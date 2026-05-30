@@ -14,7 +14,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 - **GOA has retired the SPKW pipeline (≈April 2026)**: `GO_REF:0000043` keyword-to-GO
   annotations have been removed from live GOA for all cellular organisms (verified zero for
   human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
-  project documented is now resolved at the source. Retrospective review of 9 non-Arabidopsis
+  project documented is now resolved at the source. Retrospective review of 38 non-Arabidopsis
   plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
   real over-annotation risk; removal was justified for those, but blanket retirement also
   dropped *correct* annotations when the keyword was the only carrier of a fact.
@@ -32,7 +32,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
 | [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
 | [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
-| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 9 | 15% Tier-A | Term-tiering; GOA retired SPKW |
+| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 38 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
@@ -53,6 +53,7 @@ See [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md) for detailed SQL queries and expl
 | **Toxin vs effector** | Effectors incorrectly called toxins | NleB1 (E. coli) | REMOVE |
 | **Subclade divergence** | Family keyword ignores subfunctionalization | LCR1 (Arabidopsis DEFL) | REMOVE |
 | **Kratagonist ≠ toxin** | Sequestration ≠ toxin activity | D7 proteins (mosquito) | MODIFY |
+| **Enzyme-class keyword → bare process** | An activity keyword maps to a generic, substrate-less process term; substrate specificity lives on the MF branch | Methyltransferase → methylation (plant MTases: MET1A, EZ1, CCOAOMT, COQ5) | MARK_OVER / MODIFY |
 
 ## Legitimate SPKW Contributions
 
@@ -62,13 +63,15 @@ Not all SPKW-unique annotations are over-annotations:
 - **Arsenic/antibiotic resistance genes** (P. putida) - direct functional annotations
 - **Conserved functions** (Ced-12/ELMO in D. mel) - SPKW captures known biology missing from experimental annotations
 - **Core circadian genes** (ELF4 in Arabidopsis) - accurate but redundant with specific terms
+- **DELLA growth repressors** (RHT1/"Reduced height" in wheat) - "GA signaling pathway" is the core function of a DELLA; retirement was collateral damage (left only "nucleus")
+- **Storage proteins** (patatin PATB1 in potato) - "nutrient reservoir activity" is patatin's defining role; current GOA has no storage term after retirement
 - **Viral life-cycle terms** (phage DGR reverse transcriptase, phage quorum-sensing peptide, influenza M2) - often accurate but may need more specific viral or molecular-function terms
 
 ## Project Status
 
 - **Started**: 2025-12-23
-- **Last updated**: 2026-05-21
-- **Total genes reviewed**: 104 across 11 subprojects
+- **Last updated**: 2026-05-30
+- **Total genes reviewed**: 133 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
@@ -86,7 +89,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
 - [x] [ARATH](SPKW-ARATH.md) - Plant patterns
 - [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (9 genes, 9 species); term-tier classification + retrospective validation of GOA's SPKW retirement
+- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
 - [x] [BPT4](SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
 
@@ -119,6 +122,88 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 ---
 
 ## Session Notes
+
+### 2026-05-30
+
+- Added a **keyword-level** view to [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md): reverse-map
+  SPKW-unique GO terms to their source UniProt keywords via the public `keyword2go`
+  (external2go) mapping (the GAF stores only the GO term). Produced a tier-annotated
+  watch-list of the ~30 process/role keywords that drive plant over-annotation; it is
+  organism-independent (same keywords drove the human/pombe/Arabidopsis subprojects).
+- Reviewed the largest unreviewed Tier A keyword, **`Methyltransferase` → *methylation*
+  (GO:0032259)** (92 plant genes), across 4 substrate classes: MET1A (rice, DNA),
+  EZ1 (maize, histone H3K27), CCOAOMT (potato, lignin caffeoyl-CoA), COQ5 (rice, ubiquinone).
+- **Finding: `Methyltransferase → methylation` is a reliable, mechanistically-explained
+  over-annotation** (4/4 flagged; 3 MARK_OVER, 1 MODIFY). GO keeps methylation
+  substrate-specificity on the molecular-function branch and has **obsoleted** the specific
+  *process* terms (DNA methylation GO:0006306, histone methylation GO:0016571, H3K27
+  methylation GO:0070734), so the bare *methylation* (GO:0032259) is structurally doomed to be
+  redundant with the specific *…-methyltransferase activity* MF the gene already carries.
+- Bonus: the review pass also caught two unrelated over-predictions — CCOAOMT *circadian
+  rhythm* (ARBA) and EZ1 *single-stranded RNA binding* (ortholog transfer), both REMOVEd.
+- **Keyword-watch-list sweep** (12 more genes across the next three Tier A keyword classes):
+  - *Developmental* (`Differentiation`/`Flowering`): GI, HD3A (REMOVE cell differentiation;
+    MODIFY flower development on flowering-TIME genes — the ELF4 pattern), MADS3
+    (MODIFY→specification of stamen identity), FEA2 (MODIFY→meristem maintenance). "cell
+    differentiation" is a catch-all that's wrong or too coarse.
+  - *Defense/killing* (`Plant defense`/toxin): XA21 R-gene (MODIFY→defense response to
+    bacterium), CPS4 phytoalexin synthase (MARK_OVER, STS3 enzyme-vs-product), O6/b-32 RIP
+    (toxin activity **legitimate**, kept→rRNA N-glycosylase), CHIB chitinase (mixed).
+  - *Nodulation*: NSP1 (ACCEPT — legitimate core Nod-signaling TF, removal=collateral damage),
+    CCAMK (MODIFY→arbuscular mycorrhizal association — rice doesn't nodulate; PPC16-style
+    organism-context error), LBA leghemoglobin (O2-carrier ACCEPT, nodulation MARK_OVER),
+    ENOD2A (MARK_OVER, expression marker).
+- **Meta-rule confirmed:** a process/role keyword is only as good as the gene's position
+  relative to that process → (1) core component → keep; (2) wrong organism/pathway → MODIFY;
+  (3) right area wrong altitude → MODIFY-to-specific; (4) expression/component ≠ function →
+  MARK_OVER/REMOVE. PLANTS now **30 genes / 14 species** (added common bean).
+- **Hormone-signaling-subtype batch** (4 genes; completes all six major plant hormones):
+  VP1 (maize, ABA B3 TF) MODIFY→regulation of/response to ABA (responsive effector); CKX2
+  (rice cytokinin **dehydrogenase**) MARK_OVER — a catabolic enzyme that *degrades* the hormone,
+  not a signaling component (cleanest case); TUD1 (rice BR U-box E3 ligase) ACCEPT (legitimate
+  component); EIL2 (rice ethylene EIN3-like TF) ACCEPT (legitimate; collateral damage). With
+  auxin (ABP1) and GA (RHT1/DELLA), one keyword ("X signaling pathway") yields keep / MODIFY /
+  remove purely by the gene's pathway position (transduction component vs responsive effector vs
+  hormone-metabolism enzyme). PLANTS now **34 genes / 14 species**; the full high/medium-value
+  Tier A watch-list is covered.
+- **Long-tail keyword batch** (4 genes): PG2 (tomato polygalacturonase) fruit ripening MARK_OVER
+  (enzyme-vs-process); JOKA2 (potato NBR1-like) autophagy MODIFY->macroautophagy (legitimate
+  autophagy gene — keyword reputation ≠ gene verdict); LSD1 (rice) HR MODIFY->**negative**
+  regulation of HR; DET1 (tomato) light signaling MODIFY->**negative** regulation of
+  photomorphogenesis. New variant: **regulatory-direction inversion** — LSD1/DET1 are *negative*
+  regulators of the very process their keyword names. PLANTS now **38 genes / 14 species**.
+- **Data-integrity audit (important):** the reference-validator
+  (`conf/reference_validator_config.yaml`) lists `file` in `skip_prefixes`, so `file:`
+  supporting-text is NEVER verbatim-checked by `just validate` — only `PMID:` quotes are. An
+  audit found **265/550 (~48%)** of `file:` quotes across all SPKW-PLANTS reviews (incl. the
+  original 9 and the EME1 exemplar) were non-verbatim — fabricated/paraphrased/markdown-mangled —
+  yet had passed validation. Fixed every one (replaced with exact substrings or verbatim
+  primary-PMID quotes; removed a few genuinely fabricated claims) with **zero annotation-action
+  changes** (curation was sound; provenance was not). Re-verified with the validator's own
+  matching logic: **0/536 file: quotes non-verbatim** across all 38 genes. Lesson recorded:
+  prefer PMID quotes; grep-verify any file: quote.
+
+### 2026-05-29
+
+- Extended [PLANTS](SPKW-PLANTS.md) with five more genes across four new species
+  (maize, wheat, the moss *Physcomitrium patens*, potato), bringing PLANTS to 14 genes /
+  13 species. Selected from the `plant.ddb` closure-filtered TRUE SPKW-unique set
+  (`spkw_plants_unique` table) to stress-test the highest-risk Tier A keyword classes.
+- Reviewed (falcon deep research + full ai-review.yaml, all `just validate`-clean):
+  - **RHT1** (wheat DELLA, GA signaling) → MODIFY→neg. regulation of GA signaling; removal
+    **NOT justified** (core repressor function lost — strongest collateral-damage case yet).
+  - **ABP1** (maize, auxin signaling) → MARK_AS_OVER_ANNOTATED→response to auxin; removal
+    justified (contested receptor), but auxin *binding* kept as core.
+  - **MPK4a** (moss, innate immunity/defense) → MARK_AS_OVER_ANNOTATED ×2; removal justified
+    (correct but redundant with experimental PRR-signaling-pathway).
+  - **AM1** (maize AMEIOTIC1, chromosome segregation/cell division) → REMOVE / MARK_OVER;
+    removal justified (over-broad/mis-placed; specific meiotic terms carry the biology).
+  - **PATB1** (potato patatin, nutrient reservoir/lipid catabolic/defense) → ACCEPT/ACCEPT/
+    MARK_OVER; **mixed** — storage role is collateral damage, defense over-annotated.
+- **New finding — hormone-signaling keywords cut both ways.** Tier alone does not decide a
+  hormone-signaling term; the gene's pathway position does. RHT1 (DELLA, a transduction
+  *component*) refines the earlier ARF19/PARA rule (those were merely hormone-*responsive*).
+  Running collateral-damage tally now five: CASP1, EME1, PR1B1, RHT1, PATB1.
 
 ### 2026-05-21
 

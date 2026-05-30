@@ -1,0 +1,2850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ABP1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P13689" target="_blank" class="term-link">
+                        P13689
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Zea mays</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ABP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P13689" data-a="DESCRIPTION: Maize ABP1 (P13689, &#34;auxin-binding protein 1&#34;; als..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Maize ABP1 (P13689, &#34;auxin-binding protein 1&#34;; also ERABP1, AUX311) is a soluble ~22 kDa glycoprotein of the cupin/germin/seed-storage-7S superfamily (Pfam Auxin_BP PF02041; RmlC-like cupin β-jellyroll fold). Its single firmly established molecular function is high-affinity binding of auxin: purified maize ABP1 binds the synthetic auxin 1-naphthaleneacetic acid (1-NAA) with a KD of ~1.5-2.4 x 10^-7 M, with highest affinity at acidic (apoplastic) pH ~5.5 and approximately one ligand per monomer (Hesse et al. 1989, PMID:2555179; Woo et al. 2002, PMID:12065401). The 1.9 Angstrom crystal structure (Woo et al. 2002) shows a buried, predominantly hydrophobic binding pocket containing a Zn2+ ion coordinated by three histidines and a glutamate; the auxin carboxylate coordinates the zinc and the aromatic ring contacts hydrophobic residues including Trp151. The protein is a homodimer, N-glycosylated at Asn133, and is predominantly retained in the endoplasmic reticulum lumen via a C-terminal KDEL motif, with only a tiny fraction reaching the cell surface / apoplast (Hesse et al. 1989, PMID:2555179; Oliver et al. 2004, DOI 10.1007/BF00196668, via file:MAIZE/ABP1/ABP1-deep-research-falcon.md). ABP1&#39;s role as a *functional auxin receptor* / component of the auxin-activated signaling pathway is famously contested. The classical &#34;candidate receptor&#34; model rested on antibody-blocking, protoplast hyperpolarization/swelling and an Arabidopsis abp1-null embryo-lethality report, but CRISPR-generated Arabidopsis abp1 null mutants were subsequently found phenotypically normal, and an earlier &#34;abp1 knockout&#34; line carried a confounding second-site mutation; the canonical nuclear auxin-activated signaling pathway is now attributed to the TIR1/AFB-Aux/IAA-ARF module, while ABP1&#39;s proposed signaling role has been recast as a *cell-surface, non-transcriptional* mechanism acting with transmembrane kinases (TMKs) - a model still resting largely on Arabidopsis ABP1/ABL proteins rather than on direct maize genetics (Monzer &amp; Friml 2025, DOI 10.1038/s44383-025-00002-8; Yu et al. 2023, DOI 10.1101/2022.11.28.518138; via file:MAIZE/ABP1/ABP1-deep-research-falcon.md). For maize ABP1 specifically, auxin binding and ER localization are well supported, whereas the in planta signaling/receptor role remains less definitively established than the binding chemistry.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13689" data-a="GO:0005788" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt Subcellular Location keyword mapping; duplicates the experimentally supported EXP annotation to the same term. ABP1 is predominantly ER luminal, retained by a C-terminal KDEL motif.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the EXP annotation (PMID:2555179) to the same term. The protein carries a C-terminal KDEL ER-retention signal and an N-terminal signal sequence for translocation into the ER, and the steady-state pool is overwhelmingly ER luminal [PMID:2555179]. The deep-research synthesis confirms ER lumen as the dominant location, with only a tiny apoplastic/PM fraction. A computational duplicate of a well-supported localization is acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2555179" target="_blank" class="term-link">
+                                        PMID:2555179
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An additional signal is located at the C-terminal end, consisting of the amino acids KDEL known to be responsible for preventing secretion of proteins from the lumen of the endoplasmic reticulum in eucaryotic cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Most ABP1 is retained in the **ER lumen** via KDEL/HDEL-type retention</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010011" target="_blank" class="term-link">
+                                    GO:0010011
+                                </a>
+                            </span>
+                            <span class="term-label">auxin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13689" data-a="GO:0010011" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (ARBA / InterPro IPR000526 Auxin-bd) for auxin binding; duplicates the experimentally supported IDA annotation to the same term. This is the core, firmly established molecular function of ABP1.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and well supported. The InterPro Auxin-binding domain (IPR000526) and the ABP1-defining Pfam Auxin_BP (PF02041) directly underpin this term, and the function is independently confirmed experimentally: purified maize ABP1 binds 1-NAA with a KD of ~1.5-2.4 x 10^-7 M [PMID:2555179, PMID:12065401]. A computational duplicate of a directly demonstrated molecular function is appropriate.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2555179" target="_blank" class="term-link">
+                                        PMID:2555179
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The protein has an apparent mol. wt of 22 kd and binds 1-naphthylacetic acid with a KD of 2.40 x 10(-7) M.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Purified maize ABP1 binds 1-NAA with **KD ≈ 1.5 × 10−7 M at pH 5.5**, with Scatchard analysis indicating approximately **one ligand per monomer**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2555179" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2555179
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and structural analysis of a gene from Zea...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13689" data-a="GO:0005788" data-r="PMID:2555179" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation from the original cloning/sequencing paper. ABP1 carries an N-terminal ER-translocation signal and a C-terminal KDEL ER-retention motif, and is an ER-luminal glycoprotein.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core, experimentally supported cellular-component annotation. Hesse et al. (1989) purified the protein, sequenced it, and identified both a 38-residue N-terminal hydrophobic leader (ER-translocation signal) and a C-terminal KDEL motif that prevents secretion from the ER lumen, plus an N-glycosylation site consistent with passage through the secretory pathway [PMID:2555179]. ER lumen is the dominant steady-state location; ABP1 acting as a receptor would require its minor cell-surface pool, but the localization annotation itself is solid.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2555179" target="_blank" class="term-link">
+                                        PMID:2555179
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">An additional signal is located at the C-terminal end, consisting of the amino acids KDEL known to be responsible for preventing secretion of proteins from the lumen of the endoplasmic reticulum in eucaryotic cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">predominantly **endoplasmic reticulum (ER)** localized, bearing a **C-terminal KDEL ER-retention motif**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12065401
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of auxin-binding protein 1 in complex with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13689" data-a="GO:0008270" data-r="PMID:12065401" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the 1.9 Angstrom crystal structure. ABP1 binds a single Zn2+ ion buried at the bottom of its auxin-binding pocket, coordinated by three histidines and a glutamate; the auxin carboxylate coordinates this zinc.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated by X-ray crystallography of maize ABP1 in complex with 1-NAA and a zinc ion (PDB 1LR5/1LRH). The metal ion is coordinated by three histidines and a glutamate (UniProt annotates Zn-coordinating residues His95, His97, His101 and Glu144), and the auxin carboxylate binds the zinc [PMID:12065401]. This is a genuine, structurally defined molecular function central to the auxin-binding mechanism, and is correctly captured at an appropriate level of specificity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link">
+                                        PMID:12065401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The binding pocket of ABP1 is predominantly hydrophobic with a metal ion deep inside the pocket coordinated by three histidines and a glutamate. Auxin binds within this pocket, with its carboxylate binding the zinc</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">ABP1 contains a **buried binding pocket** with a **Zn2+ ion** coordinated by protein residues (including histidines and a glutamate), and the **auxin carboxylate coordinates Zn2+**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010011" target="_blank" class="term-link">
+                                    GO:0010011
+                                </a>
+                            </span>
+                            <span class="term-label">auxin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12065401
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of auxin-binding protein 1 in complex with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P13689" data-a="GO:0010011" data-r="PMID:12065401" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the crystal structure of maize ABP1 in complex with the auxin analog 1-NAA. This is the single best-established molecular function of ABP1 and represents its core activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The strongest annotation on this gene. The 1.9 Angstrom structure directly visualizes auxin (1-NAA) bound in the ABP1 pocket, with the auxin carboxylate coordinating the active-site zinc and the aromatic ring contacting hydrophobic residues including Trp151 [PMID:12065401]; biochemical binding (KD ~1.5-2.4 x 10^-7 M, ~1 ligand per monomer) is independently established [PMID:2555179, file:MAIZE/ABP1/ABP1-deep-research-falcon.md]. &#34;Auxin binding&#34; (GO:0010011) is the precise molecular function and should be retained as the core function. Note: binding auxin is distinct from BEING a functional auxin receptor / signaling-pathway component (see the GO:0009734 entry, where the receptor role is contested).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link">
+                                        PMID:12065401
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The structure of auxin-binding protein 1 (ABP1) from maize has been determined at 1.9 A resolution, revealing its auxin-binding site.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most secure functional assignment for maize ABP1 (P13689) is that it is a **high-affinity auxin-binding protein** with a well-defined **Zn-coordinated binding mechanism**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009734" target="_blank" class="term-link">
+                                    GO:0009734
+                                </a>
+                            </span>
+                            <span class="term-label">auxin-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P13689" data-a="GO:0009734" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Auxin signaling pathway&#34; (which itself reflects the historical &#34;Receptor for the plant hormone auxin&#34; FUNCTION line); snapshot-only, removed in the current GOA release. ABP1 genuinely BINDS auxin, but its status as a component of the auxin-activated signaling pathway - a term defined around binding of auxin to a *receptor* that modulates a downstream cellular process - is famously contested.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was, on balance, JUSTIFIED (with the caveat that it is a genuinely contested case, so &#34;MIXED&#34; could be argued). The GO term GO:0009734 is explicitly defined as &#34;The series of molecular signals generated by the binding of the plant hormone auxin to a receptor, and ending with modulation of a downstream cellular process, e.g. transcription.&#34; This term is now understood to be enacted by the nuclear TIR1/AFB-Aux/IAA-ARF perception module, not by ABP1. The historical case for ABP1 as the auxin receptor (antibody-blocking of elongation, protoplast hyperpolarization/swelling, and an Arabidopsis abp1-null embryo-lethality report cited in Woo et al. 2002, PMID:12065401) has been seriously undercut: the deep-research synthesis records that Arabidopsis abp1 null mutants can lack obvious developmental/auxin-signaling phenotypes, challenging ABP1 essentiality and motivating the search for redundant co-receptors. The modern &#34;resurrection&#34; of ABP1 places it in a *cell-surface, non-transcriptional* auxin-perception model with TMKs and ABL proteins - mechanistically distinct from the canonical (largely transcriptional) auxin-activated signaling pathway captured by GO:0009734, and demonstrated mainly in Arabidopsis rather than in maize. For maize ABP1 specifically, the deep research is explicit that auxin binding and localization are well supported whereas &#34;the primary in planta signaling role remains less definitive.&#34; A blanket keyword-derived &#34;auxin-activated signaling pathway&#34; term overstates ABP1&#39;s evidence in maize. The biology that IS defensible - that maize ABP1 responds to / binds auxin - is better captured by the broader, more cautious term &#34;response to auxin&#34; (GO:0009733), proposed as the replacement. The contested signaling role is discussed but not asserted as an accepted pathway-component annotation.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009733" target="_blank" class="term-link">
+                                    response to auxin
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">An important counterweight is the Arabidopsis literature reporting that **abp1 null mutants** can lack obvious developmental/auxin-signaling phenotypes, challenging the view of ABP1 as an essential auxin receptor in that species.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">For maize ABP1 specifically, this means: **auxin binding and localization are well supported**, whereas **the primary in planta signaling role** remains **less definitive** in the retrieved evidence than the chemistry/structure</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">they do not uniquely prove that maize ABP1 is *the* in vivo receptor, because ABP1’s localization and the identity of interacting membrane partners have been difficult to resolve definitively</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Maize ABP1 is a high-affinity auxin-binding protein. Via a buried, predominantly hydrophobic cupin-fold pocket containing a single Zn2+ ion coordinated by three histidines and a glutamate, it binds auxins (e.g. 1-NAA) with submicromolar affinity (KD ~1.5-2.4 x 10^-7 M), one ligand per monomer, with highest affinity at acidic apoplastic pH. This auxin-binding activity - not a demonstrated receptor/signaling role - is its single firmly established molecular function.
+</h3>
+                <span class="vote-buttons" data-g="P13689" data-a="FUNCTION: Maize ABP1 is a high-affinity auxin-binding protei..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010011" target="_blank" class="term-link">
+                            auxin binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                endoplasmic reticulum lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link">
+                                PMID:12065401
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The structure of auxin-binding protein 1 (ABP1) from maize has been determined at 1.9 A resolution, revealing its auxin-binding site.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2555179" target="_blank" class="term-link">
+                                PMID:2555179
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The protein has an apparent mol. wt of 22 kd and binds 1-naphthylacetic acid with a KD of 2.40 x 10(-7) M.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The most secure functional assignment for maize ABP1 (P13689) is that it is a **high-affinity auxin-binding protein** with a well-defined **Zn-coordinated binding mechanism**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ABP1 coordinates a catalytically/structurally essential Zn2+ ion at the base of its auxin-binding pocket. The metal is bound by three histidines and a glutamate and directly engages the auxin carboxylate, making zinc binding integral to the auxin-binding mechanism rather than an independent activity.
+</h3>
+                <span class="vote-buttons" data-g="P13689" data-a="FUNCTION: ABP1 coordinates a catalytically/structurally esse..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                endoplasmic reticulum lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link">
+                                PMID:12065401
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The binding pocket of ABP1 is predominantly hydrophobic with a metal ion deep inside the pocket coordinated by three histidines and a glutamate. Auxin binds within this pocket, with its carboxylate binding the zinc</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">the **auxin carboxylate coordinates Zn2+**; the aromatic moiety sits in a hydrophobic environment</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The UniProt subcellular-location keyword &#34;Endoplasmic reticulum lumen&#34; maps to GO:0005788; this duplicates the experimentally supported EXP annotation from PMID:2555179.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Auxin binding (GO:0010011) assigned via ARBA/InterPro (IPR000526 Auxin-bd, Pfam PF02041); duplicates the experimentally supported IDA annotation from PMID:12065401.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotation present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For ABP1, the keyword &#34;Auxin signaling pathway&#34; mapped to GO:0009734 (auxin-activated signaling pathway) - a term defined around auxin binding to a receptor. ABP1&#39;s receptor/signaling-pathway role is contested, so this keyword-derived term is an over-annotation; &#34;response to auxin&#34; (GO:0009733) is the more defensible term.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2555179" target="_blank" class="term-link">
+                            PMID:2555179
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular cloning and structural analysis of a gene from Zea mays (L.) coding for a putative receptor for the plant hormone auxin.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The major maize auxin-binding protein was purified to homogeneity; it is ~22 kDa and binds 1-naphthylacetic acid (1-NAA) with a KD of 2.40 x 10^-7 M.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ABP1 has an N-terminal 38-residue hydrophobic ER-translocation signal and a C-terminal KDEL ER-retention motif, and is N-glycosylated - establishing ER-lumen localization.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The paper titles the protein only a &#34;putative receptor&#34; for auxin, reflecting that receptor function was inferred rather than demonstrated.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12065401" target="_blank" class="term-link">
+                            PMID:12065401
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of auxin-binding protein 1 in complex with auxin.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The 1.9 Angstrom crystal structure of maize ABP1 in complex with 1-NAA reveals the auxin-binding site and places ABP1 in the germin/seed-storage-7S (cupin) superfamily.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A single Zn2+ ion sits deep in a predominantly hydrophobic pocket, coordinated by three histidines and a glutamate; the auxin carboxylate coordinates the zinc and the aromatic ring contacts hydrophobic residues including Trp151. ABP1 is a homodimer with a single Cys2-Cys155 disulfide.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No conformational rearrangement was observed on auxin binding in the crystal; the authors propose only a &#34;possible mechanism of signal transduction,&#34; and cite an Arabidopsis abp1-null embryo-lethality report (Chen et al. 2001) that later work has challenged.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of maize ABP1 (P13689).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The most secure assignment for maize ABP1 is that it is a high-affinity, Zn-dependent auxin-binding protein (cupin fold), binding 1-NAA with KD ~1.5 x 10^-7 M at pH 5.5, ~1 ligand per monomer, with highest affinity at acidic apoplastic pH.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ABP1 is predominantly ER luminal via KDEL retention; only a tiny fraction reaches the plasma-membrane/apoplast (Oliver et al. 2004), and total ABP1 pools are long-lived and not strongly auxin-regulated.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ABP1&#39;s in planta signaling/receptor role is contested - Arabidopsis abp1 null mutants can lack obvious phenotypes; the canonical receptor role is now attributed elsewhere, and the modern model recasts ABP1 in a cell-surface, non-transcriptional pathway with TMKs/ABL proteins (Monzer &amp; Friml 2025; Yu et al. 2023), demonstrated mainly in Arabidopsis. For maize specifically, binding and localization are well supported but the primary signaling role remains less definitive than the chemistry/structure.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does maize ABP1 function as an auxin receptor in maize itself, or is the &#34;receptor&#34; designation an extrapolation from contested Arabidopsis genetics? Are there maize abp1 loss-of-function lines, and do they show auxin-response phenotypes?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Richard Napier</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P13689" data-a="Q: Does maize ABP1 function as an auxin receptor in m..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Given that maize ABP1 is overwhelmingly ER-luminal, what is the mechanism and physiological significance of the minor cell-surface/apoplastic pool, and does it interact with maize TMK-family kinases as proposed for Arabidopsis ABP1/ABL proteins?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Jiří Friml</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P13689" data-a="Q: Given that maize ABP1 is overwhelmingly ER-luminal..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the acidic-pH optimum of auxin binding (KD lowest at pH ~5.5) evidence that the physiologically relevant binding occurs extracellularly (apoplast) rather than in the neutral ER lumen, and how is auxin binding reconciled with predominant ER retention?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Richard Napier</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P13689" data-a="Q: Is the acidic-pH optimum of auxin binding (KD lowe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate true maize abp1 loss-of-function alleles (CRISPR knockout and clean null lines free of second-site mutations) and assay auxin-response phenotypes (coleoptile elongation, root growth, gravitropism, rapid PM electrical responses) to test whether maize ABP1 is required for auxin signaling in its native species.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: As in Arabidopsis CRISPR abp1 nulls, maize abp1 nulls will be largely phenotypically normal for canonical auxin responses, supporting the view that the auxin-activated signaling pathway (GO:0009734) is not ABP1-dependent.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse genetics / loss-of-function phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P13689" data-a="EXPERIMENT: Generate true maize abp1 loss-of-function alleles ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test for an auxin-dependent physical interaction between maize ABP1 (and the apoplastic fraction specifically) and maize transmembrane kinases (TMK orthologs) using co-immunoprecipitation, split-luciferase and BiFC, with pocket-histidine mutants as controls.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Maize ABP1 engages TMK extracellular domains in an auxin-dependent manner at the cell surface, supporting a non-transcriptional cell-surface perception role distinct from the canonical nuclear auxin-activated signaling pathway.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein-protein interaction / cell-surface signaling assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P13689" data-a="EXPERIMENT: Test for an auxin-dependent physical interaction b..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify and compare auxin-binding affinity and specificity (IAA vs 1-NAA vs synthetic-auxin herbicides) of purified maize ABP1 across a physiological pH range (apoplastic pH ~5.5 vs ER/cytosolic ~7), using isothermal titration calorimetry and fluorescence assays, with zinc-coordinating-residue mutants.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Auxin binding is strongly favored at acidic apoplastic pH and abolished by mutation of the Zn-coordinating His/Glu residues, supporting an extracellular, metal-dependent binding mode.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro quantitative ligand-binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P13689" data-a="EXPERIMENT: Quantify and compare auxin-binding affinity and sp..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ABP1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P13689" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: Zea mays ABP1 (Auxin-binding protein 1; UniProt P13689)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">23 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-29T22:38:29.363788</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ABP1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ABP1-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000008 The crystal structure of maize ABP1 in complex with 1-NAA, including the zinc-coordination site, is illustrated in Figures 2 and 3.</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-zea-mays-abp1-auxin-binding-protein-1-uniprot-p13689">Research report: Zea mays ABP1 (Auxin-binding protein 1; UniProt P13689)</h1>
+<h2 id="1-target-verification-and-scope">1. Target verification and scope</h2>
+<p><strong>Target identity.</strong> The requested protein is <strong>auxin-binding protein 1 (ABP1)</strong> from <strong>maize (Zea mays)</strong>, UniProt accession <strong>P13689</strong>. The core experimental literature used here explicitly studies maize ABP1 protein (e.g., crystallography and biochemical binding), and matches key UniProt features: a soluble glycoprotein, predominantly <strong>endoplasmic reticulum (ER)</strong> localized, bearing a <strong>C-terminal KDEL ER-retention motif</strong>, with a defined auxin-binding pocket (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5, oliver2004regulationofsynthesis pages 7-8).</p>
+<p><strong>Ambiguity warning (handled).</strong> “ABP1” is heavily discussed in <strong>Arabidopsis</strong> auxin biology, including a long-running controversy about whether ABP1 is required for development/auxin responses in that species. This report uses Arabidopsis-centered sources only to contextualize recent models and explicitly separates them from <strong>maize ABP1 (P13689)</strong> biochemical/structural evidence (monzer2025historicalandmechanistic pages 1-2, monzer2025historicalandmechanistic pages 4-5).</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-what-abp1-is-conceptual-definition">2.1 What ABP1 is (conceptual definition)</h3>
+<p>ABP1 is a <strong>soluble auxin-binding protein</strong> historically proposed to function in <strong>rapid (non-transcriptional) auxin responses</strong>, potentially via a <strong>cell-surface/apoplastic</strong> pool that could transmit signals to the plasma membrane (PM). However, most cellular ABP1 is retained in the <strong>ER lumen</strong> via KDEL, creating a central conceptual tension: <strong>strong auxin-binding chemistry</strong> versus <strong>uncertain physiological receptor role</strong> (kl�mbt1990aviewabout pages 1-3, oliver2004regulationofsynthesis pages 7-8).</p>
+<h3 id="22-abp1-protein-familydomain-context">2.2 ABP1 protein family/domain context</h3>
+<p>Crystal-structure analysis places maize ABP1 within the <strong>cupin/germin/7S family</strong>, with a <strong>β-jellyroll (cupin-like) barrel</strong> fold and a metal-centered ligand pocket (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5). This aligns with UniProt’s domain annotations (cupin superfamily / Auxin_BP PF02041 equivalence) in functional terms, though UniProt family naming is not needed to establish the fold.</p>
+<h2 id="3-molecular-properties-of-maize-abp1-structure-binding-and-specificity">3. Molecular properties of maize ABP1 (structure, binding, and specificity)</h2>
+<h3 id="31-high-confidence-structural-knowledge-primary-evidence">3.1 High-confidence structural knowledge (primary evidence)</h3>
+<p><strong>Crystal structure and binding pocket.</strong> The maize ABP1 structure was solved at <strong>1.9 Å</strong> resolution in complex with the synthetic auxin analog <strong>1-naphthaleneacetic acid (1-NAA)</strong> (Woo et al., 2002; published <strong>June 2002</strong>; https://doi.org/10.1093/emboj/cdf291). ABP1 contains a <strong>buried binding pocket</strong> with a <strong>Zn2+ ion</strong> coordinated by protein residues (including histidines and a glutamate), and the <strong>auxin carboxylate coordinates Zn2+</strong>; the aromatic moiety sits in a hydrophobic environment (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5).</p>
+<p><strong>Visual evidence (binding-pocket architecture).</strong> Cropped figure panels from Woo et al. show Zn coordination and 1-NAA electron density / interaction schematic supporting this mechanism (woo2002crystalstructureof media 33c74884, woo2002crystalstructureof media 87308638, woo2002crystalstructureof media 94f34f13).</p>
+<h3 id="32-quantitative-auxin-binding-and-ph-dependence">3.2 Quantitative auxin binding and pH dependence</h3>
+<p><strong>Affinity and stoichiometry.</strong> Purified maize ABP1 binds 1-NAA with <strong>KD ≈ 1.5 × 10−7 M at pH 5.5</strong>, with Scatchard analysis indicating approximately <strong>one ligand per monomer</strong>, and <strong>highest affinity near pH 5.5</strong> (Woo et al., 2002; https://doi.org/10.1093/emboj/cdf291) (woo2002crystalstructureof pages 3-5).</p>
+<p><strong>Older binding estimates (contextual).</strong> A classic synthesis paper reported apparent binding constants such as <strong>Ko ≈ 4–6 × 10−8 M for NAA</strong> and an ER-associated “site I” with <strong>K ≈ 2 × 10−7 M</strong>, while also emphasizing the relevance of <strong>acidic apoplastic pH (~5–6)</strong> versus near-neutral cytosolic pH for interpreting binding and signaling hypotheses (Klämbt, 1990; published <strong>June 1990</strong>; https://doi.org/10.1007/BF00019401) (kl�mbt1990aviewabout pages 1-3).</p>
+<p><strong>Interpretation.</strong> The robust observation that binding is favored at <strong>low pH</strong> is frequently interpreted as consistent with a <strong>physiologically relevant extracellular/apoplastic binding mode</strong>, because the apoplast is typically more acidic than the cytosol (kl�mbt1990aviewabout pages 1-3, monzer2025historicalandmechanistic pages 1-2).</p>
+<h3 id="33-ligand-specificity-what-is-and-is-not-established">3.3 Ligand specificity (what is and is not established)</h3>
+<p>The best-supported maize quantitative affinity in the retrieved evidence is for <strong>1-NAA</strong> at pH 5.5 (KD ~1.5×10−7 M). The structure-based analysis suggests <strong>IAA</strong> likely binds with <strong>lower affinity</strong> than 1-NAA (woo2002crystalstructureof pages 3-5). Claims about broad ligand spectra (e.g., herbicide selectivity) are plausible based on pocket variation, but quantitative maize-specific panels for multiple ligands were not present in the retrieved text excerpts (woo2002crystalstructureof pages 3-5).</p>
+<h2 id="4-subcellular-localization-and-trafficking-where-abp1-acts">4. Subcellular localization and trafficking (where ABP1 acts)</h2>
+<h3 id="41-er-localization-and-retention">4.1 ER localization and retention</h3>
+<p>Multiple sources describe maize ABP1 as predominantly <strong>ER luminal</strong> and bearing a C-terminal <strong>KDEL</strong> motif that supports ER retention (Woo et al., 2002; https://doi.org/10.1093/emboj/cdf291; Oliver et al., 2004; published <strong>Oct 2004</strong>; https://doi.org/10.1007/BF00196668) (woo2002crystalstructureof pages 3-5, oliver2004regulationofsynthesis pages 7-8).</p>
+<h3 id="42-evidence-for-a-minor-cell-surfaceapoplastic-pool">4.2 Evidence for a minor cell-surface/apoplastic pool</h3>
+<p>Despite ER retention, multiple functional/cytological studies have reported a small amount of ABP1 at the <strong>outer face of the plasma membrane</strong> or in the <strong>apoplast</strong>, which is key to historical receptor models (kl�mbt1990aviewabout pages 1-3, oliver2004regulationofsynthesis pages 7-8).</p>
+<p><strong>Quantitative framing (important limitation).</strong> A maize-focused study on synthesis/turnover emphasizes that the <strong>PM-associated ABP1 population appears to be only a tiny fraction of total cellular ABP1</strong>, and that total ABP1 pools were not strongly regulated by auxin or other growth regulators in the tested conditions (Oliver et al., 2004; https://doi.org/10.1007/BF00196668) (oliver2004regulationofsynthesis pages 7-8).</p>
+<h3 id="43-turnover-and-regulation-statistics">4.3 Turnover and regulation statistics</h3>
+<p>Oliver et al. estimated ABP1 <strong>mRNA half-life &gt;10 h</strong> and described ABP1 as long-lived at the protein level, consistent with a relatively stable ER-resident pool (oliver2004regulationofsynthesis pages 7-8).</p>
+<h2 id="5-biological-function-and-pathway-context">5. Biological function and pathway context</h2>
+<h3 id="51-what-is-firmly-established-for-maize-abp1">5.1 What is firmly established for maize ABP1</h3>
+<p>The most secure functional assignment for maize ABP1 (P13689) is that it is a <strong>high-affinity auxin-binding protein</strong> with a well-defined <strong>Zn-coordinated binding mechanism</strong>, and that it is <strong>predominantly ER luminal</strong> with KDEL-mediated retention (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5, oliver2004regulationofsynthesis pages 7-8).</p>
+<h3 id="52-historical-physiological-evidence-implicating-abp1-in-rapid-auxin-responses">5.2 Historical physiological evidence implicating ABP1 in rapid auxin responses</h3>
+<p>Earlier literature connected ABP/ABP1 to rapid, non-transcriptional phenomena such as auxin-dependent coleoptile elongation and plasma-membrane electrical responses.</p>
+<ul>
+<li>A classic synthesis reported that anti-ABP antibodies could block auxin-dependent elongation responses and discussed strong localization in coleoptile epidermal cells, arguing for a functional pool at the outer PM (Klämbt, 1990; https://doi.org/10.1007/BF00019401) (kl�mbt1990aviewabout pages 1-3).</li>
+<li>A recent review notes maize evidence including patch-clamp data linking an auxin-binding protein to auxin-stimulated PM currents in maize protoplasts (review-level statement; the primary electrophysiology paper was not retrieved here) (monzer2025historicalandmechanistic pages 4-5).</li>
+</ul>
+<p>These results support a model in which ABP1 could influence PM processes (e.g., ion fluxes) in a rapid manner, but they do not uniquely prove that maize ABP1 is <em>the</em> in vivo receptor, because ABP1’s localization and the identity of interacting membrane partners have been difficult to resolve definitively (kl�mbt1990aviewabout pages 1-3, oliver2004regulationofsynthesis pages 7-8).</p>
+<h3 id="53-current-mechanistic-models-abp1abltmk-cell-surface-auxin-perception">5.3 Current mechanistic models (ABP1/ABL–TMK cell-surface auxin perception)</h3>
+<p><strong>Recent developments (priority 2023–2024).</strong> A major recent direction is the <strong>cell-surface auxin perception</strong> model involving <strong>TMKs (transmembrane kinases)</strong> and cupin-family extracellular auxin binders.</p>
+<ul>
+<li>A 2023 preprint reported that Arabidopsis <strong>ABP1-like proteins (ABL1/ABL2)</strong> are <strong>apoplast-localized</strong>, interact with TMK1’s extracellular domain in an <strong>auxin-dependent</strong> manner (minutes timescale), and that mutating conserved pocket histidines disrupts the auxin-promoted interaction (Yu et al., bioRxiv; posted <strong>Nov 2023</strong>; https://doi.org/10.1101/2022.11.28.518138) (yu2023ablsandtmks pages 5-9, yu2023ablsandtmks pages 1-5).</li>
+</ul>
+<p>Although these experiments are not in maize, they are mechanistically relevant to maize ABP1 because maize ABP1 provides a foundational <strong>structural and biochemical reference</strong> for auxin binding in this protein class (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5), and modern models explicitly build on ABP1’s cupin pocket architecture and low-pH binding behavior (monzer2025historicalandmechanistic pages 1-2).</p>
+<p><strong>Expert synthesis and interpretation.</strong> A 2025 expert review (Monzer &amp; Friml; published <strong>Jul 2025</strong>; https://doi.org/10.1038/s44383-025-00002-8) summarizes the “resurrection” of ABP1 in a model where ABP1 (and ABL proteins) cooperate with TMKs at the cell surface to trigger <strong>ultrafast phosphorylation responses</strong> and downstream regulation of auxin transport components such as PIN trafficking/canalization (monzer2025historicalandmechanistic pages 1-2, monzer2025historicalandmechanistic pages 4-5). While this is beyond the 2023–2024 window, it provides a current authoritative synthesis linking older maize ABP1 biochemistry to current pathway frameworks.</p>
+<h3 id="54-arabidopsis-controversy-and-how-it-constrains-inference-for-maize">5.4 Arabidopsis controversy and how it constrains inference for maize</h3>
+<p>An important counterweight is the Arabidopsis literature reporting that <strong>abp1 null mutants</strong> can lack obvious developmental/auxin-signaling phenotypes, challenging the view of ABP1 as an essential auxin receptor in that species. This controversy motivates the search for redundant receptors/co-receptors (ABL proteins) and complicates straightforward transfer of “ABP1 as receptor” claims across species (monzer2025historicalandmechanistic pages 1-2, yu2023ablsandtmks pages 1-5).</p>
+<p>For maize ABP1 specifically, this means: <strong>auxin binding and localization are well supported</strong>, whereas <strong>the primary in planta signaling role</strong> remains <strong>less definitive</strong> in the retrieved evidence than the chemistry/structure (oliver2004regulationofsynthesis pages 7-8, kl�mbt1990aviewabout pages 1-3).</p>
+<h2 id="6-recent-maize-centered-observations-expressionassociation-limited-mechanistic-specificity">6. Recent maize-centered observations (expression/association; limited mechanistic specificity)</h2>
+<p>Direct 2023–2024 maize ABP1 mechanistic studies were not prominent in the retrieved corpus. However, maize studies in diverse contexts sometimes cite ABP1 as a putative receptor or report expression changes; these are <strong>correlative</strong> and should not be over-interpreted as establishing primary function (oliver2004regulationofsynthesis pages 7-8).</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<p><strong>Primary use: research and assay design.</strong> The most concrete “real-world” use of maize ABP1 knowledge is as a <strong>reference system for auxin-binding chemistry and structural mechanism</strong>, informing:</p>
+<ul>
+<li>interpretation of rapid auxin-response assays, including the plausibility of extracellular binding at acidic pH (kl�mbt1990aviewabout pages 1-3, monzer2025historicalandmechanistic pages 1-2);</li>
+<li>rational use of synthetic auxins (e.g., NAA analogs) in mechanistic experiments and receptor/co-receptor modeling (woo2002crystalstructureof pages 3-5, yu2023ablsandtmks pages 1-5).</li>
+</ul>
+<p><strong>Crop improvement relevance (indirect).</strong> Reviews discussing auxin networks frame nodes such as biosynthesis enzymes and auxin transporters as more validated crop targets, whereas ABP1’s direct engineering utility remains uncertain because of unresolved functional essentiality and receptor redundancy (monzer2025historicalandmechanistic pages 1-2, oliver2004regulationofsynthesis pages 7-8).</p>
+<p>No retrieved evidence demonstrated deployed agricultural products or breeding programs specifically manipulating <strong>maize ABP1 (P13689)</strong> in 2023–2024.</p>
+<h2 id="8-key-statistics-and-data-points-from-cited-studies">8. Key statistics and data points (from cited studies)</h2>
+<ul>
+<li><strong>Binding affinity:</strong> 1-NAA <strong>KD ≈ 1.5×10−7 M</strong> at <strong>pH 5.5</strong> (maize ABP1; Woo et al., 2002; https://doi.org/10.1093/emboj/cdf291) (woo2002crystalstructureof pages 3-5).</li>
+<li><strong>pH optimum:</strong> “Highest affinity at <strong>pH 5.5</strong>” for 1-NAA binding (woo2002crystalstructureof pages 3-5).</li>
+<li><strong>Binding stoichiometry:</strong> approximately <strong>1 auxin per monomer</strong> (Scatchard analysis; results referenced) (woo2002crystalstructureof pages 3-5).</li>
+<li><strong>Localization fraction:</strong> PM/apoplastic ABP1 reported as <strong>only a tiny fraction</strong> of total cellular ABP1 (Oliver et al., 2004; https://doi.org/10.1007/BF00196668) (oliver2004regulationofsynthesis pages 7-8).</li>
+<li><strong>mRNA stability:</strong> ABP1 mRNA half-life estimated <strong>&gt;10 h</strong> (Oliver et al., 2004) (oliver2004regulationofsynthesis pages 7-8).</li>
+<li><strong>Older affinity estimates:</strong> reported <strong>Ko ≈ 4–6×10−8 M for NAA</strong> and an ER-associated site with <strong>K ≈ 2×10−7 M</strong> (Klämbt, 1990; https://doi.org/10.1007/BF00019401) (kl�mbt1990aviewabout pages 1-3).</li>
+</ul>
+<h2 id="9-summary-and-functional-annotation-recommendation-evidence-weighted">9. Summary and functional annotation recommendation (evidence-weighted)</h2>
+<p><strong>Most defensible primary function (maize ABP1; P13689):</strong> a <strong>Zn-dependent auxin-binding protein</strong> (cupin fold) with <strong>high-affinity binding to auxin analogs</strong> at <strong>acidic pH</strong>, predominantly <strong>ER luminal</strong> but with evidence for a <strong>minor cell-surface/apoplastic pool</strong> (woo2002crystalstructureof pages 3-5, oliver2004regulationofsynthesis pages 7-8).</p>
+<p><strong>Most defensible cellular location:</strong> ER lumen as the dominant steady-state location (KDEL-mediated), with limited but functionally emphasized apoplastic/outer-PM presence (oliver2004regulationofsynthesis pages 7-8, kl�mbt1990aviewabout pages 1-3).</p>
+<p><strong>Most plausible pathway context (with uncertainty):</strong> potential participation in rapid, non-transcriptional auxin signaling at the cell surface, likely in conjunction with TMKs and/or related extracellular auxin binders (ABL proteins), but the direct in planta indispensability of ABP1 varies by species and remains debated in model systems (monzer2025historicalandmechanistic pages 1-2, yu2023ablsandtmks pages 1-5).</p>
+<hr />
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings (1-3 bullet phrases)</th>
+<th>Evidence type</th>
+<th>Organism(s)</th>
+<th>Primary sources with year and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>identity/domains/structure</td>
+<td>• Verified target is <strong>maize ABP1 / auxin-binding protein 1</strong> matching UniProt P13689 • Soluble ~22 kDa glycoprotein, predominantly ER-localized, with C-terminal <strong>KDEL</strong> retention motif • Fold is cupin/germin-like <strong>β-jellyroll barrel</strong> with a metal-binding auxin pocket; crystal structure solved at <strong>1.9 Å</strong> (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5, woo2002crystalstructureof pages 5-7)</td>
+<td>structure, biochem</td>
+<td><strong>Zea mays</strong></td>
+<td>Woo et al., 2002, <em>EMBO J.</em> https://doi.org/10.1093/emboj/cdf291; Klämbt, 1990, <em>Plant Mol Biol</em> https://doi.org/10.1007/BF00019401</td>
+</tr>
+<tr>
+<td>auxin binding</td>
+<td>• Purified maize ABP1 binds synthetic auxin <strong>1-NAA</strong> with <strong>KD ~1.5 × 10^-7 M</strong> at pH 5.5 • One auxin molecule binds per monomer by Scatchard analysis • Auxin carboxylate coordinates a <strong>Zn</strong> ion in the binding pocket; IAA predicted to bind with lower affinity than 1-NAA (woo2002crystalstructureof pages 1-2, woo2002crystalstructureof pages 3-5, woo2002crystalstructureof media 33c74884)</td>
+<td>structure, biochem</td>
+<td><strong>Zea mays</strong></td>
+<td>Woo et al., 2002, <em>EMBO J.</em> https://doi.org/10.1093/emboj/cdf291</td>
+</tr>
+<tr>
+<td>pH dependence</td>
+<td>• Highest auxin-binding affinity reported around <strong>pH 5.5</strong> • Reviews summarize repeated binding of purified maize/tobacco ABP1 at low <strong>apoplastic pH (~5–5.5)</strong> • This supports a model in which physiologically relevant binding occurs outside the cell rather than in neutral/alkaline cytosol (woo2002crystalstructureof pages 3-5, monzer2025historicalandmechanistic pages 1-2, kl�mbt1990aviewabout pages 1-3)</td>
+<td>biochem, review</td>
+<td><strong>Zea mays</strong>, tobacco, broader plant systems</td>
+<td>Woo et al., 2002, <em>EMBO J.</em> https://doi.org/10.1093/emboj/cdf291; Monzer &amp; Friml, 2025, <em>npj Sci. Plants</em> https://doi.org/10.1038/s44383-025-00002-8; Klämbt, 1990, <em>Plant Mol Biol</em> https://doi.org/10.1007/BF00019401</td>
+</tr>
+<tr>
+<td>localization/trafficking</td>
+<td>• Most ABP1 is retained in the <strong>ER lumen</strong> via KDEL/HDEL-type retention • A much smaller pool has been reported at the <strong>outer face of the plasma membrane / apoplast</strong> • Maize turnover study found long protein half-life and that the plasma-membrane-associated fraction is only a <strong>tiny fraction</strong> of total ABP1 (oliver2004regulationofsynthesis pages 7-8, kl�mbt1990aviewabout pages 1-3, woo2002crystalstructureof pages 5-7)</td>
+<td>localization, trafficking, review</td>
+<td><strong>Zea mays</strong>; supporting discussion from other plants</td>
+<td>Oliver et al., 2004, <em>Planta</em> https://doi.org/10.1007/BF00196668; Klämbt, 1990, <em>Plant Mol Biol</em> https://doi.org/10.1007/BF00019401; Woo et al., 2002, <em>EMBO J.</em> https://doi.org/10.1093/emboj/cdf291</td>
+</tr>
+<tr>
+<td>proposed signaling role</td>
+<td>• ABP1 has long been proposed as a <strong>rapid/cell-surface auxin perception</strong> component rather than a transcriptional receptor • Recent framework places ABP1 with <strong>TMK1</strong> in an extracellular auxin-sensing complex that drives ultrafast phosphorylation and affects <strong>PIN trafficking/auxin canalization</strong> • Functional outputs historically linked to ABP1 include proton pump activation, ion channel regulation, protoplast swelling, and cell expansion (monzer2025historicalandmechanistic pages 1-2, monzer2025historicalandmechanistic pages 4-5)</td>
+<td>review, signaling synthesis, physiological interpretation</td>
+<td>Maize evidence foundational; mechanistic model developed mainly in <strong>Arabidopsis</strong> and broader plant systems</td>
+<td>Monzer &amp; Friml, 2025, <em>npj Sci. Plants</em> https://doi.org/10.1038/s44383-025-00002-8; Zeng et al., 2024, <em>PNAS</em> https://doi.org/10.1073/pnas.2412493121</td>
+</tr>
+<tr>
+<td>maize-specific functional evidence</td>
+<td>• Early maize/corn work localized ABP activity strongly to coleoptile outer epidermal cells and antibodies against ABP blocked auxin-dependent elongation • Patch-clamp work in maize protoplasts linked an auxin-binding protein to auxin-stimulated plasma-membrane currents • Transcriptome studies report <strong>ABP1 expression changes</strong> under maize developmental/stress contexts, but these are correlative rather than definitive functional proof (kl�mbt1990aviewabout pages 1-3, monzer2025historicalandmechanistic pages 4-5)</td>
+<td>physiological, localization, transcriptome</td>
+<td><strong>Zea mays</strong></td>
+<td>Klämbt, 1990, <em>Plant Mol Biol</em> https://doi.org/10.1007/BF00019401; Monzer &amp; Friml, 2025, <em>npj Sci. Plants</em> https://doi.org/10.1038/s44383-025-00002-8</td>
+</tr>
+<tr>
+<td>controversies/limitations</td>
+<td>• Major caution: extensive <strong>Arabidopsis ABP1</strong> literature does <strong>not</strong> directly resolve maize ABP1 function • Arabidopsis <strong>abp1 null</strong> reports lacking obvious phenotypes challenged ABP1 essentiality, creating a long-running controversy • Thus, maize ABP1 has strong <strong>biochemical/structural</strong> evidence for auxin binding, but its in planta primary signaling role remains less definitively established than its binding chemistry (monzer2025historicalandmechanistic pages 1-2, monzer2025historicalandmechanistic pages 4-5, yu2023ablsandtmks pages 5-9, yu2023ablsandtmks pages 1-5)</td>
+<td>review, genetics controversy</td>
+<td><strong>Zea mays</strong> distinguished from <strong>Arabidopsis</strong></td>
+<td>Monzer &amp; Friml, 2025, <em>npj Sci. Plants</em> https://doi.org/10.1038/s44383-025-00002-8; Yu et al., 2023, <em>bioRxiv</em> https://doi.org/10.1101/2022.11.28.518138</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest gathered evidence for maize ABP1 (UniProt P13689), separating direct maize biochemical/structural findings from broader ABP1-TMK signaling models and the Arabidopsis controversy. It is useful for identifying what is firmly established versus still debated.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(woo2002crystalstructureof pages 1-2): E. Woo, J. Marshall, J. Bauly, Jin‐Gui Chen, M. Venis, R. Napier, and R. Pickersgill. Crystal structure of auxin‐binding protein 1 in complex with auxin. The EMBO Journal, 21:2877-2885, Jun 2002. URL: https://doi.org/10.1093/emboj/cdf291, doi:10.1093/emboj/cdf291. This article has 234 citations.</p>
+</li>
+<li>
+<p>(woo2002crystalstructureof pages 3-5): E. Woo, J. Marshall, J. Bauly, Jin‐Gui Chen, M. Venis, R. Napier, and R. Pickersgill. Crystal structure of auxin‐binding protein 1 in complex with auxin. The EMBO Journal, 21:2877-2885, Jun 2002. URL: https://doi.org/10.1093/emboj/cdf291, doi:10.1093/emboj/cdf291. This article has 234 citations.</p>
+</li>
+<li>
+<p>(oliver2004regulationofsynthesis pages 7-8): SusanC. Oliver, MichaelA. Venis, RobertB. Freedman, and RichardM. Napier. Regulation of synthesis and turnover of maize auxin-binding protein and observations on its passage to the plasma membrane: comparisons to maize immunoglobulin-binding protein cognate. Planta, 197:465-474, Oct 2004. URL: https://doi.org/10.1007/bf00196668, doi:10.1007/bf00196668. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(monzer2025historicalandmechanistic pages 1-2): Aline Monzer and Jiří Friml. Historical and mechanistic perspective on abp1-tmk1-mediated cell surface auxin signaling. Npj Science of Plants, Jul 2025. URL: https://doi.org/10.1038/s44383-025-00002-8, doi:10.1038/s44383-025-00002-8. This article has 3 citations.</p>
+</li>
+<li>
+<p>(monzer2025historicalandmechanistic pages 4-5): Aline Monzer and Jiří Friml. Historical and mechanistic perspective on abp1-tmk1-mediated cell surface auxin signaling. Npj Science of Plants, Jul 2025. URL: https://doi.org/10.1038/s44383-025-00002-8, doi:10.1038/s44383-025-00002-8. This article has 3 citations.</p>
+</li>
+<li>
+<p>(kl�mbt1990aviewabout pages 1-3): Dieter Kl�mbt. A view about the function of auxin-binding proteins at plasma membranes. Plant Molecular Biology, 14:1045-1050, Jun 1990. URL: https://doi.org/10.1007/bf00019401, doi:10.1007/bf00019401. This article has 107 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(woo2002crystalstructureof media 33c74884): E. Woo, J. Marshall, J. Bauly, Jin‐Gui Chen, M. Venis, R. Napier, and R. Pickersgill. Crystal structure of auxin‐binding protein 1 in complex with auxin. The EMBO Journal, 21:2877-2885, Jun 2002. URL: https://doi.org/10.1093/emboj/cdf291, doi:10.1093/emboj/cdf291. This article has 234 citations.</p>
+</li>
+<li>
+<p>(woo2002crystalstructureof media 87308638): E. Woo, J. Marshall, J. Bauly, Jin‐Gui Chen, M. Venis, R. Napier, and R. Pickersgill. Crystal structure of auxin‐binding protein 1 in complex with auxin. The EMBO Journal, 21:2877-2885, Jun 2002. URL: https://doi.org/10.1093/emboj/cdf291, doi:10.1093/emboj/cdf291. This article has 234 citations.</p>
+</li>
+<li>
+<p>(woo2002crystalstructureof media 94f34f13): E. Woo, J. Marshall, J. Bauly, Jin‐Gui Chen, M. Venis, R. Napier, and R. Pickersgill. Crystal structure of auxin‐binding protein 1 in complex with auxin. The EMBO Journal, 21:2877-2885, Jun 2002. URL: https://doi.org/10.1093/emboj/cdf291, doi:10.1093/emboj/cdf291. This article has 234 citations.</p>
+</li>
+<li>
+<p>(yu2023ablsandtmks pages 5-9): Yongqiang Yu, Wenxin Tang, Wen-shuo Lin, Wei Li, Xiang Zhou, Ying Li, Rong Chen, Rui Zheng, Guochen Qin, Wenhan Cao, Patricio Perez, Rongfeng Huang, Jun Ma, Juncheng Lin, Liwen Jiang, Tongda Xu, and Zhenbiao Yang. Abls and tmks are co-receptors for extracellular auxin. bioRxiv, Nov 2023. URL: https://doi.org/10.1101/2022.11.28.518138, doi:10.1101/2022.11.28.518138. This article has 111 citations.</p>
+</li>
+<li>
+<p>(yu2023ablsandtmks pages 1-5): Yongqiang Yu, Wenxin Tang, Wen-shuo Lin, Wei Li, Xiang Zhou, Ying Li, Rong Chen, Rui Zheng, Guochen Qin, Wenhan Cao, Patricio Perez, Rongfeng Huang, Jun Ma, Juncheng Lin, Liwen Jiang, Tongda Xu, and Zhenbiao Yang. Abls and tmks are co-receptors for extracellular auxin. bioRxiv, Nov 2023. URL: https://doi.org/10.1101/2022.11.28.518138, doi:10.1101/2022.11.28.518138. This article has 111 citations.</p>
+</li>
+<li>
+<p>(woo2002crystalstructureof pages 5-7): E. Woo, J. Marshall, J. Bauly, Jin‐Gui Chen, M. Venis, R. Napier, and R. Pickersgill. Crystal structure of auxin‐binding protein 1 in complex with auxin. The EMBO Journal, 21:2877-2885, Jun 2002. URL: https://doi.org/10.1093/emboj/cdf291, doi:10.1093/emboj/cdf291. This article has 234 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ABP1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000008 The crystal structure of maize ABP1 in complex with 1-NAA, including the zinc-coordination site, is illustrated in Figures 2 and 3." src="ABP1-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>woo2002crystalstructureof pages 3-5</li>
+<li>oliver2004regulationofsynthesis pages 7-8</li>
+<li>monzer2025historicalandmechanistic pages 4-5</li>
+<li>monzer2025historicalandmechanistic pages 1-2</li>
+<li>woo2002crystalstructureof pages 1-2</li>
+<li>yu2023ablsandtmks pages 5-9</li>
+<li>yu2023ablsandtmks pages 1-5</li>
+<li>woo2002crystalstructureof pages 5-7</li>
+<li>https://doi.org/10.1093/emboj/cdf291</li>
+<li>https://doi.org/10.1007/BF00019401</li>
+<li>https://doi.org/10.1093/emboj/cdf291;</li>
+<li>https://doi.org/10.1007/BF00196668</li>
+<li>https://doi.org/10.1101/2022.11.28.518138</li>
+<li>https://doi.org/10.1038/s44383-025-00002-8</li>
+<li>https://doi.org/10.1038/s44383-025-00002-8;</li>
+<li>https://doi.org/10.1007/BF00196668;</li>
+<li>https://doi.org/10.1007/BF00019401;</li>
+<li>https://doi.org/10.1073/pnas.2412493121</li>
+<li>https://doi.org/10.1093/emboj/cdf291,</li>
+<li>https://doi.org/10.1007/bf00196668,</li>
+<li>https://doi.org/10.1038/s44383-025-00002-8,</li>
+<li>https://doi.org/10.1007/bf00019401,</li>
+<li>https://doi.org/10.1101/2022.11.28.518138,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P13689
+gene_symbol: ABP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4577
+  label: Zea mays
+description: &gt;
+  Maize ABP1 (P13689, &#34;auxin-binding protein 1&#34;; also ERABP1, AUX311) is a soluble ~22 kDa
+  glycoprotein of the cupin/germin/seed-storage-7S superfamily (Pfam Auxin_BP PF02041;
+  RmlC-like cupin β-jellyroll fold). Its single firmly established molecular function is
+  high-affinity binding of auxin: purified maize ABP1 binds the synthetic auxin
+  1-naphthaleneacetic acid (1-NAA) with a KD of ~1.5-2.4 x 10^-7 M, with highest affinity at
+  acidic (apoplastic) pH ~5.5 and approximately one ligand per monomer (Hesse et al. 1989,
+  PMID:2555179; Woo et al. 2002, PMID:12065401). The 1.9 Angstrom crystal structure (Woo et al.
+  2002) shows a buried, predominantly hydrophobic binding pocket containing a Zn2+ ion
+  coordinated by three histidines and a glutamate; the auxin carboxylate coordinates the zinc
+  and the aromatic ring contacts hydrophobic residues including Trp151. The protein is a
+  homodimer, N-glycosylated at Asn133, and is predominantly retained in the endoplasmic
+  reticulum lumen via a C-terminal KDEL motif, with only a tiny fraction reaching the cell
+  surface / apoplast (Hesse et al. 1989, PMID:2555179; Oliver et al. 2004, DOI 10.1007/BF00196668,
+  via file:MAIZE/ABP1/ABP1-deep-research-falcon.md).
+  ABP1&#39;s role as a *functional auxin receptor* / component of the auxin-activated signaling
+  pathway is famously contested. The classical &#34;candidate receptor&#34; model rested on
+  antibody-blocking, protoplast hyperpolarization/swelling and an Arabidopsis abp1-null
+  embryo-lethality report, but CRISPR-generated Arabidopsis abp1 null mutants were
+  subsequently found phenotypically normal, and an earlier &#34;abp1 knockout&#34; line carried a
+  confounding second-site mutation; the canonical nuclear auxin-activated signaling pathway is
+  now attributed to the TIR1/AFB-Aux/IAA-ARF module, while ABP1&#39;s proposed signaling role has
+  been recast as a *cell-surface, non-transcriptional* mechanism acting with transmembrane
+  kinases (TMKs) - a model still resting largely on Arabidopsis ABP1/ABL proteins rather than
+  on direct maize genetics (Monzer &amp; Friml 2025, DOI 10.1038/s44383-025-00002-8; Yu et al. 2023,
+  DOI 10.1101/2022.11.28.518138; via file:MAIZE/ABP1/ABP1-deep-research-falcon.md). For maize
+  ABP1 specifically, auxin binding and ER localization are well supported, whereas the in
+  planta signaling/receptor role remains less definitively established than the binding
+  chemistry.
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt Subcellular Location keyword mapping; duplicates the
+      experimentally supported EXP annotation to the same term. ABP1 is predominantly ER
+      luminal, retained by a C-terminal KDEL motif.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the EXP annotation (PMID:2555179) to the same term. The
+      protein carries a C-terminal KDEL ER-retention signal and an N-terminal signal sequence
+      for translocation into the ER, and the steady-state pool is overwhelmingly ER luminal
+      [PMID:2555179]. The deep-research synthesis confirms ER lumen as the dominant location,
+      with only a tiny apoplastic/PM fraction. A computational duplicate of a well-supported
+      localization is acceptable.
+    supported_by:
+    - reference_id: PMID:2555179
+      supporting_text: &#34;An additional signal is located at the C-terminal end, consisting of
+        the amino acids KDEL known to be responsible for preventing secretion of proteins from
+        the lumen of the endoplasmic reticulum in eucaryotic cells.&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;Most ABP1 is retained in the **ER lumen** via KDEL/HDEL-type retention&#34;
+- term:
+    id: GO:0010011
+    label: auxin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation (ARBA / InterPro IPR000526 Auxin-bd) for auxin binding; duplicates the
+      experimentally supported IDA annotation to the same term. This is the core, firmly
+      established molecular function of ABP1.
+    action: ACCEPT
+    reason: &gt;
+      Correct and well supported. The InterPro Auxin-binding domain (IPR000526) and the
+      ABP1-defining Pfam Auxin_BP (PF02041) directly underpin this term, and the function is
+      independently confirmed experimentally: purified maize ABP1 binds 1-NAA with a KD of
+      ~1.5-2.4 x 10^-7 M [PMID:2555179, PMID:12065401]. A computational duplicate of a directly
+      demonstrated molecular function is appropriate.
+    supported_by:
+    - reference_id: PMID:2555179
+      supporting_text: &#34;The protein has an apparent mol. wt of 22 kd and binds 1-naphthylacetic
+        acid with a KD of 2.40 x 10(-7) M.&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;Purified maize ABP1 binds 1-NAA with **KD ≈ 1.5 × 10−7 M at pH 5.5**, with Scatchard analysis indicating approximately **one ligand per monomer**&#34;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: EXP
+  original_reference_id: PMID:2555179
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Experimental (EXP) annotation from the original cloning/sequencing paper. ABP1 carries an
+      N-terminal ER-translocation signal and a C-terminal KDEL ER-retention motif, and is an
+      ER-luminal glycoprotein.
+    action: ACCEPT
+    reason: &gt;
+      This is a core, experimentally supported cellular-component annotation. Hesse et al. (1989)
+      purified the protein, sequenced it, and identified both a 38-residue N-terminal hydrophobic
+      leader (ER-translocation signal) and a C-terminal KDEL motif that prevents secretion from
+      the ER lumen, plus an N-glycosylation site consistent with passage through the secretory
+      pathway [PMID:2555179]. ER lumen is the dominant steady-state location; ABP1 acting as a
+      receptor would require its minor cell-surface pool, but the localization annotation itself
+      is solid.
+    supported_by:
+    - reference_id: PMID:2555179
+      supporting_text: &#34;An additional signal is located at the C-terminal end, consisting of
+        the amino acids KDEL known to be responsible for preventing secretion of proteins from
+        the lumen of the endoplasmic reticulum in eucaryotic cells.&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;predominantly **endoplasmic reticulum (ER)** localized, bearing a
+        **C-terminal KDEL ER-retention motif**&#34;
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:12065401
+  qualifier: enables
+  review:
+    summary: &gt;
+      IDA annotation from the 1.9 Angstrom crystal structure. ABP1 binds a single Zn2+ ion
+      buried at the bottom of its auxin-binding pocket, coordinated by three histidines and a
+      glutamate; the auxin carboxylate coordinates this zinc.
+    action: ACCEPT
+    reason: &gt;
+      Directly demonstrated by X-ray crystallography of maize ABP1 in complex with 1-NAA and a
+      zinc ion (PDB 1LR5/1LRH). The metal ion is coordinated by three histidines and a glutamate
+      (UniProt annotates Zn-coordinating residues His95, His97, His101 and Glu144), and the auxin
+      carboxylate binds the zinc [PMID:12065401]. This is a genuine, structurally defined
+      molecular function central to the auxin-binding mechanism, and is correctly captured at an
+      appropriate level of specificity.
+    supported_by:
+    - reference_id: PMID:12065401
+      supporting_text: &#34;The binding pocket of ABP1 is predominantly hydrophobic with a metal
+        ion deep inside the pocket coordinated by three histidines and a glutamate. Auxin binds
+        within this pocket, with its carboxylate binding the zinc&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;ABP1 contains a **buried binding pocket** with a **Zn2+ ion**
+        coordinated by protein residues (including histidines and a glutamate), and the **auxin
+        carboxylate coordinates Zn2+**&#34;
+- term:
+    id: GO:0010011
+    label: auxin binding
+  evidence_type: IDA
+  original_reference_id: PMID:12065401
+  qualifier: enables
+  review:
+    summary: &gt;
+      IDA annotation from the crystal structure of maize ABP1 in complex with the auxin analog
+      1-NAA. This is the single best-established molecular function of ABP1 and represents its
+      core activity.
+    action: ACCEPT
+    reason: &gt;
+      The strongest annotation on this gene. The 1.9 Angstrom structure directly visualizes auxin
+      (1-NAA) bound in the ABP1 pocket, with the auxin carboxylate coordinating the active-site
+      zinc and the aromatic ring contacting hydrophobic residues including Trp151 [PMID:12065401];
+      biochemical binding (KD ~1.5-2.4 x 10^-7 M, ~1 ligand per monomer) is independently
+      established [PMID:2555179, file:MAIZE/ABP1/ABP1-deep-research-falcon.md]. &#34;Auxin binding&#34;
+      (GO:0010011) is the precise molecular function and should be retained as the core function.
+      Note: binding auxin is distinct from BEING a functional auxin receptor / signaling-pathway
+      component (see the GO:0009734 entry, where the receptor role is contested).
+    supported_by:
+    - reference_id: PMID:12065401
+      supporting_text: &#34;The structure of auxin-binding protein 1 (ABP1) from maize has been
+        determined at 1.9 A resolution, revealing its auxin-binding site.&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;The most secure functional assignment for maize ABP1 (P13689) is that
+        it is a **high-affinity auxin-binding protein** with a well-defined **Zn-coordinated
+        binding mechanism**&#34;
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO pipeline for cellular organisms.
+# Reviewed retrospectively to assess whether removal was justified. The UniProt keyword
+# &#34;Auxin signaling pathway&#34; (still present on the entry) is what mapped to GO:0009734.
+- term:
+    id: GO:0009734
+    label: auxin-activated signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Auxin signaling
+      pathway&#34; (which itself reflects the historical &#34;Receptor for the plant hormone auxin&#34;
+      FUNCTION line); snapshot-only, removed in the current GOA release. ABP1 genuinely BINDS
+      auxin, but its status as a component of the auxin-activated signaling pathway - a term
+      defined around binding of auxin to a *receptor* that modulates a downstream cellular
+      process - is famously contested.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was, on balance, JUSTIFIED (with the caveat that it is a
+      genuinely contested case, so &#34;MIXED&#34; could be argued). The GO term GO:0009734 is explicitly
+      defined as &#34;The series of molecular signals generated by the binding of the plant hormone
+      auxin to a receptor, and ending with modulation of a downstream cellular process, e.g.
+      transcription.&#34; This term is now understood to be enacted by the nuclear
+      TIR1/AFB-Aux/IAA-ARF perception module, not by ABP1. The historical case for ABP1 as the
+      auxin receptor (antibody-blocking of elongation, protoplast hyperpolarization/swelling, and
+      an Arabidopsis abp1-null embryo-lethality report cited in Woo et al. 2002, PMID:12065401)
+      has been seriously undercut: the deep-research synthesis records that Arabidopsis abp1 null
+      mutants can lack obvious developmental/auxin-signaling phenotypes, challenging ABP1
+      essentiality and motivating the search for redundant co-receptors. The modern &#34;resurrection&#34;
+      of ABP1 places it in a *cell-surface, non-transcriptional* auxin-perception model with TMKs
+      and ABL proteins - mechanistically distinct from the canonical (largely transcriptional)
+      auxin-activated signaling pathway captured by GO:0009734, and demonstrated mainly in
+      Arabidopsis rather than in maize. For maize ABP1 specifically, the deep research is explicit
+      that auxin binding and localization are well supported whereas &#34;the primary in planta
+      signaling role remains less definitive.&#34; A blanket keyword-derived &#34;auxin-activated
+      signaling pathway&#34; term overstates ABP1&#39;s evidence in maize. The biology that IS defensible
+      - that maize ABP1 responds to / binds auxin - is better captured by the broader, more
+      cautious term &#34;response to auxin&#34; (GO:0009733), proposed as the replacement. The contested
+      signaling role is discussed but not asserted as an accepted pathway-component annotation.
+    proposed_replacement_terms:
+    - id: GO:0009733
+      label: response to auxin
+    supported_by:
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;An important counterweight is the Arabidopsis literature reporting that
+        **abp1 null mutants** can lack obvious developmental/auxin-signaling phenotypes,
+        challenging the view of ABP1 as an essential auxin receptor in that species.&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;For maize ABP1 specifically, this means: **auxin binding and
+        localization are well supported**, whereas **the primary in planta signaling role**
+        remains **less definitive** in the retrieved evidence than the chemistry/structure&#34;
+    - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+      supporting_text: &#34;they do not uniquely prove that maize ABP1 is *the* in vivo receptor,
+        because ABP1’s localization and the identity of interacting membrane partners have been
+        difficult to resolve definitively&#34;
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: The UniProt subcellular-location keyword &#34;Endoplasmic reticulum lumen&#34; maps to
+      GO:0005788; this duplicates the experimentally supported EXP annotation from PMID:2555179.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Auxin binding (GO:0010011) assigned via ARBA/InterPro (IPR000526 Auxin-bd, Pfam
+      PF02041); duplicates the experimentally supported IDA annotation from PMID:12065401.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotation present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the
+      keyword2GO pipeline for cellular organisms.
+  - statement: For ABP1, the keyword &#34;Auxin signaling pathway&#34; mapped to GO:0009734
+      (auxin-activated signaling pathway) - a term defined around auxin binding to a receptor.
+      ABP1&#39;s receptor/signaling-pathway role is contested, so this keyword-derived term is an
+      over-annotation; &#34;response to auxin&#34; (GO:0009733) is the more defensible term.
+- id: PMID:2555179
+  title: Molecular cloning and structural analysis of a gene from Zea mays (L.) coding for a
+    putative receptor for the plant hormone auxin.
+  findings:
+  - statement: The major maize auxin-binding protein was purified to homogeneity; it is ~22 kDa
+      and binds 1-naphthylacetic acid (1-NAA) with a KD of 2.40 x 10^-7 M.
+  - statement: ABP1 has an N-terminal 38-residue hydrophobic ER-translocation signal and a
+      C-terminal KDEL ER-retention motif, and is N-glycosylated - establishing ER-lumen
+      localization.
+  - statement: The paper titles the protein only a &#34;putative receptor&#34; for auxin, reflecting that
+      receptor function was inferred rather than demonstrated.
+- id: PMID:12065401
+  title: Crystal structure of auxin-binding protein 1 in complex with auxin.
+  findings:
+  - statement: The 1.9 Angstrom crystal structure of maize ABP1 in complex with 1-NAA reveals the
+      auxin-binding site and places ABP1 in the germin/seed-storage-7S (cupin) superfamily.
+  - statement: A single Zn2+ ion sits deep in a predominantly hydrophobic pocket, coordinated by
+      three histidines and a glutamate; the auxin carboxylate coordinates the zinc and the
+      aromatic ring contacts hydrophobic residues including Trp151. ABP1 is a homodimer with a
+      single Cys2-Cys155 disulfide.
+  - statement: No conformational rearrangement was observed on auxin binding in the crystal; the
+      authors propose only a &#34;possible mechanism of signal transduction,&#34; and cite an Arabidopsis
+      abp1-null embryo-lethality report (Chen et al. 2001) that later work has challenged.
+- id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation of
+    maize ABP1 (P13689).
+  findings:
+  - statement: The most secure assignment for maize ABP1 is that it is a high-affinity,
+      Zn-dependent auxin-binding protein (cupin fold), binding 1-NAA with KD ~1.5 x 10^-7 M at
+      pH 5.5, ~1 ligand per monomer, with highest affinity at acidic apoplastic pH.
+  - statement: ABP1 is predominantly ER luminal via KDEL retention; only a tiny fraction reaches
+      the plasma-membrane/apoplast (Oliver et al. 2004), and total ABP1 pools are long-lived and
+      not strongly auxin-regulated.
+  - statement: ABP1&#39;s in planta signaling/receptor role is contested - Arabidopsis abp1 null
+      mutants can lack obvious phenotypes; the canonical receptor role is now attributed
+      elsewhere, and the modern model recasts ABP1 in a cell-surface, non-transcriptional pathway
+      with TMKs/ABL proteins (Monzer &amp; Friml 2025; Yu et al. 2023), demonstrated mainly in
+      Arabidopsis. For maize specifically, binding and localization are well supported but the
+      primary signaling role remains less definitive than the chemistry/structure.
+core_functions:
+- description: &gt;
+    Maize ABP1 is a high-affinity auxin-binding protein. Via a buried, predominantly hydrophobic
+    cupin-fold pocket containing a single Zn2+ ion coordinated by three histidines and a
+    glutamate, it binds auxins (e.g. 1-NAA) with submicromolar affinity (KD ~1.5-2.4 x 10^-7 M),
+    one ligand per monomer, with highest affinity at acidic apoplastic pH. This auxin-binding
+    activity - not a demonstrated receptor/signaling role - is its single firmly established
+    molecular function.
+  molecular_function:
+    id: GO:0010011
+    label: auxin binding
+  locations:
+  - id: GO:0005788
+    label: endoplasmic reticulum lumen
+  supported_by:
+  - reference_id: PMID:12065401
+    supporting_text: &#34;The structure of auxin-binding protein 1 (ABP1) from maize has been
+      determined at 1.9 A resolution, revealing its auxin-binding site.&#34;
+  - reference_id: PMID:2555179
+    supporting_text: &#34;The protein has an apparent mol. wt of 22 kd and binds 1-naphthylacetic
+      acid with a KD of 2.40 x 10(-7) M.&#34;
+  - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+    supporting_text: &#34;The most secure functional assignment for maize ABP1 (P13689) is that
+      it is a **high-affinity auxin-binding protein** with a well-defined **Zn-coordinated
+      binding mechanism**&#34;
+- description: &gt;
+    ABP1 coordinates a catalytically/structurally essential Zn2+ ion at the base of its
+    auxin-binding pocket. The metal is bound by three histidines and a glutamate and directly
+    engages the auxin carboxylate, making zinc binding integral to the auxin-binding mechanism
+    rather than an independent activity.
+  molecular_function:
+    id: GO:0008270
+    label: zinc ion binding
+  locations:
+  - id: GO:0005788
+    label: endoplasmic reticulum lumen
+  supported_by:
+  - reference_id: PMID:12065401
+    supporting_text: &#34;The binding pocket of ABP1 is predominantly hydrophobic with a metal
+      ion deep inside the pocket coordinated by three histidines and a glutamate. Auxin binds
+      within this pocket, with its carboxylate binding the zinc&#34;
+  - reference_id: file:MAIZE/ABP1/ABP1-deep-research-falcon.md
+    supporting_text: &#34;the **auxin carboxylate coordinates Zn2+**; the aromatic moiety sits in a
+      hydrophobic environment&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does maize ABP1 function as an auxin receptor in maize itself, or is the &#34;receptor&#34;
+    designation an extrapolation from contested Arabidopsis genetics? Are there maize abp1
+    loss-of-function lines, and do they show auxin-response phenotypes?
+  experts:
+  - Richard Napier
+- question: Given that maize ABP1 is overwhelmingly ER-luminal, what is the mechanism and
+    physiological significance of the minor cell-surface/apoplastic pool, and does it interact
+    with maize TMK-family kinases as proposed for Arabidopsis ABP1/ABL proteins?
+  experts:
+  - Jiří Friml
+- question: Is the acidic-pH optimum of auxin binding (KD lowest at pH ~5.5) evidence that the
+    physiologically relevant binding occurs extracellularly (apoplast) rather than in the
+    neutral ER lumen, and how is auxin binding reconciled with predominant ER retention?
+  experts:
+  - Richard Napier
+suggested_experiments:
+- description: Generate true maize abp1 loss-of-function alleles (CRISPR knockout and clean
+    null lines free of second-site mutations) and assay auxin-response phenotypes (coleoptile
+    elongation, root growth, gravitropism, rapid PM electrical responses) to test whether maize
+    ABP1 is required for auxin signaling in its native species.
+  hypothesis: As in Arabidopsis CRISPR abp1 nulls, maize abp1 nulls will be largely
+    phenotypically normal for canonical auxin responses, supporting the view that the
+    auxin-activated signaling pathway (GO:0009734) is not ABP1-dependent.
+  experiment_type: reverse genetics / loss-of-function phenotyping
+- description: Test for an auxin-dependent physical interaction between maize ABP1 (and the
+    apoplastic fraction specifically) and maize transmembrane kinases (TMK orthologs) using
+    co-immunoprecipitation, split-luciferase and BiFC, with pocket-histidine mutants as
+    controls.
+  hypothesis: Maize ABP1 engages TMK extracellular domains in an auxin-dependent manner at the
+    cell surface, supporting a non-transcriptional cell-surface perception role distinct from
+    the canonical nuclear auxin-activated signaling pathway.
+  experiment_type: protein-protein interaction / cell-surface signaling assay
+- description: Quantify and compare auxin-binding affinity and specificity (IAA vs 1-NAA vs
+    synthetic-auxin herbicides) of purified maize ABP1 across a physiological pH range
+    (apoplastic pH ~5.5 vs ER/cytosolic ~7), using isothermal titration calorimetry and
+    fluorescence assays, with zinc-coordinating-residue mutants.
+  hypothesis: Auxin binding is strongly favored at acidic apoplastic pH and abolished by
+    mutation of the Zn-coordinating His/Glu residues, supporting an extracellular,
+    metal-dependent binding mode.
+  experiment_type: in vitro quantitative ligand-binding assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

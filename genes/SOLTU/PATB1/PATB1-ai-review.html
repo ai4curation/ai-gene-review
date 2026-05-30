@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PATB1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PATB1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15476" target="_blank" class="term-link">
+                        P15476
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Solanum tuberosum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PATB1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15476" data-a="DESCRIPTION: PATB1 (Patatin-B1, UniProt P15476) is a member of ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PATB1 (Patatin-B1, UniProt P15476) is a member of the patatin glycoprotein family and one of the canonical potato (Solanum tuberosum) tuber patatins. It is a dual-function protein. First, it is the major soluble STORAGE protein of the potato tuber: patatin accounts for up to ~40% of total soluble tuber protein in mature/larger tubers and is widely interpreted as a nitrogen/carbon reserve. Second, it is a lipid acyl hydrolase (LAH) / phospholipase A-like serine hydrolase of the patatin (PNPLA) domain family, with broad deacylation activity toward glycerolipids - phospholipids (mono- and diacylphospholipids), galactolipids/galactosyl diglycerides and neutral mono- and diglycerides - plus measurable esterase activity on model chromogenic substrates. PATB1 is synthesized as a precursor with an N-terminal 23-residue signal peptide, is N-glycosylated, and is trafficked through the endomembrane system to be deposited in the vacuoles of tuber parenchyma cells; immunocytochemistry localizes patatin mainly to vacuoles and not to the apoplast/cell wall, consistent with the need to sequester a membrane-active lipid hydrolase away from cellular membranes. The patatin catalytic architecture is a Ca2+-independent serine hydrolase with a Ser-Asp dyad (PROSITE PNPLA domain; GXSXG nucleophile-elbow motif with the catalytic Ser77, and the DGA/G Asp215 proton acceptor) and a GGXR oxyanion hole. A defense/host-resistance role has been proposed (UniProt assigns the keywords &#34;Plant defense&#34; and notes the protein is &#34;involved in host resistance&#34;), but this role is INDIRECT: patatin LAH activity releases free fatty acids and lysolipids from membrane glycerolipids, supplying precursors for suberin/wax synthesis and generating antifungal/anti-insect fatty acids (e.g. against corn rootworm larvae and Phytophthora infestans). The defense interpretations are largely derived from broad patatin-family functional studies and mixed-isoform preparations rather than from PATB1-specific in planta pathogen experiments [file:SOLTU/PATB1/PATB1-deep-research-falcon.md; file:SOLTU/PATB1/PATB1-uniprot.txt].
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                    GO:0005773
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15476" data-a="GO:0005773" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA cellular-component annotation from the UniProt Swiss-Prot subcellular-location mapping (keyword &#34;Vacuole&#34;). Patatin is a vacuolar tuber protein, directly established by immunocytochemistry.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and strongly supported. The UniProt entry records SUBCELLULAR LOCATION: Vacuole, and primary immunocytochemistry (electron microscopy with protein-specific antibodies) localized patatin mainly to the vacuoles of tuber and induced leaf cells, with no detectable patatin in cell walls or intercellular spaces; esterase histochemistry co-localizes with patatin-containing parenchyma. Vacuolar compartmentation is the biologically meaningful location for a membrane-active LAH, sequestering it from cellular membranes. The term is at the appropriate level of specificity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Vacuole</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Experimental immunocytochemistry localizes patatin predominantly to vacuoles (not apoplast), consistent with the need to sequester a membrane-active lipid hydrolase away from cellular membranes.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Histochemical staining for esterase activity in tuber sections showed activity restricted to parenchyma cells, consistent with the tissue distribution of patatin.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P15476" data-a="GO:0006629" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA biological-process annotation from InterPro (IPR002641, PNPLA domain). The essence is correct - patatin is a lipid-acting enzyme - but &#34;lipid metabolic process&#34; is the broad parent of the specific lipid-DEGRADATION process that patatin catalyzes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Patatin is a lipid acyl hydrolase: its activity is deacylation/breakdown of glycerolipids (release of free fatty acids and lysolipids), which is lipid CATABOLISM rather than generic lipid metabolism. The deep research describes patatin LAH activity as releasing fatty acids from polar and neutral glycerolipids, and UniProt assigns the keywords &#34;Lipid degradation&#34; and &#34;Lipid metabolism&#34;. The hydrolytic, degradative direction is well established, so the more specific child term &#34;lipid catabolic process&#34; (GO:0016042) is the accurate process annotation - and it is exactly the term that the retired SPKW annotation (re-added below) used. Modifying the generic IEA up to the catabolic child consolidates the process annotation at the correct specificity.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016042" target="_blank" class="term-link">
+                                    lipid catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Patatin/LAH activity releases fatty acids from glycerolipids (polar and neutral), generating **free fatty acids and lysolipids**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The substrate range includes **mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides**.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable lipolytic acyl hydrolase (LAH), an activity which is</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016298" target="_blank" class="term-link">
+                                    GO:0016298
+                                </a>
+                            </span>
+                            <span class="term-label">lipase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P15476" data-a="GO:0016298" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA molecular-function annotation from an ARBA machine-learning model. Patatin is genuinely a lipid-hydrolyzing enzyme, but &#34;lipase activity&#34; is a broad parent; the patatin enzyme is more precisely a glycerophospholipase / phospholipase A-like acyl hydrolase.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The core molecular function of patatin is well documented as a lipid acyl hydrolase (LAH) with phospholipase A-like behaviour: it hydrolyzes glycerophospholipids (mono- and diacylphospholipids) as well as galactolipids and neutral glycerolipids, acting at the sn-1 and sn-2 acyl positions in a Ca2+-independent manner via a Ser-Asp catalytic dyad. UniProt&#39;s IBA annotations for this protein already include &#34;phospholipase activity&#34; (GO:0004620). The generic &#34;lipase activity&#34; should be MODIFIED to the more informative &#34;glycerophospholipase activity&#34; (GO:0004620), which captures the documented phospholipid-deacylation function while remaining defensible given that PATB1-specific positional specificity (PLA1 vs PLA2) and kinetics are not uniquely resolved. (Note: PATB1 also acts on neutral and galacto-lipids, so the broad LAH character is real; &#34;glycerophospholipase activity&#34; is chosen as the most specific single MF strongly supported by both the family biochemistry and the existing IBA call.)
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004620" target="_blank" class="term-link">
+                                    glycerophospholipase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable lipolytic acyl hydrolase (LAH), an activity which is</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the most defensible annotation here is a</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">broad acyl-hydrolase / PLA-like</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The substrate range includes **mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides**.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045735" target="_blank" class="term-link">
+                                    GO:0045735
+                                </a>
+                            </span>
+                            <span class="term-label">nutrient reservoir activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15476" data-a="GO:0045735" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Storage protein&#34;; snapshot-only, removed in the current GOA release. Patatin is THE major potato tuber storage protein (~40% of soluble tuber protein), so this is a correct and CORE molecular function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was NOT justified - it was collateral damage from retiring the keyword pipeline, and it removed the single term capturing patatin&#39;s best-established biological role. Patatin is repeatedly described as the major soluble storage protein of potato tubers, accounting for up to ~40% of soluble tuber protein in larger tubers, and UniProt explicitly states patatin has &#34;a dual role as a somatic storage protein and as an enzyme involved in host resistance&#34; with the keyword &#34;Storage protein&#34;. Critically, the current (2026) GOA release contains NO storage / nutrient-reservoir function term for PATB1 at all - the only molecular functions left are lipase/lipid-hydrolase terms - so removal of this SPKW annotation left the gene with no representation of its dominant tuber function. &#34;Nutrient reservoir activity&#34; (GO:0045735) should be re-asserted and treated as a core function. (This is the mixed-verdict storage arm: removal not justified; Tier C.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Patatin have a dual role as a somatic storage protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">represents approximately 40% of the total protein in mature tubers.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Patatin is the **major soluble storage protein** of potato tubers and is widely interpreted as a **nitrogen/carbon reserve protein** in addition to its enzymatic activities.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">patatin levels scale with tuber size and that patatin forms about **40%** of total soluble protein in larger tubers</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                    GO:0006952
+                                </a>
+                            </span>
+                            <span class="term-label">defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15476" data-a="GO:0006952" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Plant defense&#34;; snapshot-only, removed in the current GOA release. Patatin&#39;s defense role is INDIRECT - mediated through its LAH enzymatic activity releasing antifungal/antinematode free fatty acids - so a direct biological-process &#34;defense response&#34; annotation over-states the evidence.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. Patatin does not act as a defense effector in its own right; rather, its proposed defense/host-resistance contribution is a downstream consequence of its lipid acyl hydrolase activity, which releases free fatty acids and lysolipids that can be antimicrobial/anti-insect and can supply suberin/wax precursors. UniProt itself hedges, describing the LAH as &#34;an activity which is thought to be involved in the response of tubers to pathogens&#34; and patatin as &#34;an enzyme involved in host resistance&#34; - i.e. resistance is enacted via the enzyme, not via a dedicated defense-response program. The deep research is explicit that the defense interpretations are largely inferred from broad patatin-family studies and mixed-isoform preparations rather than from direct PATB1 pathogen experiments, and that the strongest direct PATB1 evidence is its localization and enzymatic capacity. A blanket process term &#34;defense response&#34; (GO:0006952) is therefore an over-annotation; the genuine biology is better captured by the molecular-function (glycerophospholipase / LAH) and lipid-catabolic-process terms. (This is the over-annotated arm: removal justified; Tier A.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">thought to be involved in the response of tubers to pathogens.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">as an enzyme involved in host resistance. This tuber protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">patatin-mediated fatty-acid release may contribute to wound responses (e.g., suberin/wax precursor supply) and inhibit pests/pathogens.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">these defense roles are plausible but often derived from broader patatin-family functional studies or mixed-isoform preparations; the strongest direct evidence for PATB1 remains its localization and enzymatic capacity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016042" target="_blank" class="term-link">
+                                    GO:0016042
+                                </a>
+                            </span>
+                            <span class="term-label">lipid catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15476" data-a="GO:0016042" data-r="GO_REF:0000043" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Lipid degradation&#34;; snapshot-only, removed in the current GOA release. Patatin&#39;s LAH activity hydrolyzes (deacylates) glycerolipids, so lipid catabolism is a correct and appropriately specific process term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was NOT justified (or, at minimum, low-cost and undesirable). Patatin is a lipid acyl hydrolase that breaks down glycerolipids - releasing free fatty acids and lysolipids from mono- and diacylphospholipids, galactosyl diglycerides and neutral mono-/di-glycerides - which is precisely lipid catabolism. UniProt assigns the keyword &#34;Lipid degradation&#34; and the FUNCTION line &#34;Probable lipolytic acyl hydrolase (LAH)&#34;. &#34;Lipid catabolic process&#34; (GO:0016042) is more specific and more accurate than the generic &#34;lipid metabolic process&#34; (GO:0006629) currently retained from InterPro; indeed the current GOA &#34;lipid metabolic process&#34; annotation is recommended above to be MODIFIED up to this catabolic child. Re-asserting the catabolic process term restores the correct process specificity. (This is the lipid-catabolic arm of the mixed verdict: removal not justified; Tier C.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable lipolytic acyl hydrolase (LAH), an activity which is</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Patatin/LAH activity releases fatty acids from glycerolipids (polar and neutral), generating **free fatty acids and lysolipids**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The substrate range includes **mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides**.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PATB1 is the major soluble storage (nutrient-reservoir) protein of the potato tuber, accounting for up to ~40% of soluble tuber protein and serving as a nitrogen/carbon reserve deposited in tuber parenchyma vacuoles.
+</h3>
+                <span class="vote-buttons" data-g="P15476" data-a="FUNCTION: PATB1 is the major soluble storage (nutrient-reser..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045735" target="_blank" class="term-link">
+                            nutrient reservoir activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                vacuole
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/PATB1/PATB1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Patatin have a dual role as a somatic storage protein</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/PATB1/PATB1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">represents approximately 40% of the total protein in mature tubers.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Patatin is the **major soluble storage protein** of potato tubers and is widely interpreted as a **nitrogen/carbon reserve protein** in addition to its enzymatic activities.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PATB1 is a vacuolar lipid acyl hydrolase (patatin/PNPLA-domain glycerophospholipase, phospholipase A-like serine hydrolase) that deacylates a broad range of glycerolipids, releasing free fatty acids and lysolipids - a lipid-catabolic activity that also underlies its indirect contribution to tuber defense/host resistance.
+</h3>
+                <span class="vote-buttons" data-g="P15476" data-a="FUNCTION: PATB1 is a vacuolar lipid acyl hydrolase (patatin/..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004620" target="_blank" class="term-link">
+                            glycerophospholipase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016042" target="_blank" class="term-link">
+                                lipid catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005773" target="_blank" class="term-link">
+                                vacuole
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/PATB1/PATB1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Probable lipolytic acyl hydrolase (LAH), an activity which is</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Patatin/LAH activity releases fatty acids from glycerolipids (polar and neutral), generating **free fatty acids and lysolipids**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The substrate range includes **mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides**.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro IPR002641 (PNPLA domain) mapping assigns the generic &#34;lipid metabolic process&#34; to PATB1; patatin&#39;s activity is degradative, so the more specific &#34;lipid catabolic process&#34; is preferred.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps the UniProt keyword &#34;Vacuole&#34; to GO:0005773; consistent with primary immunocytochemical localization of patatin to tuber parenchyma vacuoles.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA model assigns generic &#34;lipase activity&#34; to PATB1; the documented patatin function is a more specific glycerophospholipase / lipid acyl hydrolase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For PATB1 the keywords &#34;Storage protein&#34; (-&gt; nutrient reservoir activity) and &#34;Lipid degradation&#34; (-&gt; lipid catabolic process) mapped to correct functions whose removal was collateral damage; the keyword &#34;Plant defense&#34; (-&gt; defense response) mapped to an over-broad process given patatin&#39;s indirect, enzyme-mediated defense role.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLTU/PATB1/PATB1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry P15476 (PATB1_SOLTU), Patatin-B1, Solanum tuberosum.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FUNCTION - &#34;Probable lipolytic acyl hydrolase (LAH), an activity which is thought to be involved in the response of tubers to pathogens.&#34; SUBCELLULAR LOCATION - Vacuole. MISCELLANEOUS - patatin has a dual role as a somatic storage protein and as an enzyme involved in host resistance, and represents ~40% of total tuber protein.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Keywords - Glycoprotein, Hydrolase, Lipid degradation, Lipid metabolism, Plant defense, Signal, Storage protein, Vacuole. Domain - PNPLA (patatin) with GXSXG nucleophile motif (catalytic Ser77), DGA/G proton acceptor (Asp215) and a GGXR oxyanion hole; N-terminal 23-residue signal peptide and an N-glycosylation site.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of potato PATB1 / Patatin-B1 (P15476).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes Sonnewald et al. 1989 (immunocytochemistry), Shewry 2003 (tuber storage protein review) and Wu et al. 2025 (patatin systematic review), concluding PATB1 is a dual-function protein - a major vacuolar tuber storage glycoprotein (~40% of soluble tuber protein) and a lipid acyl hydrolase / phospholipase A-like serine hydrolase acting on a broad range of glycerolipids.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Patatin LAH releases free fatty acids and lysolipids from polar and neutral glycerolipids (mono-/diacylphospholipids, galactosyl diglycerides, mono-/diglycerides), with the protein deposited in tuber parenchyma vacuoles to sequester this membrane-active activity from cellular membranes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Defense/host-resistance roles (suberin/wax precursor supply; inhibition of corn rootworm larvae and Phytophthora infestans) are indirect, mediated by fatty-acid release, and are largely inferred from broad patatin-family or mixed-isoform studies rather than direct PATB1 pathogen experiments.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the PATB1 isoform specifically (as opposed to mixed-isoform patatin preparations) act as a phospholipase A1, A2 or B, and what are its kinetic constants and chain-position specificity on phospholipids versus galacto- and neutral lipids?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: P. R. Shewry</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15476" data-a="Q: Does the PATB1 isoform specifically (as opposed to..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the proposed defense/host-resistance role of PATB1 a direct in planta pathogen-resistance contribution, or solely a downstream consequence of free-fatty-acid release by its lipid acyl hydrolase activity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15476" data-a="Q: Is the proposed defense/host-resistance role of PA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the relative metabolic importance of PATB1&#39;s storage (nitrogen/carbon reserve) function versus its lipid-hydrolase function during tuber dormancy, sprouting and wound/pathogen response?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15476" data-a="Q: What is the relative metabolic importance of PATB1..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant PATB1 (P15476) alone and assay lipid acyl hydrolase activity against defined substrates - phosphatidylcholine and phosphatidylethanolamine (with sn-1 vs sn-2 positional reporters), monogalactosyl- and digalactosyl-diacylglycerol, and mono-/di-acylglycerols - to determine PATB1-specific substrate preference, positional specificity and kinetics.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PATB1 is a broad-specificity, Ca2+-independent lipid acyl hydrolase that deacylates both phospholipids (at sn-1 and sn-2) and neutral/galacto-glycerolipids, consistent with patatin-family PLA-like behaviour.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme kinetics / substrate-specificity assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15476" data-a="EXPERIMENT: Express and purify recombinant PATB1 (P15476) alon..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate PATB1-specific knockdown/knockout potato lines (e.g. RNAi or CRISPR targeting the class I patatin tuber gene) and challenge tubers with Phytophthora infestans and insect herbivores, measuring free-fatty-acid/oxylipin release and disease/pest outcomes alongside total tuber storage-protein content.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of PATB1 reduces tuber free-fatty-acid release upon wounding/infection and modestly impairs resistance, while substantially reducing tuber storage-protein content - dissociating the storage role from the indirect, enzyme-mediated defense role.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse-genetics / pathogen-and-pest challenge</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15476" data-a="EXPERIMENT: Generate PATB1-specific knockdown/knockout potato ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use catalytic-site mutants (Ser77Ala nucleophile; Asp215 proton acceptor) of PATB1 expressed in tubers to separate the storage (nutrient-reservoir) function from the lipid-hydrolase function, and assess whether storage accumulation is independent of catalytic activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The storage/nutrient-reservoir function of PATB1 is independent of its catalytic LAH activity, so catalytically dead PATB1 still accumulates as a tuber reserve protein but abolishes lipid catabolism and the indirect defense contribution.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structure-function / site-directed mutagenesis in planta</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P15476" data-a="EXPERIMENT: Use catalytic-site mutants (Ser77Ala nucleophile; ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PATB1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P15476" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">23 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-29T22:45:55.424197</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="PATB1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="PATB1-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000016 Table 2, located on page 10 of the document, provides a summary of the properties of major tuber storage proteins. For patatin in p</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-patb1-patatin-b1-uniprot-p15476-in-solanum-tuberosum-potato">Research Report: Functional Annotation of <strong>PATB1 / Patatin-B1</strong> (UniProt <strong>P15476</strong>) in <em>Solanum tuberosum</em> (Potato)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>Patatin-B1 (gene <strong>PATB1</strong>, UniProt <strong>P15476</strong>) is a canonical potato tuber patatin: a very abundant (~40% of soluble tuber protein in larger tubers) ~40–45 kDa <strong>vacuolar glycoprotein</strong> synthesized as a <strong>signal-peptide-containing precursor</strong> and deposited in tuber parenchyma vacuoles. It is best understood as a dual-function protein: (i) a major <strong>nitrogen/carbon storage protein</strong> in the tuber and (ii) a <strong>lipid acyl hydrolase (LAH) / phospholipase A-like serine hydrolase</strong> with broad activity toward polar and neutral glycerolipids, plus measurable esterase activity on model substrates. Experimental immunocytochemistry localizes patatin predominantly to vacuoles (not apoplast), consistent with the need to sequester a membrane-active lipid hydrolase away from cellular membranes. Evidence supports proposed roles in tuber physiology and defense/wound responses through lipid hydrolysis and fatty-acid release, but <strong>isoform-specific kinetics and substrate preferences for PATB1 alone</strong> are not well resolved in the retrieved literature corpus. (sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)</p>
+<hr />
+<h3 id="1-verification-of-geneprotein-identity-critical-disambiguation">1) Verification of gene/protein identity (critical disambiguation)</h3>
+<p>A SwissProt database-matching table explicitly lists <strong>“Patatin B1 precursor, <em>Solanum tuberosum</em> — P15476”</strong>, confirming that UniProt accession <strong>P15476</strong> corresponds to potato Patatin-B1 (the requested target) and that it is annotated as a <strong>precursor</strong>. (james1994proteinidentificationin pages 2-3)</p>
+<hr />
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-patatin-proteins-in-potato">2.1 Patatin proteins in potato</h4>
+<p>Patatin is the major soluble storage protein of potato tubers and is widely used as the reference example of a tuber storage glycoprotein. A highly cited review summarizes quantitative and biochemical features: patatin is ~40–45 kDa, highly abundant, and present as a heterogeneous mixture of related isoforms. (shewry2003tuberstorageproteins. pages 2-3)</p>
+<p>A summary table of major tuber storage proteins lists patatin at <strong>~40% of soluble tuber protein</strong>, ~<strong>40,000 Da</strong>, and <strong>vacuolar</strong> localization, and notes reported enzymatic activities (esterase, lipid acylhydrolase, and β-1,3-glucanase). (shewry2003tuberstorageproteins. media 82b0ab48)</p>
+<h4 id="22-precursor-and-subcellular-trafficking">2.2 “Precursor” and subcellular trafficking</h4>
+<p>A key feature of class I potato patatins (including Patatin-B1/PATB1) is that they are synthesized with an <strong>N-terminal signal peptide (~23 aa)</strong>, consistent with entry into the <strong>secretory/endomembrane system</strong> and deposition into vacuoles. (shewry2003tuberstorageproteins. pages 2-3)</p>
+<p>This precursor/signal-peptide model is also explicitly stated in the primary immunolocalization study: patatin is “synthesized as a pre-protein with a hydrophobic signal sequence of 23 amino acids.” (sonnewald1989immunocytochemicallocalizationof pages 1-2)</p>
+<h4 id="23-enzyme-class-lipid-acyl-hydrolase-phospholipase-a-like">2.3 Enzyme class: lipid acyl hydrolase / phospholipase A-like</h4>
+<p>Biochemically, patatin has been attributed <strong>lipid acyl hydrolase</strong> activity acting on multiple glycerolipid classes. A major review traces this to early tuber enzyme purifications in which deacylation activity on a broad range of lipids was later shown to be due to patatin. The substrate range includes <strong>mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides</strong>. (shewry2003tuberstorageproteins. pages 2-3)</p>
+<p>At the family level, patatins are often discussed as “PLA-like” enzymes (patatin-like phospholipases / PNPLA-domain enzymes). A recent systematic review (2025) summarizes a mechanistic model (conserved serine-hydrolase architecture, Gly-X-Ser-X-Gly motif, Ser–Asp catalytic dyad, Ca2+-independent PLA-like behavior), but this evidence is largely family-level synthesis rather than PATB1-only experimental biochemistry. (wu2025themultifunctionalrole pages 6-8, wu2025themultifunctionalrole pages 8-9)</p>
+<hr />
+<h3 id="3-functional-annotation-of-patb1-p15476-molecular-function-substrates-and-reaction">3) Functional annotation of PATB1 (P15476): molecular function, substrates, and reaction</h3>
+<h4 id="31-molecular-function">3.1 Molecular function</h4>
+<p>The best-supported molecular function for potato Patatin-B1/PATB1 is <strong>lipid acyl hydrolase (LAH)</strong> activity with broad deacylation capacity on glycerolipids, consistent with a phospholipase A-like function. (shewry2003tuberstorageproteins. pages 2-3)</p>
+<p>In primary text describing patatin’s enzymatic function, patatin is reported to have “a lipid-acyl-hydrolase activity,” with <strong>polar lipids used as substrates</strong>, and the cellular function is described as unclear but potentially hazardous to membranes if not compartmentalized. (sonnewald1989immunocytochemicallocalizationof pages 1-2)</p>
+<h4 id="32-substrate-scope-and-specificity">3.2 Substrate scope and specificity</h4>
+<p>Direct substrate categories supported in the retrieved corpus include: <br />
+- <strong>Polar lipids</strong> (primary paper statement). (sonnewald1989immunocytochemicallocalizationof pages 1-2)<br />
+- <strong>Mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides</strong> (review summarizing primary biochemical attribution to patatin). (shewry2003tuberstorageproteins. pages 2-3)</p>
+<p>Additional reported activities/assays include esterase activity against model chromogenic substrates such as <strong>p-nitrophenyl (PNP) laurate</strong> and <strong>PNC acetate</strong>, consistent with broad esterase/acyl-hydrolase behavior. (shewry2003tuberstorageproteins. pages 2-3)</p>
+<p><strong>Limitation:</strong> the retrieved literature does not provide PATB1-specific kinetic constants (e.g., Km, kcat) or chain-position specificity (PLA1 vs PLA2) resolved uniquely for PATB1, as opposed to patatin mixtures/isoform pools. Consequently, the most defensible annotation here is a <strong>broad acyl-hydrolase / PLA-like</strong> activity. (shewry2003tuberstorageproteins. pages 2-3, sonnewald1989immunocytochemicallocalizationof pages 1-2)</p>
+<hr />
+<h3 id="4-biological-processes-and-roles-storage-tuber-biology-and-defensestress">4) Biological processes and roles: storage, tuber biology, and defense/stress</h3>
+<h4 id="41-storage-protein-role-and-quantitative-abundance">4.1 Storage protein role and quantitative abundance</h4>
+<p>Patatin is repeatedly described as a major tuber storage protein. In the primary immunolocalization study, patatin “accounts for up to 40% of the soluble protein.” (sonnewald1989immunocytochemicallocalizationof pages 1-2)</p>
+<p>The storage-protein review reports that patatin levels scale with tuber size and that patatin forms about <strong>40%</strong> of total soluble protein in larger tubers (&gt;~200 g). (shewry2003tuberstorageproteins. pages 2-3)</p>
+<h4 id="42-compartmentation-supports-safe-coexistence-with-membranes">4.2 Compartmentation supports safe coexistence with membranes</h4>
+<p>Patatin’s lipid-hydrolase activity implies potential membrane damage if present in the cytosol or apoplast. The primary immunolocalization paper explicitly motivates vacuolar compartmentation as a solution: membranes of intact cells “must be protected,” and “compartmentation of the protein within vacuoles could solve this problem.” (sonnewald1989immunocytochemicallocalizationof pages 1-2)</p>
+<h4 id="43-defensewound-response-models">4.3 Defense/wound response models</h4>
+<p>Several sources summarize defense-associated interpretations: patatin-mediated fatty-acid release may contribute to wound responses (e.g., suberin/wax precursor supply) and inhibit pests/pathogens. A dissertation-style synthesis notes patatin’s lipid acyl hydrolase activity on diverse lipids and links it to defense reactions and resistance mechanisms (e.g., <em>Phytophthora infestans</em>). (overeem2017findingcandidategenesa pages 6-8)</p>
+<p>A potato disease-resistance thesis also summarizes reported antimicrobial/anti-insect activities and frames patatins as phospholipid/lysophospholipid hydrolases that efficiently cleave fatty acids from membrane lipids. (isayenka2020increasingresistanceto pages 25-29)</p>
+<p><strong>Interpretation:</strong> these defense roles are plausible but often derived from broader patatin-family functional studies or mixed-isoform preparations; the strongest direct evidence for PATB1 remains its localization and enzymatic capacity. (sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)</p>
+<hr />
+<h3 id="5-subcellular-localization-where-patb1-acts">5) Subcellular localization: where PATB1 acts</h3>
+<h4 id="51-experimental-localization">5.1 Experimental localization</h4>
+<p>A primary immunocytochemical study (electron microscopy using protein-specific antibodies) found patatin localized <strong>mainly in the vacuoles</strong> of tuber and induced leaf cells and reported no detectable patatin in <strong>cell walls or intercellular spaces</strong>. (sonnewald1989immunocytochemicallocalizationof pages 1-2, sonnewald1989immunocytochemicallocalizationof pages 2-5)</p>
+<p>Histochemical staining for esterase activity in tuber sections showed activity restricted to parenchyma cells, consistent with the tissue distribution of patatin. (sonnewald1989immunocytochemicallocalizationof pages 2-5)</p>
+<h4 id="52-visual-evidence">5.2 Visual evidence</h4>
+<p>The following table from an authoritative review concisely summarizes patatin’s abundance, size, <strong>vacuolar localization</strong>, and enzymatic activities.</p>
+<p>(shewry2003tuberstorageproteins. media 82b0ab48)</p>
+<hr />
+<h3 id="6-pathways-and-signaling-context">6) Pathways and signaling context</h3>
+<p>Direct pathway placement for PATB1 is not resolved as a single-gene causal node in the retrieved corpus. However, available evidence supports a mechanistic pathway hypothesis:<br />
+- Patatin/LAH activity releases fatty acids from glycerolipids (polar and neutral), generating <strong>free fatty acids and lysolipids</strong> that can enter lipid remodeling and potentially defense-related oxylipin/jasmonate signaling networks. This hypothesis is consistent with patatin-family roles in plant defense signaling described in related-species work (tobacco patatin-like enzymes contributing to soluble PLA2 activity before oxylipin accumulation during hypersensitive response), though that is not potato PATB1-specific evidence. (dhondt2000solublephospholipasea2 pages 1-2)</p>
+<hr />
+<h3 id="7-recent-developments-and-latest-research-prioritizing-20232024">7) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="71-2024-applied-functional-genomics-in-the-patatin-like-family">7.1 2024 applied functional genomics in the patatin-like family</h4>
+<p>A 2024 <em>Frontiers in Plant Science</em> study in poplar used activation tagging and follow-up overexpression to discover genes improving biomass/stress traits. Notably, overexpression of a <strong>patatin-like gene (PtaPAT)</strong> improved <strong>drought tolerance</strong> and increased <strong>cellulose content</strong>. The study provides substantial scale and implementation detail (2,700 activation-tagged lines screened; 761 mutant lines identified; phenotypes recapitulated by overexpression for key hits). This is not potato PATB1, but it demonstrates the continuing relevance and manipulability of patatin-like genes for real-world stress and industrial traits. (georgieva2024discoveryofgenes pages 1-2)</p>
+<h4 id="72-breedingengineering-directions-for-potato-patatin-traits">7.2 Breeding/engineering directions for potato patatin traits</h4>
+<p>A 2025 systematic review (outside the user’s requested 2023–2024 window but summarizing up-to-date directions) describes actionable levers: isoform-aware polyploid GWAS/QTL strategies, allele dosage and cis-regulatory variants affecting patatin expression, and gene-editing/promoter engineering approaches. These reflect current expert synthesis of how patatin traits could be translated into cultivar improvement, though quantitative field effect sizes are not provided in the retrieved excerpt. (wu2025themultifunctionalrole pages 18-20, wu2025themultifunctionalrole pages 17-18)</p>
+<p><strong>Limitation:</strong> No 2023–2024 primary studies directly characterizing potato PATB1 enzymology or localization were retrieved with the current tool searches; the strongest direct mechanistic evidence remains from earlier primary studies and reviews that integrate them. (sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)</p>
+<hr />
+<h3 id="8-current-applications-and-real-world-implementations">8) Current applications and real-world implementations</h3>
+<h4 id="81-tuber-protein-and-foodindustrial-relevance">8.1 Tuber protein and food/industrial relevance</h4>
+<p>The patatin fraction’s extreme abundance and biochemical heterogeneity have motivated studies on stability/aggregation and industrial processing; the storage-protein review explicitly notes industrial-scale interest in functional properties of patatin proteins. (shewry2003tuberstorageproteins. pages 2-3)</p>
+<h4 id="82-stress-associated-secretion-potential-applied-angle">8.2 Stress-associated secretion (potential applied angle)</h4>
+<p>A primary study (2013) reported a <strong>patatin-like PLA2</strong> activity secreted from cut/water-stressed potato tuber parenchyma and purified using lectin affinity consistent with patatin being a mannosyl glycoprotein. While framed around cytotoxicity assays, it demonstrates that patatin-like proteins can be recovered from stress-conditioned tuber tissues, suggesting relevance to wound/stress physiology and potential bioactive protein isolation workflows. (griffaut2013patatinlikepla2 pages 2-3)</p>
+<hr />
+<h3 id="9-quantitative-statistics-and-data-compiled">9) Quantitative statistics and data (compiled)</h3>
+<p>Key quantitative points supported in the retrieved corpus:<br />
+- <strong>Abundance:</strong> up to ~<strong>40% of soluble tuber protein</strong> (primary and review evidence). (sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)<br />
+- <strong>Molecular mass:</strong> typically ~<strong>40–45 kDa</strong>; table summary ~<strong>40,000 Da</strong>. (shewry2003tuberstorageproteins. media 82b0ab48, shewry2003tuberstorageproteins. pages 2-3)<br />
+- <strong>Signal peptide:</strong> <strong>23 amino acids</strong> (precursor). (sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)<br />
+- <strong>Substrate classes (biochemical attribution):</strong> mono- and diacylphospholipids, galactosyl diglycerides, mono- and diglycerides; polar lipids. (shewry2003tuberstorageproteins. pages 2-3, sonnewald1989immunocytochemicallocalizationof pages 1-2)<br />
+- <strong>2024 applied screen scale (patatin-like gene in poplar):</strong> 2,700 lines screened; 761 mutants; overexpression of key candidates; 40% dry-stem weight increase for one gene; patatin-like gene improved drought tolerance and increased cellulose content. (georgieva2024discoveryofgenes pages 1-2)</p>
+<hr />
+<h3 id="evidence-synthesis-table">Evidence synthesis table</h3>
+<p>The following table consolidates the major functional-annotation claims for PATB1/P15476 with URLs, dates, and the specific evidence used.</p>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Key evidence statement (paraphrased)</th>
+<th>Evidence type</th>
+<th>Source (short citation with year)</th>
+<th>Publication date</th>
+<th>URL/DOI</th>
+<th>Context ID for citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>SwissProt/UniProt accession <strong>P15476</strong> is explicitly listed as <strong>“Patatin B1 precursor, Solanum tuberosum”</strong>, confirming the target is potato Patatin-B1/PATB1 rather than a different similarly named protein.</td>
+<td>Primary/database-linked</td>
+<td>James et al. 1994</td>
+<td>Aug 1994</td>
+<td>https://doi.org/10.1002/pro.5560030822</td>
+<td>(james1994proteinidentificationin pages 2-3)</td>
+</tr>
+<tr>
+<td>Family / precursor status</td>
+<td>Potato patatins are mature proteins of ~<strong>360 aa</strong> synthesized with an <strong>N-terminal 23-aa signal peptide</strong>, consistent with UniProt’s “precursor” annotation and trafficking through the endomembrane system.</td>
+<td>Review synthesizing primary literature</td>
+<td>Shewry 2003</td>
+<td>Jun 2003</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. pages 2-3)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Immunocytochemistry showed patatin is localized <strong>mainly in vacuoles</strong> of potato tubers and induced leaves; <strong>cell walls and intercellular space lacked detectable patatin</strong>.</td>
+<td>Primary</td>
+<td>Sonnewald et al. 1989</td>
+<td>May 1989</td>
+<td>https://doi.org/10.1007/BF00393192</td>
+<td>(sonnewald1989immunocytochemicallocalizationof pages 1-2, sonnewald1989immunocytochemicallocalizationof pages 2-5)</td>
+</tr>
+<tr>
+<td>Glycoprotein / trafficking</td>
+<td>Patatin is a <strong>glycoprotein</strong> that becomes <strong>N-glycosylated</strong>; glycosylation plus vacuolar localization support <strong>ER/Golgi trafficking</strong> before deposition in storage vacuoles.</td>
+<td>Primary + review</td>
+<td>Sonnewald et al. 1989; Shewry 2003</td>
+<td>May 1989; Jun 2003</td>
+<td>https://doi.org/10.1007/BF00393192 ; https://doi.org/10.1093/aob/mcg084</td>
+<td>(sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)</td>
+</tr>
+<tr>
+<td>Molecular size / abundance</td>
+<td>Patatin is a major potato tuber protein of about <strong>40–45 kDa</strong> and can account for roughly <strong>40% of soluble tuber protein</strong>; one summary table lists ~<strong>40,000 Da</strong> and ~<strong>40%</strong> abundance.</td>
+<td>Review/table summary</td>
+<td>Shewry 2003</td>
+<td>Jun 2003</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. pages 2-3, shewry2003tuberstorageproteins. media 82b0ab48)</td>
+</tr>
+<tr>
+<td>Isoform heterogeneity</td>
+<td>Patatin exists as multiple glycoforms/isoforms; review data describe masses around <strong>40,400–41,600 Da</strong>, and other summaries report <strong>40.6, 41.8, 42.9 kDa</strong> isoforms in tubers.</td>
+<td>Review / thesis-style summary</td>
+<td>Shewry 2003; Overeem 2017</td>
+<td>Jun 2003; 2017</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. pages 2-3, overeem2017findingcandidategenesa pages 6-8)</td>
+</tr>
+<tr>
+<td>Enzymatic function</td>
+<td>Patatin has <strong>lipid acyl hydrolase / phospholipase A-like activity</strong> rather than being only a passive storage protein; early biochemical work identified deacylation of several lipid classes as patatin-dependent activity.</td>
+<td>Review synthesizing primary literature</td>
+<td>Shewry 2003</td>
+<td>Jun 2003</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. pages 2-3)</td>
+</tr>
+<tr>
+<td>Substrate range</td>
+<td>Reported substrates include <strong>mono- and diacylphospholipids, galactolipids/galactosyl diglycerides, mono- and diglycerides</strong>, indicating broad acyl-hydrolase activity toward membrane and neutral lipids.</td>
+<td>Review synthesizing primary literature</td>
+<td>Shewry 2003; Overeem 2017</td>
+<td>Jun 2003; 2017</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. pages 2-3, overeem2017findingcandidategenesa pages 6-8)</td>
+</tr>
+<tr>
+<td>PLA2-like biochemical model</td>
+<td>A recent systematic review describes patatins as <strong>Ca2+-independent lipid acyl hydrolase / PLA2-like enzymes</strong> with a <strong>Ser–Asp catalytic dyad</strong>, hydrolyzing <strong>phosphatidylcholine, phosphatidylethanolamine, lysophospholipids, and neutral acylglycerols</strong>; this is strong family-level inference but not PATB1-specific experimentation.</td>
+<td>Review (family-level inference)</td>
+<td>Wu et al. 2025</td>
+<td>Dec 2025</td>
+<td>https://doi.org/10.3390/biology15010029</td>
+<td>(wu2025themultifunctionalrole pages 6-8, wu2025themultifunctionalrole pages 8-9)</td>
+</tr>
+<tr>
+<td>Catalytic motif</td>
+<td>Conserved patatin-domain catalytic architecture includes a <strong>Gly-X-Ser-X-Gly</strong> motif and <strong>Ser–Asp dyad</strong>, supporting classification of PATB1 as a patatin-family serine hydrolase.</td>
+<td>Review (family-level inference)</td>
+<td>Wu et al. 2025</td>
+<td>Dec 2025</td>
+<td>https://doi.org/10.3390/biology15010029</td>
+<td>(wu2025themultifunctionalrole pages 6-8, wu2025themultifunctionalrole pages 8-9)</td>
+</tr>
+<tr>
+<td>Additional enzymatic activities</td>
+<td>Patatin has also been reported to show <strong>esterase</strong> activity toward <strong>PNP-laurate, PNC-acetate, α-/β-naphthyl acetate/laurate, phenyl acetate</strong>, and some summaries include <strong>β-1,3-glucanase</strong> activity.</td>
+<td>Review / summary</td>
+<td>Shewry 2003; Isayenka 2020</td>
+<td>Jun 2003; 2020</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. media 82b0ab48, isayenka2020increasingresistanceto pages 25-29)</td>
+</tr>
+<tr>
+<td>Tissue specificity / expression</td>
+<td>Class I patatin genes are the main tuber-expressed forms, whereas class II transcripts are largely root-associated and are about <strong>50–100-fold less abundant in tubers</strong>.</td>
+<td>Review synthesizing primary literature</td>
+<td>Shewry 2003</td>
+<td>Jun 2003</td>
+<td>https://doi.org/10.1093/aob/mcg084</td>
+<td>(shewry2003tuberstorageproteins. pages 2-3)</td>
+</tr>
+<tr>
+<td>Cellular compartment within tuber</td>
+<td>Patatin is mainly present in <strong>parenchyma cell vacuoles</strong>; esterase staining in tuber sections co-localizes with parenchyma, matching the immunolocalization pattern.</td>
+<td>Primary</td>
+<td>Sonnewald et al. 1989</td>
+<td>May 1989</td>
+<td>https://doi.org/10.1007/BF00393192</td>
+<td>(sonnewald1989immunocytochemicallocalizationof pages 1-2, sonnewald1989immunocytochemicallocalizationof pages 2-5)</td>
+</tr>
+<tr>
+<td>Biological role: storage</td>
+<td>Patatin is the <strong>major soluble storage protein</strong> of potato tubers and is widely interpreted as a <strong>nitrogen/carbon reserve protein</strong> in addition to its enzymatic activities.</td>
+<td>Primary + review</td>
+<td>Sonnewald et al. 1989; Shewry 2003</td>
+<td>May 1989; Jun 2003</td>
+<td>https://doi.org/10.1007/BF00393192 ; https://doi.org/10.1093/aob/mcg084</td>
+<td>(sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3)</td>
+</tr>
+<tr>
+<td>Biological role: defense / wound response</td>
+<td>Reviews summarize evidence that patatin may contribute to <strong>defense and wound responses</strong> by releasing fatty acids from membranes, supplying precursors for <strong>suberin/wax synthesis</strong>, and inhibiting pests/pathogens such as <strong>corn rootworm larvae</strong> and <strong>Phytophthora infestans</strong> spores.</td>
+<td>Review / summary</td>
+<td>Isayenka 2020; Overeem 2017</td>
+<td>2020; 2017</td>
+<td>N/A</td>
+<td>(isayenka2020increasingresistanceto pages 25-29, overeem2017findingcandidategenesa pages 6-8)</td>
+</tr>
+<tr>
+<td>Biological role: oxylipin-related signaling (indirect inference)</td>
+<td>Patatin-like enzymes in tobacco are induced before <strong>jasmonate/oxylipin accumulation</strong> during pathogen response, supporting a broader plant-family model in which patatin-like phospholipases release fatty acids for defense signaling; this supports inference but is <strong>not direct PATB1 evidence</strong>.</td>
+<td>Primary in related species</td>
+<td>Dhondt et al. 2000</td>
+<td>Aug 2000</td>
+<td>https://doi.org/10.1046/j.1365-313X.2000.00802.x</td>
+<td>(dhondt2000solublephospholipasea2 pages 1-2)</td>
+</tr>
+<tr>
+<td>Recent developments / applications</td>
+<td>Recent work outside potato showed overexpression of a <strong>patatin-like gene</strong> in poplar improved <strong>drought tolerance</strong> and increased <strong>cellulose content</strong>; this demonstrates ongoing applied interest in patatin-family genes, but the result is <strong>not specific to potato PATB1</strong>.</td>
+<td>Primary in another species</td>
+<td>Georgieva et al. 2024</td>
+<td>18 Oct 2024</td>
+<td>https://doi.org/10.3389/fpls.2024.1468905</td>
+<td>(georgieva2024discoveryofgenes pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main evidence supporting functional annotation of potato Patatin-B1 (PATB1; UniProt P15476), including identity verification, localization, enzyme activity, biological roles, and relevant quantitative details. It distinguishes direct potato evidence from broader patatin-family inference and recent cross-species developments.</em></p>
+<hr />
+<h3 id="conclusions-and-confidence-assessment">Conclusions and confidence assessment</h3>
+<ul>
+<li><strong>High confidence:</strong> PATB1/P15476 is a potato patatin precursor with a signal peptide; it is a vacuolar glycoprotein concentrated in tuber parenchyma vacuoles; it is extremely abundant in tubers (~40% soluble protein) and ~40–45 kDa. (sonnewald1989immunocytochemicallocalizationof pages 1-2, shewry2003tuberstorageproteins. pages 2-3, shewry2003tuberstorageproteins. media 82b0ab48)</li>
+<li><strong>Moderate confidence:</strong> PATB1 participates in lipid acyl hydrolase activity toward polar glycerolipids and broader glycerolipid deacylation; however, most biochemical characterizations reflect patatin mixtures/isoforms rather than PATB1 alone. (shewry2003tuberstorageproteins. pages 2-3, sonnewald1989immunocytochemicallocalizationof pages 1-2)</li>
+<li><strong>Lower confidence / needs direct PATB1-specific experiments:</strong> precise catalytic constants, positional specificity (PLA1 vs PLA2), and definitive in vivo pathway positioning in jasmonate/oxylipin signaling for PATB1 specifically. (shewry2003tuberstorageproteins. pages 2-3, dhondt2000solublephospholipasea2 pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(sonnewald1989immunocytochemicallocalizationof pages 1-2): Uwe Sonnewald, Daniel Studer, Mario Rocha-Sosa, and Lothar Willmitzer. Immunocytochemical localization of patatin, the major glycoprotein in potato (solanum tuberosum l.) tubers. Planta, 178:176-183, May 1989. URL: https://doi.org/10.1007/bf00393192, doi:10.1007/bf00393192. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shewry2003tuberstorageproteins. pages 2-3): P. R. SHEWRY. Tuber storage proteins. Annals of botany, 91 7:755-69, Jun 2003. URL: https://doi.org/10.1093/aob/mcg084, doi:10.1093/aob/mcg084. This article has 474 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(james1994proteinidentificationin pages 2-3): Peter James, Manfredo Quadroni, Ernesto Carafoli, and Gaston Gonnet. Protein identification in dna databases by peptide mass fingerprinting. Protein Science, 3:1347-1350, Aug 1994. URL: https://doi.org/10.1002/pro.5560030822, doi:10.1002/pro.5560030822. This article has 196 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shewry2003tuberstorageproteins. media 82b0ab48): P. R. SHEWRY. Tuber storage proteins. Annals of botany, 91 7:755-69, Jun 2003. URL: https://doi.org/10.1093/aob/mcg084, doi:10.1093/aob/mcg084. This article has 474 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wu2025themultifunctionalrole pages 6-8): Yicong Wu, Yunxia Zeng, Wenying Zhang, and Yonghong Zhou. The multifunctional role of patatin in potato tuber sink strength, starch biosynthesis, and stress adaptation: a systematic review. Biology, 15:29, Dec 2025. URL: https://doi.org/10.3390/biology15010029, doi:10.3390/biology15010029. This article has 1 citations.</p>
+</li>
+<li>
+<p>(wu2025themultifunctionalrole pages 8-9): Yicong Wu, Yunxia Zeng, Wenying Zhang, and Yonghong Zhou. The multifunctional role of patatin in potato tuber sink strength, starch biosynthesis, and stress adaptation: a systematic review. Biology, 15:29, Dec 2025. URL: https://doi.org/10.3390/biology15010029, doi:10.3390/biology15010029. This article has 1 citations.</p>
+</li>
+<li>
+<p>(overeem2017findingcandidategenesa pages 6-8): R Overeem. Finding candidate genes for the regulation of potato tuber protein content by a reverse genetics approach. Unknown journal, 2017.</p>
+</li>
+<li>
+<p>(isayenka2020increasingresistanceto pages 25-29): I Isayenka. Increasing resistance to common scab in potato varieties cultivated in quebec. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(sonnewald1989immunocytochemicallocalizationof pages 2-5): Uwe Sonnewald, Daniel Studer, Mario Rocha-Sosa, and Lothar Willmitzer. Immunocytochemical localization of patatin, the major glycoprotein in potato (solanum tuberosum l.) tubers. Planta, 178:176-183, May 1989. URL: https://doi.org/10.1007/bf00393192, doi:10.1007/bf00393192. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dhondt2000solublephospholipasea2 pages 1-2): Sandrine Dhondt, Pierrette Geoffroy, Boguslawa A. Stelmach, Michel Legrand, and Thierry Heitz. Soluble phospholipase a<sub>2</sub> activity is induced before oxylipin accumulation in tobacco mosaic virus‐infected tobacco leaves and is contributed by patatin‐like enzymes. The Plant Journal, 23:431-440, Aug 2000. URL: https://doi.org/10.1046/j.1365-313x.2000.00802.x, doi:10.1046/j.1365-313x.2000.00802.x. This article has 216 citations.</p>
+</li>
+<li>
+<p>(georgieva2024discoveryofgenes pages 1-2): Tatyana Georgieva, Yordan Yordanov, Elena Yordanova, Md Rezaul Islam Khan, Kaiwen Lyu, and Victor Busov. Discovery of genes that positively affect biomass and stress associated traits in poplar. Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1468905, doi:10.3389/fpls.2024.1468905. This article has 0 citations.</p>
+</li>
+<li>
+<p>(wu2025themultifunctionalrole pages 18-20): Yicong Wu, Yunxia Zeng, Wenying Zhang, and Yonghong Zhou. The multifunctional role of patatin in potato tuber sink strength, starch biosynthesis, and stress adaptation: a systematic review. Biology, 15:29, Dec 2025. URL: https://doi.org/10.3390/biology15010029, doi:10.3390/biology15010029. This article has 1 citations.</p>
+</li>
+<li>
+<p>(wu2025themultifunctionalrole pages 17-18): Yicong Wu, Yunxia Zeng, Wenying Zhang, and Yonghong Zhou. The multifunctional role of patatin in potato tuber sink strength, starch biosynthesis, and stress adaptation: a systematic review. Biology, 15:29, Dec 2025. URL: https://doi.org/10.3390/biology15010029, doi:10.3390/biology15010029. This article has 1 citations.</p>
+</li>
+<li>
+<p>(griffaut2013patatinlikepla2 pages 2-3): Bernard Griffaut, Eric Debiton, Marie-Josèphe Galmier, Ana Mustel, Jean-Claude Madelmont, and Gérard Ledoigt. Patatin-like pla 2 with cytotoxicity against mammalian and plant tumour cells. Advances in Biological Chemistry, 03:485-500, Oct 2013. URL: https://doi.org/10.4236/abc.2013.35053, doi:10.4236/abc.2013.35053. This article has 3 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PATB1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000016 Table 2, located on page 10 of the document, provides a summary of the properties of major tuber storage proteins. For patatin in p" src="PATB1-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>james1994proteinidentificationin pages 2-3</li>
+<li>sonnewald1989immunocytochemicallocalizationof pages 1-2</li>
+<li>overeem2017findingcandidategenesa pages 6-8</li>
+<li>isayenka2020increasingresistanceto pages 25-29</li>
+<li>sonnewald1989immunocytochemicallocalizationof pages 2-5</li>
+<li>georgieva2024discoveryofgenes pages 1-2</li>
+<li>wu2025themultifunctionalrole pages 6-8</li>
+<li>wu2025themultifunctionalrole pages 8-9</li>
+<li>wu2025themultifunctionalrole pages 18-20</li>
+<li>wu2025themultifunctionalrole pages 17-18</li>
+<li>https://doi.org/10.1002/pro.5560030822</li>
+<li>https://doi.org/10.1093/aob/mcg084</li>
+<li>https://doi.org/10.1007/BF00393192</li>
+<li>https://doi.org/10.3390/biology15010029</li>
+<li>https://doi.org/10.1046/j.1365-313X.2000.00802.x</li>
+<li>https://doi.org/10.3389/fpls.2024.1468905</li>
+<li>https://doi.org/10.1007/bf00393192,</li>
+<li>https://doi.org/10.1093/aob/mcg084,</li>
+<li>https://doi.org/10.1002/pro.5560030822,</li>
+<li>https://doi.org/10.3390/biology15010029,</li>
+<li>https://doi.org/10.1046/j.1365-313x.2000.00802.x,</li>
+<li>https://doi.org/10.3389/fpls.2024.1468905,</li>
+<li>https://doi.org/10.4236/abc.2013.35053,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15476
+gene_symbol: PATB1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4113
+  label: Solanum tuberosum
+description: &gt;
+  PATB1 (Patatin-B1, UniProt P15476) is a member of the patatin glycoprotein family
+  and one of the canonical potato (Solanum tuberosum) tuber patatins. It is a
+  dual-function protein. First, it is the major soluble STORAGE protein of the potato
+  tuber: patatin accounts for up to ~40% of total soluble tuber protein in mature/larger
+  tubers and is widely interpreted as a nitrogen/carbon reserve. Second, it is a
+  lipid acyl hydrolase (LAH) / phospholipase A-like serine hydrolase of the patatin
+  (PNPLA) domain family, with broad deacylation activity toward glycerolipids -
+  phospholipids (mono- and diacylphospholipids), galactolipids/galactosyl diglycerides
+  and neutral mono- and diglycerides - plus measurable esterase activity on model
+  chromogenic substrates. PATB1 is synthesized as a precursor with an N-terminal
+  23-residue signal peptide, is N-glycosylated, and is trafficked through the
+  endomembrane system to be deposited in the vacuoles of tuber parenchyma cells;
+  immunocytochemistry localizes patatin mainly to vacuoles and not to the apoplast/cell
+  wall, consistent with the need to sequester a membrane-active lipid hydrolase away
+  from cellular membranes. The patatin catalytic architecture is a Ca2+-independent
+  serine hydrolase with a Ser-Asp dyad (PROSITE PNPLA domain; GXSXG nucleophile-elbow
+  motif with the catalytic Ser77, and the DGA/G Asp215 proton acceptor) and a GGXR
+  oxyanion hole. A defense/host-resistance role has been proposed (UniProt assigns the
+  keywords &#34;Plant defense&#34; and notes the protein is &#34;involved in host resistance&#34;), but
+  this role is INDIRECT: patatin LAH activity releases free fatty acids and lysolipids
+  from membrane glycerolipids, supplying precursors for suberin/wax synthesis and
+  generating antifungal/anti-insect fatty acids (e.g. against corn rootworm larvae and
+  Phytophthora infestans). The defense interpretations are largely derived from broad
+  patatin-family functional studies and mixed-isoform preparations rather than from
+  PATB1-specific in planta pathogen experiments
+  [file:SOLTU/PATB1/PATB1-deep-research-falcon.md;
+  file:SOLTU/PATB1/PATB1-uniprot.txt].
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005773
+    label: vacuole
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA cellular-component annotation from the UniProt Swiss-Prot subcellular-location
+      mapping (keyword &#34;Vacuole&#34;). Patatin is a vacuolar tuber protein, directly
+      established by immunocytochemistry.
+    action: ACCEPT
+    reason: &gt;
+      Correct and strongly supported. The UniProt entry records SUBCELLULAR LOCATION:
+      Vacuole, and primary immunocytochemistry (electron microscopy with protein-specific
+      antibodies) localized patatin mainly to the vacuoles of tuber and induced leaf
+      cells, with no detectable patatin in cell walls or intercellular spaces; esterase
+      histochemistry co-localizes with patatin-containing parenchyma. Vacuolar
+      compartmentation is the biologically meaningful location for a membrane-active LAH,
+      sequestering it from cellular membranes. The term is at the appropriate level of
+      specificity.
+    supported_by:
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Vacuole&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;Experimental immunocytochemistry localizes patatin predominantly
+        to vacuoles (not apoplast), consistent with the need to sequester a membrane-active
+        lipid hydrolase away from cellular membranes.&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;Histochemical staining for esterase activity in tuber sections
+        showed activity restricted to parenchyma cells, consistent with the tissue
+        distribution of patatin.&#34;
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA biological-process annotation from InterPro (IPR002641, PNPLA domain). The
+      essence is correct - patatin is a lipid-acting enzyme - but &#34;lipid metabolic
+      process&#34; is the broad parent of the specific lipid-DEGRADATION process that patatin
+      catalyzes.
+    action: MODIFY
+    reason: &gt;
+      Patatin is a lipid acyl hydrolase: its activity is deacylation/breakdown of
+      glycerolipids (release of free fatty acids and lysolipids), which is lipid
+      CATABOLISM rather than generic lipid metabolism. The deep research describes patatin
+      LAH activity as releasing fatty acids from polar and neutral glycerolipids, and
+      UniProt assigns the keywords &#34;Lipid degradation&#34; and &#34;Lipid metabolism&#34;. The
+      hydrolytic, degradative direction is well established, so the more specific child
+      term &#34;lipid catabolic process&#34; (GO:0016042) is the accurate process annotation -
+      and it is exactly the term that the retired SPKW annotation (re-added below) used.
+      Modifying the generic IEA up to the catabolic child consolidates the process
+      annotation at the correct specificity.
+    proposed_replacement_terms:
+    - id: GO:0016042
+      label: lipid catabolic process
+    supported_by:
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;Patatin/LAH activity releases fatty acids from glycerolipids
+        (polar and neutral), generating **free fatty acids and lysolipids**&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;The substrate range includes **mono- and diacylphospholipids,
+        galactosyl diglycerides, mono- and diglycerides**.&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;Probable lipolytic acyl hydrolase (LAH), an activity which is&#34;
+- term:
+    id: GO:0016298
+    label: lipase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA molecular-function annotation from an ARBA machine-learning model. Patatin is
+      genuinely a lipid-hydrolyzing enzyme, but &#34;lipase activity&#34; is a broad parent; the
+      patatin enzyme is more precisely a glycerophospholipase / phospholipase A-like acyl
+      hydrolase.
+    action: MODIFY
+    reason: &gt;
+      The core molecular function of patatin is well documented as a lipid acyl hydrolase
+      (LAH) with phospholipase A-like behaviour: it hydrolyzes glycerophospholipids
+      (mono- and diacylphospholipids) as well as galactolipids and neutral glycerolipids,
+      acting at the sn-1 and sn-2 acyl positions in a Ca2+-independent manner via a
+      Ser-Asp catalytic dyad. UniProt&#39;s IBA annotations for this protein already include
+      &#34;phospholipase activity&#34; (GO:0004620). The generic &#34;lipase activity&#34; should be
+      MODIFIED to the more informative &#34;glycerophospholipase activity&#34; (GO:0004620), which
+      captures the documented phospholipid-deacylation function while remaining defensible
+      given that PATB1-specific positional specificity (PLA1 vs PLA2) and kinetics are not
+      uniquely resolved. (Note: PATB1 also acts on neutral and galacto-lipids, so the
+      broad LAH character is real; &#34;glycerophospholipase activity&#34; is chosen as the most
+      specific single MF strongly supported by both the family biochemistry and the
+      existing IBA call.)
+    proposed_replacement_terms:
+    - id: GO:0004620
+      label: glycerophospholipase activity
+    supported_by:
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;Probable lipolytic acyl hydrolase (LAH), an activity which is&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;the most defensible annotation here is a&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;broad acyl-hydrolase / PLA-like&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;The substrate range includes **mono- and diacylphospholipids,
+        galactosyl diglycerides, mono- and diglycerides**.&#34;
+# --- SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (SwissProt keyword2GO pipeline);
+# REMOVED from the current (2026) GOA release when GOA retired the keyword2GO pipeline
+# for cellular organisms. Re-added here and reviewed retrospectively to assess whether
+# removal was justified. Derived from the UniProt keywords &#34;Storage protein&#34;,
+# &#34;Plant defense&#34;, and &#34;Lipid degradation&#34;.
+- term:
+    id: GO:0045735
+    label: nutrient reservoir activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Storage protein&#34;;
+      snapshot-only, removed in the current GOA release. Patatin is THE major potato tuber
+      storage protein (~40% of soluble tuber protein), so this is a correct and CORE
+      molecular function.
+    action: ACCEPT
+    reason: &gt;
+      GOA&#39;s removal of this annotation was NOT justified - it was collateral damage from
+      retiring the keyword pipeline, and it removed the single term capturing patatin&#39;s
+      best-established biological role. Patatin is repeatedly described as the major
+      soluble storage protein of potato tubers, accounting for up to ~40% of soluble tuber
+      protein in larger tubers, and UniProt explicitly states patatin has &#34;a dual role as a
+      somatic storage protein and as an enzyme involved in host resistance&#34; with the keyword
+      &#34;Storage protein&#34;. Critically, the current (2026) GOA release contains NO storage /
+      nutrient-reservoir function term for PATB1 at all - the only molecular functions left
+      are lipase/lipid-hydrolase terms - so removal of this SPKW annotation left the gene
+      with no representation of its dominant tuber function. &#34;Nutrient reservoir activity&#34;
+      (GO:0045735) should be re-asserted and treated as a core function. (This is the
+      mixed-verdict storage arm: removal not justified; Tier C.)
+    supported_by:
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;Patatin have a dual role as a somatic storage protein&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;represents approximately 40% of the total protein in mature tubers.&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;Patatin is the **major soluble storage protein** of potato tubers
+        and is widely interpreted as a **nitrogen/carbon reserve protein** in addition to
+        its enzymatic activities.&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;patatin levels scale with tuber size and that patatin forms about
+        **40%** of total soluble protein in larger tubers&#34;
+- term:
+    id: GO:0006952
+    label: defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Plant defense&#34;;
+      snapshot-only, removed in the current GOA release. Patatin&#39;s defense role is INDIRECT
+      - mediated through its LAH enzymatic activity releasing antifungal/antinematode free
+      fatty acids - so a direct biological-process &#34;defense response&#34; annotation over-states
+      the evidence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. Patatin does not act as a defense
+      effector in its own right; rather, its proposed defense/host-resistance contribution
+      is a downstream consequence of its lipid acyl hydrolase activity, which releases free
+      fatty acids and lysolipids that can be antimicrobial/anti-insect and can supply
+      suberin/wax precursors. UniProt itself hedges, describing the LAH as &#34;an activity
+      which is thought to be involved in the response of tubers to pathogens&#34; and patatin as
+      &#34;an enzyme involved in host resistance&#34; - i.e. resistance is enacted via the enzyme,
+      not via a dedicated defense-response program. The deep research is explicit that the
+      defense interpretations are largely inferred from broad patatin-family studies and
+      mixed-isoform preparations rather than from direct PATB1 pathogen experiments, and that
+      the strongest direct PATB1 evidence is its localization and enzymatic capacity. A
+      blanket process term &#34;defense response&#34; (GO:0006952) is therefore an over-annotation;
+      the genuine biology is better captured by the molecular-function (glycerophospholipase
+      / LAH) and lipid-catabolic-process terms. (This is the over-annotated arm: removal
+      justified; Tier A.)
+    supported_by:
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;thought to be involved in the response of tubers to pathogens.&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;as an enzyme involved in host resistance. This tuber protein&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;patatin-mediated fatty-acid release may contribute to wound
+        responses (e.g., suberin/wax precursor supply) and inhibit pests/pathogens.&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;these defense roles are plausible but often derived from broader
+        patatin-family functional studies or mixed-isoform preparations; the strongest
+        direct evidence for PATB1 remains its localization and enzymatic capacity.&#34;
+- term:
+    id: GO:0016042
+    label: lipid catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Lipid degradation&#34;;
+      snapshot-only, removed in the current GOA release. Patatin&#39;s LAH activity hydrolyzes
+      (deacylates) glycerolipids, so lipid catabolism is a correct and appropriately
+      specific process term.
+    action: ACCEPT
+    reason: &gt;
+      GOA&#39;s removal of this annotation was NOT justified (or, at minimum, low-cost and
+      undesirable). Patatin is a lipid acyl hydrolase that breaks down glycerolipids -
+      releasing free fatty acids and lysolipids from mono- and diacylphospholipids,
+      galactosyl diglycerides and neutral mono-/di-glycerides - which is precisely lipid
+      catabolism. UniProt assigns the keyword &#34;Lipid degradation&#34; and the FUNCTION line
+      &#34;Probable lipolytic acyl hydrolase (LAH)&#34;. &#34;Lipid catabolic process&#34; (GO:0016042) is
+      more specific and more accurate than the generic &#34;lipid metabolic process&#34;
+      (GO:0006629) currently retained from InterPro; indeed the current GOA &#34;lipid metabolic
+      process&#34; annotation is recommended above to be MODIFIED up to this catabolic child.
+      Re-asserting the catabolic process term restores the correct process specificity.
+      (This is the lipid-catabolic arm of the mixed verdict: removal not justified; Tier C.)
+    supported_by:
+    - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+      supporting_text: &#34;Probable lipolytic acyl hydrolase (LAH), an activity which is&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;Patatin/LAH activity releases fatty acids from glycerolipids
+        (polar and neutral), generating **free fatty acids and lysolipids**&#34;
+    - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+      supporting_text: &#34;The substrate range includes **mono- and diacylphospholipids,
+        galactosyl diglycerides, mono- and diglycerides**.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro IPR002641 (PNPLA domain) mapping assigns the generic &#34;lipid
+      metabolic process&#34; to PATB1; patatin&#39;s activity is degradative, so the more
+      specific &#34;lipid catabolic process&#34; is preferred.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: Maps the UniProt keyword &#34;Vacuole&#34; to GO:0005773; consistent with primary
+      immunocytochemical localization of patatin to tuber parenchyma vacuoles.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA model assigns generic &#34;lipase activity&#34; to PATB1; the documented
+      patatin function is a more specific glycerophospholipase / lipid acyl hydrolase.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA
+      retired the keyword2GO pipeline for cellular organisms.
+  - statement: For PATB1 the keywords &#34;Storage protein&#34; (-&gt; nutrient reservoir activity)
+      and &#34;Lipid degradation&#34; (-&gt; lipid catabolic process) mapped to correct functions
+      whose removal was collateral damage; the keyword &#34;Plant defense&#34; (-&gt; defense
+      response) mapped to an over-broad process given patatin&#39;s indirect, enzyme-mediated
+      defense role.
+- id: file:SOLTU/PATB1/PATB1-uniprot.txt
+  title: UniProtKB entry P15476 (PATB1_SOLTU), Patatin-B1, Solanum tuberosum.
+  findings:
+  - statement: FUNCTION - &#34;Probable lipolytic acyl hydrolase (LAH), an activity which is
+      thought to be involved in the response of tubers to pathogens.&#34; SUBCELLULAR LOCATION
+      - Vacuole. MISCELLANEOUS - patatin has a dual role as a somatic storage protein and
+      as an enzyme involved in host resistance, and represents ~40% of total tuber protein.
+  - statement: Keywords - Glycoprotein, Hydrolase, Lipid degradation, Lipid metabolism,
+      Plant defense, Signal, Storage protein, Vacuole. Domain - PNPLA (patatin) with GXSXG
+      nucleophile motif (catalytic Ser77), DGA/G proton acceptor (Asp215) and a GGXR
+      oxyanion hole; N-terminal 23-residue signal peptide and an N-glycosylation site.
+- id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional
+    annotation of potato PATB1 / Patatin-B1 (P15476).
+  findings:
+  - statement: Synthesizes Sonnewald et al. 1989 (immunocytochemistry), Shewry 2003 (tuber
+      storage protein review) and Wu et al. 2025 (patatin systematic review), concluding
+      PATB1 is a dual-function protein - a major vacuolar tuber storage glycoprotein (~40%
+      of soluble tuber protein) and a lipid acyl hydrolase / phospholipase A-like serine
+      hydrolase acting on a broad range of glycerolipids.
+  - statement: Patatin LAH releases free fatty acids and lysolipids from polar and neutral
+      glycerolipids (mono-/diacylphospholipids, galactosyl diglycerides, mono-/diglycerides),
+      with the protein deposited in tuber parenchyma vacuoles to sequester this
+      membrane-active activity from cellular membranes.
+  - statement: Defense/host-resistance roles (suberin/wax precursor supply; inhibition of
+      corn rootworm larvae and Phytophthora infestans) are indirect, mediated by fatty-acid
+      release, and are largely inferred from broad patatin-family or mixed-isoform studies
+      rather than direct PATB1 pathogen experiments.
+core_functions:
+- description: &gt;
+    PATB1 is the major soluble storage (nutrient-reservoir) protein of the potato tuber,
+    accounting for up to ~40% of soluble tuber protein and serving as a nitrogen/carbon
+    reserve deposited in tuber parenchyma vacuoles.
+  molecular_function:
+    id: GO:0045735
+    label: nutrient reservoir activity
+  locations:
+  - id: GO:0005773
+    label: vacuole
+  supported_by:
+  - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+    supporting_text: &#34;Patatin have a dual role as a somatic storage protein&#34;
+  - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+    supporting_text: &#34;represents approximately 40% of the total protein in mature tubers.&#34;
+  - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+    supporting_text: &#34;Patatin is the **major soluble storage protein** of potato tubers
+      and is widely interpreted as a **nitrogen/carbon reserve protein** in addition to
+      its enzymatic activities.&#34;
+- description: &gt;
+    PATB1 is a vacuolar lipid acyl hydrolase (patatin/PNPLA-domain glycerophospholipase,
+    phospholipase A-like serine hydrolase) that deacylates a broad range of glycerolipids,
+    releasing free fatty acids and lysolipids - a lipid-catabolic activity that also
+    underlies its indirect contribution to tuber defense/host resistance.
+  molecular_function:
+    id: GO:0004620
+    label: glycerophospholipase activity
+  directly_involved_in:
+  - id: GO:0016042
+    label: lipid catabolic process
+  locations:
+  - id: GO:0005773
+    label: vacuole
+  supported_by:
+  - reference_id: file:SOLTU/PATB1/PATB1-uniprot.txt
+    supporting_text: &#34;Probable lipolytic acyl hydrolase (LAH), an activity which is&#34;
+  - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+    supporting_text: &#34;Patatin/LAH activity releases fatty acids from glycerolipids
+      (polar and neutral), generating **free fatty acids and lysolipids**&#34;
+  - reference_id: file:SOLTU/PATB1/PATB1-deep-research-falcon.md
+    supporting_text: &#34;The substrate range includes **mono- and diacylphospholipids,
+      galactosyl diglycerides, mono- and diglycerides**.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does the PATB1 isoform specifically (as opposed to mixed-isoform patatin
+    preparations) act as a phospholipase A1, A2 or B, and what are its kinetic constants
+    and chain-position specificity on phospholipids versus galacto- and neutral lipids?
+  experts:
+  - P. R. Shewry
+- question: Is the proposed defense/host-resistance role of PATB1 a direct in planta
+    pathogen-resistance contribution, or solely a downstream consequence of free-fatty-acid
+    release by its lipid acyl hydrolase activity?
+- question: What is the relative metabolic importance of PATB1&#39;s storage (nitrogen/carbon
+    reserve) function versus its lipid-hydrolase function during tuber dormancy, sprouting
+    and wound/pathogen response?
+suggested_experiments:
+- description: Express and purify recombinant PATB1 (P15476) alone and assay lipid acyl
+    hydrolase activity against defined substrates - phosphatidylcholine and
+    phosphatidylethanolamine (with sn-1 vs sn-2 positional reporters), monogalactosyl- and
+    digalactosyl-diacylglycerol, and mono-/di-acylglycerols - to determine PATB1-specific
+    substrate preference, positional specificity and kinetics.
+  hypothesis: PATB1 is a broad-specificity, Ca2+-independent lipid acyl hydrolase that
+    deacylates both phospholipids (at sn-1 and sn-2) and neutral/galacto-glycerolipids,
+    consistent with patatin-family PLA-like behaviour.
+  experiment_type: in vitro enzyme kinetics / substrate-specificity assay
+- description: Generate PATB1-specific knockdown/knockout potato lines (e.g. RNAi or
+    CRISPR targeting the class I patatin tuber gene) and challenge tubers with Phytophthora
+    infestans and insect herbivores, measuring free-fatty-acid/oxylipin release and
+    disease/pest outcomes alongside total tuber storage-protein content.
+  hypothesis: Loss of PATB1 reduces tuber free-fatty-acid release upon wounding/infection
+    and modestly impairs resistance, while substantially reducing tuber storage-protein
+    content - dissociating the storage role from the indirect, enzyme-mediated defense role.
+  experiment_type: reverse-genetics / pathogen-and-pest challenge
+- description: Use catalytic-site mutants (Ser77Ala nucleophile; Asp215 proton acceptor) of
+    PATB1 expressed in tubers to separate the storage (nutrient-reservoir) function from the
+    lipid-hydrolase function, and assess whether storage accumulation is independent of
+    catalytic activity.
+  hypothesis: The storage/nutrient-reservoir function of PATB1 is independent of its
+    catalytic LAH activity, so catalytically dead PATB1 still accumulates as a tuber reserve
+    protein but abolishes lipid catabolism and the indirect defense contribution.
+  experiment_type: structure-function / site-directed mutagenesis in planta
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

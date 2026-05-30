@@ -1,0 +1,3395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CHIB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P29023" target="_blank" class="term-link">
+                        P29023
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Zea mays</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CHIB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P29023" data-a="DESCRIPTION: CHIB (P29023; ChitB / seed chitinase B; gene synon..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CHIB (P29023; ChitB / seed chitinase B; gene synonym CTB1; maize gene model GRMZM2G005633) is a maize (Zea mays) endochitinase (EC 3.2.1.14) of glycoside hydrolase family 19 (GH19). GH19 chitinases are endo-acting enzymes that hydrolyze the beta-1,4 glycosidic linkages of chitin - a linear polymer of N-acetylglucosamine (GlcNAc) that is the principal structural polysaccharide of fungal cell walls and arthropod exoskeletons - producing chitooligosaccharides via a single-step inverting mechanism. The protein is synthesized as a precursor with an N-terminal signal peptide (residues 1-33) and is secreted; the mature 248-residue chain (residues 34-281) carries an N-terminal hevein-type chitin-binding domain (Chitin-binding type-1, residues 34-68), a short Gly-rich hinge (residues 69-78), and a C-terminal GH19 catalytic domain (residues 79-281, proton-donor active site at Glu145). The chitin-binding module enhances activity on insoluble chitin and contributes to antifungal effectiveness. CHIB is a classic pathogenesis-related (PR-3) basic chitinase: it was first purified from maize seed and characterized as an antifungal protein that defends against chitin-containing fungal pathogens (Huynh et al. 1992), and its transcript is induced ~10-fold by mechanical wounding and fall-armyworm (Spodoptera frugiperda) herbivory, placing it within plant defense responses. Its core molecular function is therefore endochitinase / chitinase activity coupled to chitin binding; its core biological process is chitin catabolism serving antifungal (and likely anti-herbivore) defense in the extracellular/apoplastic compartment and in seed. Maize chitinase B is reported to be somewhat less active than maize chitinase A, and its activity is countered in planta by fungal polyglycine hydrolases that cleave its Gly-rich hinge to disrupt chitin binding.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004568" target="_blank" class="term-link">
+                                    GO:0004568
+                                </a>
+                            </span>
+                            <span class="term-label">chitinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0004568" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chitinase activity assigned by combined automated IEA methods (ARBA/InterPro). This is the core molecular function of CHIB, a GH19 endochitinase (EC 3.2.1.14).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and central to the gene&#39;s function. CHIB belongs to glycoside hydrolase family 19 and is annotated EC 3.2.1.14 (endochitinase); GH19 chitinases hydrolyze the beta-1,4 linkages of chitin. The activity is consistent with the UniProt catalytic-activity statement (random endo-hydrolysis of N-acetyl-beta-D-glucosaminide (1-&gt;4)-beta-linkages in chitin and chitodextrins). This is a core function and is appropriately specific.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH19 chitinases are generally described as **endo-acting** enzymes that hydrolyze</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a key structural component of fungal cell walls and arthropod exoskeletons.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular localization assigned from the UniProtKB Subcellular Location vocabulary (Secreted). Consistent with the predicted signal peptide and secretory deployment of CHIB.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CHIB carries an N-terminal signal peptide (residues 1-33) and is annotated &#34;Secreted&#34; in UniProt, consistent with an apoplastic/extracellular pathogenesis-related chitinase that encounters chitin-containing microbes and chitinous insect structures at the cell surface. The localization is appropriate and supported by the secretory architecture.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">consistent with secretion and extracellular/apoplastic deployment</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Likely secreted / apoplastic or extracellular, consistent with signal peptide and seed/pathogenesis-related chitinase annotation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carbohydrate metabolic process assigned by InterPro2GO (IPR016283, Glyco_hydro_19). This is a very broad parent of the gene&#39;s true process, chitin catabolism.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Not wrong - chitin is a carbohydrate (polysaccharide) and its hydrolysis is carbohydrate metabolism - but &#34;carbohydrate metabolic process&#34; is a high-level grouping term that conveys little once the specific process &#34;chitin catabolic process&#34; (GO:0006032, also present in the current GOA) is annotated. The precise function is endo-hydrolysis of chitin. Retaining the vague parent adds no information beyond the specific term, so it is best treated as an over-annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">its primary biochemical function is</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">producing chitooligosaccharides.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006032" target="_blank" class="term-link">
+                                    GO:0006032
+                                </a>
+                            </span>
+                            <span class="term-label">chitin catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0006032" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chitin catabolic process assigned by InterPro2GO (IPR000726, Glyco_hydro_19_cat). This is the precise biological process for a GH19 endochitinase and is the core process of CHIB.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and at the right level of specificity. CHIB hydrolyzes the beta-1,4 linkages of chitin, a beta-(1-&gt;4)-linked N-acetyl-D-glucosamine polysaccharide, breaking it down into chitooligosaccharides - precisely &#34;chitin catabolic process&#34;. This is the core biological process and is more informative than the generic parents &#34;carbohydrate metabolic process&#34; and &#34;polysaccharide catabolic process&#34;.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">its primary biochemical function is</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">producing chitooligosaccharides.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH19 chitinases are generally described as **endo-acting** enzymes that hydrolyze</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008061" target="_blank" class="term-link">
+                                    GO:0008061
+                                </a>
+                            </span>
+                            <span class="term-label">chitin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0008061" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chitin binding assigned by InterPro2GO (IPR001002/IPR018371/IPR036861, chitin-binding type-1 / hevein domain). CHIB contains an N-terminal chitin-binding domain.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and supported by the protein architecture. CHIB has an N-terminal hevein-type chitin-binding domain (Chitin-binding type-1, residues 34-68); the CAZy CBM18 / Pfam Chitin_bind_1 assignments confirm the module. The chitin-binding domain enhances activity on insoluble chitin and contributes to antifungal effectiveness. This molecular function is a genuine, specific accessory activity supporting substrate engagement.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">typically includes an N-terminal</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">improves performance against insoluble chitinous substrates and contributes to defense effectiveness.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008843" target="_blank" class="term-link">
+                                    GO:0008843
+                                </a>
+                            </span>
+                            <span class="term-label">endochitinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0008843" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endochitinase activity assigned by EC2GO mapping from EC 3.2.1.14. This is the most precise molecular-function term for CHIB and represents its core catalytic activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and the most informative MF term for the gene. CHIB is named &#34;Endochitinase B&#34; with EC 3.2.1.14, and the UniProt catalytic-activity statement describes random endo-hydrolysis of chitin and chitodextrins - i.e. an endo-acting (rather than exo-acting) chitinase. The term is preferred over the more generic &#34;chitinase activity&#34; (GO:0004568) because it specifies the endo mode of cleavage.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH19 chitinases are generally described as **endo-acting** enzymes that hydrolyze</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016998" target="_blank" class="term-link">
+                                    GO:0016998
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall macromolecule catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0016998" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell wall macromolecule catabolic process assigned by InterPro2GO (IPR000726). This captures the biologically relevant target of CHIB: degradation of chitin in fungal cell walls.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Reasonable and biologically meaningful: chitin is a structural component of fungal cell walls, and a secreted plant endochitinase degrades fungal-cell-wall chitin as the basis of its antifungal action. The term is correct but is a process-level framing of the same activity already captured by &#34;chitin catabolic process&#34; (GO:0006032), which is the core, more direct term. Retain this as a non-core descriptor of the host-defense context (degradation of the microbial cell-wall macromolecule) rather than as the primary process.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a key structural component of fungal cell walls and arthropod exoskeletons.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">biologically relevant form in fungal cell walls.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0005576" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular localization transferred by curator ISS from the ortholog UniProtKB:P29022 (maize endochitinase A). Duplicates the IEA extracellular-region annotation with stronger, orthology-based evidence.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the secretory architecture of CHIB (signal peptide, &#34;Secreted&#34; subcellular location) and with the IEA extracellular-region annotation. ISS transfer from the closely related maize endochitinase A (P29022) is appropriate given the shared GH19 chitinase family, signal peptide and secreted-defense-protein role. Duplicate annotations with different evidence codes are acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Likely secreted / apoplastic or extracellular, consistent with signal peptide and seed/pathogenesis-related chitinase annotation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008843" target="_blank" class="term-link">
+                                    GO:0008843
+                                </a>
+                            </span>
+                            <span class="term-label">endochitinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0008843" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Endochitinase activity transferred by curator ISS from the ortholog UniProtKB:P29022 (maize endochitinase A). Duplicates the EC-based IEA endochitinase annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, here supported by orthology-based curator transfer from maize endochitinase A (P29022), the entry from which CHIB&#39;s EC 3.2.1.14 / catalytic-activity statement was itself transferred by similarity. Consistent with the EC2GO IEA endochitinase annotation and with GH19 family assignment. Duplicate annotations with different evidence codes are acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH19 chitinases are generally described as **endo-acting** enzymes that hydrolyze</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                    GO:0006952
+                                </a>
+                            </span>
+                            <span class="term-label">defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0006952" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Plant defense&#34;; snapshot-only, removed in the current GOA release. CHIB is a bona fide antifungal pathogenesis-related (PR-3) chitinase, so the defense role is genuinely correct - but the bare &#34;defense response&#34; parent is over-broad relative to the gene&#39;s specific antifungal action.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The essence is correct: CHIB was first purified and characterized as an antifungal protein from maize seed and is annotated by UniProt as functioning in &#34;defense against chitin-containing fungal pathogens&#34;, and its transcript is induced ~10-fold by wounding and fall-armyworm herbivory. However, &#34;defense response&#34; (GO:0006952) is a high-level grouping term, and the antifungal defense operates THROUGH the gene&#39;s chitinase enzymatic activity (secreted GH19 endochitinase degrading fungal-cell-wall chitin). Once the core molecular function (chitinase / endochitinase activity, chitin binding) and the chitin/cell-wall-macromolecule catabolic processes are annotated, the bare &#34;defense response&#34; parent adds little. The genuine biology is better captured by the more specific child term &#34;defense response to fungus&#34; (GO:0050832), proposed below as a NEW annotation. GOA&#39;s removal of the generic keyword-derived term is therefore acceptable; the defense role should be retained at the more precise antifungal level.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    defense response to fungus
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">A maize primary study investigating insect herbivory identified</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">This supports CHIB’s placement within plant defense signaling frameworks in which physical damage and herbivore-associated cues activate defense gene expression.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000272" target="_blank" class="term-link">
+                                    GO:0000272
+                                </a>
+                            </span>
+                            <span class="term-label">polysaccharide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0000272" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Polysaccharide degradation&#34; / &#34;Chitin degradation&#34;; snapshot-only, removed in the current GOA release. The term is correct (chitin is a polysaccharide and CHIB catabolizes it) but is a generic parent of the precise process, chitin catabolic process.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chitin is a linear polysaccharide of beta-(1-&gt;4)-linked N-acetyl-D-glucosamine, and CHIB hydrolyzes it - so &#34;polysaccharide catabolic process&#34; (GO:0000272) is not wrong, just under-specific. The exact process is &#34;chitin catabolic process&#34; (GO:0006032), which is the direct child describing breakdown of chitin and which is ALREADY present and retained in the current GOA (InterPro2GO, IPR000726). The annotation should therefore be MODIFIED to GO:0006032; the keyword-derived generic parent can be dropped because the specific child is already annotated. No correct biology is lost by removing the generic SPKW term.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006032" target="_blank" class="term-link">
+                                    chitin catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">its primary biochemical function is</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">producing chitooligosaccharides.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GH19 chitinases are generally described as **endo-acting** enzymes that hydrolyze</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                    GO:0050832
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to fungus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P29023" data-a="GO:0050832" data-r="GO_REF:0000043" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CHIB is an antifungal pathogenesis-related chitinase whose biological role is defense against chitin-containing fungal pathogens. This specific child of &#34;defense response&#34; is the accurate process term and is proposed to replace the retired generic &#34;defense response&#34; SPKW annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CHIB (&#34;Seed chitinase B&#34;) was first purified and characterized as an antifungal protein from maize seed (Huynh et al. 1992), and UniProt annotates its FUNCTION as &#34;Defense against chitin-containing fungal pathogens&#34;; the host-defense mechanism is enzymatic degradation of fungal-cell-wall chitin by the secreted GH19 endochitinase, an action that fungi counter via polyglycine hydrolases that cleave the chitinase hinge. The biologically precise process term is therefore &#34;defense response to fungus&#34; (GO:0050832), which is more informative than the bare &#34;defense response&#34; parent and captures the antifungal specificity supported by the chitinase molecular function. (Note: the inducible-defense evidence also includes a wounding/herbivory component; the antifungal role is the best-supported and most specific defense process.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a key structural component of fungal cell walls and arthropod exoskeletons.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">improves performance against insoluble chitinous substrates and contributes to defense effectiveness.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CHIB is a secreted maize GH19 endochitinase (EC 3.2.1.14) that hydrolyzes the beta-1,4 linkages of chitin - the N-acetylglucosamine polysaccharide of fungal cell walls and insect exoskeletons - producing chitooligosaccharides. Substrate engagement is aided by its N-terminal hevein-type chitin-binding domain, which enhances activity on insoluble chitin.
+</h3>
+                <span class="vote-buttons" data-g="P29023" data-a="FUNCTION: CHIB is a secreted maize GH19 endochitinase (EC 3...." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008843" target="_blank" class="term-link">
+                            endochitinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006032" target="_blank" class="term-link">
+                                chitin catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">producing chitooligosaccharides.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">typically includes an N-terminal</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CHIB acts as an antifungal pathogenesis-related (PR-3) defense enzyme: by degrading fungal-cell-wall chitin in the apoplast/extracellular space it defends maize against chitin-containing fungal pathogens, and it is part of the inducible defense response to wounding and herbivory. The antifungal biological role operates through the chitinase enzymatic activity.
+</h3>
+                <span class="vote-buttons" data-g="P29023" data-a="FUNCTION: CHIB acts as an antifungal pathogenesis-related (P..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008843" target="_blank" class="term-link">
+                            endochitinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050832" target="_blank" class="term-link">
+                                defense response to fungus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">a key structural component of fungal cell walls and arthropod exoskeletons.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">This supports CHIB’s placement within plant defense signaling frameworks in which physical damage and herbivore-associated cues activate defense gene expression.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO mappings assign chitin binding (IPR001002/IPR018371/IPR036861), chitin catabolic process and cell wall macromolecule catabolic process (IPR000726), and carbohydrate metabolic process (IPR016283, Glyco_hydro_19) to CHIB.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EC2GO maps EC 3.2.1.14 (the endochitinase EC annotated to CHIB) to endochitinase activity (GO:0008843).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Curator ISS transfer from the maize endochitinase A ortholog (UniProtKB:P29022) assigns extracellular region and endochitinase activity to CHIB.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For CHIB, the keyword &#34;Plant defense&#34; mapped to the generic &#34;defense response&#34; and &#34;Polysaccharide degradation&#34;/&#34;Chitin degradation&#34; mapped to &#34;polysaccharide catabolic process&#34;; both are correct-but-generic relative to the gene&#39;s specific antifungal and chitin-catabolic biology, which is captured by retained current-GOA terms and by the proposed more specific terms.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The UniProt &#34;Secreted&#34; subcellular location maps to extracellular region (GO:0005576), consistent with CHIB&#39;s signal peptide and secretory deployment.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined automated IEA methods (ARBA/InterPro) assign chitinase activity (GO:0004568) to CHIB, consistent with its GH19 / EC 3.2.1.14 endochitinase identity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of maize CHIB / Endochitinase B (P29023).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CHIB (P29023; ChitB / seed chitinase B; gene model GRMZM2G005633) is a maize GH19 plant endochitinase (EC 3.2.1.14) that hydrolyzes the beta-1,4 glycosidic linkages of chitin, a polymer of N-acetylglucosamine that is a key structural component of fungal cell walls and arthropod exoskeletons.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GH19 chitinases use a single-step inverting mechanism in a wide active-site cleft of an alpha-helical bilobed fold; chitin-binding modules enhance activity on insoluble chitin (the biologically relevant fungal-cell-wall form) and contribute to antifungal effectiveness.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CHIB is predicted to contain a signal peptide, an N-terminal chitin-binding domain and a catalytic domain (~281-282 aa, ~29 kDa), consistent with secretion to the apoplast/extracellular space.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ChiB/CHIB transcript abundance increases dramatically (~10-fold) in response to mechanical wounding and fall-armyworm (Spodoptera frugiperda) feeding, placing CHIB within plant defense signaling; ChiB shows highest expression in seed among surveyed organs and maps to chromosome 10 near insect-resistance QTL.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct CHIB-specific kinetic constants were not available in the retrieved corpus; function is inferred from EC 3.2.1.14 / GH19 assignment and supported by herbivory-induction and seed/pathogenesis-related-chitinase context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the purified maize CHIB protein have direct antifungal activity against plant-pathogenic fungi (e.g. growth inhibition / hyphal-tip lysis), and how does its potency compare with maize chitinase A, which is reported to be more active?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P29023" data-a="Q: Does the purified maize CHIB protein have direct a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are CHIB&#39;s biochemical parameters (Km, pH/temperature optima, soluble vs colloidal/ insoluble chitin preference) and is the N-terminal chitin-binding domain required for activity on insoluble chitin, as suggested for related maize GH19 chitinases?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P29023" data-a="Q: What are CHIB&#39;s biochemical parameters (Km, pH/tem..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is CHIB&#39;s antifungal role compromised in planta by fungal polyglycine hydrolases that cleave its Gly-rich hinge, and does this hinge cleavage measurably reduce chitin binding and antifungal efficacy during infection?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P29023" data-a="Q: Is CHIB&#39;s antifungal role compromised in planta by..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant mature CHIB and assay endochitinase activity on soluble (4-MU-chitooligosaccharide) and insoluble/colloidal chitin substrates, determining kinetic constants and pH/temperature optima; include a chitin-binding-domain-deletion variant.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CHIB is an active endo-acting GH19 chitinase whose N-terminal chitin-binding domain is required for efficient hydrolysis of insoluble chitin.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme kinetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P29023" data-a="EXPERIMENT: Express and purify recombinant mature CHIB and ass..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test purified CHIB for antifungal activity against chitin-containing maize pathogens (e.g. Aspergillus, Fusarium) by radial-growth-inhibition and hyphal-lysis assays, and compare to maize chitinase A.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CHIB inhibits fungal growth by degrading hyphal-tip cell-wall chitin, consistent with its classification as an antifungal pathogenesis-related chitinase.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: antifungal bioassay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P29023" data-a="EXPERIMENT: Test purified CHIB for antifungal activity against..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate maize CHIB loss-of-function and overexpression lines and challenge with fungal pathogens and fall-armyworm larvae, scoring disease/herbivory resistance and quantifying in-planta chitinase activity and CHIB hinge cleavage by fungal polyglycine hydrolases.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CHIB contributes to quantitative antifungal and anti-herbivore defense, and its efficacy is modulated by fungal hinge-cleaving polyglycine hydrolases.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse-genetics and pathogen/herbivore challenge</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P29023" data-a="EXPERIMENT: Generate maize CHIB loss-of-function and overexpre..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CHIB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P29023" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: Functional Annotation of **maize CHIB** (UniProt **P29023**) — Endochitinase B (EC 3.2.1.14)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">28 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T08:03:49.313070</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CHIB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CHIB-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000010 Table 1 on page 5 provides the classification and domain characteristics for maize chitinase B (ChiB, GRMZM2G005633) along with Chi</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-functional-annotation-of-maize-chib-uniprot-p29023-endochitinase-b-ec-32114">Comprehensive Research Report: Functional Annotation of <strong>maize CHIB</strong> (UniProt <strong>P29023</strong>) — Endochitinase B (EC 3.2.1.14)</h1>
+<h2 id="0-identity-verification-critical-disambiguation">0) Identity verification (critical disambiguation)</h2>
+<p>The target is <strong>Zea mays (maize)</strong> <strong>Endochitinase B</strong>, UniProt accession <strong>P29023</strong>, also called <strong>ChitB / seed chitinase B</strong>, gene name <strong>CHIB</strong> (synonym <strong>CTB1</strong>). In maize genomic resources and the primary experimental literature retrieved here, “chitinase B / ChiB / ChitB” corresponds to gene model <strong>GRMZM2G005633</strong>, annotated as a <strong>GH19</strong> plant chitinase and <strong>class IV endochitinase</strong>, matching the UniProt description (GH19 family; precursor/secreted). (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-what-chib-encodes">1.1 What CHIB encodes</h3>
+<p><strong>CHIB (P29023)</strong> encodes a <strong>plant endochitinase</strong> (EC <strong>3.2.1.14</strong>) in <strong>glycoside hydrolase family 19 (GH19)</strong>. GH19 chitinases are generally described as <strong>endo-acting</strong> enzymes that hydrolyze <strong>β-1,4 glycosidic linkages</strong> in <strong>chitin</strong> (a linear polymer of N-acetylglucosamine, GlcNAc), a key structural component of fungal cell walls and arthropod exoskeletons. (han2021maizeendochitinaseexpressiona pages 1-3, ubhayasekera2011structureandfunction pages 1-2)</p>
+<h3 id="12-gh19-catalytic-mechanism-and-structural-fold">1.2 GH19 catalytic mechanism and structural fold</h3>
+<p>A central mechanistic feature of <strong>GH19 chitinases</strong> is a <strong>single-step inverting mechanism</strong> (i.e., inversion of anomeric configuration during hydrolysis). The catalytic site lies in a <strong>wide cleft</strong> within a <strong>highly α-helical, bilobed</strong> protein fold; catalysis is associated with conserved <strong>glutamate residues</strong> separated by distances typical of inverting glycosidases. (ubhayasekera2011structureandfunction pages 3-5, ubhayasekera2011structureandfunction pages 6-7)</p>
+<h3 id="13-plant-chitinase-classes-and-domain-architecture-how-chib-fits">1.3 Plant chitinase classes and domain architecture (how CHIB fits)</h3>
+<p>Plant GH19 chitinases are commonly grouped into classes (I–VI in some schemes). Class differences are associated with <strong>domain composition</strong> and <strong>loop architecture</strong> bordering the active-site cleft:<br />
+- <strong>Class I vs II:</strong> broadly similar, but <strong>class I</strong> typically includes an N-terminal <strong>chitin-binding module (CtBM/CBD)</strong> that can enhance activity on <strong>insoluble chitin</strong> and contribute to antifungal effectiveness. (ubhayasekera2011structureandfunction pages 1-2, ubhayasekera2011structureandfunction pages 5-6)<br />
+- <strong>Class IV:</strong> compared to class I/II, class IV enzymes can show <strong>loop deletions</strong> and are described in one maize-focused study as containing a <strong>CBD</strong> but lacking a particular C-terminal extension (CTE) in that class definition. (han2021maizeendochitinaseexpressiona pages 3-4, ubhayasekera2011structureandfunction pages 5-6)</p>
+<p>In maize, <strong>CHIB/ChiB</strong> is classified as a <strong>class IV GH19 chitinase</strong> and is predicted to contain both a <strong>signal peptide</strong> and a <strong>chitin-binding domain (CBD)</strong> plus the catalytic domain. (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120)</p>
+<h2 id="2-chib-p29023-molecular-features-and-inferred-cellular-localization">2) CHIB (P29023) molecular features and inferred cellular localization</h2>
+<h3 id="21-domain-architecture-and-secretion">2.1 Domain architecture and secretion</h3>
+<p>A key experimentally grounded annotation from maize is that <strong>ChiB/CHIB</strong> is predicted to contain:<br />
+- <strong>Signal peptide (SP)</strong> → consistent with secretion and extracellular/apoplastic deployment<br />
+- <strong>Chitin-binding domain (CBD; cd00035)</strong><br />
+- <strong>Catalytic domain (cd00325)</strong><br />
+- Length in multiple maize inbreds around <strong>281–282 aa</strong>, with predicted mature protein mass around <strong>~29 kDa</strong>. (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120)</p>
+<p>These properties support the functional model that CHIB is synthesized as a <strong>precursor</strong> that is directed into the <strong>secretory pathway</strong>, and likely functions in the <strong>apoplast/extracellular space</strong> (including seed extracellular matrices), where it can encounter chitin-containing microbes or chitinous insect structures.</p>
+<h3 id="22-substrate-and-reaction">2.2 Substrate and reaction</h3>
+<p>Direct CHIB-specific kinetic constants were not available in the retrieved CHIB-specific evidence. However, CHIB’s assignment to <strong>EC 3.2.1.14</strong> and <strong>GH19</strong> strongly supports that its primary biochemical function is <strong>endo-hydrolysis of β-1,4 linkages in chitin</strong>, producing chitooligosaccharides. (han2021maizeendochitinaseexpressiona pages 1-3, ubhayasekera2011structureandfunction pages 1-2)</p>
+<h2 id="3-biological-processes-and-pathway-context-in-maize">3) Biological processes and pathway context in maize</h2>
+<h3 id="31-defense-related-function-and-induction-by-herbivorywounding">3.1 Defense-related function and induction by herbivory/wounding</h3>
+<p>A maize primary study investigating insect herbivory identified <strong>ChiB/CHIB</strong> as one of four cloned maize chitinase genes and reports that <strong>transcript abundance increases dramatically</strong> in response to <strong>mechanical wounding</strong> and <strong>fall armyworm (Spodoptera frugiperda) feeding</strong>. In that dataset, the <strong>fold-change induction</strong> of <strong>ChiB</strong> was generally <strong>~10-fold</strong> (and similar magnitude to ChiI), with genotype-dependent basal expression (higher basal ChiB expression in Mp708 than Tx601). (han2021maizeendochitinaseexpressiona pages 6-7)</p>
+<p>This supports CHIB’s placement within plant defense signaling frameworks in which physical damage and herbivore-associated cues activate defense gene expression.</p>
+<h3 id="32-expression-context-seed-biased-in-available-evidence">3.2 Expression context (seed-biased in available evidence)</h3>
+<p>In the same maize study, a compiled organ/development expression annotation indicates that <strong>ChiB has highest expression in seed</strong> among surveyed organs (as presented in their Table annotation). (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120)</p>
+<h3 id="33-potential-role-in-insect-defense-persistence-through-insect-digestion">3.3 Potential role in insect defense: persistence through insect digestion</h3>
+<p>Although the enzymatic activity assays used in the maize study could not discriminate among individual chitinase isoforms, the authors detected <strong>chitinase activity in fall armyworm food bolus and frass</strong>, indicating that plant chitinases can remain active after ingestion and transit through the insect gut environment—supporting plausibility of direct anti-insect action by chitinases against chitin-containing structures (e.g., peritrophic matrix). (han2021maizeendochitinaseexpressiona pages 6-7)</p>
+<h3 id="34-genetictrait-association-context">3.4 Genetic/trait association context</h3>
+<p>ChiB maps to <strong>chromosome 10</strong> and co-localizes with <strong>insect resistance QTL</strong> regions reported for fall armyworm and southwestern corn borer (as summarized in the maize study’s annotation). While this does not prove causality, it is consistent with CHIB being a plausible contributor to quantitative resistance. (han2021maizeendochitinaseexpressiona pages 5-6)</p>
+<h2 id="4-recent-developments-prioritized-20232024-relevant-to-chib-functional-inference">4) Recent developments (prioritized 2023–2024) relevant to CHIB functional inference</h2>
+<h3 id="41-2024-mechanistic-advances-for-maize-gh19-chitinases-contextual-but-informative">4.1 2024 mechanistic advances for maize GH19 chitinases (contextual but informative)</h3>
+<p>A 2024 study/review focusing on <strong>root-associated chitinases</strong> performed modeling and mutagenesis on a <strong>different maize GH19 chitinase (ZmChi19A)</strong>, confirming key catalytic residues and domain requirements for activity against insoluble substrates and fungi. Key quantitative findings include:<br />
+- Apparent <strong>Km ~30 µM</strong> for the soluble substrate <strong>4-MU-GlcNAc3</strong> (for ZmChi19A). (shobade2024plantrootassociated pages 8-9)<br />
+- Activity optima: ZmChi19A activity described as optimal across <strong>pH 7–9</strong> and <strong>50–60°C</strong> (with one excerpt specifying <strong>pH 8</strong> and <strong>50°C</strong>). (shobade2024plantrootassociated pages 1-2, shobade2024plantrootassociated pages 6-8)<br />
+- Catalytic residues validated by mutagenesis: <strong>Glu147</strong> and <strong>Glu169</strong> are essential for activity. (shobade2024plantrootassociated pages 8-9, shobade2024plantrootassociated pages 6-8)</p>
+<p>Although this is <strong>not CHIB</strong>, it provides a <strong>2024 experimentally grounded biochemical reference point</strong> for how maize GH19 enzymes achieve chitin hydrolysis and antifungal effects, and underscores the functional importance of <strong>CBD-associated interactions</strong> with insoluble chitinous surfaces—relevant for interpreting CHIB’s predicted SP + CBD architecture. (shobade2024plantrootassociated pages 8-9, shobade2024plantrootassociated pages 6-8)</p>
+<h3 id="42-2024-synthesis-of-application-scope-and-expert-caution">4.2 2024 synthesis of application scope and expert caution</h3>
+<p>A 2024 broad review emphasizes chitinases as candidate <strong>biopesticides/biocontrol agents</strong> and as tools for sustainability (e.g., valorizing chitin-rich waste), while highlighting risks such as non-target effects and dual-use concerns. It also provides quantitative global context on chitin availability and waste. (unuofin2024chitinasesexpandingthe pages 1-2, unuofin2024chitinasesexpandingthe pages 12-13)</p>
+<h2 id="5-current-applications-and-real-world-implementations-with-quantitative-data">5) Current applications and real-world implementations (with quantitative data)</h2>
+<h3 id="51-chitinase-based-pest-management-in-maize-systems-recent-field-adjacent-example">5.1 Chitinase-based pest management in maize systems (recent field-adjacent example)</h3>
+<p>A 2024 applied study (not maize CHIB; instead <strong>bacterial</strong> <em>Serratia marcescens</em> <strong>ChiB</strong>, GH18) illustrates current translational implementation of chitinase biology for maize pest control. Key data:<br />
+- Source strain showed <strong>250 U/mg</strong> chitinase activity; recombinant expression increased production <strong>2.5-fold</strong>. (elsayed2024genecloningheterologous pages 1-2)<br />
+- In laboratory assays against <strong>Spodoptera frugiperda</strong>, reported <strong>mortality 92.75 ± 0.17%</strong> vs control <strong>8 ± 0.14%</strong> (positive chemical control emamectin benzoate: <strong>98.31 ± 0.28%</strong>). (elsayed2024genecloningheterologous pages 11-13)<br />
+- Field trial implementation details: crude enzyme solution <strong>2000 U/mL</strong>, applied <strong>10 mL per plant</strong> (knapsack sprayer), with repeated application. (elsayed2024genecloningheterologous pages 21-22)<br />
+- Field outcomes included reductions in larval pupation of <strong>75% at 7 days</strong> and <strong>88.66% at 10 days</strong> post-treatment (emamectin: 86% and 91.3%). (elsayed2024genecloningheterologous pages 11-13)</p>
+<p>This does <strong>not</strong> functionally annotate maize CHIB, but it demonstrates that chitinases are being evaluated in <strong>controlled field conditions on maize</strong> with measurable efficacy, supporting the relevance of plant chitinases (including CHIB) as part of broader chitinase-enabled integrated pest management concepts. (elsayed2024genecloningheterologous pages 11-13, elsayed2024genecloningheterologous pages 21-22)</p>
+<h3 id="52-plant-side-implementation-concept-inducible-chitinase-defenses">5.2 Plant-side implementation concept: inducible chitinase defenses</h3>
+<p>The maize herbivory study provides a mechanistic implementation concept on the plant side: <strong>CHIB expression is inducible (~10-fold)</strong> under insect feeding and wounding, and chitinase activity can persist through insect digestion. This supports the premise that endogenous plant chitinases (including CHIB) could contribute to resistance traits and/or be leveraged in breeding/engineering approaches, even though direct CHIB efficacy assays were not retrieved here. (han2021maizeendochitinaseexpressiona pages 6-7)</p>
+<h2 id="6-expert-opinions-and-analysis-authoritative-sources">6) Expert opinions and analysis (authoritative sources)</h2>
+<h3 id="61-structurefunction-interpretation-for-chib">6.1 Structure–function interpretation for CHIB</h3>
+<p>The GH19 structural review emphasizes that GH19 enzymes use a <strong>wide cleft</strong> in an <strong>α-helical bilobed fold</strong> and that <strong>loop architecture</strong> and presence/absence of <strong>chitin-binding modules</strong> can modulate substrate engagement—particularly for <strong>insoluble chitin</strong>—which is often the biologically relevant form in fungal cell walls. This supports the interpretation that CHIB’s predicted <strong>CBD</strong> likely improves performance against insoluble chitinous substrates and contributes to defense effectiveness. (ubhayasekera2011structureandfunction pages 5-6, ubhayasekera2011structureandfunction pages 2-3)</p>
+<h3 id="62-localization-and-class-features-consistent-with-extracellular-defense">6.2 Localization and class features consistent with extracellular defense</h3>
+<p>The GH19 review discusses extracellular targeting trends for some classes (including class IV in the excerpt) associated with absence of specific C-terminal features, and the maize CHIB prediction includes a <strong>signal peptide</strong>, consistent with secretion to sites of pathogen/insect interface. (ubhayasekera2011structureandfunction pages 2-3, han2021maizeendochitinaseexpressiona pages 5-6)</p>
+<h3 id="63-sustainability-and-risk-framing">6.3 Sustainability and risk framing</h3>
+<p>The 2024 broad review frames chitinases as promising for sustainable agriculture and waste valorization, but explicitly raises concerns about ecological impact, resistance evolution, and governance/dual-use risks, recommending careful consideration when deploying chitinase technologies. (unuofin2024chitinasesexpandingthe pages 12-13)</p>
+<h2 id="7-relevant-statistics-and-data-recent-studies">7) Relevant statistics and data (recent studies)</h2>
+<ul>
+<li><strong>CHIB (maize) induction:</strong> ChiB transcript induction in response to wounding/herbivory is described as <strong>~10-fold</strong> in a maize study. (han2021maizeendochitinaseexpressiona pages 6-7)</li>
+<li><strong>CHIB (maize) structural annotation:</strong> predicted <strong>SP + CBD + catalytic domain</strong>, <strong>~281–282 aa</strong> and <strong>~29 kDa</strong>. (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120)</li>
+<li><strong>2024 maize GH19 kinetic reference (ZmChi19A, different gene):</strong> apparent <strong>Km 30 µM</strong> for <strong>4-MU-GlcNAc3</strong> and optima described across <strong>pH 7–9</strong> and <strong>50–60°C</strong>. (shobade2024plantrootassociated pages 8-9, shobade2024plantrootassociated pages 1-2)</li>
+<li><strong>2024 chitin global context:</strong> annual aquatic biosphere chitin production estimated <strong>10^12–10^14 tonnes</strong>, and <strong>≥60%</strong> of seafood/mollusc chitin residue reportedly discarded without proper management. (unuofin2024chitinasesexpandingthe pages 1-2)</li>
+<li><strong>2024 biocontrol implementation (bacterial ChiB, not maize CHIB):</strong> lab mortality <strong>92.75 ± 0.17%</strong>, field pupation reduction <strong>75% (7d)</strong> and <strong>88.66% (10d)</strong>; field application <strong>2000 U/mL</strong>, <strong>10 mL/plant</strong>. (elsayed2024genecloningheterologous pages 11-13, elsayed2024genecloningheterologous pages 21-22)</li>
+</ul>
+<h2 id="8-evidence-backed-functional-annotation-summary-for-maize-chib-p29023">8) Evidence-backed functional annotation summary for maize CHIB (P29023)</h2>
+<table>
+<thead>
+<tr>
+<th>Gene/protein</th>
+<th>Names / identifiers</th>
+<th>Enzyme class</th>
+<th>Predicted domains / architecture</th>
+<th>Approx. length / mass</th>
+<th>Likely localization</th>
+<th>Inducing conditions / expression context</th>
+<th>Recent biochemical examples / notes</th>
+<th>Key supporting citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CHIB (target gene)</strong></td>
+<td><strong>Endochitinase B; ChitB; seed chitinase B; UniProt P29023; gene model GRMZM2G005633</strong></td>
+<td><strong>EC 3.2.1.14; glycoside hydrolase family 19 (GH19); class IV plant endochitinase</strong></td>
+<td><strong>Signal peptide present; chitin-binding domain (CBD; cd00035) present; catalytic domain (cd00325) present; class IV GH19 architecture</strong></td>
+<td><strong>~281–282 aa; predicted mature protein ~29 kDa</strong></td>
+<td><strong>Likely secreted / apoplastic or extracellular, consistent with signal peptide and seed/pathogenesis-related chitinase annotation</strong></td>
+<td><strong>Transcript abundance and total chitinase activity increase after mechanical wounding and fall armyworm herbivory; high organ expression reported in seed; Table 1 image supports SP/CBD/domain assignment</strong></td>
+<td><strong>Direct CHIB-specific kinetic constants were not provided in the retrieved excerpts; function is inferred as an endochitinase that hydrolyzes β-1,4 linkages in chitin, consistent with GH19 catalytic mechanism</strong></td>
+<td>(han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpressiona pages 3-4, han2021maizeendochitinaseexpressiona pages 1-3, han2021maizeendochitinaseexpression media 094c2120)</td>
+</tr>
+<tr>
+<td><strong>ZmChi19A (comparison only; different maize GH19 gene, not CHIB)</strong></td>
+<td><strong>Zea mays basic endochitinase; root-associated GH19 chitinase</strong></td>
+<td><strong>GH19; class I endochitinase</strong></td>
+<td><strong>N-terminal hevein-like CBD; α-helical catalytic domain; flexible C-terminal domain; catalytic residues E147 and E169</strong></td>
+<td><strong>Not summarized in retrieved excerpt</strong></td>
+<td><strong>Root-secreted / rhizosphere-associated</strong></td>
+<td><strong>Studied as a root-associated defense enzyme; antifungal activity against <em>Aspergillus niger</em></strong></td>
+<td><strong>Apparent Km ~30 µM for 4-MU-GlcNAc3; optimum around pH 7–9 and 50–60°C (more specifically pH 8 and 50°C in one excerpt); CBD and flexible C-terminal domain are required for efficient colloidal chitin cleavage and fungal growth inhibition</strong></td>
+<td>(shobade2024plantrootassociated pages 8-9, shobade2024plantrootassociated pages 6-8, shobade2024plantrootassociated pages 1-2, shobade2024plantrootassociated pages 4-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation for the maize CHIB/ChitB protein targeted in the report, using evidence that specifically matches UniProt P29023 and the maize gene model GRMZM2G005633. It also includes a clearly separated comparison row for a different maize GH19 chitinase, ZmChi19A, to illustrate recent biochemical parameters available for related GH19 enzymes.</em></p>
+<p>In addition, the following visual evidence directly supports CHIB’s predicted domain/class assignment in maize (Table 1 from Han et al. 2021): (han2021maizeendochitinaseexpression media 094c2120)</p>
+<h2 id="9-limitations-and-confidence-assessment-important">9) Limitations and confidence assessment (important)</h2>
+<ul>
+<li><strong>Strong evidence:</strong> CHIB identity in maize (GRMZM2G005633), classification as <strong>GH19 class IV</strong>, predicted <strong>signal peptide + CBD + catalytic domain</strong>, approximate length/mass, and <strong>induction by herbivory/wounding</strong> with ~10-fold transcript induction are supported by primary maize literature and a table image. (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120, han2021maizeendochitinaseexpressiona pages 6-7)</li>
+<li><strong>Moderate evidence (inference):</strong> Specific subcellular localization (“apoplast/seed extracellular”) is inferred from signal peptide and class/domain context; direct localization experiments for CHIB were not present in retrieved evidence. (han2021maizeendochitinaseexpressiona pages 5-6, ubhayasekera2011structureandfunction pages 2-3)</li>
+<li><strong>Missing in retrieved corpus:</strong> Direct CHIB biochemical characterization (e.g., kinetic constants, pH optima, detailed substrate specificity beyond “chitin”) and direct antifungal/insecticidal assays for <strong>maize CHIB protein itself</strong> were not available in the accessible texts. Related maize GH19 enzymes (e.g., ZmChi19A) provide mechanistic context but should not be conflated with CHIB. (shobade2024plantrootassociated pages 8-9, shobade2024plantrootassociated pages 6-8)</li>
+</ul>
+<h2 id="10-key-sources-with-publication-dates-and-urls">10) Key sources (with publication dates and URLs)</h2>
+<ul>
+<li>Han Y, Taylor EB, Luthe D. <strong>Maize Endochitinase Expression in Response to Fall Armyworm Herbivory.</strong> <em>Journal of Chemical Ecology.</em> <strong>May 2021</strong>. https://doi.org/10.1007/s10886-021-01284-9 (han2021maizeendochitinaseexpressiona pages 5-6, han2021maizeendochitinaseexpression media 094c2120, han2021maizeendochitinaseexpressiona pages 6-7)</li>
+<li>Shobade SO, Zabotina OA, Nilsen-Hamilton M. <strong>Plant root associated chitinases: structures and functions.</strong> <em>Frontiers in Plant Science.</em> <strong>Feb 2024</strong>. https://doi.org/10.3389/fpls.2024.1344142 (shobade2024plantrootassociated pages 8-9, shobade2024plantrootassociated pages 1-2)</li>
+<li>El-Sayed GM, Emam MTH, Hammad MA, Mahmoud SH. <strong>Gene cloning, heterologous expression, and in silico analysis of chitinase B from Serratia marcescens for biocontrol of Spodoptera frugiperda larvae infesting maize crops.</strong> <em>Molecules.</em> <strong>Mar 2024</strong>. https://doi.org/10.3390/molecules29071466 (elsayed2024genecloningheterologous pages 11-13, elsayed2024genecloningheterologous pages 21-22)</li>
+<li>Unuofin JO et al. <strong>Chitinases: expanding the boundaries of knowledge beyond routinized chitin degradation.</strong> <em>Environmental Science and Pollution Research.</em> <strong>May 2024</strong>. https://doi.org/10.1007/s11356-024-33728-6 (unuofin2024chitinasesexpandingthe pages 1-2, unuofin2024chitinasesexpandingthe pages 12-13)</li>
+<li>Ubhayasekera W. <strong>Structure and function of chitinases from glycoside hydrolase family 19.</strong> <em>Polymer International.</em> <strong>Jun 2011</strong>. https://doi.org/10.1002/pi.3028 (ubhayasekera2011structureandfunction pages 3-5, ubhayasekera2011structureandfunction pages 6-7)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(han2021maizeendochitinaseexpressiona pages 5-6): Yang Han, Erin B. Taylor, and Dawn Luthe. Maize endochitinase expression in response to fall armyworm herbivory. May 2021. URL: https://doi.org/10.1007/s10886-021-01284-9, doi:10.1007/s10886-021-01284-9. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(han2021maizeendochitinaseexpression media 094c2120): Yang Han, Erin B. Taylor, and Dawn Luthe. Maize endochitinase expression in response to fall armyworm herbivory. May 2021. URL: https://doi.org/10.1007/s10886-021-01284-9, doi:10.1007/s10886-021-01284-9. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(han2021maizeendochitinaseexpressiona pages 1-3): Yang Han, Erin B. Taylor, and Dawn Luthe. Maize endochitinase expression in response to fall armyworm herbivory. May 2021. URL: https://doi.org/10.1007/s10886-021-01284-9, doi:10.1007/s10886-021-01284-9. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ubhayasekera2011structureandfunction pages 1-2): Wimal Ubhayasekera. Structure and function of chitinases from glycoside hydrolase family 19. Polymer International, 60:890-896, Jun 2011. URL: https://doi.org/10.1002/pi.3028, doi:10.1002/pi.3028. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ubhayasekera2011structureandfunction pages 3-5): Wimal Ubhayasekera. Structure and function of chitinases from glycoside hydrolase family 19. Polymer International, 60:890-896, Jun 2011. URL: https://doi.org/10.1002/pi.3028, doi:10.1002/pi.3028. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ubhayasekera2011structureandfunction pages 6-7): Wimal Ubhayasekera. Structure and function of chitinases from glycoside hydrolase family 19. Polymer International, 60:890-896, Jun 2011. URL: https://doi.org/10.1002/pi.3028, doi:10.1002/pi.3028. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ubhayasekera2011structureandfunction pages 5-6): Wimal Ubhayasekera. Structure and function of chitinases from glycoside hydrolase family 19. Polymer International, 60:890-896, Jun 2011. URL: https://doi.org/10.1002/pi.3028, doi:10.1002/pi.3028. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(han2021maizeendochitinaseexpressiona pages 3-4): Yang Han, Erin B. Taylor, and Dawn Luthe. Maize endochitinase expression in response to fall armyworm herbivory. May 2021. URL: https://doi.org/10.1007/s10886-021-01284-9, doi:10.1007/s10886-021-01284-9. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(han2021maizeendochitinaseexpressiona pages 6-7): Yang Han, Erin B. Taylor, and Dawn Luthe. Maize endochitinase expression in response to fall armyworm herbivory. May 2021. URL: https://doi.org/10.1007/s10886-021-01284-9, doi:10.1007/s10886-021-01284-9. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shobade2024plantrootassociated pages 8-9): Samuel O. Shobade, Olga A. Zabotina, and Marit Nilsen-Hamilton. Plant root associated chitinases: structures and functions. Frontiers in Plant Science, Feb 2024. URL: https://doi.org/10.3389/fpls.2024.1344142, doi:10.3389/fpls.2024.1344142. This article has 28 citations.</p>
+</li>
+<li>
+<p>(shobade2024plantrootassociated pages 1-2): Samuel O. Shobade, Olga A. Zabotina, and Marit Nilsen-Hamilton. Plant root associated chitinases: structures and functions. Frontiers in Plant Science, Feb 2024. URL: https://doi.org/10.3389/fpls.2024.1344142, doi:10.3389/fpls.2024.1344142. This article has 28 citations.</p>
+</li>
+<li>
+<p>(shobade2024plantrootassociated pages 6-8): Samuel O. Shobade, Olga A. Zabotina, and Marit Nilsen-Hamilton. Plant root associated chitinases: structures and functions. Frontiers in Plant Science, Feb 2024. URL: https://doi.org/10.3389/fpls.2024.1344142, doi:10.3389/fpls.2024.1344142. This article has 28 citations.</p>
+</li>
+<li>
+<p>(unuofin2024chitinasesexpandingthe pages 1-2): John Onolame Unuofin, Olubusola Ayoola Odeniyi, Omolara Sola Majengbasan, Aboi Igwaran, Karabelo MacMillan Moloantoa, Zenzile Peter Khetsha, Samuel Ayodele Iwarere, and Michael Olawale Daramola. Chitinases: expanding the boundaries of knowledge beyond routinized chitin degradation. Environmental Science and Pollution Research International, 31:38045-38060, May 2024. URL: https://doi.org/10.1007/s11356-024-33728-6, doi:10.1007/s11356-024-33728-6. This article has 54 citations.</p>
+</li>
+<li>
+<p>(unuofin2024chitinasesexpandingthe pages 12-13): John Onolame Unuofin, Olubusola Ayoola Odeniyi, Omolara Sola Majengbasan, Aboi Igwaran, Karabelo MacMillan Moloantoa, Zenzile Peter Khetsha, Samuel Ayodele Iwarere, and Michael Olawale Daramola. Chitinases: expanding the boundaries of knowledge beyond routinized chitin degradation. Environmental Science and Pollution Research International, 31:38045-38060, May 2024. URL: https://doi.org/10.1007/s11356-024-33728-6, doi:10.1007/s11356-024-33728-6. This article has 54 citations.</p>
+</li>
+<li>
+<p>(elsayed2024genecloningheterologous pages 1-2): Ghada M. El-Sayed, Maha T. H. Emam, Maher A. Hammad, and Shaymaa H. Mahmoud. Gene cloning, heterologous expression, and in silico analysis of chitinase b from serratia marcescens for biocontrol of spodoptera frugiperda larvae infesting maize crops. Molecules, 29:1466, Mar 2024. URL: https://doi.org/10.3390/molecules29071466, doi:10.3390/molecules29071466. This article has 19 citations.</p>
+</li>
+<li>
+<p>(elsayed2024genecloningheterologous pages 11-13): Ghada M. El-Sayed, Maha T. H. Emam, Maher A. Hammad, and Shaymaa H. Mahmoud. Gene cloning, heterologous expression, and in silico analysis of chitinase b from serratia marcescens for biocontrol of spodoptera frugiperda larvae infesting maize crops. Molecules, 29:1466, Mar 2024. URL: https://doi.org/10.3390/molecules29071466, doi:10.3390/molecules29071466. This article has 19 citations.</p>
+</li>
+<li>
+<p>(elsayed2024genecloningheterologous pages 21-22): Ghada M. El-Sayed, Maha T. H. Emam, Maher A. Hammad, and Shaymaa H. Mahmoud. Gene cloning, heterologous expression, and in silico analysis of chitinase b from serratia marcescens for biocontrol of spodoptera frugiperda larvae infesting maize crops. Molecules, 29:1466, Mar 2024. URL: https://doi.org/10.3390/molecules29071466, doi:10.3390/molecules29071466. This article has 19 citations.</p>
+</li>
+<li>
+<p>(ubhayasekera2011structureandfunction pages 2-3): Wimal Ubhayasekera. Structure and function of chitinases from glycoside hydrolase family 19. Polymer International, 60:890-896, Jun 2011. URL: https://doi.org/10.1002/pi.3028, doi:10.1002/pi.3028. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shobade2024plantrootassociated pages 4-6): Samuel O. Shobade, Olga A. Zabotina, and Marit Nilsen-Hamilton. Plant root associated chitinases: structures and functions. Frontiers in Plant Science, Feb 2024. URL: https://doi.org/10.3389/fpls.2024.1344142, doi:10.3389/fpls.2024.1344142. This article has 28 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CHIB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000010 Table 1 on page 5 provides the classification and domain characteristics for maize chitinase B (ChiB, GRMZM2G005633) along with Chi" src="CHIB-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>han2021maizeendochitinaseexpressiona pages 6-7</li>
+<li>han2021maizeendochitinaseexpressiona pages 5-6</li>
+<li>shobade2024plantrootassociated pages 8-9</li>
+<li>elsayed2024genecloningheterologous pages 1-2</li>
+<li>elsayed2024genecloningheterologous pages 11-13</li>
+<li>elsayed2024genecloningheterologous pages 21-22</li>
+<li>unuofin2024chitinasesexpandingthe pages 12-13</li>
+<li>unuofin2024chitinasesexpandingthe pages 1-2</li>
+<li>han2021maizeendochitinaseexpressiona pages 1-3</li>
+<li>ubhayasekera2011structureandfunction pages 1-2</li>
+<li>ubhayasekera2011structureandfunction pages 3-5</li>
+<li>ubhayasekera2011structureandfunction pages 6-7</li>
+<li>ubhayasekera2011structureandfunction pages 5-6</li>
+<li>han2021maizeendochitinaseexpressiona pages 3-4</li>
+<li>shobade2024plantrootassociated pages 1-2</li>
+<li>shobade2024plantrootassociated pages 6-8</li>
+<li>ubhayasekera2011structureandfunction pages 2-3</li>
+<li>shobade2024plantrootassociated pages 4-6</li>
+<li>https://doi.org/10.1007/s10886-021-01284-9</li>
+<li>https://doi.org/10.3389/fpls.2024.1344142</li>
+<li>https://doi.org/10.3390/molecules29071466</li>
+<li>https://doi.org/10.1007/s11356-024-33728-6</li>
+<li>https://doi.org/10.1002/pi.3028</li>
+<li>https://doi.org/10.1007/s10886-021-01284-9,</li>
+<li>https://doi.org/10.1002/pi.3028,</li>
+<li>https://doi.org/10.3389/fpls.2024.1344142,</li>
+<li>https://doi.org/10.1007/s11356-024-33728-6,</li>
+<li>https://doi.org/10.3390/molecules29071466,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P29023
+gene_symbol: CHIB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4577
+  label: Zea mays
+description: &gt;
+  CHIB (P29023; ChitB / seed chitinase B; gene synonym CTB1; maize gene model
+  GRMZM2G005633) is a maize (Zea mays) endochitinase (EC 3.2.1.14) of glycoside
+  hydrolase family 19 (GH19). GH19 chitinases are endo-acting enzymes that hydrolyze
+  the beta-1,4 glycosidic linkages of chitin - a linear polymer of N-acetylglucosamine
+  (GlcNAc) that is the principal structural polysaccharide of fungal cell walls and
+  arthropod exoskeletons - producing chitooligosaccharides via a single-step inverting
+  mechanism. The protein is synthesized as a precursor with an N-terminal signal peptide
+  (residues 1-33) and is secreted; the mature 248-residue chain (residues 34-281) carries
+  an N-terminal hevein-type chitin-binding domain (Chitin-binding type-1, residues 34-68),
+  a short Gly-rich hinge (residues 69-78), and a C-terminal GH19 catalytic domain (residues
+  79-281, proton-donor active site at Glu145). The chitin-binding module enhances activity
+  on insoluble chitin and contributes to antifungal effectiveness. CHIB is a classic
+  pathogenesis-related (PR-3) basic chitinase: it was first purified from maize seed and
+  characterized as an antifungal protein that defends against chitin-containing fungal
+  pathogens (Huynh et al. 1992), and its transcript is induced ~10-fold by mechanical
+  wounding and fall-armyworm (Spodoptera frugiperda) herbivory, placing it within plant
+  defense responses. Its core molecular function is therefore endochitinase / chitinase
+  activity coupled to chitin binding; its core biological process is chitin catabolism
+  serving antifungal (and likely anti-herbivore) defense in the extracellular/apoplastic
+  compartment and in seed. Maize chitinase B is reported to be somewhat less active than
+  maize chitinase A, and its activity is countered in planta by fungal polyglycine
+  hydrolases that cleave its Gly-rich hinge to disrupt chitin binding.
+existing_annotations:
+- term:
+    id: GO:0004568
+    label: chitinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      Chitinase activity assigned by combined automated IEA methods (ARBA/InterPro). This
+      is the core molecular function of CHIB, a GH19 endochitinase (EC 3.2.1.14).
+    action: ACCEPT
+    reason: &gt;
+      Correct and central to the gene&#39;s function. CHIB belongs to glycoside hydrolase family
+      19 and is annotated EC 3.2.1.14 (endochitinase); GH19 chitinases hydrolyze the beta-1,4
+      linkages of chitin. The activity is consistent with the UniProt catalytic-activity
+      statement (random endo-hydrolysis of N-acetyl-beta-D-glucosaminide (1-&gt;4)-beta-linkages
+      in chitin and chitodextrins). This is a core function and is appropriately specific.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;GH19 chitinases are generally described as **endo-acting** enzymes that
+        hydrolyze&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;a key structural component of fungal cell walls and arthropod exoskeletons.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Extracellular localization assigned from the UniProtKB Subcellular Location vocabulary
+      (Secreted). Consistent with the predicted signal peptide and secretory deployment of CHIB.
+    action: ACCEPT
+    reason: &gt;
+      CHIB carries an N-terminal signal peptide (residues 1-33) and is annotated &#34;Secreted&#34; in
+      UniProt, consistent with an apoplastic/extracellular pathogenesis-related chitinase that
+      encounters chitin-containing microbes and chitinous insect structures at the cell surface.
+      The localization is appropriate and supported by the secretory architecture.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;consistent with secretion and extracellular/apoplastic deployment&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;Likely secreted / apoplastic or extracellular, consistent with signal
+        peptide and seed/pathogenesis-related chitinase annotation&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      Carbohydrate metabolic process assigned by InterPro2GO (IPR016283, Glyco_hydro_19). This
+      is a very broad parent of the gene&#39;s true process, chitin catabolism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      Not wrong - chitin is a carbohydrate (polysaccharide) and its hydrolysis is carbohydrate
+      metabolism - but &#34;carbohydrate metabolic process&#34; is a high-level grouping term that conveys
+      little once the specific process &#34;chitin catabolic process&#34; (GO:0006032, also present in the
+      current GOA) is annotated. The precise function is endo-hydrolysis of chitin. Retaining the
+      vague parent adds no information beyond the specific term, so it is best treated as an
+      over-annotation.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;its primary biochemical function is&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;producing chitooligosaccharides.&#34;
+- term:
+    id: GO:0006032
+    label: chitin catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      Chitin catabolic process assigned by InterPro2GO (IPR000726, Glyco_hydro_19_cat). This is
+      the precise biological process for a GH19 endochitinase and is the core process of CHIB.
+    action: ACCEPT
+    reason: &gt;
+      Correct and at the right level of specificity. CHIB hydrolyzes the beta-1,4 linkages of
+      chitin, a beta-(1-&gt;4)-linked N-acetyl-D-glucosamine polysaccharide, breaking it down into
+      chitooligosaccharides - precisely &#34;chitin catabolic process&#34;. This is the core biological
+      process and is more informative than the generic parents &#34;carbohydrate metabolic process&#34;
+      and &#34;polysaccharide catabolic process&#34;.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;its primary biochemical function is&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;producing chitooligosaccharides.&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;GH19 chitinases are generally described as **endo-acting** enzymes that
+        hydrolyze&#34;
+- term:
+    id: GO:0008061
+    label: chitin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      Chitin binding assigned by InterPro2GO (IPR001002/IPR018371/IPR036861, chitin-binding
+      type-1 / hevein domain). CHIB contains an N-terminal chitin-binding domain.
+    action: ACCEPT
+    reason: &gt;
+      Correct and supported by the protein architecture. CHIB has an N-terminal hevein-type
+      chitin-binding domain (Chitin-binding type-1, residues 34-68); the CAZy CBM18 / Pfam
+      Chitin_bind_1 assignments confirm the module. The chitin-binding domain enhances activity
+      on insoluble chitin and contributes to antifungal effectiveness. This molecular function
+      is a genuine, specific accessory activity supporting substrate engagement.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;typically includes an N-terminal&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;improves performance against insoluble chitinous substrates and
+        contributes to defense effectiveness.&#34;
+- term:
+    id: GO:0008843
+    label: endochitinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: &gt;
+      Endochitinase activity assigned by EC2GO mapping from EC 3.2.1.14. This is the most precise
+      molecular-function term for CHIB and represents its core catalytic activity.
+    action: ACCEPT
+    reason: &gt;
+      Correct and the most informative MF term for the gene. CHIB is named &#34;Endochitinase B&#34; with
+      EC 3.2.1.14, and the UniProt catalytic-activity statement describes random endo-hydrolysis of
+      chitin and chitodextrins - i.e. an endo-acting (rather than exo-acting) chitinase. The term is
+      preferred over the more generic &#34;chitinase activity&#34; (GO:0004568) because it specifies the
+      endo mode of cleavage.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;GH19 chitinases are generally described as **endo-acting** enzymes that
+        hydrolyze&#34;
+- term:
+    id: GO:0016998
+    label: cell wall macromolecule catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      Cell wall macromolecule catabolic process assigned by InterPro2GO (IPR000726). This captures
+      the biologically relevant target of CHIB: degradation of chitin in fungal cell walls.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      Reasonable and biologically meaningful: chitin is a structural component of fungal cell walls,
+      and a secreted plant endochitinase degrades fungal-cell-wall chitin as the basis of its
+      antifungal action. The term is correct but is a process-level framing of the same activity
+      already captured by &#34;chitin catabolic process&#34; (GO:0006032), which is the core, more direct
+      term. Retain this as a non-core descriptor of the host-defense context (degradation of the
+      microbial cell-wall macromolecule) rather than as the primary process.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;a key structural component of fungal cell walls and arthropod exoskeletons.&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;biologically relevant form in fungal cell walls.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;
+      Extracellular localization transferred by curator ISS from the ortholog UniProtKB:P29022
+      (maize endochitinase A). Duplicates the IEA extracellular-region annotation with stronger,
+      orthology-based evidence.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the secretory architecture of CHIB (signal peptide, &#34;Secreted&#34;
+      subcellular location) and with the IEA extracellular-region annotation. ISS transfer from the
+      closely related maize endochitinase A (P29022) is appropriate given the shared GH19 chitinase
+      family, signal peptide and secreted-defense-protein role. Duplicate annotations with different
+      evidence codes are acceptable.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;Likely secreted / apoplastic or extracellular, consistent with signal
+        peptide and seed/pathogenesis-related chitinase annotation&#34;
+- term:
+    id: GO:0008843
+    label: endochitinase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;
+      Endochitinase activity transferred by curator ISS from the ortholog UniProtKB:P29022 (maize
+      endochitinase A). Duplicates the EC-based IEA endochitinase annotation.
+    action: ACCEPT
+    reason: &gt;
+      Correct core molecular function, here supported by orthology-based curator transfer from maize
+      endochitinase A (P29022), the entry from which CHIB&#39;s EC 3.2.1.14 / catalytic-activity statement
+      was itself transferred by similarity. Consistent with the EC2GO IEA endochitinase annotation and
+      with GH19 family assignment. Duplicate annotations with different evidence codes are acceptable.
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;GH19 chitinases are generally described as **endo-acting** enzymes that
+        hydrolyze&#34;
+# --- SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED
+# from the current (2026) GOA release when GOA retired the keyword2GO pipeline
+# for cellular organisms. Reviewed retrospectively to assess whether removal was
+# justified. Re-added here as retired entries with full review blocks. CHIB carries
+# the UniProt keywords &#34;Plant defense&#34; (-&gt; defense response) and &#34;Polysaccharide
+# degradation&#34; / &#34;Chitin degradation&#34; (-&gt; polysaccharide catabolic process).
+- term:
+    id: GO:0006952
+    label: defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Plant defense&#34;;
+      snapshot-only, removed in the current GOA release. CHIB is a bona fide antifungal
+      pathogenesis-related (PR-3) chitinase, so the defense role is genuinely correct - but the
+      bare &#34;defense response&#34; parent is over-broad relative to the gene&#39;s specific antifungal action.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      The essence is correct: CHIB was first purified and characterized as an antifungal protein
+      from maize seed and is annotated by UniProt as functioning in &#34;defense against chitin-containing
+      fungal pathogens&#34;, and its transcript is induced ~10-fold by wounding and fall-armyworm
+      herbivory. However, &#34;defense response&#34; (GO:0006952) is a high-level grouping term, and the
+      antifungal defense operates THROUGH the gene&#39;s chitinase enzymatic activity (secreted GH19
+      endochitinase degrading fungal-cell-wall chitin). Once the core molecular function (chitinase /
+      endochitinase activity, chitin binding) and the chitin/cell-wall-macromolecule catabolic
+      processes are annotated, the bare &#34;defense response&#34; parent adds little. The genuine biology is
+      better captured by the more specific child term &#34;defense response to fungus&#34; (GO:0050832),
+      proposed below as a NEW annotation. GOA&#39;s removal of the generic keyword-derived term is
+      therefore acceptable; the defense role should be retained at the more precise antifungal level.
+    proposed_replacement_terms:
+    - id: GO:0050832
+      label: defense response to fungus
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;A maize primary study investigating insect herbivory identified&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;This supports CHIB’s placement within plant defense signaling frameworks in
+        which physical damage and herbivore-associated cues activate defense gene expression.&#34;
+- term:
+    id: GO:0000272
+    label: polysaccharide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Polysaccharide degradation&#34;
+      / &#34;Chitin degradation&#34;; snapshot-only, removed in the current GOA release. The term is correct
+      (chitin is a polysaccharide and CHIB catabolizes it) but is a generic parent of the precise
+      process, chitin catabolic process.
+    action: MODIFY
+    reason: &gt;
+      Chitin is a linear polysaccharide of beta-(1-&gt;4)-linked N-acetyl-D-glucosamine, and CHIB
+      hydrolyzes it - so &#34;polysaccharide catabolic process&#34; (GO:0000272) is not wrong, just
+      under-specific. The exact process is &#34;chitin catabolic process&#34; (GO:0006032), which is the
+      direct child describing breakdown of chitin and which is ALREADY present and retained in the
+      current GOA (InterPro2GO, IPR000726). The annotation should therefore be MODIFIED to GO:0006032;
+      the keyword-derived generic parent can be dropped because the specific child is already annotated.
+      No correct biology is lost by removing the generic SPKW term.
+    proposed_replacement_terms:
+    - id: GO:0006032
+      label: chitin catabolic process
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;its primary biochemical function is&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;producing chitooligosaccharides.&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;GH19 chitinases are generally described as **endo-acting** enzymes that
+        hydrolyze&#34;
+# --- NEW annotation proposed from the literature ---
+- term:
+    id: GO:0050832
+    label: defense response to fungus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      CHIB is an antifungal pathogenesis-related chitinase whose biological role is defense against
+      chitin-containing fungal pathogens. This specific child of &#34;defense response&#34; is the accurate
+      process term and is proposed to replace the retired generic &#34;defense response&#34; SPKW annotation.
+    action: NEW
+    reason: &gt;
+      CHIB (&#34;Seed chitinase B&#34;) was first purified and characterized as an antifungal protein from
+      maize seed (Huynh et al. 1992), and UniProt annotates its FUNCTION as &#34;Defense against
+      chitin-containing fungal pathogens&#34;; the host-defense mechanism is enzymatic degradation of
+      fungal-cell-wall chitin by the secreted GH19 endochitinase, an action that fungi counter via
+      polyglycine hydrolases that cleave the chitinase hinge. The biologically precise process term
+      is therefore &#34;defense response to fungus&#34; (GO:0050832), which is more informative than the bare
+      &#34;defense response&#34; parent and captures the antifungal specificity supported by the chitinase
+      molecular function. (Note: the inducible-defense evidence also includes a wounding/herbivory
+      component; the antifungal role is the best-supported and most specific defense process.)
+    supported_by:
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;a key structural component of fungal cell walls and arthropod exoskeletons.&#34;
+    - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+      supporting_text: &#34;improves performance against insoluble chitinous substrates and
+        contributes to defense effectiveness.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro2GO mappings assign chitin binding (IPR001002/IPR018371/IPR036861),
+      chitin catabolic process and cell wall macromolecule catabolic process (IPR000726), and
+      carbohydrate metabolic process (IPR016283, Glyco_hydro_19) to CHIB.
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings:
+  - statement: EC2GO maps EC 3.2.1.14 (the endochitinase EC annotated to CHIB) to endochitinase
+      activity (GO:0008843).
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by
+    curator judgment of sequence similarity
+  findings:
+  - statement: Curator ISS transfer from the maize endochitinase A ortholog (UniProtKB:P29022)
+      assigns extracellular region and endochitinase activity to CHIB.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the
+      keyword2GO pipeline for cellular organisms.
+  - statement: For CHIB, the keyword &#34;Plant defense&#34; mapped to the generic &#34;defense response&#34;
+      and &#34;Polysaccharide degradation&#34;/&#34;Chitin degradation&#34; mapped to &#34;polysaccharide catabolic
+      process&#34;; both are correct-but-generic relative to the gene&#39;s specific antifungal and
+      chitin-catabolic biology, which is captured by retained current-GOA terms and by the proposed
+      more specific terms.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: The UniProt &#34;Secreted&#34; subcellular location maps to extracellular region (GO:0005576),
+      consistent with CHIB&#39;s signal peptide and secretory deployment.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined automated IEA methods (ARBA/InterPro) assign chitinase activity (GO:0004568)
+      to CHIB, consistent with its GH19 / EC 3.2.1.14 endochitinase identity.
+- id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation of
+    maize CHIB / Endochitinase B (P29023).
+  findings:
+  - statement: CHIB (P29023; ChitB / seed chitinase B; gene model GRMZM2G005633) is a maize GH19
+      plant endochitinase (EC 3.2.1.14) that hydrolyzes the beta-1,4 glycosidic linkages of chitin,
+      a polymer of N-acetylglucosamine that is a key structural component of fungal cell walls and
+      arthropod exoskeletons.
+  - statement: GH19 chitinases use a single-step inverting mechanism in a wide active-site cleft of
+      an alpha-helical bilobed fold; chitin-binding modules enhance activity on insoluble chitin (the
+      biologically relevant fungal-cell-wall form) and contribute to antifungal effectiveness.
+  - statement: CHIB is predicted to contain a signal peptide, an N-terminal chitin-binding domain
+      and a catalytic domain (~281-282 aa, ~29 kDa), consistent with secretion to the
+      apoplast/extracellular space.
+  - statement: ChiB/CHIB transcript abundance increases dramatically (~10-fold) in response to
+      mechanical wounding and fall-armyworm (Spodoptera frugiperda) feeding, placing CHIB within
+      plant defense signaling; ChiB shows highest expression in seed among surveyed organs and maps
+      to chromosome 10 near insect-resistance QTL.
+  - statement: Direct CHIB-specific kinetic constants were not available in the retrieved corpus;
+      function is inferred from EC 3.2.1.14 / GH19 assignment and supported by herbivory-induction
+      and seed/pathogenesis-related-chitinase context.
+core_functions:
+- description: &gt;
+    CHIB is a secreted maize GH19 endochitinase (EC 3.2.1.14) that hydrolyzes the beta-1,4 linkages
+    of chitin - the N-acetylglucosamine polysaccharide of fungal cell walls and insect exoskeletons -
+    producing chitooligosaccharides. Substrate engagement is aided by its N-terminal hevein-type
+    chitin-binding domain, which enhances activity on insoluble chitin.
+  molecular_function:
+    id: GO:0008843
+    label: endochitinase activity
+  directly_involved_in:
+  - id: GO:0006032
+    label: chitin catabolic process
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+    supporting_text: &#34;producing chitooligosaccharides.&#34;
+  - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+    supporting_text: &#34;typically includes an N-terminal&#34;
+- description: &gt;
+    CHIB acts as an antifungal pathogenesis-related (PR-3) defense enzyme: by degrading
+    fungal-cell-wall chitin in the apoplast/extracellular space it defends maize against
+    chitin-containing fungal pathogens, and it is part of the inducible defense response to wounding
+    and herbivory. The antifungal biological role operates through the chitinase enzymatic activity.
+  molecular_function:
+    id: GO:0008843
+    label: endochitinase activity
+  directly_involved_in:
+  - id: GO:0050832
+    label: defense response to fungus
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+    supporting_text: &#34;a key structural component of fungal cell walls and arthropod exoskeletons.&#34;
+  - reference_id: file:MAIZE/CHIB/CHIB-deep-research-falcon.md
+    supporting_text: &#34;This supports CHIB’s placement within plant defense signaling frameworks in
+      which physical damage and herbivore-associated cues activate defense gene expression.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does the purified maize CHIB protein have direct antifungal activity against
+    plant-pathogenic fungi (e.g. growth inhibition / hyphal-tip lysis), and how does its potency
+    compare with maize chitinase A, which is reported to be more active?
+- question: What are CHIB&#39;s biochemical parameters (Km, pH/temperature optima, soluble vs colloidal/
+    insoluble chitin preference) and is the N-terminal chitin-binding domain required for activity on
+    insoluble chitin, as suggested for related maize GH19 chitinases?
+- question: Is CHIB&#39;s antifungal role compromised in planta by fungal polyglycine hydrolases that
+    cleave its Gly-rich hinge, and does this hinge cleavage measurably reduce chitin binding and
+    antifungal efficacy during infection?
+suggested_experiments:
+- description: Express and purify recombinant mature CHIB and assay endochitinase activity on
+    soluble (4-MU-chitooligosaccharide) and insoluble/colloidal chitin substrates, determining
+    kinetic constants and pH/temperature optima; include a chitin-binding-domain-deletion variant.
+  hypothesis: CHIB is an active endo-acting GH19 chitinase whose N-terminal chitin-binding domain is
+    required for efficient hydrolysis of insoluble chitin.
+  experiment_type: in vitro enzyme kinetics
+- description: Test purified CHIB for antifungal activity against chitin-containing maize pathogens
+    (e.g. Aspergillus, Fusarium) by radial-growth-inhibition and hyphal-lysis assays, and compare to
+    maize chitinase A.
+  hypothesis: CHIB inhibits fungal growth by degrading hyphal-tip cell-wall chitin, consistent with
+    its classification as an antifungal pathogenesis-related chitinase.
+  experiment_type: antifungal bioassay
+- description: Generate maize CHIB loss-of-function and overexpression lines and challenge with
+    fungal pathogens and fall-armyworm larvae, scoring disease/herbivory resistance and quantifying
+    in-planta chitinase activity and CHIB hinge cleavage by fungal polyglycine hydrolases.
+  hypothesis: CHIB contributes to quantitative antifungal and anti-herbivore defense, and its
+    efficacy is modulated by fungal hinge-cleaving polyglycine hydrolases.
+  experiment_type: reverse-genetics and pathogen/herbivore challenge
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
