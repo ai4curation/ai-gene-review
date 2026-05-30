@@ -1,4 +1,4 @@
-# Boltz Model C domains Analysis
+# ESMFold2 Model C domains Analysis
 
 Prediction directory: `cox2_model_c_out`
 Model CIF: `cox2_model_c_out/esmfold2_model_0.cif`
@@ -24,6 +24,7 @@ Model CIF: `cox2_model_c_out/esmfold2_model_0.cif`
 
 | Pair | Value |
 |---|---:|
+| All pairs | n/a — not returned by hosted ESMFold2 API |
 
 ## Attribution Readouts
 

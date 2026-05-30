@@ -1,4 +1,4 @@
-# Boltz Proteasome PSMB5:PSMA1 Attribution Analysis
+# ESMFold2 Proteasome PSMB5:PSMA1 Attribution Analysis
 
 Prediction directory: `psmb5_psma1_out`
 Model CIF: `psmb5_psma1_out/esmfold2_model_0.cif`
