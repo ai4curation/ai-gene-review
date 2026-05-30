@@ -317,8 +317,10 @@ hypothesis-generating and must not be used as curation evidence.
       consistency
 - [ ] Draft downstream-user guidance for enrichment and ML-label consumers
 - [x] Investigate ESMFold2 (Biohub/biohub.ai) as an alternative to BioLM Boltz2 for complex pilots
-- [ ] Re-run archived complex inputs (CYC1:UQCRFS1, PSMB5:PSMA1, COX2 Model C) on ESMFold2 as a
+- [x] Re-run archived complex inputs (CYC1:UQCRFS1, PSMB5:PSMA1, COX2 Model C) on ESMFold2 as a
       head-to-head against the Boltz2 confidence summaries
+- [x] ESMFold2 COX2:SCO1 Model A metal-aware probes (apo / 3 Cu / 1 Cu), CuA-vs-PDB validation,
+      and within-cap context variants; assembled-enzyme test blocked by the 768-residue cap
 
 # NOTES
 
@@ -523,3 +525,54 @@ threshold (ipTM > 0.5). The global pLDDT values are higher than the prior Boltz2
 interface signal remains weak and the hosted response did not populate pair-chain ipTM/PAE in the
 SDK result object. These results support keeping ESMFold2 as a secondary hypothesis-generation
 backend rather than replacing the Boltz2 notes or using any output as curation-grade evidence.
+
+## 2026-05-30 ESMFold2 COX2:SCO1 metal-aware, PDB validation, and assembled-context probes
+
+Followed up the Complex IV Model A pairwise (MT-CO2 CuA domain + SCO1 metallochaperone domain) on
+ESMFold2 to test whether the weak, off-target interface seen with Boltz2 was an artifact of missing
+metals or missing complex context. Extended `analysis/esmfold2/run_esmfold2.py` with `--ligand
+ID:CCD` and `--pocket BINDER:CHAIN/RES,...`, and made it surface the `ESMProteinError` that
+`fold_all_atom` returns as a value instead of writing an empty response.
+
+Across every runnable configuration the answer is the same: the SCO1 CxxxC motif stays ~50-52 A
+(SG-SG) from the COX2 CuA cysteines, and COX2 never engages SCO1.
+
+| Run | ipTM | SCO1 CxxxC -> CuA (SG-SG) |
+|---|---:|---:|
+| Model A apo | 0.583 | 52.5 A |
+| Model A + 3 Cu | 0.632 | 51.3 A |
+| Model A + 1 Cu | 0.606 | 51.7 A |
+| Model C domains (+SCO2) | 0.390 | 50.2 A |
+| Model C full-length (+SCO2) | 0.307 | 49.8 A |
+| Model C + COA6 (4 chain) | 0.377 | 51.0 A |
+
+Metals do not rescue it. The 3-Cu holo run actually raised interface confidence (0.583 -> 0.632)
+without moving the geometry, and a single shared copper seated itself entirely in the CuA acceptor
+site (both CuA cysteines, ~2.0 A) leaving SCO1 apo, i.e. no spontaneous bridging geometry. So the
+"missing copper" explanation for the off-target docking is refuted.
+
+The 3-Cu run is separately a strong validation of the model against experiment: unforced, it
+reconstructed the binuclear CuA centre (Cu-Cu 2.67 A; both Cys196/200 + His161 + His204 + Met207)
+matching human Complex IV `9I6F` (Cu-Cu 2.75 A) within ~0.1 A. See the reproducible check
+`analysis/esmfold2/validate_cua_vs_pdb.py`. The PDB has the components individually (SCO1 ~10
+structures; COX2/CuA in 5Z62/9I6F/9I7U) but ZERO structures of any SCO1:COX2, SCO2:COX2, or
+SCO1:SCO2 complex, consistent with a transient transfer interaction.
+
+Adding partner chaperones did not help and lowered confidence (Model C domains 0.390 -> full-length
+0.307 -> +COA6 0.377), with the inter-chaperone SCO1:SCO2 geometry non-reproducible across runs
+(18.8 -> 33 -> 72 A) — a hallmark of low-confidence docking rather than a real interface.
+
+The one genuinely different test, SCO1 against the assembled enzyme (so native context removes the
+non-CuA COX2 surfaces), is blocked: the hosted esmfold2-fast endpoint caps total input at 768
+residues (422 error). The mtDNA core COX1+COX2+COX3 (1001), core+SCO1 (1191), and the full
+14-subunit enzyme (~2073) all exceed it; even COX1+COX2+SCO1 (930) is over. Forcing a bridging
+copper via pocket conditioning is also unavailable (401, feature-gated). Modeling the assembled
+enzyme would require local ESMFold2 open weights on a GPU.
+
+Bottom line: under everything the hosted API can run, ESMFold2 does not support a stable,
+transfer-competent SCO1->COX2(CuA) docking. The model is excellent at what the PDB documents (the
+CuA metal site, the SCO1 fold) and unreliable precisely where the PDB is silent (the transient
+transfer interface). The SCO1/SCO2 direct-function call should remain literature- and
+biochemistry-driven, with structure prediction confined to small-domain triage. Result files:
+`RESULTS_MODEL_A_ESMFOLD2.md`, `RESULTS_MODEL_A_CU_ESMFOLD2.md`, `RESULTS_MODEL_A_1CU_ESMFOLD2.md`,
+`RESULTS_MODEL_C_FULL_ESMFOLD2.md`, `RESULTS_COA6_ESMFOLD2.md`.
