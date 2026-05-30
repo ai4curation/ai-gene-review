@@ -25,6 +25,11 @@ def test_tree_browser_embeds_leaf_iba_annotations_and_gene_accessions(
         type_name="",
         subtype="",
         uniprot_id="Q9H2V7",
+        notes="Lysosome efflux permease required for ALR after starvation.",
+        references=(
+            "Membrane Trafficking in Autophagy - ScienceDirect",
+            "Spinster is required for autophagic lysosome reformation and mTOR reactivation following starvation | PNAS",
+        ),
     )
 
     def fake_workbook_context(workbook_path: Path | None, workbook_sheet: str):
@@ -78,10 +83,15 @@ def test_tree_browser_embeds_leaf_iba_annotations_and_gene_accessions(
 
     node = data["nodes"][pn_code]
     assert data["projection_rows"][0]["uniprot_id"] == "Q9H2V7"
+    assert node["source_evidence_row_count"] == 1
+    assert node["source_reference_count"] == 2
+    assert node["source_workbook_evidence"][0]["notes"].startswith("Lysosome efflux")
     assert node["existing_iba_gene_count"] == 1
     assert node["existing_iba_annotation_count"] == 1
     assert node["existing_iba_by_gene"][0]["terms"][0]["go_id"] == "GO:0033700"
 
     html = browser.render_html(data, tmp_path / "pn.html")
+    assert "Source Workbook Evidence" in html
+    assert "Spinster is required for autophagic lysosome reformation" in html
     assert "functionome.geneontology.org" in html
     assert "Q9H2V7" in html
