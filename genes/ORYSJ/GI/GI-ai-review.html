@@ -1,0 +1,2861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GI</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9AWL7" target="_blank" class="term-link">
+                        Q9AWL7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Oryza sativa subsp. japonica</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9AWL7" data-a="DESCRIPTION: OsGI (GIGANTEA; UniProt Q9AWL7; Os01g0182600 / LOC..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OsGI (GIGANTEA; UniProt Q9AWL7; Os01g0182600 / LOC_Os01g08700) is the rice ortholog of the plant-specific GIGANTEA-family protein, a large (1160 aa) circadian-clock-associated regulator that lacks recognized catalytic domains and instead functions through extensive protein-protein interactions in both the nucleus and cytoplasm (Li et al. 2017, file:ORYSJ/GI/GI-deep-research-falcon.md). Its primary molecular role is regulatory rather than enzymatic: OsGI couples clock and light/photoperiod signaling to developmental and physiological outputs, most prominently the timing of the floral transition (heading date). In the conserved rice photoperiod module OsGI acts upstream of Hd1 (the CONSTANS ortholog) and the florigen genes Hd3a/RFT1 (OsGI-Hd1-Hd3a/RFT1), and in a rice-specific branch OsGI binds the major long-day floral repressor Ghd7 and promotes its 26S-proteasome-dependent degradation, an activity antagonized by phytochromes OsPHYA/OsPHYB; a 2024 review summarizes OsGI as a circadian-rhythm gene and activator of Hd1 that promotes flowering under short days and inhibits flowering under long days (Song et al. 2024; Zheng et al. 2019, file:ORYSJ/GI/GI-deep-research-falcon.md). At the systems level OsGI is a large-effect coordinator of the rice diurnal transcriptome: in field transcriptomics an osgi-1 null altered expression of 57% (FDR 0.01) to 75% (FDR 0.05) of 27,201 genes tested, with strong effects on clock components (PRR1 ~10x up, LHY ~100x down at some time points), establishing OsGI as required for robust diurnal/circadian rhythms (Izawa et al. 2011, file:ORYSJ/GI/GI-deep-research-falcon.md). OsGI additionally links flowering-time regulation to phosphate homeostasis through direct interaction with the E2 ubiquitin-conjugating enzyme OsPHO2 (Li et al. 2017). The protein is consistent with UniProt&#39;s FUNCTION statement (&#34;Involved in regulation of circadian rhythm, and in the control of the photoperiodic flowering ... Activates Hd1/CONSTANS gene&#34;). Its UniProt SwissProt keywords (Biological rhythms; Developmental protein; Differentiation; Flowering) generated three keyword-derived (SPKW, GO_REF:0000043) GO annotations - cell differentiation, flower development, and rhythmic process - that are reviewed retrospectively below as developmental/clock over-annotations of the &#34;expression/regulation is not the bare process&#34; type.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt SwissProt subcellular-location vocabulary mapping (GO_REF:0000044). OsGI localizes to the nucleus, consistent with its role in nuclear transcriptional/regulatory complexes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with both UniProt (SUBCELLULAR LOCATION: Nucleus) and rice experimental evidence. OsGI has been observed in both nucleus and cytoplasm, and the OsGI-Ghd7 interaction relevant to photoperiodic flowering is detected in the nucleus and associated with nuclear speckles, supporting a nuclear site of action [file:ORYSJ/GI/GI-deep-research-falcon.md]. Nuclear localization is appropriate as a core cellular-component annotation; OsGI also has a cytoplasmic pool, so this term captures one of its two localizations.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsGI has been observed in **both nucleus and cytoplasm** in rice, consistent with a regulatory protein that participates in nuclear transcriptional complexes as well as cytoplasmic/light-signaling related processes.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the Ghd7 study, OsGI–Ghd7 interaction was detected **in the nucleus** and associated with **nuclear speckles**, supporting a nuclear site of action for the Ghd7 stability/interaction module.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000028" target="_blank" class="term-link">
+                                    GO:2000028
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of photoperiodism, flowering</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:2000028" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR026211, GIGANTEA) mapping the GIGANTEA family to regulation of photoperiodic flowering. This is the single most accurate and core biological-process term for OsGI and is strongly supported by rice experimental and review literature.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core function of OsGI and is well supported. OsGI is the upstream component of the conserved rice photoperiod pathway OsGI-Hd1-Hd3a/RFT1 and a rice-specific regulator of Ghd7 stability; reviews describe it as a circadian gene/activator of Hd1 that promotes flowering under short days and inhibits flowering under long days [file:ORYSJ/GI/GI-deep-research-falcon.md]. The InterPro2GO mapping gives the correct &#34;regulation of&#34; framing - OsGI regulates the photoperiodic flowering process rather than being a structural component of flowers - and is at an appropriate level of specificity. It directly captures the function UniProt describes (&#34;control of the photoperiodic flowering ... Activates Hd1/CONSTANS gene&#34;). This annotation is the correct replacement sense for the retired keyword-derived &#34;flower development&#34; SPKW term reviewed below.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsGI acts upstream of Hd1 (CO ortholog)** and the florigen gene **Hd3a** (and also RFT1), i.e., **OsGI–Hd1–Hd3a/RFT1**.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">summarizes OsGI (LOC_Os01g08700) as a **circadian rhythm gene and activator of Hd1** and states OsGI **promotes flowering under short days (SD)** but **inhibits flowering under long days (LD)**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:0030154" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keywords &#34;Differentiation&#34;/&#34;Developmental protein&#34;; snapshot-only, removed in the current GOA release. OsGI is a circadian-clock/photoperiodic-flowering regulator, not a cell-fate or differentiation factor.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. &#34;Cell differentiation&#34; is a generic catch-all process term assigned purely from the UniProt &#34;Differentiation&#34;/&#34;Developmental protein&#34; keywords (which themselves are loosely applied to flowering-time regulators because the floral transition is a developmental event). There is no evidence that OsGI controls the differentiation of any specific cell type. Its demonstrated roles are regulatory: it is a high-level coordinator of diurnal/circadian transcript rhythms and controls the TIMING of the floral transition via the OsGI-Hd1-Hd3a/RFT1 module and Ghd7-stability control [file:ORYSJ/GI/GI-deep-research-falcon.md]. These are correctly captured by the circadian-regulation and photoperiodic-flowering terms (GO:0042752, GO:2000028) and do not entail a cell-differentiation function. The keyword-derived term adds no information and is an over-annotation; removal was correct.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**OsGI is not an enzyme/transporter; its primary function is regulatory**: it contributes to the **circadian/diurnal system** and couples clock/light signaling to **photoperiodic flowering** and other timed physiological outputs.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GI being a regulatory/scaffold-type protein rather than an enzyme or transporter.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009908" target="_blank" class="term-link">
+                                    GO:0009908
+                                </a>
+                            </span>
+                            <span class="term-label">flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:0009908" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Flowering&#34;; snapshot-only, removed in the current GOA release. OsGI controls flowering TIME (the photoperiodic floral transition), not flower-organ development/morphogenesis, so the essence is sound but the term is mis-leveled.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation removed a term that was pointing at the right biology but at the wrong level/sense. OsGI does not participate in flower organ development or floral morphogenesis (it does not specify floral organ identity, build floral organs, etc.); rather, it REGULATES the decision/timing of flowering in response to photoperiod. &#34;Flower development&#34; (GO:0009908) is the bare developmental process and is therefore an over-broad mis-annotation of the ELF4 type (regulation of a process is not the process itself). The correct sense is &#34;regulation of flower development&#34; (GO:0009909) - or, more specifically, the photoperiodic-flowering-regulation term GO:2000028 that OsGI already carries in current GOA. OsGI acts upstream of Hd1 and the florigen Hd3a/RFT1 and, in a rice-specific branch, promotes proteasomal degradation of the floral repressor Ghd7, thereby tuning flowering time rather than constructing the flower [file:ORYSJ/GI/GI-deep-research-falcon.md]. Replace with the &#34;regulation of&#34; developmental term.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009909" target="_blank" class="term-link">
+                                    regulation of flower development
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsGI **binds Ghd7** and promotes its **26S proteasome-dependent degradation**, thereby attenuating Ghd7-mediated flowering repression.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">couples clock/light signaling to **photoperiodic flowering** and other timed physiological outputs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048511" target="_blank" class="term-link">
+                                    GO:0048511
+                                </a>
+                            </span>
+                            <span class="term-label">rhythmic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:0048511" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Biological rhythms&#34;; snapshot-only, removed in the current GOA release. OsGI is genuinely a clock-associated protein, but &#34;rhythmic process&#34; is an uninformative top-level grouping term that is redundant with the specific circadian-regulation terms OsGI should carry.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. OsGI IS clock-associated - its own transcript oscillates with a circadian rhythm (peak ~8 h into the light) and an osgi null disrupts diurnal rhythms across most of the rice transcriptome [file:ORYSJ/GI/GI-deep-research-falcon.md] - so the term is not factually wrong. However, &#34;rhythmic process&#34; (GO:0048511) is a broad parent that conveys no information about WHAT OsGI does: this same keyword-derived term was found to be 100% over-annotated in the human SPKW subproject. The informative, specific biology is captured by &#34;regulation of circadian rhythm&#34; (GO:0042752, an IBA term OsGI already carries per UniProt) and, for the transcriptome-wide effect, &#34;circadian regulation of gene expression&#34; (GO:0032922, proposed below). Once those specific regulation terms are present, the bare &#34;rhythmic process&#34; grouping is redundant and uninformative; marking it over-annotated/removing it loses no biology.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsGI is required for “strong amplitudes and fine-tuning” of diurnal rhythms in global gene expression</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">expression of **57% (FDR = 0.01)** or **75% (FDR = 0.05)** was significantly altered by an **osgi-1** null mutation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042752" target="_blank" class="term-link">
+                                    GO:0042752
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of circadian rhythm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:0042752" data-r="GO_REF:0000043" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OsGI regulates the circadian clock: it is required for robust diurnal rhythms of the rice transcriptome and modulates core clock genes. This specific regulation term (also assigned IBA across the GIGANTEA group in UniProt) is the informative replacement for the retired generic &#34;rhythmic process&#34; SPKW term and is proposed as a current annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> OsGI is a circadian-clock-associated regulator. UniProt&#39;s FUNCTION statement is &#34;Involved in regulation of circadian rhythm&#34;, and the rice field-transcriptome study showed an osgi-1 null strongly perturbs clock outputs (PRR1 ~10x up, LHY ~100x down at some time points) and alters most diurnally regulated genes, demonstrating that OsGI is required for normal circadian rhythmicity [file:ORYSJ/GI/GI-deep-research-falcon.md]. &#34;Regulation of circadian rhythm&#34; (GO:0042752) is the correct specific process term and precisely captures the biology that the over-broad &#34;rhythmic process&#34; keyword term only gestured at. (This term is present as IBA in the UniProt GO cross-references but is not in the GOA tsv supplied for review.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsGI is a circadian-regulated GIGANTEA family protein that functions primarily as a regulator of photoperiodic flowering and diurnal/circadian transcript rhythms</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**PRR1 ~10× upregulation** and **LHY ~100× reduction** at specific nighttime time points in the osgi background.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032922" target="_blank" class="term-link">
+                                    GO:0032922
+                                </a>
+                            </span>
+                            <span class="term-label">circadian regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9AWL7" data-a="GO:0032922" data-r="GO_REF:0000043" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OsGI confers robust circadian/diurnal control on global gene expression in rice. Loss of OsGI changes the rhythmic expression of a majority of the transcriptome, supporting this specific process term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The landmark field study showed that an osgi-1 null altered expression of 57% (FDR 0.01) to 75% (FDR 0.05) of 27,201 genes tested and that OsGI is required for &#34;strong amplitudes and fine-tuning&#34; of diurnal rhythms in global gene expression [file:ORYSJ/GI/GI-deep-research-falcon.md]. This large-effect, genome-wide control of rhythmic transcription is precisely &#34;circadian regulation of gene expression&#34; (GO:0032922) and is the most specific process capturing the transcriptome-wide diurnal role that the retired &#34;rhythmic process&#34; keyword term failed to convey. IMP is justified by the osgi-1 loss-of-function transcriptome phenotype.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsGI is required for “strong amplitudes and fine-tuning” of diurnal rhythms in global gene expression, emphasizing OsGI as a **high-level diurnal/circadian output coordinator**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/GI/GI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Among **27,201 genes tested**, expression of **57% (FDR = 0.01)** or **75% (FDR = 0.05)** was significantly altered by an **osgi-1** null mutation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>OsGI controls the timing of the floral transition (heading date) in response to photoperiod. As the upstream component of the conserved rice photoperiod module OsGI-Hd1-Hd3a/RFT1, and via rice-specific promotion of 26S-proteasome-dependent degradation of the long-day floral repressor Ghd7 (antagonized by phytochromes OsPHYA/OsPHYB), it promotes flowering under short days and inhibits it under long days. This is a regulatory (flowering-time) role, not flower-organ morphogenesis. OsGI has no recognized catalytic or sequence-specific DNA-binding domain; it acts as a clock-associated regulatory/scaffold protein through protein-protein interactions, so no specific molecular function term is asserted (the uninformative &#34;protein binding&#34; is deliberately avoided).
+</h3>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="FUNCTION: OsGI controls the timing of the floral transition ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000028" target="_blank" class="term-link">
+                                regulation of photoperiodism, flowering
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/GI/GI-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">OsGI acts upstream of Hd1 (CO ortholog)** and the florigen gene **Hd3a** (and also RFT1), i.e., **OsGI–Hd1–Hd3a/RFT1**.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/GI/GI-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">OsGI **binds Ghd7** and promotes its **26S proteasome-dependent degradation**, thereby attenuating Ghd7-mediated flowering repression.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>OsGI is a circadian-clock-associated regulator that confers robust diurnal/circadian rhythms on the rice transcriptome and modulates core clock genes (e.g. PRR1, LHY). It functions as a high-level coordinator of timed gene expression rather than as a single enzymatic clock component. As above, OsGI is a domainless regulatory protein and no specific molecular function term is asserted.
+</h3>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="FUNCTION: OsGI is a circadian-clock-associated regulator tha..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042752" target="_blank" class="term-link">
+                                regulation of circadian rhythm
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032922" target="_blank" class="term-link">
+                                circadian regulation of gene expression
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/GI/GI-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">OsGI is required for “strong amplitudes and fine-tuning” of diurnal rhythms in global gene expression</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/GI/GI-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**PRR1 ~10× upregulation** and **LHY ~100× reduction** at specific nighttime time points in the osgi background.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The InterPro2GO mapping for IPR026211 (GIGANTEA) assigns &#34;regulation of photoperiodism, flowering&#34; (GO:2000028), the single most accurate core process term for OsGI.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For OsGI, the keywords &#34;Differentiation&#34;/&#34;Developmental protein&#34;, &#34;Flowering&#34; and &#34;Biological rhythms&#34; produced generic/mis-leveled process terms (cell differentiation, flower development, rhythmic process) that are over-annotations of a flowering-time/circadian regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Maps the UniProt &#34;Nucleus&#34; subcellular location to GO:0005634; consistent with experimental observation of OsGI in the nucleus (and cytoplasm).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/GI/GI-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of rice GI / GIGANTEA (Q9AWL7).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsGI (Os01g0182600 / LOC_Os01g08700; UniProt Q9AWL7) is a circadian-regulated GIGANTEA-family protein whose primary function is regulatory - coordinating diurnal/ circadian transcript rhythms and controlling photoperiodic flowering (heading date) - rather than enzymatic; it lacks conserved catalytic domains and acts through protein-protein interactions and nucleo-cytoplasmic localization.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsGI is upstream in the conserved rice photoperiod pathway OsGI-Hd1-Hd3a/RFT1, and in a rice-specific branch binds the long-day repressor Ghd7 and promotes its 26S proteasome-dependent degradation, an activity antagonized by phytochromes OsPHYA/OsPHYB; a 2024 review describes OsGI as a circadian-rhythm gene and activator of Hd1 that promotes flowering under short days and inhibits flowering under long days.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In field transcriptomics, an osgi-1 null altered expression of 57% (FDR 0.01) to 75% (FDR 0.05) of 27,201 genes tested, with PRR1 ~10x up and LHY ~100x down at some nighttime time points, establishing OsGI as a high-level coordinator of robust diurnal/ circadian transcript rhythms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsGI links flowering-time regulation to phosphate homeostasis via direct interaction with OsPHO2 (a ubiquitin-conjugating E2); osgi leaves accumulate up to ~5x WT Pi with leaf-tip necrosis, and &gt;55% of osgi differentially expressed genes overlap with ospho2.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsGI is observed in both nucleus and cytoplasm; the OsGI-Ghd7 interaction is detected in the nucleus and associated with nuclear speckles.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is rice OsGI a direct transcriptional regulator of Hd1, or does it act primarily through post-translational control of partners such as Ghd7 and via FKF1-type complexes, given that GI lacks recognized DNA-binding/catalytic domains?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Takeshi Izawa</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="Q: Is rice OsGI a direct transcriptional regulator of..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the dual, photoperiod-dependent behavior of OsGI (promoting flowering under short days but inhibiting it under long days) encoded mechanistically at the level of the OsGI-Hd1-Hd3a/RFT1 and OsGI-Ghd7 branches?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Haiyang Wang</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="Q: How is the dual, photoperiod-dependent behavior of..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the OsGI-OsPHO2 interaction a genuine in vivo coupling of flowering time to phosphate homeostasis, and does it operate through OsGI&#39;s nuclear or cytoplasmic pool?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Huixia Shou</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="Q: Is the OsGI-OsPHO2 interaction a genuine in vivo c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform time-course ChIP-seq and proximity-labeling (TurboID) on OsGI under short-day and long-day conditions to define its direct chromatin associations and protein interactome at the clock/photoperiod interface, distinguishing direct transcriptional targets from post-translational partners.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsGI controls flowering time and clock outputs predominantly through protein complexes (e.g. with Hd1, Ghd7, FKF1-type factors) rather than through direct sequence- specific DNA binding.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq + proximity-labeling interactome</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="EXPERIMENT: Perform time-course ChIP-seq and proximity-labelin..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate osgi loss-of-function and OsGI-overexpression lines and quantify flowering time, Hd1/Ehd1/Hd3a/RFT1/Ghd7 expression, and Ghd7 protein levels under controlled short-day vs long-day photoperiods, with and without phytochrome mutations.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsGI promotes flowering under short days and represses it under long days by photoperiod-dependent destabilization of Ghd7 that is antagonized by OsPHYA/OsPHYB.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic / photoperiod physiology with protein-stability assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="EXPERIMENT: Generate osgi loss-of-function and OsGI-overexpres..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Assay the circadian period, amplitude and phase of core clock reporters and genome-wide diurnal transcription in osgi versus wild type under constant conditions and field-like cycles.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsGI is required for robust amplitude and fine-tuning of circadian gene expression genome-wide, and its loss broadly dampens/desynchronizes diurnal rhythms.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: circadian luciferase reporter + diurnal RNA-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9AWL7" data-a="EXPERIMENT: Assay the circadian period, amplitude and phase of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GI-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9AWL7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: Rice **GIGANTEA (OsGI)** functional annotation (UniProt Q9AWL7)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">39 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T08:03:18.459279</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="GI-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="GI-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000039 The main figure summarizing the effects of Os-GIGANTEA (OsGI) on the global diurnal transcriptome is Figure 3, &#34;Field Transcriptome</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-rice-gigantea-osgi-functional-annotation-uniprot-q9awl7">Research report: Rice <strong>GIGANTEA (OsGI)</strong> functional annotation (UniProt Q9AWL7)</h1>
+<h2 id="0-target-verification-mandatory">0) Target verification (mandatory)</h2>
+<p>The target protein is <strong>Protein GIGANTEA</strong> from <strong>Oryza sativa subsp. japonica</strong> (rice), gene symbol <strong>GI</strong>, UniProt <strong>Q9AWL7</strong>. In the rice flowering-time literature this gene is consistently referred to as <strong>OsGI / Os-GIGANTEA</strong>, the rice ortholog of Arabidopsis <strong>GIGANTEA (GI)</strong>. A recent rice heading-date review explicitly identifies <strong>OsGI as LOC_Os01g08700</strong>, matching the user-provided locus naming context (song2024researchprogresson pages 1-2). A canonical rice primary study uses <strong>osgi-1 / osgi-2</strong> mutants in <strong>Os-GIGANTEA (Os-GI)</strong> and provides a GenBank accession <strong>NM_001048755.1</strong> for Os-GI, confirming that “GI” in rice is being used as the GIGANTEA ortholog (izawa2011osgiganteaconfersrobust pages 13-14). </p>
+<p>No retrieved sources indicated an alternative rice gene symbol “GI” unrelated to GIGANTEA; therefore, the literature summarized below is restricted to <strong>rice OsGI/Os-GIGANTEA (LOC_Os01g08700)</strong> and clearly separated from Arabidopsis-only mechanistic details when they appear in reviews.</p>
+<h2 id="1-key-concepts-and-current-understanding">1) Key concepts and current understanding</h2>
+<h3 id="11-what-is-gigantea-gi">1.1 What is GIGANTEA (GI)?</h3>
+<p><strong>GIGANTEA (GI)</strong> is described in a 2024 review as an evolutionarily conserved <strong>nuclear protein</strong> that integrates <strong>light input</strong> with the <strong>circadian clock</strong>, contributing to circadian resetting and regulation of flowering initiation (Liu et al., 2024; published Jan 2024; https://doi.org/10.3390/genes15010094) (liu2024giganteaunveiledexploring pages 1-2, liu2024giganteaunveiledexploring pages 14-15). The same review emphasizes GI as a large protein (reported as <strong>1173 amino acids</strong>) and notes that GI lacks well-defined conserved domains (in the sense of readily assignable canonical domains), which complicates mechanistic dissection (liu2024giganteaunveiledexploring pages 1-2).</p>
+<p>In rice specifically, OsGI is framed as a circadian/photoperiod regulator that functions upstream in heading-date pathways, affecting florigen gene expression and the vegetative-to-reproductive transition (Song et al., 2024; published Sep 2024; https://doi.org/10.3390/cimb46090613) (song2024researchprogresson pages 1-2, song2024researchprogresson pages 2-4).</p>
+<h3 id="12-primary-function-in-rice-functional-annotation-view">1.2 Primary function in rice (functional annotation view)</h3>
+<p><strong>OsGI is not an enzyme or transporter</strong>; it is a regulatory protein whose primary functional annotation in rice is best described as:</p>
+<ul>
+<li>A <strong>core regulator of diurnal/circadian control of gene expression</strong> under natural field conditions, influencing the amplitude and phase coordination of large-scale transcript rhythms (Izawa et al., 2011; published May 2011; https://doi.org/10.1105/tpc.111.083238) (izawa2011osgiganteaconfersrobust pages 1-2).</li>
+<li>An upstream <strong>photoperiod-pathway regulator</strong> that impacts heading date through the <strong>OsGI–Hd1–Hd3a</strong> module and related pathways affecting the florigens <strong>Hd3a</strong> and <strong>RFT1</strong> (Song et al., 2024) (song2024researchprogresson pages 2-4).</li>
+</ul>
+<h3 id="13-core-pathway-placement-heading-datephotoperiod-network">1.3 Core pathway placement (heading date/photoperiod network)</h3>
+<p>Rice heading date is governed by photoperiod-controlled pathways centered on florigens <strong>Hd3a</strong> and <strong>RFT1</strong> (reviewed in Song et al., 2024) (song2024researchprogresson pages 1-2). In this framework, <strong>OsGI (LOC_Os01g08700)</strong> sits upstream of <strong>Hd1</strong> and contributes to the <strong>OsGI–Hd1–Hd3a</strong> pathway (song2024researchprogresson pages 1-2). Song et al. summarize photoperiod-dependent behavior:</p>
+<ul>
+<li>Under <strong>short days (SD)</strong>: OsGI activates <strong>Hd1</strong> and <strong>Ehd1</strong>, promoting <strong>Hd3a</strong> expression and flowering (song2024researchprogresson pages 2-4).</li>
+<li>Under <strong>long days (LD)</strong>: OsGI activates <strong>Hd1</strong>, but in that context <strong>Hd1 represses Hd3a</strong>; meanwhile <strong>Ehd1</strong> can activate <strong>Hd3a/RFT1</strong>, reflecting network branching and photoperiod dependence (song2024researchprogresson pages 2-4).</li>
+</ul>
+<p>A 2023 review likewise places OsGI upstream in the OsGI–Hd1–Hd3a module and notes OsGI upregulates Hd1 and Ehd1, which regulate Hd3a/RFT1 (Sohail, 2023; published Aug 2023; https://doi.org/10.1007/s40415-023-00910-y) (sohail2023geneticandsignaling pages 3-5).</p>
+<h3 id="14-subcellular-localization-what-can-and-cannot-be-stated">1.4 Subcellular localization: what can and cannot be stated</h3>
+<ul>
+<li>Cross-species reviews describe GI as <strong>predominantly nuclear</strong>, with dynamic nucleo-cytoplasmic partitioning reported in Arabidopsis (liu2024giganteaunveiledexploring pages 5-7, liu2024giganteaunveiledexploring pages 2-3, liu2024giganteaunveiledexploring pages 14-15). </li>
+<li><strong>However</strong>, among the retrieved rice-focused sources here, there is <strong>no direct rice OsGI localization experiment</strong> (e.g., OsGI–GFP imaging, fractionation) in the available excerpts. Thus, a rice-specific cellular compartment assignment beyond “GI is generally nuclear in plants” cannot be asserted from the present retrieved rice primary evidence.</li>
+</ul>
+<h2 id="2-mechanistic-evidence-from-primary-rice-studies-authoritative-experimental-support">2) Mechanistic evidence from primary rice studies (authoritative experimental support)</h2>
+<h3 id="21-osgi-as-a-genome-scale-controller-of-diurnal-transcriptome-rhythms">2.1 OsGI as a genome-scale controller of diurnal transcriptome rhythms</h3>
+<p>A landmark Plant Cell field study (Izawa et al., 2011) used rice <strong>osgi</strong> loss-of-function mutants to test how OsGI shapes diurnal gene expression under natural day–night cycles. Quantitatively, OsGI affected expression of <strong>75% of 27,201 genes</strong> at FDR 0.05 (and 57% at FDR 0.01) in field conditions, and was required for strong rhythm amplitudes and fine-tuning of phases (izawa2011osgiganteaconfersrobust pages 1-2). The authors reported that wild-type plants show multiphase, orchestrated transcriptome states, whereas <strong>osgi mutants collapse into a simpler “day vs night” two-state transcriptome</strong> (izawa2011osgiganteaconfersrobust pages 5-6).</p>
+<p><strong>Visual evidence:</strong> Figure 3 from the same paper (field transcriptome analysis) provides a direct visualization of this shift from complex phase structure in wild-type to simplified day/night structure in osgi mutants (izawa2011osgiganteaconfersrobust media 5a0d7264).</p>
+<h3 id="22-downstream-hormonal-regulation-signatures-ga-jasmonate-related-expression">2.2 Downstream hormonal regulation signatures (GA, jasmonate-related expression)</h3>
+<p>A follow-up analysis (Itoh &amp; Izawa, 2011; published Dec 2011; https://doi.org/10.4161/psb.6.12.18207) reported that OsGI influences expression of hormone-biosynthesis genes in field time-course datasets. In osgi-1 mutants, <strong>4 of 9 OsGA2ox genes</strong> (GA-inactivation enzymes) were increased by <strong>3.0–5.8-fold</strong>, <strong>3 of 5 OsJMT genes</strong> were decreased by <strong>2.6–4.5-fold</strong>, and <strong>two OsSDR genes</strong> increased <strong>1.5–3.9-fold</strong> (itoh2011astudyof pages 4-5). These results support that OsGI’s role as a diurnal regulator has measurable downstream impacts on growth/hormone-related transcriptional programs.</p>
+<h2 id="3-recent-developments-prioritizing-20232024-and-latest-research-context">3) Recent developments (prioritizing 2023–2024) and latest research context</h2>
+<h3 id="31-2024-review-synthesis-osgi-in-photoperiod-regulation-of-heading-date">3.1 2024 review synthesis: OsGI in photoperiod regulation of heading date</h3>
+<p>Song et al. (2024) provide a consolidated, recent overview of photoperiod genes controlling rice heading date, explicitly annotating OsGI as <strong>LOC_Os01g08700</strong> and describing its role in the <strong>OsGI–Hd1–Hd3a</strong> pathway with SD vs LD context dependence (https://doi.org/10.3390/cimb46090613; published Sep 2024) (song2024researchprogresson pages 1-2, song2024researchprogresson pages 2-4). They additionally note upstream light signaling input: <strong>OsPhyA affects heading date by regulating OsGI under SD</strong> and regulating <strong>Ghd7 under LD</strong> (song2024researchprogresson pages 2-4), highlighting photoreceptor-to-clock/photoperiod connections.</p>
+<h3 id="32-2023-pathway-review-osgi-positioned-as-an-upstream-module-component">3.2 2023 pathway review: OsGI positioned as an upstream module component</h3>
+<p>Sohail (2023) similarly frames OsGI as upstream in the rice photoperiodic flowering network and as part of an OsGI–Hd1–Hd3a module analogous to the Arabidopsis GI–CO–FT module (https://doi.org/10.1007/s40415-023-00910-y; published Aug 2023) (sohail2023geneticandsignaling pages 3-5). While not providing new primary experiments on OsGI, this review supports the current consensus network placement.</p>
+<h3 id="33-limits-of-20232024-primary-osgi-focused-mechanistic-data-in-retrieved-set">3.3 Limits of 2023–2024 primary OsGI-focused mechanistic data in retrieved set</h3>
+<p>Within the retrieved 2023–2024 primary literature available in this run, OsGI appears mostly as (i) a node in pathway diagrams and (ii) a measured transcript in studies focused on other regulators (e.g., OsMADS50). No OsGI-specific new structural or biochemical mechanistic paper from 2023–2024 was retrieved here; therefore, the most direct mechanistic experimental support remains anchored by high-citation primary rice studies (Izawa et al., 2011; Itoh &amp; Izawa, 2011), while 2023–2024 sources provide updated synthesis and application context.</p>
+<h2 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h2>
+<h3 id="41-marker-assisted-and-predictive-breeding-heading-date-snp-panels-implicating-osgi">4.1 Marker-assisted and predictive breeding: heading-date SNP panels implicating OsGI</h3>
+<p>Kitazawa et al. (2024) developed a practical, high-throughput <strong>Fluidigm 96-plex</strong> SNP genotyping system for heading-date loci (Breeding Science; published Jun 2024; https://doi.org/10.1270/jsbbs.23093). Their assays covered <strong>41 loci (29 genes + 12 QTLs)</strong> and discriminated <strong>144 alleles</strong>, with genotyping on <strong>377 cultivars</strong> averaging <strong>3.5 alleles per locus</strong> (kitazawa2024developmentofsnp pages 1-2). They built heading-date prediction models trained on <strong>200 cultivars</strong> and tested on <strong>22 independent cultivars</strong>, achieving adjusted <strong>R² ≈ 0.88</strong> and year-specific Pearson correlations <strong>r = 0.7603, 0.6908, 0.7459</strong> (kitazawa2024developmentofsnp pages 3-5).</p>
+<p>Importantly for OsGI relevance, their RIL QTL mapping detected QTLs mapping near previously reported heading-date loci including <strong>OsGI</strong>, supporting its practical relevance for genotype-informed heading-date prediction and selection (kitazawa2024developmentofsnp pages 3-5). (The retrieved excerpts do not fully confirm whether OsGI itself is directly assayed in the final 41-locus panel; the evidence supports QTL proximity and locus relevance.)</p>
+<h3 id="42-gene-editing-for-heading-date-tuning-osgi-as-network-readout">4.2 Gene editing for heading-date tuning (OsGI as network readout)</h3>
+<p>A 2024 Plants study illustrates a modern applied pipeline combining GWAS and genome editing for heading-date manipulation. Liu et al. (2024; published Aug 2024; https://doi.org/10.3390/plants13162221) performed GWAS on <strong>3,021 rice varieties</strong> and edited <strong>OsMADS50</strong> in a cultivar background to delay heading by about <strong>one week</strong>; in these mutants, expression of key flowering regulators including <strong>OsGI</strong> was decreased (liu2024improvingricequality pages 10-11). The study reports agronomic trade-offs: increased tiller number and yield per plant, but significantly reduced 1000-grain weight and grain filling (liu2024improvingricequality pages 10-11). In this implementation, OsGI is not directly edited but is monitored as a central node in the flowering regulatory network.</p>
+<h2 id="5-expert-opinion-and-authoritative-synthesis">5) Expert opinion and authoritative synthesis</h2>
+<p>The 2024 GI-focused review (Liu et al., 2024) frames GI as a hub that integrates light, clock function, flowering, and stress/hormone pathways (https://doi.org/10.3390/genes15010094; published Jan 2024) (liu2024giganteaunveiledexploring pages 1-2, liu2024giganteaunveiledexploring pages 14-15). While much mechanistic detail in this review is drawn from Arabidopsis, its central expert perspective is that GI/GIGANTEA proteins serve as integrators rather than single-pathway regulators, and that stability/complex formation with other clock/light components is central to function (liu2024giganteaunveiledexploring pages 7-8). For rice-specific pathway placement, Song et al. (2024) provide an updated authoritative synthesis that explicitly maps OsGI to rice loci and headings-date outputs (song2024researchprogresson pages 1-2).</p>
+<h2 id="6-quantitativestatistical-summary-recent-foundational">6) Quantitative/statistical summary (recent + foundational)</h2>
+<p>The following table aggregates the key quantitative/statistical findings most relevant to functional annotation and real-world usage.</p>
+<table>
+<thead>
+<tr>
+<th>Study (year)</th>
+<th>Type</th>
+<th>What measured</th>
+<th>Key quantitative result</th>
+<th>Notes/limitations</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Izawa et al. (2011)</td>
+<td>Primary field transcriptomics</td>
+<td>Global diurnal transcriptome impact of osgi mutants</td>
+<td>Os-GI affected <strong>75%</strong> of <strong>27,201</strong> genes tested at FDR 0.05; <strong>57%</strong> at FDR 0.01. Sampling used <strong>13 time points</strong> over <strong>24 h</strong> at <strong>2-h intervals</strong>; ~<strong>6,000+</strong> genes showed diurnal expression; WT used <strong>103</strong> arrays per genotype in large field time series. (izawa2011osgiganteaconfersrobust pages 5-6, izawa2011osgiganteaconfersrobust pages 2-4, izawa2011osgiganteaconfersrobust pages 13-14, izawa2011osgiganteaconfersrobust pages 1-2)</td>
+<td>Strongest mechanistic evidence for rice OsGI, but older than 2023–2024; locus ID not explicitly given in extracted pages, though GenBank accession <strong>NM_001048755.1</strong> is provided. (izawa2011osgiganteaconfersrobust pages 13-14)</td>
+<td>https://doi.org/10.1105/tpc.111.083238</td>
+</tr>
+<tr>
+<td>Itoh &amp; Izawa (2011)</td>
+<td>Primary follow-up expression/physiology study</td>
+<td>Hormone-biosynthesis gene expression changes in osgi-1</td>
+<td><strong>4/9 OsGA2ox</strong> genes upregulated by <strong>3.0–5.8-fold</strong>; <strong>3/5 OsJMT</strong> genes downregulated by <strong>2.6–4.5-fold</strong>; <strong>2 OsSDR</strong> genes increased <strong>1.5–3.9-fold</strong>. Expression profiles summarized from field time-course arrays; phenotype included semi-dwarfism. (itoh2011astudyof pages 4-5, itoh2011astudyof pages 1-4)</td>
+<td>Focuses on downstream hormonal outputs rather than direct biochemical activity of OsGI; no locus ID in extracted pages.</td>
+<td>https://doi.org/10.4161/psb.6.12.18207</td>
+</tr>
+<tr>
+<td>Song et al. (2024)</td>
+<td>Recent review</td>
+<td>Rice OsGI identity and photoperiod function</td>
+<td>Identifies rice OsGI as <strong>LOC_Os01g08700</strong>; places it upstream in the <strong>OsGI–Hd1–Hd3a</strong> pathway. Under <strong>SD</strong>, OsGI activates <strong>Hd1/Ehd1</strong> to promote <strong>Hd3a</strong> and flowering; under <strong>LD</strong>, OsGI still activates <strong>Hd1</strong>, but Hd1 represses <strong>Hd3a</strong>. (song2024researchprogresson pages 1-2, song2024researchprogresson pages 2-4)</td>
+<td>Review-level synthesis; extracted pages do not provide fold-changes or direct experimental localization/protein-domain measurements for rice OsGI.</td>
+<td>https://doi.org/10.3390/cimb46090613</td>
+</tr>
+<tr>
+<td>Kitazawa et al. (2024)</td>
+<td>Breeding/genotyping application</td>
+<td>Heading-date SNP assay panel and predictive breeding models</td>
+<td>Developed <strong>96-plex</strong> SNP assays covering <strong>41 loci</strong> (<strong>29 genes + 12 QTLs</strong>) discriminating <strong>144 alleles</strong>; genotyped <strong>377 cultivars</strong> with <strong>3.5 alleles/locus</strong> on average. Prediction models trained on <strong>200 cultivars</strong> and tested on <strong>22 cultivars</strong> gave adjusted <strong>R² ≈ 0.88</strong> (0.8895/0.8799/0.8791) and Pearson <strong>r = 0.7603, 0.6908, 0.7459</strong> across years; throughput/cost ~<strong>96 samples in half a week</strong> at ~<strong>170,000 JPY</strong>. QTLs mapping near <strong>OsGI</strong> were detected. (kitazawa2024developmentofsnp pages 3-5, kitazawa2024developmentofsnp pages 1-2, kitazawa2024developmentofsnp pages 5-7, kitazawa2024developmentofsnp pages 7-8)</td>
+<td>Real-world breeding relevance is high, but extracted text does <strong>not explicitly confirm</strong> OsGI as one of the final assayed genes in the panel; evidence is strongest for QTL proximity and heading-date network relevance.</td>
+<td>https://doi.org/10.1270/jsbbs.23093</td>
+</tr>
+<tr>
+<td>Liu et al. (2024, Plants)</td>
+<td>GWAS + gene-editing application</td>
+<td>Heading-date manipulation in breeding context with OsGI network readout</td>
+<td>GWAS used <strong>3,021 rice varieties</strong>; editing <strong>OsMADS50</strong> delayed flowering by about <strong>1 week</strong> and reduced expression of flowering genes including <strong>OsGI</strong>. Mutants showed increased tiller number and yield per plant, but <strong>1000-grain weight</strong> and <strong>grain filling</strong> decreased significantly; no numeric OsGI fold-change reported in extracted pages. (liu2024improvingricequality pages 10-11)</td>
+<td>OsGI was <strong>not directly edited</strong>; it is a downstream/readout node in the flowering network. Quantitative yield-component values were not provided in the extracted text.</td>
+<td>https://doi.org/10.3390/plants13162221</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most important quantitative and application-oriented findings for rice OsGI/GIGANTEA from the gathered evidence. It highlights mechanistic transcriptome-scale effects, hormone-related downstream changes, modern pathway interpretation, and breeding/genotyping implementations.</em></p>
+<h2 id="7-functional-annotation-summary-for-database-style-curation">7) Functional annotation summary (for database-style curation)</h2>
+<ul>
+<li><strong>Gene/protein:</strong> OsGI / Os-GIGANTEA; rice ortholog of Arabidopsis GI; <strong>LOC_Os01g08700</strong> (Song et al., 2024) (song2024researchprogresson pages 1-2).</li>
+<li><strong>Molecular function (best-supported):</strong> Regulatory protein required for robust diurnal/circadian orchestration of the rice transcriptome in field conditions (Izawa et al., 2011) (izawa2011osgiganteaconfersrobust pages 1-2).</li>
+<li><strong>Biological processes:</strong> Photoperiodic regulation of heading date via <strong>OsGI–Hd1–Hd3a</strong> and related branches involving <strong>Ehd1</strong> and florigens (<strong>Hd3a/RFT1</strong>) (song2024researchprogresson pages 2-4).</li>
+<li><strong>Key phenotypic outputs:</strong> Strong genome-wide effects on rhythmic transcription; day/night transcriptome state simplification in osgi mutants (izawa2011osgiganteaconfersrobust pages 5-6, izawa2011osgiganteaconfersrobust media 5a0d7264). Downstream transcriptional shifts in hormone-related pathways including GA catabolism genes (itoh2011astudyof pages 4-5).</li>
+<li><strong>Upstream regulation:</strong> Photoreceptor pathway input summarized as OsPhyA regulating OsGI under SD (song2024researchprogresson pages 2-4).</li>
+<li><strong>Subcellular localization:</strong> General plant GI is described as nuclear in authoritative review literature, but <strong>direct rice OsGI localization experiments were not found in retrieved excerpts</strong>; thus rice localization should be annotated conservatively unless additional rice primary localization sources are added (liu2024giganteaunveiledexploring pages 1-2, liu2024giganteaunveiledexploring pages 14-15).</li>
+</ul>
+<h2 id="8-evidence-gaps-and-recommendations">8) Evidence gaps and recommendations</h2>
+<ul>
+<li><strong>Rice-specific protein localization and interactome evidence:</strong> The retrieved sources do not provide direct OsGI localization assays or rice OsGI protein–protein interaction biochemistry; adding primary rice OsGI localization/interactome studies (e.g., OsGI–GFP, co-IP/BiFC) would strengthen cellular-component annotations.</li>
+<li><strong>2023–2024 OsGI primary mechanistic novelty:</strong> Recent sources in this run are mainly reviews and applied studies where OsGI is measured as a network readout; targeted searches for 2023–2024 OsGI interaction partners, post-translational regulation, or structural studies could be undertaken if needed.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(song2024researchprogresson pages 1-2): Jian Song, Liqun Tang, Yongtao Cui, Honghuan Fan, Xueqiang Zhen, and Jianjun Wang. Research progress on photoperiod gene regulation of heading date in rice. Current Issues in Molecular Biology, 46:10299-10311, Sep 2024. URL: https://doi.org/10.3390/cimb46090613, doi:10.3390/cimb46090613. This article has 12 citations.</p>
+</li>
+<li>
+<p>(izawa2011osgiganteaconfersrobust pages 13-14): T. Izawa, M. Mihara, Yuji Suzuki, Meenu Gupta, Hironori Itoh, A. Nagano, Ritsuko Motoyama, Y. Sawada, M. Yano, M. Hirai, A. Makino, and Y. Nagamura. Os-gigantea confers robust diurnal rhythms on the global transcriptome of rice in the field[c][w][oa]. Plant Cell, 23:1741-1755, May 2011. URL: https://doi.org/10.1105/tpc.111.083238, doi:10.1105/tpc.111.083238. This article has 198 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024giganteaunveiledexploring pages 1-2): Ling Liu, Yuxin Xie, Baba Salifu Yahaya, and Fengkai Wu. Gigantea unveiled: exploring its diverse roles and mechanisms. Genes, 15:94, Jan 2024. URL: https://doi.org/10.3390/genes15010094, doi:10.3390/genes15010094. This article has 15 citations.</p>
+</li>
+<li>
+<p>(liu2024giganteaunveiledexploring pages 14-15): Ling Liu, Yuxin Xie, Baba Salifu Yahaya, and Fengkai Wu. Gigantea unveiled: exploring its diverse roles and mechanisms. Genes, 15:94, Jan 2024. URL: https://doi.org/10.3390/genes15010094, doi:10.3390/genes15010094. This article has 15 citations.</p>
+</li>
+<li>
+<p>(song2024researchprogresson pages 2-4): Jian Song, Liqun Tang, Yongtao Cui, Honghuan Fan, Xueqiang Zhen, and Jianjun Wang. Research progress on photoperiod gene regulation of heading date in rice. Current Issues in Molecular Biology, 46:10299-10311, Sep 2024. URL: https://doi.org/10.3390/cimb46090613, doi:10.3390/cimb46090613. This article has 12 citations.</p>
+</li>
+<li>
+<p>(izawa2011osgiganteaconfersrobust pages 1-2): T. Izawa, M. Mihara, Yuji Suzuki, Meenu Gupta, Hironori Itoh, A. Nagano, Ritsuko Motoyama, Y. Sawada, M. Yano, M. Hirai, A. Makino, and Y. Nagamura. Os-gigantea confers robust diurnal rhythms on the global transcriptome of rice in the field[c][w][oa]. Plant Cell, 23:1741-1755, May 2011. URL: https://doi.org/10.1105/tpc.111.083238, doi:10.1105/tpc.111.083238. This article has 198 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sohail2023geneticandsignaling pages 3-5): Amir Sohail. Genetic and signaling pathways of flowering regulation in rice (oryza sativa l.). Brazilian Journal of Botany, 46:599-608, Aug 2023. URL: https://doi.org/10.1007/s40415-023-00910-y, doi:10.1007/s40415-023-00910-y. This article has 10 citations.</p>
+</li>
+<li>
+<p>(liu2024giganteaunveiledexploring pages 5-7): Ling Liu, Yuxin Xie, Baba Salifu Yahaya, and Fengkai Wu. Gigantea unveiled: exploring its diverse roles and mechanisms. Genes, 15:94, Jan 2024. URL: https://doi.org/10.3390/genes15010094, doi:10.3390/genes15010094. This article has 15 citations.</p>
+</li>
+<li>
+<p>(liu2024giganteaunveiledexploring pages 2-3): Ling Liu, Yuxin Xie, Baba Salifu Yahaya, and Fengkai Wu. Gigantea unveiled: exploring its diverse roles and mechanisms. Genes, 15:94, Jan 2024. URL: https://doi.org/10.3390/genes15010094, doi:10.3390/genes15010094. This article has 15 citations.</p>
+</li>
+<li>
+<p>(izawa2011osgiganteaconfersrobust pages 5-6): T. Izawa, M. Mihara, Yuji Suzuki, Meenu Gupta, Hironori Itoh, A. Nagano, Ritsuko Motoyama, Y. Sawada, M. Yano, M. Hirai, A. Makino, and Y. Nagamura. Os-gigantea confers robust diurnal rhythms on the global transcriptome of rice in the field[c][w][oa]. Plant Cell, 23:1741-1755, May 2011. URL: https://doi.org/10.1105/tpc.111.083238, doi:10.1105/tpc.111.083238. This article has 198 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(izawa2011osgiganteaconfersrobust media 5a0d7264): T. Izawa, M. Mihara, Yuji Suzuki, Meenu Gupta, Hironori Itoh, A. Nagano, Ritsuko Motoyama, Y. Sawada, M. Yano, M. Hirai, A. Makino, and Y. Nagamura. Os-gigantea confers robust diurnal rhythms on the global transcriptome of rice in the field[c][w][oa]. Plant Cell, 23:1741-1755, May 2011. URL: https://doi.org/10.1105/tpc.111.083238, doi:10.1105/tpc.111.083238. This article has 198 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(itoh2011astudyof pages 4-5): Hironori Itoh and Takeshi Izawa. A study of phytohormone biosynthetic gene expression using a circadian clock-related mutant in rice. Plant Signaling &amp; Behavior, 6:1932-1936, Dec 2011. URL: https://doi.org/10.4161/psb.6.12.18207, doi:10.4161/psb.6.12.18207. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kitazawa2024developmentofsnp pages 1-2): Noriyuki Kitazawa, Ayahiko Shomura, Tatsumi Mizubayashi, Tsuyu Ando, Nagao Hayashi, Shiori Yabe, Kazuki Matsubara, Kaworu Ebana, Utako Yamanouchi, and Shuichi Fukuoka. Development of snp genotyping assays for heading date in rice. Breeding Science, 74:274-284, Jun 2024. URL: https://doi.org/10.1270/jsbbs.23093, doi:10.1270/jsbbs.23093. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kitazawa2024developmentofsnp pages 3-5): Noriyuki Kitazawa, Ayahiko Shomura, Tatsumi Mizubayashi, Tsuyu Ando, Nagao Hayashi, Shiori Yabe, Kazuki Matsubara, Kaworu Ebana, Utako Yamanouchi, and Shuichi Fukuoka. Development of snp genotyping assays for heading date in rice. Breeding Science, 74:274-284, Jun 2024. URL: https://doi.org/10.1270/jsbbs.23093, doi:10.1270/jsbbs.23093. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024improvingricequality pages 10-11): Jianguo Liu, Qinqin Yi, Guojun Dong, Yuyu Chen, Longbiao Guo, Zhenyu Gao, Li Zhu, Deyong Ren, Qiang Zhang, Qing Li, Jingyong Li, Qiangming Liu, Guangheng Zhang, Qian Qian, and Lan Shen. Improving rice quality by regulating the heading dates of rice varieties without yield penalties. Plants, 13:2221, Aug 2024. URL: https://doi.org/10.3390/plants13162221, doi:10.3390/plants13162221. This article has 8 citations.</p>
+</li>
+<li>
+<p>(liu2024giganteaunveiledexploring pages 7-8): Ling Liu, Yuxin Xie, Baba Salifu Yahaya, and Fengkai Wu. Gigantea unveiled: exploring its diverse roles and mechanisms. Genes, 15:94, Jan 2024. URL: https://doi.org/10.3390/genes15010094, doi:10.3390/genes15010094. This article has 15 citations.</p>
+</li>
+<li>
+<p>(izawa2011osgiganteaconfersrobust pages 2-4): T. Izawa, M. Mihara, Yuji Suzuki, Meenu Gupta, Hironori Itoh, A. Nagano, Ritsuko Motoyama, Y. Sawada, M. Yano, M. Hirai, A. Makino, and Y. Nagamura. Os-gigantea confers robust diurnal rhythms on the global transcriptome of rice in the field[c][w][oa]. Plant Cell, 23:1741-1755, May 2011. URL: https://doi.org/10.1105/tpc.111.083238, doi:10.1105/tpc.111.083238. This article has 198 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(itoh2011astudyof pages 1-4): Hironori Itoh and Takeshi Izawa. A study of phytohormone biosynthetic gene expression using a circadian clock-related mutant in rice. Plant Signaling &amp; Behavior, 6:1932-1936, Dec 2011. URL: https://doi.org/10.4161/psb.6.12.18207, doi:10.4161/psb.6.12.18207. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kitazawa2024developmentofsnp pages 5-7): Noriyuki Kitazawa, Ayahiko Shomura, Tatsumi Mizubayashi, Tsuyu Ando, Nagao Hayashi, Shiori Yabe, Kazuki Matsubara, Kaworu Ebana, Utako Yamanouchi, and Shuichi Fukuoka. Development of snp genotyping assays for heading date in rice. Breeding Science, 74:274-284, Jun 2024. URL: https://doi.org/10.1270/jsbbs.23093, doi:10.1270/jsbbs.23093. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kitazawa2024developmentofsnp pages 7-8): Noriyuki Kitazawa, Ayahiko Shomura, Tatsumi Mizubayashi, Tsuyu Ando, Nagao Hayashi, Shiori Yabe, Kazuki Matsubara, Kaworu Ebana, Utako Yamanouchi, and Shuichi Fukuoka. Development of snp genotyping assays for heading date in rice. Breeding Science, 74:274-284, Jun 2024. URL: https://doi.org/10.1270/jsbbs.23093, doi:10.1270/jsbbs.23093. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="GI-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000039 The main figure summarizing the effects of Os-GIGANTEA (OsGI) on the global diurnal transcriptome is Figure 3, &quot;Field Transcriptome" src="GI-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>song2024researchprogresson pages 1-2</li>
+<li>izawa2011osgiganteaconfersrobust pages 13-14</li>
+<li>liu2024giganteaunveiledexploring pages 1-2</li>
+<li>izawa2011osgiganteaconfersrobust pages 1-2</li>
+<li>song2024researchprogresson pages 2-4</li>
+<li>sohail2023geneticandsignaling pages 3-5</li>
+<li>izawa2011osgiganteaconfersrobust pages 5-6</li>
+<li>itoh2011astudyof pages 4-5</li>
+<li>kitazawa2024developmentofsnp pages 1-2</li>
+<li>kitazawa2024developmentofsnp pages 3-5</li>
+<li>liu2024improvingricequality pages 10-11</li>
+<li>liu2024giganteaunveiledexploring pages 7-8</li>
+<li>liu2024giganteaunveiledexploring pages 14-15</li>
+<li>liu2024giganteaunveiledexploring pages 5-7</li>
+<li>liu2024giganteaunveiledexploring pages 2-3</li>
+<li>izawa2011osgiganteaconfersrobust pages 2-4</li>
+<li>itoh2011astudyof pages 1-4</li>
+<li>kitazawa2024developmentofsnp pages 5-7</li>
+<li>kitazawa2024developmentofsnp pages 7-8</li>
+<li>c</li>
+<li>w</li>
+<li>oa</li>
+<li>https://doi.org/10.3390/genes15010094</li>
+<li>https://doi.org/10.3390/cimb46090613</li>
+<li>https://doi.org/10.1105/tpc.111.083238</li>
+<li>https://doi.org/10.1007/s40415-023-00910-y</li>
+<li>https://doi.org/10.4161/psb.6.12.18207</li>
+<li>https://doi.org/10.3390/cimb46090613;</li>
+<li>https://doi.org/10.1007/s40415-023-00910-y;</li>
+<li>https://doi.org/10.1270/jsbbs.23093</li>
+<li>https://doi.org/10.3390/plants13162221</li>
+<li>https://doi.org/10.3390/genes15010094;</li>
+<li>https://doi.org/10.3390/cimb46090613,</li>
+<li>https://doi.org/10.1105/tpc.111.083238,</li>
+<li>https://doi.org/10.3390/genes15010094,</li>
+<li>https://doi.org/10.1007/s40415-023-00910-y,</li>
+<li>https://doi.org/10.4161/psb.6.12.18207,</li>
+<li>https://doi.org/10.1270/jsbbs.23093,</li>
+<li>https://doi.org/10.3390/plants13162221,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9AWL7
+gene_symbol: GI
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:39947
+  label: Oryza sativa subsp. japonica
+description: &gt;
+  OsGI (GIGANTEA; UniProt Q9AWL7; Os01g0182600 / LOC_Os01g08700) is the rice ortholog of
+  the plant-specific GIGANTEA-family protein, a large (1160 aa) circadian-clock-associated
+  regulator that lacks recognized catalytic domains and instead functions through extensive
+  protein-protein interactions in both the nucleus and cytoplasm (Li et al. 2017,
+  file:ORYSJ/GI/GI-deep-research-falcon.md). Its primary molecular role is regulatory rather
+  than enzymatic: OsGI couples clock and light/photoperiod signaling to developmental and
+  physiological outputs, most prominently the timing of the floral transition (heading date).
+  In the conserved rice photoperiod module OsGI acts upstream of Hd1 (the CONSTANS ortholog)
+  and the florigen genes Hd3a/RFT1 (OsGI-Hd1-Hd3a/RFT1), and in a rice-specific branch OsGI
+  binds the major long-day floral repressor Ghd7 and promotes its 26S-proteasome-dependent
+  degradation, an activity antagonized by phytochromes OsPHYA/OsPHYB; a 2024 review
+  summarizes OsGI as a circadian-rhythm gene and activator of Hd1 that promotes flowering
+  under short days and inhibits flowering under long days (Song et al. 2024; Zheng et al.
+  2019, file:ORYSJ/GI/GI-deep-research-falcon.md). At the systems level OsGI is a large-effect
+  coordinator of the rice diurnal transcriptome: in field transcriptomics an osgi-1 null
+  altered expression of 57% (FDR 0.01) to 75% (FDR 0.05) of 27,201 genes tested, with strong
+  effects on clock components (PRR1 ~10x up, LHY ~100x down at some time points), establishing
+  OsGI as required for robust diurnal/circadian rhythms (Izawa et al. 2011,
+  file:ORYSJ/GI/GI-deep-research-falcon.md). OsGI additionally links flowering-time regulation
+  to phosphate homeostasis through direct interaction with the E2 ubiquitin-conjugating enzyme
+  OsPHO2 (Li et al. 2017). The protein is consistent with UniProt&#39;s FUNCTION statement
+  (&#34;Involved in regulation of circadian rhythm, and in the control of the photoperiodic
+  flowering ... Activates Hd1/CONSTANS gene&#34;). Its UniProt SwissProt keywords (Biological
+  rhythms; Developmental protein; Differentiation; Flowering) generated three keyword-derived
+  (SPKW, GO_REF:0000043) GO annotations - cell differentiation, flower development, and
+  rhythmic process - that are reviewed retrospectively below as developmental/clock
+  over-annotations of the &#34;expression/regulation is not the bare process&#34; type.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9AWL7-1
+- name: &#39;2&#39;
+  id: Q9AWL7-2
+  sequence_note: VSP_013910
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt SwissProt subcellular-location vocabulary mapping
+      (GO_REF:0000044). OsGI localizes to the nucleus, consistent with its role in nuclear
+      transcriptional/regulatory complexes.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with both UniProt (SUBCELLULAR LOCATION: Nucleus) and rice
+      experimental evidence. OsGI has been observed in both nucleus and cytoplasm, and the
+      OsGI-Ghd7 interaction relevant to photoperiodic flowering is detected in the nucleus
+      and associated with nuclear speckles, supporting a nuclear site of action
+      [file:ORYSJ/GI/GI-deep-research-falcon.md]. Nuclear localization is appropriate as a
+      core cellular-component annotation; OsGI also has a cytoplasmic pool, so this term
+      captures one of its two localizations.
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;OsGI has been observed in **both nucleus and cytoplasm** in rice,
+        consistent with a regulatory protein that participates in nuclear transcriptional
+        complexes as well as cytoplasmic/light-signaling related processes.&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;In the Ghd7 study, OsGI–Ghd7 interaction was detected **in the
+        nucleus** and associated with **nuclear speckles**, supporting a nuclear site of
+        action for the Ghd7 stability/interaction module.&#34;
+- term:
+    id: GO:2000028
+    label: regulation of photoperiodism, flowering
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR026211, GIGANTEA) mapping the GIGANTEA family to
+      regulation of photoperiodic flowering. This is the single most accurate and core
+      biological-process term for OsGI and is strongly supported by rice experimental and
+      review literature.
+    action: ACCEPT
+    reason: &gt;
+      This is the core function of OsGI and is well supported. OsGI is the upstream component
+      of the conserved rice photoperiod pathway OsGI-Hd1-Hd3a/RFT1 and a rice-specific
+      regulator of Ghd7 stability; reviews describe it as a circadian gene/activator of Hd1
+      that promotes flowering under short days and inhibits flowering under long days
+      [file:ORYSJ/GI/GI-deep-research-falcon.md]. The InterPro2GO mapping gives the correct
+      &#34;regulation of&#34; framing - OsGI regulates the photoperiodic flowering process rather than
+      being a structural component of flowers - and is at an appropriate level of specificity.
+      It directly captures the function UniProt describes (&#34;control of the photoperiodic
+      flowering ... Activates Hd1/CONSTANS gene&#34;). This annotation is the correct replacement
+      sense for the retired keyword-derived &#34;flower development&#34; SPKW term reviewed below.
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;OsGI acts upstream of Hd1 (CO ortholog)** and the florigen gene
+        **Hd3a** (and also RFT1), i.e., **OsGI–Hd1–Hd3a/RFT1**.&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;summarizes OsGI (LOC_Os01g08700) as a **circadian rhythm gene and
+        activator of Hd1** and states OsGI **promotes flowering under short days (SD)** but
+        **inhibits flowering under long days (LD)**&#34;
+# --- SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO pipeline for cellular organisms.
+# Reviewed retrospectively to assess whether removal was justified. These three derive from
+# the UniProt keywords &#34;Differentiation&#34;/&#34;Developmental protein&#34;/&#34;Flowering&#34;/&#34;Biological
+# rhythms&#34; and are classic developmental/clock over-annotations of the &#34;expression or
+# regulation of a process is not the bare process itself&#34; type.
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keywords
+      &#34;Differentiation&#34;/&#34;Developmental protein&#34;; snapshot-only, removed in the current GOA
+      release. OsGI is a circadian-clock/photoperiodic-flowering regulator, not a cell-fate
+      or differentiation factor.
+    action: REMOVE
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. &#34;Cell differentiation&#34; is a generic
+      catch-all process term assigned purely from the UniProt &#34;Differentiation&#34;/&#34;Developmental
+      protein&#34; keywords (which themselves are loosely applied to flowering-time regulators
+      because the floral transition is a developmental event). There is no evidence that OsGI
+      controls the differentiation of any specific cell type. Its demonstrated roles are
+      regulatory: it is a high-level coordinator of diurnal/circadian transcript rhythms and
+      controls the TIMING of the floral transition via the OsGI-Hd1-Hd3a/RFT1 module and
+      Ghd7-stability control [file:ORYSJ/GI/GI-deep-research-falcon.md]. These are correctly
+      captured by the circadian-regulation and photoperiodic-flowering terms (GO:0042752,
+      GO:2000028) and do not entail a cell-differentiation function. The keyword-derived term
+      adds no information and is an over-annotation; removal was correct.
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;**OsGI is not an enzyme/transporter; its primary function is
+        regulatory**: it contributes to the **circadian/diurnal system** and couples
+        clock/light signaling to **photoperiodic flowering** and other timed physiological
+        outputs.&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;GI being a regulatory/scaffold-type protein rather than an enzyme or
+        transporter.&#34;
+- term:
+    id: GO:0009908
+    label: flower development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Flowering&#34;;
+      snapshot-only, removed in the current GOA release. OsGI controls flowering TIME (the
+      photoperiodic floral transition), not flower-organ development/morphogenesis, so the
+      essence is sound but the term is mis-leveled.
+    action: MODIFY
+    reason: &gt;
+      GOA&#39;s removal of this annotation removed a term that was pointing at the right biology
+      but at the wrong level/sense. OsGI does not participate in flower organ development or
+      floral morphogenesis (it does not specify floral organ identity, build floral organs,
+      etc.); rather, it REGULATES the decision/timing of flowering in response to photoperiod.
+      &#34;Flower development&#34; (GO:0009908) is the bare developmental process and is therefore an
+      over-broad mis-annotation of the ELF4 type (regulation of a process is not the process
+      itself). The correct sense is &#34;regulation of flower development&#34; (GO:0009909) - or, more
+      specifically, the photoperiodic-flowering-regulation term GO:2000028 that OsGI already
+      carries in current GOA. OsGI acts upstream of Hd1 and the florigen Hd3a/RFT1 and, in a
+      rice-specific branch, promotes proteasomal degradation of the floral repressor Ghd7,
+      thereby tuning flowering time rather than constructing the flower
+      [file:ORYSJ/GI/GI-deep-research-falcon.md]. Replace with the &#34;regulation of&#34;
+      developmental term.
+    proposed_replacement_terms:
+    - id: GO:0009909
+      label: regulation of flower development
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;OsGI **binds Ghd7** and promotes its **26S proteasome-dependent
+        degradation**, thereby attenuating Ghd7-mediated flowering repression.&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;couples clock/light signaling to **photoperiodic flowering** and
+        other timed physiological outputs.&#34;
+- term:
+    id: GO:0048511
+    label: rhythmic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Biological rhythms&#34;;
+      snapshot-only, removed in the current GOA release. OsGI is genuinely a clock-associated
+      protein, but &#34;rhythmic process&#34; is an uninformative top-level grouping term that is
+      redundant with the specific circadian-regulation terms OsGI should carry.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. OsGI IS clock-associated - its own
+      transcript oscillates with a circadian rhythm (peak ~8 h into the light) and an osgi
+      null disrupts diurnal rhythms across most of the rice transcriptome
+      [file:ORYSJ/GI/GI-deep-research-falcon.md] - so the term is not factually wrong. However,
+      &#34;rhythmic process&#34; (GO:0048511) is a broad parent that conveys no information about WHAT
+      OsGI does: this same keyword-derived term was found to be 100% over-annotated in the
+      human SPKW subproject. The informative, specific biology is captured by &#34;regulation of
+      circadian rhythm&#34; (GO:0042752, an IBA term OsGI already carries per UniProt) and, for the
+      transcriptome-wide effect, &#34;circadian regulation of gene expression&#34; (GO:0032922,
+      proposed below). Once those specific regulation terms are present, the bare &#34;rhythmic
+      process&#34; grouping is redundant and uninformative; marking it over-annotated/removing it
+      loses no biology.
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;OsGI is required for “strong amplitudes and fine-tuning” of
+        diurnal rhythms in global gene expression&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;expression of **57% (FDR = 0.01)** or **75% (FDR = 0.05)** was
+        significantly altered by an **osgi-1** null mutation.&#34;
+# --- NEW annotations proposed from the literature ---
+- term:
+    id: GO:0042752
+    label: regulation of circadian rhythm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      OsGI regulates the circadian clock: it is required for robust diurnal rhythms of the
+      rice transcriptome and modulates core clock genes. This specific regulation term (also
+      assigned IBA across the GIGANTEA group in UniProt) is the informative replacement for
+      the retired generic &#34;rhythmic process&#34; SPKW term and is proposed as a current annotation.
+    action: NEW
+    reason: &gt;
+      OsGI is a circadian-clock-associated regulator. UniProt&#39;s FUNCTION statement is
+      &#34;Involved in regulation of circadian rhythm&#34;, and the rice field-transcriptome study
+      showed an osgi-1 null strongly perturbs clock outputs (PRR1 ~10x up, LHY ~100x down at
+      some time points) and alters most diurnally regulated genes, demonstrating that OsGI is
+      required for normal circadian rhythmicity [file:ORYSJ/GI/GI-deep-research-falcon.md].
+      &#34;Regulation of circadian rhythm&#34; (GO:0042752) is the correct specific process term and
+      precisely captures the biology that the over-broad &#34;rhythmic process&#34; keyword term only
+      gestured at. (This term is present as IBA in the UniProt GO cross-references but is not
+      in the GOA tsv supplied for review.)
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;OsGI is a circadian-regulated GIGANTEA family protein that functions
+        primarily as a regulator of photoperiodic flowering and diurnal/circadian transcript
+        rhythms&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;**PRR1 ~10× upregulation** and **LHY ~100× reduction** at specific
+        nighttime time points in the osgi background.&#34;
+- term:
+    id: GO:0032922
+    label: circadian regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &gt;
+      OsGI confers robust circadian/diurnal control on global gene expression in rice. Loss
+      of OsGI changes the rhythmic expression of a majority of the transcriptome, supporting
+      this specific process term.
+    action: NEW
+    reason: &gt;
+      The landmark field study showed that an osgi-1 null altered expression of 57% (FDR 0.01)
+      to 75% (FDR 0.05) of 27,201 genes tested and that OsGI is required for &#34;strong amplitudes
+      and fine-tuning&#34; of diurnal rhythms in global gene expression
+      [file:ORYSJ/GI/GI-deep-research-falcon.md]. This large-effect, genome-wide control of
+      rhythmic transcription is precisely &#34;circadian regulation of gene expression&#34;
+      (GO:0032922) and is the most specific process capturing the transcriptome-wide diurnal
+      role that the retired &#34;rhythmic process&#34; keyword term failed to convey. IMP is justified
+      by the osgi-1 loss-of-function transcriptome phenotype.
+    supported_by:
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;OsGI is required for “strong amplitudes and fine-tuning” of
+        diurnal rhythms in global gene expression, emphasizing OsGI as a **high-level
+        diurnal/circadian output coordinator**&#34;
+    - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+      supporting_text: &#34;Among **27,201 genes tested**, expression of **57% (FDR = 0.01)** or
+        **75% (FDR = 0.05)** was significantly altered by an **osgi-1** null mutation.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: The InterPro2GO mapping for IPR026211 (GIGANTEA) assigns &#34;regulation of
+      photoperiodism, flowering&#34; (GO:2000028), the single most accurate core process term
+      for OsGI.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: For OsGI, the keywords &#34;Differentiation&#34;/&#34;Developmental protein&#34;, &#34;Flowering&#34;
+      and &#34;Biological rhythms&#34; produced generic/mis-leveled process terms (cell
+      differentiation, flower development, rhythmic process) that are over-annotations of a
+      flowering-time/circadian regulator.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: Maps the UniProt &#34;Nucleus&#34; subcellular location to GO:0005634; consistent with
+      experimental observation of OsGI in the nucleus (and cytoplasm).
+- id: file:ORYSJ/GI/GI-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation
+    of rice GI / GIGANTEA (Q9AWL7).
+  findings:
+  - statement: OsGI (Os01g0182600 / LOC_Os01g08700; UniProt Q9AWL7) is a circadian-regulated
+      GIGANTEA-family protein whose primary function is regulatory - coordinating diurnal/
+      circadian transcript rhythms and controlling photoperiodic flowering (heading date) -
+      rather than enzymatic; it lacks conserved catalytic domains and acts through
+      protein-protein interactions and nucleo-cytoplasmic localization.
+  - statement: OsGI is upstream in the conserved rice photoperiod pathway OsGI-Hd1-Hd3a/RFT1,
+      and in a rice-specific branch binds the long-day repressor Ghd7 and promotes its 26S
+      proteasome-dependent degradation, an activity antagonized by phytochromes OsPHYA/OsPHYB;
+      a 2024 review describes OsGI as a circadian-rhythm gene and activator of Hd1 that
+      promotes flowering under short days and inhibits flowering under long days.
+  - statement: In field transcriptomics, an osgi-1 null altered expression of 57% (FDR 0.01)
+      to 75% (FDR 0.05) of 27,201 genes tested, with PRR1 ~10x up and LHY ~100x down at some
+      nighttime time points, establishing OsGI as a high-level coordinator of robust diurnal/
+      circadian transcript rhythms.
+  - statement: OsGI links flowering-time regulation to phosphate homeostasis via direct
+      interaction with OsPHO2 (a ubiquitin-conjugating E2); osgi leaves accumulate up to ~5x
+      WT Pi with leaf-tip necrosis, and &gt;55% of osgi differentially expressed genes overlap
+      with ospho2.
+  - statement: OsGI is observed in both nucleus and cytoplasm; the OsGI-Ghd7 interaction is
+      detected in the nucleus and associated with nuclear speckles.
+core_functions:
+- description: &gt;
+    OsGI controls the timing of the floral transition (heading date) in response to
+    photoperiod. As the upstream component of the conserved rice photoperiod module
+    OsGI-Hd1-Hd3a/RFT1, and via rice-specific promotion of 26S-proteasome-dependent
+    degradation of the long-day floral repressor Ghd7 (antagonized by phytochromes
+    OsPHYA/OsPHYB), it promotes flowering under short days and inhibits it under long days.
+    This is a regulatory (flowering-time) role, not flower-organ morphogenesis. OsGI has no
+    recognized catalytic or sequence-specific DNA-binding domain; it acts as a clock-associated
+    regulatory/scaffold protein through protein-protein interactions, so no specific molecular
+    function term is asserted (the uninformative &#34;protein binding&#34; is deliberately avoided).
+  directly_involved_in:
+  - id: GO:2000028
+    label: regulation of photoperiodism, flowering
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+    supporting_text: &#34;OsGI acts upstream of Hd1 (CO ortholog)** and the florigen gene
+      **Hd3a** (and also RFT1), i.e., **OsGI–Hd1–Hd3a/RFT1**.&#34;
+  - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+    supporting_text: &#34;OsGI **binds Ghd7** and promotes its **26S proteasome-dependent
+      degradation**, thereby attenuating Ghd7-mediated flowering repression.&#34;
+- description: &gt;
+    OsGI is a circadian-clock-associated regulator that confers robust diurnal/circadian
+    rhythms on the rice transcriptome and modulates core clock genes (e.g. PRR1, LHY). It
+    functions as a high-level coordinator of timed gene expression rather than as a single
+    enzymatic clock component. As above, OsGI is a domainless regulatory protein and no
+    specific molecular function term is asserted.
+  directly_involved_in:
+  - id: GO:0042752
+    label: regulation of circadian rhythm
+  - id: GO:0032922
+    label: circadian regulation of gene expression
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+    supporting_text: &#34;OsGI is required for “strong amplitudes and fine-tuning” of
+      diurnal rhythms in global gene expression&#34;
+  - reference_id: file:ORYSJ/GI/GI-deep-research-falcon.md
+    supporting_text: &#34;**PRR1 ~10× upregulation** and **LHY ~100× reduction** at specific
+      nighttime time points in the osgi background.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Is rice OsGI a direct transcriptional regulator of Hd1, or does it act primarily
+    through post-translational control of partners such as Ghd7 and via FKF1-type complexes,
+    given that GI lacks recognized DNA-binding/catalytic domains?
+  experts:
+  - Takeshi Izawa
+- question: How is the dual, photoperiod-dependent behavior of OsGI (promoting flowering under
+    short days but inhibiting it under long days) encoded mechanistically at the level of the
+    OsGI-Hd1-Hd3a/RFT1 and OsGI-Ghd7 branches?
+  experts:
+  - Haiyang Wang
+- question: Is the OsGI-OsPHO2 interaction a genuine in vivo coupling of flowering time to
+    phosphate homeostasis, and does it operate through OsGI&#39;s nuclear or cytoplasmic pool?
+  experts:
+  - Huixia Shou
+suggested_experiments:
+- description: Perform time-course ChIP-seq and proximity-labeling (TurboID) on OsGI under
+    short-day and long-day conditions to define its direct chromatin associations and protein
+    interactome at the clock/photoperiod interface, distinguishing direct transcriptional
+    targets from post-translational partners.
+  hypothesis: OsGI controls flowering time and clock outputs predominantly through protein
+    complexes (e.g. with Hd1, Ghd7, FKF1-type factors) rather than through direct sequence-
+    specific DNA binding.
+  experiment_type: ChIP-seq + proximity-labeling interactome
+- description: Generate osgi loss-of-function and OsGI-overexpression lines and quantify
+    flowering time, Hd1/Ehd1/Hd3a/RFT1/Ghd7 expression, and Ghd7 protein levels under
+    controlled short-day vs long-day photoperiods, with and without phytochrome mutations.
+  hypothesis: OsGI promotes flowering under short days and represses it under long days by
+    photoperiod-dependent destabilization of Ghd7 that is antagonized by OsPHYA/OsPHYB.
+  experiment_type: genetic / photoperiod physiology with protein-stability assay
+- description: Assay the circadian period, amplitude and phase of core clock reporters and
+    genome-wide diurnal transcription in osgi versus wild type under constant conditions and
+    field-like cycles.
+  hypothesis: OsGI is required for robust amplitude and fine-tuning of circadian gene
+    expression genome-wide, and its loss broadly dampens/desynchronizes diurnal rhythms.
+  experiment_type: circadian luciferase reporter + diurnal RNA-seq
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

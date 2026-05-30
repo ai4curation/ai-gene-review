@@ -14,7 +14,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 - **GOA has retired the SPKW pipeline (≈April 2026)**: `GO_REF:0000043` keyword-to-GO
   annotations have been removed from live GOA for all cellular organisms (verified zero for
   human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
-  project documented is now resolved at the source. Retrospective review of 18 non-Arabidopsis
+  project documented is now resolved at the source. Retrospective review of 30 non-Arabidopsis
   plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
   real over-annotation risk; removal was justified for those, but blanket retirement also
   dropped *correct* annotations when the keyword was the only carrier of a fact.
@@ -32,7 +32,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
 | [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
 | [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
-| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 18 | 15% Tier-A | Term-tiering; GOA retired SPKW |
+| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 30 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
@@ -71,7 +71,7 @@ Not all SPKW-unique annotations are over-annotations:
 
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-30
-- **Total genes reviewed**: 113 across 11 subprojects
+- **Total genes reviewed**: 125 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
@@ -89,7 +89,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
 - [x] [ARATH](SPKW-ARATH.md) - Plant patterns
 - [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (18 genes, 13 species); term-tier classification + retrospective validation of GOA's SPKW retirement + Methyltransferase->methylation keyword batch
+- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (30 genes, 14 species); term-tier classification + retrospective validation + keyword-watch-list sweep (methylation, developmental, defense, nodulation)
 - [x] [BPT4](SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
 
@@ -141,7 +141,22 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
   redundant with the specific *…-methyltransferase activity* MF the gene already carries.
 - Bonus: the review pass also caught two unrelated over-predictions — CCOAOMT *circadian
   rhythm* (ARBA) and EZ1 *single-stranded RNA binding* (ortholog transfer), both REMOVEd.
-- PLANTS now 18 genes / 13 species.
+- **Keyword-watch-list sweep** (12 more genes across the next three Tier A keyword classes):
+  - *Developmental* (`Differentiation`/`Flowering`): GI, HD3A (REMOVE cell differentiation;
+    MODIFY flower development on flowering-TIME genes — the ELF4 pattern), MADS3
+    (MODIFY→specification of stamen identity), FEA2 (MODIFY→meristem maintenance). "cell
+    differentiation" is a catch-all that's wrong or too coarse.
+  - *Defense/killing* (`Plant defense`/toxin): XA21 R-gene (MODIFY→defense response to
+    bacterium), CPS4 phytoalexin synthase (MARK_OVER, STS3 enzyme-vs-product), O6/b-32 RIP
+    (toxin activity **legitimate**, kept→rRNA N-glycosylase), CHIB chitinase (mixed).
+  - *Nodulation*: NSP1 (ACCEPT — legitimate core Nod-signaling TF, removal=collateral damage),
+    CCAMK (MODIFY→arbuscular mycorrhizal association — rice doesn't nodulate; PPC16-style
+    organism-context error), LBA leghemoglobin (O2-carrier ACCEPT, nodulation MARK_OVER),
+    ENOD2A (MARK_OVER, expression marker).
+- **Meta-rule confirmed:** a process/role keyword is only as good as the gene's position
+  relative to that process → (1) core component → keep; (2) wrong organism/pathway → MODIFY;
+  (3) right area wrong altitude → MODIFY-to-specific; (4) expression/component ≠ function →
+  MARK_OVER/REMOVE. PLANTS now **30 genes / 14 species** (added common bean).
 
 ### 2026-05-29
 

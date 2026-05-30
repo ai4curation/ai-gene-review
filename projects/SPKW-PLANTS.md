@@ -22,11 +22,12 @@ current (≈April 2026) GOA release, GOA **retired the keyword-to-GO pipeline**
 `GO_REF:0000043` annotations for human, mouse, fly, worm, *S. pombe*, *Chlamydomonas*,
 Arabidopsis, rice, soybean, tobacco, and every other model organism checked (only viruses
 retain them). `plant.ddb` is effectively the last high-coverage record of the plant SPKW
-landscape, so this subproject is a **retrospective validation study**: for eighteen
-genes across thirteen species (nine in the original round, five in the 2026-05-29
-species extension, four in the 2026-05-30 methylation-keyword batch) we ask whether
-GOA's wholesale removal was justified, and we classify the 214 SPKW-unique terms by
-their over-annotation risk.
+landscape, so this subproject is a **retrospective validation study**: for thirty
+genes across fourteen species (nine in the original round, five in the 2026-05-29
+species extension, four in the 2026-05-30 methylation-keyword batch, and twelve in the
+2026-05-30 developmental/defense/nodulation keyword sweep) we ask whether GOA's
+wholesale removal was justified, and we classify the 214 SPKW-unique terms by their
+over-annotation risk.
 
 ## Key Statistics (2026-05-21)
 
@@ -549,6 +550,88 @@ is also a general annotation-quality pass.
 
 ---
 
+## Keyword-Sweep: Developmental, Defense & Nodulation Batches (2026-05-30)
+
+Continuing down the keyword watch-list ([SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md)), twelve
+more genes were reviewed across the next three high-count Tier A keyword classes:
+**developmental** (`Differentiation`→cell differentiation, `Flowering`→flower development),
+**defense/killing** (`Plant defense`→defense response, toxin/killing), and
+**`Nodulation`→nodulation**. Genes were chosen to span each keyword's verdict range;
+per-gene detail is in the individual `ai-review.yaml` files. All 12 pass `just validate`.
+
+### Developmental keywords (cell differentiation GO:0030154; flower development GO:0009908)
+
+| Gene | Species | Role | SPKW term → action |
+|------|---------|------|--------------------|
+| GI | rice | GIGANTEA clock / photoperiod regulator | cell differentiation→**REMOVE**; flower development→MODIFY (regulation of); rhythmic process→MARK_OVER |
+| HD3A | rice | Hd3a florigen (mobile FT signal) | cell differentiation→**REMOVE**; flower development→MODIFY (positive regulation of) |
+| MADS3 | rice | C-class floral homeotic TF (AGAMOUS) | cell differentiation→**MODIFY → specification of stamen identity** |
+| FEA2 | maize | CLAVATA meristem-size receptor | cell differentiation→**MODIFY → meristem maintenance** |
+
+**"cell differentiation" is a generic catch-all that is essentially never the right term.** On
+flowering-time signals/regulators (GI, HD3A) it is simply wrong → REMOVE; on genuine
+developmental genes (MADS3 organ identity, FEA2 meristem homeostasis) it is correct-but-far-too-
+coarse → MODIFY to the precise process. "flower development" on flowering-*time* genes (GI, HD3A)
+is the ELF4 pattern — they control the timing/transition, not organ morphogenesis → MODIFY to a
+"regulation of flower development" term. GI's "rhythmic process" repeats the 100%-over-annotated
+human/ELF4 result.
+
+### Defense / killing keywords (defense response GO:0006952; toxin/killing)
+
+| Gene | Species | Role | SPKW term → action |
+|------|---------|------|--------------------|
+| XA21 | rice | LRR receptor kinase R-gene / PRR | defense response→**MODIFY → defense response to bacterium** |
+| CPS4 | rice | syn-CPP synthase (momilactone phytoalexin) | defense response→**MARK_OVER** (enzyme-vs-product) |
+| O6/b-32 | maize | ribosome-inactivating protein (RIP) | toxin activity→**MODIFY → rRNA N-glycosylase (legitimate)**; defense response→MARK_OVER |
+| CHIB | maize | endochitinase (PR-3) | polysaccharide catabolic→MODIFY → chitin catabolic; defense response→MARK_OVER |
+
+**"defense response" spans the full verdict range, set by the gene's mechanism.** A genuine
+immune *receptor* (XA21) → correct-but-broad, MODIFY to the specific defense-to-bacterium (it
+was the gene's *only* process term, so collateral-damage-adjacent). A *biosynthetic enzyme* for
+a defense metabolite (CPS4) → over-annotation, the STS3 enzyme-vs-product conflation in a crop.
+A genuine *cytotoxin* (b-32 RIP) → "toxin activity" is **legitimate** (kept, refined to the
+precise rRNA N-glycosylase MF), while the broad "defense response" process is trimmed. An
+antifungal *enzyme* (CHIB chitinase) → the substrate-catabolism term is correct (MODIFY to
+chitin-specific) but "defense response" is over-broad. In every case the informative annotation
+is the molecular function; "defense response" is either redundant with it or wrong.
+
+### Nodulation keyword (nodulation GO:0009877)
+
+| Gene | Species | Role | SPKW term → action |
+|------|---------|------|--------------------|
+| NSP1 | *Medicago* | Nod-factor signaling GRAS TF | nodulation→**ACCEPT** (legitimate core; removal = collateral damage) |
+| CCAMK | rice | common-symbiosis Ca²⁺/CaM kinase | nodulation→**MODIFY → arbuscular mycorrhizal association** |
+| LBA | common bean | leghemoglobin (nodule O₂ carrier) | O₂ carrier/transport→ACCEPT; metal binding→MODIFY→heme; nodulation→MARK_OVER |
+| ENOD2A | soybean | early nodulin-75 cell-wall glycoprotein | nodulation→**MARK_OVER** (expression marker) |
+
+**"nodulation" splits cleanly by what the gene does.** For a core signaling component (NSP1 —
+literally NODULATION SIGNALING PATHWAY 1) it is correct and central; removal was **collateral
+damage** (the RHT1/DELLA pattern — current GOA left it with no symbiosis term). For CCAMK it is
+a **pathway/organism-context error**: rice does not nodulate, so the legume-inherited keyword is
+wrong — but the gene's genuine *arbuscular mycorrhizal* symbiosis role must be preserved
+(MODIFY), exactly the PPC16 photosynthesis-in-a-C3-plant pattern. For a *component* that merely
+operates in the nodule (leghemoglobin's O₂ transport) or a nodule-specific *expression marker*
+(ENOD2), "nodulation" is over-broad — the real biology is the molecular function / structural
+role, which is kept.
+
+### What the keyword-sweep confirms
+
+Across all three batches the same meta-rule holds — **a process/role keyword is only as good as
+the gene's actual position relative to that process** — and resolves into four recurring
+outcomes that recur regardless of which keyword is involved:
+
+1. **Core component → keep** (NSP1 nodulation, XA21 receptor; cf. RHT1/DELLA) — removal is collateral damage.
+2. **Wrong organism / pathway context → MODIFY** (CCAMK nodulation→mycorrhiza; cf. PPC16 photosynthesis).
+3. **Right area, wrong altitude → MODIFY to specific** (MADS3, FEA2, HD3A/GI flower development, CHIB, and the CPS4 product-process).
+4. **Expression / component ≠ function → MARK_OVER or REMOVE** (GI & HD3A cell differentiation, ENOD2, leghemoglobin nodulation, GI rhythmic process).
+
+The bare process term almost never adds information beyond the gene's molecular function; where
+it does (NSP1, XA21), it is the *sole* carrier of a correct fact and must not be silently
+dropped. This is the same tier→verdict logic established for the first 18 genes, now stress-
+tested across four more keyword classes and a 14th species (common bean).
+
+---
+
 ## Over-Annotation Patterns (Non-Arabidopsis Plants)
 
 | Pattern | Example | Mechanism | Tier |
@@ -650,6 +733,21 @@ genes/ORYSJ/MET1A/MET1A-ai-review.yaml    (A: DNA MTase; methylation MODIFY -> D
 genes/MAIZE/EZ1/EZ1-ai-review.yaml        (A: histone H3K27 MTase; methylation redundant w/ specific MF)
 genes/SOLTU/CCOAOMT/CCOAOMT-ai-review.yaml (A/C/B: lignin OMT; methylation redundant, lignin process correct)
 genes/ORYSJ/COQ5/COQ5-ai-review.yaml      (A: ubiquinone MTase; methylation redundant w/ specific MF+process)
+# 2026-05-30 keyword sweep — developmental (Differentiation/Flowering):
+genes/ORYSJ/GI/GI-ai-review.yaml          (A: clock/photoperiod; cell diff REMOVE, flower dev MODIFY, rhythmic MARK_OVER)
+genes/ORYSJ/HD3A/HD3A-ai-review.yaml      (A: florigen; cell diff REMOVE, flower dev MODIFY->positive regulation)
+genes/ORYSJ/MADS3/MADS3-ai-review.yaml    (A: C-class floral TF; cell diff MODIFY->specification of stamen identity)
+genes/MAIZE/FEA2/FEA2-ai-review.yaml      (A: CLV meristem receptor; cell diff MODIFY->meristem maintenance)
+# 2026-05-30 keyword sweep — defense/killing:
+genes/ORYSJ/XA21/XA21-ai-review.yaml      (A: R-gene/PRR; defense response MODIFY->defense response to bacterium)
+genes/ORYSJ/CPS4/CPS4-ai-review.yaml      (A: phytoalexin synthase; defense response MARK_OVER, enzyme-vs-product)
+genes/MAIZE/O6/O6-ai-review.yaml          (legit toxin: RIP; toxin activity MODIFY->rRNA N-glycosylase, defense MARK_OVER)
+genes/MAIZE/CHIB/CHIB-ai-review.yaml      (A/C: chitinase; polysacc catab MODIFY->chitin catab, defense MARK_OVER)
+# 2026-05-30 keyword sweep — nodulation:
+genes/MEDTR/NSP1/NSP1-ai-review.yaml      (legit core: Nod-signaling TF; nodulation ACCEPT, removal=collateral damage)
+genes/ORYSJ/CCAMK/CCAMK-ai-review.yaml    (A: rice common-symbiosis kinase; nodulation MODIFY->arbuscular mycorrhizal association)
+genes/PHAVU/LBA/LBA-ai-review.yaml        (C/A: leghemoglobin; O2-carrier ACCEPT, nodulation MARK_OVER)
+genes/SOYBN/ENOD2A/ENOD2A-ai-review.yaml  (A: early nodulin; nodulation MARK_OVER, expression marker)
 ```
 
 ## Methods Note

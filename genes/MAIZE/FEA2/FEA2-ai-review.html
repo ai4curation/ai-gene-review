@@ -1,0 +1,3304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEA2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FEA2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q940E8" target="_blank" class="term-link">
+                        Q940E8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Zea mays</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FEA2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q940E8" data-a="DESCRIPTION: FEA2 (FASCIATED EAR2; UniProt Q940E8) is a maize l..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FEA2 (FASCIATED EAR2; UniProt Q940E8) is a maize leucine-rich repeat receptor-like protein (LRR-RLP) and the maize ortholog of Arabidopsis CLAVATA2 (CLV2). It is a single-pass type I plasma-membrane protein with a cleaved signal peptide, a large extracellular domain built from ~17-19 leucine-rich repeats (with an internal &#34;island&#34; between LRRs), a single transmembrane helix, and a very short cytoplasmic tail that lacks any obvious intracellular signaling/kinase domain. FEA2 functions in the CLAVATA-WUSCHEL (CLV-WUS) pathway to restrict stem-cell proliferation in shoot and inflorescence meristems: loss-of-function fea2 mutants overproliferate the ear inflorescence meristem (massive fasciation, flattened wider ears with irregular extra rows of seeds) and have a more modest enlargement of floral meristems with increased floral organ number (Taguchi-Shiobara et al. 2001, PMID:11641280). Mechanistically, FEA2 acts as a signal-routing receptor hub at the plasma membrane that perceives distinct CLE peptide ligands and transmits them through two separate downstream effectors: the ZmCLE7 (maize CLV3 ortholog) signal is routed via the heterotrimeric G-protein alpha subunit COMPACT PLANT2 (CT2), whereas the ZmFCP1 signal is routed via the membrane pseudokinase ZmCRN (CORYNE). fea2 mutants are resistant to both CLE peptides, placing FEA2 upstream of both branches; this perception ultimately represses the WUSCHEL ortholog ZmWUS1, restricting meristem size (Je et al. 2018, eLife, doi:10.7554/eLife.35673; Dong et al. 2023; Demesa-Arevalo et al. 2024). FEA2 is expressed in ear primordia, the vegetative apex and young leaves, but not in roots. Because meristem size determines organ number, FEA2 is a quantitative regulator of maize kernel row number (KRN) and a breeding-relevant target for ear architecture (Bommert et al. 2013, PMID:23377180). FEA2 is NOT an enzyme; its molecular role is extracellular CLE-peptide perception/signal transduction, and its core biological role is meristem-size/stem-cell-homeostasis control - not generic cell differentiation.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0030154" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Differentiation&#34; (FEA2 is keyworded &#34;Developmental protein; Differentiation&#34;); snapshot-only, removed in the current GOA release. &#34;Cell differentiation&#34; is a generic catch-all parent term. FEA2&#39;s actual role is restriction of stem-cell proliferation and control of meristem size/identity via CLAVATA-CLE signaling, not the broad process of cell differentiation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of the keyword-derived term was reasonable because &#34;cell differentiation&#34; (GO:0030154) is far too generic and is not the function FEA2 performs. FEA2 is a CLAVATA2-like receptor-like protein that restricts shoot/inflorescence meristem proliferation: fea2 mutants cause a massive overproliferation of the ear inflorescence meristem and increased floral organ number, and FEA2 &#34;normally functions in these meristems to restrict growth&#34; [PMID:11641280]. The genuine biology - maintaining the identity, size and shape of the meristem stem-cell niche by transducing CLE peptide signals (ZmCLE7 via CT2; ZmFCP1 via ZmCRN) to repress ZmWUS1 - is best captured by the meristem-maintenance/meristem-growth ontology branch, not by &#34;cell differentiation&#34;. The annotation should therefore be MODIFIED to the more precise term &#34;meristem maintenance&#34; (GO:0010073, &#34;Any process involved in maintaining the identity, size and shape of a meristem&#34;), which complements the already-present &#34;regulation of meristem development&#34; (GO:0048509). The more specific &#34;regulation of meristem growth&#34; (GO:0010075) is also proposed as a NEW term below. Tier A (high-confidence over-broad keyword term replaced by a precise, well-supported meristem term).
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010073" target="_blank" class="term-link">
+                                    meristem maintenance
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fea2 normally functions in
+these meristems to restrict growth</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we isolated a novel 
+mutant of maize, fasciated ear2 (fea2), which causes a massive overproliferation 
+of the ear inflorescence meristem and a more modest effect on floral meristem 
+size and organ number</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FEA2 is a **signaling co-receptor/receptor component** that perceives CLE peptide signals to **restrict stem-cell proliferation and meristem size**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009908" target="_blank" class="term-link">
+                                    GO:0009908
+                                </a>
+                            </span>
+                            <span class="term-label">flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0009908" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation propagated across the CLV2/FEA2 phylogenetic group. FEA2 affects flower (floral organ) development indirectly, as a consequence of its meristem-size role.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but represents a secondary/pleiotropic consequence rather than the core function. fea2 mutants have enlarged floral meristems and a consequent increase in floral organ number (extra stamens in male flowers, extra carpels in female flowers), but the paper explicitly interprets this organ-number increase as &#34;presumably a consequence of the enlarged floral meristems&#34; rather than a direct floral-patterning role [PMID:11641280]. The core, mechanistic function is meristem-size restriction via CLAVATA signaling; flower development is downstream of that. Retain as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fea2 plants have an increase in floral organ number that is
+presumably a consequence of the enlarged floral meristems</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">its primary role is extracellular signal perception/transduction in meristem maintenance</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048509" target="_blank" class="term-link">
+                                    GO:0048509
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of meristem development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0048509" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation propagated across the CLV2/FEA2 phylogenetic group. This is the core biological process of FEA2: regulation (restriction) of shoot/inflorescence meristem development through CLAVATA-CLE signaling.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the central, well-supported function of FEA2 and is at an appropriate level of specificity. FEA2 &#34;regulates shoot meristem proliferation in maize&#34; (UniProt FUNCTION; the title of the cloning paper) and &#34;normally functions in these meristems to restrict growth&#34; [PMID:11641280]. Mechanistically it perceives CLE peptides at the plasma membrane and routes them through CT2 and ZmCRN to repress ZmWUS1, restricting meristem size [file:MAIZE/FEA2/FEA2-deep-research-falcon.md]. The IBA term matches the experimentally demonstrated role; a more specific NEW term (GO:0010075 regulation of meristem growth) is proposed below.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fea2 normally functions in
+these meristems to restrict growth</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FEA2 functions in the **CLAVATA–WUSCHEL negative feedback loop**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt Subcellular-Location keyword mapping (SL-0039, Cell membrane). Correct and confirmed experimentally by FEA2-GFP localization.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported. UniProt records the subcellular location as &#34;Cell membrane; Single-pass type I membrane protein&#34;, and FEA2 has the predicted topology of an extracellular LRR ectodomain (residues 29-573), a single transmembrane helix (574-597) and a short cytoplasmic tail (598-613). Direct experimental evidence: FEA2 is &#34;predicted to be membrane localized, and visualization of FEA2-GFP is consistent with its targeting to the plasma membrane&#34; [PMID:11641280]. The plasma-membrane location is essential for its role as a receptor for an extracellular CLE-peptide ligand. This IEA duplicates the IDA annotation to the same term and is acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">FEA2 is predicted to be membrane localized, and visualization of
+FEA2–GFP is consistent with its targeting to the plasma membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Maize **FEA2 (UniProt Q940E8)** is a **CLV2-like LRR receptor-like protein** functioning at the **plasma membrane** to perceive CLE peptides and restrict meristem proliferation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11641280
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fasciated ear2 gene encodes a leucine-rich repeat recept...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0005886" data-r="PMID:11641280" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the cloning paper: FEA2-GFP localizes to the plasma membrane. This is the primary experimental evidence for the cellular-component assignment.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by experiment. Taguchi-Shiobara et al. visualized a FEA2-GFP fusion and observed accumulation at the plasma membrane, consistent with the predicted single-pass type I topology; they note this &#34;supports the hypothesis that FEA2 acts as a receptor for an extracellular ligand&#34; [PMID:11641280]. (A reproducible secondary fluorescence at the nuclear membrane was noted but its significance was left open and it is not the functional location.) Plasma-membrane localization is core to FEA2&#39;s receptor function. Duplicate of the IEA annotation to the same term, which is fine.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The apparent plasma membrane
+accumulation of FEA2–GFP supports the hypothesis that FEA2 acts as a
+receptor for an extracellular ligand</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">it 
+encodes a membrane localized leucine-rich repeat receptor-like protein that is 
+most closely related to CLAVATA2 from Arabidopsis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009908" target="_blank" class="term-link">
+                                    GO:0009908
+                                </a>
+                            </span>
+                            <span class="term-label">flower development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11641280
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fasciated ear2 gene encodes a leucine-rich repeat recept...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0009908" data-r="PMID:11641280" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from the cloning paper, based on the fea2 mutant phenotype of altered floral organ number. This is a secondary consequence of the meristem-size defect.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The mutant phenotype is real but pleiotropic/downstream. fea2 loss of function produces enlarged floral meristems with a consequent increase in floral organ number (extra stamens and carpels), which the authors explicitly interpret as &#34;presumably a consequence of the enlarged floral meristems&#34; rather than a direct floral developmental function [PMID:11641280]. The disruption phenotype recorded in UniProt likewise lists &#34;increased floral organ numbers&#34; alongside the fasciation/ear phenotypes. Because the essence of FEA2&#39;s function is meristem-size restriction, flower development should be kept as a non-core (developmental, pleiotropic) annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fea2 plants have an increase in floral organ number that is
+presumably a consequence of the enlarged floral meristems</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Male flowers
+have an increase in stamen number, and female flowers have an increase
+in carpel number</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048509" target="_blank" class="term-link">
+                                    GO:0048509
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of meristem development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11641280
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fasciated ear2 gene encodes a leucine-rich repeat recept...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0048509" data-r="PMID:11641280" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from the cloning paper: the fea2 loss-of-function mutant overproliferates the inflorescence/floral meristem, demonstrating that FEA2 regulates (restricts) meristem development. This is the core function, supported by direct mutant analysis.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core, experimentally demonstrated function. The fea2 mutant &#34;causes a massive overproliferation of the ear inflorescence meristem and a more modest effect on floral meristem size and organ number&#34;, and FEA2 &#34;normally functions in these meristems to restrict growth&#34; [PMID:11641280]. The paper concludes that &#34;the CLAVATA pathway for regulation of meristem size is functionally conserved throughout the angiosperms&#34; [PMID:11641280]. The IMP term is correct and at an appropriate altitude; a more specific NEW term (GO:0010075, regulation of meristem growth) is proposed below to capture the meristem-size specificity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">which causes a massive overproliferation 
+of the ear inflorescence meristem</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CLAVATA pathway for regulation of meristem size is 
+functionally conserved throughout the angiosperms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001653" target="_blank" class="term-link">
+                                    GO:0001653
+                                </a>
+                            </span>
+                            <span class="term-label">peptide receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11641280
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fasciated ear2 gene encodes a leucine-rich repeat recept...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0001653" data-r="PMID:11641280" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed NEW molecular-function annotation. FEA2 is the CLV2-like LRR receptor-like protein that perceives secreted CLE peptide ligands (ZmCLE7, ZmFCP1) at the plasma membrane. Current GOA has NO molecular-function term for FEA2 at all.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The current GOA release annotates FEA2 only with biological-process and cellular-component terms and contains no molecular function, even though FEA2&#39;s defining role is ligand perception. FEA2 is a membrane LRR receptor-like protein &#34;most closely related to CLAVATA2&#34; whose plasma-membrane localization &#34;supports the hypothesis that FEA2 acts as a receptor for an extracellular ligand&#34; [PMID:11641280]. Mechanistic work established that FEA2 is &#34;a signaling co-receptor/receptor component that perceives CLE peptide signals&#34; - routing ZmCLE7 and ZmFCP1 into distinct downstream effectors, with fea2 mutants resistant to both peptides [file:MAIZE/FEA2/FEA2-deep-research-falcon.md]. &#34;Peptide receptor activity&#34; (GO:0001653, &#34;Combining with an extracellular or intracellular peptide to initiate a change in cell activity&#34;) is the accurate MF for a CLE-peptide-perceiving receptor-like protein. (FEA2 lacks a cytoplasmic kinase domain, so a kinase MF is not appropriate; it acts as a receptor/co-receptor module.) IMP/ genetic evidence is justified by the peptide-resistance phenotype of fea2 mutants.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The apparent plasma membrane
+accumulation of FEA2–GFP supports the hypothesis that FEA2 acts as a
+receptor for an extracellular ligand</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">FEA2 is a **signaling co-receptor/receptor component** that perceives CLE peptide signals</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**fea2 mutants are resistant to both CLE ligands/combined peptide treatments**, placing FEA2 upstream of both branches as a common receptor component</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010075" target="_blank" class="term-link">
+                                    GO:0010075
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of meristem growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11641280
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fasciated ear2 gene encodes a leucine-rich repeat recept...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q940E8" data-a="GO:0010075" data-r="PMID:11641280" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed NEW biological-process annotation capturing the meristem-size specificity of FEA2&#39;s function, more precise than the existing GO:0048509 (regulation of meristem development) and a better home for the biology that the retired &#34;cell differentiation&#34; keyword was gesturing at.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FEA2 specifically controls meristem SIZE/growth: fea2 mutants cause &#34;a massive overproliferation of the ear inflorescence meristem&#34; and FEA2 &#34;normally functions in these meristems to restrict growth&#34;, with the CLAVATA pathway &#34;for regulation of meristem size&#34; conserved across angiosperms [PMID:11641280]. &#34;Regulation of meristem growth&#34; (GO:0010075, &#34;Any process involved in maintaining the size and shape of a meristem&#34;) is more specific than the currently annotated GO:0048509 and directly matches the demonstrated phenotype. Proposed alongside the MODIFY of the retired SPKW term to GO:0010073 (meristem maintenance). IMP justified by the loss-of-function overproliferation phenotype.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fea2 normally functions in
+these meristems to restrict growth</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                        PMID:11641280
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CLAVATA pathway for regulation of meristem size is 
+functionally conserved throughout the angiosperms</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FEA2 is a plasma-membrane CLAVATA2-like leucine-rich repeat receptor-like protein that perceives secreted CLE peptide ligands (ZmCLE7, ZmFCP1) at the cell surface of meristem cells. Lacking an intracellular kinase domain, it acts as a receptor/co-receptor module that routes distinct CLE signals to distinct downstream effectors (ZmCLE7 -&gt; CT2/G-protein; ZmFCP1 -&gt; ZmCRN pseudokinase).
+</h3>
+                <span class="vote-buttons" data-g="Q940E8" data-a="FUNCTION: FEA2 is a plasma-membrane CLAVATA2-like leucine-ri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001653" target="_blank" class="term-link">
+                            peptide receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                PMID:11641280
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The apparent plasma membrane
+accumulation of FEA2–GFP supports the hypothesis that FEA2 acts as a
+receptor for an extracellular ligand</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">FEA2 is a **signaling co-receptor/receptor component** that perceives CLE peptide signals</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FEA2 restricts shoot and inflorescence meristem size by maintaining the stem-cell niche: CLE-peptide perception by FEA2-containing complexes feeds into the CLAVATA-WUSCHEL negative-feedback loop and represses ZmWUS1, limiting stem-cell proliferation. Loss of FEA2 causes massive ear-inflorescence-meristem overproliferation (fasciation), enlarged floral meristems, increased floral organ number and increased kernel row number.
+</h3>
+                <span class="vote-buttons" data-g="Q940E8" data-a="FUNCTION: FEA2 restricts shoot and inflorescence meristem si..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001653" target="_blank" class="term-link">
+                            peptide receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010073" target="_blank" class="term-link">
+                                meristem maintenance
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048509" target="_blank" class="term-link">
+                                regulation of meristem development
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010075" target="_blank" class="term-link">
+                                regulation of meristem growth
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                PMID:11641280
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">fea2 normally functions in
+these meristems to restrict growth</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                                PMID:11641280
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">which causes a massive overproliferation 
+of the ear inflorescence meristem</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">FEA2 functions in the **CLAVATA–WUSCHEL negative feedback loop**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CLV2/FEA2-family functions (regulation of meristem development, flower development) are propagated across the PANTHER PTN009226978 phylogenetic group by IBA.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations were present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For FEA2, the keyword &#34;Differentiation&#34; mapped to the over-broad term &#34;cell differentiation&#34; (GO:0030154); the precise biology is meristem-size/stem-cell homeostasis, better captured by meristem-maintenance / meristem-growth terms.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The UniProt subcellular-location keyword &#34;Cell membrane&#34; (SL-0039) maps to plasma membrane (GO:0005886); confirmed experimentally by FEA2-GFP localization.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11641280" target="_blank" class="term-link">
+                            PMID:11641280
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The fasciated ear2 gene encodes a leucine-rich repeat receptor-like protein that regulates shoot meristem proliferation in maize.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">fea2, a transposon-tagged maize mutant, causes massive overproliferation of the ear inflorescence meristem and a more modest enlargement of floral meristems with increased organ number; FEA2 normally functions in these meristems to restrict growth.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FEA2 encodes a membrane-localized LRR receptor-like protein most closely related to Arabidopsis CLAVATA2 (CLV2); the CLAVATA pathway for regulation of meristem size is functionally conserved throughout the angiosperms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FEA2-GFP localizes to the plasma membrane, supporting the hypothesis that FEA2 acts as a receptor for an extracellular ligand; FEA2 has no obvious intracellular signaling domain and likely acts as part of a heterodimeric receptor.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">fea2 maps to a QTL for seed row number, linking FEA2-mediated meristem-size control to maize ear architecture and potential crop-yield improvement.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23377180" target="_blank" class="term-link">
+                            PMID:23377180
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative variation in maize kernel row number is controlled by the FASCIATED EAR2 locus.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Weak/quantitative FEA2 alleles (mutagenesis of Gly-332, Met-367, Gly-405, Pro-477) give no fasciation but increased kernel row number / larger inflorescence meristems, establishing FEA2 as a quantitative regulator of maize KRN.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of maize FEA2 (Q940E8).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FEA2 is the maize CLAVATA2 (CLV2) ortholog, a plasma-membrane LRR receptor-like protein that perceives CLE peptides to restrict stem-cell proliferation and meristem size, preventing ear fasciation; it is not an enzyme or transporter.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">FEA2 is a signal-routing receptor hub - it transmits the ZmCLE7 (maize CLV3 ortholog) signal through the heterotrimeric G-protein alpha subunit CT2 (COMPACT PLANT2) and the ZmFCP1 signal through the membrane pseudokinase ZmCRN (CORYNE); fea2 mutants are resistant to both peptides, placing FEA2 upstream of both branches.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CLE-peptide perception by FEA2 complexes ultimately represses the WUSCHEL ortholog ZmWUS1, consistent with the conserved CLV-WUS negative-feedback logic that restricts meristem size; loss of function enlarges meristems and increases kernel row number (KRN), making FEA2 a breeding-relevant target for ear architecture.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Co-IP and BiFC support a direct FEA2-ZmCRN interaction and a (possibly indirect) FEA2-CT2 association, consistent with two distinct FEA2-containing receptor complexes rather than one static assembly.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does FEA2 directly bind the CLE peptides ZmCLE7 and ZmFCP1, or does it require a co-receptor LRR receptor kinase (analogous to CLV1/BAM) for high-affinity ligand binding, given that FEA2 lacks an intracellular signaling domain?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: David Jackson</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q940E8" data-a="Q: Does FEA2 directly bind the CLE peptides ZmCLE7 an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is ligand-specific routing achieved - what determines whether a given CLE peptide signal is transmitted through CT2 (G-protein) versus ZmCRN (pseudokinase)?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: David Jackson, Byoung Il Je</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q940E8" data-a="Q: How is ligand-specific routing achieved - what det..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro / in planta peptide-binding assays (e.g. photoaffinity labelling or microscale thermophoresis) with purified FEA2 ectodomain and synthetic ZmCLE7 and ZmFCP1 peptides, with and without candidate co-receptor LRR-kinase ectodomains, to determine whether FEA2 binds CLE peptides directly.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FEA2 perceives CLE peptides as part of a heterodimeric receptor complex and may require a co-receptor LRR receptor kinase for high-affinity binding.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ligand-binding biochemistry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q940E8" data-a="EXPERIMENT: In vitro / in planta peptide-binding assays (e.g. ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative measurement of ZmWUS1 expression (in situ hybridization / qRT-PCR on microdissected meristems) in wild-type versus fea2, ct2 and Zmcrn single and double mutants, with and without ZmCLE7/ZmFCP1 peptide application.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FEA2-mediated CLE perception represses ZmWUS1; loss of FEA2 derepresses ZmWUS1, expanding the stem-cell domain and enlarging the meristem.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: gene-expression / epistasis analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q940E8" data-a="EXPERIMENT: Quantitative measurement of ZmWUS1 expression (in ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate and field-test an allelic series of weak FEA2 alleles (cf. the Gly-332/Met-367/Gly-405/Pro-477 mutations) across environments to quantify the dose-response relationship between FEA2 activity, inflorescence meristem size and kernel row number.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Graded reduction of FEA2 activity tunes meristem size and KRN continuously, making FEA2 a quantitative lever for ear architecture without full fasciation.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: quantitative genetics / phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q940E8" data-a="EXPERIMENT: Generate and field-test an allelic series of weak ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FEA2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q940E8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">39 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T08:00:10.492113</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="FEA2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="FEA2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000024 Figure 6 provides a schematic model summarizing FEA2 signaling in maize. It shows that two different peptides, ZmFCP1 and ZmCLE7, s</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-maize-fea2-fasciated-ear2-uniprot-q940e8">Research report: Functional annotation of maize <strong>FEA2</strong> (FASCIATED EAR2) — UniProt <strong>Q940E8</strong></h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p><strong>FASCIATED EAR2 (FEA2)</strong> is a <em>Zea mays</em> <strong>CLAVATA2 (CLV2)-orthologous leucine-rich repeat receptor-like protein (LRR-RLP)</strong> that functions at the <strong>plasma membrane</strong> to restrict stem-cell proliferation in shoot and inflorescence meristems, thereby shaping ear/tassel architecture and yield-associated traits. Mechanistic evidence indicates that FEA2 acts as a <strong>shared signaling node</strong> for at least two CLE peptide inputs (ZmCLE7 and ZmFCP1), routing these signals into <strong>two separable downstream branches</strong> mediated by the heterotrimeric Gα <strong>CT2 (COMPACT PLANT2)</strong> and the membrane pseudokinase <strong>ZmCRN (CORYNE)</strong>, respectively, with convergence on meristem homeostasis outputs including <strong>ZmWUS</strong> regulation. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 12-14, je2018theclavatareceptor media 3b7154fc)</p>
+<h3 id="target-identity-verification-critical">Target identity verification (critical)</h3>
+<p>The literature evidence used here explicitly studies <strong>maize FASCIATED EAR2 (FEA2)</strong> as the <strong>maize ortholog of Arabidopsis CLAVATA2</strong>, described as an <strong>LRR receptor-like protein</strong> involved in CLE-mediated meristem signaling (consistent with UniProt Q940E8’s “CLAVATA2-like” description). (je2018theclavatareceptor pages 1-2)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-the-clvwus-feedback-module-and-cle-peptides">1.1 The CLV–WUS feedback module and CLE peptides</h4>
+<p>Shoot and inflorescence meristems maintain a stem-cell reservoir while producing organ primordia; this balance is classically governed by a <strong>CLAVATA–WUSCHEL (CLV–WUS)</strong> negative feedback circuit where extracellular peptide signals restrict WUS-driven stem-cell maintenance. Reviews emphasize that meristem intercellular communication integrates mobile factors, hormones, small RNAs, and <strong>secreted peptides perceived by membrane-localized receptors</strong>, with CLV–WUS as a central organizing module. (demesaarevalo2024intercellularcommunicationin pages 1-3)</p>
+<p>In maize, CLV-like receptors and CLE ligands (including <strong>ZmCLE7</strong>, a CLV3 homolog) are components of this conserved module; hormonal crosstalk (notably cytokinin) can modulate CLV-mediated feedback onto WUS output. (chaudhry2024hormonalinfluenceon pages 5-6)</p>
+<h4 id="12-what-kind-of-protein-is-fea2">1.2 What kind of protein is FEA2?</h4>
+<p>FEA2 is repeatedly described as a <strong>CLV2-like receptor-like protein</strong> (LRR-RLP) rather than a receptor kinase, implying a primary role as a <strong>co-receptor/scaffold</strong> in receptor complexes rather than as an enzyme that catalyzes reactions. (je2018theclavatareceptor pages 1-2)</p>
+<p>A key mechanistic concept in this system is that <strong>CLV2/FEA2 does not itself bind CLE peptides directly</strong>, and instead is proposed to act with other ligand-binding receptors (e.g., LRR receptor-like kinases) to transmit ligand-dependent signals. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 12-14)</p>
+<h3 id="2-mechanistic-function-and-pathway-placement-of-maize-fea2">2) Mechanistic function and pathway placement of maize FEA2</h3>
+<h4 id="21-demonstrated-cle-peptide-inputs-ligands">2.1 Demonstrated CLE peptide inputs (ligands)</h4>
+<p>Je et al. (2018) provide direct evidence that FEA2 is required for signaling from at least <strong>two distinct CLE peptides</strong>:<br />
+- <strong>ZmCLE7</strong> (maize CLV3 ortholog)<br />
+- <strong>ZmFCP1</strong> (ZmFON2-LIKE CLE PROTEIN1)</p>
+<p>In peptide-response assays, <strong>fea2 mutants</strong> show resistance to both peptide inputs, supporting the conclusion that FEA2 is required for both pathways. (je2018theclavatareceptor pages 9-12, je2018theclavatareceptor pages 3-6)</p>
+<h4 id="22-receptor-complex-composition-and-interaction-partners">2.2 Receptor complex composition and interaction partners</h4>
+<p><strong>FEA2 forms complexes with two distinct downstream signaling partners</strong>:<br />
+- <strong>CT2 (COMPACT PLANT2)</strong>, the α subunit of the maize heterotrimeric G protein<br />
+- <strong>ZmCRN</strong>, a CORYNE ortholog described as a membrane-localized pseudokinase</p>
+<p>Biochemical evidence (co-immunoprecipitation) shows that CT2 can pull down FEA2, and ZmCRN can pull down FEA2; reciprocally, FEA2 can immunoprecipitate either CT2 or ZmCRN. (je2018theclavatareceptor pages 6-9, je2018theclavatareceptor pages 9-12)</p>
+<p>BiFC detected a <strong>direct FEA2–ZmCRN interaction</strong>, while FEA2–CT2 interaction was not detected by BiFC in that assay context, consistent with the possibility that FEA2–CT2 association is indirect or occurs in a different complex organization. (je2018theclavatareceptor pages 6-9)</p>
+<p>Evidence further indicates <strong>ZmCRN and CT2 are not recovered as a single three-way complex</strong> (i.e., ZmCRN did not immunoprecipitate CT2), supporting a model of <strong>distinct FEA2-containing complexes</strong>. (je2017theclavatareceptor pages 9-12, je2018theclavatareceptor pages 6-9)</p>
+<h4 id="23-signal-branch-specificity-two-downstream-effectors">2.3 Signal-branch specificity: two downstream effectors</h4>
+<p>A central mechanistic advance is that <strong>FEA2 transmits different CLE peptide inputs through different downstream effectors</strong>:<br />
+- <strong>ZmCLE7 → CT2 branch</strong><br />
+- <strong>ZmFCP1 → ZmCRN branch</strong></p>
+<p>This is supported by differential peptide resistance in mutants: <strong>ct2</strong> shows resistance primarily to ZmCLE7, while <strong>Zmcrn</strong> shows resistance primarily to ZmFCP1; <strong>fea2</strong> is resistant to both, consistent with FEA2 being upstream of both branches. (je2018theclavatareceptor pages 12-14, je2018theclavatareceptor pages 9-12)</p>
+<p>Genetic interactions further support parallel branches: <strong>Zmcrn;ct2 double mutants</strong> show additive/enhanced phenotypes, consistent with separable outputs, while <strong>fea2 is epistatic</strong> in the pathway placement. (je2018theclavatareceptor pages 12-14, je2018theclavatareceptor pages 6-9)</p>
+<p>A schematic model from Je et al. summarizes these relationships (distinct FEA2 complexes feeding into CT2 vs ZmCRN and converging on nuclear outputs controlling meristem homeostasis). (je2018theclavatareceptor media 3b7154fc)</p>
+<h3 id="3-cellular-localization-and-where-fea2-acts">3) Cellular localization and where FEA2 acts</h3>
+<h4 id="31-plasma-membrane-localization">3.1 Plasma membrane localization</h4>
+<p>Je et al. experimentally confirmed plasma membrane localization of <strong>ZmCRN-mCherry</strong> and noted that this localization is consistent with <strong>FEA2 and CT2 localization</strong>, supporting a <strong>plasma-membrane signaling complex</strong>. (je2018theclavatareceptor pages 6-9)</p>
+<p>Additionally, the authors infer that <strong>FEA2 is on the plasma membrane even in the absence of ZmCRN</strong>, because FEA2 still functions with CT2 in a <strong>crn</strong> mutant background. (je2018theclavatareceptor pages 12-14)</p>
+<p>Together these data place the primary site of FEA2 action at the <strong>cell surface/plasma membrane</strong>, consistent with receptor complex-mediated perception/transduction of extracellular CLE signals. (je2018theclavatareceptor pages 6-9, je2018theclavatareceptor pages 12-14)</p>
+<h4 id="32-domain-architecture-evidence-vs-inference">3.2 Domain architecture (evidence vs inference)</h4>
+<p>Within the retrieved primary-text passages, FEA2 is identified as an <strong>LRR receptor-like protein (CLV2-like)</strong>, but <strong>a full enumeration of its LRR count, transmembrane segment boundaries, or cytosolic tail length is not explicitly provided in the quoted sections</strong>. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 12-14)</p>
+<p>By contrast, the related maize receptor-like protein <strong>FEA3</strong> is explicitly described as having a signal peptide, multiple LRRs, a transmembrane domain, and a short cytosolic tail lacking a kinase domain—illustrating the typical architecture used by CLV-related RLPs in maize and supporting the general co-receptor model for FEA2. (je2016signalingfrommaize pages 1-5)</p>
+<h3 id="4-developmental-roles-and-phenotypes-in-maize">4) Developmental roles and phenotypes in maize</h3>
+<h4 id="41-meristem-phenotypes-and-inflorescence-architecture">4.1 Meristem phenotypes and inflorescence architecture</h4>
+<p>FEA2 restricts stem-cell proliferation in meristems; loss-of-function phenotypes in the pathway include <strong>enlarged shoot apical meristems</strong> and <strong>fasciated ears / enlarged ear inflorescence meristems</strong>, consistent with excess stem-cell accumulation. (je2018theclavatareceptor pages 6-9, je2018theclavatareceptor pages 9-12, wu2018roleofheterotrimeric pages 1-2)</p>
+<h4 id="42-quantitative-data-recently-extracted-from-primary-study">4.2 Quantitative data (recently extracted from primary study)</h4>
+<p>Je et al. report quantitative increases in vegetative SAM size in downstream pathway mutants and enhanced phenotypes in double mutants, illustrating the magnitude of CLV-branch perturbations:<br />
+- <strong>Zmcrn</strong> vegetative SAM: <strong>130.0 ± 4.1 µm vs 109.2 ± 4.6 µm</strong> in normal siblings (P &lt; 0.0001)<br />
+- Other comparisons reported include larger SAMs in <strong>Zmcrn</strong> and <strong>fea2</strong> single mutants (<strong>166.3 ± 8.3 µm</strong> and <strong>176.1 ± 9.8 µm</strong>) vs normal (<strong>139.7 ± 4.8 µm</strong>), and <strong>Zmcrn;ct2</strong> double mutant SAM size <strong>191.8 ± 18.6 µm</strong> (P &lt; 0.0001)</p>
+<p>These measurements support the conclusion that the FEA2 network quantitatively constrains meristem size and that CT2 and ZmCRN act as separable downstream effectors. (je2018theclavatareceptor pages 3-6, je2018theclavatareceptor pages 2-3)</p>
+<h3 id="5-recent-developments-prioritizing-20232024-sources">5) Recent developments (prioritizing 2023–2024 sources)</h3>
+<h4 id="51-2024-synthesis-of-meristem-intercellular-communication">5.1 2024 synthesis of meristem intercellular communication</h4>
+<p>A 2024 <em>Annual Review of Plant Biology</em> review frames meristem regulation as an intercellular communication problem mediated by secreted peptides and membrane receptors; it highlights maize CLV pathway literature (including FEA2/CT2 and yield-relevant CLV studies) as part of the broader conceptual landscape of shoot meristem signaling and its crop-relevant implications. (demesaarevalo2024intercellularcommunicationin pages 1-3)</p>
+<h4 id="52-2024-hormone-integration-into-clv-wus-outputs">5.2 2024 hormone integration into CLV-WUS outputs</h4>
+<p>A 2024 review on hormonal influence in maize inflorescence development explicitly lists FEA2 as a maize CLV2 homolog within the CLV module and emphasizes that cytokinin can modulate CLV-mediated repression of WUS output, connecting the FEA2-containing module to hormonal regulation of meristem size and inflorescence patterning. (chaudhry2024hormonalinfluenceon pages 5-6)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-breeding-and-yield-trait-engineering-through-the-clv-wus-network">6.1 Breeding and yield trait engineering through the CLV-WUS network</h4>
+<p>Authoritative reviews and primary studies position CLV-WUS components as yield-trait levers (e.g., kernel row number), and explicitly discuss exploitation of <strong>weak alleles</strong> to tune meristem size without severe fasciation. (fletcher2018theclvwusstem pages 1-3, je2016signalingfrommaize pages 9-12)</p>
+<p>A maize inflorescence-architecture review specifically reports <strong>“promising results using fea2 weak alleles in field trials”</strong>, citing <strong>Trung et al. 2020</strong>, and argues that these strategies may have potential to increase yield (qualitatively; quantitative outcomes not provided in the excerpt). (chen2021improvingarchitecturaltraits pages 5-6)</p>
+<h4 id="62-trade-offs-kernel-row-number-vs-kernel-size">6.2 Trade-offs: kernel row number vs kernel size</h4>
+<p>A key applied insight is that <strong>weak fea2 alleles can enhance kernel row number</strong>, but may not necessarily increase overall yield due to compensatory decreases in kernel size, highlighting the importance of optimizing allele strength and genetic background. (fletcher2018theclvwusstem pages 5-7, je2016signalingfrommaize pages 9-12)</p>
+<h4 id="63-genome-editing-and-pathway-adjacent-engineering-ct2-branch">6.3 Genome editing and pathway-adjacent engineering (CT2 branch)</h4>
+<p>Although not direct editing of FEA2 itself in the retrieved excerpts, an adjacent translational avenue is engineering the downstream <strong>CT2 (Gα)</strong> branch: constitutively active CT2 and CRISPR-based perturbations of non-canonical Gα-like proteins (XLGs) are reported to improve agronomic traits including <strong>kernel row number</strong>, <strong>spikelet density</strong>, and <strong>leaf angle</strong>, and the work explicitly discusses generating weak alleles (including via CRISPR) as a route to multi-trait improvement. (wu2018roleofheterotrimeric pages 1-2, wu2018roleofheterotrimeric pages 11-12)</p>
+<h3 id="7-expert-opinions-and-analysis-authoritative-sources">7) Expert opinions and analysis (authoritative sources)</h3>
+<p>Mechanistically, Je et al. (2018) provide an expert framework for how “promiscuous” receptor-like proteins can achieve ligand specificity: <strong>distinct ligands can be interpreted through distinct receptor complexes and downstream branches</strong>, using shared components such as FEA2 but different intracellular effectors (CT2 vs ZmCRN). (je2018theclavatareceptor pages 12-14, je2018theclavatareceptor media 3b7154fc)</p>
+<p>From an applications perspective, reviews emphasize that meristem regulatory circuits (including CLV-WUS and maize CLV orthologs) are attractive targets because small, tunable shifts in meristem activity can translate into changes in organ number and yield components—but also stress the need to manage pleiotropy and trade-offs (e.g., kernel size). (fletcher2018theclvwusstem pages 1-3, fletcher2018theclvwusstem pages 5-7)</p>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<p>The following table consolidates key functional annotation points with evidence types and URLs/DOIs.</p>
+<table>
+<thead>
+<tr>
+<th>Functional aspect</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Key sources with dates/URLs/DOIs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / class</td>
+<td>FEA2 in maize is the ortholog of Arabidopsis <strong>CLAVATA2 (CLV2)</strong> and is described as a <strong>leucine-rich repeat receptor-like protein (LRR-RLP)</strong> involved in CLAVATA/CLE meristem signaling. This matches the UniProt Q940E8 annotation for a CLAVATA2-like precursor protein in <em>Zea mays</em>. (je2018theclavatareceptor pages 1-2)</td>
+<td>Primary genetics/mechanistic paper; review</td>
+<td>Je et al., 2018, <em>eLife</em>, published Mar 2018, https://doi.org/10.7554/eLife.35673; Demesa-Arevalo et al., 2024, <em>Annual Review of Plant Biology</em>, first published Feb 29 2024, https://doi.org/10.1146/annurev-arplant-070523-035342</td>
+</tr>
+<tr>
+<td>Core molecular function</td>
+<td>FEA2 functions as a <strong>shared/co-receptor-like signaling component</strong> in the maize CLV-WUS pathway, restricting stem-cell proliferation in shoot and inflorescence meristems. The evidence supports a signaling role rather than an enzymatic one; FEA2 helps transmit extracellular CLE-peptide information to intracellular downstream effectors that ultimately influence <strong>ZmWUS</strong> output. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 12-14, je2018theclavatareceptor media 3b7154fc)</td>
+<td>Genetic, biochemical, model synthesis, review</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673; Fletcher, 2018, <em>Plants</em>, Oct 19 2018, https://doi.org/10.3390/plants7040087</td>
+</tr>
+<tr>
+<td>Ligands / peptide inputs</td>
+<td>The strongest direct evidence shows FEA2 mediates responses to at least two CLE-family peptides: <strong>ZmCLE7</strong> (maize CLV3 ortholog) and <strong>ZmFCP1</strong> (ZmFON2-LIKE CLE PROTEIN1). fea2 mutants are resistant to both peptide treatments, supporting the conclusion that FEA2 is required for signaling from both inputs. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 9-12, je2018theclavatareceptor pages 3-6)</td>
+<td>Peptide-response assays, genetics</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Direct ligand binding vs co-receptor role</td>
+<td>The study emphasizes that <strong>CLV2/FEA2 does not itself directly bind CLV3/CLE peptides</strong>, consistent with a co-receptor role. The proposed model is that FEA2 works with ligand-binding RLKs in different receptor complexes to relay distinct peptide signals. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 12-14)</td>
+<td>Mechanistic interpretation from primary paper</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Receptor complexes / interaction partners</td>
+<td>FEA2 associates with <strong>ZmCRN</strong> and <strong>CT2</strong> in separate complexes. Co-immunoprecipitation showed ZmCRN pulls down FEA2, CT2 pulls down FEA2, and FEA2 can immunoprecipitate either partner; ZmCRN and CT2 do <strong>not</strong> appear to form one common three-way complex, implying distinct receptor assemblies. (je2018theclavatareceptor pages 6-9, je2017theclavatareceptor pages 9-12, je2018theclavatareceptor pages 9-12)</td>
+<td>Biochemical interaction assays (Co-IP), BiFC, genetics</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Downstream effectors / branch specificity</td>
+<td>FEA2 routes different CLE signals through different downstream components: <strong>CT2</strong> (heterotrimeric Gα, COMPACT PLANT2) primarily for <strong>ZmCLE7</strong>, and <strong>ZmCRN</strong> (CORYNE ortholog, pseudokinase) primarily for <strong>ZmFCP1</strong>. Additive phenotypes in <strong>Zmcrn;ct2</strong> double mutants and differential peptide resistance support two parallel downstream branches under a common FEA2 node. (je2018theclavatareceptor pages 12-14, je2017theclavatareceptor pages 9-12, je2018theclavatareceptor pages 9-12, je2018theclavatareceptor media 3b7154fc)</td>
+<td>Genetics, peptide assays, biochemical interaction, model</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673; Wu et al., 2018, <em>PLOS Genetics</em>, Apr 30 2018, https://doi.org/10.1371/journal.pgen.1007374</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Experimental evidence places the FEA2 signaling module at the <strong>plasma membrane</strong>. ZmCRN-mCherry was confirmed at the plasma membrane, co-localizing with FEA2/CT2-associated signaling; the authors further infer that FEA2 is on the plasma membrane even without ZmCRN because FEA2 still functions with CT2 in a <strong>crn</strong> background. (je2018theclavatareceptor pages 12-14, je2018theclavatareceptor pages 6-9, je2018theclavatareceptor pages 14-15)</td>
+<td>Imaging, membrane-associated biochemical assays, inference from genetics</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Domain / structure inference</td>
+<td>In the retrieved evidence, FEA2 is consistently described as an <strong>LRR receptor-like protein</strong> rather than a kinase, fitting a model of extracellular ligand perception with limited intracellular signaling capacity. The primary paper provides more explicit structural detail for partner <strong>ZmCRN</strong> (a transmembrane <strong>pseudokinase</strong>) than for FEA2, reinforcing the idea that FEA2 likely signals through associated proteins rather than intrinsic kinase activity. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 14-15)</td>
+<td>Annotation plus mechanistic inference</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Pathway position</td>
+<td>FEA2 acts in the conserved <strong>CLAVATA-WUSCHEL feedback system</strong> that balances stem-cell maintenance and organ initiation. Recent reviews place maize FEA2 alongside TD1/CLV1, FEA3, ZmCLE7, and cytokinin-responsive control of <strong>ZmWUS1</strong>, showing FEA2 is part of a broader meristem signaling network rather than an isolated receptor. (chaudhry2024hormonalinfluenceon pages 5-6, demesaarevalo2024intercellularcommunicationin pages 1-3)</td>
+<td>Review synthesis anchored in primary studies</td>
+<td>Demesa-Arevalo et al., 2024, <em>Annual Review of Plant Biology</em>, Feb 29 2024, https://doi.org/10.1146/annurev-arplant-070523-035342; Chaudhry et al., 2024, <em>Plant Reproduction</em>, Oct 2024, https://doi.org/10.1007/s00497-024-00510-0</td>
+</tr>
+<tr>
+<td>Developmental roles / mutant phenotypes</td>
+<td>Loss of FEA2 causes <strong>enlarged shoot apical and ear inflorescence meristems</strong> and <strong>fasciated ears</strong>, consistent with excess stem-cell proliferation. Reviews and primary studies also connect FEA2/CLV signaling to inflorescence architecture traits such as spikelet organization and kernel row number. (je2018theclavatareceptor pages 6-9, je2018theclavatareceptor pages 9-12, wu2018roleofheterotrimeric pages 1-2)</td>
+<td>Mutant phenotyping, review</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673; Wu et al., 2018, <em>PLOS Genetics</em>, Apr 30 2018, https://doi.org/10.1371/journal.pgen.1007374</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>In the FEA2 signaling network, <strong>Zmcrn</strong> mutants had larger vegetative SAMs than normal siblings (<strong>130.0 ± 4.1 µm vs 109.2 ± 4.6 µm; P &lt; 0.0001</strong>), and additional comparisons showed larger SAMs in <strong>Zmcrn</strong> and <strong>fea2</strong> single mutants (<strong>166.3 ± 8.3 µm</strong> and <strong>176.1 ± 9.8 µm</strong>) versus normal (<strong>139.7 ± 4.8 µm</strong>); the <strong>Zmcrn;ct2</strong> double mutant reached <strong>191.8 ± 18.6 µm</strong>. These data support FEA2-linked control of meristem size and parallel downstream pathways. (je2018theclavatareceptor pages 3-6, je2018theclavatareceptor pages 2-3)</td>
+<td>Quantitative genetics / morphometrics</td>
+<td>Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Natural variation / agronomic trait association</td>
+<td>Independent work cited in the retrieved evidence identifies <strong>FEA2 as a locus controlling quantitative variation in maize kernel row number (KRN)</strong>, making it one of the clearest CLV-pathway examples with agronomic relevance in maize. Related signaling components such as <strong>ZmCRN</strong> also show KRN-associated polymorphisms in the retrieved evidence. (liu2025multiomicsanalysisof pages 12-12, je2018theclavatareceptor pages 3-6)</td>
+<td>QTL/association context, review citation of primary study</td>
+<td>Bommert et al., 2013, <em>Nature Genetics</em>, Feb 2013, https://doi.org/10.1038/ng.2534; Je et al., 2018, <em>eLife</em>, Mar 2018, https://doi.org/10.7554/eLife.35673</td>
+</tr>
+<tr>
+<td>Applications / real-world implementation</td>
+<td>Reviews and follow-up studies present FEA2 as a <strong>crop-improvement target</strong> for tuning meristem size and yield-related traits. Chen &amp; Gallavotti (2021) specifically note promising <strong>field-trial results with fea2 weak alleles</strong>, while broader maize G-protein engineering studies show that modulating the linked CT2 branch can improve spikelet density, kernel row number, and leaf angle—supporting practical meristem engineering strategies built around the FEA2 network. (chen2021improvingarchitecturaltraits pages 5-6, wu2018roleofheterotrimeric pages 1-2, wu2018roleofheterotrimeric pages 11-12)</td>
+<td>Review, field-translation context, transgenic trait engineering</td>
+<td>Chen &amp; Gallavotti, 2021, <em>Molecular Breeding</em>, Feb 2021, https://doi.org/10.1007/s11032-021-01212-5; Wu et al., 2018, <em>PLOS Genetics</em>, Apr 30 2018, https://doi.org/10.1371/journal.pgen.1007374</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest evidence-supported functional annotation points for maize FEA2, including mechanism, partners, localization, phenotypes, and agronomic relevance. It is designed as a compact reference for building a full research report on UniProt Q940E8.</em></p>
+<h3 id="key-visual-evidence">Key visual evidence</h3>
+<p>A schematic model figure from Je et al. summarizes FEA2-dependent bifurcation of CLE signaling through CT2 versus ZmCRN and convergence on meristem homeostasis outputs. (je2018theclavatareceptor media 3b7154fc)</p>
+<h3 id="limitations-of-this-report-evidence-availability">Limitations of this report (evidence availability)</h3>
+<p>1) The seminal maize QTL paper identifying <strong>FEA2 as controlling kernel row number</strong> (Bommert et al., <em>Nature Genetics</em> 2013; https://doi.org/10.1038/ng.2534) is cited by reviews in the retrieved corpus but was flagged as unobtainable for full-text extraction in this run; thus, numeric effect sizes for the FEA2 KRN QTL are not reproduced here from the primary source. (demesaarevalo2024intercellularcommunicationin pages 20-21)<br />
+2) Detailed <strong>domain architecture</strong> (e.g., exact number/positions of LRRs and transmembrane boundaries) for <strong>FEA2</strong> is not explicitly quoted in the retrieved text segments; the report therefore limits domain claims to what is directly supported (LRR receptor-like protein / CLV2 ortholog) and flags that deeper structural annotation would require direct database/sequence analysis beyond the passages retrieved here. (je2018theclavatareceptor pages 1-2, je2018theclavatareceptor pages 12-14)</p>
+<h3 id="key-references-with-publication-dates-and-urls">Key references (with publication dates and URLs)</h3>
+<ul>
+<li>Je BI et al. <strong>“The CLAVATA receptor FASCIATED EAR2 responds to distinct CLE peptides by signaling through two downstream effectors.”</strong> <em>eLife</em> (Mar 2018). https://doi.org/10.7554/eLife.35673 (je2018theclavatareceptor pages 1-2)</li>
+<li>Demesa-Arevalo E et al. <strong>“Intercellular Communication in Shoot Meristems.”</strong> <em>Annual Review of Plant Biology</em> (Review in Advance; first published Feb 29 2024). https://doi.org/10.1146/annurev-arplant-070523-035342 (demesaarevalo2024intercellularcommunicationin pages 1-3)</li>
+<li>Chaudhry A et al. <strong>“Hormonal influence on maize inflorescence development and reproduction.”</strong> <em>Plant Reproduction</em> (Oct 2024). https://doi.org/10.1007/s00497-024-00510-0 (chaudhry2024hormonalinfluenceon pages 5-6)</li>
+<li>Chen Z, Gallavotti A. <strong>“Improving architectural traits of maize inflorescences.”</strong> <em>Molecular Breeding</em> (Feb 2021). https://doi.org/10.1007/s11032-021-01212-5 (chen2021improvingarchitecturaltraits pages 5-6)</li>
+<li>Wu Q et al. <strong>“Role of heterotrimeric Gα proteins in maize development and enhancement of agronomic traits.”</strong> <em>PLOS Genetics</em> (Apr 30 2018). https://doi.org/10.1371/journal.pgen.1007374 (wu2018roleofheterotrimeric pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(je2018theclavatareceptor pages 1-2): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor pages 12-14): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor media 3b7154fc): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demesaarevalo2024intercellularcommunicationin pages 1-3): Edgar Demesa-Arevalo, Madhumitha Narasimhan, and Rüdiger Simon. Intercellular communication in shoot meristems. Jul 2024. URL: https://doi.org/10.1146/annurev-arplant-070523-035342, doi:10.1146/annurev-arplant-070523-035342. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chaudhry2024hormonalinfluenceon pages 5-6): Amina Chaudhry, Zongliang Chen, and Andrea Gallavotti. Hormonal influence on maize inflorescence development and reproduction. Plant Reproduction, 37:393-407, Oct 2024. URL: https://doi.org/10.1007/s00497-024-00510-0, doi:10.1007/s00497-024-00510-0. This article has 15 citations.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor pages 9-12): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor pages 3-6): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor pages 6-9): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2017theclavatareceptor pages 9-12): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, and David Jackson. The clavata receptor fasciated ear2 responds to different cle peptides by signaling through different downstream effectors. bioRxiv, Oct 2017. URL: https://doi.org/10.1101/194951, doi:10.1101/194951. This article has 0 citations.</p>
+</li>
+<li>
+<p>(je2016signalingfrommaize pages 1-5): Byoung Il Je, Jeremy Gruel, Young Koung Lee, Peter Bommert, Edgar Demesa Arevalo, Andrea L Eveland, Qingyu Wu, Alexander Goldshmidt, Robert Meeley, Madelaine Bartlett, Mai Komatsu, Hajime Sakai, Henrik Jönsson, and David Jackson. Signaling from maize organ primordia via fasciated ear3 regulates stem cell proliferation and yield traits. Nature Genetics, 48:785-791, May 2016. URL: https://doi.org/10.1038/ng.3567, doi:10.1038/ng.3567. This article has 296 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wu2018roleofheterotrimeric pages 1-2): Qingyu Wu, Michael Regan, Hiro Furukawa, and David Jackson. Role of heterotrimeric gα proteins in maize development and enhancement of agronomic traits. PLOS Genetics, 14:e1007374, Apr 2018. URL: https://doi.org/10.1371/journal.pgen.1007374, doi:10.1371/journal.pgen.1007374. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor pages 2-3): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fletcher2018theclvwusstem pages 1-3): Jennifer C. Fletcher. The clv-wus stem cell signaling pathway: a roadmap to crop yield optimization. Plants, 7:87, Oct 2018. URL: https://doi.org/10.3390/plants7040087, doi:10.3390/plants7040087. This article has 128 citations.</p>
+</li>
+<li>
+<p>(je2016signalingfrommaize pages 9-12): Byoung Il Je, Jeremy Gruel, Young Koung Lee, Peter Bommert, Edgar Demesa Arevalo, Andrea L Eveland, Qingyu Wu, Alexander Goldshmidt, Robert Meeley, Madelaine Bartlett, Mai Komatsu, Hajime Sakai, Henrik Jönsson, and David Jackson. Signaling from maize organ primordia via fasciated ear3 regulates stem cell proliferation and yield traits. Nature Genetics, 48:785-791, May 2016. URL: https://doi.org/10.1038/ng.3567, doi:10.1038/ng.3567. This article has 296 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2021improvingarchitecturaltraits pages 5-6): Zongliang Chen and Andrea Gallavotti. Improving architectural traits of maize inflorescences. Molecular Breeding : New Strategies in Plant Improvement, Feb 2021. URL: https://doi.org/10.1007/s11032-021-01212-5, doi:10.1007/s11032-021-01212-5. This article has 34 citations.</p>
+</li>
+<li>
+<p>(fletcher2018theclvwusstem pages 5-7): Jennifer C. Fletcher. The clv-wus stem cell signaling pathway: a roadmap to crop yield optimization. Plants, 7:87, Oct 2018. URL: https://doi.org/10.3390/plants7040087, doi:10.3390/plants7040087. This article has 128 citations.</p>
+</li>
+<li>
+<p>(wu2018roleofheterotrimeric pages 11-12): Qingyu Wu, Michael Regan, Hiro Furukawa, and David Jackson. Role of heterotrimeric gα proteins in maize development and enhancement of agronomic traits. PLOS Genetics, 14:e1007374, Apr 2018. URL: https://doi.org/10.1371/journal.pgen.1007374, doi:10.1371/journal.pgen.1007374. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(je2018theclavatareceptor pages 14-15): Byoung Il Je, Fang Xu, Qingyu Wu, Lei Liu, Robert Meeley, Joseph P Gallagher, Leo Corcilius, Richard J Payne, Madelaine E Bartlett, and David Jackson. The clavata receptor fasciated ear2 responds to distinct cle peptides by signaling through two downstream effectors. eLife, Mar 2018. URL: https://doi.org/10.7554/elife.35673, doi:10.7554/elife.35673. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2025multiomicsanalysisof pages 12-12): Jing Liu, Tianxiao Yang, Zhuoya Gao, Jianxin Li, Tuan Li, Jialei Ou, Yalan Li, Shuaishuai Zhang, Yinuo Wang, Hui-ling Xie, Weihua Li, Jihua Tang, and Pengshuai Yan. Multi-omics analysis of the maize ear diameter mutant3 (zmed3) provides insights into female inflorescence development. BMC Plant Biology, Oct 2025. URL: https://doi.org/10.1186/s12870-025-07439-0, doi:10.1186/s12870-025-07439-0. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demesaarevalo2024intercellularcommunicationin pages 20-21): Edgar Demesa-Arevalo, Madhumitha Narasimhan, and Rüdiger Simon. Intercellular communication in shoot meristems. Jul 2024. URL: https://doi.org/10.1146/annurev-arplant-070523-035342, doi:10.1146/annurev-arplant-070523-035342. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="FEA2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000024 Figure 6 provides a schematic model summarizing FEA2 signaling in maize. It shows that two different peptides, ZmFCP1 and ZmCLE7, s" src="FEA2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>je2018theclavatareceptor pages 1-2</li>
+<li>demesaarevalo2024intercellularcommunicationin pages 1-3</li>
+<li>chaudhry2024hormonalinfluenceon pages 5-6</li>
+<li>je2018theclavatareceptor pages 6-9</li>
+<li>je2018theclavatareceptor pages 12-14</li>
+<li>je2016signalingfrommaize pages 1-5</li>
+<li>chen2021improvingarchitecturaltraits pages 5-6</li>
+<li>demesaarevalo2024intercellularcommunicationin pages 20-21</li>
+<li>wu2018roleofheterotrimeric pages 1-2</li>
+<li>je2018theclavatareceptor pages 9-12</li>
+<li>je2018theclavatareceptor pages 3-6</li>
+<li>je2017theclavatareceptor pages 9-12</li>
+<li>je2018theclavatareceptor pages 2-3</li>
+<li>fletcher2018theclvwusstem pages 1-3</li>
+<li>je2016signalingfrommaize pages 9-12</li>
+<li>fletcher2018theclvwusstem pages 5-7</li>
+<li>wu2018roleofheterotrimeric pages 11-12</li>
+<li>je2018theclavatareceptor pages 14-15</li>
+<li>liu2025multiomicsanalysisof pages 12-12</li>
+<li>https://doi.org/10.7554/eLife.35673;</li>
+<li>https://doi.org/10.1146/annurev-arplant-070523-035342</li>
+<li>https://doi.org/10.3390/plants7040087</li>
+<li>https://doi.org/10.7554/eLife.35673</li>
+<li>https://doi.org/10.1371/journal.pgen.1007374</li>
+<li>https://doi.org/10.1146/annurev-arplant-070523-035342;</li>
+<li>https://doi.org/10.1007/s00497-024-00510-0</li>
+<li>https://doi.org/10.1038/ng.2534;</li>
+<li>https://doi.org/10.1007/s11032-021-01212-5;</li>
+<li>https://doi.org/10.1038/ng.2534</li>
+<li>https://doi.org/10.1007/s11032-021-01212-5</li>
+<li>https://doi.org/10.7554/elife.35673,</li>
+<li>https://doi.org/10.1146/annurev-arplant-070523-035342,</li>
+<li>https://doi.org/10.1007/s00497-024-00510-0,</li>
+<li>https://doi.org/10.1101/194951,</li>
+<li>https://doi.org/10.1038/ng.3567,</li>
+<li>https://doi.org/10.1371/journal.pgen.1007374,</li>
+<li>https://doi.org/10.3390/plants7040087,</li>
+<li>https://doi.org/10.1007/s11032-021-01212-5,</li>
+<li>https://doi.org/10.1186/s12870-025-07439-0,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q940E8
+gene_symbol: FEA2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4577
+  label: Zea mays
+description: &gt;
+  FEA2 (FASCIATED EAR2; UniProt Q940E8) is a maize leucine-rich repeat receptor-like
+  protein (LRR-RLP) and the maize ortholog of Arabidopsis CLAVATA2 (CLV2). It is a
+  single-pass type I plasma-membrane protein with a cleaved signal peptide, a large
+  extracellular domain built from ~17-19 leucine-rich repeats (with an internal
+  &#34;island&#34; between LRRs), a single transmembrane helix, and a very short cytoplasmic
+  tail that lacks any obvious intracellular signaling/kinase domain. FEA2 functions in
+  the CLAVATA-WUSCHEL (CLV-WUS) pathway to restrict stem-cell proliferation in shoot
+  and inflorescence meristems: loss-of-function fea2 mutants overproliferate the ear
+  inflorescence meristem (massive fasciation, flattened wider ears with irregular extra
+  rows of seeds) and have a more modest enlargement of floral meristems with increased
+  floral organ number (Taguchi-Shiobara et al. 2001, PMID:11641280). Mechanistically,
+  FEA2 acts as a signal-routing receptor hub at the plasma membrane that perceives
+  distinct CLE peptide ligands and transmits them through two separate downstream
+  effectors: the ZmCLE7 (maize CLV3 ortholog) signal is routed via the heterotrimeric
+  G-protein alpha subunit COMPACT PLANT2 (CT2), whereas the ZmFCP1 signal is routed via
+  the membrane pseudokinase ZmCRN (CORYNE). fea2 mutants are resistant to both CLE
+  peptides, placing FEA2 upstream of both branches; this perception ultimately represses
+  the WUSCHEL ortholog ZmWUS1, restricting meristem size (Je et al. 2018, eLife,
+  doi:10.7554/eLife.35673; Dong et al. 2023; Demesa-Arevalo et al. 2024). FEA2 is
+  expressed in ear primordia, the vegetative apex and young leaves, but not in roots.
+  Because meristem size determines organ number, FEA2 is a quantitative regulator of
+  maize kernel row number (KRN) and a breeding-relevant target for ear architecture
+  (Bommert et al. 2013, PMID:23377180). FEA2 is NOT an enzyme; its molecular role is
+  extracellular CLE-peptide perception/signal transduction, and its core biological
+  role is meristem-size/stem-cell-homeostasis control - not generic cell differentiation.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO (keyword -&gt; GO) pipeline for
+# cellular organisms. Re-added here and reviewed retrospectively to assess whether removal
+# was justified. This is the SPKW-unique term for FEA2 (the UniProt keyword &#34;Differentiation&#34;
+# maps to GO:0030154 &#34;cell differentiation&#34;).
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Differentiation&#34;
+      (FEA2 is keyworded &#34;Developmental protein; Differentiation&#34;); snapshot-only, removed
+      in the current GOA release. &#34;Cell differentiation&#34; is a generic catch-all parent term.
+      FEA2&#39;s actual role is restriction of stem-cell proliferation and control of meristem
+      size/identity via CLAVATA-CLE signaling, not the broad process of cell differentiation.
+    action: MODIFY
+    reason: &gt;
+      GOA&#39;s removal of the keyword-derived term was reasonable because &#34;cell differentiation&#34;
+      (GO:0030154) is far too generic and is not the function FEA2 performs. FEA2 is a
+      CLAVATA2-like receptor-like protein that restricts shoot/inflorescence meristem
+      proliferation: fea2 mutants cause a massive overproliferation of the ear inflorescence
+      meristem and increased floral organ number, and FEA2 &#34;normally functions in these
+      meristems to restrict growth&#34; [PMID:11641280]. The genuine biology - maintaining the
+      identity, size and shape of the meristem stem-cell niche by transducing CLE peptide
+      signals (ZmCLE7 via CT2; ZmFCP1 via ZmCRN) to repress ZmWUS1 - is best captured by the
+      meristem-maintenance/meristem-growth ontology branch, not by &#34;cell differentiation&#34;.
+      The annotation should therefore be MODIFIED to the more precise term &#34;meristem
+      maintenance&#34; (GO:0010073, &#34;Any process involved in maintaining the identity, size and
+      shape of a meristem&#34;), which complements the already-present &#34;regulation of meristem
+      development&#34; (GO:0048509). The more specific &#34;regulation of meristem growth&#34;
+      (GO:0010075) is also proposed as a NEW term below. Tier A (high-confidence over-broad
+      keyword term replaced by a precise, well-supported meristem term).
+    proposed_replacement_terms:
+    - id: GO:0010073
+      label: meristem maintenance
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;fea2 normally functions in\nthese meristems to restrict growth&#34;
+    - reference_id: PMID:11641280
+      supporting_text: &#34;we isolated a novel \nmutant of maize, fasciated ear2 (fea2), which causes a massive overproliferation \nof the ear inflorescence meristem and a more modest effect on floral meristem \nsize and organ number&#34;
+    - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+      supporting_text: &#34;FEA2 is a **signaling co-receptor/receptor component** that perceives CLE peptide signals to **restrict stem-cell proliferation and meristem size**&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0009908
+    label: flower development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IBA annotation propagated across the CLV2/FEA2 phylogenetic group. FEA2 affects flower
+      (floral organ) development indirectly, as a consequence of its meristem-size role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The annotation is correct but represents a secondary/pleiotropic consequence rather than
+      the core function. fea2 mutants have enlarged floral meristems and a consequent increase
+      in floral organ number (extra stamens in male flowers, extra carpels in female flowers),
+      but the paper explicitly interprets this organ-number increase as &#34;presumably a
+      consequence of the enlarged floral meristems&#34; rather than a direct floral-patterning
+      role [PMID:11641280]. The core, mechanistic function is meristem-size restriction via
+      CLAVATA signaling; flower development is downstream of that. Retain as non-core.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;fea2 plants have an increase in floral organ number that is\npresumably a consequence of the enlarged floral meristems&#34;
+    - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+      supporting_text: &#34;its primary role is extracellular signal perception/transduction in meristem maintenance&#34;
+- term:
+    id: GO:0048509
+    label: regulation of meristem development
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IBA annotation propagated across the CLV2/FEA2 phylogenetic group. This is the core
+      biological process of FEA2: regulation (restriction) of shoot/inflorescence meristem
+      development through CLAVATA-CLE signaling.
+    action: ACCEPT
+    reason: &gt;
+      This is the central, well-supported function of FEA2 and is at an appropriate level of
+      specificity. FEA2 &#34;regulates shoot meristem proliferation in maize&#34; (UniProt FUNCTION;
+      the title of the cloning paper) and &#34;normally functions in these meristems to restrict
+      growth&#34; [PMID:11641280]. Mechanistically it perceives CLE peptides at the plasma
+      membrane and routes them through CT2 and ZmCRN to repress ZmWUS1, restricting meristem
+      size [file:MAIZE/FEA2/FEA2-deep-research-falcon.md]. The IBA term matches the
+      experimentally demonstrated role; a more specific NEW term (GO:0010075 regulation of
+      meristem growth) is proposed below.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;fea2 normally functions in\nthese meristems to restrict growth&#34;
+    - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+      supporting_text: &#34;FEA2 functions in the **CLAVATA–WUSCHEL negative feedback loop**&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt Subcellular-Location keyword mapping (SL-0039,
+      Cell membrane). Correct and confirmed experimentally by FEA2-GFP localization.
+    action: ACCEPT
+    reason: &gt;
+      Strongly supported. UniProt records the subcellular location as &#34;Cell membrane;
+      Single-pass type I membrane protein&#34;, and FEA2 has the predicted topology of an
+      extracellular LRR ectodomain (residues 29-573), a single transmembrane helix
+      (574-597) and a short cytoplasmic tail (598-613). Direct experimental evidence: FEA2
+      is &#34;predicted to be membrane localized, and visualization of FEA2-GFP is consistent
+      with its targeting to the plasma membrane&#34; [PMID:11641280]. The plasma-membrane
+      location is essential for its role as a receptor for an extracellular CLE-peptide
+      ligand. This IEA duplicates the IDA annotation to the same term and is acceptable.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;FEA2 is predicted to be membrane localized, and visualization of\nFEA2–GFP is consistent with its targeting to the plasma membrane&#34;
+    - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+      supporting_text: &#34;Maize **FEA2 (UniProt Q940E8)** is a **CLV2-like LRR receptor-like protein** functioning at the **plasma membrane** to perceive CLE peptides and restrict meristem proliferation&#34;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:11641280
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IDA annotation from the cloning paper: FEA2-GFP localizes to the plasma membrane.
+      This is the primary experimental evidence for the cellular-component assignment.
+    action: ACCEPT
+    reason: &gt;
+      Directly supported by experiment. Taguchi-Shiobara et al. visualized a FEA2-GFP fusion
+      and observed accumulation at the plasma membrane, consistent with the predicted
+      single-pass type I topology; they note this &#34;supports the hypothesis that FEA2 acts as a
+      receptor for an extracellular ligand&#34; [PMID:11641280]. (A reproducible secondary
+      fluorescence at the nuclear membrane was noted but its significance was left open and
+      it is not the functional location.) Plasma-membrane localization is core to FEA2&#39;s
+      receptor function. Duplicate of the IEA annotation to the same term, which is fine.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;The apparent plasma membrane\naccumulation of FEA2–GFP supports the hypothesis that FEA2 acts as a\nreceptor for an extracellular ligand&#34;
+    - reference_id: PMID:11641280
+      supporting_text: &#34;it \nencodes a membrane localized leucine-rich repeat receptor-like protein that is \nmost closely related to CLAVATA2 from Arabidopsis&#34;
+- term:
+    id: GO:0009908
+    label: flower development
+  evidence_type: IMP
+  original_reference_id: PMID:11641280
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IMP annotation from the cloning paper, based on the fea2 mutant phenotype of altered
+      floral organ number. This is a secondary consequence of the meristem-size defect.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The mutant phenotype is real but pleiotropic/downstream. fea2 loss of function produces
+      enlarged floral meristems with a consequent increase in floral organ number (extra
+      stamens and carpels), which the authors explicitly interpret as &#34;presumably a
+      consequence of the enlarged floral meristems&#34; rather than a direct floral developmental
+      function [PMID:11641280]. The disruption phenotype recorded in UniProt likewise lists
+      &#34;increased floral organ numbers&#34; alongside the fasciation/ear phenotypes. Because the
+      essence of FEA2&#39;s function is meristem-size restriction, flower development should be
+      kept as a non-core (developmental, pleiotropic) annotation.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;fea2 plants have an increase in floral organ number that is\npresumably a consequence of the enlarged floral meristems&#34;
+    - reference_id: PMID:11641280
+      supporting_text: &#34;Male flowers\nhave an increase in stamen number, and female flowers have an increase\nin carpel number&#34;
+- term:
+    id: GO:0048509
+    label: regulation of meristem development
+  evidence_type: IMP
+  original_reference_id: PMID:11641280
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IMP annotation from the cloning paper: the fea2 loss-of-function mutant overproliferates
+      the inflorescence/floral meristem, demonstrating that FEA2 regulates (restricts)
+      meristem development. This is the core function, supported by direct mutant analysis.
+    action: ACCEPT
+    reason: &gt;
+      This is the core, experimentally demonstrated function. The fea2 mutant &#34;causes a
+      massive overproliferation of the ear inflorescence meristem and a more modest effect on
+      floral meristem size and organ number&#34;, and FEA2 &#34;normally functions in these meristems
+      to restrict growth&#34; [PMID:11641280]. The paper concludes that &#34;the CLAVATA pathway for
+      regulation of meristem size is functionally conserved throughout the angiosperms&#34;
+      [PMID:11641280]. The IMP term is correct and at an appropriate altitude; a more specific
+      NEW term (GO:0010075, regulation of meristem growth) is proposed below to capture the
+      meristem-size specificity.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;which causes a massive overproliferation \nof the ear inflorescence meristem&#34;
+    - reference_id: PMID:11641280
+      supporting_text: &#34;CLAVATA pathway for regulation of meristem size is \nfunctionally conserved throughout the angiosperms&#34;
+# --- NEW annotations proposed from the literature ---
+- term:
+    id: GO:0001653
+    label: peptide receptor activity
+  evidence_type: IMP
+  original_reference_id: PMID:11641280
+  qualifier: enables
+  review:
+    summary: &gt;
+      Proposed NEW molecular-function annotation. FEA2 is the CLV2-like LRR receptor-like
+      protein that perceives secreted CLE peptide ligands (ZmCLE7, ZmFCP1) at the plasma
+      membrane. Current GOA has NO molecular-function term for FEA2 at all.
+    action: NEW
+    reason: &gt;
+      The current GOA release annotates FEA2 only with biological-process and
+      cellular-component terms and contains no molecular function, even though FEA2&#39;s defining
+      role is ligand perception. FEA2 is a membrane LRR receptor-like protein &#34;most closely
+      related to CLAVATA2&#34; whose plasma-membrane localization &#34;supports the hypothesis that
+      FEA2 acts as a receptor for an extracellular ligand&#34; [PMID:11641280]. Mechanistic work
+      established that FEA2 is &#34;a signaling co-receptor/receptor component that perceives CLE
+      peptide signals&#34; - routing ZmCLE7 and ZmFCP1 into distinct downstream effectors, with
+      fea2 mutants resistant to both peptides [file:MAIZE/FEA2/FEA2-deep-research-falcon.md].
+      &#34;Peptide receptor activity&#34; (GO:0001653, &#34;Combining with an extracellular or
+      intracellular peptide to initiate a change in cell activity&#34;) is the accurate MF for a
+      CLE-peptide-perceiving receptor-like protein. (FEA2 lacks a cytoplasmic kinase domain,
+      so a kinase MF is not appropriate; it acts as a receptor/co-receptor module.) IMP/
+      genetic evidence is justified by the peptide-resistance phenotype of fea2 mutants.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;The apparent plasma membrane\naccumulation of FEA2–GFP supports the hypothesis that FEA2 acts as a\nreceptor for an extracellular ligand&#34;
+    - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+      supporting_text: &#34;FEA2 is a **signaling co-receptor/receptor component** that perceives CLE peptide signals&#34;
+    - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+      supporting_text: &#34;**fea2 mutants are resistant to both CLE ligands/combined peptide treatments**, placing FEA2 upstream of both branches as a common receptor component&#34;
+- term:
+    id: GO:0010075
+    label: regulation of meristem growth
+  evidence_type: IMP
+  original_reference_id: PMID:11641280
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      Proposed NEW biological-process annotation capturing the meristem-size specificity of
+      FEA2&#39;s function, more precise than the existing GO:0048509 (regulation of meristem
+      development) and a better home for the biology that the retired &#34;cell differentiation&#34;
+      keyword was gesturing at.
+    action: NEW
+    reason: &gt;
+      FEA2 specifically controls meristem SIZE/growth: fea2 mutants cause &#34;a massive
+      overproliferation of the ear inflorescence meristem&#34; and FEA2 &#34;normally functions in
+      these meristems to restrict growth&#34;, with the CLAVATA pathway &#34;for regulation of
+      meristem size&#34; conserved across angiosperms [PMID:11641280]. &#34;Regulation of meristem
+      growth&#34; (GO:0010075, &#34;Any process involved in maintaining the size and shape of a
+      meristem&#34;) is more specific than the currently annotated GO:0048509 and directly matches
+      the demonstrated phenotype. Proposed alongside the MODIFY of the retired SPKW term to
+      GO:0010073 (meristem maintenance). IMP justified by the loss-of-function overproliferation
+      phenotype.
+    supported_by:
+    - reference_id: PMID:11641280
+      supporting_text: &#34;fea2 normally functions in\nthese meristems to restrict growth&#34;
+    - reference_id: PMID:11641280
+      supporting_text: &#34;CLAVATA pathway for regulation of meristem size is \nfunctionally conserved throughout the angiosperms&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: CLV2/FEA2-family functions (regulation of meristem development, flower
+      development) are propagated across the PANTHER PTN009226978 phylogenetic group by IBA.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations were present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: For FEA2, the keyword &#34;Differentiation&#34; mapped to the over-broad term
+      &#34;cell differentiation&#34; (GO:0030154); the precise biology is meristem-size/stem-cell
+      homeostasis, better captured by meristem-maintenance / meristem-growth terms.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: The UniProt subcellular-location keyword &#34;Cell membrane&#34; (SL-0039) maps to
+      plasma membrane (GO:0005886); confirmed experimentally by FEA2-GFP localization.
+- id: PMID:11641280
+  title: The fasciated ear2 gene encodes a leucine-rich repeat receptor-like protein
+    that regulates shoot meristem proliferation in maize.
+  findings:
+  - statement: fea2, a transposon-tagged maize mutant, causes massive overproliferation of
+      the ear inflorescence meristem and a more modest enlargement of floral meristems with
+      increased organ number; FEA2 normally functions in these meristems to restrict growth.
+  - statement: FEA2 encodes a membrane-localized LRR receptor-like protein most closely
+      related to Arabidopsis CLAVATA2 (CLV2); the CLAVATA pathway for regulation of meristem
+      size is functionally conserved throughout the angiosperms.
+  - statement: FEA2-GFP localizes to the plasma membrane, supporting the hypothesis that
+      FEA2 acts as a receptor for an extracellular ligand; FEA2 has no obvious intracellular
+      signaling domain and likely acts as part of a heterodimeric receptor.
+  - statement: fea2 maps to a QTL for seed row number, linking FEA2-mediated meristem-size
+      control to maize ear architecture and potential crop-yield improvement.
+- id: PMID:23377180
+  title: Quantitative variation in maize kernel row number is controlled by the FASCIATED
+    EAR2 locus.
+  findings:
+  - statement: Weak/quantitative FEA2 alleles (mutagenesis of Gly-332, Met-367, Gly-405,
+      Pro-477) give no fasciation but increased kernel row number / larger inflorescence
+      meristems, establishing FEA2 as a quantitative regulator of maize KRN.
+- id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional
+    annotation of maize FEA2 (Q940E8).
+  findings:
+  - statement: FEA2 is the maize CLAVATA2 (CLV2) ortholog, a plasma-membrane LRR
+      receptor-like protein that perceives CLE peptides to restrict stem-cell proliferation
+      and meristem size, preventing ear fasciation; it is not an enzyme or transporter.
+  - statement: FEA2 is a signal-routing receptor hub - it transmits the ZmCLE7 (maize CLV3
+      ortholog) signal through the heterotrimeric G-protein alpha subunit CT2 (COMPACT
+      PLANT2) and the ZmFCP1 signal through the membrane pseudokinase ZmCRN (CORYNE); fea2
+      mutants are resistant to both peptides, placing FEA2 upstream of both branches.
+  - statement: CLE-peptide perception by FEA2 complexes ultimately represses the WUSCHEL
+      ortholog ZmWUS1, consistent with the conserved CLV-WUS negative-feedback logic that
+      restricts meristem size; loss of function enlarges meristems and increases kernel row
+      number (KRN), making FEA2 a breeding-relevant target for ear architecture.
+  - statement: Co-IP and BiFC support a direct FEA2-ZmCRN interaction and a (possibly
+      indirect) FEA2-CT2 association, consistent with two distinct FEA2-containing receptor
+      complexes rather than one static assembly.
+core_functions:
+- description: &gt;
+    FEA2 is a plasma-membrane CLAVATA2-like leucine-rich repeat receptor-like protein that
+    perceives secreted CLE peptide ligands (ZmCLE7, ZmFCP1) at the cell surface of meristem
+    cells. Lacking an intracellular kinase domain, it acts as a receptor/co-receptor module
+    that routes distinct CLE signals to distinct downstream effectors (ZmCLE7 -&gt; CT2/G-protein;
+    ZmFCP1 -&gt; ZmCRN pseudokinase).
+  molecular_function:
+    id: GO:0001653
+    label: peptide receptor activity
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:11641280
+    supporting_text: &#34;The apparent plasma membrane\naccumulation of FEA2–GFP supports the hypothesis that FEA2 acts as a\nreceptor for an extracellular ligand&#34;
+  - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+    supporting_text: &#34;FEA2 is a **signaling co-receptor/receptor component** that perceives CLE peptide signals&#34;
+- description: &gt;
+    FEA2 restricts shoot and inflorescence meristem size by maintaining the stem-cell niche:
+    CLE-peptide perception by FEA2-containing complexes feeds into the CLAVATA-WUSCHEL
+    negative-feedback loop and represses ZmWUS1, limiting stem-cell proliferation. Loss of
+    FEA2 causes massive ear-inflorescence-meristem overproliferation (fasciation), enlarged
+    floral meristems, increased floral organ number and increased kernel row number.
+  molecular_function:
+    id: GO:0001653
+    label: peptide receptor activity
+  directly_involved_in:
+  - id: GO:0010073
+    label: meristem maintenance
+  - id: GO:0048509
+    label: regulation of meristem development
+  - id: GO:0010075
+    label: regulation of meristem growth
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:11641280
+    supporting_text: &#34;fea2 normally functions in\nthese meristems to restrict growth&#34;
+  - reference_id: PMID:11641280
+    supporting_text: &#34;which causes a massive overproliferation \nof the ear inflorescence meristem&#34;
+  - reference_id: file:MAIZE/FEA2/FEA2-deep-research-falcon.md
+    supporting_text: &#34;FEA2 functions in the **CLAVATA–WUSCHEL negative feedback loop**&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does FEA2 directly bind the CLE peptides ZmCLE7 and ZmFCP1, or does it require a
+    co-receptor LRR receptor kinase (analogous to CLV1/BAM) for high-affinity ligand binding,
+    given that FEA2 lacks an intracellular signaling domain?
+  experts:
+  - David Jackson
+- question: How is ligand-specific routing achieved - what determines whether a given CLE
+    peptide signal is transmitted through CT2 (G-protein) versus ZmCRN (pseudokinase)?
+  experts:
+  - David Jackson
+  - Byoung Il Je
+suggested_experiments:
+- description: In vitro / in planta peptide-binding assays (e.g. photoaffinity labelling or
+    microscale thermophoresis) with purified FEA2 ectodomain and synthetic ZmCLE7 and ZmFCP1
+    peptides, with and without candidate co-receptor LRR-kinase ectodomains, to determine
+    whether FEA2 binds CLE peptides directly.
+  hypothesis: FEA2 perceives CLE peptides as part of a heterodimeric receptor complex and may
+    require a co-receptor LRR receptor kinase for high-affinity binding.
+  experiment_type: ligand-binding biochemistry
+- description: Quantitative measurement of ZmWUS1 expression (in situ hybridization / qRT-PCR
+    on microdissected meristems) in wild-type versus fea2, ct2 and Zmcrn single and double
+    mutants, with and without ZmCLE7/ZmFCP1 peptide application.
+  hypothesis: FEA2-mediated CLE perception represses ZmWUS1; loss of FEA2 derepresses ZmWUS1,
+    expanding the stem-cell domain and enlarging the meristem.
+  experiment_type: gene-expression / epistasis analysis
+- description: Generate and field-test an allelic series of weak FEA2 alleles (cf. the
+    Gly-332/Met-367/Gly-405/Pro-477 mutations) across environments to quantify the dose-response
+    relationship between FEA2 activity, inflorescence meristem size and kernel row number.
+  hypothesis: Graded reduction of FEA2 activity tunes meristem size and KRN continuously,
+    making FEA2 a quantitative lever for ear architecture without full fasciation.
+  experiment_type: quantitative genetics / phenotyping
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
