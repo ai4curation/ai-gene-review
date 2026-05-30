@@ -22,9 +22,10 @@ current (≈April 2026) GOA release, GOA **retired the keyword-to-GO pipeline**
 `GO_REF:0000043` annotations for human, mouse, fly, worm, *S. pombe*, *Chlamydomonas*,
 Arabidopsis, rice, soybean, tobacco, and every other model organism checked (only viruses
 retain them). `plant.ddb` is effectively the last high-coverage record of the plant SPKW
-landscape, so this subproject is a **retrospective validation study**: for nine
-representative genes across nine species we ask whether GOA's wholesale removal was
-justified, and we classify the 214 SPKW-unique terms by their over-annotation risk.
+landscape, so this subproject is a **retrospective validation study**: for fourteen
+genes across thirteen species (nine in the original round, five in the 2026-05-29
+extension) we ask whether GOA's wholesale removal was justified, and we classify the
+214 SPKW-unique terms by their over-annotation risk.
 
 ## Key Statistics (2026-05-21)
 
@@ -326,6 +327,130 @@ retirement was **not** the right call.
 
 ---
 
+## Extension: Five More Species (2026-05-29)
+
+A second round added five genes across four further species — maize (*Zea mays*),
+bread wheat (*Triticum aestivum*), the moss *Physcomitrium patens* (a non-vascular
+plant ~450 My diverged from the crops), and potato (*Solanum tuberosum*) — selected to
+stress-test the tier→verdict rule on the highest-risk Tier A keyword classes
+(hormone signaling, immunity, meiosis/cell-cycle) plus a storage-protein keyword.
+
+| Gene | UniProt | Species | Tier | Key SPKW term | Action | GOA removal justified? |
+|------|---------|---------|------|---------------|--------|------------------------|
+| RHT1 | Q9ST59 | wheat | A | gibberellic acid mediated signaling pathway | MODIFY | **No — core DELLA function lost** |
+| ABP1 | P13689 | maize | A | auxin-activated signaling pathway | MARK_AS_OVER_ANNOTATED | Yes (contested receptor) |
+| MPK4a | A9T142 | *Physcomitrium* (moss) | A | innate immune response / defense response | MARK_AS_OVER_ANNOTATED | Yes (redundant) |
+| AM1 | C0RWW9 | maize | A | chromosome segregation / cell division | REMOVE / MARK_OVER | Yes (over-broad / mis-placed) |
+| PATB1 | P15476 | potato | C/A | nutrient reservoir activity / defense response | ACCEPT / MARK_OVER | **Mixed — storage kept** |
+
+**Verdict:** every *bona fide* over-annotation (ABP1 signaling, MPK4a broad immunity,
+AM1 cell-cycle keywords, PATB1 defense) was correctly removed; but two more cases —
+RHT1 and PATB1's storage role — are **collateral damage** where the keyword was the
+sole carrier of correct biology. The extension brings the running collateral-damage
+tally to five (CASP1, EME1, PR1B1, RHT1, PATB1).
+
+### Case 10: RHT1 — A Hormone-Signaling Keyword That Was Correct (Tier A, but legitimate)
+
+**Gene:** RHT1 (Q9ST59) — DELLA protein RHT-1 / "Reduced height-1", *Triticum aestivum*.
+**Review file:** `genes/WHEAT/RHT1/RHT1-ai-review.yaml`
+
+RHT1 is the wheat DELLA protein — one of the Green Revolution semi-dwarfing genes — and
+DELLA proteins are *the* central repressors of gibberellin signaling: bioactive GA binds
+the GID1 receptor, the GA–GID1–DELLA complex recruits an SCF E3 ligase, and DELLA is
+degraded by the proteasome, de-repressing growth. "Gibberellic acid mediated signaling
+pathway" (GO:0009740) is therefore not an over-annotation at all — it is RHT1's core
+process. Yet the keyword2GO retirement stripped it, leaving RHT1 with essentially only
+"nucleus". Decision **MODIFY** to the more precise "negative regulation of gibberellic
+acid mediated signaling pathway" (GO:0009938), since DELLA is specifically a repressor,
+plus a NEW transcription-corepressor MF (GO:0003714 — DELLA acts via protein–protein
+interactions with TFs, not sequence-specific DNA binding). **GOA's removal was NOT
+justified.** RHT1 is the mirror image of Arabidopsis ARF19 and tobacco PARA: those were
+hormone-*responsive* genes wrongly called signaling components; RHT1 *is* a signaling
+component wrongly stripped of the label.
+
+### Case 11: ABP1 — Auxin-Signaling Keyword on the Contested Auxin Receptor (Tier A)
+
+**Gene:** ABP1 (P13689) — Auxin-binding protein 1, *Zea mays*.
+**Review file:** `genes/MAIZE/ABP1/ABP1-ai-review.yaml`
+
+ABP1 is the textbook auxin-binding protein: maize ABP1 binds auxin in an ER-luminal cupin
+pocket with a coordinated Zn²⁺ (crystal structure), so "auxin binding" (GO:0010011, IDA)
+and "endoplasmic reticulum lumen" (EXP) are retained as correct core terms. Unlike
+PARA/ARF19, ABP1 genuinely binds the hormone. But "auxin-activated signaling pathway"
+(GO:0009734) is defined around auxin binding to a receptor that drives a downstream,
+largely transcriptional response — a role now firmly attributed to the nuclear
+TIR1/AFB–Aux/IAA–ARF module. ABP1's status as a functional auxin receptor is famously
+contested (CRISPR *abp1* nulls are phenotypically normal; the original knockout carried a
+confounding second-site mutation). Decision **MARK_AS_OVER_ANNOTATED**, replacement
+"response to auxin" (GO:0009733). The lesson: **binding a hormone is not the same as being
+a component of its signaling pathway** — removal justified, but the binding MF must be kept.
+
+### Case 12: MPK4a — Correct-but-Redundant Immunity Terms in a Moss (Tier A)
+
+**Gene:** MPK4a (A9T142) — Mitogen-activated protein kinase 4a, *Physcomitrium patens*.
+**Review file:** `genes/PHYPA/MPK4a/MPK4a-ai-review.yaml`
+
+PpMPK4a is the moss orthologue of the immunity MAP kinase MPK4, experimentally required
+for pathogen defense: the CERK1→MEKK1→MKK1→MPK4a cascade transduces chitin/chitosan
+perception to defense-gene activation, and *mpk4* mutants are susceptible to *Botrytis
+cinerea* [PMID:27268428]. So the retired keywords "innate immune response" (GO:0045087)
+and "defense response" (GO:0006952) are *correct*. But current GOA already carries the
+more specific, experimentally backed "pattern recognition receptor signaling pathway"
+(GO:0002221, EXP) — of which innate immune response is a broad parent — so the SPKW terms
+add little. Decision **MARK_AS_OVER_ANNOTATED** for both, with NEW specific terms (defense
+response to fungus; cellular response to chitin). Removal **justified** (low information
+loss). The moss case shows the over-annotation pattern is identical in a non-vascular
+plant deeply diverged from the crops — the same ELF4/psaC "correct-but-redundant" shape.
+
+### Case 13: AM1 — Cell-Cycle Keywords on a Meiotic-Entry Switch (Tier A)
+
+**Gene:** AM1 (C0RWW9) — Protein AMEIOTIC 1, *Zea mays*.
+**Review file:** `genes/MAIZE/AM1/AM1-ai-review.yaml`
+
+AMEIOTIC1 is the master switch for meiotic entry in maize: *am1* mutants fail the
+mitosis-to-meiosis transition and arrest at leptotene, and AM1 is required for homologous
+pairing and initiation of meiotic recombination [PMID:19204280]. Its biology is
+meiosis-specific and is already captured by current GOA's "meiotic cell cycle" (IDA),
+"reciprocal meiotic recombination" and "meiotic sister chromatid cohesion". The retired
+SPKW terms are over-broad or mis-placed: "cell division" (GO:0051301) is uninformative
+(→ **MARK_AS_OVER_ANNOTATED**), and "chromosome segregation" (GO:0007059) is mis-placed —
+*am1* arrests at leptotene, so chromosomes never reach the meiotic divisions where
+segregation occurs (→ **REMOVE**). Removal **justified**. This parallels rice EME1 and
+Arabidopsis BUB3.1: generic cell-cycle keywords pasted onto genes with a specific, earlier
+role.
+
+### Case 14: PATB1 — A Storage Protein That Lost Its Defining Annotation (Tier C/A, mixed)
+
+**Gene:** PATB1 (P15476) — Patatin-B1, *Solanum tuberosum*.
+**Review file:** `genes/SOLTU/PATB1/PATB1-ai-review.yaml`
+
+Patatin is the major potato tuber storage glycoprotein (~40% of soluble tuber protein) and
+also a lipid acyl hydrolase. Its three SPKW terms split by tier: "nutrient reservoir
+activity" (GO:0045735) is patatin's defining role — current GOA has *no* storage term, so
+its removal is **collateral damage** (→ **ACCEPT**, re-assert as core); "lipid catabolic
+process" (GO:0016042) is correct and more specific than the retained generic "lipid
+metabolic process" (→ **ACCEPT**); but "defense response" (GO:0006952) over-states an
+indirect role (defense is a downstream consequence of the lipid-hydrolase activity
+releasing antifungal fatty acids; UniProt itself hedges "thought to be involved")
+(→ **MARK_AS_OVER_ANNOTATED**). The current generic "lipase activity" was MODIFYed to the
+precise "glycerophospholipase activity". Removal verdict **mixed** — storage and
+lipid-catabolism correct, defense over-annotated. Like CASP1, the Tier C term carried real
+biology.
+
+### What the extension adds: hormone-signaling keywords cut both ways
+
+The original PLANTS finding was that hormone-signaling keywords land on hormone-*responsive*
+genes (ARF19, PARA) that are not signal transducers. RHT1 (DELLA) is the mirror image: a
+hormone-signaling keyword on the gene that *is* the central signaling component — here
+removal was wrong. ABP1 sits between them: a genuine auxin *binder* whose role as a pathway
+component is contested. **Refined rule:** for a hormone-signaling keyword, ask whether the
+gene is (i) a component of the transduction machinery (keep — DELLA), (ii) a ligand-binder
+of contested pathway role (case-by-case — ABP1), or (iii) merely hormone-responsive
+(over-annotation — PARA/ARF19). The tier alone does not decide a hormone-signaling keyword;
+the gene's position in the pathway does.
+
+---
+
 ## Over-Annotation Patterns (Non-Arabidopsis Plants)
 
 | Pattern | Example | Mechanism | Tier |
@@ -379,6 +504,14 @@ terms were correct.
    keyword2GO and InterPro2GO assign "kinase activity" to a known pseudokinase. This
    failure mode affects Tier-C-looking specific MF terms, not just broad ones.
 
+5. **A hormone-signaling keyword cuts both ways (2026-05-29 extension).** The tier alone
+   does not decide a hormone-signaling term — the gene's position in the pathway does. RHT1
+   (wheat DELLA) is a core GA-signaling repressor whose keyword was *correct* and wrongly
+   retired (collateral damage); PARA and ARF19 are merely hormone-*responsive* and were
+   correctly flagged; ABP1 (a genuine auxin binder of contested receptor status) is
+   case-by-case. Ask: transduction component → keep; ligand-binder of contested role →
+   case-by-case; merely responsive → over-annotation.
+
 ## Recommendations
 
 1. **Triage retired SPKW annotations by tier.** Tier A removals can be accepted wholesale.
@@ -408,6 +541,12 @@ genes/MEDTR/NFP/NFP-ai-review.yaml        (A: kinase activity on a pseudokinase)
 genes/POPTR/METK1/METK1-ai-review.yaml    (B: broad cofactor keyword on a SAM synthase)
 genes/CHLRE/psaC/psaC-ai-review.yaml      (B: broad keywords superseded by specific terms)
 genes/SORBI/CASP1/CASP1-ai-review.yaml    (C: correct cell-wall biology, wrongly retired)
+# 2026-05-29 extension:
+genes/WHEAT/RHT1/RHT1-ai-review.yaml      (A-legit: GA signaling on a DELLA; removal = collateral damage)
+genes/MAIZE/ABP1/ABP1-ai-review.yaml      (A: auxin signaling on the contested auxin receptor; binding kept)
+genes/PHYPA/MPK4a/MPK4a-ai-review.yaml    (A: broad immunity terms redundant with PRR-signaling, in a moss)
+genes/MAIZE/AM1/AM1-ai-review.yaml        (A: cell-division/segregation keywords on a meiotic-entry switch)
+genes/SOLTU/PATB1/PATB1-ai-review.yaml    (C/A: storage role kept; defense over-annotated)
 ```
 
 ## Methods Note
