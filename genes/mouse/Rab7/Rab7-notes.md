@@ -41,6 +41,14 @@ delivery." DOI: 10.1038/s41587-026-03022-6.
 - Added as a reference and cited as supporting evidence on the relevant
   maturation/transport annotations.
 
+## Deep research provider status
+
+Automated deep research could not be run in this environment: the **Falcon**
+provider requires the `agentapi` binary (not in PATH), and the
+OpenAI/Perplexity/Anthropic providers require API keys that are unset. No
+`-deep-research-{provider}.md` file was fabricated (per project policy). A manual,
+fully-cited synthesis was written to `Rab7-deep-research-manual.md` instead.
+
 ## Annotation review approach
 
 119 GOA annotations seeded. The biology mirrors human RAB7A
