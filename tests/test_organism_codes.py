@@ -5,8 +5,12 @@ in addition to common names and taxonomy IDs.
 """
 
 from unittest.mock import patch, MagicMock
+
+import pytest
+
 from ai_gene_review.etl.gene import (
     resolve_organism_code_to_taxon,
+    resolve_gene_to_uniprot,
     uniprot_by_gene_taxon,
     get_organism_name_from_uniprot,
     expand_organism_name,
@@ -295,3 +299,130 @@ class TestOrganismNameExpansion:
         assert expand_organism_name("HUMAN") == "Homo sapiens"
         assert expand_organism_name("ecoli") == "Escherichia coli"
         assert expand_organism_name("E.coli") == "Escherichia coli"
+
+
+class TestResolveGeneToUniprotPrimarySymbolPreference:
+    """Regression tests for the resolver bug behind issue #910.
+
+    UniProt's ``gene_exact:`` query matches both primary gene symbols and
+    deprecated synonyms. Before the fix, a Swiss-Prot entry for gene Y that
+    listed gene X as a deprecated synonym would shadow a TrEMBL entry whose
+    primary symbol is X (the actual gene the user asked for). These tests
+    encode the desired behavior: prefer primary-symbol matches; fall through
+    to TrEMBL for non-human organisms when only synonym matches exist in
+    Swiss-Prot.
+    """
+
+    @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
+    def test_csr1_synonym_in_swissprot_falls_through_to_trembl(
+        self, mock_lookup
+    ):
+        """worm csr-1 scenario: Swiss-Prot returns nhr-47 (csr-1 as synonym),
+        TrEMBL returns the actual CSR-1 Argonaute entries."""
+        swissprot_synonym_hit = [
+            {
+                "accession": "Q17370",
+                "entry_name": "NHR47_CAEEL",
+                "gene": "nhr-47",  # NOTE: primary is nhr-47, not csr-1
+                "organism": "Caenorhabditis elegans",
+            }
+        ]
+        trembl_primary_hits = [
+            {
+                "accession": "H2KZD5",
+                "entry_name": "H2KZD5_CAEEL",
+                "gene": "csr-1",
+                "organism": "Caenorhabditis elegans",
+            },
+            {
+                "accession": "Q27GU1",
+                "entry_name": "Q27GU1_CAEEL",
+                "gene": "csr-1",
+                "organism": "Caenorhabditis elegans",
+            },
+        ]
+        mock_lookup.side_effect = [swissprot_synonym_hit, trembl_primary_hits]
+
+        result = resolve_gene_to_uniprot("csr-1", "worm")
+
+        # Must NOT pick Q17370 (csr-1 is only a synonym there)
+        assert result != "Q17370"
+        # Must pick the first TrEMBL primary-symbol hit
+        assert result == "H2KZD5"
+
+        # Verify the resolver actually consulted both Swiss-Prot and TrEMBL
+        assert mock_lookup.call_count == 2
+        first_call_kwargs = mock_lookup.call_args_list[0].kwargs
+        second_call_kwargs = mock_lookup.call_args_list[1].kwargs
+        assert first_call_kwargs.get("reviewed_only") is True
+        assert second_call_kwargs.get("reviewed_only") is False
+
+    @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
+    def test_primary_symbol_match_returned_directly(self, mock_lookup):
+        """Normal case: Swiss-Prot has a primary-symbol match — return it."""
+        swissprot_hits = [
+            {
+                "accession": "P04637",
+                "entry_name": "P53_HUMAN",
+                "gene": "TP53",
+                "organism": "Homo sapiens",
+            }
+        ]
+        mock_lookup.return_value = swissprot_hits
+
+        result = resolve_gene_to_uniprot("TP53", "human")
+
+        assert result == "P04637"
+        # Only one lookup needed — no TrEMBL fallthrough
+        assert mock_lookup.call_count == 1
+
+    @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
+    def test_primary_symbol_filter_is_case_insensitive(self, mock_lookup):
+        """Primary-symbol comparison must be case-insensitive."""
+        swissprot_hits = [
+            {
+                "accession": "P12830",
+                "entry_name": "CADH1_HUMAN",
+                "gene": "CDH1",
+                "organism": "Homo sapiens",
+            }
+        ]
+        mock_lookup.return_value = swissprot_hits
+
+        # Lower-case query against upper-case primary symbol — should still match
+        assert resolve_gene_to_uniprot("cdh1", "human") == "P12830"
+
+    @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
+    def test_human_synonym_only_raises_informative_error(self, mock_lookup):
+        """For human, synonym-only matches must raise — never silently return
+        the wrong gene's entry. Error message must mention the synonym hits."""
+        swissprot_synonym_hit = [
+            {
+                "accession": "Q99999",
+                "entry_name": "OTHER_HUMAN",
+                "gene": "OTHER",
+                "organism": "Homo sapiens",
+            }
+        ]
+        mock_lookup.return_value = swissprot_synonym_hit
+
+        with pytest.raises(ValueError) as excinfo:
+            resolve_gene_to_uniprot("FAKEGENE", "human")
+
+        msg = str(excinfo.value)
+        assert "FAKEGENE" in msg
+        # Error must hint at the synonym match so the user can act
+        assert "Q99999" in msg or "synonym" in msg.lower()
+        # Must not have consulted TrEMBL for human
+        assert mock_lookup.call_count == 1
+
+    @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
+    def test_worm_no_hits_anywhere_raises(self, mock_lookup):
+        """Non-human gene with no Swiss-Prot or TrEMBL hits at all must raise."""
+        mock_lookup.return_value = []
+
+        with pytest.raises(ValueError):
+            resolve_gene_to_uniprot("nonexistent-gene", "worm")
+
+        # Should have tried both Swiss-Prot and TrEMBL
+        assert mock_lookup.call_count == 2

@@ -699,6 +699,13 @@ def resolve_gene_to_uniprot(gene_name: str, organism: str) -> str:
     For human genes, only Swiss-Prot (reviewed) entries are accepted.
     For other organisms, falls back to TrEMBL if no Swiss-Prot entry is found.
 
+    Prefers entries where the queried gene name is the *primary* gene symbol
+    over entries where it appears only as a deprecated synonym. UniProt's
+    ``gene_exact:`` query matches both primary symbols and synonyms, so without
+    this filter a Swiss-Prot entry for a different gene that lists the queried
+    name as a deprecated synonym can shadow the actual TrEMBL entry for the
+    intended gene (see issue #910 / worm csr-1 vs nhr-47).
+
     Special case: If gene_name looks like a UniProt accession (6+ alphanumeric chars
     starting with letter), verify it exists directly rather than treating as gene name.
 
@@ -726,29 +733,68 @@ def resolve_gene_to_uniprot(gene_name: str, organism: str) -> str:
             # If fetch fails, fall through to treat as gene name
             pass
 
-    # First try Swiss-Prot entries
-    hits = uniprot_by_gene_taxon(gene_name, organism, limit=1, reviewed_only=True)
+    # Pull up to 10 Swiss-Prot hits so we can filter by primary-symbol match
+    hits = uniprot_by_gene_taxon(gene_name, organism, limit=10, reviewed_only=True)
 
-    if hits:
-        return hits[0]["accession"]
+    primary_hits = _filter_primary_symbol_hits(hits, gene_name)
+    if primary_hits:
+        return primary_hits[0]["accession"]
 
     # For human, Swiss-Prot is required - no fallback to TrEMBL
     if organism.lower() == "human":
+        if hits:
+            synonym_accessions = ", ".join(h["accession"] for h in hits[:3])
+            raise ValueError(
+                f"Could not find Swiss-Prot UniProt ID for gene {gene_name} in {organism} "
+                f"as a primary symbol. Found {len(hits)} synonym match(es) "
+                f"({synonym_accessions}). Use --uniprot-id to specify the accession explicitly."
+            )
         raise ValueError(
             f"Could not find Swiss-Prot UniProt ID for gene {gene_name} in {organism}. "
             "All human genes should have Swiss-Prot entries."
         )
 
-    # For other organisms, try TrEMBL as fallback
-    hits = uniprot_by_gene_taxon(gene_name, organism, limit=1, reviewed_only=False)
+    # For other organisms, try TrEMBL as fallback (Swiss-Prot returned no
+    # primary-symbol match, e.g. csr-1 only exists in TrEMBL as a primary symbol)
+    trembl_hits = uniprot_by_gene_taxon(gene_name, organism, limit=10, reviewed_only=False)
 
-    if not hits:
+    trembl_primary = _filter_primary_symbol_hits(trembl_hits, gene_name)
+    if trembl_primary:
+        return trembl_primary[0]["accession"]
+
+    if not trembl_hits and not hits:
         raise ValueError(
             f"Could not find any UniProt ID (Swiss-Prot or TrEMBL) for gene {gene_name} in {organism}"
         )
 
-    # Return the first hit (could be Swiss-Prot or TrEMBL)
-    return hits[0]["accession"]
+    # Synonym-only matches in both Swiss-Prot and TrEMBL — return the first
+    # Swiss-Prot synonym hit as a last resort (preserves the pre-#910 behavior
+    # when no primary-symbol entry exists anywhere).
+    fallback = (hits or trembl_hits)[0]
+    return fallback["accession"]
+
+
+def _filter_primary_symbol_hits(
+    hits: List[Dict[str, str]], gene_name: str
+) -> List[Dict[str, str]]:
+    """Filter UniProt hits to those where ``gene_name`` is the primary symbol.
+
+    UniProt's ``gene_exact:`` query matches both primary gene symbols and
+    deprecated synonyms. This filter narrows the result to entries whose
+    ``gene_primary`` field equals the queried name (case-insensitive), so a
+    Swiss-Prot entry for a different gene that happens to list ``gene_name``
+    as a deprecated synonym is not selected.
+
+    Args:
+        hits: Hits returned by :func:`uniprot_by_gene_taxon` (each carries a
+            ``gene`` key derived from ``gene_primary``).
+        gene_name: The queried gene symbol.
+
+    Returns:
+        Subset of ``hits`` whose primary gene symbol matches ``gene_name``.
+    """
+    target = gene_name.lower()
+    return [h for h in hits if h.get("gene") and h["gene"].lower() == target]
 
 
 def fetch_uniprot_data(uniprot_id: str) -> str:
