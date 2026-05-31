@@ -426,3 +426,21 @@ class TestResolveGeneToUniprotPrimarySymbolPreference:
 
         # Should have tried both Swiss-Prot and TrEMBL
         assert mock_lookup.call_count == 2
+
+
+@pytest.mark.integration
+def test_resolve_csr1_worm_returns_argonaute_not_nhr47():
+    """Regression for #910 against the live UniProt API.
+
+    Before the resolver fix, csr-1 resolved to Q17370 (NHR47_CAEEL), because
+    csr-1 is listed as a deprecated synonym on that Swiss-Prot entry. After
+    the fix, the resolver must return one of the TrEMBL accessions whose
+    primary symbol is actually csr-1 (the CSR-1 Argonaute).
+
+    Auto-recorded VCR cassette so CI replays without hitting UniProt.
+    """
+    result = resolve_gene_to_uniprot("csr-1", "worm")
+    assert result != "Q17370", "csr-1 must not resolve to nhr-47 (Q17370)"
+    assert result in {"H2KZD5", "Q27GU1"}, (
+        f"csr-1 must resolve to a CSR-1 Argonaute accession, got {result!r}"
+    )
