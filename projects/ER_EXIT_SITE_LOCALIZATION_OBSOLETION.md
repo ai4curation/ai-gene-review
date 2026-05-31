@@ -33,9 +33,9 @@ There is **no single `replaced_by`**. The proposed per-annotation remapping
 
 | Accession | Symbol | Source | Organism | Proposed action |
 |---|---|---|---|---|
-| O15027 | SEC16A | UniProt | Human | → `GO:0048208` COPII vesicle coating (syn. "COPII vesicle coat assembly") |
-| P34643 | sec-16A.1 | WB | *C. elegans* | → `GO:0048208` COPII vesicle coating |
-| P48415 | SEC16 | SGD | *S. cerevisiae* | → `GO:0048208` COPII vesicle coating |
+| O15027 | SEC16A | UniProt | Human | → `GO:0048208` COPII vesicle coat assembly (syn. "COPII vesicle coating") |
+| P34643 | sec-16A.1 | WB | *C. elegans* | → `GO:0048208` COPII vesicle coat assembly |
+| P48415 | SEC16 | SGD | *S. cerevisiae* | → `GO:0048208` COPII vesicle coat assembly |
 | Q5JRA6 | MIA3 | UniProt | Human | → `GO:0006888` ER to Golgi vesicle-mediated transport |
 | Q5S007 | LRRK2 | UniProt | Human | → `GO:0060628` regulation of ER to Golgi vesicle-mediated transport |
 | Q5S006 | Lrrk2 | UniProt | Mouse | **delete** — redundant; already carries `GO:0060628` from the same paper (PMID:25201882) |
@@ -51,7 +51,7 @@ best replacement, since it is the COPII vesicle that drives exit from the ER.
 Term labels verified in OLS on 2026-05-29:
 
 - `GO:0070973` (`protein localization to endoplasmic reticulum exit site`) — live BP, slated for obsoletion. No children.
-- `GO:0048208` (`COPII vesicle coating`) — live; synonym "COPII vesicle coat assembly".
+- `GO:0048208` (`COPII vesicle coat assembly`) — live; renamed from "COPII vesicle coating" (go-ontology PR #32013).
 - `GO:0090114` (`COPII-coated vesicle budding`) — live; synonym "ER exit".
 - `GO:0006888` (`endoplasmic reticulum to Golgi vesicle-mediated transport`) — live.
 - `GO:0060628` (`regulation of ER to Golgi vesicle-mediated transport`) — live.
@@ -93,7 +93,7 @@ The curated annotations fall into biologically distinct classes:
 
 - **COPII coat-assembly scaffolds** — SEC16A / SEC16 / sec-16A.1 organize ER
   exit sites and template the COPII coat. The right MF/BP is COPII vesicle
-  coating (`GO:0048208`), not a "localization" term.
+  coat assembly (`GO:0048208`), not a "localization" term.
 - **Anterograde transport cargo/machinery** — MIA3/TANGO1 (`GO:0006888`),
   GBF1 (general vesicle-mediated transport). These are about the transport step
   itself.
