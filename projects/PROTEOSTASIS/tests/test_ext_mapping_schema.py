@@ -113,9 +113,9 @@ def test_ext_mapping_sets_use_unified_subject_curations() -> None:
     }
     assert status_counts == {
         "pending_review": 0,
-        "mapped": 482,
+        "mapped": 481,
         "context_only": 89,
-        "no_mapping": 1458,
+        "no_mapping": 1459,
         "deferred": 0,
     }
 
