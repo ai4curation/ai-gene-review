@@ -191,7 +191,7 @@ family for prospective review.
 
 ## Scope
 
-- **Organisms**: Human (8 direct: KPNA1-4, KPNB1, TNPO1, TNPO2, IPO4,
+- **Organisms**: Human (10 direct: KPNA1-4, KPNB1, TNPO1, TNPO2, IPO4,
   NFKBIA, BRAP), *S. cerevisiae* (7), *R. norvegicus* (6 + 2 from
   ParkinsonsUK-UCL), *D. melanogaster* (2), *C. elegans* (1: ima-3),
   *A. thaliana* (2: IMPA1, IMPA2). Total ~28 manual/experimental
