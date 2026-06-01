@@ -13,3 +13,10 @@
 - New zebrafish-specific process: endocardial-autonomous spns1 drives cardiac valve morphogenesis via notch1 signaling (Chávez 2024) — noted in description but not added as a NEW annotation (no curated PMID cached; would require IC/primary-PMID pairing).
 - MF term check (OLS): GO:0051978 "lysophospholipid:sodium symporter activity" is the only lysophospholipid transporter MF term but is Na+-coupled (spns1 is H+-coupled efflux), and GO:0005548 is obsolete — so the proposed_new_terms entry for proton-dependent lysophospholipid efflux remains justified; justification updated accordingly.
 - No falcon contradictions to existing actions; the PMID:24967584 "H+-carbohydrate transporter" hypothesis is now flagged as superseded by the LPC/LPE transporter demonstration.
+
+## PR #1055 review response (2026-05)
+
+- IMPORTANT: Added PMID:36161949 (He et al. 2022 PNAS, the primary substrate-deorphanization paper, DOI 10.1073/pnas.2210353119) as a formal reference with two ABSTRACT-verbatim findings. Cached via fetch-gene-pmids. Updated proposed_new_terms justification to cite PMID:36161949 explicitly.
+- SUGGESTION: GO:0055085 ACCEPT → MODIFY to GO:0051977 "lysophospholipid transport" (OLS-verified valid, non-obsolete BP; child of lipid transport GO:0006869 under transport GO:0006810 — same BP aspect, more specific). core_functions.directly_involved_in updated GO:0055085 → GO:0051977 for consistency.
+- SUGGESTION: Added explicit OLS-verification note for proposed_parent GO:0015562 (efflux transmembrane transporter activity; non-obsolete MF, child of GO:0022857 under GO:0005215).
+- SUGGESTION: Added Chávez et al. 2024 iScience (PMID:39720516, DOI 10.1016/j.isci.2024.111406) and Ha et al. 2024 JCI Insight (PMID:38451736, DOI 10.1172/jci.insight.175462) as formal references with abstract-verbatim findings; cited both PMIDs in the description. PMIDs/DOIs confirmed via PubMed and cross-checked against the falcon report DOIs.
