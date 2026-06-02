@@ -66,3 +66,9 @@
   vivo., "we identify its mechanism of action, showing that Cx43 regulation of
   N-cadherin is due to a direct interaction with the basic transcription factor
   3 (BTF3)"]
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: PN-supported core role was interpreted as cytoplasmic cotranslational nascent-peptide handling rather than a broad transcriptional regulator assignment.

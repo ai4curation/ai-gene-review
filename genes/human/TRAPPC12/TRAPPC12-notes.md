@@ -19,3 +19,9 @@ The TRAPPC12 disease paper is cached as abstract-only. It supports Golgi dysfunc
 The fetched PANTHER family metadata for PTHR21581 is labeled "D-alanyl-D-alanine Carboxypeptidase", which does not match TRAPPC12/TRAMM biology. I am not using that artifact as functional evidence for this review.
 
 Falcon deep research was requested with `just deep-research-falcon human TRAPPC12`, but the provider timed out after 600 seconds and no `TRAPPC12-deep-research-falcon.md` file was produced. I am completing the review using the cached primary literature, UniProt record, GOA seed, and Reactome context described above.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed TRAPPC12 in the Proteostasis Network TRAPP bucket, where its shared gene-level semantics are TRAPP/TRAPPII/TRAPPIII complex membership and TRAPP/RAB1 trafficking, not a direct TRAPPC12-specific autophagy annotation.

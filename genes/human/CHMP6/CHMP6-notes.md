@@ -25,3 +25,9 @@ CHMP6 is the human Vps20 ortholog and a core ESCRT-III pathway component. For th
 ## Literature access notes
 
 - A fetch attempt for PMID:14583093 hit an HTTP 429 rate limit, so I did not use that paper as evidence in the review.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed CHMP6's endolysosomal cargo-quality-control role as its best-supported Proteostasis Network role.

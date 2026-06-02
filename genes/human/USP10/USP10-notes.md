@@ -29,3 +29,9 @@ Annotation stance:
 - Non-core but supported contexts: regulation of autophagy (Beclin1/LC3B), p53-class DNA damage response, translesion synthesis/PCNA deubiquitination, stress-granule inhibition, NF-kappaB/IL-1 regulation, MAVS/RLR innate immune regulation, p53 binding, CFTR/transporter binding, RNA binding.
 - Modify cysteine-type endopeptidase activity (GO:0004197) to cysteine-type deubiquitinase activity (GO:0004843).
 - Mark generic protein binding (GO:0005515) as over-annotated; when meaningful, capture the specific substrate/context in notes and replacement questions rather than keeping a generic MF term.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed USP10's most direct roles in the Proteostasis Network as protein deubiquitination, rescue of ubiquitinated stalled 40S ribosomal subunits, and non-core regulation of autophagy/stress-granule signaling through LC3B, Beclin1, and G3BP contexts.

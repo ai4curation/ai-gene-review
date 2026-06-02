@@ -27,3 +27,9 @@ The older lysophosphatidic acid acyltransferase claim is isoform/endophilin-fami
 ## Falcon
 
 Falcon deep research was started for SH3GLB1 on 2026-06-02. The run timed out after the configured 600 seconds and did not produce `SH3GLB1-deep-research-falcon.md`; the review therefore relies on local UniProt, GOA, and cached publication evidence.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed the PI3KC3 activation, UVRAG/Beclin 1 association, and Golgi/autophagosome membrane fission/tubulation roles specifically in the Proteostasis Network class III PI3K complex 2 context.

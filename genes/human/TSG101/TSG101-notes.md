@@ -17,3 +17,9 @@ Many interaction rows should not be accepted as informative molecular functions.
 ## Falcon
 
 Falcon deep research was started for TSG101 on 2026-06-02 but timed out after 600 seconds and did not produce a usable report. The review therefore relies on UniProt, cached primary literature, and PN context rather than Falcon output.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed TSG101's autophagy role in the Proteostasis Network context as ESCRT-I participation in phagophore/autophagosome closure, best represented as autophagosome assembly rather than generic macroautophagy.

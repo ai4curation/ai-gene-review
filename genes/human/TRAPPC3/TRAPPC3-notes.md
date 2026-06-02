@@ -19,3 +19,9 @@ Annotation stance:
 - Keep as non-core: intra-Golgi vesicle-mediated transport and broad Golgi vesicle transport if supported by TRAPPII context but not central to the PN review.
 - Modify: vesicle-mediated/coat/tethering rows that are broad, over-specific, or obsolete to ER-to-Golgi vesicle-mediated transport.
 - Mark over-annotated: generic protein binding rows, even when the interaction partner is another TRAPP component; the specific biology should be captured as complex membership.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the autophagophore-recruitment context as PN-specific and interpreted it through TRAPP complex membership and cautious TRAPPIII/RAB1 context rather than a broad autophagy process annotation.

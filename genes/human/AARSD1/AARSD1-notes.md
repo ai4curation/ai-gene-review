@@ -8,3 +8,9 @@
 - NCBI treats PTGES3L-AARSD1 as a separate readthrough locus and explicitly says the readthrough transcript encodes a fusion protein; its conserved domains include a p23/HSP90-related module plus AlaX/editing domains [NCBI Gene 100885850 PTGES3L-AARSD1 readthrough, "The readthrough transcript encodes a fusion protein that shares sequence identity with each individual gene product." / "p23; p23 binds heat shock protein (Hsp)90"; "AlaX; Ser-tRNA(Ala) deacylase AlaX (editing enzyme)"].
 - Working interpretation for review: PN translation placement is core and well supported. PN HSP90-cochaperone placement is explainable, but only as a contextual/readthrough-derived isoform story rather than as a general gene-level function of canonical AARSD1.
 - The nucleus GO annotation is high-throughput sperm-nucleus proteomics only, so keep it contextual [PMID:21630459 Proteomic characterization of the human sperm nucleus, "403 different proteins have been identified from the isolated sperm nuclei"].
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: PN translation placement was interpreted as core biology, while the separate PN suggestion of HSP90 cochaperone function was not supported as a core gene-level assignment for canonical AARSD1.

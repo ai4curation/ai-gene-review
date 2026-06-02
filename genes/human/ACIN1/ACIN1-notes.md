@@ -18,3 +18,9 @@ Curation decisions:
 - Remove ATP hydrolysis activity; ACIN1 is an RRM/SAP-domain RNA-processing factor, and neither UniProt function nor cached primary evidence supports an ACIN1 ATPase activity.
 - Mark generic protein binding and enzyme binding as over-annotated; specific interactions are better represented by ASAP complex membership, EJC context, or regulatory evidence.
 - Keep the Drosophila Acinus basal-autophagy PN signal as a suggested question/experiment for human ACIN1 rather than a new human annotation.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording said the human GOA evidence reviewed here supports RNA processing and apoptosis rather than a direct human ACIN1 autophagy annotation. That is a curation observation, not part of the standalone gene description.

@@ -21,3 +21,9 @@ CHMP7 is an ESCRT-III-like / ESCRT-II-III hybrid protein with two literature-sup
 - Treat viral budding annotations as over-annotated for CHMP7. The direct evidence is dominant-negative overexpression affecting virus-like particle release, not a demonstrated endogenous core viral-budding function.
 - Keep autophagy/amphisome/lysosomal membrane, plasma membrane repair, cytoplasm/cytosol/nucleoplasm, kinetochore/midbody, and broad ESCRT cell-cycle annotations as non-core pathway contexts unless the annotation can be tied directly to nuclear-envelope sealing or CHMP7-dependent ESCRT recruitment.
 - Mark generic GO:0005515 protein binding as over-annotated. The meaningful molecular interactions are CHMP7-LEMD2 and CHMP7-CHMP4B, not undifferentiated protein binding.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the CHMP4B-associated endosomal sorting evidence as secondary specifically in the Proteostasis Network context.
