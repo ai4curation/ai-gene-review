@@ -13,3 +13,9 @@
 - BECN2 also interacts with ATG14 through a metastable coiled-coil to mediate autophagy, consistent with ATG14 acting as a PI3KC3-C1/BECN-family adaptor rather than only as a generic binding protein [PMID:28218432].
 - Falcon deep research requested for ATG14 as part of the full review process.
 - Falcon deep research timed out after the configured 600 second limit and did not produce `ATG14-deep-research-falcon.md`; final review therefore relies on the cached UniProt, GOA, Reactome, and publication evidence above.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the Proteostasis Network framing emphasized ATG14 as an autophagy-initiation/autophagosome-maturation component rather than a generic protein-binding or class I PI3K/AKT signaling factor.

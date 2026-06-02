@@ -21,3 +21,9 @@ Annotation stance:
 - Non-core: neuronal synbindin localization at dendrites, synapse, and postsynaptic membrane.
 - Modify: broad vesicle-mediated transport, vesicle coat assembly, COPII vesicle coat assembly, and obsolete vesicle tethering to ER-to-Golgi vesicle-mediated transport.
 - Mark over-annotated: generic protein binding, synaptic vesicle, presynaptic active zone, postsynaptic density membrane, and broad dendrite development.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed the TRAPP-component context as PN-specific and directly relevant because human patient fibroblasts and yeast Trs23 models show trafficking and autophagy defects.

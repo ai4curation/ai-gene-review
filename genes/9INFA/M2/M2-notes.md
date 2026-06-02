@@ -77,3 +77,9 @@ M2 is one of the most well-characterized viral ion channels with:
 - Nature and Cell publications represent top-tier journals
 - Crystal structure is frequently cited in structural biology
 - Comprehensive mechanistic coverage achieved
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: this review includes five proposed new GO annotations based on literature-supported functions that are not yet in GOA: viral budding, autophagosome manipulation, M1 recruitment, membrane scission, and inflammasome activation.

@@ -20,3 +20,9 @@ The core role of VTI1A is SNARE-mediated vesicle docking/fusion in membrane traf
 Autophagy/macroautophagy rows should be retained because Vti1a knockdown blocks autophagic flux in the STX13/CHMP2B context. The evidence supports autophagy and autophagosome context but does not establish ESCRT-III complex membership.
 
 Rows from `PMID:15215310` are likely mis-referenced or at least not confirmable from accessible text. The affected terms are still biologically supported by independent VTI1A evidence, but the PMID should not be treated as direct evidence for VTI1A. The movement phenotype from `PMID:22958904` should be removed because it is attributable to VAMP1, not VTI1A.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the autophagy/autophagosome context as PN-relevant and noted that VTI1A should not be annotated as an ESCRT-III complex component.

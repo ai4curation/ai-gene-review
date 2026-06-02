@@ -17,3 +17,9 @@ Protein binding rows should not be accepted as informative molecular functions. 
 ## Falcon
 
 Falcon deep research was started for VPS37A on 2026-06-02 but timed out after 600 seconds and did not produce a usable report. The review therefore relies on UniProt, cached primary literature, and PN context rather than Falcon output.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described VPS37A's phagophore-closure role as PN-relevant.

@@ -24,3 +24,9 @@ Curation stance:
 - Keep as non-core: protein kinase/ATP-binding/protein phosphorylation rows, cilium/axoneme/cytoskeleton context, glucose-starvation response, phagocytic vesicle membrane, cytokinesis.
 - Remove: nucleus-vacuole junction as a yeast/vacuole-specific cellular component that does not map to human PIK3R4.
 - Mark over-annotated: generic protein binding rows.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording identified PI3KC3 complex regulation, not independent catalytic signaling, as the central PN function.

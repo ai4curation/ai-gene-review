@@ -24,3 +24,9 @@ The NOD2/LPS/MDP annotations are not core CHMP5 function. Thiebaut et al. identi
 ## Deep research status
 
 `just deep-research-falcon human CHMP5` timed out after 600 seconds and reported that all providers failed. No `CHMP5-deep-research-falcon.md` file was written, so this review is based on UniProt, GOA-seeded annotations, cached publications, and the local synthesis above.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the Proteostasis Network framing interpreted CHMP5 as an endolysosomal cargo-sorting and ESCRT-recycling component, with broader ESCRT contexts treated as secondary.

@@ -21,3 +21,9 @@ Annotation stance:
 - Non-core: broad Golgi vesicle transport.
 - Modify: vesicle coat assembly, COPII vesicle coat assembly, and obsolete vesicle tethering to ER-to-Golgi vesicle-mediated transport.
 - Mark over-annotated: human TRAPPI protein complex and generic protein binding rows.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the TRAPP-component context as PN-specific and interpreted TRAPPC5 through TRAPP/TRAPPII/TRAPPIII complex membership and ER-Golgi trafficking rather than a broad autophagy process annotation.

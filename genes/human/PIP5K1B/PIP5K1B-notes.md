@@ -57,3 +57,9 @@ the provider timed out after 600 seconds and no `PIP5K1B-deep-research-falcon.md
 was generated in the gene folder. This review therefore relies on cached GOA/UniProt,
 cached publications, Reactome entries, PN mappings, the article page for PMID:22885770,
 and these notes.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the Proteostasis Network context was specifically autophagic lysosome reformation; existing GOA captures PI4P 5-kinase activity and phosphatidylinositol phosphate biosynthesis; broader phosphatidylinositol kinase/metabolic terms should be narrowed, while uropod localization and WNT/PI3K pathway annotations are secondary. The ALR literature supports adding a broad lysosome organization annotation and proposing a more specific autophagic lysosome reformation term.

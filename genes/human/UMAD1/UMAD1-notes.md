@@ -15,3 +15,9 @@ UMAD1 should be treated as a poorly characterized UMA-domain protein rather than
 The existing `GO:0005515 protein binding` annotation is supported as a broad interaction-screen observation, but it is uninformative as a molecular function and should be marked as over-annotated. The interaction partners in the local records, TH isoform 3 and GABARAPL1, do not by themselves establish a coherent UMAD1 core function or a proteostasis pathway role.
 
 No core GO function is assigned in this review. Adding ESCRT-I complex membership, MVB sorting, ubiquitin binding, phospholipid binding, membrane fission, or macroautophagy terms would overstate the available evidence.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording said the local evidence reviewed here does not establish a specific ESCRT-I complex, endosomal sorting, autophagy, membrane fission, or viral budding function for UMAD1. That is a curation observation rather than standalone gene biology.

@@ -77,3 +77,9 @@ Falcon deep research was started with `just deep-research-falcon human LAMP1`.
 The provider timed out after 600 seconds and no `LAMP1-deep-research-falcon.md`
 file was generated in the gene folder. This review therefore relies on cached
 GOA/UniProt, cached publications, PN mappings, and these notes.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: existing GOA correctly captures lysosomal membrane, late endosome membrane, lysosomal lumen acidification, and broad ion channel inhibitor activity; broad lysosome, endosome, membrane, and generic binding annotations should be narrowed; NK-cell cytotoxicity, TAPL/ABCB9 stabilization, Lassa virus receptor activity, plasma membrane exposure, and lysosome-related granule locations are secondary contexts. The Proteostasis Network ALR morphology row is useful search context but does not by itself justify a new ALR annotation for LAMP1.

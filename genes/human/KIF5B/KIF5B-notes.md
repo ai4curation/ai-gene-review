@@ -55,3 +55,9 @@ MTOC-lytic granule polarization and reduces cytotoxicity
 - Do not add a new `GO:0007040 lysosome organization` annotation from the PN
   lysosomal-tubulation row; the PN project intentionally treats this row as
   context-only.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: for Proteostasis Network curation, the supported lysosomal role is kinesin-dependent lysosome localization/positioning; the PN lysosomal-tubulation row is context-only and should not be propagated to a new lysosome-organization annotation for KIF5B without more direct ALR-specific evidence.

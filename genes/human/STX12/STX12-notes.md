@@ -19,3 +19,9 @@ The core role of STX12 is syntaxin-family SNARE activity in endosomal/recycling 
 The autophagy annotation is directly supported and biologically important in the PN context. It should be retained as a supported non-primary output of the STX12 SNARE trafficking role, focused on phagophore/autophagosome maturation rather than ESCRT-III complex membership.
 
 BLOC-1, ABCA1/cholesterol efflux, phagocytic vesicle/membrane raft, and neuronal postsynaptic/synaptic vesicle annotations are best treated as context-specific or non-core. Generic `protein binding` rows should be marked over-annotated even when the interaction itself is real.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the LC3-positive phagophore/autophagosome role as PN-relevant and noted that STX12 should not be annotated as an ESCRT-III complex component.
