@@ -86,6 +86,12 @@ filters, plus PINC ECO:0000304 author-statement entries):
 | 9 | Q8TEX9 | IPO4 | H. sapiens (9606) | IDA | PMID:17682055 |
 | 10 | Q96321 | IMPA1 | A. thaliana (3702) | IMP | PMID:37676567 |
 
+Accession spot-checks (UniProt REST, 2026-06-01): Q96321 resolves to
+`IMPA1_ARATH` (Importin subunit alpha-1, A. thaliana, taxon 3702 — gene
+names `IMPA1 KAP1 At3g06720`); F4JL11 resolves to `F4JL11_ARATH`
+(Importin alpha isoform 2, A. thaliana, taxon 3702). Both accessions
+match the table rows above.
+
 ### SGD (7) — all *S. cerevisiae* (taxon 559292)
 
 | # | Accession | Symbol | Evidence | Reference |
@@ -145,6 +151,15 @@ update automatically.)
 | # | Accession | Symbol | Organism | Evidence | Reference |
 |---|---|---|---|---|---|
 | 1 | Q7Z569 | BRAP | H. sapiens (9606) | IDA | PMID:9497340 |
+
+The MGI source / human accession combination is intentional, not a
+transcription error: Q7Z569 resolves to `BRAP_HUMAN` (BRCA1-associated
+protein, taxon 9606) per UniProt REST (2026-06-01), and the IDA
+annotation was contributed to the human gene by an MGI curator working
+from Li et al. 1998 (PMID:9497340, J. Biol. Chem. — the paper that
+originally identified BRAP as a cytoplasmic NLS-binding factor). MGI
+also holds the corresponding ISS annotation on mouse Brap (Q99MP8),
+which follows the human IDA and is noted below.
 
 (Q99MP8 mouse Brap is ISS and follows automatically.)
 
@@ -217,10 +232,15 @@ family for prospective review.
     retain it in the cytoplasm (Hedgehog signaling). Again, not a
     carrier; likely keep as a cargo-retention / NLS-masking MF or
     remove.
-  - **NSR1**, **Nolc1**, **Cabp1**, **Lbr**, **BRAP**, **ETP1** —
+  - **NSR1** (Tier 3), **Nolc1** (Tier 3), **ETP1** (Tier 3),
+    **Lbr** (Tier 3), **BRAP** (Tier 4), **Cabp1** (Tier 4) —
     each needs literature triage to determine whether the original
     assay supports a carrier role (→ GO:0140142) or a different
-    interaction role (→ alternative MF or remove).
+    interaction role (→ alternative MF or remove). Tier assignments
+    are listed in the "Candidate genes for initial review" section
+    below; the diagnostic clusters are nucleolar cargo recognition
+    (NSR1, Nolc1), nuclear-envelope / membrane tethering (Lbr), and
+    cytoplasmic NLS-masking / retention (BRAP, ETP1, Cabp1).
 - **Special case (FYPO dependency)**: when GO:0008139 is obsoleted,
   FYPO:0007070's UbergraphImplementation needs to be updated upstream;
   no action required from this repo.
@@ -257,29 +277,55 @@ None are currently in `genes/`.
    Ribosomal protein import; pairs with PSE1.
 8. **MTR10 / KAP111** (*S. cerevisiae*, UniProt **Q99189**) — IDA
    PMID:9545233. mRNA-binding protein import receptor.
+9. **KAP120** (*S. cerevisiae*, UniProt **Q02932**) — IDA PMID:20219973.
+   β-karyopherin; ribosomal-protein / Rpf1 import receptor. Clean
+   carrier-activity case; rounds out the yeast importin block.
 
 ### Tier 3 — non-importin annotations that need triage
 
-9. **NFKBIA / IκBα** (human, UniProt **P25963**) — IPI PMID:1493333.
-   Diagnostic case: the GO:0008139 annotation reflects NLS-*masking*,
-   not NLS-*carrying*. The right call may be REMOVE or MODIFY to a
-   transcription-factor-binding term. This is the most interesting
-   review of the set.
-10. **Su(fu)** (*D. melanogaster*, UniProt **Q9VG38**) — IPI
+10. **NFKBIA / IκBα** (human, UniProt **P25963**) — IPI PMID:1493333.
+    Diagnostic case: the GO:0008139 annotation reflects NLS-*masking*,
+    not NLS-*carrying*. The right call may be REMOVE or MODIFY to a
+    transcription-factor-binding term. This is the most interesting
+    review of the set.
+11. **Su(fu)** (*D. melanogaster*, UniProt **Q9VG38**) — IPI
     PMID:24413177. NLS-masking on Ci/Gli; similar triage to NFKBIA.
-11. **Nup98** (*R. norvegicus*, UniProt **P49793**), **Nup153**
+12. **Nup98** (*R. norvegicus*, UniProt **P49793**), **Nup153**
     (P49791), **Nup214** (D4ACK1), **Nup58** (P70581) — all
     nucleoporins from PMID:7878057 (Radu et al. 1995) / PMID:8707840.
     Annotation reflects FG-repeat binding to importins (transit
     interaction), not NLS-binding for transport. Likely MODIFY to
     GO:0017056 *structural constituent of nuclear pore* or removal.
+13. **NSR1** (*S. cerevisiae*, UniProt **P27476**) — IDA PMID:1706724.
+    Nucleolar SSB protein; NLS-binding assay reflects nucleolar
+    cargo-recognition rather than nucleocytoplasmic transit. Triage
+    needed — likely MODIFY to a nucleolar / cargo-binding MF rather
+    than GO:0140142.
+14. **ETP1** (*S. cerevisiae*, UniProt **P38748**) — IDA PMID:9497340.
+    Same primary reference as human BRAP (Tier 4) and similar
+    cytoplasmic NLS-binding context; triage needed to determine
+    whether ETP1 acts as a carrier or as a retention factor.
+15. **Lbr** (*R. norvegicus*, UniProt **O08984**) — IPI PMID:8486604.
+    Lamin B receptor; inner-nuclear-membrane protein whose NLS
+    interaction reflects nuclear-envelope tethering of cargos
+    rather than nucleocytoplasmic transport. Likely MODIFY to a
+    nuclear-envelope-binding MF or removal.
+16. **Nolc1** (*R. norvegicus*, UniProt **P41777**) — IDA PMID:1623516.
+    Nucleolar/nucleolar-organizing-region phosphoprotein (NOPP140);
+    NLS-binding assay likely reflects nucleolar cargo recognition.
+    Triage in parallel with NSR1.
 
 ### Tier 4 — disease-relevant / outlier annotations
 
-12. **BRAP** (human, UniProt **Q7Z569**) — IDA PMID:9497340. BRCA1-
+17. **BRAP** (human, UniProt **Q7Z569**) — IDA PMID:9497340. BRCA1-
     associated protein; cytoplasmic retention factor for NLS-bearing
     cargos. Triage needed (cargo-retention, not carrier).
-13. **IMPA1** (UniProt **Q96321**) and **IMPA2** (UniProt **F4JL11**)
+18. **Cabp1** (*R. norvegicus*, UniProt **O88751**) — IDA PMID:18303947
+    (UniProt + ParkinsonsUK-UCL). Calcium-binding protein 1; the
+    NLS-binding assertion is unusual for a Ca²⁺-binding signalling
+    protein and warrants a careful triage of the underlying
+    immunoprecipitation / pulldown evidence.
+19. **IMPA1** (UniProt **Q96321**) and **IMPA2** (UniProt **F4JL11**)
     — *A. thaliana* importin-α homologs; both IMP PMID:37676567.
     Pair the two together; useful plant-side coverage.
 
@@ -302,9 +348,12 @@ None are currently in `genes/`.
    stress-test the per-annotation triage logic. These are the
    annotations where the carrier-vs-masking distinction matters most
    and where a straight `MODIFY` to GO:0140142 would be wrong.
-5. **Yeast block (PSE1 / KAP104 / KAP123 / MTR10) as one project.**
-   Shared literature and shared cargo classes (ribosomal protein
-   import, mRNA-binding protein import) make a paired review efficient.
+5. **Yeast importin block (PSE1 / KAP104 / KAP123 / MTR10 / KAP120)
+   as one project.** Shared literature and shared cargo classes
+   (ribosomal protein import, mRNA-binding protein import) make a
+   paired review efficient. Run the yeast triage cases (NSR1, ETP1)
+   alongside or immediately after, since they share publications and
+   curation context with the importin block.
 6. **Nucleoporin block (Nup58 / Nup98 / Nup153 / Nup214)** —
    probably one review per protein, with consistent MODIFY → GO:0017056
    recommendations and a shared rationale citing Radu et al. 1995
@@ -327,6 +376,11 @@ reviews) are also good candidates for evidence-code modernization.
 
 ## Status
 
+- 2026-06-02 — Review follow-up: spot-checked Q96321 (IMPA1_ARATH) and
+  F4JL11 against UniProt REST, added an explanatory note for the
+  MGI/Q7Z569 (human BRAP) curation pattern, added KAP120 to Tier 2,
+  and added explicit tier assignments for NSR1 / ETP1 / Lbr / Nolc1 /
+  Cabp1 in Tiers 3 and 4. No biological conclusions changed.
 - 2026-06-01 — Project file created. Tracking upstream issue
   geneontology/go-annotation#6435 (opened 2026-05-27, updated 2026-06-01).
   Upstream ontology ticket geneontology/go-ontology#31419 is CLOSED
