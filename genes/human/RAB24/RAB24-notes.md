@@ -1,0 +1,18 @@
+# RAB24 notes
+
+RAB24 is reviewed in the PN autophagosome maturation / lysosome fusion neighborhood. The PN source row has no PMID and is a no-mapping/context-only entry, so it was used to focus the literature search rather than as evidence for any GO action.
+
+Core RAB24 evidence supports an atypical Rab-family small GTPase linked to basal autophagy. UniProt summarizes RAB24 as an atypical Rab with low GTPase activity that is predominantly GTP-bound and says it is "required for the clearance of late autophagic vacuoles under basal conditions" and "not needed for starvation-induced autophagy" [file:human/RAB24/RAB24-uniprot.txt, "RAB24 is required for the clearance of late autophagic vacuoles under basal conditions"; file:human/RAB24/RAB24-uniprot.txt, "It is not needed for starvation-induced autophagy"]. The main autophagy paper confirms "localization of RAB24 to autophagic vacuoles" and shows that RAB24 functions in "maturation and/or clearance of autophagic compartments under nutrient-rich conditions" [PMID:26325487, "localization of RAB24 to autophagic vacuoles"; PMID:26325487, "maturation and/or clearance of autophagic compartments under nutrient-rich conditions"].
+
+The original human biochemical/localization paper supports the generic membrane and atypical Rab-GTPase context but not a precise process term. It reports that Rab24 "exists predominantly in the GTP state" and that inefficient geranylgeranylation/GDI interaction may mean it operates by a "novel mechanism that does not depend on GTP hydrolysis or GDP dissociation inhibitor-mediated recycling" [PMID:10660536, "Rab24 exists predominantly in the GTP state"; PMID:10660536, "does not depend on GTP hydrolysis or GDP dissociation inhibitor-mediated recycling"]. UniProt also notes that only about 20% partitions with membranes and that Rab24 localizes to limiting membranes of autophagic compartments by similarity [file:human/RAB24/RAB24-uniprot.txt, "Only about 20% is recovered in the particulate fraction"; file:human/RAB24/RAB24-uniprot.txt, "limiting membranes of autophagic compartments under basal conditions"].
+
+The rabenosyn-5/ZFYVE20 interaction is real Rab-effector context but does not justify a standalone `protein binding` GO annotation as a core molecular function. The paper is about Rab-effector recognition specificity, noting that Rab GTPases interact with diverse effectors after nucleotide exchange and that rabenosyn-5 domains selectively recognize Rab subsets [PMID:16034420, "Rab GTPases interact with functionally diverse effectors"; PMID:16034420, "rabenosyn-5 can achieve highly selective recognition"].
+
+The oocyte maturation, spindle, and kinetochore-microtubule annotations are transferred from mouse/by-similarity sources. They may represent a secondary reproductive/cell-division context, but they are not the central human proteostasis function and should not be treated as core for this PN review.
+
+Curation decisions:
+- Accept Rab-family GTPase/GTP-binding activity and the specific autophagosome/autophagosome-membrane localization rows.
+- Modify generic `GO:0006914 autophagy` rows to `GO:0097352 autophagosome maturation`, because the RAB24-specific evidence places the function at late maturation/clearance of basal autophagic compartments rather than general autophagy induction.
+- Keep broad cytosol/membrane/perinuclear and endocytic-vesicle locations as non-core context.
+- Keep mouse-oocyte and spindle/kinetochore annotations as non-core transferred biology.
+- Mark generic `protein binding`, mitochondrial, plasma-membrane, and secretory-granule membrane rows as over-annotated for the core RAB24 review.

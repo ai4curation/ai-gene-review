@@ -1,0 +1,4033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPNS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SPNS1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H2V7" target="_blank" class="term-link">
+                        Q9H2V7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SPNS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H2V7" data-a="DESCRIPTION: SPNS1 is a multi-pass lysosomal membrane protein i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SPNS1 is a multi-pass lysosomal membrane protein in the major facilitator superfamily and Spinster family. Its core function is proton-gradient-dependent export of lysophospholipids, especially lysophosphatidylcholine (LPC) and lysophosphatidylethanolamine (LPE), from the lysosomal lumen to the cytosol. The exported lysophospholipids are reused in phospholipid salvage pathways and can support phosphatidylcholine synthesis, neutral-lipid storage, cholesterol homeostasis, and survival under nutrient limitation. SPNS1 deficiency causes lysosomal accumulation of LPC/LPE and related lysolipids, perturbs lysosomal function and lipid homeostasis, and is now linked to human multiorgan disease caused by biallelic loss-of-function variants.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>lysophospholipid:proton symporter activity</h3>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="lysophospholipid:proton symporter activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Enables the coupled transfer of a lysophospholipid and a proton from one side of a membrane to the other, driven by the transmembrane proton gradient.</p>
+            
+
+            
+            <p><strong>Justification:</strong> The current closest GO molecular-function term for SPNS1 is GO:0051978 lysophospholipid:sodium symporter activity, but SPNS1 is repeatedly described experimentally as proton dependent, not sodium dependent.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015295" target="_blank" class="term-link">
+                    solute:proton symporter activity
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                        PMID:36161949
+                    </a>
+                    
+                    
+                    : The uptake of [14C]-LPC-oleate by Spns1 was concentration dependent and saturable, with a pH optimum between pH 5.0 and 6.0
+                    
+                </li>
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                        PMID:39739806
+                    </a>
+                    
+                    
+                    : we identify a five-residue network that is crucial for proton-sensing by Spns1
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>lysosomal lysophospholipid export</h3>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="lysosomal lysophospholipid export" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The directed movement of lysophospholipids from the lysosomal lumen across the lysosomal membrane to the cytosol.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Existing GO terms capture lysophospholipid transport and broad lysosomal transport, but do not represent the specific lysosomal export/salvage process established for SPNS1.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                    lysophospholipid transport
+                </a>
+            </p>
+            
+
+            
+            <p><strong>Mappings:</strong></p>
+            <ul>
+                
+                <li>
+                    skos:relatedMatch:
+                    
+                    lysosomal transport
+                    
+                </li>
+                
+            </ul>
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                        PMID:36161949
+                    </a>
+                    
+                    
+                    : Our findings identify a phospholipid salvage pathway from lysosomes to the cytosol that is dependent on Spns1
+                    
+                </li>
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/37075117" target="_blank" class="term-link">
+                        PMID:37075117
+                    </a>
+                    
+                    
+                    : SPNS1 functions to export LPC species from the lysosomal lumen to the cytosol for reacylation to PC
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0022857" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPNS1 is a transmembrane transporter, but this term is too general for a reviewed core-function annotation. Experimental work shows a lysosomal lysophospholipid transporter activity with LPC/LPE/LPG substrate specificity and proton-gradient dependence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace the broad transporter term with the current specific GO molecular-function term for lysophospholipid transporter activity. The current GO label says sodium symporter, but SPNS1 itself is described as proton dependent; this review also proposes a new proton-specific child term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051978" target="_blank" class="term-link">
+                                    lysophospholipid:sodium symporter activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the major facilitator superfamily protein Spns1 that is ubiquitously expressed in all tissues as a proton-dependent lysophosphatidylcholine (LPC) and lysophosphatidylethanolamine (LPE) transporter</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                                        PMID:39739806
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spns1 mediates the rate-limiting efflux of lysophospholipids from the lysosome to the cytosol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                                    GO:0051977
+                                </a>
+                            </span>
+                            <span class="term-label">lysophospholipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0051977" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core SPNS1 biological process. SPNS1 exports lysosomal LPC and LPE to the cytosol, and loss of SPNS1 causes lysosomal accumulation of these lysophospholipids.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The process accurately captures the conserved cargo-level biology, even though a more precise lysosomal export term would be preferable.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spns1 deficiency in cells, zebrafish embryos, and mouse liver resulted in lysosomal accumulation of LPC and LPE species</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37075117" target="_blank" class="term-link">
+                                        PMID:37075117
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">leads to intralysosomal accumulation of lysophosphatidylcholine (LPC) and lysophosphatidylethanolamine (LPE).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033700" target="_blank" class="term-link">
+                                    GO:0033700
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid efflux</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0033700" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPNS1 mediates efflux of lysosomal lysophospholipids that derive from lysosomal phospholipid degradation. These products are exported to the cytosol for re-acylation and broader lipid salvage.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although the transported substrates are lysophospholipids rather than intact phospholipids, the term is a reasonable process-level description of lysosomal phospholipid catabolite efflux and salvage.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Flux analysis using stable isotope-labeled phospholipid apolipoprotein E nanodiscs targeted to lysosomes showed that LPC was transported out of lysosomes in an Spns1-dependent manner</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40608416" target="_blank" class="term-link">
+                                        PMID:40608416
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPNS1 is a lysosomal transporter that mediates the salvage of lysoglycerophospholipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPNS1 is a multi-pass membrane transporter, but generic membrane is too broad. The experimentally and physiologically relevant active location is the lysosomal membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace the generic membrane term with the specific lysosomal membrane localization.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    lysosomal membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPNS1/SPNS1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                                        PMID:39739806
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">While Spns1 primarily localizes to the lysosomal membrane to export its substrates from lysosomal lumen under physiological conditions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Early HSpin1 work and UniProt note occasional mitochondrial localization, but later biochemical and structural work establishes lysosomal membrane transport as the dominant SPNS1 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Keep as a possible non-core/overexpression-associated localization rather than treating it as a defining location for SPNS1 activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPNS1/SPNS1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mitochondrion inner membrane {ECO:0000269|PubMed:12815463}; Multi-pass membrane protein {ECO:0000269|PubMed:12815463}. Note=Ocassionally localizes to mitochondria.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005765" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal membrane is the core active location for SPNS1. Transport assays, lysosome lipidomics, human disease work, and structural analyses all interpret SPNS1 as a lysosomal membrane lysophospholipid transporter.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core localization for the lysosomal efflux function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPNS1/SPNS1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40608416" target="_blank" class="term-link">
+                                        PMID:40608416
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPNS1, a ubiquitously expressed lysosomal transmembrane protein belonging to the major facilitator superfamily</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006869" target="_blank" class="term-link">
+                                    GO:0006869
+                                </a>
+                            </span>
+                            <span class="term-label">lipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0006869" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPNS1 is involved in lipid transport, but the reviewed literature defines the more specific process as lysosomal lysophospholipid transport and phospholipid-catabolite efflux.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The broad lipid transport term should be replaced by more informative lysophospholipid transport and phospholipid efflux terms.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                                    lysophospholipid transport
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033700" target="_blank" class="term-link">
+                                    phospholipid efflux
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Our findings identify a phospholipid salvage pathway from lysosomes to the cytosol that is dependent on Spns1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The InterPro-derived transporter annotation is true but too broad for SPNS1 now that direct biochemical and structural evidence defines its lysophospholipid transporter activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace with the specific lysophospholipid transporter term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051978" target="_blank" class="term-link">
+                                    lysophospholipid:sodium symporter activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                                        PMID:39739806
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Our results reveal molecular insights into lysosomal LPC transport and the proton-sensing mechanism by Spns1.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPNS1 mediates transmembrane movement, but the specific process is lysosomal lysophospholipid export/salvage.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace the broad transmembrane transport term with the specific lysophospholipid transport process.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                                    lysophospholipid transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37075117" target="_blank" class="term-link">
+                                        PMID:37075117
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPNS1 functions to export LPC species from the lysosomal lumen to the cytosol for reacylation to PC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12815463" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12815463
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HSpin1, a transmembrane protein interacting with Bcl-2/Bcl-x...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005515" data-r="PMID:12815463" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The early HSpin1 study reported interaction with BCL2 and BCL2L1, but GO:0005515 is uninformative and does not describe SPNS1&#39;s core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Avoid protein binding as a retained functional annotation. The interaction may be valid as interaction data, but it should not define SPNS1 function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12815463" target="_blank" class="term-link">
+                                        PMID:12815463
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">HSpin1 bound to Bcl-2 and apoptosis regulator Bcl-X (Bcl-xL)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005764" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPNS1 acts in lysosomes as a lysophospholipid exporter. This orthology transfer is consistent with direct human and model-organism evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core active cellular location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The lysosome is central to the degradation of proteins, carbohydrates, and lipids and their salvage back to the cytosol for reutilization.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40608416" target="_blank" class="term-link">
+                                        PMID:40608416
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPNS1 is a lysosomal transporter that mediates the salvage of lysoglycerophospholipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                                    GO:0051977
+                                </a>
+                            </span>
+                            <span class="term-label">lysophospholipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0051977" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based lysophospholipid transport is directly supported by human SPNS1 transport assays, lysosome flux experiments, and disease variant studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Taken together, these data indicate that endogenous Spns1 mediates the transport of LPCs and LPEs out of lysosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40608416" target="_blank" class="term-link">
+                                        PMID:40608416
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">lysophospholipids transported by SPNS1 into the cytosol quantitatively contributed to triglyceride synthesis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36161949
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spns1 is a lysophospholipid transporter mediating lysosomal ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005764" data-r="PMID:36161949" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The 2022 PNAS study directly investigated SPNS1 function in lysosomes and isolated lysosome-enriched fractions showing substrate accumulation in SPNS1-deficient cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core active location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Lysosomes isolated from [14C]-choline-labeled Spns1 KO cells showed accumulation of [14C]-LPC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                                    GO:0051977
+                                </a>
+                            </span>
+                            <span class="term-label">lysophospholipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36161949
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spns1 is a lysophospholipid transporter mediating lysosomal ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0051977" data-r="PMID:36161949" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is one of the central conclusions of the 2022 PNAS study. SPNS1 transports LPC and LPE out of lysosomes and enables their reuse in phospholipid pools.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process supported by direct assays and flux data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">data from our flux analysis support the conclusion that LPCs are transported out of lysosomes by Spns1 and re-acylated into PC pools</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051978" target="_blank" class="term-link">
+                                    GO:0051978
+                                </a>
+                            </span>
+                            <span class="term-label">lysophospholipid:sodium symporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36161949
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spns1 is a lysophospholipid transporter mediating lysosomal ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0051978" data-r="PMID:36161949" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The underlying molecular function is correct as lysophospholipid transporter activity, but the current GO label is mechanistically imperfect for SPNS1 because SPNS1 is proton-gradient dependent rather than sodium dependent.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No current GO child term captures lysophospholipid:proton symporter activity. Retain the existing closest term while proposing a proton-specific GO term below.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The uptake of [14C]-LPC-oleate by Spns1 was concentration dependent and saturable, with a pH optimum between pH 5.0 and 6.0</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                                        PMID:39739806
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identify a five-residue network that is crucial for proton-sensing by Spns1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25365221" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25365221
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spastic paraplegia proteins spastizin and spatacsin mediate ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005764" data-r="PMID:25365221" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The seeded original reference is an autophagic lysosome reformation paper focused on spastizin and spatacsin rather than direct SPNS1 evidence. Nevertheless, lysosomal localization of SPNS1 is strongly supported by later direct SPNS1 studies and UniProt.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accept the term because it is correct, while noting that PMID:25365221 is not the best primary evidence for SPNS1 itself.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPNS1/SPNS1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                                        PMID:39739806
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spns1 is located on the lysosomal membrane and mediates lysophospholipid efflux depending on the proton gradient</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17897319
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Integral and associated lysosomal membrane proteins.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0005765" data-r="PMID:17897319" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput lysosomal membrane proteomics is consistent with the established SPNS1 lysosomal membrane localization, but the direct transporter papers are stronger support.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate cellular component annotation consistent with core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link">
+                                        PMID:17897319
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We searched for novel proteins in lysosomal membranes, tentatively participating in molecular transport across the membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPNS1/SPNS1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                    GO:0007041
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36161949
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spns1 is a lysophospholipid transporter mediating lysosomal ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H2V7" data-a="GO:0007041" data-r="PMID:36161949" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation from the Proteostasis Network context. SPNS1 exports lysosomal degradation products across the lysosomal membrane, placing its specific lysophospholipid salvage activity within the broader process of lysosomal transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA already captures lysophospholipid transport and phospholipid efflux, but not the broader lysosomal-transport context highlighted by the PN entry. This should be added conservatively as a broad process annotation; a more precise lysosomal lysophospholipid export term would be better.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                        PMID:36161949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Our findings identify a phospholipid salvage pathway from lysosomes to the cytosol that is dependent on Spns1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37075117" target="_blank" class="term-link">
+                                        PMID:37075117
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPNS1 functions to export LPC species from the lysosomal lumen to the cytosol for reacylation to PC</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SPNS1/SPNS1-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Proteostasis Network places SPNS1 under `Autophagy-Lysosome Pathway|Autophagic lysosome reformation|Efflux of autophagy products`.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Proton-gradient-dependent export of lysophospholipids from the lysosomal lumen to the cytosol. SPNS1 transports LPC and LPE, and also transports LPG and lysoplasmalogen species in reported assays. This lysosomal efflux enables phospholipid salvage through downstream re-acylation and supports lipid homeostasis under nutrient stress.</h3>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="FUNCTION: Proton-gradient-dependent export of lysophospholip..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051978" target="_blank" class="term-link">
+                            lysophospholipid:sodium symporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051977" target="_blank" class="term-link">
+                                lysophospholipid transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033700" target="_blank" class="term-link">
+                                phospholipid efflux
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                lysosomal transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                lysosomal membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                lysosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                                PMID:36161949
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">major facilitator superfamily protein Spns1 that is ubiquitously expressed in all tissues as a proton-dependent lysophosphatidylcholine (LPC) and lysophosphatidylethanolamine (LPE) transporter</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37075117" target="_blank" class="term-link">
+                                PMID:37075117
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">SPNS1 functions to export LPC species from the lysosomal lumen to the cytosol for reacylation to PC</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                                PMID:39739806
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Our results reveal molecular insights into lysosomal LPC transport and the proton-sensing mechanism by Spns1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40608416" target="_blank" class="term-link">
+                                PMID:40608416
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">lysophospholipids transported by SPNS1 into the cytosol quantitatively contributed to triglyceride synthesis</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12815463" target="_blank" class="term-link">
+                            PMID:12815463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">HSpin1, a transmembrane protein interacting with Bcl-2/Bcl-xL, induces a caspase-independent autophagic cell death.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link">
+                            PMID:17897319
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Integral and associated lysosomal membrane proteins.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25365221" target="_blank" class="term-link">
+                            PMID:25365221
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Spastic paraplegia proteins spastizin and spatacsin mediate autophagic lysosome reformation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36161949" target="_blank" class="term-link">
+                            PMID:36161949
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Spns1 is a lysophospholipid transporter mediating lysosomal phospholipid salvage.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37075117" target="_blank" class="term-link">
+                            PMID:37075117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An SPNS1-dependent lysosomal lipid transport pathway that enables cell survival under choline limitation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39739806" target="_blank" class="term-link">
+                            PMID:39739806
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular basis of Spns1-mediated lysophospholipid transport from the lysosome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40608416" target="_blank" class="term-link">
+                            PMID:40608416
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SPNS1 variants cause multiorgan disease and implicate lysophospholipid transport as critical for mTOR-regulated lipid homeostasis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SPNS1/SPNS1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for human SPNS1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SPNS1/SPNS1-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SPNS1 curation notes</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:projects/PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteostasis Network autophagy-lysosome pathway mappings</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO:0051978 be renamed or should a proton-dependent lysophospholipid symporter child term be added for SPNS1-like lysosomal transporters?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: David L. Silver, Li X</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="Q: Should GO:0051978 be renamed or should a proton-de..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should SPNS1 receive a broad GO:0007041 lysosomal transport annotation now, or should curation wait for a more precise lysosomal lysophospholipid export biological-process term?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Menglan He, Susanna G. Scharenberg</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="Q: Should SPNS1 receive a broad GO:0007041 lysosomal ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How much of SPNS1-associated disease is driven by lysophospholipid salvage, ether-lysophospholipid/plasmalogen salvage, cholesterol egress, or secondary autophagy defects in specific tissues?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Menglan He, David L. Silver</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="Q: How much of SPNS1-associated disease is driven by ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute purified human SPNS1 into proteoliposomes with controlled proton and sodium gradients and measure transport of LPC, LPE, LPG, and lysoplasmalogen substrates.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SPNS1 is a lysophospholipid:proton symporter rather than a sodium-coupled lysophospholipid transporter.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transport_reconstitution</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="EXPERIMENT: Reconstitute purified human SPNS1 into proteolipos..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use autophagy-induced lysosomal cargo flux assays in SPNS1 knockout and rescue cells to measure export of autolysosome-derived lysophospholipids after starvation and recovery.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SPNS1 mediates lysosomal export of autophagy-derived lysophospholipid catabolites during lysosome recovery and lipid salvage.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: lipidomics/genetic_rescue</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="EXPERIMENT: Use autophagy-induced lysosomal cargo flux assays ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare wild-type SPNS1, disease variants, and transport-site mutants for lysosomal LPC/LPE accumulation, cholesterol egress, triglyceride synthesis, and autophagy markers under mTOR inhibition.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Disease variants cause partial loss of lysosomal lysophospholipid export that secondarily disrupts cholesterol egress and nutrient-stress lipid storage.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: disease_variant_functional_assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H2V7" data-a="EXPERIMENT: Compare wild-type SPNS1, disease variants, and tra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SPNS1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H2V7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="spns1-review-notes">SPNS1 review notes</h1>
+<h2 id="curation-scope">Curation scope</h2>
+<p>Falcon deep research was attempted with <code>just deep-research-falcon human SPNS1</code>, but the<br />
+provider timed out after 600 seconds and did not generate <code>SPNS1-deep-research-falcon.md</code>.<br />
+This review therefore relies on cached publications, UniProt/GOA-derived files, PN project<br />
+mappings, and these manual curation notes.</p>
+<h2 id="core-function">Core function</h2>
+<p>SPNS1 is a lysosomal multi-pass major facilitator superfamily transporter. The<br />
+strongest current evidence supports a lysosomal lysophospholipid export/salvage<br />
+function, especially for LPC and LPE, with LPG and lysoplasmalogens also<br />
+transported in some assays. He et al. 2022 identified SPNS1 as a<br />
+proton-dependent LPC/LPE transporter and showed SPNS1-dependent efflux from<br />
+lysosomes followed by re-acylation into cytoplasmic phospholipid pools<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36161949" title="Spns1 is a lysophospholipid transporter mediating lysosomal phospholipid salvage">PMID:36161949</a>.<br />
+Scharenberg et al. 2023 independently found SPNS1 in an endolysosomal CRISPR<br />
+screen under choline limitation and concluded that SPNS1 exports LPC from the<br />
+lysosome to support phospholipid synthesis and cell survival<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/37075117" title="An SPNS1-dependent lysosomal lipid transport pathway that enables cell survival under choline limitation">PMID:37075117</a>.</p>
+<p>Chen et al. 2025 provide structural support for this molecular function: a<br />
+cryo-EM structure of human SPNS1 in an LPC-bound lumen-facing conformation,<br />
+transport assays for cavity residues, and a proton-sensing residue network<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/39739806" title="Molecular basis of Spns1-mediated lysophospholipid transport from the lysosome">PMID:39739806</a>.<br />
+He et al. 2025 extend the physiology to human disease, reporting biallelic<br />
+SPNS1 loss-of-function variants with lysosomal lysophospholipid/cholesterol<br />
+accumulation and altered triglyceride/cholesterol homeostasis<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40608416" title="SPNS1 variants cause multiorgan disease and implicate lysophospholipid transport as critical for mTOR-regulated lipid homeostasis">PMID:40608416</a>.</p>
+<h2 id="proteostasis-network-context">Proteostasis network context</h2>
+<p>The Proteostasis Network places SPNS1 under<br />
+<code>Autophagy-Lysosome Pathway|Autophagic lysosome reformation|Efflux of autophagy products</code>.<br />
+That placement is biologically plausible because autophagy-derived membrane<br />
+lipids are degraded in autolysosomes and their products must exit the lysosomal<br />
+lumen for reuse. However, the PN row is a curation hypothesis, not primary<br />
+evidence. The relevant direct evidence is that SPNS1 exports lysosomal LPC/LPE<br />
+and that loss of SPNS1 disrupts lysosomal lipid homeostasis, lysosomal function,<br />
+and nutrient-stress survival [PMID:36161949; PMID:37075117; PMID:40608416].</p>
+<p>The PN projected term <code>GO:0007041 lysosomal transport</code> is defensible as a new<br />
+annotation because SPNS1 transports lysosomal degradation products across the<br />
+lysosomal membrane. It is still broad and does not capture the specific cargo or<br />
+direction. A more precise GO term such as "lysosomal lysophospholipid export" or<br />
+"lysosomal phospholipid salvage" would better represent the biology.</p>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<ul>
+<li>Accept lysosomal membrane/lysosome localization as core, with PMID:36161949<br />
+  and UniProt supporting the lysosomal transporter model. The high-throughput<br />
+  placental lysosomal membrane proteomics study is consistent but not the main<br />
+  evidence <a href="https://pubmed.ncbi.nlm.nih.gov/17897319">PMID:17897319</a>.</li>
+<li>Accept lysophospholipid transport, phospholipid efflux, and the current<br />
+  GO:0051978 lysophospholipid transporter term as core. The GO label<br />
+<code>lysophospholipid:sodium symporter activity</code> is mechanistically imperfect for<br />
+  SPNS1 because the papers describe proton-gradient dependence, so this review<br />
+  proposes a more specific ontology term.</li>
+<li>Modify broad <code>transmembrane transporter activity</code>, <code>transmembrane transport</code>,<br />
+<code>lipid transport</code>, and generic <code>membrane</code> annotations to the more specific<br />
+  SPNS1 terms already supported by experiments.</li>
+<li>Keep the mitochondrial inner membrane annotation as non-core. UniProt records<br />
+  occasional mitochondrial localization from the early HSpin1 study, but the<br />
+  dominant conserved function is lysosomal.</li>
+<li>Mark <code>protein binding</code> as over-annotated. The BCL2/BCL2L1 interaction was<br />
+  reported in the early HSpin1 cell-death study <a href="https://pubmed.ncbi.nlm.nih.gov/12815463">PMID:12815463</a>, but GO:0005515<br />
+  is not informative for SPNS1's core molecular function.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H2V7
+gene_symbol: SPNS1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SPNS1 is a multi-pass lysosomal membrane protein in the major facilitator
+  superfamily and Spinster family. Its core function is proton-gradient-dependent
+  export of lysophospholipids, especially lysophosphatidylcholine (LPC) and
+  lysophosphatidylethanolamine (LPE), from the lysosomal lumen to the cytosol.
+  The exported lysophospholipids are reused in phospholipid salvage pathways and
+  can support phosphatidylcholine synthesis, neutral-lipid storage, cholesterol
+  homeostasis, and survival under nutrient limitation. SPNS1 deficiency causes
+  lysosomal accumulation of LPC/LPE and related lysolipids, perturbs lysosomal
+  function and lipid homeostasis, and is now linked to human multiorgan disease
+  caused by biallelic loss-of-function variants.
+alternative_products:
+  - name: &#39;1&#39;
+    id: Q9H2V7-1
+  - name: &#39;2&#39;
+    id: Q9H2V7-2
+    sequence_note: VSP_028196
+  - name: 3 (CRA_d)
+    id: Q9H2V7-3
+    sequence_note: VSP_028195, VSP_028196
+  - name: &#39;4&#39;
+    id: Q9H2V7-4
+    sequence_note: VSP_028194
+  - name: &#39;5&#39;
+    id: Q9H2V7-5
+    sequence_note: VSP_036389
+existing_annotations:
+  - term:
+      id: GO:0022857
+      label: transmembrane transporter activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        SPNS1 is a transmembrane transporter, but this term is too general for a
+        reviewed core-function annotation. Experimental work shows a lysosomal
+        lysophospholipid transporter activity with LPC/LPE/LPG substrate
+        specificity and proton-gradient dependence.
+      action: MODIFY
+      reason: &gt;-
+        Replace the broad transporter term with the current specific GO
+        molecular-function term for lysophospholipid transporter activity. The
+        current GO label says sodium symporter, but SPNS1 itself is described as
+        proton dependent; this review also proposes a new proton-specific child
+        term.
+      proposed_replacement_terms:
+        - id: GO:0051978
+          label: lysophospholipid:sodium symporter activity
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            the major facilitator superfamily protein Spns1 that is ubiquitously
+            expressed in all tissues as a proton-dependent lysophosphatidylcholine
+            (LPC) and lysophosphatidylethanolamine (LPE) transporter
+        - reference_id: PMID:39739806
+          supporting_text: &gt;-
+            Spns1 mediates the rate-limiting efflux of lysophospholipids from
+            the lysosome to the cytosol
+  - term:
+      id: GO:0051977
+      label: lysophospholipid transport
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        This is a core SPNS1 biological process. SPNS1 exports lysosomal LPC and
+        LPE to the cytosol, and loss of SPNS1 causes lysosomal accumulation of
+        these lysophospholipids.
+      action: ACCEPT
+      reason: &gt;-
+        The process accurately captures the conserved cargo-level biology, even
+        though a more precise lysosomal export term would be preferable.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            Spns1 deficiency in cells, zebrafish embryos, and mouse liver
+            resulted in lysosomal accumulation of LPC and LPE species
+        - reference_id: PMID:37075117
+          supporting_text: &gt;-
+            leads to intralysosomal accumulation of lysophosphatidylcholine (LPC) and
+            lysophosphatidylethanolamine (LPE).
+  - term:
+      id: GO:0033700
+      label: phospholipid efflux
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        SPNS1 mediates efflux of lysosomal lysophospholipids that derive from
+        lysosomal phospholipid degradation. These products are exported to the
+        cytosol for re-acylation and broader lipid salvage.
+      action: ACCEPT
+      reason: &gt;-
+        Although the transported substrates are lysophospholipids rather than
+        intact phospholipids, the term is a reasonable process-level description
+        of lysosomal phospholipid catabolite efflux and salvage.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            Flux analysis using stable isotope-labeled phospholipid apolipoprotein
+            E nanodiscs targeted to lysosomes showed that LPC was transported out
+            of lysosomes in an Spns1-dependent manner
+        - reference_id: PMID:40608416
+          supporting_text: &gt;-
+            SPNS1 is a lysosomal transporter that mediates the salvage of
+            lysoglycerophospholipids
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        SPNS1 is a multi-pass membrane transporter, but generic membrane is too
+        broad. The experimentally and physiologically relevant active location is
+        the lysosomal membrane.
+      action: MODIFY
+      reason: &gt;-
+        Replace the generic membrane term with the specific lysosomal membrane
+        localization.
+      proposed_replacement_terms:
+        - id: GO:0005765
+          label: lysosomal membrane
+      supported_by:
+        - reference_id: file:human/SPNS1/SPNS1-uniprot.txt
+          supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome membrane&#39;
+        - reference_id: PMID:39739806
+          supporting_text: &gt;-
+            While Spns1 primarily localizes to the lysosomal membrane to export
+            its substrates from lysosomal lumen under physiological conditions
+  - term:
+      id: GO:0005743
+      label: mitochondrial inner membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Early HSpin1 work and UniProt note occasional mitochondrial localization,
+        but later biochemical and structural work establishes lysosomal membrane
+        transport as the dominant SPNS1 function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Keep as a possible non-core/overexpression-associated localization rather
+        than treating it as a defining location for SPNS1 activity.
+      supported_by:
+        - reference_id: file:human/SPNS1/SPNS1-uniprot.txt
+          supporting_text: &gt;-
+            Mitochondrion inner membrane {ECO:0000269|PubMed:12815463};
+            Multi-pass membrane protein {ECO:0000269|PubMed:12815463}.
+            Note=Ocassionally localizes to mitochondria.
+  - term:
+      id: GO:0005765
+      label: lysosomal membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Lysosomal membrane is the core active location for SPNS1. Transport
+        assays, lysosome lipidomics, human disease work, and structural analyses
+        all interpret SPNS1 as a lysosomal membrane lysophospholipid transporter.
+      action: ACCEPT
+      reason: Core localization for the lysosomal efflux function.
+      supported_by:
+        - reference_id: file:human/SPNS1/SPNS1-uniprot.txt
+          supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome membrane&#39;
+        - reference_id: PMID:40608416
+          supporting_text: &gt;-
+            SPNS1, a ubiquitously expressed lysosomal transmembrane protein
+            belonging to the major facilitator superfamily
+  - term:
+      id: GO:0006869
+      label: lipid transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        SPNS1 is involved in lipid transport, but the reviewed literature defines
+        the more specific process as lysosomal lysophospholipid transport and
+        phospholipid-catabolite efflux.
+      action: MODIFY
+      reason: &gt;-
+        The broad lipid transport term should be replaced by more informative
+        lysophospholipid transport and phospholipid efflux terms.
+      proposed_replacement_terms:
+        - id: GO:0051977
+          label: lysophospholipid transport
+        - id: GO:0033700
+          label: phospholipid efflux
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            Our findings identify a phospholipid salvage pathway from lysosomes
+            to the cytosol that is dependent on Spns1
+  - term:
+      id: GO:0022857
+      label: transmembrane transporter activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        The InterPro-derived transporter annotation is true but too broad for
+        SPNS1 now that direct biochemical and structural evidence defines its
+        lysophospholipid transporter activity.
+      action: MODIFY
+      reason: Replace with the specific lysophospholipid transporter term.
+      proposed_replacement_terms:
+        - id: GO:0051978
+          label: lysophospholipid:sodium symporter activity
+      supported_by:
+        - reference_id: PMID:39739806
+          supporting_text: &gt;-
+            Our results reveal molecular insights into lysosomal LPC transport
+            and the proton-sensing mechanism by Spns1.
+  - term:
+      id: GO:0055085
+      label: transmembrane transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        SPNS1 mediates transmembrane movement, but the specific process is
+        lysosomal lysophospholipid export/salvage.
+      action: MODIFY
+      reason: &gt;-
+        Replace the broad transmembrane transport term with the specific
+        lysophospholipid transport process.
+      proposed_replacement_terms:
+        - id: GO:0051977
+          label: lysophospholipid transport
+      supported_by:
+        - reference_id: PMID:37075117
+          supporting_text: &gt;-
+            SPNS1 functions to export LPC species from the lysosomal lumen to the
+            cytosol for reacylation to PC
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:12815463
+    qualifier: enables
+    review:
+      summary: &gt;-
+        The early HSpin1 study reported interaction with BCL2 and BCL2L1, but
+        GO:0005515 is uninformative and does not describe SPNS1&#39;s core molecular
+        function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Avoid protein binding as a retained functional annotation. The interaction
+        may be valid as interaction data, but it should not define SPNS1 function.
+      supported_by:
+        - reference_id: PMID:12815463
+          supporting_text: &gt;-
+            HSpin1 bound to Bcl-2 and apoptosis regulator Bcl-X (Bcl-xL)
+  - term:
+      id: GO:0005764
+      label: lysosome
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000107
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        SPNS1 acts in lysosomes as a lysophospholipid exporter. This orthology
+        transfer is consistent with direct human and model-organism evidence.
+      action: ACCEPT
+      reason: Core active cellular location.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            The lysosome is central to the degradation of proteins,
+            carbohydrates, and lipids and their salvage back to the cytosol for
+            reutilization.
+        - reference_id: PMID:40608416
+          supporting_text: &gt;-
+            SPNS1 is a lysosomal transporter that mediates the salvage of
+            lysoglycerophospholipids
+  - term:
+      id: GO:0051977
+      label: lysophospholipid transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000107
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Orthology-based lysophospholipid transport is directly supported by human
+        SPNS1 transport assays, lysosome flux experiments, and disease variant
+        studies.
+      action: ACCEPT
+      reason: Core biological process.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            Taken together, these data indicate that endogenous Spns1 mediates
+            the transport of LPCs and LPEs out of lysosomes
+        - reference_id: PMID:40608416
+          supporting_text: &gt;-
+            lysophospholipids transported by SPNS1 into the cytosol quantitatively
+            contributed to triglyceride synthesis
+  - term:
+      id: GO:0005764
+      label: lysosome
+    evidence_type: IDA
+    original_reference_id: PMID:36161949
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        The 2022 PNAS study directly investigated SPNS1 function in lysosomes and
+        isolated lysosome-enriched fractions showing substrate accumulation in
+        SPNS1-deficient cells.
+      action: ACCEPT
+      reason: Core active location.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            Lysosomes isolated from [14C]-choline-labeled Spns1 KO cells showed
+            accumulation of [14C]-LPC
+  - term:
+      id: GO:0051977
+      label: lysophospholipid transport
+    evidence_type: IDA
+    original_reference_id: PMID:36161949
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        This is one of the central conclusions of the 2022 PNAS study. SPNS1
+        transports LPC and LPE out of lysosomes and enables their reuse in
+        phospholipid pools.
+      action: ACCEPT
+      reason: Core biological process supported by direct assays and flux data.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            data from our flux analysis support the conclusion that LPCs are
+            transported out of lysosomes by Spns1 and re-acylated into PC pools
+  - term:
+      id: GO:0051978
+      label: lysophospholipid:sodium symporter activity
+    evidence_type: IDA
+    original_reference_id: PMID:36161949
+    qualifier: enables
+    review:
+      summary: &gt;-
+        The underlying molecular function is correct as lysophospholipid
+        transporter activity, but the current GO label is mechanistically
+        imperfect for SPNS1 because SPNS1 is proton-gradient dependent rather
+        than sodium dependent.
+      action: ACCEPT
+      reason: &gt;-
+        No current GO child term captures lysophospholipid:proton symporter
+        activity. Retain the existing closest term while proposing a
+        proton-specific GO term below.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            The uptake of [14C]-LPC-oleate by Spns1 was concentration dependent
+            and saturable, with a pH optimum between pH 5.0 and 6.0
+        - reference_id: PMID:39739806
+          supporting_text: &gt;-
+            we identify a five-residue network that is crucial for proton-sensing
+            by Spns1
+  - term:
+      id: GO:0005764
+      label: lysosome
+    evidence_type: IDA
+    original_reference_id: PMID:25365221
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        The seeded original reference is an autophagic lysosome reformation paper
+        focused on spastizin and spatacsin rather than direct SPNS1 evidence.
+        Nevertheless, lysosomal localization of SPNS1 is strongly supported by
+        later direct SPNS1 studies and UniProt.
+      action: ACCEPT
+      reason: &gt;-
+        Accept the term because it is correct, while noting that PMID:25365221 is
+        not the best primary evidence for SPNS1 itself.
+      supported_by:
+        - reference_id: file:human/SPNS1/SPNS1-uniprot.txt
+          supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome membrane&#39;
+        - reference_id: PMID:39739806
+          supporting_text: &gt;-
+            Spns1 is located on the lysosomal membrane and mediates
+            lysophospholipid efflux depending on the proton gradient
+  - term:
+      id: GO:0005765
+      label: lysosomal membrane
+    evidence_type: HDA
+    original_reference_id: PMID:17897319
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        High-throughput lysosomal membrane proteomics is consistent with the
+        established SPNS1 lysosomal membrane localization, but the direct
+        transporter papers are stronger support.
+      action: ACCEPT
+      reason: Accurate cellular component annotation consistent with core function.
+      supported_by:
+        - reference_id: PMID:17897319
+          supporting_text: &gt;-
+            We searched for novel proteins in lysosomal membranes, tentatively
+            participating in molecular transport across the membrane
+        - reference_id: file:human/SPNS1/SPNS1-uniprot.txt
+          supporting_text: &#39;SUBCELLULAR LOCATION: Lysosome membrane&#39;
+  - term:
+      id: GO:0007041
+      label: lysosomal transport
+    evidence_type: IDA
+    original_reference_id: PMID:36161949
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Proposed new annotation from the Proteostasis Network context. SPNS1
+        exports lysosomal degradation products across the lysosomal membrane,
+        placing its specific lysophospholipid salvage activity within the broader
+        process of lysosomal transport.
+      action: NEW
+      reason: &gt;-
+        GOA already captures lysophospholipid transport and phospholipid efflux,
+        but not the broader lysosomal-transport context highlighted by the PN
+        entry. This should be added conservatively as a broad process annotation;
+        a more precise lysosomal lysophospholipid export term would be better.
+      supported_by:
+        - reference_id: PMID:36161949
+          supporting_text: &gt;-
+            Our findings identify a phospholipid salvage pathway from lysosomes
+            to the cytosol that is dependent on Spns1
+        - reference_id: PMID:37075117
+          supporting_text: &gt;-
+            SPNS1 functions to export LPC species from the lysosomal lumen to the
+            cytosol for reacylation to PC
+        - reference_id: file:human/SPNS1/SPNS1-notes.md
+          supporting_text: &gt;-
+            The Proteostasis Network places SPNS1 under
+            `Autophagy-Lysosome Pathway|Autophagic lysosome reformation|Efflux
+            of autophagy products`.
+core_functions:
+  - description: &gt;-
+      Proton-gradient-dependent export of lysophospholipids from the lysosomal
+      lumen to the cytosol. SPNS1 transports LPC and LPE, and also transports
+      LPG and lysoplasmalogen species in reported assays. This lysosomal efflux
+      enables phospholipid salvage through downstream re-acylation and supports
+      lipid homeostasis under nutrient stress.
+    molecular_function:
+      id: GO:0051978
+      label: lysophospholipid:sodium symporter activity
+    directly_involved_in:
+      - id: GO:0051977
+        label: lysophospholipid transport
+      - id: GO:0033700
+        label: phospholipid efflux
+      - id: GO:0007041
+        label: lysosomal transport
+    locations:
+      - id: GO:0005765
+        label: lysosomal membrane
+      - id: GO:0005764
+        label: lysosome
+    supported_by:
+      - reference_id: PMID:36161949
+        supporting_text: &gt;-
+          major facilitator superfamily protein Spns1 that is ubiquitously
+          expressed in all tissues as a proton-dependent lysophosphatidylcholine
+          (LPC) and lysophosphatidylethanolamine (LPE) transporter
+      - reference_id: PMID:37075117
+        supporting_text: &gt;-
+          SPNS1 functions to export LPC species from the lysosomal lumen to the
+          cytosol for reacylation to PC
+      - reference_id: PMID:39739806
+        supporting_text: &gt;-
+          Our results reveal molecular insights into lysosomal LPC transport and
+          the proton-sensing mechanism by Spns1.
+      - reference_id: PMID:40608416
+        supporting_text: &gt;-
+          lysophospholipids transported by SPNS1 into the cytosol quantitatively
+          contributed to triglyceride synthesis
+proposed_new_terms:
+  - proposed_name: lysophospholipid:proton symporter activity
+    proposed_definition: &gt;-
+      Enables the coupled transfer of a lysophospholipid and a proton from one
+      side of a membrane to the other, driven by the transmembrane proton
+      gradient.
+    justification: &gt;-
+      The current closest GO molecular-function term for SPNS1 is
+      GO:0051978 lysophospholipid:sodium symporter activity, but SPNS1 is
+      repeatedly described experimentally as proton dependent, not sodium
+      dependent.
+    proposed_parent:
+      id: GO:0015295
+      label: solute:proton symporter activity
+    supported_by:
+      - reference_id: PMID:36161949
+        supporting_text: &gt;-
+          The uptake of [14C]-LPC-oleate by Spns1 was concentration dependent
+          and saturable, with a pH optimum between pH 5.0 and 6.0
+      - reference_id: PMID:39739806
+        supporting_text: &gt;-
+          we identify a five-residue network that is crucial for proton-sensing
+          by Spns1
+  - proposed_name: lysosomal lysophospholipid export
+    proposed_definition: &gt;-
+      The directed movement of lysophospholipids from the lysosomal lumen across
+      the lysosomal membrane to the cytosol.
+    justification: &gt;-
+      Existing GO terms capture lysophospholipid transport and broad lysosomal
+      transport, but do not represent the specific lysosomal export/salvage
+      process established for SPNS1.
+    proposed_parent:
+      id: GO:0051977
+      label: lysophospholipid transport
+    proposed_mappings:
+      - predicate: skos:relatedMatch
+        target_term:
+          id: GO:0007041
+          label: lysosomal transport
+    supported_by:
+      - reference_id: PMID:36161949
+        supporting_text: &gt;-
+          Our findings identify a phospholipid salvage pathway from lysosomes
+          to the cytosol that is dependent on Spns1
+      - reference_id: PMID:37075117
+        supporting_text: &gt;-
+          SPNS1 functions to export LPC species from the lysosomal lumen to the
+          cytosol for reacylation to PC
+suggested_questions:
+  - question: &gt;-
+      Should GO:0051978 be renamed or should a proton-dependent
+      lysophospholipid symporter child term be added for SPNS1-like lysosomal
+      transporters?
+    experts:
+      - David L. Silver
+      - Li X
+  - question: &gt;-
+      Should SPNS1 receive a broad GO:0007041 lysosomal transport annotation now,
+      or should curation wait for a more precise lysosomal lysophospholipid export
+      biological-process term?
+    experts:
+      - Menglan He
+      - Susanna G. Scharenberg
+  - question: &gt;-
+      How much of SPNS1-associated disease is driven by lysophospholipid salvage,
+      ether-lysophospholipid/plasmalogen salvage, cholesterol egress, or secondary
+      autophagy defects in specific tissues?
+    experts:
+      - Menglan He
+      - David L. Silver
+suggested_experiments:
+  - description: &gt;-
+      Reconstitute purified human SPNS1 into proteoliposomes with controlled
+      proton and sodium gradients and measure transport of LPC, LPE, LPG, and
+      lysoplasmalogen substrates.
+    experiment_type: transport_reconstitution
+    hypothesis: &gt;-
+      SPNS1 is a lysophospholipid:proton symporter rather than a sodium-coupled
+      lysophospholipid transporter.
+  - description: &gt;-
+      Use autophagy-induced lysosomal cargo flux assays in SPNS1 knockout and
+      rescue cells to measure export of autolysosome-derived lysophospholipids
+      after starvation and recovery.
+    experiment_type: lipidomics/genetic_rescue
+    hypothesis: &gt;-
+      SPNS1 mediates lysosomal export of autophagy-derived lysophospholipid
+      catabolites during lysosome recovery and lipid salvage.
+  - description: &gt;-
+      Compare wild-type SPNS1, disease variants, and transport-site mutants for
+      lysosomal LPC/LPE accumulation, cholesterol egress, triglyceride synthesis,
+      and autophagy markers under mTOR inhibition.
+    experiment_type: disease_variant_functional_assay
+    hypothesis: &gt;-
+      Disease variants cause partial loss of lysosomal lysophospholipid export
+      that secondarily disrupts cholesterol egress and nutrient-stress lipid
+      storage.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+    findings: []
+  - id: GO_REF:0000107
+    title: Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: PMID:12815463
+    title: HSpin1, a transmembrane protein interacting with Bcl-2/Bcl-xL, induces a caspase-independent autophagic cell death.
+    findings: []
+  - id: PMID:17897319
+    title: Integral and associated lysosomal membrane proteins.
+    findings: []
+  - id: PMID:25365221
+    title: Spastic paraplegia proteins spastizin and spatacsin mediate autophagic lysosome reformation.
+    findings: []
+  - id: PMID:36161949
+    title: Spns1 is a lysophospholipid transporter mediating lysosomal phospholipid salvage.
+    findings: []
+  - id: PMID:37075117
+    title: An SPNS1-dependent lysosomal lipid transport pathway that enables cell survival under choline limitation.
+    findings: []
+  - id: PMID:39739806
+    title: Molecular basis of Spns1-mediated lysophospholipid transport from the lysosome.
+    findings: []
+  - id: PMID:40608416
+    title: SPNS1 variants cause multiorgan disease and implicate lysophospholipid transport as critical for mTOR-regulated lipid homeostasis.
+    findings: []
+  - id: file:human/SPNS1/SPNS1-uniprot.txt
+    title: UniProt record for human SPNS1
+    findings: []
+  - id: file:human/SPNS1/SPNS1-notes.md
+    title: SPNS1 curation notes
+    findings: []
+  - id: file:projects/PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml
+    title: Proteostasis Network autophagy-lysosome pathway mappings
+    findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

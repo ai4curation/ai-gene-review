@@ -1,0 +1,23 @@
+# TRAPPC11 review notes
+
+TRAPPC11 (C4orf41/Gryzun) is a metazoan TRAPP-associated subunit. Scrivens et al. identify C4orf41/Gryzun as TRAPPC11 and report that C8, C11, and C12 are bona fide TRAPP components with roles in ER-to-Golgi trafficking, specifically implicating C11 in ER-to-ERGIC membrane traffic [PMID:21525244 "we report two novel TRAPP proteins, C4orf41/Gryzun (now designated TRAPPC11)" and "Specifically, we implicate C11 in membrane traffic between the ER and the ERGIC compartment"].
+
+The same paper supports TRAPP complex membership by TAP purification and coimmunoprecipitation. TRAPPC11 and TRAPPC12 interact with each other and established TRAPP subunits, and the newly identified proteins are stable TRAPP interactors [PMID:21525244 "C4orf41 and TTC-15 interact both with each other and with previously characterized TRAPP subunits" and "These results firmly establish the newly identified proteins as stable TRAPP interactors"].
+
+TRAPPC11 appears to help stabilize mammalian TRAPP architecture. C11 depletion partially redistributes core TRAPP signals out of the high-molecular-weight pool and affects C12 levels, leading the authors to conclude that C11 stabilizes mammalian TRAPP [PMID:21525244 "depletion of C11 ... resulted in a partial disassembly of the TRAPP complex" and "this protein stabilizes the TRAPP complex in mammalian cells"].
+
+TRAPPC11 supports early secretory/ER-to-Golgi trafficking rather than COPII coat assembly per se. TRAPPC11/C12 knockdown arrests VSV-G cargo in a BFA-resistant ERGIC-associated compartment, and the authors model TRAPP function at ER exit sites or peripheral ERGIC elements [PMID:21525244 "knockdowns of either C11 or C12 arrest a cargo protein in a BFA-resistant compartment" and "TRAPP functions either at ER exit sites or at peripheral ERGIC (BFA-resistant) elements"].
+
+TRAPPC11 depletion also produces Golgi fragmentation, which is best interpreted as a phenotype/readout of early secretory pathway disruption rather than the most specific core process [PMID:21525244 "RNAi against C8, C11, or C12 resulted in Golgi fragmentation" and "These results imply that the three novel TRAPP-associated proteins function in the early secretory pathway"].
+
+The review article assigns TRAPPC11 to mammalian TRAPP III context and states that TRAPP III contains core TRAPP plus TRAPPC8, TRAPPC11, TRAPPC12, and TRAPPC13 [PMID:27066478 "TRAPP III, which contains core TRAPP plus TrappC8, 11-13"]. It also cautions that TRAPP tethering remains inconclusive [PMID:27066478 "evidence that any TRAPP complex acts as a membrane tether is currently inconclusive"].
+
+Reactome models TRAPPC complexes II and III as complex-level RAB1 GEFs in anterograde ER-to-ERGIC/Golgi traffic and macroautophagy context [Reactome:R-HSA-8877475 "RAB1 nucleotide exchange is stimulated in these pathways by the GEF activity of the multisubunit TRAPPC complexes II and III"]. For TRAPPC11, this supports contributes_to RAB1 GEF activity in TRAPPIII/TRAPP context rather than independent GEF activity.
+
+The secretory-screen paper provides independent support that human Gryzun/C4orf41 is a secretory pathway component and that RNAi of human Gryzun blocks Golgi exit [PMID:19942856 "RNAi of human Gryzun (C4orf41) blocks Golgi exit"].
+
+The glycosylation/CDG paper is cached as abstract-only. It supports Golgi/secretory context and TRAPPIII membership, but I am not using it to infer a separate glycosylation GO annotation [PMID:27862579 "delayed vesicular transport in the GA due to mutations in TRAPPC11, a subunit of the TRAPPIII complex"].
+
+Proteostasis-network context: the PN entry flags TRAPPIII/autophagophore recruitment as relevant context. Falcon completed successfully and identified accessible primary evidence that TRAPPC11 variants affect autophagic flux and autophagosome sealing. PMID:31575891 reports that only the compound heterozygous subject displayed an autophagic flux defect, that LC3-II could not be cleared during starvation, and that fibroblasts lacking full-length TRAPPC11 failed to seal isolation membranes into autophagosomes [PMID:31575891 "displayed an autophagic flux defect"; PMID:31575891 "LC3-II could not be cleared from the cells over the time course of starvation examined"; PMID:31575891 "failed to seal isolation membranes into autophagosomes"]. Therefore, add a direct TRAPPC11 autophagosome maturation annotation while keeping ER-to-ERGIC/Golgi trafficking and TRAPP complex stability as the main shared TRAPP functions.
+
+Falcon deep research was requested with `just deep-research-falcon human TRAPPC11` and completed successfully in 563.63 seconds, producing `TRAPPC11-deep-research-falcon.md`.

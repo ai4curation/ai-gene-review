@@ -1,0 +1,21 @@
+# UBAP1 review notes
+
+## Scope
+
+UBAP1 is reviewed in the PN ESCRT-I branch. PN entries without PMIDs were used as context only. UBAP1 is an endosome-specific ESCRT-I fourth-subunit variant with direct evidence for ubiquitinated cargo sorting, ubiquitin binding through SOUBA/UBA domains, and endosome localization. It should not inherit MVB12A/VPS37B-specific structural membrane-fission or autophagosome-closure evidence as a core UBAP1 function without UBAP1-specific perturbation data.
+
+## Evidence synthesis
+
+UniProt describes UBAP1 as a "Component of the ESCRT-I complex" and states that it "Binds to ubiquitinated cargo proteins" and is required for sorting endocytic ubiquitinated cargo into MVBs [file:human/UBAP1/UBAP1-uniprot.txt, "Component of the ESCRT-I complex"; file:human/UBAP1/UBAP1-uniprot.txt, "Binds to ubiquitinated cargo proteins"; file:human/UBAP1/UBAP1-uniprot.txt, "sorting of endocytic ubiquitinated cargos"]. UniProt also states that UBAP1-containing ESCRT-I consists of TSG101, VPS28, VPS37A, and UBAP1, and that UBAP1 interacts with PTPN23 and ubiquitinated proteins [file:human/UBAP1/UBAP1-uniprot.txt, "consists of TSG101, VPS28, VPS37A and UBAP1"; file:human/UBAP1/UBAP1-uniprot.txt, "Interacts with PTPN23"; file:human/UBAP1/UBAP1-uniprot.txt, "Interacts (via UBA domains) with ubiquitinated proteins"].
+
+The main UBAP1 functional paper defines UBAP1 as an endosome-specific ESCRT-I component. Its abstract reports that mammalian ESCRT-I comprises TSG101, VPS28, VPS37A-D, and MVB12A/B, identifies UBAP1 as a novel ESCRT-I component, and says UBAP1 binds HD-PTP/PTPN23 [PMID:21757351, "Mammalian ESCRT-I comprises TSG101, VPS28, VPS37A-D, and MVB12A/B"; PMID:21757351, "identify a novel ESCRT-I component"; PMID:21757351, "UBAP1 binds the endosomal Bro1 protein"]. It also reports that UBAP1 is required for EGFR sorting to the MVB and endosomal ubiquitin homeostasis, but not cytokinesis, and that UBAP1 plus VPS37A defines an endosome-specific ESCRT-I complex [PMID:21757351, "required for sorting EGFR to the MVB"; PMID:21757351, "endosomal ubiquitin homeostasis"; PMID:21757351, "defines an endosome-specific ESCRT-I complex"]. These support accepting ESCRT-I complex, endosome/endosome membrane, ubiquitin binding, and ubiquitin-dependent MVB sorting.
+
+The UBAP1/SOUBA structural paper directly supports ubiquitin binding and the ESCRT-I complex role. PMID:22405001 reports that UBAP1 coassembles in a stable complex with Vps23/TSG101, VPS28, and VPS37, that its SOUBA domain contains overlapping UBAs, and that those UBAs interact with ubiquitin [PMID:22405001, "coassembles in a stable 1:1:1:1 complex"; PMID:22405001, "solenoid of overlapping UBAs"; PMID:22405001, "interact with ubiquitin"]. It also shows UBAP1-containing ESCRT-I is needed for degradation of antiviral cell-surface proteins, giving a direct cargo-sorting context [PMID:22405001, "essential for degradation of antiviral cell-surface proteins"].
+
+The ComplexPortal/NAS rows that cite PMID:32424346 should be handled carefully. That paper determined a human ESCRT-I headpiece "comprising TSG101-VPS28-VPS37B-MVB12A" and tested VPS28 helical-interface mutants [PMID:32424346, "comprising TSG101-VPS28-VPS37B-MVB12A"; PMID:32424346, "Mutation of VPS28 helical interface residues"]. It supports general ESCRT-I membrane remodeling and can provide background for ESCRT-I context, but it is not direct UBAP1 evidence. Therefore endosome/MVB sorting rows can be retained using UBAP1-specific evidence, while the `membrane fission` row should be marked over-transferred for UBAP1.
+
+Generic `protein binding` is not informative for UBAP1. The meaningful molecular functions and components are ubiquitin binding, ESCRT-I complex membership, and endosome-specific cargo sorting. Cytosol/cytoplasm rows are supported as localization context because UBAP1 is predominantly cytosolic and recruited to endosomes, but the core functional site is endosomal ESCRT-I.
+
+## Falcon
+
+Falcon deep research was started for UBAP1 on 2026-06-02 but timed out after 600 seconds and did not produce a usable `UBAP1-deep-research-falcon.md` report. The review therefore relies on the local UniProt, GOA, cached-publication, Reactome, and PN-context evidence summarized above.
