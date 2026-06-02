@@ -19,3 +19,9 @@ Curation stance:
 - Modify: mitophagy to autophagosome assembly; late endosome-to-vacuole transport to endosome-to-lysosome transport; protein-containing complex binding to adaptor activity.
 - Keep as non-core: cellular response to nitrogen starvation as autophagy context.
 - Mark over-annotated: generic protein binding rows.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording tied the PI3KC3-C1 interpretation to a Proteostasis Network leaf and contrasted that shared role with the BECN2-specific GPCR catabolic branch.

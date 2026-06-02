@@ -19,3 +19,9 @@ Nucleus, cytosol/cytoplasm, plasma membrane, vesicle, and extracellular exosome 
 ## Falcon
 
 Falcon deep research was started for MVB12B on 2026-06-02 but timed out after 600 seconds and did not produce a usable `MVB12B-deep-research-falcon.md` report. The review therefore relies on the local UniProt, GOA, cached-publication, Reactome, and PN-context evidence summarized above.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: viral budding and virus maturation were described as direct ESCRT contexts but non-core for this proteostasis review.

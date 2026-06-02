@@ -21,3 +21,9 @@ The glycosylation/CDG paper is cached as abstract-only. It supports Golgi/secret
 Proteostasis-network context: the PN entry flags TRAPPIII/autophagophore recruitment as relevant context. Falcon completed successfully and identified accessible primary evidence that TRAPPC11 variants affect autophagic flux and autophagosome sealing. PMID:31575891 reports that only the compound heterozygous subject displayed an autophagic flux defect, that LC3-II could not be cleared during starvation, and that fibroblasts lacking full-length TRAPPC11 failed to seal isolation membranes into autophagosomes [PMID:31575891 "displayed an autophagic flux defect"; PMID:31575891 "LC3-II could not be cleared from the cells over the time course of starvation examined"; PMID:31575891 "failed to seal isolation membranes into autophagosomes"]. Therefore, add a direct TRAPPC11 autophagosome maturation annotation while keeping ER-to-ERGIC/Golgi trafficking and TRAPP complex stability as the main shared TRAPP functions.
 
 Falcon deep research was requested with `just deep-research-falcon human TRAPPC11` and completed successfully in 563.63 seconds, producing `TRAPPC11-deep-research-falcon.md`.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed TRAPPC11 in the Proteostasis Network TRAPPIII context and emphasized TRAPPIII/TRAPP complex membership, complex-level RAB1 GEF activity, ER-to-Golgi transport, TRAPP complex stability, and autophagosome maturation.

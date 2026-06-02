@@ -21,3 +21,9 @@ Annotation stance:
 - Non-core: Golgi organization as a depletion phenotype/readout.
 - Modify: collagen biosynthetic process, COPII vesicle coat assembly, and obsolete vesicle tethering to ER-to-Golgi vesicle-mediated transport.
 - Mark over-annotated: generic protein binding rows.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described autophagophore recruitment as PN-specific and directly supported for TRAPPC8 by mammalian TBC1D14/TRAPPIII/ATG9 evidence.

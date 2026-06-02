@@ -19,3 +19,9 @@ Annotation stance:
 - Modify: vesicle coat assembly and obsolete vesicle tethering to ER-to-Golgi vesicle-mediated transport.
 - Mark over-annotated: generic protein binding rows.
 - No new direct autophagy annotation unless Falcon or later primary literature provides TRAPPC13-specific support.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described TRAPPC13's TRAPP/RAB1 trafficking and ER-to-Golgi role as PN-relevant and contrasted it with independent GEF activity, COPII coat assembly, generic protein binding, or direct TRAPPC13-specific autophagy annotation.

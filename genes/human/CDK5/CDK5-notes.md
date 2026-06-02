@@ -18,3 +18,9 @@ Curation decisions:
 - Accept `regulation of macroautophagy` based on human/neuron SH3GLB1/endophilin B1 evidence, but describe it as PN-relevant substrate-specific kinase regulation rather than a direct autophagy-machinery role.
 - Mark generic `protein binding` rows as over-annotated.
 - Treat receptor-binding/activator/inhibitor activity terms from similarity transfer conservatively unless direct evidence makes them more specific than kinase regulation.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: PN autophagy context was used to interpret CDK5 mainly through substrate-specific phosphorylation of SH3GLB1/endophilin B1; Drosophila Cdk5-Acinus basal-autophagy evidence was treated as orthology context rather than direct human CDK5 evidence. Generic protein-binding rows were considered less informative than kinase, complex, substrate-specific, and neuronal process terms.

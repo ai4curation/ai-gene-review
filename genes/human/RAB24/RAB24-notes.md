@@ -16,3 +16,9 @@ Curation decisions:
 - Keep broad cytosol/membrane/perinuclear and endocytic-vesicle locations as non-core context.
 - Keep mouse-oocyte and spindle/kinetochore annotations as non-core transferred biology.
 - Mark generic `protein binding`, mitochondrial, plasma-membrane, and secretory-granule membrane rows as over-annotated for the core RAB24 review.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described the late basal autophagy role as PN-related and treated broader cytosolic, membrane, endocytic, and mouse-oocyte/spindle annotations as secondary to the core PN function.

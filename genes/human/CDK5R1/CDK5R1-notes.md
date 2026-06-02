@@ -9,3 +9,9 @@ CDK5R1 also has a direct microtubule-associated function. The strongest evidence
 Proteostasis-network context: the PN row is adjacent to the CDK5/Acinus/autophagy thread, but direct human evidence is strongest for CDK5 phosphorylating SH3GLB1/endophilin B1 during induced neuronal autophagy. That paper reports an "unexpected role for Cdk5 in the regulation of induced autophagy in neurons" and that CDK5-mediated phosphorylation of endophilin B1 is required for autophagy induction in starved neurons [PMID:21499257 "Cdk5-mediated phosphorylation of endophilin B1 is required for induced autophagy in models of Parkinson's disease."]. It does not specifically establish a CDK5R1 perturbation requirement, so the CDK5R1 macroautophagy row should be retained as complex-level/proteostasis context rather than treated as the primary core function.
 
 Generic protein binding rows, broad kinase activity rows, and broad peptidyl-serine/threonine phosphorylation rows should be treated cautiously. CDK5R1 binds CDK5 and other proteins as a regulatory subunit/scaffold, but the informative GO statement is kinase activator activity and protein kinase 5 complex membership. CDK5R1 itself is not the catalytic kinase that transfers phosphate.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the Proteostasis Network context was used to treat CDK5R1 mainly as the CDK5 activator relevant to CDK5-mediated induced autophagy, while noting that the direct human experiment is CDK5-SH3GLB1/endophilin B1 centered rather than CDK5R1-specific.

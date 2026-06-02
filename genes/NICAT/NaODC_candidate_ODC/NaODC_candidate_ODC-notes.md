@@ -5,3 +5,9 @@
 - The N. attenuata genome paper argues that the nicotine pathway co-opted duplicated polyamine-pathway genes, so multiple ODC-like paralogs are expected and should be curated comparatively rather than all accepted as core pathway members. [PMID:28536194 "The biosynthetic machinery that allows for nicotine synthesis in the roots evolved from the stepwise duplications of two ancient primary metabolic pathways: the polyamine and nicotinamide adenine dinucleotide (NAD) pathways."]
 - The full glucosylation preprint uses **ODC, PMT, and MPO** together to generate **N-methylpyrrolinium** for the in planta pathway reconstruction, which keeps ODC-like paralog resolution directly relevant to the minimal upstream nicotine module. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "In N. benthamiana leaves, the in planta reconstruction uses ODC, PMT, and MPO to generate N-methylpyrrolinium, then depends on the glucosylation-late-pathway module to make labelled nicotine"; "ODC, PMT, and MPO remain part of the minimal upstream module needed to feed the completed pathway."]
 - This accession is therefore a strong NaODC1/NaODC2 candidate, but resolving it against the DCOR paralog still requires evidence beyond current automated pathway annotation. [file:NICAT/NaODC_candidate_ODC/NaODC_candidate_ODC-uniprot.txt "GN   Name=ODC"; "CC   -!- PATHWAY: Alkaloid biosynthesis; nicotine biosynthesis."]
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: project mapping currently treats NaODC_candidate_ODC as the stronger NICAT ornithine decarboxylase mapping for the polyamine branch that feeds nicotine biosynthesis.

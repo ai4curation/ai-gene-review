@@ -30,3 +30,9 @@ The HDA lysosomal membrane row from PMID:17897319 is broad proteomics evidence. 
 - Non-core: cytokinesis, midbody/centrosome localization, and possible HR-DSBR role.
 - Modify/replace: generic `protein binding` rows should be replaced by lysosome organization, lysosomal membrane organization, membrane bending, or regulation of cytokinesis depending on the source.
 - Undecided: `protein kinase binding` from PMID:25365221, due missing accessible evidence.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: cytokinesis and HR-DSBR roles were treated as non-core in this proteostasis-focused review, and generic protein-binding annotations should be replaced by specific membrane-organization, membrane-remodeling, or cytokinesis terms supported by the source publications.

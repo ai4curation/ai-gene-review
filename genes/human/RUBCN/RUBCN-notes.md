@@ -19,3 +19,9 @@ Generic protein binding rows are mostly over-annotations. The useful annotations
 ## Falcon
 
 Falcon deep research was run for RUBCN on 2026-06-02 but timed out after 600 seconds, and no `RUBCN-deep-research-falcon.md` report was produced. This review therefore uses the local GOA, UniProt, cached publication files, and the additional notes above.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed RUBCN in the Proteostasis Network context as a negative PI3KC3-C2/autophagosome maturation regulator rather than an autophagy activator, with UniProt pathogen/innate-immune interaction biology treated as non-core for the GOA rows.

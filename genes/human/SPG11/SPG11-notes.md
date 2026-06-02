@@ -36,3 +36,9 @@ Review focus: proteostasis network context places SPG11/spatacsin under autophag
 ## Deep research
 
 - Falcon deep research was started with `just deep-research-falcon human SPG11` during this review and timed out after 600s with `All providers failed`; no `SPG11-deep-research-falcon.md` evidence was available for this review.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: existing GOA appropriately includes lysosome organization, lysosomal membrane organization, membrane bending, late endosome/lysosome locations, ER, and cytoplasmic locations; neuronal axonal/synaptic transport annotations are supported but non-core in this proteostasis-focused review; generic protein-binding annotations should be replaced by or subordinated to more informative endolysosomal membrane-organization processes.

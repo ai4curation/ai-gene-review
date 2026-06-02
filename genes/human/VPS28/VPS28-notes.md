@@ -19,3 +19,9 @@ Generic `protein binding` rows should be marked over-annotated. Many are from in
 ## Falcon
 
 Falcon deep research was started for VPS28 on 2026-06-02 but timed out after 600 seconds and did not produce a usable report. The review therefore relies on UniProt, cached primary literature, and PN context rather than Falcon output.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording described phagophore/autophagosome closure as PN-relevant.

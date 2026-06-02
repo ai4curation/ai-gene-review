@@ -22,3 +22,9 @@ PDCD6IP encodes ALIX/AIP1, a Bro1-domain ESCRT accessory/adaptor protein. The ke
 - Retain the NOT annotations for nucleus organization, metaphase chromosome alignment, and mitotic spindle assembly as negated/non-core records; they should not be converted into positive PDCD6IP functions.
 - Keep broad or peripheral locations/processes such as cytoplasm/cytosol, extracellular region, centrosome, melanosome, tight junction, focal adhesion, immunological synapse, ER exit site, membrane, actomyosin/tight-junction polarity, and centrosome duplication as non-core unless directly tied to the core ESCRT adaptor functions.
 - Modify the obsolete ubiquitin-independent MVB protein-catabolism term to current MVB sorting/endolysosomal sorting wording while preserving the PAR1/ALIX-specific biology.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed the endogenous proteostasis-network core as ALIX-mediated ESCRT adaptor activity in endolysosomal/exosome and cytokinetic membrane-remodeling pathways.

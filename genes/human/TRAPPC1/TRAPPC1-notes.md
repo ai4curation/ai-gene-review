@@ -24,3 +24,9 @@ Annotation stance:
 - Core processes: ER-to-Golgi vesicle-mediated transport (GO:0006888) and more general vesicle-mediated transport only as a broad parent/modification target.
 - Core locations: cytoplasm/cytosol, endoplasmic reticulum, Golgi apparatus.
 - Modify/over-annotate: generic protein binding; vesicle coat assembly and COPII vesicle coat assembly; obsolete vesicle tethering; extracellular/azurophil granule lumen from neutrophil degranulation Reactome.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the Proteostasis Network autophagy component recruitment context was interpreted at gene level through TRAPP/TRAPPII/TRAPPIII complex membership rather than a broad autophagy-process annotation.
