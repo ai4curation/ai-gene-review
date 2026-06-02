@@ -22,9 +22,14 @@ current (≈April 2026) GOA release, GOA **retired the keyword-to-GO pipeline**
 `GO_REF:0000043` annotations for human, mouse, fly, worm, *S. pombe*, *Chlamydomonas*,
 Arabidopsis, rice, soybean, tobacco, and every other model organism checked (only viruses
 retain them). `plant.ddb` is effectively the last high-coverage record of the plant SPKW
-landscape, so this subproject is a **retrospective validation study**: for nine
-representative genes across nine species we ask whether GOA's wholesale removal was
-justified, and we classify the 214 SPKW-unique terms by their over-annotation risk.
+landscape, so this subproject is a **retrospective validation study**: for thirty-eight
+genes across fourteen species (nine original, five in the 2026-05-29 species extension,
+four methylation, twelve in the developmental/defense/nodulation sweep, four hormone-
+signaling subtypes, and four long-tail keywords — the latter five batches a full sweep of
+the high/medium-value Tier A keyword watch-list) we ask whether GOA's wholesale removal
+was justified, and we classify the 214 SPKW-unique terms by their over-annotation risk.
+All 38 reviews have had their `file:` supporting-text quotes verbatim-audited (the
+reference-validator does not check `file:` prefixes; see [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md)).
 
 ## Key Statistics (2026-05-21)
 
@@ -326,6 +331,363 @@ retirement was **not** the right call.
 
 ---
 
+## Extension: Five More Species (2026-05-29)
+
+A second round added five genes across four further species — maize (*Zea mays*),
+bread wheat (*Triticum aestivum*), the moss *Physcomitrium patens* (a non-vascular
+plant ~450 My diverged from the crops), and potato (*Solanum tuberosum*) — selected to
+stress-test the tier→verdict rule on the highest-risk Tier A keyword classes
+(hormone signaling, immunity, meiosis/cell-cycle) plus a storage-protein keyword.
+
+| Gene | UniProt | Species | Tier | Key SPKW term | Action | GOA removal justified? |
+|------|---------|---------|------|---------------|--------|------------------------|
+| RHT1 | Q9ST59 | wheat | A | gibberellic acid mediated signaling pathway | MODIFY | **No — core DELLA function lost** |
+| ABP1 | P13689 | maize | A | auxin-activated signaling pathway | MARK_AS_OVER_ANNOTATED | Yes (contested receptor) |
+| MPK4a | A9T142 | *Physcomitrium* (moss) | A | innate immune response / defense response | MARK_AS_OVER_ANNOTATED | Yes (redundant) |
+| AM1 | C0RWW9 | maize | A | chromosome segregation / cell division | REMOVE / MARK_OVER | Yes (over-broad / mis-placed) |
+| PATB1 | P15476 | potato | C/A | nutrient reservoir activity / defense response | ACCEPT / MARK_OVER | **Mixed — storage kept** |
+
+**Verdict:** every *bona fide* over-annotation (ABP1 signaling, MPK4a broad immunity,
+AM1 cell-cycle keywords, PATB1 defense) was correctly removed; but two more cases —
+RHT1 and PATB1's storage role — are **collateral damage** where the keyword was the
+sole carrier of correct biology. The extension brings the running collateral-damage
+tally to five (CASP1, EME1, PR1B1, RHT1, PATB1).
+
+### Case 10: RHT1 — A Hormone-Signaling Keyword That Was Correct (Tier A, but legitimate)
+
+**Gene:** RHT1 (Q9ST59) — DELLA protein RHT-1 / "Reduced height-1", *Triticum aestivum*.
+**Review file:** `genes/WHEAT/RHT1/RHT1-ai-review.yaml`
+
+RHT1 is the wheat DELLA protein — one of the Green Revolution semi-dwarfing genes — and
+DELLA proteins are *the* central repressors of gibberellin signaling: bioactive GA binds
+the GID1 receptor, the GA–GID1–DELLA complex recruits an SCF E3 ligase, and DELLA is
+degraded by the proteasome, de-repressing growth. "Gibberellic acid mediated signaling
+pathway" (GO:0009740) is therefore not an over-annotation at all — it is RHT1's core
+process. Yet the keyword2GO retirement stripped it, leaving RHT1 with essentially only
+"nucleus". Decision **MODIFY** to the more precise "negative regulation of gibberellic
+acid mediated signaling pathway" (GO:0009938), since DELLA is specifically a repressor,
+plus a NEW transcription-corepressor MF (GO:0003714 — DELLA acts via protein–protein
+interactions with TFs, not sequence-specific DNA binding). **GOA's removal was NOT
+justified.** RHT1 is the mirror image of Arabidopsis ARF19 and tobacco PARA: those were
+hormone-*responsive* genes wrongly called signaling components; RHT1 *is* a signaling
+component wrongly stripped of the label.
+
+### Case 11: ABP1 — Auxin-Signaling Keyword on the Contested Auxin Receptor (Tier A)
+
+**Gene:** ABP1 (P13689) — Auxin-binding protein 1, *Zea mays*.
+**Review file:** `genes/MAIZE/ABP1/ABP1-ai-review.yaml`
+
+ABP1 is the textbook auxin-binding protein: maize ABP1 binds auxin in an ER-luminal cupin
+pocket with a coordinated Zn²⁺ (crystal structure), so "auxin binding" (GO:0010011, IDA)
+and "endoplasmic reticulum lumen" (EXP) are retained as correct core terms. Unlike
+PARA/ARF19, ABP1 genuinely binds the hormone. But "auxin-activated signaling pathway"
+(GO:0009734) is defined around auxin binding to a receptor that drives a downstream,
+largely transcriptional response — a role now firmly attributed to the nuclear
+TIR1/AFB–Aux/IAA–ARF module. ABP1's status as a functional auxin receptor is famously
+contested (CRISPR *abp1* nulls are phenotypically normal; the original knockout carried a
+confounding second-site mutation). Decision **MARK_AS_OVER_ANNOTATED**, replacement
+"response to auxin" (GO:0009733). The lesson: **binding a hormone is not the same as being
+a component of its signaling pathway** — removal justified, but the binding MF must be kept.
+
+### Case 12: MPK4a — Correct-but-Redundant Immunity Terms in a Moss (Tier A)
+
+**Gene:** MPK4a (A9T142) — Mitogen-activated protein kinase 4a, *Physcomitrium patens*.
+**Review file:** `genes/PHYPA/MPK4a/MPK4a-ai-review.yaml`
+
+PpMPK4a is the moss orthologue of the immunity MAP kinase MPK4, experimentally required
+for pathogen defense: the CERK1→MEKK1→MKK1→MPK4a cascade transduces chitin/chitosan
+perception to defense-gene activation, and *mpk4* mutants are susceptible to *Botrytis
+cinerea* [PMID:27268428]. So the retired keywords "innate immune response" (GO:0045087)
+and "defense response" (GO:0006952) are *correct*. But current GOA already carries the
+more specific, experimentally backed "pattern recognition receptor signaling pathway"
+(GO:0002221, EXP) — of which innate immune response is a broad parent — so the SPKW terms
+add little. Decision **MARK_AS_OVER_ANNOTATED** for both, with NEW specific terms (defense
+response to fungus; cellular response to chitin). Removal **justified** (low information
+loss). The moss case shows the over-annotation pattern is identical in a non-vascular
+plant deeply diverged from the crops — the same ELF4/psaC "correct-but-redundant" shape.
+
+### Case 13: AM1 — Cell-Cycle Keywords on a Meiotic-Entry Switch (Tier A)
+
+**Gene:** AM1 (C0RWW9) — Protein AMEIOTIC 1, *Zea mays*.
+**Review file:** `genes/MAIZE/AM1/AM1-ai-review.yaml`
+
+AMEIOTIC1 is the master switch for meiotic entry in maize: *am1* mutants fail the
+mitosis-to-meiosis transition and arrest at leptotene, and AM1 is required for homologous
+pairing and initiation of meiotic recombination [PMID:19204280]. Its biology is
+meiosis-specific and is already captured by current GOA's "meiotic cell cycle" (IDA),
+"reciprocal meiotic recombination" and "meiotic sister chromatid cohesion". The retired
+SPKW terms are over-broad or mis-placed: "cell division" (GO:0051301) is uninformative
+(→ **MARK_AS_OVER_ANNOTATED**), and "chromosome segregation" (GO:0007059) is mis-placed —
+*am1* arrests at leptotene, so chromosomes never reach the meiotic divisions where
+segregation occurs (→ **REMOVE**). Removal **justified**. This parallels rice EME1 and
+Arabidopsis BUB3.1: generic cell-cycle keywords pasted onto genes with a specific, earlier
+role.
+
+### Case 14: PATB1 — A Storage Protein That Lost Its Defining Annotation (Tier C/A, mixed)
+
+**Gene:** PATB1 (P15476) — Patatin-B1, *Solanum tuberosum*.
+**Review file:** `genes/SOLTU/PATB1/PATB1-ai-review.yaml`
+
+Patatin is the major potato tuber storage glycoprotein (~40% of soluble tuber protein) and
+also a lipid acyl hydrolase. Its three SPKW terms split by tier: "nutrient reservoir
+activity" (GO:0045735) is patatin's defining role — current GOA has *no* storage term, so
+its removal is **collateral damage** (→ **ACCEPT**, re-assert as core); "lipid catabolic
+process" (GO:0016042) is correct and more specific than the retained generic "lipid
+metabolic process" (→ **ACCEPT**); but "defense response" (GO:0006952) over-states an
+indirect role (defense is a downstream consequence of the lipid-hydrolase activity
+releasing antifungal fatty acids; UniProt itself hedges "thought to be involved")
+(→ **MARK_AS_OVER_ANNOTATED**). The current generic "lipase activity" was MODIFYed to the
+precise "glycerophospholipase activity". Removal verdict **mixed** — storage and
+lipid-catabolism correct, defense over-annotated. Like CASP1, the Tier C term carried real
+biology.
+
+### What the extension adds: hormone-signaling keywords cut both ways
+
+The original PLANTS finding was that hormone-signaling keywords land on hormone-*responsive*
+genes (ARF19, PARA) that are not signal transducers. RHT1 (DELLA) is the mirror image: a
+hormone-signaling keyword on the gene that *is* the central signaling component — here
+removal was wrong. ABP1 sits between them: a genuine auxin *binder* whose role as a pathway
+component is contested. **Refined rule:** for a hormone-signaling keyword, ask whether the
+gene is (i) a component of the transduction machinery (keep — DELLA), (ii) a ligand-binder
+of contested pathway role (case-by-case — ABP1), or (iii) merely hormone-responsive
+(over-annotation — PARA/ARF19). The tier alone does not decide a hormone-signaling keyword;
+the gene's position in the pathway does.
+
+---
+
+## Methylation-Keyword Batch (2026-05-30): One Keyword, Four Substrates
+
+Following the keyword-level watch-list in [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md),
+**`Methyltransferase` → *methylation* (GO:0032259)** was the largest *unreviewed* Tier A
+keyword (92 plant genes). Four methyltransferases spanning four substrate classes were
+reviewed to test whether the bare process term is a reliable over-annotation.
+
+| Gene | UniProt | Species | Substrate | "methylation" (GO:0032259) action | Tier |
+|------|---------|---------|-----------|-----------------------------------|------|
+| MET1A | Q7Y1I7 | rice | DNA (5-methylcytosine) | MODIFY → GO:0141119 (DNA-methylation maintenance) | A |
+| EZ1 | Q8S4P6 | maize | histone H3 Lys27 | MARK_AS_OVER_ANNOTATED | A |
+| CCOAOMT | Q8H9B6 | potato | caffeoyl-CoA (lignin) | MARK_AS_OVER_ANNOTATED | A |
+| COQ5 | Q5JNC0 | rice | benzoquinol (ubiquinone) | MARK_AS_OVER_ANNOTATED | A |
+
+**Result: in all four, the bare *methylation* (GO:0032259) is an over-annotation.** It drops
+the one thing that matters — the substrate — and in every case the substrate-specific
+*molecular function* (DNA (cytosine-5)-methyltransferase, histone H3K27 methyltransferase,
+caffeoyl-CoA O-methyltransferase, benzoquinol methyltransferase activity) is already present,
+making the bare process term redundant.
+
+### Why *methylation* is almost always redundant: GO puts the substrate on the MF branch
+
+A structural insight made this verdict near-deterministic. GO encodes methylation
+substrate-specificity on the **molecular-function** branch (the specific
+*…-methyltransferase activity* terms), not the process branch. The substrate-specific
+methylation **process** terms one would want to MODIFY to are now **obsolete** — *DNA
+methylation* (GO:0006306), *histone methylation* (GO:0016571), and *histone H3-K27
+methylation* (GO:0070734) are all obsoleted in the current ontology. So for a
+`Methyltransferase`-keyword gene there is usually **no specific process term to MODIFY to**,
+and the right action is to drop the bare *methylation* in favour of the specific MF the gene
+already carries. The one exception in this batch was MET1A, where a maintenance-specific
+process term survives (GO:0141119, *chromosomal DNA methylation maintenance following DNA
+replication*, whose GO definition explicitly names plant MET1).
+
+### Case 15: MET1A — DNA methylation maintenance (DNA substrate)
+
+**Gene:** MET1A (Q7Y1I7) — DNA (cytosine-5)-methyltransferase 1A, *Oryza sativa*.
+**Review file:** `genes/ORYSJ/MET1A/MET1A-ai-review.yaml`
+
+OsMET1a is the rice DNMT1-orthologue that maintains CG methylation after replication. The
+keyword-derived *methylation* drops both substrate (DNA) and mechanism (maintenance); decision
+**MODIFY → GO:0141119** (the surviving substrate-specific process term, whose definition names
+MET1). The redundant bare *methyltransferase activity* (GO:0008168) was also
+MARK_AS_OVER_ANNOTATED, leaving the specific *DNA (cytosine-5-)-methyltransferase activity*
+(GO:0003886) as the core MF. Tier A.
+
+### Case 16: EZ1 — histone H3K27 methylation (protein substrate)
+
+**Gene:** EZ1 (Q8S4P6) — Histone-lysine N-methyltransferase EZ1 (maize Enhancer-of-zeste, "Mez1").
+**Review file:** `genes/MAIZE/EZ1/EZ1-ai-review.yaml`
+
+EZ1/Mez1 is the catalytic SET-domain subunit of Polycomb Repressive Complex 2; it
+trimethylates histone H3 Lys27 to silence chromatin. *methylation* → **MARK_AS_OVER_ANNOTATED**:
+the substrate-specific *histone methylation* process terms are obsolete, and the specific MF
+*histone H3K27 methyltransferase activity* (GO:0046976) is already present, so the bare term is
+redundant with no MODIFY target. The review also tightened the generic *histone
+methyltransferase activity* → H3K27-specific, and **REMOVE**d a spurious ortholog-transferred
+*single-stranded RNA binding*. Tier A.
+
+### Case 17: CCOAOMT — lignin O-methylation, with collateral damage (small-molecule substrate)
+
+**Gene:** CCOAOMT (Q8H9B6) — Caffeoyl-CoA O-methyltransferase, *Solanum tuberosum*.
+**Review file:** `genes/SOLTU/CCOAOMT/CCOAOMT-ai-review.yaml`
+
+The Mg²⁺-dependent O-methyltransferase that converts caffeoyl-CoA to feruloyl-CoA in
+phenylpropanoid/lignin biosynthesis — and the **cleanest redundancy case**: *methylation* is
+fully covered by the specific MF *caffeoyl-CoA O-methyltransferase activity* (GO:0042409) plus
+the pathway process, so → **MARK_AS_OVER_ANNOTATED** (Tier A). But this gene is also **multi-tier
+and partly collateral damage**: its retired *lignin biosynthetic process* (GO:0009809) is
+correct and informative → **ACCEPT** (Tier C; the retained *phenylpropanoid biosynthetic
+process* is only the broader parent, not a substitute), and *metal ion binding* (GO:0046872) is
+broad-but-correct → MARK_OVER (Tier B). A spurious ARBA-predicted *circadian rhythm*
+(GO:0007623) was also **REMOVE**d. Tier A/C/B.
+
+### Case 18: COQ5 — ubiquinone C-methylation (cofactor substrate)
+
+**Gene:** COQ5 (Q5JNC0) — 2-methoxy-6-polyprenyl-1,4-benzoquinol methylase, mitochondrial, *Oryza sativa*.
+**Review file:** `genes/ORYSJ/COQ5/COQ5-ai-review.yaml`
+
+The C-methyltransferase of the coenzyme-Q (ubiquinone) biosynthesis pathway. *methylation* →
+**MARK_AS_OVER_ANNOTATED**: both the specific MF (GO:0008425, benzoquinol methyltransferase
+activity) and the specific process (GO:0006744, *ubiquinone biosynthetic process*) are already
+present, so the bare term is purely redundant. Tier A.
+
+### What the methylation batch adds
+
+`Methyltransferase → methylation` is a **reliable, mechanistically-explained over-annotation**:
+4/4 genes, across DNA / histone / secondary-metabolite / cofactor substrates, had the bare
+process term flagged (3 MARK_OVER, 1 MODIFY). Because GO deliberately keeps methylation
+substrate-specificity on the MF branch and obsoleted the specific process terms, the keyword's
+target term is structurally doomed to be uninformative or redundant. As a bonus, reviewing the
+keyword-derived terms surfaced **two unrelated over-predictions** (CCOAOMT *circadian rhythm*
+from ARBA; EZ1 *ssRNA binding* from ortholog transfer) — a reminder that the SPKW review pass
+is also a general annotation-quality pass.
+
+---
+
+## Keyword-Sweep: Developmental, Defense & Nodulation Batches (2026-05-30)
+
+Continuing down the keyword watch-list ([SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md)), twelve
+more genes were reviewed across the next three high-count Tier A keyword classes:
+**developmental** (`Differentiation`→cell differentiation, `Flowering`→flower development),
+**defense/killing** (`Plant defense`→defense response, toxin/killing), and
+**`Nodulation`→nodulation**. Genes were chosen to span each keyword's verdict range;
+per-gene detail is in the individual `ai-review.yaml` files. All 12 pass `just validate`.
+
+### Developmental keywords (cell differentiation GO:0030154; flower development GO:0009908)
+
+| Gene | Species | Role | SPKW term → action |
+|------|---------|------|--------------------|
+| GI | rice | GIGANTEA clock / photoperiod regulator | cell differentiation→**REMOVE**; flower development→MODIFY (regulation of); rhythmic process→MARK_OVER |
+| HD3A | rice | Hd3a florigen (mobile FT signal) | cell differentiation→**REMOVE**; flower development→MODIFY (positive regulation of) |
+| MADS3 | rice | C-class floral homeotic TF (AGAMOUS) | cell differentiation→**MODIFY → specification of stamen identity** |
+| FEA2 | maize | CLAVATA meristem-size receptor | cell differentiation→**MODIFY → meristem maintenance** |
+
+**"cell differentiation" is a generic catch-all that is essentially never the right term.** On
+flowering-time signals/regulators (GI, HD3A) it is simply wrong → REMOVE; on genuine
+developmental genes (MADS3 organ identity, FEA2 meristem homeostasis) it is correct-but-far-too-
+coarse → MODIFY to the precise process. "flower development" on flowering-*time* genes (GI, HD3A)
+is the ELF4 pattern — they control the timing/transition, not organ morphogenesis → MODIFY to a
+"regulation of flower development" term. GI's "rhythmic process" repeats the 100%-over-annotated
+human/ELF4 result.
+
+### Defense / killing keywords (defense response GO:0006952; toxin/killing)
+
+| Gene | Species | Role | SPKW term → action |
+|------|---------|------|--------------------|
+| XA21 | rice | LRR receptor kinase R-gene / PRR | defense response→**MODIFY → defense response to bacterium** |
+| CPS4 | rice | syn-CPP synthase (momilactone phytoalexin) | defense response→**MARK_OVER** (enzyme-vs-product) |
+| O6/b-32 | maize | ribosome-inactivating protein (RIP) | toxin activity→**MODIFY → rRNA N-glycosylase (legitimate)**; defense response→MARK_OVER |
+| CHIB | maize | endochitinase (PR-3) | polysaccharide catabolic→MODIFY → chitin catabolic; defense response→MARK_OVER |
+
+**"defense response" spans the full verdict range, set by the gene's mechanism.** A genuine
+immune *receptor* (XA21) → correct-but-broad, MODIFY to the specific defense-to-bacterium (it
+was the gene's *only* process term, so collateral-damage-adjacent). A *biosynthetic enzyme* for
+a defense metabolite (CPS4) → over-annotation, the STS3 enzyme-vs-product conflation in a crop.
+A genuine *cytotoxin* (b-32 RIP) → "toxin activity" is **legitimate** (kept, refined to the
+precise rRNA N-glycosylase MF), while the broad "defense response" process is trimmed. An
+antifungal *enzyme* (CHIB chitinase) → the substrate-catabolism term is correct (MODIFY to
+chitin-specific) but "defense response" is over-broad. In every case the informative annotation
+is the molecular function; "defense response" is either redundant with it or wrong.
+
+### Nodulation keyword (nodulation GO:0009877)
+
+| Gene | Species | Role | SPKW term → action |
+|------|---------|------|--------------------|
+| NSP1 | *Medicago* | Nod-factor signaling GRAS TF | nodulation→**ACCEPT** (legitimate core; removal = collateral damage) |
+| CCAMK | rice | common-symbiosis Ca²⁺/CaM kinase | nodulation→**MODIFY → arbuscular mycorrhizal association** |
+| LBA | common bean | leghemoglobin (nodule O₂ carrier) | O₂ carrier/transport→ACCEPT; metal binding→MODIFY→heme; nodulation→MARK_OVER |
+| ENOD2A | soybean | early nodulin-75 cell-wall glycoprotein | nodulation→**MARK_OVER** (expression marker) |
+
+**"nodulation" splits cleanly by what the gene does.** For a core signaling component (NSP1 —
+literally NODULATION SIGNALING PATHWAY 1) it is correct and central; removal was **collateral
+damage** (the RHT1/DELLA pattern — current GOA left it with no symbiosis term). For CCAMK it is
+a **pathway/organism-context error**: rice does not nodulate, so the legume-inherited keyword is
+wrong — but the gene's genuine *arbuscular mycorrhizal* symbiosis role must be preserved
+(MODIFY), exactly the PPC16 photosynthesis-in-a-C3-plant pattern. For a *component* that merely
+operates in the nodule (leghemoglobin's O₂ transport) or a nodule-specific *expression marker*
+(ENOD2), "nodulation" is over-broad — the real biology is the molecular function / structural
+role, which is kept.
+
+### Hormone-signaling subtypes (ABA, cytokinin, BR, ethylene) — completing the picture
+
+| Gene | Species | Hormone | Role | SPKW term → action |
+|------|---------|---------|------|--------------------|
+| VP1 | maize | ABA | VIVIPAROUS1 B3 TF (seed maturation) | ABA signaling→**MODIFY → regulation of / cellular response to ABA** |
+| CKX2 | rice | cytokinin | cytokinin **dehydrogenase** (Gn1a) | cytokinin signaling→**MARK_OVER** (catabolic enzyme) |
+| TUD1 | rice | BR | U-box E3 ligase (Gα/RGA1-mediated) | BR signaling→**ACCEPT** (legitimate component) |
+| EIL2 | rice | ethylene | EIN3-like master TF | ethylene signaling→**ACCEPT** (legitimate component) |
+
+With auxin (ABP1) and GA (RHT1/DELLA) from the species extension, **all six major plant
+hormones are now covered**, and the "hormone-signaling cuts both ways" rule resolves cleanly by
+the gene's position in the pathway:
+
+| Hormone | Gene | Position in pathway | Verdict |
+|---------|------|---------------------|---------|
+| Gibberellin | RHT1 (DELLA) | core repressor (transduction) | **keep** (MODIFY→neg. reg.); removal = collateral damage |
+| Brassinosteroid | TUD1 | E3-ligase component | **keep** (ACCEPT) |
+| Ethylene | EIL2 | EIN3 master TF (transduction output) | **keep** (ACCEPT); removal = collateral damage |
+| Abscisic acid | VP1 | downstream responsive TF effector | **MODIFY** → regulation of / response to |
+| Auxin | ABP1 | contested ligand-binder | **MARK_OVER** → response to auxin |
+| Cytokinin | CKX2 | catabolic enzyme (degrades the hormone) | **MARK_OVER** (not signaling at all) |
+
+The keyword is right for genuine transduction **components** (DELLA, TUD1, EIL2 — keep), too
+coarse/misframed for downstream **responsive effectors** (VP1, ABP1 — MODIFY to "response
+to"/"regulation of"), and simply **wrong** for a hormone-**metabolism** enzyme (CKX2, which
+*degrades* cytokinin and has nothing to do with signal transduction). One keyword
+("X signaling pathway") thus yields keep / MODIFY / remove verdicts depending entirely on
+whether the gene perceives-and-transduces, merely responds to, or metabolizes the hormone.
+
+### Long-tail keywords (fruit ripening, autophagy, hypersensitive response, light signaling)
+
+A final pass covered the remaining smaller Tier A keywords (each ≤30 genes):
+
+| Gene | Species | Keyword → GO term | Action |
+|------|---------|-------------------|--------|
+| PG2 | tomato | fruit ripening (GO:0009835) | **MARK_OVER** (enzyme-vs-process; STS3 pattern) |
+| JOKA2 | potato | autophagy (GO:0006914) | **MODIFY → macroautophagy** (legitimate autophagy gene) |
+| LSD1 | rice | plant-type hypersensitive response (GO:0009626) | **MODIFY → negative regulation of HR** |
+| DET1 | tomato | red/far-red light signaling (GO:0010017) | **MODIFY → negative regulation of photomorphogenesis** |
+
+These reconfirm the four outcomes and add two sharp variants:
+- **Regulatory-direction inversion** (LSD1, DET1): both are *negative* regulators of the process
+  their keyword names — LSD1 restrains the hypersensitive response (*lsd1* = runaway cell death),
+  DET1 represses photomorphogenesis. The keyword maps them to the bare process as if they
+  execute/promote it; the correct term is "negative regulation of …". This is a sharper form of
+  the regulator-vs-participant conflation — the keyword gets the *direction* backwards.
+- **Keyword reputation ≠ gene verdict** (JOKA2): the Autophagy keyword was ~80% over-annotated in
+  the human subproject, but potato JOKA2 is a bona fide NBR1/p62-family selective-autophagy cargo
+  receptor — so "autophagy" is correct here (MODIFY to the more specific macroautophagy/
+  autophagosome). Gene-specific biology overrides keyword priors.
+- PG2 (fruit ripening on the softening polygalacturonase) is the STS3/CPS4 enzyme-vs-process
+  pattern in developmental guise; the pass also removed spurious anther/fruit-dehiscence
+  cross-paralog transfers.
+
+### What the keyword-sweep confirms
+
+Across all three batches the same meta-rule holds — **a process/role keyword is only as good as
+the gene's actual position relative to that process** — and resolves into four recurring
+outcomes that recur regardless of which keyword is involved:
+
+1. **Core component → keep** (NSP1 nodulation, XA21 receptor; cf. RHT1/DELLA) — removal is collateral damage.
+2. **Wrong organism / pathway context → MODIFY** (CCAMK nodulation→mycorrhiza; cf. PPC16 photosynthesis).
+3. **Right area, wrong altitude → MODIFY to specific** (MADS3, FEA2, HD3A/GI flower development, CHIB, and the CPS4 product-process).
+4. **Expression / component ≠ function → MARK_OVER or REMOVE** (GI & HD3A cell differentiation, ENOD2, leghemoglobin nodulation, GI rhythmic process).
+
+The bare process term almost never adds information beyond the gene's molecular function; where
+it does (NSP1, XA21), it is the *sole* carrier of a correct fact and must not be silently
+dropped. This is the same tier→verdict logic established for the first 18 genes, now stress-
+tested across four more keyword classes and a 14th species (common bean).
+
+---
+
 ## Over-Annotation Patterns (Non-Arabidopsis Plants)
 
 | Pattern | Example | Mechanism | Tier |
@@ -379,6 +741,14 @@ terms were correct.
    keyword2GO and InterPro2GO assign "kinase activity" to a known pseudokinase. This
    failure mode affects Tier-C-looking specific MF terms, not just broad ones.
 
+5. **A hormone-signaling keyword cuts both ways (2026-05-29 extension).** The tier alone
+   does not decide a hormone-signaling term — the gene's position in the pathway does. RHT1
+   (wheat DELLA) is a core GA-signaling repressor whose keyword was *correct* and wrongly
+   retired (collateral damage); PARA and ARF19 are merely hormone-*responsive* and were
+   correctly flagged; ABP1 (a genuine auxin binder of contested receptor status) is
+   case-by-case. Ask: transduction component → keep; ligand-binder of contested role →
+   case-by-case; merely responsive → over-annotation.
+
 ## Recommendations
 
 1. **Triage retired SPKW annotations by tier.** Tier A removals can be accepted wholesale.
@@ -408,6 +778,42 @@ genes/MEDTR/NFP/NFP-ai-review.yaml        (A: kinase activity on a pseudokinase)
 genes/POPTR/METK1/METK1-ai-review.yaml    (B: broad cofactor keyword on a SAM synthase)
 genes/CHLRE/psaC/psaC-ai-review.yaml      (B: broad keywords superseded by specific terms)
 genes/SORBI/CASP1/CASP1-ai-review.yaml    (C: correct cell-wall biology, wrongly retired)
+# 2026-05-29 extension:
+genes/WHEAT/RHT1/RHT1-ai-review.yaml      (A-legit: GA signaling on a DELLA; removal = collateral damage)
+genes/MAIZE/ABP1/ABP1-ai-review.yaml      (A: auxin signaling on the contested auxin receptor; binding kept)
+genes/PHYPA/MPK4a/MPK4a-ai-review.yaml    (A: broad immunity terms redundant with PRR-signaling, in a moss)
+genes/MAIZE/AM1/AM1-ai-review.yaml        (A: cell-division/segregation keywords on a meiotic-entry switch)
+genes/SOLTU/PATB1/PATB1-ai-review.yaml    (C/A: storage role kept; defense over-annotated)
+# 2026-05-30 methylation-keyword batch (Methyltransferase -> methylation, GO:0032259):
+genes/ORYSJ/MET1A/MET1A-ai-review.yaml    (A: DNA MTase; methylation MODIFY -> DNA-maintenance GO:0141119)
+genes/MAIZE/EZ1/EZ1-ai-review.yaml        (A: histone H3K27 MTase; methylation redundant w/ specific MF)
+genes/SOLTU/CCOAOMT/CCOAOMT-ai-review.yaml (A/C/B: lignin OMT; methylation redundant, lignin process correct)
+genes/ORYSJ/COQ5/COQ5-ai-review.yaml      (A: ubiquinone MTase; methylation redundant w/ specific MF+process)
+# 2026-05-30 keyword sweep — developmental (Differentiation/Flowering):
+genes/ORYSJ/GI/GI-ai-review.yaml          (A: clock/photoperiod; cell diff REMOVE, flower dev MODIFY, rhythmic MARK_OVER)
+genes/ORYSJ/HD3A/HD3A-ai-review.yaml      (A: florigen; cell diff REMOVE, flower dev MODIFY->positive regulation)
+genes/ORYSJ/MADS3/MADS3-ai-review.yaml    (A: C-class floral TF; cell diff MODIFY->specification of stamen identity)
+genes/MAIZE/FEA2/FEA2-ai-review.yaml      (A: CLV meristem receptor; cell diff MODIFY->meristem maintenance)
+# 2026-05-30 keyword sweep — defense/killing:
+genes/ORYSJ/XA21/XA21-ai-review.yaml      (A: R-gene/PRR; defense response MODIFY->defense response to bacterium)
+genes/ORYSJ/CPS4/CPS4-ai-review.yaml      (A: phytoalexin synthase; defense response MARK_OVER, enzyme-vs-product)
+genes/MAIZE/O6/O6-ai-review.yaml          (legit toxin: RIP; toxin activity MODIFY->rRNA N-glycosylase, defense MARK_OVER)
+genes/MAIZE/CHIB/CHIB-ai-review.yaml      (A/C: chitinase; polysacc catab MODIFY->chitin catab, defense MARK_OVER)
+# 2026-05-30 keyword sweep — nodulation:
+genes/MEDTR/NSP1/NSP1-ai-review.yaml      (legit core: Nod-signaling TF; nodulation ACCEPT, removal=collateral damage)
+genes/ORYSJ/CCAMK/CCAMK-ai-review.yaml    (A: rice common-symbiosis kinase; nodulation MODIFY->arbuscular mycorrhizal association)
+genes/PHAVU/LBA/LBA-ai-review.yaml        (C/A: leghemoglobin; O2-carrier ACCEPT, nodulation MARK_OVER)
+genes/SOYBN/ENOD2A/ENOD2A-ai-review.yaml  (A: early nodulin; nodulation MARK_OVER, expression marker)
+# 2026-05-30 hormone-signaling-subtype batch (ABA/cytokinin/BR/ethylene):
+genes/MAIZE/VP1/VP1-ai-review.yaml        (A: ABA B3 TF; ABA signaling MODIFY->regulation/response, responsive effector)
+genes/ORYSJ/CKX2/CKX2-ai-review.yaml      (A: cytokinin dehydrogenase; cytokinin signaling MARK_OVER, catabolic enzyme)
+genes/ORYSJ/TUD1/TUD1-ai-review.yaml      (A: BR E3 ligase; BR signaling ACCEPT, legitimate component)
+genes/ORYSJ/EIL2/EIL2-ai-review.yaml      (A: ethylene EIN3-like TF; ethylene signaling ACCEPT, legitimate component)
+# 2026-05-30 long-tail keyword batch (fruit ripening, autophagy, HR, light signaling):
+genes/SOLLC/PG2/PG2-ai-review.yaml        (A: polygalacturonase; fruit ripening MARK_OVER, enzyme-vs-process)
+genes/SOLTU/JOKA2/JOKA2-ai-review.yaml    (A-legit: NBR1-like autophagy receptor; autophagy MODIFY->macroautophagy)
+genes/ORYSJ/LSD1/LSD1-ai-review.yaml      (A: neg. regulator of cell death; HR MODIFY->negative regulation of HR)
+genes/SOLLC/DET1/DET1-ai-review.yaml      (A: photomorphogenesis repressor; light signaling MODIFY->neg. reg. photomorphogenesis)
 ```
 
 ## Methods Note
