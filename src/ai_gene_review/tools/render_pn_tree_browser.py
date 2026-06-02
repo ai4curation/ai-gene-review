@@ -36,6 +36,7 @@ DEFAULT_WORKBOOK_PATH = Path(
 DEFAULT_WORKBOOK_SHEET = "DENSE"
 DEFAULT_OUTPUT_PATH = Path("projects/PROTEOSTASIS/pn.html")
 PROJECT_PAGE_PATH = Path("pages/projects/PROTEOSTASIS.html")
+DEFAULT_REVIEW_ROOT = Path("genes")
 UNUSUAL_PROPAGATIONS_PATH = Path(
     "projects/PROTEOSTASIS/reports/pn_mapping_audit/unusual_propagations.tsv"
 )
@@ -85,6 +86,23 @@ def display_path(path: Path | None) -> str:
     if path_string.startswith(f"{home}{os.sep}"):
         return f"~/{path_string[len(home) + 1:]}"
     return path_string
+
+
+def build_review_path_lookup(review_root: Path = DEFAULT_REVIEW_ROOT) -> dict[str, str]:
+    """Return local HTML review paths keyed by gene symbol, preferring human reviews."""
+    if not review_root.exists():
+        return {}
+
+    review_paths: dict[str, str] = {}
+    paths = sorted(
+        review_root.glob("*/*/*-ai-review.html"),
+        key=lambda path: (path.parts[-3] != "human", path.parts[-2], path.parts[-3]),
+    )
+    for path in paths:
+        gene_symbol = path.name.removesuffix("-ai-review.html")
+        repo_relative_path = Path(review_root.name) / path.relative_to(review_root)
+        review_paths.setdefault(gene_symbol, repo_relative_path.as_posix())
+    return review_paths
 
 
 def aspect_label(aspect: str) -> str:
@@ -270,6 +288,7 @@ def build_data(
     workbook_path: Path | None = DEFAULT_WORKBOOK_PATH,
     workbook_sheet: str = DEFAULT_WORKBOOK_SHEET,
     goa_duckdb: Path | None = DEFAULT_GOA_DUCKDB,
+    review_root: Path = DEFAULT_REVIEW_ROOT,
 ) -> dict[str, Any]:
     """Build browser data from PN reports."""
     nodes: dict[str, dict[str, Any]] = {}
@@ -285,6 +304,7 @@ def build_data(
         workbook_sheet,
     )
     iba_terms_by_gene = load_existing_iba_annotations(workbook_rows, goa_duckdb)
+    review_paths = build_review_path_lookup(review_root)
 
     for row in coverage_rows:
         code = row["code"]
@@ -343,6 +363,7 @@ def build_data(
                 "gene_symbol": row["gene_symbol"],
                 "gene_name": row["gene_name"],
                 "uniprot_id": gene_accessions.get(row["gene_symbol"], ""),
+                "review_path": review_paths.get(row["gene_symbol"], ""),
                 "pn_code": row["pn_code"],
                 "target_go_id": row["target_go_id"],
                 "target_go_label": row["target_go_label"],
@@ -388,6 +409,7 @@ def build_data(
                         "gene_symbol": row.gene_symbol,
                         "gene_name": row.gene_name or gene_names.get(row.gene_symbol, ""),
                         "uniprot_id": row.uniprot_id or gene_accessions.get(row.gene_symbol, ""),
+                        "review_path": review_paths.get(row.gene_symbol, ""),
                         "notes": row.notes,
                         "references": list(row.references),
                     }
@@ -404,6 +426,7 @@ def build_data(
                     "gene_symbol": row.gene_symbol,
                     "gene_name": row.gene_name or gene_names.get(row.gene_symbol, ""),
                     "uniprot_id": row.uniprot_id or gene_accessions.get(row.gene_symbol, ""),
+                    "review_path": review_paths.get(row.gene_symbol, ""),
                     "terms": terms,
                 }
             )
@@ -1089,6 +1112,7 @@ HTML_TEMPLATE = """<!doctype html>
 
   <script>
     const DATA = __DATA_JSON__;
+    const REPO_ROOT_HREF = "__REPO_ROOT_HREF__";
     const nodeById = new Map();
     const parentById = new Map();
     const expanded = new Set(DATA.root_codes);
@@ -1131,19 +1155,25 @@ HTML_TEMPLATE = """<!doctype html>
       return `https://functionome.geneontology.org/gene/UniProtKB:${encodeURIComponent(uniprotId)}`;
     }
 
-    function renderGeneCell(geneSymbol, geneName = "", uniprotId = "") {
+    function localReviewUrl(reviewPath) {
+      return REPO_ROOT_HREF + String(reviewPath || "").split("/").map(encodeURIComponent).join("/");
+    }
+
+    function renderGeneCell(geneSymbol, geneName = "", uniprotId = "", reviewPath = "") {
       const safeSymbol = escapeHtml(geneSymbol || "");
       const safeName = escapeHtml(geneName || "");
-      if (!uniprotId) {
-        return `<div class="gene-cell"><strong>${safeSymbol}</strong>${safeName ? `<small>${safeName}</small>` : ""}</div>`;
+      const links = [];
+      if (reviewPath) {
+        links.push(`<a href="${escapeHtml(localReviewUrl(reviewPath))}">Review</a>`);
       }
-      const safeId = escapeHtml(uniprotId);
+      if (uniprotId) {
+        const safeId = escapeHtml(uniprotId);
+        links.push(`<a href="${uniprotUrl(uniprotId)}" target="_blank" rel="noopener">UniProt ${safeId}</a>`);
+        links.push(`<a href="${functionomeUrl(uniprotId)}" target="_blank" rel="noopener">Functionome</a>`);
+      }
       return `<div class="gene-cell">
         <strong>${safeSymbol}</strong>
-        <div class="gene-links">
-          <a href="${uniprotUrl(uniprotId)}" target="_blank" rel="noopener">UniProt ${safeId}</a>
-          <a href="${functionomeUrl(uniprotId)}" target="_blank" rel="noopener">Functionome</a>
-        </div>
+        ${links.length ? `<div class="gene-links">${links.join("")}</div>` : ""}
         ${safeName ? `<small>${safeName}</small>` : ""}
       </div>`;
     }
@@ -1332,7 +1362,7 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>Gene</th><th>PN code</th><th>GO target</th><th>Status</th></tr></thead>
         <tbody>${limited.map(row => `
           <tr>
-            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id, row.review_path)}</td>
             <td>${escapeHtml(row.pn_code)}</td>
             <td>${escapeHtml(row.target_go_id)} ${escapeHtml(row.target_go_label)}</td>
             <td>${escapeHtml(row.goa_status)}</td>
@@ -1372,7 +1402,7 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>Gene</th><th>Notes</th><th>Workbook references</th></tr></thead>
         <tbody>${limited.map(row => `
           <tr>
-            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id, row.review_path)}</td>
             <td>${row.notes ? escapeHtml(row.notes) : `<span class="empty">No notes.</span>`}</td>
             <td>${(row.references || []).length ? `<ol class="ref-list">${row.references.map(ref => `<li>${renderWorkbookReference(ref)}</li>`).join("")}</ol>` : `<span class="empty">No references.</span>`}</td>
           </tr>`).join("")}</tbody>
@@ -1386,7 +1416,7 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>Gene</th><th>Existing IBA GO annotations</th></tr></thead>
         <tbody>${rows.map(row => `
           <tr>
-            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id, row.review_path)}</td>
             <td><div class="term-list">${(row.terms || []).map(term => `
               <div class="term-line">
                 <span class="pill ${aspectClass(term.aspect)}">${escapeHtml(term.aspect)}</span>
@@ -1532,6 +1562,14 @@ def relative_href(output_path: Path, target_path: Path) -> str:
     return Path(os.path.relpath(target_path, start=output_path.parent)).as_posix()
 
 
+def repo_root_href(output_path: Path) -> str:
+    """Return a browser href prefix from an output file to the repository root."""
+    relative_root = Path(os.path.relpath(Path("."), start=output_path.parent)).as_posix()
+    if relative_root == ".":
+        return ""
+    return f"{relative_root}/"
+
+
 def render_html(data: dict[str, Any], output_path: Path) -> str:
     """Render a standalone HTML document with embedded browser data."""
     html = HTML_TEMPLATE.replace(
@@ -1545,6 +1583,7 @@ def render_html(data: dict[str, Any], output_path: Path) -> str:
             "__UNUSUAL_PROPAGATIONS_HREF__",
             relative_href(output_path, UNUSUAL_PROPAGATIONS_PATH),
         )
+        .replace("__REPO_ROOT_HREF__", repo_root_href(output_path))
     )
 
 
@@ -1593,6 +1632,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help=f"Local GOA DuckDB used to load existing IBA annotations (default: {DEFAULT_GOA_DUCKDB})",
     )
     parser.add_argument(
+        "--review-root",
+        type=Path,
+        default=DEFAULT_REVIEW_ROOT,
+        help=f"Local gene review root used to add review links (default: {DEFAULT_REVIEW_ROOT})",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=DEFAULT_OUTPUT_PATH,
@@ -1614,6 +1659,7 @@ def main() -> None:
         workbook_path=args.workbook,
         workbook_sheet=args.sheet,
         goa_duckdb=args.goa_duckdb,
+        review_root=args.review_root,
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
