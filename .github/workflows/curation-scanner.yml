@@ -51,6 +51,102 @@ jobs:
       - name: Install just
         run: uv tool install rust-just
 
+      - name: Build candidate context
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          out=/tmp/curation-candidates.md
+          tmpdir="$(mktemp -d)"
+
+          {
+            echo "# Curation scanner candidate context"
+            echo
+            echo "Effort tier: ${EFFORT_TIER}"
+            echo "Effort selector: ${EFFORT_SELECTOR}"
+            echo
+            echo "Candidates are sorted with the least recently commented items first."
+            echo "Use this ordering as the default queue order, and put recently commented items last unless a later human comment clearly reactivates them."
+          } > "$out"
+
+          issue_json="$tmpdir/issues.json"
+          issue_rows="$tmpdir/issues.tsv"
+          : > "$issue_rows"
+
+          gh issue list --repo "$REPO" \
+            --search "is:open is:issue no:assignee ${EFFORT_SELECTOR}" \
+            --json number,title,updatedAt,url,labels \
+            --limit 100 > "$issue_json"
+
+          jq -r '.[] | [.number, .title, .updatedAt, .url, (.labels | map(.name) | join(","))] | @tsv' "$issue_json" |
+          while IFS=$'\t' read -r number title updated_at url labels; do
+            latest_comment="$(gh issue view "$number" --repo "$REPO" --json comments \
+              --jq '(.comments // []) | max_by(.createdAt) | if . == null then ["",""] else [.createdAt, .author.login] end | @tsv')"
+            latest_at="$(printf '%s\n' "$latest_comment" | cut -f1)"
+            latest_author="$(printf '%s\n' "$latest_comment" | cut -f2)"
+            sort_at="${latest_at:-0000-00-00T00:00:00Z}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+              "$sort_at" "$number" "$latest_at" "$latest_author" "$updated_at" "$labels" "$url" "$title" >> "$issue_rows"
+          done
+
+          {
+            echo
+            echo "## Matching issues"
+            if [ -s "$issue_rows" ]; then
+              sort "$issue_rows" |
+              while IFS=$'\t' read -r _sort_at number latest_at latest_author updated_at labels url title; do
+                echo "- #${number}: ${title}"
+                echo "  - url: ${url}"
+                echo "  - labels: ${labels}"
+                echo "  - updated_at: ${updated_at}"
+                echo "  - latest_comment: ${latest_at:-none}${latest_author:+ by ${latest_author}}"
+              done
+            else
+              echo "No matching open unassigned issues for this selector."
+            fi
+          } >> "$out"
+
+          pr_json="$tmpdir/prs.json"
+          pr_rows="$tmpdir/prs.tsv"
+          : > "$pr_rows"
+
+          gh pr list --repo "$REPO" \
+            --search "is:open is:pr no:assignee ${EFFORT_SELECTOR}" \
+            --json number,title,updatedAt,url,labels \
+            --limit 100 > "$pr_json"
+
+          jq -r '.[] | [.number, .title, .updatedAt, .url, (.labels | map(.name) | join(","))] | @tsv' "$pr_json" |
+          while IFS=$'\t' read -r number title updated_at url labels; do
+            latest_discussion="$(gh pr view "$number" --repo "$REPO" --json comments,reviews \
+              --jq '[((.comments // [])[] | {at: .createdAt, author: .author.login}), ((.reviews // [])[] | select(.submittedAt != null) | {at: .submittedAt, author: .author.login})] | max_by(.at) | if . == null then ["",""] else [.at, .author] end | @tsv')"
+            latest_at="$(printf '%s\n' "$latest_discussion" | cut -f1)"
+            latest_author="$(printf '%s\n' "$latest_discussion" | cut -f2)"
+            sort_at="${latest_at:-0000-00-00T00:00:00Z}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+              "$sort_at" "$number" "$latest_at" "$latest_author" "$updated_at" "$labels" "$url" "$title" >> "$pr_rows"
+          done
+
+          {
+            echo
+            echo "## Matching pull requests"
+            if [ -s "$pr_rows" ]; then
+              sort "$pr_rows" |
+              while IFS=$'\t' read -r _sort_at number latest_at latest_author updated_at labels url title; do
+                echo "- #${number}: ${title}"
+                echo "  - url: ${url}"
+                echo "  - labels: ${labels}"
+                echo "  - updated_at: ${updated_at}"
+                echo "  - latest_discussion: ${latest_at:-none}${latest_author:+ by ${latest_author}}"
+              done
+            else
+              echo "No matching open unassigned pull requests for this selector."
+            fi
+          } >> "$out"
+
+          cat "$out"
+
       - name: Run Curation Scanner
         id: curation-scanner
         uses: anthropics/claude-code-action@v1
@@ -71,10 +167,16 @@ jobs:
 
             You are running an automated curation scanner for the AI Gene Review repository.
 
+            A deterministic pre-scan has written matching candidates to
+            `/tmp/curation-candidates.md`. Start by reading that file. It is sorted
+            with the least recently commented items first; preserve that default
+            queue order and put recently commented items last unless a later human
+            comment clearly reactivates them.
+
             Scan only for open issues and pull requests that are unassigned and match
-            EFFORT SELECTOR. Start by gathering candidate items with `gh issue list`
-            and `gh pr list`, including metadata such as labels, assignees, updated
-            time, review state, and reaction counts.
+            EFFORT SELECTOR. You may gather additional metadata with `gh issue list`,
+            `gh issue view`, `gh pr list`, and `gh pr view`, including labels,
+            assignees, updated time, comments, review state, and reaction counts.
 
             Use searches equivalent to:
             - `is:open is:issue no:assignee label:curation ...effort selector...`
@@ -84,40 +186,46 @@ jobs:
             - `low_effort`: suitable for validation cleanup, evidence/reference/PMID cleanup,
               and small edits to existing gene reviews. Do not create new gene reviews from
               this tier. If a task requires a new review, sparse-literature synthesis,
-              bioinformatics analysis, schema/tooling changes, or broad edits, leave a brief
-              comment and ensure the work is routed to `high_effort`.
+              bioinformatics analysis, schema/tooling changes, or broad edits, route it
+              to `high_effort` without posting a routing-only comment; assign to `cmungall`
+              only if human routing judgment is required.
             - `medium_effort`: suitable for bounded single-gene review improvements where the
               source files and deep research already exist. Do not create new gene reviews or
               make schema/tooling changes from this tier. If the source material is missing or
-              the work expands beyond one gene, leave a brief comment and route it to
-              `high_effort`.
+              the work expands beyond one gene, route it to `high_effort` without posting a
+              routing-only comment; assign to `cmungall` only if human routing judgment is
+              required.
             - `high_effort`: default for curation work without lower-effort labels, including
               new gene reviews, sparse literature, bioinformatics analyses, schema/tooling
               changes, and broad changes.
 
             If an item has more than one effort label, skip it rather than guessing.
 
-            You may scan multiple candidates, but you must choose exactly one issue or pull request
+            You may scan multiple candidates, but choose zero or one issue or pull request
             to actively work on in this run. Leave all other items untouched.
 
             Rank candidates before acting. Use judgment, with these signals in mind:
             - prioritize `high-priority` items when that label is present
             - prioritize items with stronger positive reaction signals, especially `THUMBS_UP`
-            - prioritize stale items that have not been updated recently
+            - prioritize stale items that have not been commented on recently
+            - put items most recently commented by the automation at the end of the queue
+            - treat a human comment after the last automation comment as a reactivation signal
             - deprioritize `low-priority` items
             - deprioritize items that were updated very recently, unless they are clearly the best use of this run
             - prefer the single item where a safe, meaningful next step can be completed in one run
 
             Avoid repeatedly touching the freshest bottom-of-queue items while older unassigned
-            candidates remain. If signals conflict, explain your choice briefly in the comment or PR
-            you post for the selected item.
+            candidates remain. If signals conflict, explain your choice briefly in the PR body,
+            closing/escalation comment, or `$GITHUB_STEP_SUMMARY` as appropriate.
 
             For the single selected unassigned curation issue:
             - Analyze the request (gene review, annotation fix, new organism, tooling improvement, etc.)
-            - Post a concise assessment comment covering the gene/organism, what work is needed, and estimated scope/risk
+            - Do not post a comment just to report that the issue is still valid, still complete, unchanged, or ready for closure
+            - If the issue is complete, validation-clean, and has no open blocking PR, close it with a concise closing comment
             - If the first step is straightforward and low-risk, create an initial PR
               - For gene review issues: run `just fetch-gene <organism> <gene>` first, then follow CLAUDE.md review workflow
-            - Otherwise, leave the assessment comment and flag the issue for human review
+            - If progress requires maintainer judgment, assign the issue to `cmungall` and post one concise comment naming the decision needed
+            - If no substantive action is available, do not comment on the issue; write the run summary only to `$GITHUB_STEP_SUMMARY`
 
             For the single selected unassigned curation PR:
             - Inspect its current state, review history, and discussion
@@ -125,11 +233,15 @@ jobs:
             - If the branch is stale or conflicted, refresh it carefully
             - Prefer GitHub's update-branch flow via `gh api` rather than local rebases for branch refreshes
             - Never use a local rebase to resolve PR conflicts
-            - If the next step is unclear or risky, post a comment asking for guidance instead of guessing
+            - If the PR is obsolete or superseded, close it with a concise closing comment
+            - If progress requires maintainer judgment, assign the PR to `cmungall` and post one concise comment naming the decision needed
+            - If no substantive action is available, do not comment on the PR; write the run summary only to `$GITHUB_STEP_SUMMARY`
 
             General guidance:
             - Use judgment rather than rigid rules
-            - Be conservative. When in doubt, comment with your assessment instead of making a risky change
+            - Be conservative. When in doubt, assign to `cmungall` for a concrete decision instead of making a risky change
+            - Comments are not required. Avoid status-only, no-op, "still ready", "no drift", and repeated hand-off comments
+            - If you choose zero targets, do not touch GitHub issues or PRs; summarize only in `$GITHUB_STEP_SUMMARY`
             - Prefer draft PRs for new work unless the result is clearly ready for review
             - Follow `CLAUDE.md` and the repository conventions
             - Do not edit derived files (`*-uniprot.txt`, `*-goa.tsv`, `*-deep-research*.md`, `publications/*`)
