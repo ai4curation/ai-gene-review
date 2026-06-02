@@ -53,14 +53,15 @@ direction. A more precise GO term such as "lysosomal lysophospholipid export" or
   and UniProt supporting the lysosomal transporter model. The high-throughput
   placental lysosomal membrane proteomics study is consistent but not the main
   evidence [PMID:17897319].
-- Accept lysophospholipid transport, phospholipid efflux, and the current
-  GO:0051978 lysophospholipid transporter term as core. The GO label
-  `lysophospholipid:sodium symporter activity` is mechanistically imperfect for
-  SPNS1 because the papers describe proton-gradient dependence, so this review
-  proposes a more specific ontology term.
-- Modify broad `transmembrane transporter activity`, `transmembrane transport`,
-  `lipid transport`, and generic `membrane` annotations to the more specific
-  SPNS1 terms already supported by experiments.
+- Accept lysophospholipid transport and phospholipid efflux as core. Treat
+  GO:0051978 `lysophospholipid:sodium symporter activity` as mechanistically
+  incorrect for SPNS1 because the papers describe proton-gradient dependence;
+  use the broad transmembrane transporter activity term pending the proposed
+  proton-specific ontology term.
+- Accept broad `transmembrane transporter activity` as accurate pending a
+  proton-specific lysophospholipid symporter term. Modify `transmembrane
+  transport`, `lipid transport`, and generic `membrane` annotations to more
+  specific SPNS1 terms already supported by experiments.
 - Keep the mitochondrial inner membrane annotation as non-core. UniProt records
   occasional mitochondrial localization from the early HSpin1 study, but the
   dominant conserved function is lysosomal.
