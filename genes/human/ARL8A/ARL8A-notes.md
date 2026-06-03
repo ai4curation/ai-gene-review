@@ -1,0 +1,15 @@
+# ARL8A review notes
+
+## Deep research provider status
+
+Falcon deep research was attempted for the PN batch review, but the provider timed out after 600 seconds. The configured perplexity-lite fallback was then attempted and failed with a 401 quota error, so no `ARL8A-deep-research-falcon.md` or fallback provider output was produced. This review therefore uses the fetched UniProt/GOA records, cached PMID texts, Reactome cache, and PN projection/audit reports.
+
+## Evidence summary
+
+ARL8A encodes one of the two mammalian ARL8 small GTPases. The clearest direct experimental result is that ARL8A and ARL8B localize to lysosomes and affect lysosome motility: Hofmann and Munro report that "Arl8a and Arl8b ... localise to lysosomes in mammalian cells" and that overexpression redistributes lysosomes toward the cell periphery in a microtubule-dependent manner [PMID:16537643 "Arl8a and Arl8b ... localise to lysosomes in mammalian cells"]. The original GIE/ARL8 paper also supports GTP binding, tubulin association, spindle-midzone localization, and a chromosome-segregation phenotype, but this is a secondary mitotic context for the PN review rather than the proteostasis-centered function [PMID:15331635 "Gie protein has ability to bind to tubulin and localizes with microtubules on the spindle mid-zone in late mitosis"].
+
+The BORC paper places ARL8 in lysosome positioning: BORC recruits Arl8 to lysosomes and initiates kinesin-dependent movement toward microtubule plus ends [PMID:25898167 "BORC associates peripherally with the lysosomal membrane, where it functions to recruit the small GTPase Arl8"]. PLEKHM1/HOPS and RUFY3/RUFY4 papers expand this into a broader endolysosomal transport/fusion network. PLEKHM1 binds Arl8b and promotes delivery/degradation of endocytic and autophagic cargo in lysosomes [PMID:28325809 "Arl8b binding to PLEKHM1 is required for its function in delivery and, therefore, degradation of endocytic and autophagic cargo in lysosomes"]. RUFY3/RUFY4 are ARL8 effectors that couple endolysosomes to dynein-dynactin for retrograde microtubule transport [PMID:35314674 "RUFY3 and RUFY4 are ARL8 effectors that promote coupling of endolysosomes to dynein-dynactin"].
+
+## PN projection decision
+
+The PN projection file proposes ARL8A as a candidate new annotation to GO:0061906 autophagosome localization from the Autophagy-Lysosome Pathway / Localization of the autophagosome / Movement of autophagosomes along microtubules / HOPS-BORC complex bridging path. The mapping audit marks this projection family as requiring manual gene-level review before changing a gene review. For ARL8A, the strongest direct evidence supports lysosome/endolysosome localization and transport. The available ARL8 autophagy evidence is mostly about lysosome positioning, HOPS recruitment, and delivery or degradation of autophagic cargo in lysosomes, not direct ARL8A-dependent positioning of autophagosomes themselves. Therefore this review does not add GO:0061906 for ARL8A; it records the projection as an expert question/experimental follow-up.
