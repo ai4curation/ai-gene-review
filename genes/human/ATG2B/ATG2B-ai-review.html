@@ -1,0 +1,4270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATG2B - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ATG2B</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96BY7" target="_blank" class="term-link">
+                        Q96BY7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ATG2B";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96BY7" data-a="DESCRIPTION: ATG2B encodes a large conserved autophagy-related ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ATG2B encodes a large conserved autophagy-related lipid-transfer protein that acts at endoplasmic reticulum-phagophore membrane contact sites during autophagosome biogenesis. ATG2B binds membranes and forms an ATG2-WIPI/ATG18 complex with WDR45/WIPI4, which promotes ATG2B recruitment to PI3P-containing autophagic membranes and stimulates lipid-transfer activity. Mammalian ATG2 proteins are also associated with lipid droplets and affect lipid droplet morphology and dispersion, but the best-supported core role of ATG2B is membrane tethering and lipid transfer for phagophore expansion.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000407" target="_blank" class="term-link">
+                                    GO:0000407
+                                </a>
+                            </span>
+                            <span class="term-label">phagophore assembly site</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0000407" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B is active at autophagy initiation/elongation sites. Mammalian ATG2 proteins are required at a late step of autophagosome formation, and the PN-relevant mechanism is lipid transfer at the ER-phagophore interface.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This cellular-component annotation matches the conserved ATG2/WIPI role at phagophore assembly sites and is supported by mammalian cell evidence for ATG2-dependent autophagosome formation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000422" target="_blank" class="term-link">
+                                    GO:0000422
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy of mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0000422" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B is part of the core macroautophagy machinery required to build autophagosomal membranes, so it can participate in mitophagy when the macroautophagy machinery is recruited to mitochondria.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is biologically plausible as a phylogenetic inference for a core autophagy factor, but it should not be interpreted as a mitochondria- selective recognition role for ATG2B. The core function remains phagophore lipid transfer.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061908" target="_blank" class="term-link">
+                                    GO:0061908
+                                </a>
+                            </span>
+                            <span class="term-label">phagophore</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0061908" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B functions on nascent autophagic membranes during phagophore expansion and forms a WIPI/ATG18-associated lipid-transfer module.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phagophore is the core location for ATG2B lipid-transfer activity in autophagosome biogenesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000425" target="_blank" class="term-link">
+                                    GO:0000425
+                                </a>
+                            </span>
+                            <span class="term-label">pexophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0000425" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B can support pexophagy indirectly as part of the general autophagosome-building machinery used by selective autophagy pathways.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is best retained as a non-core phylogenetic selective-autophagy annotation. The evidence does not show ATG2B as a peroxisome-selective cargo receptor or specificity factor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043495" target="_blank" class="term-link">
+                                    GO:0043495
+                                </a>
+                            </span>
+                            <span class="term-label">protein-membrane adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0043495" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B binds membranes and WDR45/WIPI4 and functions with this WIPI partner at autophagic membranes, consistent with a protein-membrane adaptor or tethering role in addition to lipid transfer.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct biochemical and structural evidence supports ATG2B membrane binding, ATG2B-WDR45 complex formation, and membrane tethering/lipid-transfer activity. The more specific core molecular function is lipid transfer activity, but this term captures a supported tether/adaptor aspect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mammalian WDR45/WIPI4 has a stronger binding capacity for mammalian ATG2A or ATG2B than the other 3 WIPIs</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATG2B possesses the membrane tethering (MT) and LT activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061723" target="_blank" class="term-link">
+                                    GO:0061723
+                                </a>
+                            </span>
+                            <span class="term-label">glycophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0061723" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B may be required for glycophagy insofar as glycophagy uses the core macroautophagy membrane expansion machinery.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain as a non-core inferred selective-autophagy annotation. The direct evidence for ATG2B is autophagosome membrane formation, not glycogen cargo recognition.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032266" target="_blank" class="term-link">
+                                    GO:0032266
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylinositol-3-phosphate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0032266" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ATG2-WIPI module is recruited to PI3P-positive autophagic membranes, but the direct PI3P-binding effector is the WIPI/ATG18 family partner, not clearly ATG2B itself.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term overstates the available gene-level evidence for ATG2B. Direct evidence supports liposome binding and WDR45/WIPI4-dependent association with PI3P-containing membranes, but not a specific ATG2B PI3P headgroup binding activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PtdIns3P-binding effectors which can form complexes with proteins in the Atg2 family</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATG2B and found that it could bind to liposomes independently of PtdIns3P or WDR45</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034727" target="_blank" class="term-link">
+                                    GO:0034727
+                                </a>
+                            </span>
+                            <span class="term-label">piecemeal microautophagy of the nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0034727" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B is a conserved autophagy factor and may support this process where the conserved machinery is used, but human ATG2B is not established as a process-specific PMN factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Keep as a non-core phylogenetic inference. The strongest mammalian evidence supports general phagophore/autophagosome biogenesis rather than a human PMN-specific role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061709" target="_blank" class="term-link">
+                                    GO:0061709
+                                </a>
+                            </span>
+                            <span class="term-label">reticulophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0061709" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B can support reticulophagy as part of the core autophagy membrane expansion system, especially because ATG2B acts at ER-phagophore contact sites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain as non-core. ATG2B is not a reticulophagy cargo receptor or ER quality-control factor; its direct role is lipid transfer for phagophore expansion.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane localization is consistent with the accepted model in which ATG2B tethers the isolation membrane/phagophore edge to the ER and transfers lipids from ER-derived membranes to the growing phagophore.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although this GOA row is electronically inferred from UniProt subcellular location, it is consistent with experimental and biochemical evidence for ATG2-dependent ER-to-phagophore lipid transfer.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005811" target="_blank" class="term-link">
+                                    GO:0005811
+                                </a>
+                            </span>
+                            <span class="term-label">lipid droplet</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005811" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mammalian ATG2 proteins associate with lipid droplets and affect lipid droplet morphology and dispersion, but this is a secondary cellular context relative to ATG2B&#39;s core phagophore lipid-transfer role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain the localization, but mark non-core because the publication notes that the precise lipid-droplet mechanism and directness of the association remain unresolved.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One novel aspect of the present study is the finding that mammalian Atg2 proteins are present on lipid droplets</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Further experiments will be required to test whether Atg2 proteins directly or indirectly associate with lipid droplets</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006914" target="_blank" class="term-link">
+                                    GO:0006914
+                                </a>
+                            </span>
+                            <span class="term-label">autophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0006914" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad InterPro-derived autophagy annotation is directionally correct but less informative than the experimentally supported role in autophagosome assembly/phagophore expansion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Modify to GO:0000045 autophagosome assembly. ATG2B is not merely associated with autophagy in general; it is required for formation and closure/expansion of autophagosomal membranes.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000045" target="_blank" class="term-link">
+                                    autophagosome assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034045" target="_blank" class="term-link">
+                                    GO:0034045
+                                </a>
+                            </span>
+                            <span class="term-label">phagophore assembly site membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0034045" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The phagophore assembly site membrane is a supported location for ATG2B function and matches its WIPI-associated lipid-transfer role at the growing isolation membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The electronic UniProt location mapping is supported by the experimental ATG2A/B depletion phenotype and by ATG2B membrane tethering/lipid-transfer activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120009" target="_blank" class="term-link">
+                                    GO:0120009
+                                </a>
+                            </span>
+                            <span class="term-label">intermembrane lipid transfer</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0120009" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2B has membrane tethering and lipid-transfer activity and transfers lipids between membranes during isolation membrane expansion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This BP annotation follows directly from the experimentally demonstrated lipid-transfer activity and the model of ER-to-isolation-membrane lipid movement.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATG2B possesses the membrane tethering (MT) and LT activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20562859
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Network organization of the human autophagy system.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005515" data-r="PMID:20562859" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This interaction record reflects WDR45/WIPI4 association in the human autophagy interaction network, but generic protein binding is not an informative ATG2B molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The WDR45 interaction is biologically relevant, but the curation should be represented by the ATG2-ATG18 complex/component context and ATG2B lipid transfer/tethering function rather than by GO:0005515.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" target="_blank" class="term-link">
+                                        PMID:20562859
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mammalian WDR45/WIPI4 has a stronger binding capacity for mammalian ATG2A or ATG2B than the other 3 WIPIs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This BioPlex interaction row is a high-throughput WDR45 association, but GO:0005515 is too generic for ATG2B.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retaining a generic protein binding MF would obscure the supported biology: ATG2B forms a WDR45/WIPI4-associated autophagy lipid-transfer complex. The interaction can inform complex membership but should not be treated as a core molecular function by itself.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These networks model the interactome whose structure encodes protein function, localization, and complex membership.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mammalian WDR45/WIPI4 has a stronger binding capacity for mammalian ATG2A or ATG2B than the other 3 WIPIs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34524948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34524948
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global Proximity Interactome of the Human Macroautophagy Pat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005515" data-r="PMID:34524948" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This proximity-interactome annotation supports ATG2B&#39;s placement in the human macroautophagy interaction network, but it is not an adequate molecular-function description.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding should not be propagated as ATG2B&#39;s function. The informative curation is lipid transfer activity and ATG2-WIPI complex membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34524948" target="_blank" class="term-link">
+                                        PMID:34524948
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here, we applied BioID to the study of macroautophagy in human cells, generating a proximity interaction map of 39 core macroautophagy proteins.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATG2B possesses the membrane tethering (MT) and LT activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005515" data-r="PMID:35271311" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The OpenCell-derived interaction annotation is useful as interactome context, but GO:0005515 is too broad and uninformative for ATG2B curation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The interaction should be interpreted conservatively as supporting complex context, not as the gene product&#39;s molecular function. ATG2B&#39;s curated molecular function is lipid transfer activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                                        PMID:35271311
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">well-curated localization and interactome measurements</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005783" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER localization is consistent with ATG2B&#39;s role at ER-associated autophagosome biogenesis sites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ER is central to ATG2B-mediated lipid transfer to the isolation membrane; this broader ER localization is valid alongside the more specific ER membrane annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ER membrane annotation transferred by sequence similarity is consistent with the experimentally supported ATG2 lipid-transfer model.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATG2B acts at an ER-to-isolation-membrane interface, so ER membrane localization is a core cellular context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">direct lipid transfer (LT) from ER to IM for IM expansion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005811" target="_blank" class="term-link">
+                                    GO:0005811
+                                </a>
+                            </span>
+                            <span class="term-label">lipid droplet</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22219374
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian Atg2 proteins are essential for autophagosome form...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0005811" data-r="PMID:22219374" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATG2 proteins were observed on lipid droplets, and ATG2A/B depletion altered lipid droplet size and distribution.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This direct localization should be retained, but it is not the main ATG2B core function for the PN review. The lipid-droplet role is experimentally observed but mechanistically less resolved than ER- phagophore lipid transfer.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">One novel aspect of the present study is the finding that mammalian Atg2 proteins are present on lipid droplets</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These data suggest that mammalian Atg2A and Atg2B function both in autophagosome formation and regulation of lipid droplet volume and distribution.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034045" target="_blank" class="term-link">
+                                    GO:0034045
+                                </a>
+                            </span>
+                            <span class="term-label">phagophore assembly site membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22219374
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian Atg2 proteins are essential for autophagosome form...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0034045" data-r="PMID:22219374" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct mammalian evidence supports ATG2 localization/function at autophagic membranes and shows defective autophagosome formation after combined ATG2A/B depletion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core location for ATG2B lipid transfer and membrane tethering during phagophore expansion.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                        PMID:22219374
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120013" target="_blank" class="term-link">
+                                    GO:0120013
+                                </a>
+                            </span>
+                            <span class="term-label">lipid transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31721365
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human ATG2B possesses a lipid transfer activity which is acc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0120013" data-r="PMID:31721365" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human ATG2B directly possesses lipid-transfer activity, and this activity is promoted by negatively charged membranes and WIPI4.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most informative supported molecular-function annotation for ATG2B and should be treated as the core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ATG2B possesses the membrane tethering (MT) and LT activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                        PMID:31721365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">negatively charged membranes and an Atg18 ortholog WIPI4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0062079" target="_blank" class="term-link">
+                                    GO:0062079
+                                </a>
+                            </span>
+                            <span class="term-label">ATG2-ATG18 complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28820312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the ATG2B-WDR45 complex and an aromatic Y/HF...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96BY7" data-a="GO:0062079" data-r="PMID:28820312" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW annotation. ATG2B forms an ATG2-WIPI/ATG18 complex with WDR45/WIPI4, and the PN projection specifically identifies this as the component-level target for the ATG2-WIPI complex bucket.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the conservative way to use the PN projection. The projection is not evidence for a new proteostasis function by itself, but it points to an existing GO complex term that is directly supported by ATG2B-WDR45 structural and biochemical evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                        PMID:28820312
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">conserved aromatic H/YF motif in the C terminus of ATG2A and ATG2B that is crucial for complex formation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" target="_blank" class="term-link">
+                                        PMID:20562859
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATG2B is a WDR45/WIPI4-associated lipid-transfer and membrane-tethering protein that transfers lipids between ER-derived membrane sources and the growing isolation membrane/phagophore during autophagosome assembly.</h3>
+                <span class="vote-buttons" data-g="Q96BY7" data-a="FUNCTION: ATG2B is a WDR45/WIPI4-associated lipid-transfer a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120013" target="_blank" class="term-link">
+                            lipid transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120009" target="_blank" class="term-link">
+                                intermembrane lipid transfer
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000045" target="_blank" class="term-link">
+                                autophagosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034045" target="_blank" class="term-link">
+                                phagophore assembly site membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061908" target="_blank" class="term-link">
+                                phagophore
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0062079" target="_blank" class="term-link">
+                            ATG2-ATG18 complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                                PMID:31721365
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">ATG2B possesses the membrane tethering (MT) and LT activity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                                PMID:28820312
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                                PMID:22219374
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" target="_blank" class="term-link">
+                            PMID:20562859
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Network organization of the human autophagy system.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATG2B is a known autophagy protein in a human autophagy interaction network and associates with WDR45.</div>
+                        
+                        <div class="finding-text">"association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" target="_blank" class="term-link">
+                            PMID:22219374
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mammalian Atg2 proteins are essential for autophagosome formation and important for regulation of size and distribution of lipid droplets.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mammalian ATG2A and ATG2B are required for autophagosome formation and also affect lipid droplet morphology.</div>
+                        
+                        <div class="finding-text">"These data suggest that mammalian Atg2A and Atg2B function both in autophagosome formation and regulation of lipid droplet volume and distribution."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28820312" target="_blank" class="term-link">
+                            PMID:28820312
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Architecture of the ATG2B-WDR45 complex and an aromatic Y/HF motif crucial for complex formation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATG2B forms a complex with WDR45/WIPI4, supporting ATG2-ATG18 complex membership.</div>
+                        
+                        <div class="finding-text">"We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31721365" target="_blank" class="term-link">
+                            PMID:31721365
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human ATG2B possesses a lipid transfer activity which is accelerated by negatively charged lipids and WIPI4.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human ATG2B has membrane tethering and lipid-transfer activity stimulated by WIPI4.</div>
+                        
+                        <div class="finding-text">"ATG2B possesses the membrane tethering (MT) and LT activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34524948" target="_blank" class="term-link">
+                            PMID:34524948
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Global Proximity Interactome of the Human Macroautophagy Pathway.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioID mapping places core macroautophagy proteins in a proximity-interaction network and supports cautious interpretation of high-throughput interaction annotations.</div>
+                        
+                        <div class="finding-text">"Here, we applied BioID to the study of macroautophagy in human cells, generating a proximity interaction map of 39 core macroautophagy proteins."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ATG2B directly associate with lipid droplets at endogenous expression levels, or is the lipid-droplet phenotype secondary to altered ER/phagophore lipid handling?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Noboru Mizushima, Noriyuki Noda, Li Yu</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96BY7" data-a="Q: Does ATG2B directly associate with lipid droplets ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use endogenous ATG2B knockout/rescue cells expressing wild-type ATG2B or WDR45-binding motif mutants, then measure ATG2B-WDR45 colocalization, autophagic flux, and phagophore closure under starvation.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ATG2B-WDR45 complex formation is required for efficient ATG2B recruitment to PI3P-positive phagophore membranes and for autophagosome membrane expansion.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genome editing, rescue, live-cell imaging, and autophagy flux assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q96BY7" data-a="EXPERIMENT: Use endogenous ATG2B knockout/rescue cells express..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ATG2B-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96BY7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="atg2b-notes">ATG2B notes</h1>
+<h2 id="deep-research-provenance">Deep research provenance</h2>
+<p>Falcon deep research was attempted with the requested <code>perplexity-lite</code> fallback using:</p>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>deep-research-falcon<span class="w"> </span>human<span class="w"> </span>ATG2B<span class="w"> </span>--fallback<span class="w"> </span>perplexity-lite
+</code></pre></div>
+
+<p>The Falcon child process timed out after 600 seconds. The fallback attempt then failed with a Perplexity API quota error, so no <code>ATG2B-deep-research-falcon.md</code> or fallback provider artifact was written. Per repository guidance, this manual notes file records the evidence review instead of creating a fake provider-named deep-research file.</p>
+<h2 id="evidence-synthesis">Evidence synthesis</h2>
+<p>ATG2B is one of the two mammalian ATG2 orthologs. The core mammalian phenotype is a redundant ATG2A/ATG2B requirement for autophagy: combined ATG2A/B depletion blocks autophagic flux, accumulates unclosed autophagic structures, and leaves other ATG proteins on abnormal LC3-positive membranes [PMID:22219374 "both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions"; PMID:22219374 "these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation"].</p>
+<p>The best-supported molecular function is membrane tethering plus lipid transfer. Osawa et al. report that human ATG2B has membrane tethering and lipid-transfer activity, promoted by negatively charged membranes and WIPI4 [PMID:31721365 "ATG2B possesses the membrane tethering (MT) and LT activity"; PMID:31721365 "negatively charged membranes and an Atg18 ortholog WIPI4"]. This supports <code>GO:0120013 lipid transfer activity</code> and <code>GO:0120009 intermembrane lipid transfer</code>, with <code>GO:0000045 autophagosome assembly</code> as the best replacement for broad <code>GO:0006914 autophagy</code>.</p>
+<p>The PN projection report lists ATG2B under <code>Autophagy-Lysosome Pathway|Autophagophore initiation and elongation|Regulation of autophagophore membrane composition|ATG2-WIPI complex component</code>, projecting <code>GO:0062079 ATG2-ATG18 complex</code> as a candidate addition. This projection is biologically plausible and conservative when treated as a component annotation, not as evidence for a new proteostasis/chaperone/degradation role. Direct evidence supports ATG2B-WDR45/WIPI4 complex membership [PMID:28820312 "We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex"; PMID:28820312 "conserved aromatic H/YF motif in the C terminus of ATG2A and ATG2B that is crucial for complex formation"]. A human autophagy interaction-network paper also detects ATG2A/ATG2B/WDR45 association <a href="https://pubmed.ncbi.nlm.nih.gov/20562859" title="association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition">PMID:20562859</a>.</p>
+<p>The PI3P-binding IBA annotation should be interpreted cautiously. WIPI/ATG18 proteins are the PI3P-binding effectors in the complex, while ATG2B binds liposomes without requiring PI3P or WDR45 in the cited abstract [PMID:28820312 "PtdIns3P-binding effectors which can form complexes with proteins in the Atg2 family"; PMID:28820312 "ATG2B and found that it could bind to liposomes independently of PtdIns3P or WDR45"]. I marked <code>GO:0032266 phosphatidylinositol-3-phosphate binding</code> as over-annotated for ATG2B.</p>
+<p>Lipid droplet localization is experimentally supported but not the main PN-relevant role. Velikkakath et al. report mammalian ATG2 proteins on lipid droplets and altered lipid droplet size/distribution after ATG2A/B depletion [PMID:22219374 "One novel aspect of the present study is the finding that mammalian Atg2 proteins are present on lipid droplets"; PMID:22219374 "These data suggest that mammalian Atg2A and Atg2B function both in autophagosome formation and regulation of lipid droplet volume and distribution."]. The same paper notes the directness/mechanism remains unresolved <a href="https://pubmed.ncbi.nlm.nih.gov/22219374" title="Further experiments will be required to test whether Atg2 proteins directly or indirectly associate with lipid droplets">PMID:22219374</a>, so I kept lipid-droplet annotations as non-core.</p>
+<p>Selective autophagy terms such as mitophagy, pexophagy, glycophagy, reticulophagy, and piecemeal microautophagy of the nucleus are plausible for a conserved core autophagy membrane-expansion factor, but they should not be read as cargo-specific receptor or recognition functions. I kept those as non-core rather than adding proteostasis-projection-driven cargo-specific conclusions.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96BY7
+gene_symbol: ATG2B
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ATG2B encodes a large conserved autophagy-related lipid-transfer protein that
+  acts at endoplasmic reticulum-phagophore membrane contact sites during
+  autophagosome biogenesis. ATG2B binds membranes and forms an ATG2-WIPI/ATG18
+  complex with WDR45/WIPI4, which promotes ATG2B recruitment to PI3P-containing
+  autophagic membranes and stimulates lipid-transfer activity. Mammalian ATG2
+  proteins are also associated with lipid droplets and affect lipid droplet
+  morphology and dispersion, but the best-supported core role of ATG2B is
+  membrane tethering and lipid transfer for phagophore expansion.
+existing_annotations:
+- term:
+    id: GO:0000407
+    label: phagophore assembly site
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      ATG2B is active at autophagy initiation/elongation sites. Mammalian ATG2
+      proteins are required at a late step of autophagosome formation, and the
+      PN-relevant mechanism is lipid transfer at the ER-phagophore interface.
+    action: ACCEPT
+    reason: &gt;-
+      This cellular-component annotation matches the conserved ATG2/WIPI role at
+      phagophore assembly sites and is supported by mammalian cell evidence for
+      ATG2-dependent autophagosome formation.
+    additional_reference_ids:
+    - PMID:22219374
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0000422
+    label: autophagy of mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ATG2B is part of the core macroautophagy machinery required to build
+      autophagosomal membranes, so it can participate in mitophagy when the
+      macroautophagy machinery is recruited to mitochondria.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is biologically plausible as a phylogenetic inference for a
+      core autophagy factor, but it should not be interpreted as a mitochondria-
+      selective recognition role for ATG2B. The core function remains
+      phagophore lipid transfer.
+    additional_reference_ids:
+    - PMID:22219374
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation
+- term:
+    id: GO:0061908
+    label: phagophore
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      ATG2B functions on nascent autophagic membranes during phagophore
+      expansion and forms a WIPI/ATG18-associated lipid-transfer module.
+    action: ACCEPT
+    reason: &gt;-
+      The phagophore is the core location for ATG2B lipid-transfer activity in
+      autophagosome biogenesis.
+    additional_reference_ids:
+    - PMID:22219374
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0000425
+    label: pexophagy
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ATG2B can support pexophagy indirectly as part of the general
+      autophagosome-building machinery used by selective autophagy pathways.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is best retained as a non-core phylogenetic selective-autophagy
+      annotation. The evidence does not show ATG2B as a peroxisome-selective
+      cargo receptor or specificity factor.
+    additional_reference_ids:
+    - PMID:22219374
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions
+- term:
+    id: GO:0043495
+    label: protein-membrane adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ATG2B binds membranes and WDR45/WIPI4 and functions with this WIPI partner
+      at autophagic membranes, consistent with a protein-membrane adaptor or
+      tethering role in addition to lipid transfer.
+    action: ACCEPT
+    reason: &gt;-
+      Direct biochemical and structural evidence supports ATG2B membrane binding,
+      ATG2B-WDR45 complex formation, and membrane tethering/lipid-transfer
+      activity. The more specific core molecular function is lipid transfer
+      activity, but this term captures a supported tether/adaptor aspect.
+    additional_reference_ids:
+    - PMID:28820312
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:28820312
+      supporting_text: mammalian WDR45/WIPI4 has a stronger binding capacity for mammalian ATG2A or ATG2B than the other 3 WIPIs
+    - reference_id: PMID:31721365
+      supporting_text: ATG2B possesses the membrane tethering (MT) and LT activity
+- term:
+    id: GO:0061723
+    label: glycophagy
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ATG2B may be required for glycophagy insofar as glycophagy uses the core
+      macroautophagy membrane expansion machinery.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as a non-core inferred selective-autophagy annotation. The direct
+      evidence for ATG2B is autophagosome membrane formation, not glycogen cargo
+      recognition.
+    additional_reference_ids:
+    - PMID:22219374
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions
+- term:
+    id: GO:0032266
+    label: phosphatidylinositol-3-phosphate binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The ATG2-WIPI module is recruited to PI3P-positive autophagic membranes,
+      but the direct PI3P-binding effector is the WIPI/ATG18 family partner,
+      not clearly ATG2B itself.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This term overstates the available gene-level evidence for ATG2B. Direct
+      evidence supports liposome binding and WDR45/WIPI4-dependent association
+      with PI3P-containing membranes, but not a specific ATG2B PI3P headgroup
+      binding activity.
+    additional_reference_ids:
+    - PMID:28820312
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:28820312
+      supporting_text: PtdIns3P-binding effectors which can form complexes with proteins in the Atg2 family
+    - reference_id: PMID:28820312
+      supporting_text: ATG2B and found that it could bind to liposomes independently of PtdIns3P or WDR45
+- term:
+    id: GO:0034727
+    label: piecemeal microautophagy of the nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ATG2B is a conserved autophagy factor and may support this process where
+      the conserved machinery is used, but human ATG2B is not established as a
+      process-specific PMN factor.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Keep as a non-core phylogenetic inference. The strongest mammalian
+      evidence supports general phagophore/autophagosome biogenesis rather than
+      a human PMN-specific role.
+    additional_reference_ids:
+    - PMID:22219374
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: both Atg2A and Atg2B are required for autophagy and that they have redundant and overlapping functions
+- term:
+    id: GO:0061709
+    label: reticulophagy
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ATG2B can support reticulophagy as part of the core autophagy membrane
+      expansion system, especially because ATG2B acts at ER-phagophore contact
+      sites.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as non-core. ATG2B is not a reticulophagy cargo receptor or ER
+      quality-control factor; its direct role is lipid transfer for phagophore
+      expansion.
+    additional_reference_ids:
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER membrane localization is consistent with the accepted model in which
+      ATG2B tethers the isolation membrane/phagophore edge to the ER and
+      transfers lipids from ER-derived membranes to the growing phagophore.
+    action: ACCEPT
+    reason: &gt;-
+      Although this GOA row is electronically inferred from UniProt subcellular
+      location, it is consistent with experimental and biochemical evidence for
+      ATG2-dependent ER-to-phagophore lipid transfer.
+    additional_reference_ids:
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0005811
+    label: lipid droplet
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mammalian ATG2 proteins associate with lipid droplets and affect lipid
+      droplet morphology and dispersion, but this is a secondary cellular
+      context relative to ATG2B&#39;s core phagophore lipid-transfer role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain the localization, but mark non-core because the publication notes
+      that the precise lipid-droplet mechanism and directness of the association
+      remain unresolved.
+    additional_reference_ids:
+    - PMID:22219374
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: One novel aspect of the present study is the finding that mammalian Atg2 proteins are present on lipid droplets
+    - reference_id: PMID:22219374
+      supporting_text: Further experiments will be required to test whether Atg2 proteins directly or indirectly associate with lipid droplets
+- term:
+    id: GO:0006914
+    label: autophagy
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The broad InterPro-derived autophagy annotation is directionally correct
+      but less informative than the experimentally supported role in
+      autophagosome assembly/phagophore expansion.
+    action: MODIFY
+    reason: &gt;-
+      Modify to GO:0000045 autophagosome assembly. ATG2B is not merely
+      associated with autophagy in general; it is required for formation and
+      closure/expansion of autophagosomal membranes.
+    proposed_replacement_terms:
+    - id: GO:0000045
+      label: autophagosome assembly
+    additional_reference_ids:
+    - PMID:22219374
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0034045
+    label: phagophore assembly site membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The phagophore assembly site membrane is a supported location for ATG2B
+      function and matches its WIPI-associated lipid-transfer role at the
+      growing isolation membrane.
+    action: ACCEPT
+    reason: &gt;-
+      The electronic UniProt location mapping is supported by the experimental
+      ATG2A/B depletion phenotype and by ATG2B membrane tethering/lipid-transfer
+      activity.
+    additional_reference_ids:
+    - PMID:22219374
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0120009
+    label: intermembrane lipid transfer
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ATG2B has membrane tethering and lipid-transfer activity and transfers
+      lipids between membranes during isolation membrane expansion.
+    action: ACCEPT
+    reason: &gt;-
+      This BP annotation follows directly from the experimentally demonstrated
+      lipid-transfer activity and the model of ER-to-isolation-membrane lipid
+      movement.
+    additional_reference_ids:
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:31721365
+      supporting_text: ATG2B possesses the membrane tethering (MT) and LT activity
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20562859
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This interaction record reflects WDR45/WIPI4 association in the human
+      autophagy interaction network, but generic protein binding is not an
+      informative ATG2B molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The WDR45 interaction is biologically relevant, but the curation should be
+      represented by the ATG2-ATG18 complex/component context and ATG2B lipid
+      transfer/tethering function rather than by GO:0005515.
+    additional_reference_ids:
+    - PMID:28820312
+    supported_by:
+    - reference_id: PMID:20562859
+      supporting_text: association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition
+    - reference_id: PMID:28820312
+      supporting_text: mammalian WDR45/WIPI4 has a stronger binding capacity for mammalian ATG2A or ATG2B than the other 3 WIPIs
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This BioPlex interaction row is a high-throughput WDR45 association, but
+      GO:0005515 is too generic for ATG2B.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Retaining a generic protein binding MF would obscure the supported biology:
+      ATG2B forms a WDR45/WIPI4-associated autophagy lipid-transfer complex. The
+      interaction can inform complex membership but should not be treated as a
+      core molecular function by itself.
+    additional_reference_ids:
+    - PMID:28820312
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: These networks model the interactome whose structure encodes protein function, localization, and complex membership.
+    - reference_id: PMID:28820312
+      supporting_text: mammalian WDR45/WIPI4 has a stronger binding capacity for mammalian ATG2A or ATG2B than the other 3 WIPIs
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34524948
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This proximity-interactome annotation supports ATG2B&#39;s placement in the
+      human macroautophagy interaction network, but it is not an adequate
+      molecular-function description.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding should not be propagated as ATG2B&#39;s function. The
+      informative curation is lipid transfer activity and ATG2-WIPI complex
+      membership.
+    additional_reference_ids:
+    - PMID:28820312
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:34524948
+      supporting_text: Here, we applied BioID to the study of macroautophagy in human cells, generating a proximity interaction map of 39 core macroautophagy proteins.
+    - reference_id: PMID:31721365
+      supporting_text: ATG2B possesses the membrane tethering (MT) and LT activity
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The OpenCell-derived interaction annotation is useful as interactome
+      context, but GO:0005515 is too broad and uninformative for ATG2B curation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The interaction should be interpreted conservatively as supporting complex
+      context, not as the gene product&#39;s molecular function. ATG2B&#39;s curated
+      molecular function is lipid transfer activity.
+    additional_reference_ids:
+    - PMID:28820312
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:35271311
+      supporting_text: well-curated localization and interactome measurements
+    - reference_id: PMID:28820312
+      supporting_text: We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER localization is consistent with ATG2B&#39;s role at ER-associated
+      autophagosome biogenesis sites.
+    action: ACCEPT
+    reason: &gt;-
+      The ER is central to ATG2B-mediated lipid transfer to the isolation
+      membrane; this broader ER localization is valid alongside the more
+      specific ER membrane annotation.
+    additional_reference_ids:
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      The ER membrane annotation transferred by sequence similarity is
+      consistent with the experimentally supported ATG2 lipid-transfer model.
+    action: ACCEPT
+    reason: &gt;-
+      ATG2B acts at an ER-to-isolation-membrane interface, so ER membrane
+      localization is a core cellular context.
+    additional_reference_ids:
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:31721365
+      supporting_text: direct lipid transfer (LT) from ER to IM for IM expansion
+- term:
+    id: GO:0005811
+    label: lipid droplet
+  evidence_type: EXP
+  original_reference_id: PMID:22219374
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ATG2 proteins were observed on lipid droplets, and ATG2A/B depletion
+      altered lipid droplet size and distribution.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This direct localization should be retained, but it is not the main
+      ATG2B core function for the PN review. The lipid-droplet role is
+      experimentally observed but mechanistically less resolved than ER-
+      phagophore lipid transfer.
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: One novel aspect of the present study is the finding that mammalian Atg2 proteins are present on lipid droplets
+    - reference_id: PMID:22219374
+      supporting_text: These data suggest that mammalian Atg2A and Atg2B function both in autophagosome formation and regulation of lipid droplet volume and distribution.
+- term:
+    id: GO:0034045
+    label: phagophore assembly site membrane
+  evidence_type: EXP
+  original_reference_id: PMID:22219374
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct mammalian evidence supports ATG2 localization/function at
+      autophagic membranes and shows defective autophagosome formation after
+      combined ATG2A/B depletion.
+    action: ACCEPT
+    reason: &gt;-
+      This is a core location for ATG2B lipid transfer and membrane tethering
+      during phagophore expansion.
+    supported_by:
+    - reference_id: PMID:22219374
+      supporting_text: these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation
+- term:
+    id: GO:0120013
+    label: lipid transfer activity
+  evidence_type: IDA
+  original_reference_id: PMID:31721365
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Human ATG2B directly possesses lipid-transfer activity, and this activity
+      is promoted by negatively charged membranes and WIPI4.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most informative supported molecular-function annotation for
+      ATG2B and should be treated as the core molecular function.
+    supported_by:
+    - reference_id: PMID:31721365
+      supporting_text: ATG2B possesses the membrane tethering (MT) and LT activity
+    - reference_id: PMID:31721365
+      supporting_text: negatively charged membranes and an Atg18 ortholog WIPI4
+- term:
+    id: GO:0062079
+    label: ATG2-ATG18 complex
+  evidence_type: IDA
+  original_reference_id: PMID:28820312
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      NEW annotation. ATG2B forms an ATG2-WIPI/ATG18 complex with WDR45/WIPI4,
+      and the PN projection specifically identifies this as the component-level
+      target for the ATG2-WIPI complex bucket.
+    action: NEW
+    reason: &gt;-
+      This is the conservative way to use the PN projection. The projection is
+      not evidence for a new proteostasis function by itself, but it points to an
+      existing GO complex term that is directly supported by ATG2B-WDR45
+      structural and biochemical evidence.
+    additional_reference_ids:
+    - PMID:20562859
+    - PMID:31721365
+    supported_by:
+    - reference_id: PMID:28820312
+      supporting_text: We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex
+    - reference_id: PMID:28820312
+      supporting_text: conserved aromatic H/YF motif in the C terminus of ATG2A and ATG2B that is crucial for complex formation
+    - reference_id: PMID:20562859
+      supporting_text: association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: PMID:20562859
+  title: Network organization of the human autophagy system.
+  findings:
+  - statement: ATG2B is a known autophagy protein in a human autophagy interaction network and associates with WDR45.
+    supporting_text: association between ATG2A, ATG2B, and WDR45 was unaltered by mTOR inhibition
+- id: PMID:22219374
+  title: Mammalian Atg2 proteins are essential for autophagosome formation and important for regulation of size and distribution of lipid droplets.
+  findings:
+  - statement: Mammalian ATG2A and ATG2B are required for autophagosome formation and also affect lipid droplet morphology.
+    supporting_text: These data suggest that mammalian Atg2A and Atg2B function both in autophagosome formation and regulation of lipid droplet volume and distribution.
+- id: PMID:28820312
+  title: Architecture of the ATG2B-WDR45 complex and an aromatic Y/HF motif crucial for complex formation.
+  full_text_unavailable: true
+  findings:
+  - statement: ATG2B forms a complex with WDR45/WIPI4, supporting ATG2-ATG18 complex membership.
+    supporting_text: We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex
+- id: PMID:31721365
+  title: Human ATG2B possesses a lipid transfer activity which is accelerated by negatively charged lipids and WIPI4.
+  full_text_unavailable: true
+  findings:
+  - statement: Human ATG2B has membrane tethering and lipid-transfer activity stimulated by WIPI4.
+    supporting_text: ATG2B possesses the membrane tethering (MT) and LT activity
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings: []
+- id: PMID:34524948
+  title: Global Proximity Interactome of the Human Macroautophagy Pathway.
+  findings:
+  - statement: BioID mapping places core macroautophagy proteins in a proximity-interaction network and supports cautious interpretation of high-throughput interaction annotations.
+    supporting_text: Here, we applied BioID to the study of macroautophagy in human cells, generating a proximity interaction map of 39 core macroautophagy proteins.
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+core_functions:
+- description: &gt;-
+    ATG2B is a WDR45/WIPI4-associated lipid-transfer and membrane-tethering
+    protein that transfers lipids between ER-derived membrane sources and the
+    growing isolation membrane/phagophore during autophagosome assembly.
+  molecular_function:
+    id: GO:0120013
+    label: lipid transfer activity
+  directly_involved_in:
+  - id: GO:0120009
+    label: intermembrane lipid transfer
+  - id: GO:0000045
+    label: autophagosome assembly
+  locations:
+  - id: GO:0034045
+    label: phagophore assembly site membrane
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  - id: GO:0061908
+    label: phagophore
+  in_complex:
+    id: GO:0062079
+    label: ATG2-ATG18 complex
+  supported_by:
+  - reference_id: PMID:31721365
+    supporting_text: ATG2B possesses the membrane tethering (MT) and LT activity
+  - reference_id: PMID:28820312
+    supporting_text: We also purified the ATG2B-WDR45 complex and then performed 3-dimensional reconstruction of the complex
+  - reference_id: PMID:22219374
+    supporting_text: these results suggest that Atg2A/B play an essential role, probably at a late step of autophagosome formation
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does ATG2B directly associate with lipid droplets at endogenous expression
+    levels, or is the lipid-droplet phenotype secondary to altered ER/phagophore
+    lipid handling?
+  experts:
+  - Noboru Mizushima
+  - Noriyuki Noda
+  - Li Yu
+suggested_experiments:
+- hypothesis: &gt;-
+    ATG2B-WDR45 complex formation is required for efficient ATG2B recruitment to
+    PI3P-positive phagophore membranes and for autophagosome membrane expansion.
+  description: &gt;-
+    Use endogenous ATG2B knockout/rescue cells expressing wild-type ATG2B or
+    WDR45-binding motif mutants, then measure ATG2B-WDR45 colocalization,
+    autophagic flux, and phagophore closure under starvation.
+  experiment_type: genome editing, rescue, live-cell imaging, and autophagy flux assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
