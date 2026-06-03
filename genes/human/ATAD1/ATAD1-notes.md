@@ -24,7 +24,10 @@ pathway`. This is a class-level propagation, and the mapping audit flags this
 source as requiring manual gene-level review before changing a review. I accepted
 the projected term only as a broad `NEW` candidate because PMID:24843043 supports
 degradation as the downstream outcome, not because the PN source alone is
-sufficient. It should not replace `GO:0140570`, which is the sharper mechanism.
+sufficient. I used TAS rather than IMP for this candidate because the cached
+paper text supports a traceable degradation claim, while the explicit
+protein-level knockout evidence available in the cached abstract is from mouse
+tissue. It should not replace `GO:0140570`, which is the sharper mechanism.
 
 Peroxisomal membrane localization is retained as non-core. UniProt reports
 peroxisome membrane localization and Reactome lists ATAD1 as a class I
