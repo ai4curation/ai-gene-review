@@ -26,5 +26,5 @@
 ## Curation decisions
 
 - Treat `GO:0005515 protein binding` rows as over-annotations. The papers often support biologically meaningful interactions, but generic protein binding hides the specific AMBRA1 functions: CRL4 substrate receptor/adaptor activity, ubiquitin ligase binding, protein phosphatase binding/activation, autophagy scaffolding, and mitophagy regulation.
-- Treat `GO:0051020 GTPase binding` from PMID:25891078 as unsupported for AMBRA1. The cached paper supports IRGM organization of autophagy regulators but does not establish AMBRA1 as a GTPase-binding molecular function.
+- Treat `GO:0051020 GTPase binding` from PMID:25891078 as over-annotated for AMBRA1. The cached paper supports IRGM organization of autophagy regulators and a physical IRGM-AMBRA1 interaction, but does not establish AMBRA1 as a general GTPase-binding molecular-function effector.
 - Treat `GO:0051897 positive regulation of phosphatidylinositol 3-kinase/protein kinase B signal transduction` as a term-choice problem. The Parkin/AMBRA1 paper supports local class III PI3K activation during mitophagy, not canonical PI3K/AKT signaling, so `GO:1901526 positive regulation of mitophagy` is the better replacement.
