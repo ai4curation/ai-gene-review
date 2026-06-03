@@ -1,0 +1,23 @@
+# ABTB1 review notes
+
+## Scope
+
+ABTB1 is reviewed for the Human Proteostasis Network batch because the PN projection places it in the UPS Cul3 substrate receptor branch. The PN projection for ABTB1 is one candidate addition: `GO:1990756 ubiquitin-like ligase-substrate adaptor activity`, from `Ubiquitin Proteasome System|E3 ubiquitin and UBL ligases|Cul3 substrate receptor|BTB-BACK|ankyrin`.
+
+I am treating that projection as context only for this review. The PN mapping audit marks the Cul3 substrate receptor mapping as requiring manual gene-level review before changing a gene review, and the UPS branch is domain-heavy. For ABTB1, local evidence supports BTB/POZ/ankyrin architecture, CUL3 interaction, and inferred ubiquitin ligase complex membership, but I did not find ABTB1-specific substrate identification or a direct assay showing that ABTB1 bridges CUL3 to a substrate. Therefore I do not add `GO:1990756` as a new annotation in this review.
+
+## Evidence synthesis
+
+ABTB1/BPOZ was cloned as a 478 aa protein with an N-terminal ankyrin repeat and two BTB/POZ domains [PMID:10891360 "A novel human gene containing an ankyrin repeat and BTB/POZ domains (BPOZ) was isolated from a human leukocyte cDNA library"; PMID:10891360 "Sequence pattern analysis shows that BPOZ contains an N-terminal ankyrin repeat, a bipartite nuclear localization signal and two BTB/POZ domains"]. The same paper found ubiquitous fetal expression and proposed involvement in protein-protein interaction/complex formation [PMID:10891360 "ubiquitously expressed in all fetal tissues examined"; PMID:10891360 "functionally involved in protein-protein interaction, perhaps in forming protein complexes"].
+
+UniProt summarizes ABTB1 as cytoplasmic and as a possible mediator of PTEN growth-suppressive signaling [file:human/ABTB1/ABTB1-uniprot.txt "May act as a mediator of the PTEN growth-suppressive"; file:human/ABTB1/ABTB1-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"]. The PTEN-response paper reports that BPOZ overexpression suppresses cancer cell growth and G1/S progression, while antisense knockdown accelerates growth [PMID:11494141 "BPOZ were able to suppress growth of cancer cells"; PMID:11494141 "over-expression of BPOZ inhibited progression of the cell cycle at the G(1)/S transition"; PMID:11494141 "Anti-sense oligonucleotides for BPOZ or EGR2 effectively inhibited their expression, and cell growth was accelerated"].
+
+The strongest proteostasis-relevant evidence is CUL3 association plus domain architecture. UniProt lists an ABTB1-CUL3 interaction with multiple experiments [file:human/ABTB1/ABTB1-uniprot.txt "Q969K4; Q13618: CUL3; NbExp=5"]. The Bennett et al. CRL-network paper provides the broader cullin-ligase proteomics context, reporting that cullins are assembled with adaptor modules and that adaptor-module abundance drives CRL network organization [PMID:21145461 "a large fraction of cullins are assembled with adaptor modules"; PMID:21145461 "the abundance of adaptor modules, rather than cycles of neddylation and CAND1 binding, drives CRL network organization"]. This supports a specific replacement of generic CUL3-linked `protein binding` with `cullin family protein binding` and supports refining `ubiquitin ligase complex` toward `Cul3-RING ubiquitin ligase complex`. It does not, by itself, establish a known ABTB1 substrate.
+
+The remaining IntAct protein-binding rows are mostly large-scale interactome evidence for EEF1A2, EEF1D, ZBTB21, ATXN1, TARDBP, and additional CUL3 interactions. These data support physical-interaction context but the generic `protein binding` term is not informative as a molecular function. I mark these rows as over-annotated rather than using them to infer translation elongation factor activity, neurodegeneration-specific function, or broad proteostasis function.
+
+## Falcon
+
+Falcon deep research was started for ABTB1 with `perplexity-lite` fallback on 2026-06-03. Falcon timed out after 600 seconds and did not produce `ABTB1-deep-research-falcon.md`. The configured fallback then failed with a Perplexity API 401 quota error and did not produce `ABTB1-deep-research-perplexity-lite.md`.
+
+Because both providers failed, this review relies on the local UniProt record, GOA file, cached publications, fetched PANTHER family data, and PN projection/mapping-audit files. If a later Falcon/fallback report identifies direct ABTB1 substrate-adaptor evidence, the main YAML should be updated to reconsider `GO:1990756`; otherwise this review remains intentionally conservative about the PN projection.
