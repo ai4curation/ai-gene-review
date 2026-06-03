@@ -1,7 +1,7 @@
 ---
 name: boss
 description: Use ONLY when the user explicitly asks to orchestrate parallel external agents (Codex or Claude Code) in tmux sessions via tp (tmux-pilot). Or when a user tells you that you're the boss or orchestrator. You can also use this if you are an operclaw agent. NEVER auto-invoke for a generic "do this in parallel" request. For in-process subagents, use superpowers:dispatching-parallel-agents instead.
-argument-hint: [ "review" | "status" | "kill" ] [INFO]
+argument-hint: '"review" | "status" | "kill" [INFO]'
 ---
 
 # boss: orchestrate multiple agents in the ai-gene-review repo
