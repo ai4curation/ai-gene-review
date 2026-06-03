@@ -12,6 +12,8 @@
 
 - Farnesyl/prenyl binding is a real AIPL1 function. Ramamurthy et al. showed that "AIPL1 interacts specifically with farnesylated proteins" and "AIPL1 enhances the processing of farnesylated proteins" [PMID:14555765]. Majumder et al. later mapped this to the FKBP-like domain, stating that "farnesylated-Cys binds exclusively to the FKBP domain of AIPL1" [PMID:23737531].
 
+- Keep farnesyl/prenyl binding separate from the HSP90-dependent PDE6 maturation core function. Yadav et al. show that prenyl-binding-deficient AIPL1 retains co-chaperone activity and conclude that prenyl modification sequestration is not required for PDE6 maturation [PMID:35065964 "neither sequestration of the prenyl modifications is required for PDE6 maturation to proceed"].
+
 - The FKBP-like domain should not be curated as PPIase activity. Majumder et al. state that "the FKBP domain of AIPL1 does not bind FK506 or exhibit peptidylprolylisomerase activity" [PMID:23737531]. This directly argues against retaining the InterPro/PN PPIase transfer.
 
 - The strongest PN-relevant function is AIPL1-HSP90 co-chaperone activity for PDE6 maturation. Yadav et al. report that AIPL1 "preferentially binds to HSP90 in the closed state with a stoichiometry of 1:2" and that "Disruption of the AIPL1 interaction with HSP90 impedes maturation of PDE6" [PMID:35065964]. Sacristan-Reviriego et al. also describe AIPL1 as a "photoreceptor-specific co-chaperone that interacts with the molecular chaperone HSP90" [PMID:28973376].
