@@ -16,6 +16,8 @@ The strongest proteostasis-relevant evidence is CUL3 association plus domain arc
 
 The remaining IntAct protein-binding rows are mostly large-scale interactome evidence for EEF1A2, EEF1D, ZBTB21, ATXN1, TARDBP, and additional CUL3 interactions. These data support physical-interaction context but the generic `protein binding` term is not informative as a molecular function. I mark these rows as over-annotated rather than using them to infer translation elongation factor activity, neurodegeneration-specific function, or broad proteostasis function.
 
+UniProt lists three GO rows that were not present in the QuickGO GOA file used to seed this review: nucleolus, plasma membrane, and translation elongation factor activity [file:human/ABTB1/ABTB1-uniprot.txt "GO; GO:0005730; C:nucleolus; IDA:HPA"; file:human/ABTB1/ABTB1-uniprot.txt "GO; GO:0005886; C:plasma membrane; IDA:HPA"; file:human/ABTB1/ABTB1-uniprot.txt "GO; GO:0003746; F:translation elongation factor activity"]. The two HPA localization rows may reflect broader or condition-specific localization, but they are not in the seeded GOA file. The translation elongation factor activity IEA looks especially suspect: ABTB1 binds EEF1A2 reproducibly [file:human/ABTB1/ABTB1-uniprot.txt "Q969K4; Q05639: EEF1A2; NbExp=12"], but local evidence does not show that ABTB1 itself has elongation factor activity.
+
 ## Falcon
 
 Falcon deep research was started for ABTB1 with `perplexity-lite` fallback on 2026-06-03. Falcon timed out after 600 seconds and did not produce `ABTB1-deep-research-falcon.md`. The configured fallback then failed with a Perplexity API 401 quota error and did not produce `ABTB1-deep-research-perplexity-lite.md`.
