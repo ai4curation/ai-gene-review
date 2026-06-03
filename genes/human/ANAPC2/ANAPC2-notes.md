@@ -31,8 +31,11 @@ ANAPC2 as belonging to the cullin family and states that ANAPC2 with ANAPC11
 constitutes the catalytic APC/C component [genes/human/ANAPC2/ANAPC2-uniprot.txt].
 The structural papers describe the catalytic module as Apc2-Apc11 and the
 cullin Apc2/RING Apc11 pair as the site where substrates are ubiquitinated
-[PMID:16364912; PMID:26083744]. I therefore added `GO:0160072` as a proposed
-`NEW` annotation rather than automatically changing existing GOA.
+[PMID:16364912; PMID:26083744]. The biochemical reconstitution paper shows that
+human APC2 with APC11 forms a minimal ligase module sufficient to ubiquitinate
+securin and cyclin B1 with Ubc4 or UbcH10, while lacking substrate specificity
+alone [PMID:11739784]. I therefore added `GO:0160072` as a proposed `NEW`
+annotation rather than automatically changing existing GOA.
 
 ## Annotation review summary
 
@@ -43,8 +46,10 @@ APC/C-dependent proteasomal degradation [PMID:16364912; PMID:18485873;
 PMID:26083744; PMID:29033132].
 
 Neuron-development annotations transferred from mammalian orthology were kept
-as non-core where they represent CDC20-APC/C pathway context rather than a
-distinct ANAPC2 molecular function. Generic `protein binding` annotations were
-not treated as core because they primarily record individual physical
-interactions and are less informative than the APC/C scaffold and ubiquitin
-ligase module interpretation.
+as non-core only where they directly match the UniProt CDC20-APC/C
+presynaptic-differentiation context. Broader or more specific axon, dendrite,
+and synaptic-plasticity terms were marked as over-annotated because the local
+support does not establish those exact process labels for human ANAPC2. Generic
+`protein binding` annotations were not treated as core because they primarily
+record individual physical interactions and are less informative than the APC/C
+scaffold and ubiquitin ligase module interpretation.
