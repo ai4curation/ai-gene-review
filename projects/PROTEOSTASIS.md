@@ -6,6 +6,7 @@ priority: high
 scope: Full Proteostasis Consortium workbook and manuscripts; unfolded protein binding is a sub-use case
 sidecars:
   priority_genes: PROTEOSTASIS/priority_genes.tsv
+  review_batches: PROTEOSTASIS/review_batches.tsv
   mapping_sets_dir: PROTEOSTASIS/mappings
   tests_dir: PROTEOSTASIS/tests
   reports_dir: PROTEOSTASIS/reports
@@ -20,6 +21,22 @@ external_sources:
   - Survey of the Human PN MS1 Translation Folding Transport
   - Survey of the Human PN MS2 ALP
   - Survey of the Human PN MS3 UPS
+review_batches:
+  - id: proteostasis-pr-1217
+    title: "[codex] Review proteostasis network genes"
+    source_pr: 1217
+    source_pr_url: "https://github.com/ai4curation/ai-gene-review/pull/1217"
+    merged_at: "2026-06-02T19:59:17Z"
+    species: human
+    gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+  - id: proteostasis-batch-2026-06-03
+    title: "Proteostasis PN projected candidate additions batch 2"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
 ---
 # Human Proteostasis Network Project
 
@@ -66,6 +83,7 @@ Within this project:
 See:
 
 - [Priority genes](PROTEOSTASIS/priority_genes.tsv)
+- [Reviewed gene batches](PROTEOSTASIS/review_batches.tsv)
 - [PN tree browser](PROTEOSTASIS/pn.html)
 - [ALP mapping set](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml)
 - [Chaperone mapping set](PROTEOSTASIS/mappings/chaperone_systems.yaml)
@@ -87,6 +105,20 @@ See:
 - [Ribosome Quality Control project](RIBOSOME_QUALITY_CONTROL.md)
 - [Integrated Stress Response project](INTEGRATED_STRESS_RESPONSE.md)
 - [ER-phagy project](ER_PHAGY.md)
+
+## Gene Review Tracking
+
+The most recent PN review batch is
+[`#1217`](https://github.com/ai4curation/ai-gene-review/pull/1217),
+merged on `2026-06-02`. It reviewed `50` human proteostasis-network genes:
+`49` new review YAMLs plus a refresh of the existing `PIK3C3` review. The
+gene-level metadata for this batch is tracked in
+[review_batches.tsv](PROTEOSTASIS/review_batches.tsv).
+
+The current PN review batch, `proteostasis-batch-2026-06-03`, was selected from
+the projected candidate additions report and has `50` human gene-review PR rows
+in the same sidecar. Merged PRs record `merged_at`; open PRs keep that field
+empty until merged.
 
 ## What The PN Resource Actually Contains
 
