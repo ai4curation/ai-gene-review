@@ -206,3 +206,65 @@ GROUP BY status;
 - **MOD databases** (PomBase, FlyBase, TAIR) use organism-specific IDs, not UniProt accessions
 - ID length heuristic is ~95% accurate but not perfect
 - Some entries promoted from TrEMBL to Swiss-Prot retain automatic keywords
+
+---
+
+## Keyword-Level View: Reverse-Mapping GO Terms to Source Keywords
+
+All SPKW analyses above work at the **GO-term** level, because the GAF stores only the GO
+term (`ontology_class_ref`) and `supporting_references='GO_REF:0000043'` — **not** the source
+UniProt keyword. To ask the more direct question — *which UniProt keywords drive
+over-annotation?* — reverse-map each SPKW-unique GO term to its source keyword(s) using the
+public GOA/UniProt **keyword2go** mapping:
+
+```bash
+# 744 keyword->GO mappings (version date in the file header)
+curl -sL https://current.geneontology.org/ontology/external2go/uniprotkb_kw2go -o kw2go.txt
+# Parse "UniProtKB-KW:KW-0067 ATP-binding > GO:ATP binding ; GO:0005524" -> go_id, kw_id, kw_name
+grep -vE '^!' kw2go.txt \
+  | sed -E 's/^UniProtKB-KW:(KW-[0-9]+) (.+) > GO:.+ ; (GO:[0-9]+)$/\3\t\1\t\2/' > kw2go.tsv
+```
+
+Then `LEFT JOIN` `kw2go` on `ontology_class_ref` and aggregate by keyword. One GO term can
+map from several keywords (e.g. *defense response* ← `Plant defense` / `Defensin` /
+`Antimicrobial`), so pick the keyword whose biology matches the organism set.
+
+### The keyword watch-list (non-Arabidopsis plants, ranked by SPKW-unique gene count)
+
+Tiering follows [SPKW-PLANTS.md](SPKW-PLANTS.md). The over-annotation risk is concentrated in
+a small set of **process / pathway / role** keywords; the high-count keywords are otherwise
+broad-but-correct binding/enzyme-class terms.
+
+| Tier | UniProt keyword(s) | → GO term | plant genes | Reviewed? |
+|------|--------------------|-----------|-------------|-----------|
+| **A** | Plant defense (also Defensin, Antimicrobial) | defense response (GO:0006952) | 312 | partial (STS3, PR1B1, MPK4a) |
+| **A** | Auxin signaling pathway | auxin-activated signaling pathway (GO:0009734) | 120 | yes (ABP1; ARF19 ARATH) |
+| **A** | **Methyltransferase** | methylation (GO:0032259) | 92 | **no — top unreviewed** |
+| **A** | Cell division | cell division (GO:0051301) | 81 | yes (AM1; BUB3.1 ARATH) |
+| **A** | **Differentiation** | cell differentiation (GO:0030154) | 62 | **no** (MADS-box TFs) |
+| **A** | **Flowering** | flower development (GO:0009908) | 46 | partial (ELF4 ARATH) |
+| **A** | Defensin / Cytolysis / Hemolysis | killing of cells of another organism (GO:0031640) | 42 | partial (LCR1, PR1B1) |
+| **A** | **Nodulation** | nodulation (GO:0009877) | 40 | partial (NFP) |
+| A | Abscisic acid / Gibberellin / Brassinosteroid / Cytokinin / Ethylene signaling | respective `*-activated/mediated signaling pathway` | 9–25 each | partial (RHT1=GA) |
+| B | Metal-binding, Metal-thiolate cluster | metal ion binding (GO:0046872) | 1149 | low risk (broad, correct) |
+| B | Nucleotide-binding / ATP-binding / Zinc-finger | nucleotide / ATP / zinc binding | 286–342 | low risk |
+| C | Ribonucleoprotein | ribonucleoprotein complex (GO:1990904) | 235 | correct |
+| C | Cell wall biogenesis/degradation | cell wall organization (GO:0071555) | 140 | correct (CASP1) |
+| C | Storage protein / Seed storage protein | nutrient reservoir activity (GO:0045735) | 54 | correct (PATB1) |
+| D | Photosynthesis / Chlorophyll-binding | photosynthesis, photosystem I/II | 65–110 | context (PPC16, psaC) |
+
+### Two over-annotation mechanisms made explicit at the keyword level
+
+1. **Enzyme-class keyword → bare process term.** `Methyltransferase` (a molecular-function
+   keyword) maps to the generic process *methylation* (GO:0032259) — uninformative, and
+   sometimes wrong about the substrate (protein vs DNA vs small-molecule methyltransferases
+   all collapse to one term). The same shape produced *cell division* from `Cell division`.
+2. **Pathway/role keyword → developmental or defense process.** `Differentiation`,
+   `Flowering`, `Nodulation`, `Plant defense` attach broad process terms to genes that merely
+   act *during* (or are *induced by*) the process — the recurring "expression ≠ function" and
+   "responsive ≠ component" patterns.
+
+**Cross-organism reuse.** Because keyword2go is organism-independent, this watch-list of ~30
+process/role keywords is the same lever in any taxon — the keywords flagged here (defense,
+hormone signaling, differentiation, methylation, cell division/meiosis, killing) are exactly
+those that drove over-annotation in the human, *S. pombe*, and Arabidopsis subprojects.

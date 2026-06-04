@@ -1,0 +1,22 @@
+| Feature | Key finding | Evidence/source (author year) | Notes/conditions |
+|---|---|---|---|
+| Enzyme type | ChrR from *Pseudomonas putida* KT2440 is a soluble flavoprotein chromate/quinone reductase; primary literature uses the gene/protein name **chrR/ChrR** | Gonzalez et al. 2003; Ackerley et al. 2004 (pqac-00000003, pqac-00000005) | Studied as purified recombinant KTChrR and in KT2440 mutant backgrounds |
+| Cellular localization / physical state | The enzyme is **soluble**, consistent with a cytosolic flavoprotein rather than a membrane protein | Gonzalez et al. 2003; Ackerley et al. 2004 (pqac-00000016, pqac-00000018) | Purified from soluble fractions; described in the title/analysis as a soluble flavoprotein |
+| Cofactor | ChrR contains a **tightly/noncovalently bound FMN** cofactor identified by TLC | Gonzalez et al. 2003; Ackerley et al. 2004 (pqac-00000001, pqac-00000009) | Yellow purified protein; cofactor released by boiling and matched FMN standard |
+| Oligomeric state | ChrR is **dimeric** | Ackerley et al. 2004 (pqac-00000000, pqac-00000009) | Approx. 22 kDa subunit and ~50 kDa native enzyme |
+| Electron donor preference | ChrR uses **NADH preferentially** over NADPH, with an approximately **8-fold preference** for NADH | Ackerley et al. 2004 (pqac-00000008, pqac-00000009) | Preference reported at limiting cofactor concentrations |
+| Primary reaction | ChrR reduces **Cr(VI) to Cr(III)** efficiently and shows no activity with Cr(III) as substrate | Ackerley et al. 2004 (pqac-00000008, pqac-00000014) | End product supported by XANES in the 2004 study |
+| Additional substrates | ChrR also reduces **quinones**, potassium ferrocyanide, and 2,6-dichloroindophenol | Ackerley et al. 2004 (pqac-00000008) | No activity reported for several tested high-valence metals including U(VI), V(V), Mn(IV), and Mo(VI) |
+| Chromate Km | Reported **Km for chromate ~190 µM** | Gonzalez et al. 2003 (pqac-00000011, pqac-00000016) | Purified KTChrR enzyme assays |
+| Chromate Vmax | Reported **Vmax ~1.71 µmol min⁻¹ mg⁻¹** | Gonzalez et al. 2003 (pqac-00000011, pqac-00000016) | Measured for purified KTChrR chromate reduction |
+| Catalytic efficiency | Reported **kcat/Km ~2.2 × 10^4 M⁻¹ s⁻¹** for chromate reduction | Ackerley et al. 2004 (pqac-00000008, pqac-00000009) | Table 2 / steady-state kinetic analysis |
+| Other kinetic values | Ackerley et al. report **Km ~260 µM** and **kcat ~5.8 s⁻¹** for chromate reduction | Ackerley et al. 2004 (pqac-00000008) | Values reflect a separate assay framework from the 2003 report |
+| Mechanism: overall | Kinetic analysis supports a **bi-substrate ping-pong (double-displacement)** mechanism | Gonzalez et al. 2003 (pqac-00000011, pqac-00000016) | Electrons are transferred from NAD(P)H to enzyme-bound FMN and then to chromate |
+| Mechanism: redox intermediate | Stopped-flow experiments detected a **flavin semiquinone intermediate** during ChrR turnover | Ackerley et al. 2004 (pqac-00000010, pqac-00000013) | Supports partial one-electron chemistry within the catalytic cycle |
+| ROS stoichiometry | Roughly **25% of NADH electrons are diverted to O2**, generating **H2O2/ROS** during chromate reduction | Ackerley et al. 2004 (pqac-00000010, pqac-00000012, pqac-00000014) | Reported as about 1 of every 4 electrons going to O2 rather than chromate |
+| Physiological role in vivo | **chrR disruption reduces chromate transformation and increases chromate sensitivity/tolerance defects** | Gonzalez et al. 2003; Ackerley et al. 2004 (pqac-00000001, pqac-00000020) | Mutant strains showed slower growth and/or lower initial chromate conversion rates than wild type |
+| Regulation / induction | ChrR is induced by **chromate exposure** and by **entry into stationary phase** | Ackerley et al. 2004 (pqac-00000012, pqac-00000017) | Protein levels were reported to rise under both conditions |
+| Temperature profile | ChrR shows an unusually high apparent temperature optimum of about **70 °C**, while retaining activity over a broad range | Gonzalez et al. 2003; Ackerley et al. 2004 (pqac-00000011, pqac-00000009) | Broad activity reported from ~30–80 °C in one study; physiological relevance in vivo remains uncertain |
+
+
+*Table: This table compiles the main experimentally supported biochemical and physiological properties of *Pseudomonas putida* KT2440 ChrR from the primary literature. It is useful as a concise evidence map for enzyme function, mechanism, and in vivo role.*

@@ -1,0 +1,26 @@
+# ACIN1 notes
+
+ACIN1 is reviewed in the PN "specific function in autophagosome maturation and lysosome fusion unknown" bucket. That PN row is no-mapping/context-only and its autophagy citations are Drosophila Acinus studies, so it was used as search context rather than as direct human ACIN1 evidence.
+
+The strongest human ACIN1 function is nuclear RNA processing/splicing through EJC/ASAP-associated complexes. UniProt describes ACIN1 as an "Auxiliary component of the splicing-dependent multiprotein exon junction complex (EJC)" and as a "Component of the ASAP complexes which bind RNA" [file:human/ACIN1/ACIN1-uniprot.txt, "Auxiliary component of the splicing-dependent multiprotein exon junction complex"; file:human/ACIN1/ACIN1-uniprot.txt, "Component of the ASAP complexes which bind RNA"]. The EJC biochemical paper identified "two novel EJC components, Acinus and SAP18" and showed that "Acinus binds directly to another EJC component, RNPS1" [PMID:16314458, "identified two novel EJC components, Acinus and SAP18"; PMID:16314458, "Acinus binds directly to another EJC component, RNPS1"]. The ASAP structural paper states that ASAP subunits Acinus, RNPS1, and SAP18 are implicated in "transcriptional regulation, pre-mRNA splicing and mRNA quality control" and that the Acinus-RNPS1-SAP18 ternary complex has "both RNA- and protein-binding properties" [PMID:22388736, "transcriptional regulation, pre-mRNA splicing and mRNA quality control"; PMID:22388736, "both RNA- and protein-binding properties"].
+
+ASAP complex and nuclear-speckle localization are well supported. Schwerk et al. isolated ASAP complexes from HeLa extract and found they were "composed of the polypeptides SAP18 and RNPS1 and different isoforms of the Acinus protein" [PMID:12665594, "composed of the polypeptides SAP18 and RNPS1 and different isoforms of the Acinus protein"]. Singh et al. later summarized that "RNPS1, Acinus, and SAP18 form the apoptosis- and splicing-associated protein (ASAP) complex" and demonstrated that SAP18 assembles a "nuclear speckle-localized splicing regulatory multiprotein complex including RNPS1 and Acinus" [PMID:20966198, "RNPS1, Acinus, and SAP18 form the apoptosis- and splicing-associated protein (ASAP) complex"; PMID:20966198, "nuclear speckle-localized splicing regulatory multiprotein complex including RNPS1 and Acinus"].
+
+ACIN1's apoptosis annotation is also supported, but it is separate from the PN autophagy question. The original Acinus paper identified a nuclear factor that "induces apoptotic chromatin condensation after cleavage by caspase-3" and found Acinus "essential for apoptotic chromatin condensation in vitro" [PMID:10490026, "induces apoptotic chromatin condensation after cleavage by caspase-3"; PMID:10490026, "essential for apoptotic chromatin condensation in vitro"]. The ASAP paper also reports that microinjected ASAP complexes accelerated cell death and that the complex disassembles after apoptosis induction [PMID:12665594, "microinjection of ASAP complexes into mammalian cells resulted in acceleration of cell death"; PMID:12665594, "after induction of apoptosis the ASAP complex disassembles"].
+
+Hematopoietic differentiation rows are real caspase/substrate contexts but not central ACIN1 core functions. During erythroid differentiation, acinus is cleaved as part of caspase-dependent nuclear changes [PMID:11208865, "cleave proteins involved in nucleus integrity (lamin B) and chromatin condensation (acinus)without inducing cell death"; PMID:11208865, "normal erythroid differentiation requires the transient activation of several caspases"]. During monocyte-to-macrophage differentiation, the abstract reports that differentiation-associated caspase activation "leads to the cleavage of the protein acinus" [PMID:12393560, "leads to the cleavage of the protein acinus"].
+
+Curation decisions:
+- Accept RNA splicing, RNA binding, ASAP complex, nucleus/nucleoplasm/nuclear speck, apoptotic chromatin condensation, and positive regulation of apoptotic process.
+- Modify broad nucleic acid binding to RNA binding.
+- Modify regulation of mRNA processing to negative regulation of mRNA splicing via spliceosome, based on UniProt/ASAP-complex evidence that the complex can inhibit in vitro splicing reactions.
+- Keep erythrocyte and monocyte differentiation as non-core hematopoietic/caspase contexts.
+- Remove ATP hydrolysis activity; ACIN1 is an RRM/SAP-domain RNA-processing factor, and neither UniProt function nor cached primary evidence supports an ACIN1 ATPase activity.
+- Mark generic protein binding and enzyme binding as over-annotated; specific interactions are better represented by ASAP complex membership, EJC context, or regulatory evidence.
+- Keep the Drosophila Acinus basal-autophagy PN signal as a suggested question/experiment for human ACIN1 rather than a new human annotation.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording said the human GOA evidence reviewed here supports RNA processing and apoptosis rather than a direct human ACIN1 autophagy annotation. That is a curation observation, not part of the standalone gene description.

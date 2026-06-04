@@ -295,6 +295,9 @@ def test_pn_projection_excludes_manually_blocked_descendants(tmp_path: Path) -> 
                     {"condition_level": "class", "condition_code": "Chaperone"},
                     {"condition_level": "group", "condition_code": "HSP70 system"},
                 ],
+                "excluded_subjects": [
+                    {"condition_level": "gene_symbol", "condition_code": "GENE5"},
+                ],
                 "rationale": "Test projection mapping.",
                 "references": ["proteostasis-ms1"],
             },
@@ -317,6 +320,7 @@ def test_pn_projection_excludes_manually_blocked_descendants(tmp_path: Path) -> 
     assert ("GENE1", "GO:0044183") not in projected_gene_go
     assert ("GENE1", "GO:0140662") in projected_gene_go
     assert ("GENE3", "GO:0044183") in projected_gene_go
+    assert ("GENE5", "GO:0140662") not in projected_gene_go
 
 
 def test_pn_projection_can_fetch_missing_goa_into_project_cache(

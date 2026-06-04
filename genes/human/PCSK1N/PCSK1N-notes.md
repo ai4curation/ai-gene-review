@@ -283,3 +283,9 @@ keyword-derived on record).
 - PMID:27457957 — Anti-aggregant chaperone for α-synuclein (in vitro + neuronal cytoprotection)
 - PMID:35527562 — In vivo neuroprotection in PD models; blocks transsynaptic aSyn spread
 - PMID:35549000 — Holdase for TDP-43 via cytoplasmic phase separation; sphere formation
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: this review addresses upstream go-annotation issue #6407, where a curator asked which GO terms suitably capture ProSAAS chaperone activity. The N-terminal SAAS-derived peptide accumulation in tau inclusions is pathological and is not evidence for normal cytoplasmic localization.

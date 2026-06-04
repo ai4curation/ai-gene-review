@@ -1,6 +1,7 @@
 ---
+name: review
 description: Review, either de-novo, or augment the review of an existing one. A list of deep research providers may be specified.
-argument-hint: [ORGANISM] [GENE_SYMBOL] ( using [DEEP_RESEARCH_PROVIDER] )
+argument-hint: "[ORGANISM] [GENE_SYMBOL] (using [DEEP_RESEARCH_PROVIDER])"
 ---
 
 Review the gene specified in $ARGUMENTS.
