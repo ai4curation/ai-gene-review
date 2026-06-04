@@ -1,0 +1,16 @@
+# ATP13A1 notes
+
+## 2026-06-03 - Proteostasis PN review pass
+
+- `just fetch-gene human ATP13A1` created the review stub, UniProt record, GOA table, cached publications, Reactome entries, and PANTHER family data. Falcon deep research was attempted with `perplexity-lite` fallback; the wrapper reported a Falcon timeout after 600 seconds and the fallback failed with a Perplexity quota/401 error, but `ATP13A1-deep-research-falcon.md` was written and incorporated into this review.
+- ATP13A1 is best treated as an ER membrane P5A-type P-type ATPase whose direct function is ATP-dependent transmembrane-helix dislocation. McKenna et al. report that ATP13A1 directly interacts with mitochondrial tail-anchored protein transmembrane segments and that "ATP13A1 mediates ATP-dependent removal of a mitochondrial TM from the ER" [PMID:32973005 The endoplasmic reticulum P5A-ATPase is a transmembrane helix dislocase].
+- The same paper supports the biological-process annotation to extraction of mislocalized proteins from the ER membrane: ATP13A1 knockout increased ER/secretory-pathway mislocalization of mitochondrial tail-anchored reporters, rescue required wild-type but not catalytic-dead ATP13A1, and the authors conclude a quality-control role in "removing misinserted terminal hydrophobic helices from the ER" [PMID:32973005].
+- The later MTCH2 study independently uses ATP13A1 as the ER-side dislocase in the mitochondrial tail-anchored protein targeting system, stating that MTCH2 depletion effects were enhanced by depleting "ATP13A1 (19), an ER dislocase for mislocalized mitochondrial TAs" [PMID:36264797 MTCH2 is a mitochondrial outer membrane protein insertase].
+- ER membrane localization is supported by the early human ATP13A1 work: "immunohistochemistry of HeLa cells reveals a reticular pattern surrounding the nucleus of the cell as would be expected from an ER resident protein" [PMID:24392018 The yeast p5 type ATPase, spf1, regulates manganese transport into the endoplasmic reticulum].
+- Manganese/cation transport annotations should be removed or modified conservatively. Cohen et al. linked yeast Spf1 and human ATP13A1 to manganese-dependent cellular phenotypes, but they explicitly state that their results "can not prove that Spf1 is the direct transporter of Mn2+" [PMID:24392018]. McKenna et al. later found a large membrane-accessible substrate pocket and state that its structure argues "against the idea that the P5A-ATPase transports cations" [PMID:32973005].
+- Reactome:R-HSA-5692462 still asserts "ATP13A1 transports Mn2+ from cytosol to ER lumen"; this appears to reflect the superseded 2013 interpretation and should not drive GO review decisions for ATP13A1 molecular function.
+
+## PN projection decision
+
+- The PN projection report has one candidate addition for ATP13A1: `GO:0015031 protein transport`, propagated from `ER proteostasis | Protein transport | Removal of misinserted transmembrane proteins`.
+- Working curation conclusion: do not add the broad parent `GO:0015031 protein transport` candidate. ATP13A1 already has the narrower, directly supported `GO:0140567 membrane protein dislocase activity` and `GO:0140569 extraction of mislocalized protein from ER membrane` annotations, and adding `protein transport` would be less informative than the reviewed dislocase/extraction terms.
