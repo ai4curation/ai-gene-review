@@ -1,0 +1,35 @@
+# SH3GLB1 review notes
+
+## Scope
+
+SH3GLB1/BIF-1/endophilin B1 is reviewed in the PN class III PI3K complex 2/autophagosome maturation neighborhood. PN entries without PMIDs were used as context only. The main curation question is how to represent a membrane-curvature BAR/SH3 adaptor that associates with UVRAG/PI3KC3-C2 but is also involved in mitochondrial morphology and Bax-dependent apoptosis.
+
+## Evidence synthesis
+
+The core PN-relevant evidence supports SH3GLB1 as a Bif-1/endophilin B1 adaptor for UVRAG/Beclin1/PI3KC3-C2 autophagy. The main autophagy paper reports that Bif-1 "interacts with Beclin 1 through ultraviolet irradiation resistance-associated gene (UVRAG)" and "functions as a positive mediator of the class III PI(3) kinase (PI(3)KC3)" [PMID:17891140, "interacts with Beclin 1 through ultraviolet irradiation resistance-associated gene (UVRAG)"; PMID:17891140, "functions as a positive mediator of the class III PI(3) kinase (PI(3)KC3)"]. It also states that Bif-1 localizes to autophagosomes after nutrient deprivation and that "loss of Bif-1 suppresses autophagosome formation" [PMID:17891140, "localizes to autophagosomes"; PMID:17891140, "loss of Bif-1 suppresses autophagosome formation"]. UniProt summarizes the same mechanism: SH3GLB1 "Activates lipid kinase activity of PIK3C3" and does so "probably by associating with the PI3K complex II (PI3KC3-C2)" [file:human/SH3GLB1/SH3GLB1-uniprot.txt, "Activates lipid kinase activity of PIK3C3"; file:human/SH3GLB1/SH3GLB1-uniprot.txt, "probably by associating with the PI3K complex II"].
+
+The ATG9/Golgi fission paper provides the strongest process-level support for membrane fission/tubulation during autophagosome assembly. It reports that nutrient starvation induces "tubulation and fragmentation of Atg9-positive Golgi membranes" and that this is dependent on "Bif-1/Endophilin B1 and the PI3KC3 complex II" [PMID:21068542, "tubulation and fragmentation of Atg9-positive Golgi membranes"; PMID:21068542, "Bif-1/Endophilin B1 and the PI3KC3 complex II"]. The authors state that Bif-1 regulates "the fission of Golgi membranes and the trafficking of Atg9 from the Golgi complex to autophagosomes" [PMID:21068542, "the fission of Golgi membranes and the trafficking of Atg9 from the Golgi complex to autophagosomes"]. This supports `membrane fission`, `positive regulation of membrane tubulation`, `protein localization to vacuolar/autophagosome membrane` after humanization, and `positive regulation of autophagosome assembly`.
+
+The molecular-function basis is the endophilin N-BAR/SH3 architecture. A membrane-curvature paper reports that purified endophilin can "directly bind and evaginate lipid bilayers into narrow tubules" [PMID:11604418, "directly bind and evaginate lipid bilayers into narrow tubules"]. UniProt states that the N-BAR domain "induce membrane curvature and bind curved membranes" and that the SH3 domain is required for UVRAG interaction [file:human/SH3GLB1/SH3GLB1-uniprot.txt, "induce membrane curvature and bind curved membranes"; file:human/SH3GLB1/SH3GLB1-uniprot.txt, "The SH3 domain is required and sufficient for the interaction with UVRAG"].
+
+A second, real but non-core branch concerns mitochondrial morphology and apoptosis. Endophilin B1 is reported as "required for maintenance of mitochondrial morphology" and specifically "required for the regulation of the outer mitochondrial membrane dynamics" [PMID:15452144, "required for maintenance of mitochondrial morphology"; PMID:15452144, "required for the regulation of the outer mitochondrial membrane dynamics"]. Bif-1 also "interacts with Bax" and is an "important component of the mitochondrial pathway for apoptosis as a novel Bax/Bak activator" [PMID:16227588, "interacts with Bax"; PMID:16227588, "important component of the mitochondrial pathway for apoptosis as a novel Bax/Bak activator"]. These rows should be retained as non-core or separated from the autophagy/PI3KC3-C2 function.
+
+The older lysophosphatidic acid acyltransferase claim is isoform/endophilin-family context rather than the main PN function. The B1b paper states that endophilin B1 "binds to palmitoyl-CoA" and "exhibits lysophosphatidic acid acyl transferase activity", but also frames B1b/B1c as brain-specific splice variants [PMID:12456676, "binds to palmitoyl-CoA"; PMID:12456676, "exhibits lysophosphatidic acid acyl transferase activity"; PMID:12456676, "brain-specific"]. This should be kept non-core rather than treated as the central function of SH3GLB1 in proteostasis.
+
+## Curation calls
+
+- Core: protein-macromolecule adaptor activity, PI3K activator activity, positive regulation of autophagy/autophagosome assembly, membrane fission/tubulation, autophagosome membrane, and Golgi membrane/ATG9 trafficking.
+- Modify generic complex annotations (`GO:0032991 protein-containing complex`) toward `GO:0034272 phosphatidylinositol 3-kinase complex, class III, type II` where supported by UVRAG/BECN1/PI3KC3-C2 evidence.
+- Generic `GO:0005515 protein binding` and most `identical protein binding` rows are over-annotated; use specific adaptor, homodimerization, UVRAG/PI3KC3-C2, and membrane-curvature terms instead.
+- Keep mitochondrial outer membrane, mitochondrial morphology/protein-targeting, Bax/apoptosis, receptor catabolic process, and cytokinesis/midbody as non-core.
+- Treat `autophagic cell death` cautiously. The Bif-1 papers link starvation survival/apoptosis and autophagy, but the supported autophagy process is better captured as positive regulation of autophagy/autophagosome assembly rather than direct annotation to autophagic cell death.
+
+## Falcon
+
+Falcon deep research was started for SH3GLB1 on 2026-06-02. The run timed out after the configured 600 seconds and did not produce `SH3GLB1-deep-research-falcon.md`; the review therefore relies on local UniProt, GOA, and cached publication evidence.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: the prior wording framed the PI3KC3 activation, UVRAG/Beclin 1 association, and Golgi/autophagosome membrane fission/tubulation roles specifically in the Proteostasis Network class III PI3K complex 2 context.

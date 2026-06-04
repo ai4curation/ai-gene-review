@@ -94,3 +94,11 @@ DCAF12L2 is a genuinely poorly characterized Tdark protein. The only solid evide
 3. It is an intronless retrocopy of DCAF12, conserved across mammals
 4. It is enriched in testis/epididymis
 5. High-throughput interaction data exists (BioPlex) but has not been validated
+
+## 2026-06-01 - PROTEOSTASIS PN Cul4 substrate-receptor pass
+
+The PN projection under `Ubiquitin Proteasome System > E3 ubiquitin and UBL ligases > Cul4A/Cul4B substrate receptor` maps DCAF12L2 to `GO:1990756 ubiquitin-like ligase-substrate adaptor activity`. This is plausible as a homology-supported candidate because DCAF12L2 belongs to the DCAF12 family, retains the WD40 beta-propeller architecture, and already has an IBA annotation to `GO:0080008 Cul4-RING E3 ubiquitin ligase complex`.
+
+The evidence is still indirect. There is no direct DCAF12L2 biochemical paper, no validated DDB1/CUL4 binding experiment, and no confirmed DCAF12L2 substrate. The PN propagation should therefore be interpreted as a family/complex-based candidate for substrate-adaptor activity, not as support for unsupported BioReason autophagy-substrate claims about MAP1LC3B, GABARAPL1, WIPI2, or KLF4.
+
+Curation conclusion: leave the PN mapping to `GO:1990756` propagatable for now, but keep DCAF12L2 as a cautionary Tdark case. Do not propagate autophagy regulation or specific-substrate degradation terms from DCAF12L2 without direct evidence.

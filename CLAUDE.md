@@ -73,7 +73,7 @@ gene_symbol: <HGNC symbol>
 taxon:
   id: <NCBI taxon id>
   label: <taxon label>
-description: <your own summary of the gene>
+description: <your own standalone biological summary of the gene>
 references:
   <all relevant reference, including both literature and bioinformatics sources; includes all but not limited to those used in existing_annotations>
 existing_annotations:
@@ -89,6 +89,18 @@ suggested_experiments:
 ```
 
 See the schema and existing files for more details.
+
+### Description field quality
+
+The top-level `description` field is for a project-independent biological summary
+that a biologist can read without knowing the current curation project. It should
+describe what the gene product is, where it acts, and its major biological roles.
+
+Do not put project, workflow, or curation commentary in `description`, including
+phrases such as `Proteostasis Network`, `PN`, `this review`, `curation`, `GOA
+correctly captures`, or `should/should not be annotated`. Put that material in
+the gene notes file (`GENE-notes.md`), in `review.reason` for a specific
+annotation, or in `core_functions`/`suggested_questions` as appropriate.
 
 When creating a new review, always make sure files are in place:
 
@@ -283,4 +295,3 @@ The `generate-pages` workflow runs on push to main when gene YAMLs, schema, temp
 
 There is also support code in `src/ai_gene_review`, see the CLAUDE.md file in that directory for more details
 on best practices for working with the code.
-

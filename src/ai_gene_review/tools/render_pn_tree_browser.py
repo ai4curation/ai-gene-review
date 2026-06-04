@@ -36,6 +36,7 @@ DEFAULT_WORKBOOK_PATH = Path(
 DEFAULT_WORKBOOK_SHEET = "DENSE"
 DEFAULT_OUTPUT_PATH = Path("projects/PROTEOSTASIS/pn.html")
 PROJECT_PAGE_PATH = Path("pages/projects/PROTEOSTASIS.html")
+DEFAULT_REVIEW_ROOT = Path("genes")
 UNUSUAL_PROPAGATIONS_PATH = Path(
     "projects/PROTEOSTASIS/reports/pn_mapping_audit/unusual_propagations.tsv"
 )
@@ -85,6 +86,23 @@ def display_path(path: Path | None) -> str:
     if path_string.startswith(f"{home}{os.sep}"):
         return f"~/{path_string[len(home) + 1:]}"
     return path_string
+
+
+def build_review_path_lookup(review_root: Path = DEFAULT_REVIEW_ROOT) -> dict[str, str]:
+    """Return local HTML review paths keyed by gene symbol, preferring human reviews."""
+    if not review_root.exists():
+        return {}
+
+    review_paths: dict[str, str] = {}
+    paths = sorted(
+        review_root.glob("*/*/*-ai-review.html"),
+        key=lambda path: (path.parts[-3] != "human", path.parts[-2], path.parts[-3]),
+    )
+    for path in paths:
+        gene_symbol = path.name.removesuffix("-ai-review.html")
+        repo_relative_path = Path(review_root.name) / path.relative_to(review_root)
+        review_paths.setdefault(gene_symbol, repo_relative_path.as_posix())
+    return review_paths
 
 
 def aspect_label(aspect: str) -> str:
@@ -270,6 +288,7 @@ def build_data(
     workbook_path: Path | None = DEFAULT_WORKBOOK_PATH,
     workbook_sheet: str = DEFAULT_WORKBOOK_SHEET,
     goa_duckdb: Path | None = DEFAULT_GOA_DUCKDB,
+    review_root: Path = DEFAULT_REVIEW_ROOT,
 ) -> dict[str, Any]:
     """Build browser data from PN reports."""
     nodes: dict[str, dict[str, Any]] = {}
@@ -285,6 +304,7 @@ def build_data(
         workbook_sheet,
     )
     iba_terms_by_gene = load_existing_iba_annotations(workbook_rows, goa_duckdb)
+    review_paths = build_review_path_lookup(review_root)
 
     for row in coverage_rows:
         code = row["code"]
@@ -311,6 +331,9 @@ def build_data(
             "scrutiny_decision_counts": {},
             "target_terms": [],
             "gene_examples": [],
+            "source_workbook_evidence": [],
+            "source_evidence_row_count": 0,
+            "source_reference_count": 0,
             "existing_iba_by_gene": [],
             "existing_iba_gene_count": 0,
             "existing_iba_annotation_count": 0,
@@ -340,6 +363,7 @@ def build_data(
                 "gene_symbol": row["gene_symbol"],
                 "gene_name": row["gene_name"],
                 "uniprot_id": gene_accessions.get(row["gene_symbol"], ""),
+                "review_path": review_paths.get(row["gene_symbol"], ""),
                 "pn_code": row["pn_code"],
                 "target_go_id": row["target_go_id"],
                 "target_go_label": row["target_go_label"],
@@ -372,9 +396,24 @@ def build_data(
     for code, rows in workbook_rows_by_leaf.items():
         if code not in nodes:
             continue
+        source_evidence_rows: list[dict[str, Any]] = []
+        seen_evidence_rows: set[tuple[str, str, str, tuple[str, ...]]] = set()
         seen_genes: set[tuple[str, str]] = set()
         iba_by_gene_rows: list[dict[str, Any]] = []
         for row in sorted(rows, key=lambda item: (item.order is None, item.order or 0, item.gene_symbol)):
+            evidence_key = (row.gene_symbol, row.uniprot_id, row.notes, row.references)
+            if (row.notes or row.references) and evidence_key not in seen_evidence_rows:
+                seen_evidence_rows.add(evidence_key)
+                source_evidence_rows.append(
+                    {
+                        "gene_symbol": row.gene_symbol,
+                        "gene_name": row.gene_name or gene_names.get(row.gene_symbol, ""),
+                        "uniprot_id": row.uniprot_id or gene_accessions.get(row.gene_symbol, ""),
+                        "review_path": review_paths.get(row.gene_symbol, ""),
+                        "notes": row.notes,
+                        "references": list(row.references),
+                    }
+                )
             key = (row.gene_symbol, row.uniprot_id)
             if key in seen_genes:
                 continue
@@ -387,9 +426,15 @@ def build_data(
                     "gene_symbol": row.gene_symbol,
                     "gene_name": row.gene_name or gene_names.get(row.gene_symbol, ""),
                     "uniprot_id": row.uniprot_id or gene_accessions.get(row.gene_symbol, ""),
+                    "review_path": review_paths.get(row.gene_symbol, ""),
                     "terms": terms,
                 }
             )
+        nodes[code]["source_workbook_evidence"] = source_evidence_rows
+        nodes[code]["source_evidence_row_count"] = len(source_evidence_rows)
+        nodes[code]["source_reference_count"] = sum(
+            len(row["references"]) for row in source_evidence_rows
+        )
         nodes[code]["existing_iba_by_gene"] = iba_by_gene_rows
         nodes[code]["existing_iba_gene_count"] = len(iba_by_gene_rows)
         nodes[code]["existing_iba_annotation_count"] = sum(
@@ -532,6 +577,12 @@ def build_data(
             "curation_status_counts": dict(curation_status_counts),
             "audit_rows": len(audit_rows),
             "audit_decision_counts": dict(audit_decision_counts),
+            "source_evidence_rows_on_leaf_nodes": sum(
+                node["source_evidence_row_count"] for node in nodes.values()
+            ),
+            "source_references_on_leaf_nodes": sum(
+                node["source_reference_count"] for node in nodes.values()
+            ),
             "existing_iba_genes_on_leaf_nodes": sum(
                 node["existing_iba_gene_count"] for node in nodes.values()
             ),
@@ -849,6 +900,12 @@ HTML_TEMPLATE = """<!doctype html>
       flex-wrap: wrap;
       gap: 5px;
     }
+    .ref-list {
+      display: grid;
+      gap: 5px;
+      margin: 0;
+      padding-left: 18px;
+    }
     .aspect-bp { background: #e7f5ee; color: #1f7a52; }
     .aspect-mf { background: #e8f1fb; color: #1f5d99; }
     .aspect-cc { background: #fff1d1; color: #835600; }
@@ -1004,6 +1061,15 @@ HTML_TEMPLATE = """<!doctype html>
             <dd>No GOA record was available from the configured source, currently <code>~/repos/go-db/db/goa_human.ddb</code>; this is a data-availability state, not biological evidence.</dd>
           </dl>
         </section>
+        <section class="help-section">
+          <h2>Workbook Evidence</h2>
+          <dl>
+            <dt>Notes</dt>
+            <dd>Free-text PN workbook justification for the gene-to-PN row.</dd>
+            <dt>REF1-REF8</dt>
+            <dd>Workbook reference fields supplied by the PN annotation source for that row.</dd>
+          </dl>
+        </section>
       </div>
     </details>
   </header>
@@ -1046,6 +1112,7 @@ HTML_TEMPLATE = """<!doctype html>
 
   <script>
     const DATA = __DATA_JSON__;
+    const REPO_ROOT_HREF = "__REPO_ROOT_HREF__";
     const nodeById = new Map();
     const parentById = new Map();
     const expanded = new Set(DATA.root_codes);
@@ -1088,25 +1155,40 @@ HTML_TEMPLATE = """<!doctype html>
       return `https://functionome.geneontology.org/gene/UniProtKB:${encodeURIComponent(uniprotId)}`;
     }
 
-    function renderGeneCell(geneSymbol, geneName = "", uniprotId = "") {
+    function localReviewUrl(reviewPath) {
+      return REPO_ROOT_HREF + String(reviewPath || "").split("/").map(encodeURIComponent).join("/");
+    }
+
+    function renderGeneCell(geneSymbol, geneName = "", uniprotId = "", reviewPath = "") {
       const safeSymbol = escapeHtml(geneSymbol || "");
       const safeName = escapeHtml(geneName || "");
-      if (!uniprotId) {
-        return `<div class="gene-cell"><strong>${safeSymbol}</strong>${safeName ? `<small>${safeName}</small>` : ""}</div>`;
+      const links = [];
+      if (reviewPath) {
+        links.push(`<a href="${escapeHtml(localReviewUrl(reviewPath))}">Review</a>`);
       }
-      const safeId = escapeHtml(uniprotId);
+      if (uniprotId) {
+        const safeId = escapeHtml(uniprotId);
+        links.push(`<a href="${uniprotUrl(uniprotId)}" target="_blank" rel="noopener">UniProt ${safeId}</a>`);
+        links.push(`<a href="${functionomeUrl(uniprotId)}" target="_blank" rel="noopener">Functionome</a>`);
+      }
       return `<div class="gene-cell">
         <strong>${safeSymbol}</strong>
-        <div class="gene-links">
-          <a href="${uniprotUrl(uniprotId)}" target="_blank" rel="noopener">UniProt ${safeId}</a>
-          <a href="${functionomeUrl(uniprotId)}" target="_blank" rel="noopener">Functionome</a>
-        </div>
+        ${links.length ? `<div class="gene-links">${links.join("")}</div>` : ""}
         ${safeName ? `<small>${safeName}</small>` : ""}
       </div>`;
     }
 
     function aspectClass(aspect) {
       return `aspect-${String(aspect || "").toLowerCase()}`;
+    }
+
+    function renderWorkbookReference(value) {
+      const raw = String(value || "");
+      const escaped = escapeHtml(raw);
+      if (/^https?:\\/\\//i.test(raw)) {
+        return `<a href="${escaped}" target="_blank" rel="noopener">${escaped}</a>`;
+      }
+      return escaped;
     }
 
     function selectedStatuses() {
@@ -1136,6 +1218,12 @@ HTML_TEMPLATE = """<!doctype html>
           item.gene_symbol,
           item.uniprot_id,
           item.terms.map(term => `${term.go_id} ${term.go_label} ${term.aspect}`).join(" ")
+        ].join(" ")).join(" "),
+        (node.source_workbook_evidence || []).map(item => [
+          item.gene_symbol,
+          item.uniprot_id,
+          item.notes,
+          item.references.join(" ")
         ].join(" ")).join(" ")
       ].join(" ").toLowerCase();
     }
@@ -1274,7 +1362,7 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>Gene</th><th>PN code</th><th>GO target</th><th>Status</th></tr></thead>
         <tbody>${limited.map(row => `
           <tr>
-            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id, row.review_path)}</td>
             <td>${escapeHtml(row.pn_code)}</td>
             <td>${escapeHtml(row.target_go_id)} ${escapeHtml(row.target_go_label)}</td>
             <td>${escapeHtml(row.goa_status)}</td>
@@ -1306,6 +1394,21 @@ HTML_TEMPLATE = """<!doctype html>
       </table>`;
     }
 
+    function renderSourceWorkbookEvidence(node) {
+      const rows = node.source_workbook_evidence || [];
+      if (!rows.length) return `<div class="empty">No workbook notes or REF fields found for genes at this leaf.</div>`;
+      const limited = rows.slice(0, 80);
+      return `<table>
+        <thead><tr><th>Gene</th><th>Notes</th><th>Workbook references</th></tr></thead>
+        <tbody>${limited.map(row => `
+          <tr>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id, row.review_path)}</td>
+            <td>${row.notes ? escapeHtml(row.notes) : `<span class="empty">No notes.</span>`}</td>
+            <td>${(row.references || []).length ? `<ol class="ref-list">${row.references.map(ref => `<li>${renderWorkbookReference(ref)}</li>`).join("")}</ol>` : `<span class="empty">No references.</span>`}</td>
+          </tr>`).join("")}</tbody>
+      </table>${rows.length > limited.length ? `<div class="empty">Showing ${limited.length} of ${rows.length} evidence rows.</div>` : ""}`;
+    }
+
     function renderExistingIba(node) {
       const rows = node.existing_iba_by_gene || [];
       if (!rows.length) return `<div class="empty">No existing IBA annotations found for genes at this leaf.</div>`;
@@ -1313,7 +1416,7 @@ HTML_TEMPLATE = """<!doctype html>
         <thead><tr><th>Gene</th><th>Existing IBA GO annotations</th></tr></thead>
         <tbody>${rows.map(row => `
           <tr>
-            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id, row.review_path)}</td>
             <td><div class="term-list">${(row.terms || []).map(term => `
               <div class="term-line">
                 <span class="pill ${aspectClass(term.aspect)}">${escapeHtml(term.aspect)}</span>
@@ -1368,6 +1471,10 @@ HTML_TEMPLATE = """<!doctype html>
           <div class="mini"><strong>${compactNumber(node.existing_iba_gene_count || 0)}</strong><span>genes with existing IBA</span></div>
           <div class="mini"><strong>${compactNumber(node.existing_iba_annotation_count || 0)}</strong><span>existing IBA terms</span></div>
       ` : "";
+      const sourceEvidenceMetric = isLeaf ? `
+          <div class="mini"><strong>${compactNumber(node.source_evidence_row_count || 0)}</strong><span>source evidence rows</span></div>
+          <div class="mini"><strong>${compactNumber(node.source_reference_count || 0)}</strong><span>source references</span></div>
+      ` : "";
       const subtreeCoverage = isLeaf ? "" : `
         <h3>Subtree Coverage</h3>
         <div class="badges">
@@ -1394,6 +1501,7 @@ HTML_TEMPLATE = """<!doctype html>
           <div class="mini"><strong>${compactNumber(node.projected_gene_count)}</strong><span>projected genes</span></div>
           <div class="mini"><strong>${compactNumber(node.projected_gene_go_count)}</strong><span>gene-GO pairs</span></div>
           <div class="mini"><strong>${compactNumber(node.candidate_gene_go_count)}</strong><span>candidate pairs</span></div>
+          ${sourceEvidenceMetric}
           ${existingIbaMetric}
         </div>
 
@@ -1410,6 +1518,8 @@ HTML_TEMPLATE = """<!doctype html>
 
         <h3>Candidate Additions</h3>
         ${renderProjectionTable(candidateRows)}
+
+        ${isLeaf ? `<h3>Source Workbook Evidence</h3>${renderSourceWorkbookEvidence(node)}` : ""}
 
         ${isLeaf ? `<h3>Existing IBA GO Annotations</h3>${renderExistingIba(node)}` : ""}
 
@@ -1452,6 +1562,14 @@ def relative_href(output_path: Path, target_path: Path) -> str:
     return Path(os.path.relpath(target_path, start=output_path.parent)).as_posix()
 
 
+def repo_root_href(output_path: Path) -> str:
+    """Return a browser href prefix from an output file to the repository root."""
+    relative_root = Path(os.path.relpath(Path("."), start=output_path.parent)).as_posix()
+    if relative_root == ".":
+        return ""
+    return f"{relative_root}/"
+
+
 def render_html(data: dict[str, Any], output_path: Path) -> str:
     """Render a standalone HTML document with embedded browser data."""
     html = HTML_TEMPLATE.replace(
@@ -1465,6 +1583,7 @@ def render_html(data: dict[str, Any], output_path: Path) -> str:
             "__UNUSUAL_PROPAGATIONS_HREF__",
             relative_href(output_path, UNUSUAL_PROPAGATIONS_PATH),
         )
+        .replace("__REPO_ROOT_HREF__", repo_root_href(output_path))
     )
 
 
@@ -1513,6 +1632,12 @@ def build_argument_parser() -> argparse.ArgumentParser:
         help=f"Local GOA DuckDB used to load existing IBA annotations (default: {DEFAULT_GOA_DUCKDB})",
     )
     parser.add_argument(
+        "--review-root",
+        type=Path,
+        default=DEFAULT_REVIEW_ROOT,
+        help=f"Local gene review root used to add review links (default: {DEFAULT_REVIEW_ROOT})",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=DEFAULT_OUTPUT_PATH,
@@ -1534,6 +1659,7 @@ def main() -> None:
         workbook_path=args.workbook,
         workbook_sheet=args.sheet,
         goa_duckdb=args.goa_duckdb,
+        review_root=args.review_root,
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

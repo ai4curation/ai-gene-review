@@ -1,0 +1,3151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fliA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fliA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88EW1" target="_blank" class="term-link">
+                        Q88EW1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fliA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88EW1" data-a="DESCRIPTION: fliA encodes the flagellar alternative sigma facto..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>fliA encodes the flagellar alternative sigma factor Sigma-28 in Pseudomonas putida KT2440. It confers promoter specificity on RNA polymerase for flagella-related genes, so its core biological role is sigma factor activity and transcription initiation rather than RNA polymerase catalytic activity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA binding is not entirely wrong for a sigma factor-containing holoenzyme, but it is too generic as a standalone description of FliA. The precise molecular function is sigma factor activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016987 captures promoter-specific sigma-factor function better than generic DNA binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNA polymerase sigma factor FliA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0003677	DNA binding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliA is a transcription regulatory factor, but the generic DNA-binding transcription factor term is less precise than sigma factor activity for a bacterial RNA polymerase sigma subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace the broad transcription-factor term with the specific sigma factor molecular function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    sigma factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNA polymerase sigma factor FliA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the sigma-70 factor family. FliA subfamily.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003899" target="_blank" class="term-link">
+                                    GO:0003899
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-directed RNA polymerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0003899" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation should be removed. FliA is a sigma factor that helps RNA polymerase initiate at flagellar promoters; it is not the catalytic RNA polymerase enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA polymerase catalytic activity belongs to the core polymerase complex, whereas FliA provides promoter specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0003899	DNA-directed RNA polymerase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This location annotation is appropriate for a bacterial sigma factor that associates with cytoplasmic RNA polymerase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt places FliA in the cytoplasm.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">FliA is not a secreted or membrane-embedded protein; it functions by **associating with cytosolic RNAP** and acting at **chromosomal promoters**. KT2440 literature describes FliA as conferring promoter specificity to core RNAP, implying its functional localization is the cytosol/nucleoid region where RNAP-DNA transcription occurs.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                    GO:0006352
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0006352" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core process annotation. Sigma factors act at transcription initiation by directing RNA polymerase to specific promoters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FliA controls initiation at flagella-related promoters.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006352	DNA-templated transcription initiation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0006355" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad transcription-regulation term is directionally correct but less informative than the initiation-specific process term already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:2000142 is already present and ACCEPTED in this review; this MODIFY means the broad parent term should be dropped in favor of the existing initiation-specific term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    regulation of DNA-templated transcription initiation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">controls the expression of flagella-related genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0006355	regulation of DNA-templated transcription</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0010468" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regulation of gene expression is too broad for FliA. The direct process is regulation of transcription initiation through sigma-factor promoter recognition.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:2000142 is already present and ACCEPTED in this review; this MODIFY removes a redundant high-level gene-expression parent in favor of the existing initiation-specific term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    regulation of DNA-templated transcription initiation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">controls the expression of flagella-related genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0010468	regulation of gene expression</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                                    GO:0016987
+                                </a>
+                            </span>
+                            <span class="term-label">sigma factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0016987" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct core molecular function for FliA. The protein is explicitly annotated as an RNA polymerase sigma factor and a sigma-70 family FliA subfamily member.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sigma factor activity captures FliA promoter-specificity function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=RNA polymerase sigma factor FliA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the sigma-70 factor family. FliA subfamily.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0016987	sigma factor activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                    GO:2000142
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:2000142" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best specific regulatory process term in the current annotation set. FliA regulates transcription at initiation by directing RNA polymerase to flagellar promoters.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The logical inference from sigma factor activity to regulation of transcription initiation is biologically appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sigma factors are initiation factors that promote the</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/fliA/fliA-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:2000142	regulation of DNA-templated transcription initiation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044780" target="_blank" class="term-link">
+                                    GO:0044780
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88EW1" data-a="GO:0044780" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As the Class III (late-tier) flagellar sigma factor, FliA directs transcription of the genes that build the flagellar filament, a stator complex, and the chemotaxis apparatus, so it is functionally involved in completing bacterial-type flagellum assembly. This process is absent from the current IEA-only annotation set but is well supported by KT2440 primary literature summarized in the falcon deep research.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> KT2440 primary literature places FliA at the late tier of the flagellar cascade, where its transcriptional output completes filament, stator, and chemotaxis biogenesis; this flagellum-assembly process role complements the molecular sigma factor function and is not captured by the existing transcription-centric terms.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**Class III:** **FliA-dependent** transcription enables synthesis of the **filament**, at least one **stator** complex, and completion of the **chemotaxis apparatus**.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In KT2440 the late output of FliA activity is explicitly described: **filament synthesis**, activation of at least one **stator complex**, and completion of the **chemotaxis apparatus**.</div>
+
+                            </div>
+
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FliA is the Sigma-28 flagellar sigma factor that gives RNA polymerase promoter specificity for flagella-related genes and thereby controls transcription initiation.</h3>
+                <span class="vote-buttons" data-g="Q88EW1" data-a="FUNCTION: FliA is the Sigma-28 flagellar sigma factor that g..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006352" target="_blank" class="term-link">
+                                DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000142" target="_blank" class="term-link">
+                                regulation of DNA-templated transcription initiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/fliA/fliA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">RecName: Full=RNA polymerase sigma factor FliA</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/fliA/fliA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Sigma factors are initiation factors that promote the</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/fliA/fliA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">controls the expression of flagella-related genes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As the Class III (late-tier) sigma factor in the KT2440 flagellar transcriptional cascade, FliA directs transcription of genes required for flagellar filament synthesis, stator assembly, and chemotaxis, thereby positively driving bacterial-type flagellum biogenesis. Its activity is gated post-translationally by the anti-sigma factor FlgM, which is exported via the flagellar type III secretion system upon hook-basal body completion.</h3>
+                <span class="vote-buttons" data-g="Q88EW1" data-a="FUNCTION: As the Class III (late-tier) sigma factor in the K..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016987" target="_blank" class="term-link">
+                            sigma factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044780" target="_blank" class="term-link">
+                                bacterial-type flagellum assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">In KT2440 the late output of FliA activity is explicitly described: **filament synthesis**, activation of at least one **stator complex**, and completion of the **chemotaxis apparatus**.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">FliA is regulated by the **anti-sigma factor FlgM**, which sequesters FliA until flagellar assembly reaches a checkpoint. In *P. putida*, the “final tier” is triggered when FliA is **released from inactivation by FlgM**, after **FlgM secretion via the flagellar type III secretion system (FT3SS)** upon hook completion.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/fliA/fliA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry for fliA (RNA polymerase sigma factor FliA)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies fliA as RNA polymerase sigma factor FliA and supplies function, pathway, family, location, or GO cross-reference evidence used in this review.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/fliA/fliA-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for fliA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the automated annotations reviewed for fliA.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fliA/fliA-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon (Edison Scientific) deep research report for fliA (P. putida KT2440)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The *Pseudomonas putida* KT2440 gene **fliA** encodes **FliA (σ28; sigma-28 / sigma-F)**, an alternative RNA polymerase sigma factor that directs transcription of **late (flagellar/chemotaxis) genes** in the flagellar regulatory cascade.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">**FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">**Class III:** **FliA-dependent** transcription enables synthesis of the **filament**, at least one **stator** complex, and completion of the **chemotaxis apparatus**.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In KT2440 the late output of FliA activity is explicitly described: **filament synthesis**, activation of at least one **stator complex**, and completion of the **chemotaxis apparatus**.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FliA is regulated by the **anti-sigma factor FlgM**, which sequesters FliA until flagellar assembly reaches a checkpoint. In *P. putida*, the “final tier” is triggered when FliA is **released from inactivation by FlgM**, after **FlgM secretion via the flagellar type III secretion system (FT3SS)** upon hook completion.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FliA is not a secreted or membrane-embedded protein; it functions by **associating with cytosolic RNAP** and acting at **chromosomal promoters**. KT2440 literature describes FliA as conferring promoter specificity to core RNAP, implying its functional localization is the cytosol/nucleoid region where RNAP-DNA transcription occurs.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Leal-Morales et al. (2022) report systematic promoter motif discovery in the KT2440 flagellar cluster, with **21 putative flagellar promoters** and explicit identification of **FliA-dependent promoter motifs** upstream of **fliK2**, **fliC**, and **cheV**, and additional matches upstream of **fliS** and **flgM**.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A KT2440 targeted mechanistic study demonstrated that **bifA** (encoding a c-di-GMP phosphodiesterase) is **partly controlled by FliA**:</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 flagellar promoters are directly FliA-dependent rather than indirectly affected by the broader flagellar hierarchy?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW1" data-a="Q: Which KT2440 flagellar promoters are directly FliA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare RNA-seq and promoter-reporter activity in wild-type, fliA deletion, and complemented strains during flagellar gene induction.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FliA directly activates a defined late flagellar promoter set in KT2440.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transcriptomics and promoter reporter analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88EW1" data-a="EXPERIMENT: Compare RNA-seq and promoter-reporter activity in ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fliA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EW1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">22 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-06-01T09:26:38.580137</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="fliA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="fliA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 The document provides a summary of the flagellar transcriptional hierarchy and promoter motif alignments for *Pseudomonas putida*. </a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-flia-uniprot-q88ew1-in-pseudomonas-putida-kt2440-psepk">Research report: <strong>fliA (UniProt Q88EW1)</strong> in <em>Pseudomonas putida</em> KT2440 (PSEPK)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The <em>Pseudomonas putida</em> KT2440 gene <strong>fliA</strong> encodes <strong>FliA (σ28; sigma-28 / sigma-F)</strong>, an alternative RNA polymerase sigma factor that directs transcription of <strong>late (flagellar/chemotaxis) genes</strong> in the flagellar regulatory cascade. In KT2440, FliA is positioned downstream of the master regulator <strong>FleQ</strong> and <strong>σ54 (RpoN)</strong> and is activated post-translationally by release from the anti-sigma factor <strong>FlgM</strong> after hook–basal body completion. Evidence in KT2440 further supports a role for FliA in coupling motility to the second messenger <strong>c-di-GMP</strong> through partial control of <strong>bifA</strong>, a c-di-GMP phosphodiesterase important for swimming behavior. (leal‐morales2022transcriptionalorganizationand pages 1-1, leal‐morales2022transcriptionalorganizationand pages 14-14, xiao2017expressionofthe pages 5-7)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-is-flia">1.1 What is FliA?</h4>
+<p><strong>FliA is an alternative sigma factor</strong> that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In <em>P. putida</em> KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology. (xiao2017expressionofthe pages 4-5, xiao2017expressionofthe pages 5-7)</p>
+<h4 id="12-flagellar-transcriptional-hierarchy-in-p-putida-kt2440">1.2 Flagellar transcriptional hierarchy in <em>P. putida</em> KT2440</h4>
+<p>A detailed KT2440 model describes a <strong>three-tier transcriptional cascade</strong>:<br />
+- <strong>Class I:</strong> <strong>fleQ</strong> is at the top of the hierarchy. (leal‐morales2022transcriptionalorganizationand pages 1-1)<br />
+- <strong>Class II:</strong> <strong>FleQ- and σ54-dependent</strong> genes encode most basal body/structural components and regulatory elements <strong>including fliA</strong>. (leal‐morales2022transcriptionalorganizationand pages 1-1, leal‐morales2022transcriptionalorganizationand media 34a91b68)<br />
+- <strong>Class III:</strong> <strong>FliA-dependent</strong> transcription enables synthesis of the <strong>filament</strong>, at least one <strong>stator</strong> complex, and completion of the <strong>chemotaxis apparatus</strong>. (leal‐morales2022transcriptionalorganizationand pages 1-1, leal‐morales2022transcriptionalorganizationand media 34a91b68)</p>
+<p>Quantitatively, the KT2440 flagellar cluster is reported to contain <strong>59 genes</strong>, organized into <strong>11 operons</strong> with <strong>22 primary/internal promoters</strong>, highlighting extensive transcriptional complexity that FliA participates in at the late tier. (leal‐morales2022transcriptionalorganizationand pages 1-1)</p>
+<h4 id="13-anti-sigma-factor-control-flgmflia-module">1.3 Anti-sigma factor control (FlgM–FliA module)</h4>
+<p>FliA is regulated by the <strong>anti-sigma factor FlgM</strong>, which sequesters FliA until flagellar assembly reaches a checkpoint. In <em>P. putida</em>, the “final tier” is triggered when FliA is <strong>released from inactivation by FlgM</strong>, after <strong>FlgM secretion via the flagellar type III secretion system (FT3SS)</strong> upon hook completion. (leal‐morales2022transcriptionalorganizationand pages 14-14)</p>
+<p>A 2024 expert review in <em>Pseudomonas</em> further frames this as a conserved mechanism in which <strong>hook–basal body completion enables FlgM export and thus FliA activation</strong>. (oladosu2024fliptheswitch pages 3-4)</p>
+<h3 id="2-recent-developments-and-latest-research-20232024-prioritized">2) Recent developments and latest research (2023–2024 prioritized)</h3>
+<h4 id="21-2024-synthesis-of-fliaflgm-logic-and-target-gene-examples-authoritative-review">2.1 2024 synthesis of FliA/FlgM logic and target gene examples (authoritative review)</h4>
+<p>A 2024 review (focused on <em>P. aeruginosa</em> but widely used as a mechanistic reference for pseudomonads) summarizes: <br />
+- <strong>FliA (RpoF, σ28) drives Class IV flagellar gene expression</strong> once released from FlgM. (oladosu2024fliptheswitch pages 3-4)<br />
+- It lists representative FliA-dependent genes such as <strong>fliC</strong>, <strong>motAB</strong>, and multiple chemotaxis genes (e.g., <strong>cheAB</strong>, <strong>cheW</strong>, <strong>cheVR</strong>, <strong>cheYZ</strong>) and <strong>flgMN</strong>. (oladosu2024fliptheswitch pages 3-4)</p>
+<p>Although these named targets are from <em>P. aeruginosa</em>, they align with <em>P. putida</em> KT2440’s late-tier role for FliA in completing filament/chemotaxis/stator function and provide an expert-curated framework for interpreting the conserved FliA module. (leal‐morales2022transcriptionalorganizationand pages 1-1, oladosu2024fliptheswitch pages 3-4)</p>
+<h4 id="22-2023-review-flias-integration-with-broader-regulatory-networks-cross-species-authoritative">2.2 2023 review: FliA’s integration with broader regulatory networks (cross-species, authoritative)</h4>
+<p>A 2023 review of <em>P. aeruginosa</em> transcriptional regulators states that <strong>σFliA (σ28)</strong> controls flagellar biosynthesis genes and is essential for motility, with its activity modulated by <strong>FlgM</strong> and additional partner-switching layers that interface with global signaling (Rsm-related pathways). (sanchezjimenez2023transcriptionalregulatorscontrolling pages 18-19)</p>
+<p>The same review reports transcriptomic evidence in <em>P. aeruginosa</em> that a <strong>fliA mutant</strong> shows downregulation of multiple secretion-system genes (T2SS/T3SS/T6SS components), suggesting that in some pseudomonads FliA can be a broader node connecting motility and virulence-associated functions. This should be treated as <strong>cross-species</strong> context rather than KT2440-specific annotation. (sanchezjimenez2023transcriptionalregulatorscontrolling pages 19-21)</p>
+<h3 id="3-functional-annotation-of-p-putida-kt2440-flia-molecular-function-processes-and-pathways">3) Functional annotation of <em>P. putida</em> KT2440 fliA: molecular function, processes, and pathways</h3>
+<h4 id="31-primary-molecular-function">3.1 Primary molecular function</h4>
+<p>In KT2440, FliA’s <strong>primary molecular function</strong> is to function as an <strong>RNAP sigma factor</strong> that recognizes <strong>σ28-type promoters</strong> to activate late flagellar/chemotaxis transcription. (leal‐morales2022transcriptionalorganizationand pages 1-1, xiao2017expressionofthe pages 4-5)</p>
+<h4 id="32-biological-process-context-flagellar-assembly-and-chemotaxis">3.2 Biological process context: flagellar assembly and chemotaxis</h4>
+<p>In KT2440 the late output of FliA activity is explicitly described: <strong>filament synthesis</strong>, activation of at least one <strong>stator complex</strong>, and completion of the <strong>chemotaxis apparatus</strong>. (leal‐morales2022transcriptionalorganizationand pages 1-1)</p>
+<p>The regulatory logic is consistent with a checkpoint model: completion of the hook triggers secretion of FlgM, which removes inhibition and enables robust transcription of late genes. (leal‐morales2022transcriptionalorganizationand pages 14-14)</p>
+<h4 id="33-promoter-motifs-and-direct-promoter-evidence-in-kt2440">3.3 Promoter motifs and direct promoter evidence in KT2440</h4>
+<p>Leal-Morales et al. (2022) report systematic promoter motif discovery in the KT2440 flagellar cluster, with <strong>21 putative flagellar promoters</strong> and explicit identification of <strong>FliA-dependent promoter motifs</strong> upstream of <strong>fliK2</strong>, <strong>fliC</strong>, and <strong>cheV</strong>, and additional matches upstream of <strong>fliS</strong> and <strong>flgM</strong>. (leal‐morales2022transcriptionalorganizationand pages 6-6)</p>
+<p>Promoter-motif alignments and the overall transcriptional cascade schematic are shown in the paper’s figures (promoter motif alignments and tiered cascade). (leal‐morales2022transcriptionalorganizationand media ffe1d522, leal‐morales2022transcriptionalorganizationand media 34a91b68)</p>
+<h4 id="34-flia-links-flagellar-output-to-c-di-gmp-via-bifa-kt2440-experimental-evidence">3.4 FliA links flagellar output to c-di-GMP via bifA (KT2440 experimental evidence)</h4>
+<p>A KT2440 targeted mechanistic study demonstrated that <strong>bifA</strong> (encoding a c-di-GMP phosphodiesterase) is <strong>partly controlled by FliA</strong>:<br />
+- <strong>fliA deletion</strong> caused an approximately <strong>twofold decrease</strong> in <strong>bifA</strong> transcription/promoter activity and produced a <strong>nonmotile phenotype</strong> that could be complemented by fliA expression. (xiao2017expressionofthe pages 4-5, xiao2017expressionofthe pages 1-2)<br />
+- <strong>5′-RACE</strong> identified <strong>two transcription start sites</strong> for bifA (at <strong>103 nt and 40 nt upstream</strong> of the start codon), with upstream <strong>σ70 and σ28</strong> promoter elements, indicating dual control (basal σ70 and enhancing σ28/FliA). (xiao2017expressionofthe pages 5-7)<br />
+- Promoter mutagenesis in the σ28 region reduced activity in wild type but not in a fliA mutant, supporting FliA dependence for that promoter component. (xiao2017expressionofthe pages 5-7)</p>
+<p>This establishes an experimentally supported mechanistic bridge between the <strong>flagellar sigma factor</strong> and <strong>second-messenger regulation</strong> relevant to motility transitions (swimming vs sessility). (xiao2017expressionofthe pages 5-7, xiao2017expressionofthe pages 8-9)</p>
+<h3 id="4-cellular-localization-and-site-of-action">4) Cellular localization and site of action</h3>
+<p>FliA is not a secreted or membrane-embedded protein; it functions by <strong>associating with cytosolic RNAP</strong> and acting at <strong>chromosomal promoters</strong>. KT2440 literature describes FliA as conferring promoter specificity to core RNAP, implying its functional localization is the cytosol/nucleoid region where RNAP-DNA transcription occurs. (xiao2017expressionofthe pages 4-5, xiao2017expressionofthe pages 5-7)</p>
+<p>Its activity is <strong>conditioned by flagellar assembly state</strong> via FlgM sequestration and export, a mechanism that ensures late genes are transcribed primarily after assembly has progressed. (leal‐morales2022transcriptionalorganizationand pages 14-14, xiao2017expressionofthe pages 1-2)</p>
+<h3 id="5-relevant-statistics-and-quantitative-data-recentprimary">5) Relevant statistics and quantitative data (recent/primary)</h3>
+<h4 id="51-flagellar-gene-system-architecture-kt2440">5.1 Flagellar gene system architecture (KT2440)</h4>
+<ul>
+<li><strong>59 genes</strong> in the flagellar cluster (KT2440). (leal‐morales2022transcriptionalorganizationand pages 1-1)</li>
+<li><strong>11 flagellar operons</strong> and <strong>22 primary/internal promoters</strong> characterized. (leal‐morales2022transcriptionalorganizationand pages 1-1)</li>
+<li><strong>21 putative flagellar promoters</strong> reported by motif analysis, with assignments to σ54, σ70, and FliA/σ28 classes. (leal‐morales2022transcriptionalorganizationand pages 6-6)</li>
+</ul>
+<h4 id="52-flia-dependent-promoter-evidence-and-c-di-gmp-measurements-kt2440">5.2 FliA-dependent promoter evidence and c-di-GMP measurements (KT2440)</h4>
+<ul>
+<li><strong>~2× decrease</strong> in bifA transcription/promoter activity in a <strong>ΔfliA</strong> mutant. (xiao2017expressionofthe pages 5-7, xiao2017expressionofthe pages 4-5)</li>
+<li><strong>Two bifA TSS</strong> at <strong>−103</strong> and <strong>−40 nt</strong> upstream of start codon, consistent with <strong>dual σ70/σ28 promoter architecture</strong>. (xiao2017expressionofthe pages 5-7)</li>
+<li><strong>~5× increase</strong> in bifA promoter activity in an <em>E. coli</em> reporter upon FliA expression (heterologous validation of sigma-dependent activation). (xiao2017expressionofthe pages 5-7)</li>
+<li>Intracellular c-di-GMP measurements reported: <strong>23.33 pmol/mg protein</strong> in WT vs <strong>20.13 pmol/mg</strong> in the <strong>fliA mutant</strong> in the cited assay conditions. (xiao2017expressionofthe pages 5-7)</li>
+</ul>
+<h4 id="53-upstream-regulator-quantitative-context-fleq-chip-seq">5.3 Upstream regulator quantitative context (FleQ ChIP-seq)</h4>
+<p>While not FliA itself, upstream master regulation shapes when fliA is expressed: FleQ ChIP-seq in KT2440 identified <strong>103 putative FleQ binding sites</strong>, supporting FleQ as a broad regulator upstream of σ54-dependent class II genes that include fliA. (blancoromero2018genomewideanalysisof pages 1-2)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<p>Direct industrial applications of <em>P. putida</em> KT2440 commonly leverage its metabolism and robustness; however, <strong>motility control</strong> is practically important in environmental and engineered contexts because it affects <strong>surface colonization, biofilm formation, and dispersal</strong>. In the KT2440 system, FliA is a key transcriptional node controlling late motility outputs and also modulates <strong>bifA/c-di-GMP</strong>, meaning that perturbing fliA (deletion or overexpression) can be used experimentally to:<br />
+- Disable or enhance <strong>swimming motility</strong> (ΔfliA nonmotile; FliA overexpression enhances swimming in a BifA-dependent manner). (xiao2017expressionofthe pages 4-5, xiao2017expressionofthe pages 8-9)<br />
+- Tune expression from <strong>σ28 promoters</strong> (e.g., engineered reporters or synthetic control elements based on σ28 motifs identified in the flagellar cluster). (leal‐morales2022transcriptionalorganizationand pages 6-6, leal‐morales2022transcriptionalorganizationand media ffe1d522)</p>
+<p>These applications are most mature as <strong>research and synthetic biology strategies</strong> (motility/biofilm tuning and promoter engineering) rather than direct deployed products.</p>
+<h3 id="7-expert-analysis-and-interpretation">7) Expert analysis and interpretation</h3>
+<ol>
+<li>
+<p><strong>Checkpointed transcription ensures cost-effective assembly.</strong> The FlgM-mediated sequestration mechanism ties FliA activity to structural completion of the hook–basal body, preventing premature expression of filament/late genes. This is described explicitly for <em>P. putida</em> and synthesized in recent expert reviews for pseudomonads. (leal‐morales2022transcriptionalorganizationand pages 14-14, oladosu2024fliptheswitch pages 3-4)</p>
+</li>
+<li>
+<p><strong>FliA is a regulatory hub with feedback architecture.</strong> In <em>P. putida</em>, FliA promotes expression of <strong>flgM</strong> (negative feedback) and can drive transcription of upstream regulators (e.g., <strong>fleQ</strong> and <strong>fleSR</strong> as part of a larger operon), forming feed-forward/feedback loops that can stabilize a motility program once initiated. (leal‐morales2022transcriptionalorganizationand pages 14-14)</p>
+</li>
+<li>
+<p><strong>Beyond canonical flagellar genes, FliA can couple motility and second-messenger signaling.</strong> In KT2440, FliA partly controls <strong>bifA</strong>, linking σ28 control to <strong>c-di-GMP turnover</strong> and swimming behavior. (xiao2017expressionofthe pages 5-7, xiao2017expressionofthe pages 8-9)</p>
+</li>
+</ol>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<p>The following table compiles the most relevant KT2440-specific evidence and recent reviews used to support functional annotation and quantitative claims.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Year/date</th>
+<th>URL / DOI</th>
+<th>Evidence type</th>
+<th>Main findings</th>
+<th>Scope / notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Leal-Morales et al., <em>Environmental Microbiology</em></td>
+<td>Dec 2022</td>
+<td>https://doi.org/10.1111/1462-2920.15857</td>
+<td>Genetic regulation mapping, promoter architecture, operon analysis</td>
+<td>In <em>P. putida</em> KT2440, the flagellar cluster contains <strong>59 genes</strong>, organized into <strong>11 operons</strong> with <strong>22 primary/internal promoters</strong>; the system follows a <strong>three-tier cascade</strong> in which FleQ is Class I, FleQ+σ54 control Class II genes including <strong>fliA</strong>, and <strong>FliA (σ28)</strong> activates Class III genes needed for filament synthesis, one stator, and chemotaxis completion (leal‐morales2022transcriptionalorganizationand pages 1-1). Promoter analysis identified <strong>21 putative flagellar promoters</strong> overall, including <strong>FliA-dependent motifs</strong> upstream of <strong>fliK2, fliC, cheV, fliS, flgM</strong>; σ54-type motifs were found upstream of several earlier flagellar operons (leal‐morales2022transcriptionalorganizationand pages 6-6). The paper also describes FliA as central to feed-forward/feedback control: FliA activates late genes and promotes <strong>flgM</strong> expression, while hook completion enables FlgM export and FliA release (leal‐morales2022transcriptionalorganizationand pages 14-14, leal‐morales2022transcriptionalorganizationand media 34a91b68).</td>
+<td><strong>KT2440-specific primary study</strong>; strongest source for operon counts, promoter classes, and regulatory hierarchy.</td>
+</tr>
+<tr>
+<td>Xiao et al., <em>MicrobiologyOpen</em></td>
+<td>Sep 2017</td>
+<td>https://doi.org/10.1002/mbo3.402</td>
+<td>Genetics, promoter-lacZ assays, 5′-RACE, qRT-PCR, c-di-GMP biochemistry</td>
+<td>Demonstrated that <strong>FliA partly controls bifA</strong> expression in <em>P. putida</em> KT2440: <strong>fliA deletion lowered bifA transcription about twofold</strong> and caused a <strong>nonmotile phenotype</strong> that was complemented by plasmid-borne fliA (xiao2017expressionofthe pages 4-5, xiao2017expressionofthe pages 1-2). <strong>5′-RACE identified two bifA TSSs</strong> at <strong>103 nt</strong> and <strong>40 nt</strong> upstream of the start codon, with upstream <strong>σ70</strong> and <strong>σ28</strong> promoter elements; mutation of the σ28 promoter reduced activity, and FliA overexpression in an <em>E. coli</em> reporter increased activity about <strong>fivefold</strong> (xiao2017expressionofthe pages 5-7). Reported intracellular c-di-GMP values were <strong>23.33 pmol/mg protein</strong> in WT vs <strong>20.13 pmol/mg</strong> in the <strong>fliA mutant</strong>; FliA overexpression promoted swimming in a <strong>BifA-dependent</strong> manner (xiao2017expressionofthe pages 5-7, xiao2017expressionofthe pages 8-9).</td>
+<td><strong>KT2440-specific primary study</strong>; strongest source for direct quantitative phenotypes, dual-promoter architecture at <strong>bifA</strong>, and c-di-GMP linkage.</td>
+</tr>
+<tr>
+<td>Blanco-Romero et al., <em>Scientific Reports</em></td>
+<td>Sep 2018</td>
+<td>https://doi.org/10.1038/s41598-018-31371-z</td>
+<td>ChIP-seq, regulon mapping (FleQ)</td>
+<td>Defined upstream hierarchy around FliA by showing that FleQ is the master regulator of pseudomonad flagellar transcription and identified <strong>103 putative FleQ binding sites</strong> in <em>P. putida</em> KT2440. FleQ works with <strong>σ54/RpoN</strong> to activate multiple early flagellar operons, including loci that feed into the layer containing <strong>fliA</strong> (blancoromero2018genomewideanalysisof pages 1-2).</td>
+<td><strong>KT2440-specific primary study</strong>, but focuses on <strong>FleQ</strong>, not direct FliA targets; useful for upstream regulatory context.</td>
+</tr>
+<tr>
+<td>Oladosu et al., <em>Journal of Bacteriology</em></td>
+<td>Mar 2024</td>
+<td>https://doi.org/10.1128/jb.00365-23</td>
+<td>Expert review</td>
+<td>Summarizes authoritative current understanding in pseudomonads: <strong>FliA is constitutively expressed but post-translationally sequestered by FlgM</strong>; after hook-basal body completion, <strong>FlgM export frees FliA</strong>, enabling late/class IV transcription such as <strong>fliC, fleL, cheAB, motAB, cheW, cheVR, flgMN, cheYZ</strong>. The review also highlights integration of the FliA/FlgM module with broader signaling and <strong>c-di-GMP</strong>-linked lifestyle regulation (oladosu2024fliptheswitch pages 3-4).</td>
+<td><strong>Cross-species Pseudomonas review</strong> centered on <em>P. aeruginosa</em>; used for conserved mechanistic interpretation, not KT2440-specific claims.</td>
+</tr>
+<tr>
+<td>Lo et al., <em>PLoS ONE</em></td>
+<td>May 2016</td>
+<td>https://doi.org/10.1371/journal.pone.0155397</td>
+<td>Transcriptomics, reporter assays, phenotype analysis</td>
+<td>Provides cross-species evidence that FliA regulates more than canonical flagellar genes: in <em>P. aeruginosa</em>, FliA affected expression of phosphodiesterase genes such as <strong>PA4367/bifA</strong>, linking FliA to <strong>c-di-GMP metabolism</strong>, swarming, and pigment production. The study also notes that excess FliA can trigger feedback through <strong>flgM</strong>, supporting careful dosage control of σ28 activity (lo2016regulationofmotility pages 11-14, lo2016regulationofmotility pages 14-15).</td>
+<td><strong>Cross-species primary study</strong>; not KT2440-specific, but supports broader interpretation of FliA as a motility–c-di-GMP network node.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the key KT2440-specific and comparative Pseudomonas evidence for FliA (sigma-28), including regulatory hierarchy, promoter architecture, quantitative measurements, and broader expert interpretation. It is useful for separating direct evidence in </em>P. putida<em> KT2440 from conserved mechanisms inferred from related pseudomonads.</em></p>
+<h3 id="limitations-of-this-report-important">Limitations of this report (important)</h3>
+<ul>
+<li>Although the user provided UniProt/InterPro/HAMAP identifiers, <strong>this tool environment did not provide direct access to those databases for citable retrieval</strong>; therefore, database assertions are not independently cited beyond the user’s provided identity context. Functional annotation was grounded in <strong>KT2440 primary literature</strong> and authoritative reviews instead. (leal‐morales2022transcriptionalorganizationand pages 1-1, xiao2017expressionofthe pages 4-5)</li>
+<li><strong>2023–2024 KT2440-specific primary studies</strong> directly centered on fliA were limited in the retrieved corpus; thus, 2023–2024 sources are primarily <strong>authoritative reviews</strong> and are explicitly labeled as cross-species where applicable. (oladosu2024fliptheswitch pages 3-4, sanchezjimenez2023transcriptionalregulatorscontrolling pages 19-21)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand pages 1-1): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand pages 14-14): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2017expressionofthe pages 5-7): Yujie Xiao, Huizhong Liu, Hailing Nie, Shan Xie, Xuesong Luo, Wenli Chen, and Qiaoyun Huang. Expression of the phosphodiesterase bifa facilitating swimming motility is partly controlled by flia in pseudomonas putida kt2440. MicrobiologyOpen, 6:e00402, Sep 2017. URL: https://doi.org/10.1002/mbo3.402, doi:10.1002/mbo3.402. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2017expressionofthe pages 4-5): Yujie Xiao, Huizhong Liu, Hailing Nie, Shan Xie, Xuesong Luo, Wenli Chen, and Qiaoyun Huang. Expression of the phosphodiesterase bifa facilitating swimming motility is partly controlled by flia in pseudomonas putida kt2440. MicrobiologyOpen, 6:e00402, Sep 2017. URL: https://doi.org/10.1002/mbo3.402, doi:10.1002/mbo3.402. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand media 34a91b68): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oladosu2024fliptheswitch pages 3-4): Victoria I. Oladosu, Soyoung Park, and Karin Sauer. Flip the switch: the role of fleq in modulating the transition between the free-living and sessile mode of growth in <i>pseudomonas aeruginosa</i>. Journal of Bacteriology, Mar 2024. URL: https://doi.org/10.1128/jb.00365-23, doi:10.1128/jb.00365-23. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sanchezjimenez2023transcriptionalregulatorscontrolling pages 18-19): Ana Sánchez-Jiménez, María A. Llamas, and Francisco Javier Marcos-Torres. Transcriptional regulators controlling virulence in pseudomonas aeruginosa. International Journal of Molecular Sciences, 24:11895, Jul 2023. URL: https://doi.org/10.3390/ijms241511895, doi:10.3390/ijms241511895. This article has 64 citations.</p>
+</li>
+<li>
+<p>(sanchezjimenez2023transcriptionalregulatorscontrolling pages 19-21): Ana Sánchez-Jiménez, María A. Llamas, and Francisco Javier Marcos-Torres. Transcriptional regulators controlling virulence in pseudomonas aeruginosa. International Journal of Molecular Sciences, 24:11895, Jul 2023. URL: https://doi.org/10.3390/ijms241511895, doi:10.3390/ijms241511895. This article has 64 citations.</p>
+</li>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand pages 6-6): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand media ffe1d522): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2017expressionofthe pages 1-2): Yujie Xiao, Huizhong Liu, Hailing Nie, Shan Xie, Xuesong Luo, Wenli Chen, and Qiaoyun Huang. Expression of the phosphodiesterase bifa facilitating swimming motility is partly controlled by flia in pseudomonas putida kt2440. MicrobiologyOpen, 6:e00402, Sep 2017. URL: https://doi.org/10.1002/mbo3.402, doi:10.1002/mbo3.402. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2017expressionofthe pages 8-9): Yujie Xiao, Huizhong Liu, Hailing Nie, Shan Xie, Xuesong Luo, Wenli Chen, and Qiaoyun Huang. Expression of the phosphodiesterase bifa facilitating swimming motility is partly controlled by flia in pseudomonas putida kt2440. MicrobiologyOpen, 6:e00402, Sep 2017. URL: https://doi.org/10.1002/mbo3.402, doi:10.1002/mbo3.402. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blancoromero2018genomewideanalysisof pages 1-2): Esther Blanco-Romero, Miguel Redondo-Nieto, Francisco Martínez-Granero, Daniel Garrido-Sanz, Maria Isabel Ramos-González, Marta Martín, and Rafael Rivilla. Genome-wide analysis of the fleq direct regulon in pseudomonas fluorescens f113 and pseudomonas putida kt2440. Scientific Reports, Sep 2018. URL: https://doi.org/10.1038/s41598-018-31371-z, doi:10.1038/s41598-018-31371-z. This article has 64 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lo2016regulationofmotility pages 11-14): Yi-Ling Lo, Lunda Shen, Chih-Hsuan Chang, Manish Bhuwan, Cheng-Hsun Chiu, and Hwan-You Chang. Regulation of motility and phenazine pigment production by flia is cyclic-di-gmp dependent in pseudomonas aeruginosa pao1. PLoS ONE, 11:e0155397, May 2016. URL: https://doi.org/10.1371/journal.pone.0155397, doi:10.1371/journal.pone.0155397. This article has 46 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lo2016regulationofmotility pages 14-15): Yi-Ling Lo, Lunda Shen, Chih-Hsuan Chang, Manish Bhuwan, Cheng-Hsun Chiu, and Hwan-You Chang. Regulation of motility and phenazine pigment production by flia is cyclic-di-gmp dependent in pseudomonas aeruginosa pao1. PLoS ONE, 11:e0155397, May 2016. URL: https://doi.org/10.1371/journal.pone.0155397, doi:10.1371/journal.pone.0155397. This article has 46 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fliA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 The document provides a summary of the flagellar transcriptional hierarchy and promoter motif alignments for *Pseudomonas putida*. " src="fliA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>oladosu2024fliptheswitch pages 3-4</li>
+<li>sanchezjimenez2023transcriptionalregulatorscontrolling pages 18-19</li>
+<li>sanchezjimenez2023transcriptionalregulatorscontrolling pages 19-21</li>
+<li>xiao2017expressionofthe pages 5-7</li>
+<li>blancoromero2018genomewideanalysisof pages 1-2</li>
+<li>xiao2017expressionofthe pages 4-5</li>
+<li>xiao2017expressionofthe pages 1-2</li>
+<li>xiao2017expressionofthe pages 8-9</li>
+<li>lo2016regulationofmotility pages 11-14</li>
+<li>lo2016regulationofmotility pages 14-15</li>
+<li>ing</li>
+<li>https://doi.org/10.1111/1462-2920.15857</li>
+<li>https://doi.org/10.1002/mbo3.402</li>
+<li>https://doi.org/10.1038/s41598-018-31371-z</li>
+<li>https://doi.org/10.1128/jb.00365-23</li>
+<li>https://doi.org/10.1371/journal.pone.0155397</li>
+<li>https://doi.org/10.1111/1462-2920.15857,</li>
+<li>https://doi.org/10.1002/mbo3.402,</li>
+<li>https://doi.org/10.1128/jb.00365-23,</li>
+<li>https://doi.org/10.3390/ijms241511895,</li>
+<li>https://doi.org/10.1038/s41598-018-31371-z,</li>
+<li>https://doi.org/10.1371/journal.pone.0155397,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fliA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88EW1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="flia-review-notes">fliA review notes</h1>
+<h2 id="description-cleanup-note">Description cleanup note</h2>
+<p>The YAML <code>description</code> field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.</p>
+<ul>
+<li>Moved out of the YAML description: curation should emphasize sigma factor activity and transcription initiation rather than RNA polymerase catalytic activity.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88EW1
+gene_symbol: fliA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  fliA encodes the flagellar alternative sigma factor Sigma-28 in Pseudomonas putida KT2440. It
+  confers promoter specificity on RNA polymerase for flagella-related genes, so its core biological
+  role is sigma factor activity and transcription initiation rather than RNA polymerase catalytic
+  activity.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: DNA binding is not entirely wrong for a sigma factor-containing holoenzyme, but it is too
+      generic as a standalone description of FliA. The precise molecular function is sigma factor activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0016987 captures promoter-specific sigma-factor function better than generic DNA binding.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: RNA polymerase sigma factor FliA
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0003677\tDNA binding&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: FliA is a transcription regulatory factor, but the generic DNA-binding transcription factor
+      term is less precise than sigma factor activity for a bacterial RNA polymerase sigma subunit.
+    action: MODIFY
+    reason: Replace the broad transcription-factor term with the specific sigma factor molecular function.
+    proposed_replacement_terms:
+    - id: GO:0016987
+      label: sigma factor activity
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: RNA polymerase sigma factor FliA
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: Belongs to the sigma-70 factor family. FliA subfamily.
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        **FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.
+- term:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation should be removed. FliA is a sigma factor that helps RNA polymerase initiate
+      at flagellar promoters; it is not the catalytic RNA polymerase enzyme.
+    action: REMOVE
+    reason: RNA polymerase catalytic activity belongs to the core polymerase complex, whereas FliA provides
+      promoter specificity.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: Sigma factors are initiation factors that promote the
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0003899\tDNA-directed RNA polymerase activity&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        **FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This location annotation is appropriate for a bacterial sigma factor that associates with
+      cytoplasmic RNA polymerase.
+    action: ACCEPT
+    reason: UniProt places FliA in the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        FliA is not a secreted or membrane-embedded protein; it functions by **associating with cytosolic RNAP** and acting at **chromosomal promoters**. KT2440 literature describes FliA as conferring promoter specificity to core RNAP, implying its functional localization is the cytosol/nucleoid region where RNAP-DNA transcription occurs.
+- term:
+    id: GO:0006352
+    label: DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is a core process annotation. Sigma factors act at transcription initiation by directing
+      RNA polymerase to specific promoters.
+    action: ACCEPT
+    reason: FliA controls initiation at flagella-related promoters.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: Sigma factors are initiation factors that promote the
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0006352\tDNA-templated transcription initiation&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This broad transcription-regulation term is directionally correct but less informative than
+      the initiation-specific process term already present.
+    action: MODIFY
+    reason: GO:2000142 is already present and ACCEPTED in this review; this MODIFY means the broad parent
+      term should be dropped in favor of the existing initiation-specific term.
+    proposed_replacement_terms:
+    - id: GO:2000142
+      label: regulation of DNA-templated transcription initiation
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: controls the expression of flagella-related genes
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0006355\tregulation of DNA-templated transcription&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: Regulation of gene expression is too broad for FliA. The direct process is regulation of
+      transcription initiation through sigma-factor promoter recognition.
+    action: MODIFY
+    reason: GO:2000142 is already present and ACCEPTED in this review; this MODIFY removes a redundant
+      high-level gene-expression parent in favor of the existing initiation-specific term.
+    proposed_replacement_terms:
+    - id: GO:2000142
+      label: regulation of DNA-templated transcription initiation
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: controls the expression of flagella-related genes
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0010468\tregulation of gene expression&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+- term:
+    id: GO:0016987
+    label: sigma factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the correct core molecular function for FliA. The protein is explicitly annotated
+      as an RNA polymerase sigma factor and a sigma-70 family FliA subfamily member.
+    action: ACCEPT
+    reason: Sigma factor activity captures FliA promoter-specificity function.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: &#39;RecName: Full=RNA polymerase sigma factor FliA&#39;
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: Belongs to the sigma-70 factor family. FliA subfamily.
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:0016987\tsigma factor activity&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        **FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.
+- term:
+    id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: This is the best specific regulatory process term in the current annotation set. FliA regulates
+      transcription at initiation by directing RNA polymerase to flagellar promoters.
+    action: ACCEPT
+    reason: The logical inference from sigma factor activity to regulation of transcription initiation
+      is biologically appropriate.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+      supporting_text: Sigma factors are initiation factors that promote the
+    - reference_id: file:PSEPK/fliA/fliA-goa.tsv
+      supporting_text: &#34;GO:2000142\tregulation of DNA-templated transcription initiation&#34;
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+- term:
+    id: GO:0044780
+    label: bacterial-type flagellum assembly
+  evidence_type: IEA
+  review:
+    summary: As the Class III (late-tier) flagellar sigma factor, FliA directs transcription
+      of the genes that build the flagellar filament, a stator complex, and the chemotaxis
+      apparatus, so it is functionally involved in completing bacterial-type flagellum
+      assembly. This process is absent from the current IEA-only annotation set but is
+      well supported by KT2440 primary literature summarized in the falcon deep research.
+    action: NEW
+    reason: KT2440 primary literature places FliA at the late tier of the flagellar cascade,
+      where its transcriptional output completes filament, stator, and chemotaxis biogenesis;
+      this flagellum-assembly process role complements the molecular sigma factor function
+      and is not captured by the existing transcription-centric terms.
+    supported_by:
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        **Class III:** **FliA-dependent** transcription enables synthesis of the **filament**, at least one **stator** complex, and completion of the **chemotaxis apparatus**.
+    - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+      supporting_text: |-
+        In KT2440 the late output of FliA activity is explicitly described: **filament synthesis**, activation of at least one **stator complex**, and completion of the **chemotaxis apparatus**.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related
+    proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/fliA/fliA-uniprot.txt
+  title: UniProtKB entry for fliA (RNA polymerase sigma factor FliA)
+  findings:
+  - statement: UniProt identifies fliA as RNA polymerase sigma factor FliA and supplies function, pathway,
+      family, location, or GO cross-reference evidence used in this review.
+- id: file:PSEPK/fliA/fliA-goa.tsv
+  title: QuickGO GOA annotations for fliA
+  findings:
+  - statement: The fetched GOA table contains the automated annotations reviewed for fliA.
+- id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+  title: Falcon (Edison Scientific) deep research report for fliA (P. putida KT2440)
+  findings:
+  - statement: |-
+      The *Pseudomonas putida* KT2440 gene **fliA** encodes **FliA (σ28; sigma-28 / sigma-F)**, an alternative RNA polymerase sigma factor that directs transcription of **late (flagellar/chemotaxis) genes** in the flagellar regulatory cascade.
+    reference_section_type: OTHER
+  - statement: |-
+      **FliA is an alternative sigma factor** that binds core RNA polymerase (RNAP) to alter promoter recognition specificity. In *P. putida* KT2440, this is explicitly described as FliA “conferr[ing] promoter-recognition specificity to core RNA polymerase (RNAP),” consistent with sigma-factor biology.
+    reference_section_type: OTHER
+  - statement: |-
+      In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+    reference_section_type: OTHER
+  - statement: |-
+      **Class III:** **FliA-dependent** transcription enables synthesis of the **filament**, at least one **stator** complex, and completion of the **chemotaxis apparatus**.
+    reference_section_type: OTHER
+  - statement: |-
+      In KT2440 the late output of FliA activity is explicitly described: **filament synthesis**, activation of at least one **stator complex**, and completion of the **chemotaxis apparatus**.
+    reference_section_type: OTHER
+  - statement: |-
+      FliA is regulated by the **anti-sigma factor FlgM**, which sequesters FliA until flagellar assembly reaches a checkpoint. In *P. putida*, the “final tier” is triggered when FliA is **released from inactivation by FlgM**, after **FlgM secretion via the flagellar type III secretion system (FT3SS)** upon hook completion.
+    reference_section_type: OTHER
+  - statement: |-
+      FliA is not a secreted or membrane-embedded protein; it functions by **associating with cytosolic RNAP** and acting at **chromosomal promoters**. KT2440 literature describes FliA as conferring promoter specificity to core RNAP, implying its functional localization is the cytosol/nucleoid region where RNAP-DNA transcription occurs.
+    reference_section_type: OTHER
+  - statement: |-
+      Leal-Morales et al. (2022) report systematic promoter motif discovery in the KT2440 flagellar cluster, with **21 putative flagellar promoters** and explicit identification of **FliA-dependent promoter motifs** upstream of **fliK2**, **fliC**, and **cheV**, and additional matches upstream of **fliS** and **flgM**.
+    reference_section_type: OTHER
+  - statement: |-
+      A KT2440 targeted mechanistic study demonstrated that **bifA** (encoding a c-di-GMP phosphodiesterase) is **partly controlled by FliA**:
+    reference_section_type: OTHER
+core_functions:
+- description: FliA is the Sigma-28 flagellar sigma factor that gives RNA polymerase promoter specificity
+    for flagella-related genes and thereby controls transcription initiation.
+  molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+  directly_involved_in:
+  - id: GO:0006352
+    label: DNA-templated transcription initiation
+  - id: GO:2000142
+    label: regulation of DNA-templated transcription initiation
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+    supporting_text: &#39;RecName: Full=RNA polymerase sigma factor FliA&#39;
+  - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+    supporting_text: Sigma factors are initiation factors that promote the
+  - reference_id: file:PSEPK/fliA/fliA-uniprot.txt
+    supporting_text: controls the expression of flagella-related genes
+  - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+    supporting_text: |-
+      In KT2440, FliA’s **primary molecular function** is to function as an **RNAP sigma factor** that recognizes **σ28-type promoters** to activate late flagellar/chemotaxis transcription.
+- description: As the Class III (late-tier) sigma factor in the KT2440 flagellar transcriptional
+    cascade, FliA directs transcription of genes required for flagellar filament synthesis,
+    stator assembly, and chemotaxis, thereby positively driving bacterial-type flagellum
+    biogenesis. Its activity is gated post-translationally by the anti-sigma factor FlgM,
+    which is exported via the flagellar type III secretion system upon hook-basal body
+    completion.
+  molecular_function:
+    id: GO:0016987
+    label: sigma factor activity
+  directly_involved_in:
+  - id: GO:0044780
+    label: bacterial-type flagellum assembly
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+    supporting_text: |-
+      In KT2440 the late output of FliA activity is explicitly described: **filament synthesis**, activation of at least one **stator complex**, and completion of the **chemotaxis apparatus**.
+  - reference_id: file:PSEPK/fliA/fliA-deep-research-falcon.md
+    supporting_text: |-
+      FliA is regulated by the **anti-sigma factor FlgM**, which sequesters FliA until flagellar assembly reaches a checkpoint. In *P. putida*, the “final tier” is triggered when FliA is **released from inactivation by FlgM**, after **FlgM secretion via the flagellar type III secretion system (FT3SS)** upon hook completion.
+proposed_new_terms: []
+suggested_questions:
+- question: Which KT2440 flagellar promoters are directly FliA-dependent rather than indirectly affected
+    by the broader flagellar hierarchy?
+suggested_experiments:
+- hypothesis: FliA directly activates a defined late flagellar promoter set in KT2440.
+  description: Compare RNA-seq and promoter-reporter activity in wild-type, fliA deletion, and complemented
+    strains during flagellar gene induction.
+  experiment_type: transcriptomics and promoter reporter analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -273,6 +273,17 @@ returned CIF, confidence summary, input payload, and analysis notes under `analy
 `boltz predict` can still be useful for reproducibility or batch work, but local run outputs are not
 part of this project PR.
 
+### Candidate replacement: ESMFold2 (Biohub / biohub.ai)
+
+ESMFold2 is a strong candidate to use alongside or in place of the BioLM Boltz2 endpoint for the
+complex-interface pilots in this project. It is the structure/interaction model in Biohub's
+("a world model of protein biology", formerly EvolutionaryScale Forge) release and is directly
+relevant to our attribution question because it is built around protein-protein and
+antibody-antigen interface prediction. See the 2026-05-29 NOTES entry for the full evaluation. Net
+position: adopt ESMFold2 as an additional hosted endpoint and re-run the existing archived inputs
+head-to-head, keeping the Boltz2 outputs for provenance. All such predictions remain
+hypothesis-generating and must not be used as curation evidence.
+
 ## Related Projects
 
 - [OXPHOS](OXPHOS.md) -- primary case study for catalytic cores and assembly factors.
@@ -305,6 +316,11 @@ part of this project PR.
 - [ ] Audit existing OXPHOS reviews for direct-function, `contributes_to`, and assembly-factor
       consistency
 - [ ] Draft downstream-user guidance for enrichment and ML-label consumers
+- [x] Investigate ESMFold2 (Biohub/biohub.ai) as an alternative to BioLM Boltz2 for complex pilots
+- [x] Re-run archived complex inputs (CYC1:UQCRFS1, PSMB5:PSMA1, COX2 Model C) on ESMFold2 as a
+      head-to-head against the Boltz2 confidence summaries
+- [x] ESMFold2 COX2:SCO1 Model A metal-aware probes (apo / 3 Cu / 1 Cu), CuA-vs-PDB validation,
+      and within-cap context variants; assembled-enzyme test blocked by the 768-residue cap
 
 # NOTES
 
@@ -404,3 +420,159 @@ Even if a PSMB5:PSMA1 structural interface were high-confidence, the threonine-t
 activity should stay with PSMB5 and other catalytic beta subunits, not with alpha-ring structural
 members. This is the clearest non-OXPHOS example so far of why complex membership and molecular
 function execution need separate annotation edges.
+
+## 2026-05-29 ESMFold2 (Biohub / biohub.ai) evaluation vs BioLM Boltz2
+
+Investigated whether ESMFold2 at https://biohub.ai/esm/protein should replace the hosted BioLM
+Boltz2 endpoint used for the complex-interface pilots above.
+
+### What biohub.ai/esm is
+
+`biohub.ai` is the new home of the EvolutionaryScale / Forge platform, now operating as Biohub.ai
+and releasing what they call "a world model of protein biology". The release has three pieces:
+
+- **ESMC** (Evolutionary Scale Modeling Cambrian): a protein language model trained on ~2.8B
+  sequences; available at multiple scales on Hugging Face (e.g. `esmc-600m-2024-12`).
+- **ESMFold2**: the structure/interaction prediction and design engine built on ESMC, hosted as
+  `esmfold2-fast-2026-05`. MSA-free (no alignment step, unlike AlphaFold2).
+- **ESM Atlas**: a navigable database of ~6.8B sequences and ~1.1B predicted structures.
+
+Licensing is MIT (commercial and non-commercial), with open weights on Hugging Face plus a hosted
+inference API. Biohub states the models are "freely available to the global scientific community";
+I could not confirm exact free-tier quotas or rate limits from public pages (the biohub.ai product
+pages are a JS app and did not render details to the fetcher), so quota needs verifying against an
+actual token before committing to batch runs.
+
+### Why it is a good fit for this project specifically
+
+1. **It is interface-first.** Unlike the original ESMFold (single-chain only), ESMFold2 explicitly
+   predicts multi-chain biomolecular complexes, and its headline claim is interface accuracy:
+   "surpasses other models in DockQ pass-rate on FoldBench protein-protein and antibody-antigen
+   complexes," and "performed favorably when compared against Chai-1, Boltz-1, and AlphaFold 3."
+   That is exactly the regime our pilots live in (does an interface justify exporting a molecular
+   function to a subunit), where Boltz2 gave us weak ipTM signals (0.15-0.39) across every run.
+2. **Same confidence vocabulary.** The hosted API returns pLDDT (mean), pTM, and ipTM - the same
+   metrics our analysis notes already key on - so our interpretation thresholds and analysis
+   scripts port over with minimal change. (PAE / pair-chain iPAE, which we used for CYC1:UQCRFS1,
+   was not confirmed in the hosted API surface and should be checked; it may only be in the local
+   weights path.)
+3. **Ligand and nucleic-acid support.** The input builder exposes `ProteinInput`, `DNAInput`, and
+   `LigandInput`. This is directly relevant to the unfinished hard cases in this project - copper
+   delivery (COX2 CuA / SCO1 / SCO2), heme-bearing electron transfer (CYC1), and Fe-S centers
+   (UQCRFS1) - which Boltz2 ran as apo domains. Whether non-standard metals (Cu) and cofactors can
+   be parameterized cleanly still needs a concrete test.
+4. **Open weights + MIT.** Better reproducibility story than a closed hosted endpoint: we can pin a
+   model version, and a local path exists for batch work without depending on a third-party host.
+
+### Access pattern (hosted)
+
+```python
+from esm.sdk.forge import SequenceStructureForgeInferenceClient
+from esm.sdk.api import FoldingConfig
+from esm.utils.structure.input_builder import ProteinInput, StructurePredictionInput
+
+client = SequenceStructureForgeInferenceClient(
+    model="esmfold2-fast-2026-05",
+    url="https://biohub.ai",
+    token="<API token>",
+)
+complex_input = StructurePredictionInput(
+    sequences=[
+        ProteinInput(id="A", sequence="..."),
+        ProteinInput(id="B", sequence="..."),
+    ]
+)
+result = client.fold_all_atom(
+    complex_input,
+    config=FoldingConfig(num_loops=3, num_sampling_steps=32),
+)
+```
+
+Multi-chain complexes are assembled from `ProteinInput` / `DNAInput` / `LigandInput` components
+with distinct chain IDs. This is a different client surface from the BioLM Boltz2 caller, so the
+existing payload generator / endpoint caller under `analysis/` would need an ESMFold2 adapter
+rather than a drop-in URL swap.
+
+### Recommendation
+
+Adopt ESMFold2 as an **additional** hosted endpoint rather than a hard replacement, and run a
+head-to-head on the three archived inputs we already have Boltz2 summaries for: CYC1:UQCRFS1
+(active electron-transfer interface), PSMB5:PSMA1 (catalytic-vs-structural control), and the COX2
+Model C copper-maturation module. Because ipTM was the limiting signal in every Boltz2 pilot, a
+model that is genuinely stronger on complexes could change those conclusions - which is the whole
+reason to test it on identical inputs and keep the Boltz2 outputs side by side for provenance. The
+curation guardrail is unchanged: any ESMFold2 model remains hypothesis-generating and must not be
+cited as GO evidence.
+
+Open items before relying on it: confirm free-tier/rate limits with a real token; confirm whether
+PAE/iPAE is exposed by the hosted API; confirm metal/cofactor (Cu, heme, Fe-S) parameterization in
+the ligand input.
+
+### 2026-05-29 hosted re-run on archived protein-complex inputs
+
+Ran the three archived Boltz2 inputs through the Biohub hosted ESMFold2 endpoint using the pinned
+GitHub SDK adapter in `analysis/esmfold2/run_esmfold2.py`. The live runs succeeded and produced
+CIF, raw response JSON, confidence JSON, and analyzer markdown under `analysis/esmfold2/`.
+
+| Input | Result note | ipTM | pTM | complex pLDDT | Analyzer readout |
+|---|---|---:|---:|---:|---|
+| CYC1:UQCRFS1 | `analysis/esmfold2/RESULTS_CYC1_UQCRFS1_ESMFOLD2.md` | 0.228 | 0.603 | 0.829 | heme/Rieske min CA distance 14.63 A |
+| PSMB5:PSMA1 | `analysis/esmfold2/RESULTS_PSMB5_PSMA1_ESMFOLD2.md` | 0.362 | 0.616 | 0.825 | 27 residue contacts within 5 A; active-site T60 to PSMA1 30.00 A |
+| COX2:SCO1:SCO2 Model C | `analysis/esmfold2/RESULTS_MODEL_C_ESMFOLD2.md` | 0.390 | 0.532 | 0.757 | SCO1/SCO2 CxxxC motifs remain far from COX2 CuA residues |
+
+Interpretation: none of the hosted ESMFold2 runs exceeded the provisional interface-confidence
+threshold (ipTM > 0.5). The global pLDDT values are higher than the prior Boltz2 runs, but the
+interface signal remains weak and the hosted response did not populate pair-chain ipTM/PAE in the
+SDK result object. These results support keeping ESMFold2 as a secondary hypothesis-generation
+backend rather than replacing the Boltz2 notes or using any output as curation-grade evidence.
+
+## 2026-05-30 ESMFold2 COX2:SCO1 metal-aware, PDB validation, and assembled-context probes
+
+Followed up the Complex IV Model A pairwise (MT-CO2 CuA domain + SCO1 metallochaperone domain) on
+ESMFold2 to test whether the weak, off-target interface seen with Boltz2 was an artifact of missing
+metals or missing complex context. Extended `analysis/esmfold2/run_esmfold2.py` with `--ligand
+ID:CCD` and `--pocket BINDER:CHAIN/RES,...`, and made it surface the `ESMProteinError` that
+`fold_all_atom` returns as a value instead of writing an empty response.
+
+Across every runnable configuration the answer is the same: the SCO1 CxxxC motif stays ~50-52 A
+(SG-SG) from the COX2 CuA cysteines, and COX2 never engages SCO1.
+
+| Run | ipTM | SCO1 CxxxC -> CuA (SG-SG) |
+|---|---:|---:|
+| Model A apo | 0.583 | 52.5 A |
+| Model A + 3 Cu | 0.632 | 51.3 A |
+| Model A + 1 Cu | 0.606 | 51.7 A |
+| Model C domains (+SCO2) | 0.390 | 50.2 A |
+| Model C full-length (+SCO2) | 0.307 | 49.8 A |
+| Model C + COA6 (4 chain) | 0.377 | 51.0 A |
+
+Metals do not rescue it. The 3-Cu holo run actually raised interface confidence (0.583 -> 0.632)
+without moving the geometry, and a single shared copper seated itself entirely in the CuA acceptor
+site (both CuA cysteines, ~2.0 A) leaving SCO1 apo, i.e. no spontaneous bridging geometry. So the
+"missing copper" explanation for the off-target docking is refuted.
+
+The 3-Cu run is separately a strong validation of the model against experiment: unforced, it
+reconstructed the binuclear CuA centre (Cu-Cu 2.67 A; both Cys196/200 + His161 + His204 + Met207)
+matching human Complex IV `9I6F` (Cu-Cu 2.75 A) within ~0.1 A. See the reproducible check
+`analysis/esmfold2/validate_cua_vs_pdb.py`. The PDB has the components individually (SCO1 ~10
+structures; COX2/CuA in 5Z62/9I6F/9I7U) but ZERO structures of any SCO1:COX2, SCO2:COX2, or
+SCO1:SCO2 complex, consistent with a transient transfer interaction.
+
+Adding partner chaperones did not help and lowered confidence (Model C domains 0.390 -> full-length
+0.307 -> +COA6 0.377), with the inter-chaperone SCO1:SCO2 geometry non-reproducible across runs
+(18.8 -> 33 -> 72 A) — a hallmark of low-confidence docking rather than a real interface.
+
+The one genuinely different test, SCO1 against the assembled enzyme (so native context removes the
+non-CuA COX2 surfaces), is blocked: the hosted esmfold2-fast endpoint caps total input at 768
+residues (422 error). The mtDNA core COX1+COX2+COX3 (1001), core+SCO1 (1191), and the full
+14-subunit enzyme (~2073) all exceed it; even COX1+COX2+SCO1 (930) is over. Forcing a bridging
+copper via pocket conditioning is also unavailable (401, feature-gated). Modeling the assembled
+enzyme would require local ESMFold2 open weights on a GPU.
+
+Bottom line: under everything the hosted API can run, ESMFold2 does not support a stable,
+transfer-competent SCO1->COX2(CuA) docking. The model is excellent at what the PDB documents (the
+CuA metal site, the SCO1 fold) and unreliable precisely where the PDB is silent (the transient
+transfer interface). The SCO1/SCO2 direct-function call should remain literature- and
+biochemistry-driven, with structure prediction confined to small-domain triage. Result files:
+`RESULTS_MODEL_A_ESMFOLD2.md`, `RESULTS_MODEL_A_CU_ESMFOLD2.md`, `RESULTS_MODEL_A_1CU_ESMFOLD2.md`,
+`RESULTS_MODEL_C_FULL_ESMFOLD2.md`, `RESULTS_COA6_ESMFOLD2.md`.

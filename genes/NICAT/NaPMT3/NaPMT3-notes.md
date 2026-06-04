@@ -4,3 +4,9 @@
 - The full glucosylation preprint keeps **PMT** in the minimal upstream pathway module by using **ODC, PMT, and MPO** to generate **N-methylpyrrolinium** for in planta nicotine reconstruction. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "In N. benthamiana leaves, the in planta reconstruction uses ODC, PMT, and MPO to generate N-methylpyrrolinium, then depends on the glucosylation-late-pathway module to make labelled nicotine"; "ODC, PMT, and MPO remain part of the minimal upstream module needed to feed the completed pathway."]
 - The same preprint places **PMT3** among the stronger tobacco genes correlated with **A622** and **UGT1**, which supports keeping PMT3 as a serious nicotine-module paralog rather than dismissing it as an irrelevant duplicate. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "genes most correlated with A622 include MATE1, PMT3, PMT2, PMT1, beta-GD1, AO2B, and MPO1"; "genes most correlated with UGT1 include BBLa, QPT2, beta-GD1, A622, PMT1, PMT2, PMT3, and MATE1"]
 - The paper does not distinguish whether a PMT3-like paralog in NICAT is part of the core flux-carrying pair or a secondary duplicate, so PMT3 remains follow-up rather than an automatically accepted seed-core anchor. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "For the NICAT project, this paper is therefore strongest for pathway-role assignment and weakest for exact paralog/accession resolution."]
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: current project framing treats PMT3 as a follow-up paralog behind the better established PMT1.1 and PMT1.2 pair.

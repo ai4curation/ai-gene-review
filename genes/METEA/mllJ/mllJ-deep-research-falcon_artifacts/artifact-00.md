@@ -1,0 +1,6 @@
+| Locus / gene | Organism | Genomic context | Induction condition and RNA-seq signal | Predicted domain / family | Predicted localization | What is not known | Supporting citation |
+|---|---|---|---|---|---|---|---|
+| META1p4138 / **mllJ** | *Methylorubrum extorquens* AM1 (formerly *Methylobacterium extorquens* AM1) | Part of the **methylolanthanin (mll) biosynthetic gene cluster**, spanning META1p4129–META1p4138 | The full cluster, including **mllJ**, was reported as highly upregulated during growth with poorly soluble **Nd2O3** versus soluble **NdCl3**, with an average induction of about **32-fold** across the cluster | Annotated as **DUF4142**; described as **ferritin-like** | Reported as **putatively exported into the periplasm** | No direct biochemical activity, substrate specificity, catalytic reaction, or mutant phenotype has been specifically established for **mllJ** in the cited study; its role is inferred from cluster membership and domain architecture rather than direct assay | (pqac-00000000) |
+
+
+*Table: This table summarizes the verified identity and currently available literature evidence for META1p4138 (mllJ) in *Methylorubrum extorquens* AM1. It highlights what is supported by experimental transcriptomics and bioinformatic annotation, while clearly separating unresolved functional questions.*
