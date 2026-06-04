@@ -392,10 +392,24 @@ class TestResolveGeneToUniprotPrimarySymbolPreference:
         # Lower-case query against upper-case primary symbol — should still match
         assert resolve_gene_to_uniprot("cdh1", "human") == "P12830"
 
+    @patch(
+        "ai_gene_review.etl.gene.fetch_uniprot_data",
+        side_effect=ValueError("not a real accession"),
+    )
     @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
-    def test_human_synonym_only_raises_informative_error(self, mock_lookup):
+    def test_human_synonym_only_raises_informative_error(
+        self, mock_lookup, _mock_fetch
+    ):
         """For human, synonym-only matches must raise — never silently return
-        the wrong gene's entry. Error message must mention the synonym hits."""
+        the wrong gene's entry. Error message must mention the synonym hits.
+
+        ``FAKEGENE`` matches the resolver's UniProt-accession regex (line 725
+        of ``gene.py``), so the resolver calls ``fetch_uniprot_data`` before
+        falling through to gene-name lookup. Mock that call to keep the test
+        hermetic — otherwise it would hit ``rest.uniprot.org`` and fail in
+        offline CI environments where ``requests.get`` raises ``ConnectionError``
+        (which the resolver's ``except ValueError`` would not catch).
+        """
         swissprot_synonym_hit = [
             {
                 "accession": "Q99999",
