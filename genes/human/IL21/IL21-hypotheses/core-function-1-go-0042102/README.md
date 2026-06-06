@@ -1,24 +1,24 @@
-# Staged OpenScientist hypothesis job — IL21 GO:0042102
+# OpenScientist hypothesis job — IL21 GO:0042102
 
-**Status:** staged, **not yet submitted** (requires `OPENSCIENTIST_API_KEY`).
+**Status:** ✅ completed 2026-06-06 (28.5 min, 28 PMID citations). Result in
+`openscientist.md` (+ `openscientist.md.citations.md`).
 
-This is a pilot of the openscientist.io hypothesis-job pattern (as used in
-`monarch-initiative/dismech` and already exemplified here by
-`genes/human/SCO1/SCO1-hypotheses/`), pointed at a candidate produced by the
-ASSAY_TO_FUNCTION analysis.
+**Verdict:** *OVER-ANNOTATED as core function → recommend `KEEP_AS_NON_CORE`* for
+GO:0042102 — the T-cell-proliferation effect is real but costimulation-dependent,
+bidirectional across T-cell subsets, not a defining feature of IL-21R deficiency,
+and subordinate to IL-21's B-cell/Tfh signature. Same call for NK cytotoxicity
+(GO:0045954). Notable leads: GO:0045954 actually has IDA support (PMID:18005035),
+and IL-21's true core functions have only ISS/IEA (so IDA ≠ core).
 
-- **Hypothesis:** is `positive regulation of T cell proliferation` (GO:0042102)
-  a *core* function of IL21, or a downstream/context-dependent consequence of
-  cytokine signaling?
-- **Why staged:** IL21 GO:0042102 was set to `UNDECIDED` and removed from
-  `core_functions` pending expert review — see
-  [issue #1418](https://github.com/ai4curation/ai-gene-review/issues/1418). A
-  cited OpenScientist brief is intended to *complement* (not replace) that human
-  review.
-- `prompt.md` is the rendered, submittable prompt
-  (`templates/gene_hypothesis_deep_research.md` filled for this hypothesis).
+> This is the autonomous agent's analysis — **hypothesis-generating literature
+> synthesis to verify against the cited PMIDs, not ground truth.** The
+> annotations remain `UNDECIDED` pending expert adjudication on
+> [issue #1418](https://github.com/ai4curation/ai-gene-review/issues/1418); this
+> brief is a complement, not the decision.
 
-## How to submit (with an API key)
+---
+
+## Reproduction
 
 ```bash
 export OPENSCIENTIST_API_KEY="name:secret"   # your key
