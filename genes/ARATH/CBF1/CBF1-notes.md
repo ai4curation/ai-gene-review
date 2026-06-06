@@ -47,4 +47,16 @@ Source: `file:ARATH/CBF1/CBF1-deep-research-falcon.md`. The Falcon report corrob
 - Water deprivation (kept NON_CORE): report reinforces that the cold/drought link is via the shared cis-element [falcon "The CRT/DRE element is a shared regulatory node for cold- and dehydration-responsive gene expression, and CBF/DREB-type factors are widely used to connect these stress responses."], consistent with KEEP_AS_NON_CORE (CBF1 transcript is cold-induced, not osmotic-induced).
 - ADA2/GCN5 (protein binding, NON_CORE): report adds the SAGA-like coactivator mechanism [falcon "Stockinger et al. (2001) report physical interaction (in vitro pull-down) between CBF1 and Arabidopsis homologs of **Ada/SAGA-like complex** components **ADA2a/ADA2b** and **GCN5** (a histone acetyltransferase)."]. Still uninformative as bare `protein binding`; retained NON_CORE per guidelines.
 - New mechanistic context not annotatable to existing GOA/UniProt IDs (recorded for reference, no NEW GO term added): SVALKA (SVK) lncRNA cis-antisense fine-tuning of CBF1 mRNA stability/termination; upstream ICE1-CBF-COR cascade, CAMTA activation, MYB15 repression, circadian control. These concern regulation OF CBF1 rather than CBF1's own activity, so no new MF/BP annotation is warranted.
-- No `action: UNDECIDED` entries existed; none required resolution. No NEW GO annotation added because all GOA/UniProt-verifiable terms are already annotated and the more-specific MF terms (GO:0043565, GO:0000977) remain as proposed_new_terms.
+- No `action: UNDECIDED` entries existed; none required resolution.
+
+## PR #1417 review fix (2026-06-06)
+Reviewer (ai4c-agent) flagged that `proposed_new_terms` listed GO:0000977 and GO:0043565, which are EXISTING GO terms (not terms requiring creation). Verified via QuickGO REST API:
+- GO:0000977 "RNA polymerase II transcription regulatory region sequence-specific DNA binding" — molecular_function, not obsolete.
+- GO:0043565 "sequence-specific DNA binding" — molecular_function, not obsolete.
+
+Action taken:
+- Removed the entire `proposed_new_terms` block (both GO:0000977 and GO:0043565).
+- Added GO:0000977 as a `NEW` entry under `existing_annotations` with `evidence_type: IDA`, `original_reference_id: PMID:9023378`, qualifier `enables`. This is the single most informative MF term: CBF1 binds the C-repeat/DRE (a Pol II promoter regulatory region) sequence-specifically. Supported by verbatim gel-shift/EMSA quote ["Binding of CBF1 to the C-repeat/DRE was demonstrated in gel shift assays using recombinant CBF1 protein expressed in Escherichia coli."] plus the specificity-vs-mutant-element quote ["expression of CBF1 in yeast was found to activate transcription of reporter genes containing the C-repeat/DRE as an upstream activator sequence but not mutant versions of the DNA element."], both exact substrings of PMID:9023378.
+- Did not separately add GO:0043565 (sequence-specific DNA binding); GO:0000977 is its more specific child and already captures the Pol II promoter context, so a single NEW annotation suffices.
+- Also fixed two `directly_involved_in:` fields in `core_functions` that were single mappings instead of YAML lists (added `- ` list-item syntax for GO:0045893 and GO:0009631).
+- Validation: `uv run ai-gene-review validate genes/ARATH/CBF1/CBF1-ai-review.yaml` → ✓ Valid.

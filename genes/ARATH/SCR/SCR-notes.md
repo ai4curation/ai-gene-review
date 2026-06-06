@@ -111,3 +111,20 @@ remains captured by the existing `proposed_new_terms` entry.
 - Non-core: gravitropism, bundle-sheath/leaf development, redox homeostasis, GA2OX7 interactome hit.
 - protein binding (GO:0005515) IPI entries: uninformative; recommend replacing with specific partner
   capture (SHR especially) — per curation guidance, avoid bare protein binding.
+
+## PR #1417 review follow-up (ai4c-agent)
+- GO:0043565 "sequence-specific DNA binding" (IDA, PMID:17446396): changed action
+  MARK_AS_OVER_ANNOTATED -> REMOVE. Rationale: PMID:28211915 structurally REFUTES direct
+  DNA binding by SHR-SCR/GRAS proteins ("no evidence for direct binding ... to DNA"; no
+  DNA-binding motif; negatively charged surface unfavorable for DNA binding). The activity
+  is actively contradicted, not merely broad, so removal (not over-annotation flag) is correct.
+- Internal consistency: SHR is itself a GRAS-family coregulator that does NOT bind DNA directly.
+  Reworded the GO:0140297 annotation reasons so SHR is no longer called a "DNA-binding
+  transcription factor". For SHR-only IPI interactions (PMID:17446396, PMID:18500650),
+  switched proposed replacement from GO:0140297 -> GO:0019904 "protein domain specific binding"
+  (verified non-obsolete via QuickGO API), capturing GRAS-GRAS heterodimerization. GO:0140297
+  retained only where genuine DNA-binding partners (JKD/MGP, BIRD/IDD) are involved
+  (PMID:17785527, PMID:28211915, PMID:28746306); PMID:28211915 reason now attributes GO:0140297
+  to the JKD partner and describes SHR as a GRAS coregulator.
+- core_functions directly_involved_in: all three already YAML lists; no change needed.
+- Validation: `uv run ai-gene-review validate genes/ARATH/SCR/SCR-ai-review.yaml` -> Valid.

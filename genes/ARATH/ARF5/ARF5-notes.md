@@ -130,3 +130,24 @@ deletion (MPΔ / MP11ir isoform) broadens and de-auxin-sensitizes genomic bindin
 in one dataset); ~4,585 direct auxin-dependent targets reported; combinatorial partner TFs (e.g. bZIP11
 recruiting SAGA; GBF factors); and 2024 evolutionary work tracing the ARF DBD fold to a chromatin-regulator
 (PHIP-related crypto-Tudor) origin. These refine but do not change the existing annotation decisions.
+
+## PR #1417 review fix (2026-06-06): GO:0140297 -> GO:0019904
+
+Reviewer (ai4c-agent, IMPORTANT) flagged that the NEW GO:0140297 "DNA-binding
+transcription factor binding" annotation was justified by ARF5's interaction with
+Aux/IAA proteins (e.g. BODENLOS/IAA12). Aux/IAA proteins are transcriptional
+co-repressors that LACK a DNA-binding domain — they bind ARFs via PB1-domain
+(domain III/IV) interactions. GO:0140297 requires the partner to be a DNA-binding
+transcription factor, so it is not appropriate for ARF-Aux/IAA interactions.
+
+Decision: replaced GO:0140297 with GO:0019904 "protein domain specific binding"
+(verified label/def via QuickGO API: "Binding to a specific domain of a protein"),
+which correctly captures the PB1-domain-mediated ARF5-Aux/IAA interaction. Updated:
+- the NEW molecular-function annotation block (now GO:0019904, IPI, PMID:12101120)
+- the corresponding core_functions entry
+- the six REMOVE reviews of redundant GO:0005515 "protein binding" annotations that
+  pointed at GO:0140297, and corrected text mislabeling Aux/IAA as DNA-binding TFs.
+
+ARF-ARF homodimerization (where the partner IS a DNA-binding TF) remains covered by
+the existing GO:0042802 "identical protein binding" annotations, so no redundant
+ARF-ARF term was created. Validation: ✓ Valid.
