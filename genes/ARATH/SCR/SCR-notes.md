@@ -83,6 +83,27 @@ transcription regulator / coregulator given current evidence.
 - 653 aa; single C-terminal GRAS domain (281-650) with LHRI, VHIID, LHRII, PFYRE, SAW subdomains;
   N-terminal disordered region (1-69, 193-265); LxCxE motif at 295-299 (RBR1 binding).
 
+## Deep research synthesis (Falcon / Edison Scientific)
+The Falcon deep-research report (`file:ARATH/SCR/SCR-deep-research-falcon.md`) corroborates and
+slightly extends the existing review; it introduced no contradictions and no UNDECIDED items needed
+resolving. Key corroborated points:
+- Core MF/BP: SCR is a putative transcriptional regulator required for the formative periclinal
+  division generating cortex and endodermis [falcon "SCR is a **putative transcriptional regulator/transcription factor** required for the asymmetric periclinal division that generates cortex and endodermis."]; in scr the division fails and a single heterogeneous ground-tissue layer forms [falcon "In **scr** mutants, the second asymmetric division fails and a **single heterogeneous ground-tissue layer** forms instead of separate cortex and endodermis"], establishing normal radial organization [falcon "generating separate **cortex** and **endodermis** layers and thus normal **radial organization**"].
+- SHR interaction / nuclear sequestration: confirms direct SHR–SCR interaction and SCR confining SHR
+  to nuclei [falcon "Reviews further emphasize SCR’s direct interaction with SHR and SCR’s role in confining SHR to nuclei"; "restricting SHR to the nucleus and coordinating downstream patterning and stem cell niche functions"; "SCR co-localizes with SHR in nuclei in primordia, and supports direct SHR–SCR interaction in these contexts"].
+- In vivo complexes: FRET-FLIM JKD-YFP + SCR-RFP lifetime reduction up to 0.17 ± 0.02 ns supports
+  SCR–JKD complex formation [falcon "coexpression of **JKD-YFP** with **SCR-RFP** reduced fluorescence lifetime by up to **0.17 ± 0.02 ns**, supporting close interaction/complex formation in meristem peripheral/primordia regions"].
+- Gravitropism (non-core): amyloplasts in scr fail to sediment, explaining impaired shoot gravitropism
+  [falcon "amyloplasts in scr do not sediment in response to gravity"].
+- New (untracked) context: the report highlights an expanded SAM role (Bahafid et al. 2023, eLife;
+  PMID not in current GOA) where SCR within the SHR network is needed for normal auxin-maxima
+  formation and lateral organ initiation, and regulation of CYCD6;1. This is consistent with SCR's
+  patterning role but does not map to a verifiable new GO term from the existing GOA/UniProt set, so
+  no NEW annotation was added on this basis.
+
+No new GO ID verifiable from GOA/UniProt warranted a NEW annotation; the GRAS-cofactor mechanism
+remains captured by the existing `proposed_new_terms` entry.
+
 ## Action summary rationale
 - Core MF: transcription coregulator/cofactor function via SHR heterodimer + BIRD/IDD recruitment.
   The existing set lacks a clean coregulator MF term and over-relies on direct DNA-binding terms.

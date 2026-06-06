@@ -34,3 +34,16 @@ UniProt: P35510 (PAL1_ARATH); locus At2g37040; 725 aa. EC 4.3.1.24.
 - Defense/stress BP (defense response, response to wounding, oxidative stress, UV-B): downstream consequences of phenylpropanoid output; KEEP_AS_NON_CORE.
 - GO:0046274 lignin catabolic process & GO:0046244 salicylic acid catabolic process: REMOVE/MODIFY — direction wrong (PAL feeds biosynthesis, not catabolism); these are TAIR IMP family-level over/mis-annotations.
 - protein binding (GO:0005515) x several IPI: MARK_AS_OVER_ANNOTATED (PAL1 as proteasome-turnover substrate of KFB/SAGL1 F-box proteins; not an informative MF, no adapter function).
+
+## Deep research synthesis (Falcon / Edison Scientific)
+
+Source: `file:ARATH/PAL1/PAL1-deep-research-falcon.md` (Edison Scientific Literature; 27 citations). The report corroborates the existing review and adds no contradictory evidence. Key corroborations folded into `supported_by`:
+
+- Core reaction / MF: "PAL catalyzes the non-oxidative deamination of L-phenylalanine (Phe) to trans-cinnamic acid (t-cinnamate) and ammonia (NH3), representing the first committed step channelling carbon from primary metabolism into the phenylpropanoid pathway." Reinforces GO:0045548, GO:0006559, GO:0009800, GO:0009698 as core.
+- Substrate specificity: "AtPAL1, AtPAL2, and AtPAL4 show robust phenylalanine deamination activity, whereas AtPAL3 has low activity" — independent support for PAL1 as a major catalytic isoform (consistent with PMID:15276452).
+- Localization: corpus has no direct PAL1-protein localization experiment, but "PAL-dependent SA production is explicitly described as operating in a cytosolic PAL pathway" — pathway-level support for cytosolic action; consistent with UniProt cytoplasm. No basis to change the ACCEPT for GO:0005737.
+- Catabolic mis-annotations confirmed wrong-direction: PAL1 "supplying precursors for lignin, flavonoids/anthocyanins, and contributing to salicylic acid (SA) biosynthesis" and participating in the "cytosolic 'PAL pathway' contributing to salicylic acid (SA) biosynthesis." This reinforces the REMOVE decisions for GO:0046274 (lignin catabolic) and GO:0046244 (SA catabolic) — PAL feeds biosynthesis, not catabolism.
+- Post-translational regulation: "proteasome-dependent PAL degradation mediated by Kelch-domain F-box (KFB) proteins" — corroborates KFB/SAGL1 IPI annotations as PAL1-as-substrate (kept MARK_AS_OVER_ANNOTATED for bare protein binding).
+- Transcriptional regulation (new context, not annotated): ERF114 directly binds the PAL1 promoter and activates expression during elicitor/pathogen defense ("ERF114 positively modulates elicitor-induced lignin and SA accumulation, likely via PAL1 activation"); WHY1 represses PAL1 indirectly via MYB15. These are regulators OF PAL1, not PAL1 functions, so they do not generate new PAL1 GO annotations.
+
+No UNDECIDED annotations existed; none required resolution. No new GO term could be added with a GOA/UniProt-verifiable ID beyond those already present (regulatory/defense relationships are upstream-of-PAL1 and not appropriate as PAL1 MF/BP additions). `proposed_new_terms` therefore remains empty. status kept DRAFT.
