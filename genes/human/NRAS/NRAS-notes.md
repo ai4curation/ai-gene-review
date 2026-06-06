@@ -119,3 +119,19 @@ activator; this complex dephosphorylates the inhibitory S259 site on RAF.
    RAF-MEK-ERK MAPK cascade and PI3K (GO:0007265, GO:0000165; GO:0005886, GO:0000139).
 3. Promotion of cell proliferation downstream of this signaling (GO:0008284) — pleiotropic /
    peripheral relative to the switch function.
+
+## Final review action plan (applied to YAML 2026-06)
+- GTPase activity (GO:0003924) IBA/IEA/ISS/IDA/TAS, GTP binding (GO:0005525) IEA: ACCEPT (core MF).
+- G protein activity (GO:0003925) IEA EC-map: KEEP_AS_NON_CORE (less standard than GTPase activity for RAS).
+- Ras protein signal transduction (GO:0007265) IBA + IDA: ACCEPT (core BP); MAPK cascade (GO:0000165) IEA + TAS: ACCEPT (core BP).
+- signal transduction (GO:0007165) IEA InterPro: KEEP_AS_NON_CORE (broad parent of GO:0007265/GO:0000165).
+- plasma membrane (GO:0005886) IBA/IDA/EXP/TAS-Reactome(many): ACCEPT (core CC; Reactome block redundant but location correct).
+- Golgi membrane (GO:0000139) EXP/IEA/TAS and Golgi apparatus (GO:0005794) IDA: ACCEPT (core CC; shuttling site).
+- ER membrane (GO:0005789) TAS-Reactome: KEEP_AS_NON_CORE (RAS-processing transit site).
+- cytosol (GO:0005829) TAS-Reactome (pre-processed RAS): KEEP_AS_NON_CORE.
+- membrane (GO:0016020) IEA/HDA, tertiary granule membrane (GO:0070821) TAS, extracellular exosome (GO:0070062) HDA: MARK_AS_OVER_ANNOTATED (generic/HT, loses PM/Golgi specificity).
+- positive regulation of cell population proliferation (GO:0008284) IBA: KEEP_AS_NON_CORE (downstream).
+- positive regulation of endothelial cell proliferation (GO:0001938) IMP PMID:23619365: KEEP_AS_NON_CORE (peripheral; NRAS as miR-146a target).
+- positive regulation of Ras protein signal transduction (GO:0046579) NAS PMID:35831509: KEEP_AS_NON_CORE (complex-level / SHOC2-PP1C).
+- protein binding (GO:0005515) IPI x many: bare term — MARK_AS_OVER_ANNOTATED (high-throughput interactome) or note effector partners; not endorsed as informative MF.
+- protein-containing complex binding (GO:0044877) IDA PMID:23209302: MARK_AS_OVER_ANNOTATED (paper not focused on NRAS).

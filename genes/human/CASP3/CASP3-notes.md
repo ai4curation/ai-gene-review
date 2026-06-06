@@ -70,3 +70,34 @@ Synonyms: CPP32, Yama, apopain, SCA-1. Heterotetramer of two p17 (large) + p12 (
   many from interactome screens). Do not endorse as core.
 - Reactome cytosol/nucleoplasm CC TAS (dozens) -> ACCEPT location, but these are substrate-cleavage reaction
   contexts; cytosol/nucleus are valid.
+
+## Exact supporting quotes gathered (for supported_by)
+- PMID:18723680: "Caspase-3 was found to be generally more promiscuous than caspase-7 and appears to be the
+  major executioner caspase during the demolition phase of apoptosis."
+- PMID:7596430: "This enzyme, named apopain, is composed of two subunits of relative molecular mass (M(r)) 17K
+  and 12K that are derived from a common proenzyme identified as CPP32." / "suggesting that apopain/CPP32 is
+  important for the initiation of apoptotic cell death."
+- PMID:9334240: "the other is caspase-3, which cleaves both precursor and mature hIL-18 at Asp71-Ser72 and
+  Asp76-Asn77 to generate biologically inactive products."
+- PMID:16374543: "the activation of nuclear caspases-7 and -3, and poly(ADP-ribose) polymerase (PARP) cleavage,
+  are early events in camptothecin-induced apoptosis."
+- PMID:17167422: "Caspase-3 is activated during both terminal differentiation and erythropoietin-starvation-
+  induced apoptosis of human erythroid precursors." / "Hsp70 prevents active caspase-3 from cleaving GATA-1 and
+  inducing apoptosis."
+- PMID:22253444: "the activation of, at least, caspase-3 is necessary for the proper cleavage of ICAD L/S."
+- PMID:28459430: "GSDME was specifically cleaved by caspase-3 in its linker, generating a GSDME-N fragment that
+  perforates membranes and thereby induces pyroptosis."
+- PMID:30878284: "activated caspase-3 cleaved cGAS, MAVS, and IRF3 to prevent cytokine overproduction." /
+  "Caspase-3 was exclusively required in human cells."
+- PMID:36002459: "caspase-3 can mediate the cleavage of NF-κB members p65/RelA, RelB, and c-Rel via its protease
+  activity."
+- PMID:33725486: "Upon apoptotic stimuli, XRCC4, contained in the DNA repair complex, is cleaved by caspases,
+  and its C-terminal fragment with an intrinsically disordered region is released into the cytoplasm."
+- PMID:11257232: "We report the crystal structure of the second BIR domain of XIAP (BIR2) in complex with
+  caspase-3, at a resolution of 2.7 A, revealing the structural basis for inhibition."
+- PMID:8689682: "Cells undergoing apoptosis in vivo showed increased release of cytochrome c to their cytosol"
+  (intrinsic/apoptosome upstream of CASP3 activation).
+- PMID:15565177: "typical apoptotic features such as caspase-3 activation and cleavage of poly(ADP-ribose)-
+  polymerase" (DIP/E2F1 intrinsic apoptosis).
+- PMID:33852854: GSDME "cleaved by apoptosis-associated CASP3"; non-cleavable GSDME D270A "altered at the CASP3
+  cleavage and activation site."
