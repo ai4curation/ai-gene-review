@@ -42,3 +42,17 @@ UniProt: A8R7E6 (CERK1_ARATH); locus AT3G21630; 617 aa precursor; EC 2.7.11.1.
 - REMOVE: all GO:0005515 "protein binding" (uninformative; PUB12, IOS1, PBL27 x2, LYK5, AvrPtoB); GO:0005576 extracellular region (ISM/AtSubP misprediction — protein is plasma-membrane-anchored, only the ectodomain faces apoplast).
 
 No proposed_new_terms: existing terms (chitin binding, transmembrane receptor protein kinase activity, cell surface PRR signaling pathway, detection of molecule of fungal origin) already capture CERK1 biology well. OLS MCP was unavailable, so no unverified GO IDs were introduced.
+
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+
+A Falcon deep-research report (`CERK1-deep-research-falcon.md`) was reviewed to augment the existing curation. Findings fully corroborated the prior decisions; no actions were weakened, no UNDECIDED items existed, and no NEW GO terms with verifiable IDs were warranted.
+
+Key corroborating points (with verbatim support added as `file:` supported_by entries):
+- Architecture/MF: "CERK1 is a single-pass membrane receptor with" three LysM motifs, TM/juxtamembrane, and intracellular Ser/Thr kinase; "CERK1 has intrinsic kinase activity with autophosphorylation and myelin basic protein phosphorylation in vitro." Reinforces GO:0004674, GO:0019199.
+- Ligand specificity: "evidence supports preferential recognition of longer chitin oligomers, especially chitin heptamers/octamers, and GlcNAc8-driven receptor activation/dimerization"; "All three LysM domains are required for full chitin responsiveness." Reinforces GO:0008061 and homodimerization (GO:0042803; "Early model: CERK1 can homodimerize upon chitin binding.").
+- Localization: "CERK1 is localized to the plasma membrane." Reinforces GO:0005886.
+- Immunity/PRR/signaling: "CERK1 is a key PRR component required for chitin-induced PTI outputs including MAPK activation, ROS burst, and defense gene induction"; "Loss-of-function cerk1 mutants lose chitin-elicitor responses..."; downstream relay "Activated CERK1 signals through RLCK-VII kinases including PBL27, BIK1, and PBL19...". Reinforces GO:0045087, GO:0002752, GO:0032491, GO:0035556.
+- Fungal defense quantification: "Disease phenotype against Alternaria brassicicola showed lesion size 1.37 ± 0.57 mm in cerk1-2 versus 1.14 ± 0.56 mm in Col-0." Reinforces GO:0050832.
+- Bacterial (non-core): LysM partners "including LYM1/LYM3 for peptidoglycan signaling and LYM2 for plasmodesmal chitin responses." Reinforces non-core GO:0009617 etc.
+
+Note: The report also surfaces additional biology not separately annotated in GOA (LYK5-CERK1-PBL27-SLAH3 stomatal-immunity module; phosphosite-specific ROS-vs-MAPK branching; PUB12/13 / EXO70B2 / CIPP1 receptor-turnover modules). Several phosphosite assignments are secondarily sourced (reviews/theses), so they were not used to introduce new annotations. These remain candidates for GO-CAM modeling rather than new term proposals.
