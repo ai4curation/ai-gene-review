@@ -56,3 +56,16 @@
 - floral organ morphogenesis / fruit morphogenesis / positive regulation of fertilization — developmental outputs of GA signaling; KEEP_AS_NON_CORE (pleiotropic, redundant with paralogs).
 - cellular response to hypoxia (GO:0071456, HEP) — MARK_AS_OVER_ANNOTATED.
 - nucleus / cytoplasm — ACCEPT (nucleus core; cytoplasm experimentally observed).
+
+## Deep research synthesis (Falcon / Edison Scientific report)
+
+The Falcon deep-research report (`GID1A-deep-research-falcon.md`) corroborates and extends the existing review with no contradictions. Key points used to strengthen the review:
+
+- **Non-enzymatic receptor confirmed**: "the receptor lacks key catalytic features and shows **no detectable hydrolase activity** in a model substrate assay (p-nitrophenyl acetate)" — reinforces the REMOVE decision on GO:0016787 hydrolase activity (Ueguchi-Tanaka et al. 2007; Alabadí & Sun 2025).
+- **Ligand binding / GA4 selectivity**: "**GA4** is highlighted as the **highest-affinity** GA and the most effective for driving GID1–DELLA complex formation in planta" — supports GO:0010331 gibberellin binding (core MF).
+- **Allosteric lid mechanism**: GA binding "creates hydrophobic surfaces needed for DELLA binding" (closes N-terminal lid; engages DELLA, LExLE, VHYNP motifs) — supports the receptor mechanism / proposed gibberellin receptor activity term.
+- **Two-mode DELLA suppression**: proteolysis-dependent (cryo-EM GA3–GID1A–RGA–SLY1–ASK1 quaternary complex, ~2.72 Å, Dahal et al. 2025 PNAS) AND proteolysis-independent ("GA-bound GID1 can reduce DELLA repression without necessarily inducing DELLA degradation") — supports GO:0009939 and the GA-mediated signaling core function.
+- **Nucleocytoplasmic localization**: "GFP-tagged Arabidopsis GID1A localized to both nucleus and cytoplasm, and this distribution was not altered by GA or paclobutrazol treatment" — supports both nucleus (GO:0005634) and cytoplasm (GO:0005737).
+- **New mechanistic detail (2025)**: GA–GID1A binding to the DELLA GRAS region can compete with IDD transcription-factor binding (Y3H attenuation of IDD1–RGA), extending DELLA neutralization beyond degradation. Captured as context; no new GO ID added.
+
+No `UNDECIDED` annotations were present, so none required resolution. No new GO annotation could be added with a verifiable GOA/UniProt ID (a dedicated "gibberellin receptor activity" MF still does not exist in GO and remains in `proposed_new_terms`). The report does not contradict the negated `response to gibberellin` annotation (redundancy masking) or the hypoxia HEP over-annotation call. New references: Shani et al. 2024 (Plant Physiol), Alabadí & Sun 2025 (Annu Rev Plant Biol), Dahal et al. 2025 (PNAS) — cited within the falcon report rather than added as standalone PMIDs.
