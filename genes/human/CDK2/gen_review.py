@@ -612,6 +612,10 @@ data["suggested_experiments"] = [
      "experiment_type": "genetic separation-of-function analysis"},
 ]
 
+# Fix core_functions supporting_text too
+for cf in data["core_functions"]:
+    fix_supported_by(cf)
+
 # Write out
 with open(STUB, "w") as f:
     yaml.safe_dump(data, f, sort_keys=False, default_flow_style=False, width=100, allow_unicode=True)
