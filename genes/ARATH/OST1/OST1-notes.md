@@ -49,3 +49,23 @@
 1. ABA-activated Ser/Thr protein kinase (protein serine/threonine kinase activity; EC 2.7.11.1; ATP binding) — autophosphorylates and phosphorylates downstream targets. Core.
 2. Positive regulator of the ABA-activated signaling pathway -> regulation of stomatal closure / response to water deprivation / drought tolerance. Core biological role.
 3. Activation of the guard-cell S-type anion channel SLAC1 (ion channel regulator activity) driving stomatal closure. Core.
+
+## Deep research synthesis (Falcon / Edison Scientific report, 2026-06-06)
+
+Source: `OST1-deep-research-falcon.md` (provider: falcon). Used to corroborate and strengthen existing annotation decisions; no decisions were reversed. Key additional findings and provenance:
+
+- Catalytic mechanism restated explicitly: OST1 transfers phosphate from ATP to Ser/Thr residues of downstream effectors, antagonized by PP2C dephosphorylation [falcon "OST1/SRK2E/SnRK2.6 is an ABA-activated Ser/Thr protein kinase that transfers phosphate from ATP to serine/threonine residues on downstream effectors in ABA, osmotic-stress, and guard-cell signaling pathways; PP2C phosphatases antagonize this by dephosphorylation"]. Added as supporting_text to GO:0004674, GO:0005524 (ATP binding), and core function 1.
+- Canonical PYR/PYL-PP2C-SnRK2 module reaffirmed: "In the absence of ABA, PP2Cs inhibit SnRK2s; ABA perception relieves this inhibition, enabling kinase activation and phosphorylation of downstream targets." Added to GO:0009738 (ABA-activated signaling pathway).
+- SLAC1 activation: "OST1 interacts with SLAC1 and activates it via phosphorylation, linking ABA signaling to anion efflux and stomatal closure" (Lee 2009, Geiger 2009). Brandt 2012 functional-site evidence: SLAC1 S120A prevents activation by OST1. Added to GO:0099106 and core function 3.
+- PP2CA acts at multiple nodes: "PP2CA inhibits SLAC1 and also physically interacts with OST1 to inhibit the kinase" — supports GO:0019903 protein phosphatase binding.
+- RBOHF/RBOHD substrate residues compiled: OST1 phosphorylates RBOHF (Ser13, Ser174) and RBOHD (Ser343, Ser347; also Ser163); "These phosphorylation events are linked to ROS production in guard cells and stomatal closure." Added to GO:2000377 (regulation of ROS metabolic process).
+- Dual activation modes reaffirmed: "Yoshida et al. showed SRK2E/OST1 is activated in vivo by both ABA and osmotic stress" with osmotic activation being ABA-independent. Added to GO:0006970 (response to osmotic stress).
+- Localization: functional/interaction evidence places OST1 at plasma-membrane-proximal complexes with SLAC1 ("OST1 forms complexes with plasma membrane-localized SLAC1...") and in nuclear-proximal functions ("OST1 is also implicated in nuclear-proximal functions through phosphorylation of transcriptional regulators and chromatin-associated proteins"). Added to GO:0005634 (nucleus).
+- Physiological synthesis: "OST1 is a core positive regulator of ABA-induced stomatal closure, drought and osmotic-stress responses, ROS production in guard cells, and broader stress signaling." Added to GO:0009414 (water deprivation) and GO:0090333 (stomatal closure).
+
+New/expanded biology in the report not yet annotatable as core OST1 GO terms (no verified GO ID; kept as context only, NOT added):
+- Compartmentalized SnRK2 signaling: prolonged ABA drives N-glycosylation-dependent nucleus-to-peroxisome relocalization of SnRK2.2/2.3 (Lu 2024), but this is explicitly NOT yet assigned to OST1/SnRK2.6 — not annotated.
+- Additional reported direct targets (review-synthesized, not primary-extracted): CNGC5/6/9/12, KAT1, QUAC1, PIP2;1, BRM, ICE1, PUB25/26, AtANN1. These remain candidate substrates; no new GO term added.
+- PTM regulation of OST1: S-nitrosylation by NO negatively regulates OST1 (Yastreb 2024 review). Candidate suggested_question/experiment, not annotated.
+
+No UNDECIDED actions were present; none required resolution. No NEW annotation added (no clearly missing function with a verifiable GO ID from existing GOA/UniProt). Status kept DRAFT.
