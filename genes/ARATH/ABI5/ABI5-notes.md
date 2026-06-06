@@ -79,6 +79,26 @@ is sequence-specific DNA-binding transcription factor activity.
   binding" is itself acceptable as a DNA-binding term, but the specific biological inference of
   ABI5 regulating cell-wall/nitrogen/vascular genes is weak. Kept as non-core / over-annotated.
 
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+
+The Falcon deep-research report (`file:ARATH/ABI5/ABI5-deep-research-falcon.md`) corroborates
+the core review with recent (2021-2024) literature and adds nuance:
+
+- Core MF and pathway role confirmed: ABI5 is a group-A AREB/ABF bZIP TF binding ABRE/ACGT-core
+  cis-elements (consensus (C/T)ACGTGGC; G-box CACGTG), acting as the central downstream
+  transcriptional effector of the PYR/PYL/RCAR -> PP2C -> SnRK2 module, predominantly in
+  seeds/early seedlings [file:ARATH/ABI5/ABI5-deep-research-falcon.md "ABI5 is a **sequence-specific transcription factor** (bZIP/AREB/ABF family) that binds ABRE/ACGT-core motifs and modulates transcription of ABA-responsive genes, functioning as a central transcriptional effector downstream of SnRK2 kinases."]. Used to strengthen GO:0003700, GO:0043565, GO:0006355, GO:0009737/germination, and both core_functions.
+- Localization confirmed as nuclear, refined to nucleoplasmic after ABA treatment; in nup1
+  mutants ABI5 is retained in the nucleolus rather than cleared [file:ARATH/ABI5/ABI5-deep-research-falcon.md "ABI5 acts in the nucleus. In native-promoter ABI5-GFP lines, ABI5 was predominantly nucleoplasmic after 4 h ABA treatment"]. Used to strengthen GO:0005634.
+- DUAL ACTIVITY / repressor role (new emphasis): beyond its classical activator role,
+  ABI5 also acts as a direct transcriptional REPRESSOR. ABI5 directly represses PME31
+  (pectin methylesterase 31) during ABA-inhibited germination [file:ARATH/ABI5/ABI5-deep-research-falcon.md "A 2024 study connects ABI5 to cell-wall remodeling during ABA-inhibited germination by showing ABI5 **directly represses** **PME31** (pectin methylesterase 31)."], and the ABI5-FLZ13 module represses suites of growth-related genes (photosynthesis, cell-wall organization) during the embryo-to-seedling transition. This suggests a possible future GO:0045892 (negative regulation of DNA-templated transcription) annotation — recorded as a suggested_question rather than a NEW annotation, because GO:0045892 is not present in the current GOA/UniProt set and the schema reserves proposed_new_terms for terms that do not yet exist.
+- New regulators of ABI5 proteostasis reported (PUB8 U-box E3 ligase promoting ABI5
+  ubiquitin/26S-proteasome degradation; NUP1/nuclear-pore-associated degradation; FLZ13
+  cofactor enhancing ABI5 promoter occupancy; AFPs as phospho-regulated negative regulators).
+  These are regulators of ABI5 (not ABI5's own MF) and reinforce the REMOVE decisions on the
+  bare GO:0005515 protein binding annotations; the biology is captured in the description/notes.
+
 ## Core function synthesis
 
 1. Sequence-specific DNA-binding transcription factor (ABRE/G-box binding) — GO:0003700 /
