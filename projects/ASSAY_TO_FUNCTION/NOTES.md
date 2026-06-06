@@ -137,3 +137,17 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
 - No YAML edits (defensible cases, respecting curation). Handed off as worklist.
 - Honest limit: discriminator only catches signaling-ligand indirects; other
   indirect classes (transporters etc.) still need human judgement.
+
+## 2026-06-06 (cont.) — actual YAML edits (EDITS.md)
+
+- Carried analysis through to curation edits. Downgraded ACCEPT->KEEP_AS_NON_CORE:
+  PDGFB GO:0072126 (x2), HMGB1 GO:0007204, Sirt2 GO:0051781, VEGFA GO:0043066 (x2).
+  = 4 genes, 6 records. All re-validate clean.
+- Kept (false positives): VEGFA GO:0001938 EC prolif (defining fn), SIRT1 GO:0003714
+  corepressor (well-supported MF), Calm2/HRC binding MF, CTNNB1/NOTCH1 coactivator.
+- IMPORTANT: tried to downgrade IL21 GO:0042102 T-cell-prolif but the core_functions
+  pretool validation hook BLOCKED it — GO:0042102 is in IL21 core_functions
+  directly_involved_in (cytokine -> immune outputs, incl B cell prolif). Singling
+  out T cell prolif = inconsistent. Reverted; kept core. Good catch by the hook.
+- Lesson: a flag is a candidate; decline the edit when the "downstream" process is
+  the gene's defining role (VEGFA EC prolif, IL21 immune outputs). Tracked in EDITS.md.

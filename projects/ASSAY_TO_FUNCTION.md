@@ -285,6 +285,24 @@ VEGFA×2, HMGB1×2) at the top of the queue while the cell-cycle machinery sinks
 uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py --target accepted
 ```
 
+## Annotation edits made (curation output)
+
+The analysis was carried through to actual YAML edits — see
+[`ASSAY_TO_FUNCTION/EDITS.md`](ASSAY_TO_FUNCTION/EDITS.md) for the full table
+with gene descriptions and rationale. Summary: **4 genes / 6 annotation records
+downgraded `ACCEPT` → `KEEP_AS_NON_CORE`** where a process is genuinely
+downstream of the gene's core MF:
+
+- **PDGFB** — glomerular mesangial cell proliferation (GO:0072126) — downstream of PDGFR signaling
+- **HMGB1** — cytosolic calcium (GO:0007204) — downstream CXCR4 signaling
+- **Sirt2** — positive regulation of cell division (GO:0051781) — downstream of deacetylase activity
+- **VEGFA** — negative regulation of apoptotic process (GO:0043066) — downstream Akt survival signaling
+
+Deliberately **kept as-is** (flag was a false positive): VEGFA endothelial-cell
+proliferation (defining function), IL21 T-cell proliferation (integral to its
+curated `core_functions`), SIRT1 corepressor activity, and the binding/coactivator
+MF terms from the Tier-1 re-review. All edited files re-validate cleanly.
+
 ## Next steps
 
 1. **Curator triage** of the ranked `flagged_candidates.tsv`, starting with the
