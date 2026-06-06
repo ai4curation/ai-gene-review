@@ -37,6 +37,14 @@ review_batches:
     species: human
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
+  - id: proteostasis-batch-2026-06-06
+    title: "Proteostasis PN candidate additions batch 3 (V-ATPase, ER folding/QC, autophagy receptors, co-chaperone/UPS)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 20
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch3_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
