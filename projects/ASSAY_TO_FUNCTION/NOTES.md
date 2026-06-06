@@ -120,3 +120,20 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   value was calibrating the rubric + confirming existing curation handled the
   real MF over-calls.
 - Next: re-target flagger at unreviewed hub-aligned MF; work Tier-2 queue.
+
+## 2026-06-06 (cont.) — Tier-2 queue + machinery discriminator
+
+- Re-aiming at *unreviewed* only yields 18 candidates (all BP/CC, no MF) — volume
+  is in the Tier-2 ACCEPT queue (291). So prioritized that instead.
+- flag_candidates.py now: --target {accepted,unreviewed,all}; Tier-2 ranked by
+  class any-downgrade rate (read from aligned crosstab); clean \n TSVs (miners too).
+- VIABILITY re-review (18): queue MIXES machinery (CDK1/MYC/RB1/TP53/Mtor =
+  correctly core) with indirect (IL21/PDGFB/VEGFA/Sirt2). Flag alone can't tell
+  them apart.
+- KEY: the gene's own MF is the discriminator. Added `indirect_ligand` tag =
+  gene has signaling-ligand MF (cytokine/growth factor/hormone/chemokine) ->
+  process is downstream of receptor signaling -> non-core. Surfaces 6 clean
+  candidates (IL21, PDGFB, VEGFA x2, HMGB1 x2) at top of queue. See REREVIEW_TIER2.md.
+- No YAML edits (defensible cases, respecting curation). Handed off as worklist.
+- Honest limit: discriminator only catches signaling-ligand indirects; other
+  indirect classes (transporters etc.) still need human judgement.

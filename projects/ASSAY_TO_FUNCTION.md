@@ -265,15 +265,35 @@ findings fed back:
    flagger's marginal value is therefore highest on *unreviewed* annotations and
    the Tier-2 queue, not on re-litigating accepted MF calls.
 
+### Tier-2 triage + the machinery discriminator
+
+The Tier-2 queue (core `ACCEPT` on a hub-aligned BP/CC term) is large and, on
+its own, low precision: re-reviewing the top `VIABILITY_PROLIFERATION` class
+showed the queue mixes genuine machinery (CDK1, MYC, RB1, TP53 — correctly core)
+with indirect cases (IL21, PDGFB, VEGFA). See
+[`ASSAY_TO_FUNCTION/REREVIEW_TIER2.md`](ASSAY_TO_FUNCTION/REREVIEW_TIER2.md).
+
+The flagger now (a) ranks Tier 2 by each readout class's empirical any-downgrade
+rate, and (b) adds a **machinery discriminator**: a candidate is tagged
+`indirect_ligand` when the gene's own MF is a *secreted signaling ligand*
+(cytokine/growth factor/hormone/chemokine), because then any cellular process it
+drives is downstream of receptor signaling — the strongest computable non-core
+signal. This cleanly isolates 6 high-precision non-core candidates (IL21, PDGFB,
+VEGFA×2, HMGB1×2) at the top of the queue while the cell-cycle machinery sinks.
+
+```bash
+uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py --target accepted
+```
+
 ## Next steps
 
-1. **Expand the catalog** with more probe vocabularies and the convergent
+1. **Curator triage** of the ranked `flagged_candidates.tsv`, starting with the
+   `indirect_ligand` subset (highest-precision non-core candidates).
+2. **Expand the catalog** with more probe vocabularies and the convergent
    *process-term* GO IDs each readout gets over-mapped to.
-2. **Tighten the link** from paper-assay to annotation, e.g. by restricting to
-   papers whose *title/abstract* (not just full text) features the readout, or
-   by parsing the methods section specifically.
-3. **Triage the worklist**: route Tier 1 through a focused re-review pass and
-   feed outcomes back to calibrate the rubric.
+3. **Generalize the discriminator** beyond signaling ligands (e.g. transporters,
+   structural proteins) — currently those indirect cases still need human
+   judgement via the ranked queue.
 
 ## Relationship to existing projects
 

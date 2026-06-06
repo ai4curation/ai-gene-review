@@ -236,7 +236,7 @@ def main() -> None:
               "proximity", "convergence", "aligned", "full_text"]
     matches_tsv = args.out_dir / "paper_readout_matches.tsv"
     with matches_tsv.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
@@ -262,7 +262,7 @@ def main() -> None:
         for r in subset:
             ct[r["readout_class"]][r["action"]] += 1
         with out.open("w", newline="") as fh:
-            w = csv.writer(fh, delimiter="\t")
+            w = csv.writer(fh, delimiter="\t", lineterminator="\n")
             w.writerow(["readout_class", "proximity", "convergence",
                         "total", "reviewed"] + actions_order
                        + ["pct_removed_or_overann", "pct_any_downgrade"])

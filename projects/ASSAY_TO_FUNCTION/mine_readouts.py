@@ -155,7 +155,7 @@ def main() -> None:
         "matched", "snippet", "file",
     ]
     with matches_tsv.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fieldnames, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=fieldnames, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
@@ -185,7 +185,7 @@ def main() -> None:
 
     crosstab_tsv = args.out_dir / "readout_action_crosstab.tsv"
     with crosstab_tsv.open("w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         header = ["readout_class", "proximity", "convergence", "total", "reviewed"]
         header += actions_order + ["pct_removed_or_overann", "pct_any_downgrade"]
         w.writerow(header)
@@ -206,7 +206,7 @@ def main() -> None:
         matched_counts[r["readout_class"]][r["matched"].lower()] += 1
     qc_tsv = args.out_dir / "matched_string_counts.tsv"
     with qc_tsv.open("w", newline="") as fh:
-        w = csv.writer(fh, delimiter="\t")
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
         w.writerow(["readout_class", "matched_string", "count"])
         for name in catalog:
             for s, c in matched_counts.get(name, Counter()).most_common():
