@@ -69,3 +69,24 @@ New/expanded biology in the report not yet annotatable as core OST1 GO terms (no
 - PTM regulation of OST1: S-nitrosylation by NO negatively regulates OST1 (Yastreb 2024 review). Candidate suggested_question/experiment, not annotated.
 
 No UNDECIDED actions were present; none required resolution. No NEW annotation added (no clearly missing function with a verifiable GO ID from existing GOA/UniProt). Status kept DRAFT.
+
+## PR #1417 review fix (catch-all PMID:22090030 evidence on protein-binding REMOVE entries)
+
+The reviewer (ai4c-agent) flagged ~8 GO:0005515 (protein binding) REMOVE entries that
+used PMID:22090030 as a single catch-all `supported_by` reference while each entry's
+`original_reference_id` was a different paper. REMOVE actions are correct (bare protein
+binding is uninformative per curation guidelines); only the evidence attribution was fixed.
+For each of the 6 entries whose original paper is cached, the catch-all PMID:22090030
+supporting_text was replaced with a verbatim quote from the actual `original_reference_id`:
+
+- PMID:19805022 (Umezawa et al.): "Group A PP2Cs interacted physically with SnRK2s in various combinations, and efficiently inactivated ABA-activated SnRK2s via"
+- PMID:19874541 (Nishimura et al.): "ABI1 interacts with the ABA-signalling kinases OST1, SnRK2.2 and SnRK2.3 in plants."
+- PMID:19898420 (Melcher et al., gate-latch-lock): paper does NOT show a direct OST1-HAB1 binding assay; it uses a SnRK2.6 phosphopeptide as a HAB1 substrate. Kept REMOVE; reason now states bare binding is uninformative per guidelines and the original reference shows the substrate relationship, not a binding assay. Quote: "SnRK2.6 is a natural substrate of PP2C and phosphorylation at S175 is required for SnRK2.6 kinase activation and its role in ABA signaling"
+- PMID:19924127 (Fujii et al.): "the SnRK2 kinases are kept inactive by the PP2Cs through physical interaction and dephosphorylation."
+- PMID:20729862 (Melcher et al., pyrabactin): focuses on PYL-PP2C complexes but states the PP2C-SnRK2 interaction directly. Quote: "these PP2Cs bind and inactivate subfamily 2 members of SNF1-related kinases (SnRK2 kinases) by dephosphorylating serine and threonine residues in their activation loop"
+- PMID:23290725 (HDX study): "the function of the αG helix is primarily phosphatase binding"
+
+Remaining PMID:22090030 occurrences in the file are legitimate (it is the actual
+original_reference_id for GO:0046777 autophosphorylation, a properly attributed secondary
+reference for GO:0009789, and a references-block entry) — not catch-all misattributions.
+Validation: ✓ Valid (1 pre-existing unrelated plasma-membrane location warning).
