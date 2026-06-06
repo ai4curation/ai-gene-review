@@ -216,6 +216,35 @@ promote to core only when independent evidence places the gene in P's recognized
 machinery. The single MF exception is a transcriptional reporter for a bona fide
 DNA-binding TF.
 
+## The flagger (operationalized rubric)
+
+[`ASSAY_TO_FUNCTION/flag_candidates.py`](ASSAY_TO_FUNCTION/flag_candidates.py)
+applies the rubric to the mined matches and emits a prioritized re-review
+worklist (`reports/flagged_candidates.tsv`). It flags only annotations that are
+still *standing* (not already downgraded) and *thematically aligned* to a hub
+readout, so precision stays high. Two tiers:
+
+- **Tier 1 — MF from a hub readout** (a state readout cannot license molecular
+  function). The legitimate transcriptional-reporter→TF-activity case is
+  excluded.
+- **Tier 2 — a core (`ACCEPT`) hub-aligned BP/CC call**, where the rubric
+  default is non-core; verify the gene is in the recognized machinery.
+
+```bash
+uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py
+```
+
+Current run: **298 candidates (7 Tier 1, 291 Tier 2)**. The Tier-1 set is
+precisely the reporter-driven over-annotation pattern the rubric predicts —
+`transcription coactivator/corepressor activity` claimed from luciferase
+reporters for coregulators that are **not** sequence-specific TFs (CTNNB1/
+β-catenin, NOTCH1, SIRT1, HMGB1), plus Ca²⁺-binding MF terms (Calm2, HRC) that
+should rest on EF-hand/structural evidence rather than Ca²⁺ imaging. Tier 2 is a
+larger triage queue dominated by `MITO_MEMBRANE_POTENTIAL` (85, mostly generic
+`mitochondrion`), `TRANSCRIPTIONAL_REPORTER` (72), and `AUTOPHAGY_FLUX` (70).
+
+These are re-review *candidates*, not asserted errors.
+
 ## Next steps
 
 1. **Expand the catalog** with more probe vocabularies and the convergent
@@ -223,10 +252,8 @@ DNA-binding TF.
 2. **Tighten the link** from paper-assay to annotation, e.g. by restricting to
    papers whose *title/abstract* (not just full text) features the readout, or
    by parsing the methods section specifically.
-3. **Operationalize**: flag existing annotations whose source paper's only
-   relevant readout is a hub probe and whose aspect is MF, or whose action is
-   ACCEPT-as-core but the gene is not in the machinery set — candidate
-   over-annotations to re-review.
+3. **Triage the worklist**: route Tier 1 through a focused re-review pass and
+   feed outcomes back to calibrate the rubric.
 
 ## Relationship to existing projects
 

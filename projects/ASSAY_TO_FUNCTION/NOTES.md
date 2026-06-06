@@ -92,3 +92,15 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   paper_readout_matches.tsv.
 - Next: operationalize as a flagger (hub-readout + MF aspect, or core-call on a
   non-machinery gene = re-review candidate).
+
+## 2026-06-06 (cont.) — flagger built
+
+- flag_candidates.py consumes paper_readout_matches.tsv, applies rubric, writes
+  reports/flagged_candidates.tsv. Flags only standing + hub-aligned annotations.
+- Tier 1 (MF from hub): 7. Exactly the predicted pattern — reporter-driven
+  coactivator/corepressor MF for non-TF coregulators (CTNNB1, NOTCH1, SIRT1,
+  HMGB1) + Ca2+-binding MF (Calm2, HRC) that needs EF-hand evidence not imaging.
+  TF DNA-binding-activity MF excluded via TF_LEGIT_MF regex.
+- Tier 2 (core hub-aligned BP/CC): 291. Triage queue: MITO 85 (mostly generic
+  mitochondrion), TRANSCRIPTIONAL 72, AUTOPHAGY 70, APOPTOSIS 24, VIABILITY 18.
+- Dedup per (organism, gene, go_id). Framed as re-review candidates, not errors.
