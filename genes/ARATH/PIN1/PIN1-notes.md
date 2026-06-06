@@ -86,6 +86,40 @@ gradients) — keep as non-core:
 - GO:0048364 root development; GO:0048367 shoot system development (PMID:9856939/PMID:11060241).
 - GO:0010262 somatic embryogenesis (IMP PMID:36345646); GO:0048830 adventitious root development (IMP PMID:36398993 — tomato ro/big paper; PIN1 accumulation Ca-sensitive). The adventitious-root annotation rests on an indirect tomato study; keep as non-core but flagged.
 
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+
+The Falcon deep-research report (`file:ARATH/PIN1/PIN1-deep-research-falcon.md`) corroborates
+the existing review and adds no contradicting evidence. Key points used to strengthen the
+review:
+
+- Disambiguation: the target is the Arabidopsis PIN-FORMED1 auxin transporter (Q9C6B8,
+  At1g73590), not the animal PIN1 prolyl isomerase; the 2022 cryo-EM study explicitly
+  references Q9C6B8 ["demonstrates PIN1-mediated auxin (IAA) efflux and inhibitor (NPA)
+  binding, matching the UniProt record provided"].
+- Core MF: PIN1 "exports auxin from the cytosol toward the apoplast" via "a defined
+  intracellular binding pocket that coordinates IAA" (apo/IAA-bound/NPA-bound inward-facing
+  states); IAA Kd = 83 ± 10 µM vs NPA Kd = 0.15 ± 0.08 µM (ITC, pH 7.0), NPA a competitive
+  inhibitor of the same site. Supports GO:0010329 (auxin efflux transmembrane transporter
+  activity) and GO:0010315 (auxin export across the PM).
+- Polar transport: polar PM distribution "determines the direction of auxin flow between
+  neighboring cells"; PIN1 "frequently described as basally localized" in vascular tissue
+  and root stele. Supports GO:0009926 (auxin polar transport) and GO:0009925 (basal PM).
+- Transport mechanism: elevator-like alternating-access; energetics consistent with a
+  uniport-like mechanism, though the in vivo energy source remains unresolved (no GO change
+  warranted).
+- Developmental output: "pin1 mutants exhibit severe organ initiation failures, producing
+  'pin-like' stems with reduced or absent flowers/organs" — supports the non-core
+  inflorescence/flower-development annotations.
+- Regulation context (2023–2024): D6PK activates PIN1 transport; PID/WAG bias apical sorting;
+  GNOM-dependent recycling and K63-ubiquitin/vacuolar turnover; phosphoinositide/CLE-peptide
+  hubs and ENHANCER OF PINOID modulate PIN1 patterning. These reinforce (but do not change)
+  the MARK_AS_OVER_ANNOTATED decisions on the bare protein-binding (GO:0005515) interactor rows.
+
+No UNDECIDED actions were present and none were created; no new GO term with a verifiable ID
+emerged from the report (the regulatory/interactor findings remain best captured by specific
+interactor context rather than bare protein binding, consistent with existing decisions).
+Status remains DRAFT.
+
 ## Summary of decisions
 - ACCEPT (core MF/BP/CC): auxin efflux transmembrane transporter activity (x2), auxin export across PM, auxin polar transport, auxin transport (x2), plasma membrane (multiple), transmembrane transport.
 - ACCEPT non-core / homodimer: identical protein binding, protein homodimerization activity.
