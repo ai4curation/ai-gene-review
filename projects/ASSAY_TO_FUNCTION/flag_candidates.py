@@ -62,7 +62,13 @@ TF_LEGIT_MF = re.compile(
 
 def gene_has_ligand_mf(genes_dir: Path, organism: str, gene: str,
                        _cache: dict[tuple[str, str], bool] = {}) -> bool:
-    """True if the gene has an ACCEPTed signaling-ligand MF annotation."""
+    """True if the gene has an ACCEPTed signaling-ligand MF annotation.
+
+    Only ACCEPT counts -- if a curator has REMOVEd or downgraded the
+    signaling-ligand MF, the gene no longer carries the "indirect ligand"
+    discriminator and we should not tag its hub-aligned process annotations
+    as downstream of receptor signaling.
+    """
     key = (organism, gene)
     if key in _cache:
         return _cache[key]
@@ -73,7 +79,10 @@ def gene_has_ligand_mf(genes_dir: Path, organism: str, gene: str,
             doc = yaml.safe_load(hits[0].read_text())
             for a in (doc.get("existing_annotations") or []):
                 lab = (a.get("term") or {}).get("label", "")
-                if SIGNALING_LIGAND_MF.search(lab):
+                if not SIGNALING_LIGAND_MF.search(lab):
+                    continue
+                action = ((a.get("review") or {}).get("action") or "").upper()
+                if action == "ACCEPT":
                     found = True
                     break
         except (yaml.YAMLError, OSError):

@@ -234,7 +234,7 @@ readout, so precision stays high. Two tiers:
 uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py
 ```
 
-Current run: **298 candidates (7 Tier 1, 291 Tier 2)**. The Tier-1 set is
+Current run: **296 candidates (5 Tier 1, 291 Tier 2)** (post Tier-1 binding-MF calibration — see [Tier-1 re-review outcome](#tier-1-re-review-outcome-loop-closed) below for the 7→5 reduction). The Tier-1 set is
 precisely the reporter-driven over-annotation pattern the rubric predicts —
 `transcription coactivator/corepressor activity` claimed from luciferase
 reporters for coregulators that are **not** sequence-specific TFs (CTNNB1/
