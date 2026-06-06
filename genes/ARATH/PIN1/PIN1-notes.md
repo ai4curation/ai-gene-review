@@ -126,3 +126,40 @@ Status remains DRAFT.
 - KEEP_AS_NON_CORE: polar PM subdomains (apical/basal PM, apical part of cell, cell periphery), cytoplasm, plasmodesma, and all developmental BPs.
 - MARK_AS_OVER_ANNOTATED: bare protein binding rows; plant-type cell wall.
 - REMOVE: ER body (mis-assignment / wrong paper context).
+
+## PR #1417 review fix: bare-title supporting_text (2026-06-06)
+
+Reviewer (ai4c-agent) flagged ~12 `supporting_text` entries that were merely the
+publication TITLE rather than evidentiary excerpts. Each cited PMID was opened and
+checked against the specific GO term claim.
+
+Replaced title with a real verbatim quote (publication substantiates the claim):
+- PMID:17237354 (GO:0005515, ABCB19/PGP19 interaction) — Y2H + coIP statement.
+- PMID:20439545 (GO:0005886 plasma membrane) — "those PINs were localized in the plasma membrane...".
+- PMID:36226797 (GO:0005515, SUE4 interaction) — "SUE4...interacts with the polar auxin transporter PIN1".
+- PMID:22715043 (GO:0005515, FYPP1/3 interaction) — "FyPP1 and FyPP3 interact with a subset of PIN proteins...".
+- PMID:17586653 (GO:0005515, RGLG2 interaction) — "RGLG2 and PIN1 can interact in the yeast two-hybrid system".
+- PMID:15371311 (GO:0048825 cotyledon development) — pin1/pid disrupt cotyledon symmetry.
+- PMID:16107478 (GO:0045177 apical part of cell) — PIN1 polarity in the apex.
+- PMID:11060241 (GO:0048367 shoot system development) — pin1 organ-initiation/naked inflorescence.
+- PMID:16601150 (GO:0009926 auxin polar transport, + same in core_functions[1]) — PINs mediate efflux in heterologous cells.
+- PMID:36345646 (GO:0010262 somatic embryogenesis) — PIN-FORMED1 efflux drives PAT required for proembryo transition (full text).
+
+Set to UNDECIDED (cited paper does NOT substantiate the claim / no usable PIN1-specific text):
+- PMID:17889649 (GO:0005515, PID) — abstract reports PP2A/PINOID colocalization, not a PIN1-PID binding assay.
+- PMID:20080776 (GO:0005515, PID) — states in vitro results do NOT support the site as a PID target; no PIN1-PID binding assay.
+- PMID:15610358 (GO:0005737 cytoplasm) — generic GFP-fusion methods paper; no PIN1-specific localization.
+- PMID:21533090 (GO:0009506 plasmodesma) — plasmodesmal proteome text does not mention PIN1 at all.
+- PMID:18337510 (GO:0005886 plasma membrane) — ATI/actin/vesicle study; no PIN1 PM localization data in available text.
+- PMID:19825598 (GO:0005886 plasma membrane) — about SCAR complex (BRK1/SCAR1) PM localization; PIN1 not mentioned.
+- PMID:18539115 (GO:0005886 plasma membrane) — WOX2/WOX8 paper; PIN1 only as a reporter for auxin response, no PM localization.
+- PMID:16971475 (GO:0010358 leaf shaping) — AS1/KNOX paper; PIN1 not mentioned.
+- PMID:16943276 (GO:0010051 xylem/phloem patterning) — HVE/CAND1 paper explicitly states pathway involves "...but not...PIN1...".
+- PMID:16141452 (GO:0009640 photomorphogenesis) — BR/PAT/tropism via PIN2 protein; no PIN1-specific photomorphogenesis evidence.
+- PMID:16601150 (GO:0009630 gravitropism) — rate-limiting efflux paper; does not mention gravitropism.
+
+Note: PIN1 plasma-membrane localization itself remains well supported by other rows
+(PMID:33705718, PMID:35917925, PMID:20439545); the UNDECIDED PM rows reflect that those
+*particular* citations don't substantiate localization, hence the validator's
+"inconsistent review actions for GO:0005886" warning (expected/acceptable).
+Status kept DRAFT; validation: ✓ Valid.
