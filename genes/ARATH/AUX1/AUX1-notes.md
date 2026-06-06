@@ -109,8 +109,46 @@ MODIFY: cell surface → plasma membrane.
 REMOVE: protein binding.
 NEW: symporter activity (GO:0015293, mechanism).
 
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+
+A Falcon deep-research report (`AUX1-deep-research-falcon.md`) was generated and
+used to augment the review with `file:ARATH/AUX1/AUX1-deep-research-falcon.md`
+supporting_text entries. Key corroborations (no decisions weakened):
+
+- Core MF / auxin import / polar transport: "Direct functional evidence from
+  heterologous expression in Xenopus oocytes demonstrates that AUX1 transports
+  IAA with high affinity and saturable kinetics" (Yang 2006); AUX1/LAX are
+  "major auxin influx carriers required to establish auxin gradients that drive
+  development."
+- Symporter (NEW GO:0015293) mechanism reinforced: AUX1 "operates as a
+  proton-coupled symporter (H+:IAA−)"; commonly cited stoichiometry 2 H+ per IAA−
+  (Singh 2018 review). Supports the NEW symporter annotation and the proposed
+  auxin:proton symporter term.
+- Auxin binding (GO:0010011): Kd ≈ 2.6 µM, Bmax ≈ 11,800 fmol/mg, binding optimum
+  pH 5–6 (Carrier 2008), matching transport Km.
+- Plasma membrane localization confirmed (EYFP-AUX1).
+- AXR4 = ER accessory/chaperone-like factor; in axr4, AUX1 accumulates in the ER
+  rather than reaching the PM; AXR4 physically interacts with AUX1 and reduces
+  AUX1 aggregation dose-dependently (Tidy et al. 2024, Plant Physiol,
+  doi:10.1093/plphys/kiad506). This 2024 mechanistic study reinforces REMOVE of
+  the bare protein binding term (AXR4 interaction reflects trafficking/chaperone
+  biology, not AUX1's own MF) and the KEEP_AS_NON_CORE Golgi/endosome trafficking
+  pools.
+- Gravitropism (core): AUX1 moves auxin from lateral root cap to elongation-zone
+  epidermis (Tang 2024 review).
+- Lateral root: aux1 mutants ~50% reduction in emerged lateral roots; root hair:
+  ~30-fold higher double-hair frequency, shorter root hairs (Swarup & Péret 2012)
+  — corroborate KEEP_AS_NON_CORE developmental roles.
+
+No new GO IDs were introduced from the deep research (the only NEW term,
+GO:0015293, was already present from the UniProt KW DR line). The amino-acid
+transport annotations remain MARK_AS_OVER_ANNOTATED: the report consistently
+identifies IAA (not amino acids) as the demonstrated substrate while placing AUX1
+in the AAAP superfamily, supporting the over-annotation call. No UNDECIDED
+actions were present to resolve. status kept DRAFT.
+
 ## Notes on resources
-No deep-research provider file available for AUX1 (per task instructions, deep
-research was not run). All 15 cited PMIDs are cached under publications/.
+All 15 cited PMIDs are cached under publications/. A Falcon deep-research report
+is now available (`AUX1-deep-research-falcon.md` + `..._artifacts/artifact-00.md`).
 Recent cryo-EM structures of AUX1 exist (PDB 9JDR, 9M2H) per the UniProt entry but
 the structure papers were not in the cached set, so not cited.
