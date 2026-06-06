@@ -83,8 +83,11 @@ HAMAP-derived record and conserved ClpX/ClpXP biology.
 
 ## OPEN ISSUES
 
-- There is no current, non-obsolete GO MF term that cleanly captures "ATP-dependent
-  protein unfoldase / translocase" activity; GO:0051082 (unfolded protein binding)
-  is obsolete and GO:0140662 is the nearest active MF.
+- There is no current GO MF term that cleanly captures "ATP-dependent protein
+  unfoldase / translocase" activity; GO:0140662 (ATP-dependent protein folding
+  chaperone) is the nearest active MF used here. (Note: GO:0051082, unfolded
+  protein binding, is an active term but describes passive holdase binding rather
+  than the ATP-driven unfoldase/translocase activity of ClpX, so it is not used as
+  the core MF for ClpX.)
 - No P. putida-specific experimental characterization of ClpXP substrates was
   found; all evidence is homology-based.
