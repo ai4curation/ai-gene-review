@@ -65,3 +65,35 @@ For each gene:
 - `description`, `core_functions`, `suggested_questions`, `suggested_experiments`
   populated.
 - Validated with `uv run ai-gene-review validate ...` / `just validate`.
+
+## Completion summary (2026-06-06)
+
+All 20 reviews completed and validated (schema + term + reference validators all
+pass). Selected curation highlights:
+
+- **V-ATPase subunits** (ATP6V1A/B2/C1/D/E1/F/G1/H, ATP6V0E1): core role is
+  ATP-hydrolysis-driven proton transport in the V1/V0 rotary mechanism; the
+  recurring over-annotations were bare `protein binding`, generic `membrane`,
+  `extracellular exosome` (lysosomal-proteomics contamination), and indirect
+  `regulation of macroautophagy`. Genuine secondary roles retained as non-core
+  include ATP6V1H's clathrin/AP-2 adaptor role and ATP6V1D/E1 mTORC1 and
+  apical-membrane functions. ATP6V1E1 had one IPI `protein binding` REMOVED
+  (tristetraprolin/CCL3 mRNA paper — probable curation error).
+- **ER folding/QC** (CANX, CALR, CCDC47, CAMLG, AUP1): calnexin/calreticulin
+  cycle (lectin chaperone + ER Ca2+) accepted as core; CALR surface/"eat-me"
+  and MHC-I peptide-loading roles kept as non-core. CCDC47 PAT-complex and
+  CAMLG GET-complex membrane-protein-biogenesis roles accepted; both required
+  moving complex terms into `core_functions.in_complex`.
+- **Autophagy/mitophagy receptors** (BNIP3L, BCL2L13, CALCOCO1): the defining
+  selective-autophagy receptor MF/BP terms are largely absent from GOA. Added
+  as `proposed_new_terms` (mitophagy receptor activity for BNIP3L/BCL2L13;
+  reticulophagy/Golgiphagy receptor activity for CALCOCO1). CALCOCO1's older
+  transcriptional-coactivator (CoCoA) annotations kept as non-core. BNIP3L
+  `defense response to virus` marked UNDECIDED (cited paper is about apoptosis;
+  the real NIX-MAVS link is viral immune *evasion*, not host defense).
+- **Co-chaperone / UPS regulation** (BAG2, CACYBP, CAND1): BAG2 HSP70 NEF +
+  CHIP-inhibition accepted; CAND1 captured as a CRL exchange/assembly regulator
+  (not a catalytic enzyme); CACYBP as a Siah1-SKP1 E3 adaptor bridging S100/
+  calcium signaling to ubiquitination.
+
+Tracking row added to `review_batches.tsv` as `proteostasis-batch-2026-06-06`.
