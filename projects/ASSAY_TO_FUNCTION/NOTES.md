@@ -151,3 +151,22 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   out T cell prolif = inconsistent. Reverted; kept core. Good catch by the hook.
 - Lesson: a flag is a candidate; decline the edit when the "downstream" process is
   the gene's defining role (VEGFA EC prolif, IL21 immune outputs). Tracked in EDITS.md.
+
+## 2026-06-06 (cont.) — IL21 deferred, PDGFB confirmed, rubric refined
+
+- Discussion w/ cmungall on IL21. Outcome:
+  - IL21 GO:0042102 (T cell prolif) x2: ACCEPT -> UNDECIDED (paper-backed:
+    PMID:17673207 abstract shows proliferative effect on anti-CD3 T cells).
+    Removed GO:0042102 from core_functions (else validation fails / inconsistent).
+    Created detailed GitHub issue #1418 for expert curator; NK cytotoxicity
+    (GO:0045954, IBA/IEA) raised there too. IL21 validates clean.
+  - PDGFB: considered reverting (mesangial = signature, KO-null lacks mesangial
+    cells) but user rightly noted that's necessity not mechanism -> ligand doesn't
+    directly regulate proliferation, receptor does. STAYS KEEP_AS_NON_CORE.
+  - Rubric refined: "signaling-ligand -> indirect" over-fires on DEDICATED
+    cytokines/growth factors. Better axis = signature vs incidental. Added caveat
+    to RUBRIC.md. (Flagger discriminator left as-is for now; the caveat documents
+    that signature outputs must not be auto-demoted.)
+- No new papers fetched; reasoning used background knowledge + already-cached
+  PMID:17673207 / PMID:15207081 to back the UNDECIDED. publications/ is write-
+  protected by hook anyway.

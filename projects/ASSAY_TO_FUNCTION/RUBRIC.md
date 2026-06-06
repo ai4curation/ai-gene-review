@@ -81,6 +81,31 @@ machinery vs. an over-annotation for a gene acting indirectly:
   transcription factor activity* (ACCEPT — genuine TFs) vs `AIP` →
   *transcription coactivator activity* (OVER_ANNOTATED).
 
+## Caveat: dedicated signaling ligands (signature vs incidental)
+
+The "phenotypic hub readout ⇒ non-core" rule, and the flagger's
+`indirect_ligand` discriminator, **over-fire on dedicated cytokines and growth
+factors**. For a gene whose entire biological purpose is to regulate a process
+(VEGFA→endothelial proliferation; IL21→B-cell/Tfh responses), the regulated
+process is *core* even though it is mechanistically downstream of receptor
+signaling. "Cytokine activity" alone is nearly contentless, so the regulated
+processes are the informative, identity-defining annotations.
+
+The discriminating axis is therefore **signature vs incidental**, not
+ligand-vs-not:
+
+- **Signature** — the process the gene is known/named for, and that loss-of-
+  function abolishes → keep core (VEGFA endothelial proliferation; IL21 germinal
+  center / Tfh / B-cell responses).
+- **Incidental / generic / tissue-specific-secondary / context-dependent** →
+  demote (HMGB1→CXCR4 calcium; VEGFA→generic anti-apoptosis; IL21→T-cell
+  proliferation is borderline and was deferred to expert review, issue #1418).
+
+Mechanistic directness still matters for the *ligand vs receptor* distinction
+(knockout *necessity* ≠ the ligand *directly* performing the process), but it
+must not be applied so bluntly that a dedicated cytokine's signature outputs are
+stripped to non-core.
+
 ## How this was derived
 
 Across 722 thematically-aligned (annotation, source-paper-readout) pairs, the

@@ -299,9 +299,22 @@ downstream of the gene's core MF:
 - **VEGFA** — negative regulation of apoptotic process (GO:0043066) — downstream Akt survival signaling
 
 Deliberately **kept as-is** (flag was a false positive): VEGFA endothelial-cell
-proliferation (defining function), IL21 T-cell proliferation (integral to its
-curated `core_functions`), SIRT1 corepressor activity, and the binding/coactivator
-MF terms from the Tier-1 re-review. All edited files re-validate cleanly.
+proliferation (defining function), SIRT1 corepressor activity, the
+binding/coactivator MF terms from the Tier-1 re-review, and PDGFB mesangial
+proliferation (a reversal was considered but rejected — knockout necessity is
+not mechanistic evidence of direct proliferation regulation). All edited files
+re-validate cleanly.
+
+**Deferred to expert review (`UNDECIDED`):** IL21 `positive regulation of T cell
+proliferation` (GO:0042102) is genuinely borderline — a real but weak,
+context-dependent effect versus IL21's signature B-cell/Tfh axis. Rather than
+guess, the two IDA annotations were set to `UNDECIDED` (paper-backed) and the
+term removed from `core_functions` pending
+[issue #1418](https://github.com/ai4curation/ai-gene-review/issues/1418).
+This exposed a needed **rubric refinement**: the "signaling-ligand ⇒ indirect"
+discriminator over-fires on *dedicated* cytokines/growth factors, whose
+regulated processes can be core. The better axis is **signature vs incidental**
+(see `RUBRIC.md`).
 
 ## Next steps
 

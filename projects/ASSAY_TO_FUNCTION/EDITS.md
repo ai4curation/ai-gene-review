@@ -22,6 +22,19 @@ by re-review against each file.
 4 genes, 6 annotation records (PDGFB ×2, VEGFA ×2, HMGB1 ×1, Sirt2 ×1). All
 files re-validated with `linkml-validate` (no issues).
 
+**PDGFB note (discussion outcome):** a reversal was considered on the grounds
+that mesangial cells are a "signature" PDGFB role (PDGFB-null mice lack them).
+That argument was rejected as **non-mechanistic** — knockout *necessity* for
+mesangial-cell development is not evidence that the secreted ligand *directly
+regulates proliferation* (the receptor does the signaling). The annotation
+stays `KEEP_AS_NON_CORE`.
+
+## Deferred to expert curator (ACCEPT → UNDECIDED)
+
+| gene | term (GO) | refs | why deferred |
+|---|---|---|---|
+| **IL21** (human) | positive regulation of T cell proliferation (GO:0042102, ×2) | PMID:17673207, PMID:15207081 | Borderline core vs non-core: the effect is real and directly evidenced, but IL21 is a weak, context-dependent T-cell mitogen relative to its signature B-cell/Tfh axis. Set `UNDECIDED` and removed from `core_functions` pending expert review — see **issue [#1418](https://github.com/ai4curation/ai-gene-review/issues/1418)**. The B-cell/Tfh/GC/Ig signature processes remain core; NK cytotoxicity (GO:0045954, IBA/IEA) is raised in the issue for the same review. |
+
 ## Re-reviewed but deliberately NOT changed (flag was a false positive)
 
 Documented so the analysis is honest about precision and to prevent re-flagging.
@@ -29,7 +42,6 @@ Documented so the analysis is honest about precision and to prevent re-flagging.
 | gene | candidate term | why kept as-is |
 |---|---|---|
 | **VEGFA** | positive regulation of endothelial cell proliferation (GO:0001938) | This *is* VEGFA's defining function (massive IDA support); the flag fires only because VEGFA has growth-factor-activity MF. |
-| **IL21** | positive regulation of T cell proliferation (GO:0042102) | Integral to the curated `core_functions` (cytokine activity → suite of immune outputs, incl. B cell proliferation); singling out T cell proliferation would be inconsistent. The `core_functions` validation hook correctly flagged the attempted edit. |
 | **SIRT1** | transcription corepressor activity (GO:0003714) | Well-supported MF across many IDA/IMP studies; deacetylase is the core MF but corepressor activity is a legitimate, directly evidenced role. |
 | **Calm2 / HRC** | calcium(-dependent) binding (GO:0048306 / GO:0005509) | Direct binding MF established by binding/IPI assays — not licensed by, nor reducible to, a calcium-imaging readout. |
 | **CTNNB1 / NOTCH1** | transcription coactivator activity (GO:0003713) | β-catenin and NICD are bona fide transcriptional coactivators (machinery); reporter-supported MF is appropriate. |
