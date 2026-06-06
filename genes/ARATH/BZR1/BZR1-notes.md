@@ -41,6 +41,22 @@ Note: Many partners are DNA-binding TFs (PIF1/PIF4, TCP3/13/15/16/21, MYB21, DEL
 - Female germline (MMC) specification via NSN1 [PMID:36748257].
 - Response to light / photomorphogenesis & response to water deprivation: BR/BZR1 decision-making in seedlings; note PMID:36508461 is primarily about BIN2 alleles, BZR1 acts within the BR pathway downstream [PMID:36508461 abstract — BIN2 alleles as "decision mutants"; light + water withdrawal screen].
 
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+
+The Falcon deep research report (`file:ARATH/BZR1/BZR1-deep-research-falcon.md`) corroborates and extends the existing review. Key points used as `supported_by` evidence:
+- Core MF/activator-repressor role: "It binds BRRE/E-box-associated promoters and can activate or repress BR-responsive genes controlling growth and BR homeostasis" — supports GO:0003700 and the regulation-of-transcription terms.
+- BR signaling pathway role: BZR1 "acts as a principal nuclear effector of the BR receptor-initiated signaling cascade" — supports GO:0009742.
+- Localization switch: "phosphorylated forms are biased toward cytoplasmic sequestration, while dephosphorylated forms accumulate in the nucleus and drive transcriptional outputs"; and "BIN2-phosphorylated BZR1 is retained more in the cytoplasm through 14-3-3 association, whereas dephosphorylated BZR1 accumulates in the nucleus to regulate transcription" — supports nucleus (core) and cytosol (non-core, inactive exported pool).
+- Signal integration: reviews "emphasize BZR1 as an integration node for light, auxin, GA, ethylene, and stress signaling" — supports GO:0140297 (DNA-binding TF binding) NEW term.
+
+New mechanistic detail not previously captured (recorded here, not added as GO annotations because no new verifiable GO ID is warranted):
+- 14-3-3 recognition is structurally defined: minimal phosphomotif at BZR1 residues 169–175 (RISNpSAP) centered on pSer173, binding 14-3-3κ with KD ~0.5 µM, 2:2 stoichiometry, complex lifetime ~1 s (Obergfell et al. 2024, Plant & Cell Physiology; doi:10.1093/pcp/pcae112-era / bioRxiv 2023.10.13.562204).
+- Auxin promotes BZR1 nuclear accumulation via MPK3/MPK6-dependent phosphorylation/destabilization of GRF4 (a 14-3-3) at S248 (Yu et al. 2023, Science Advances, doi:10.1126/sciadv.ade2493).
+- BIN2 proximity network (TurboID + phosphoproteomics): 482 BIN2-proximal proteins, BZR1 recovered as a canonical BIN2 substrate (Kim et al. 2023, Plant Cell, doi:10.1093/plcell/koad013).
+- BZR1 family is redundant and indispensable for BR signaling (Chen et al. 2019, Mol Plant).
+
+No UNDECIDED annotations existed; none required resolution. No new GO annotation was added from the deep research because the new mechanistic findings (14-3-3 KD, auxin/MPK crosstalk, BIN2 network) concern upstream regulation rather than a new verifiable BZR1 GO molecular function/process/component not already represented.
+
 ## Curation reasoning summary
 - MF: keep DNA-binding TF activity (GO:0003700, IDA + IEA); refine DNA binding (GO:0003677) → sequence-specific repressor / cis-regulatory binding; the existing GO:0000987 (cis-regulatory region SS DNA binding) is well-supported. Add repressor activity (GO:0001227) as NEW, and homodimerization (GO:0042803) from the crystal structure, and DNA-binding TF binding (GO:0140297) for the PIF/TCP partners.
 - Remove all generic GO:0005515 "protein binding".
