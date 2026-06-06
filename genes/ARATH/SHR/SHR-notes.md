@@ -90,3 +90,47 @@ and endosomes are part of the movement/trafficking route.
 - GO:0006355 (regulation of DNA-templated transcription) IBA → ACCEPT (core, correct level).
 - Locations: nucleus ACCEPT (core); cytoplasm ACCEPT (trafficking); endosomes KEEP_AS_NON_CORE.
 - Developmental BP: radial pattern formation ACCEPT; asymmetric cell division ACCEPT; leaf development / neg reg mitotic cell cycle / iron homeostasis / hormone metabolic = KEEP_AS_NON_CORE.
+
+## Deep research synthesis (Falcon / Edison Scientific report)
+
+The Falcon deep-research report (`file:ARATH/SHR/SHR-deep-research-falcon.md`)
+corroborates and extends the existing review without contradicting any decision.
+No `UNDECIDED` annotations were present; none required resolution. Key points:
+
+- Mobile, non-cell-autonomous GRAS TF: "SHR is synthesized in one tissue domain
+  but acts in neighboring cells after intercellular movement through
+  plasmodesmata, thereby delivering positional information." Reinforces ACCEPT for
+  nucleus and the trafficking/movement framing (cytoplasm, endosomes). Added as
+  supported_by on the nucleus (PMID:11565032 IDA) annotation.
+- Acts via protein complexes, not direct DNA binding: "SHR functions through
+  protein–protein interactions forming cell-type-specific complexes. In roots,
+  SHR interacts with SCR ... SCL23 ... and JKD (JACKDAW; a BIRD/IDD TF)." Consistent
+  with the MODIFY decisions (coregulator / DNA-binding TF binding / dimerization),
+  and used to enrich the SCL23 (PMID:18500650) and FRET-FLIM (PMID:28746306) entries
+  plus the SCR-dimerization and IDD-binding core functions.
+- Transcriptional output: SHR/SCR "activate or coordinate transcription of
+  developmental regulators and cell-cycle components in recipient cells." Added to
+  the regulation-of-transcription (GO:0006355) annotation.
+- Core developmental phenotypes: "Loss-of-function shr mutants show characteristic
+  defects including loss of correct ground tissue layering (single layer instead of
+  cortex+endodermis) and stem-cell niche abnormalities" and SHR/SCR "trigger the
+  formative (asymmetric) division that generates separate cortex and endodermis
+  lineages." Added to radial pattern formation (GO:0009956) and asymmetric cell
+  division (GO:0008356).
+- Shoot/leaf redeployment: SHR network is reused in the SAM and leaves (bundle
+  sheath, lateral-organ initiation), consistent with KEEP_AS_NON_CORE for leaf
+  development. Added to the leaf-development (PMID:24517883) entry.
+
+New evidence beyond the current review (not added as new GO annotations because
+no verifiable GO IDs are present in GOA/UniProt for them, recorded here only):
+- SHR → MYB36 → CASP1 Casparian-strip / endodermal-differentiation cascade (Li et al.
+  2018, Curr Biol). Plausible downstream BP (endodermis differentiation / Casparian
+  strip), but the GO IDs are not in the current GOA/UniProt set, so not added.
+- 2024 Nature (Winter et al.): SHR/SCR act via transient early-cell-cycle dynamics
+  (not a stable bistable switch) to orient formative division — refines mechanism but
+  does not change any existing annotation action.
+- Auxin/MONOPTEROS-linked SHR expression in the SAM; promoter repressor motifs
+  (ZML1/DDF1) sharpening the SHR domain — regulation OF SHR rather than functions OF
+  SHR; not annotated.
+No NEW GO annotation was added because no additional GO ID verifiable from the
+existing GOA/UniProt could be supported by the deep-research evidence alone.
