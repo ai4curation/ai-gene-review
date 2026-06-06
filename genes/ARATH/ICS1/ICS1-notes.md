@@ -81,3 +81,34 @@ directly executing these processes:
 - Two isoforms via alternative splicing: Q9S7H8-1 (displayed) and Q9S7H8-2
   (VSP_034699, altered C-terminus 553-569). Functional consequences of isoform 2
   not characterized in the available literature.
+
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+Source: `file:ARATH/ICS1/ICS1-deep-research-falcon.md`. This review-level report
+corroborates and extends the existing annotations; it did not surface any new
+verifiable GO IDs, so no NEW annotations or proposed_new_terms were added, and no
+UNDECIDED actions required resolution (none were present).
+
+- Quantitative dominance of the ICS1/SA-biosynthesis role:
+  [file "ICS1 contributes ~90% of pathogen-induced SA accumulation"] (with
+  ics1/sid2/eds16 retaining only ~5-10% WT SA), reinforcing GO:0009697 as the
+  core process. Added as supporting_text on the IEA SA-biosynthesis annotation
+  and on the SA core_function.
+- Enzymatic substrate context: chorismate is
+  [file "a plastid-derived metabolite at the branch point of aromatic compound
+  biosynthesis"] and its product isochorismate
+  [file "is the committed precursor for SA in the Arabidopsis ICS route"].
+  Added to GO:0008909 (IEA) and the SA core_function respectively.
+- Chloroplast/plastid localization corroborated:
+  [file "the ICS step is the only SA-biosynthetic step occurring in chloroplasts"].
+  Added to the IEA chloroplast and IEA plastid localization annotations.
+- SAR mechanism: de novo ICS1 induction in distal tissue, not just SA transport,
+  [file "linking local-to-systemic signaling to renewed SA synthesis in distal
+  tissue rather than relying solely on long-distance transport of SA from the
+  infection site"]. Added to both systemic acquired resistance (GO:0009627)
+  annotations.
+- Additional context not used as annotation evidence (no verifiable GO IDs from
+  GOA/UniProt): plastid-to-cytosol pathway architecture (ICS1 -> EDS5 ->
+  PBS3/EPS1), positive regulators (SARD1/CBP60g, TGA1/4, H2O2-CHE), and negative
+  regulators (NAC90/61/36, CAMTAs, WRKYs). These describe the regulatory and
+  downstream network around ICS1 rather than ICS1's own molecular function, so
+  they remain background only.
