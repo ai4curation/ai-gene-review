@@ -133,5 +133,21 @@ Decisions unchanged: no UNDECIDED actions existed; the two GO:0005515 protein bi
 annotations remain REMOVE (the SOS3/SOS2 interactions are real but bare "protein binding"
 stays uninformative); GO:0015386 K+/H+ antiporter remains MARK_AS_OVER_ANNOTATED; chloroplast
 envelope remains REMOVE. No NEW GO annotation added (no new verifiable GO ID).
+
+## PR #1417 review fix (ai4c-agent comment)
+
+Reviewer flagged an internal inconsistency: GO:0098719 (sodium ion import across
+plasma membrane) was ACCEPTed as core in existing_annotations while the description and
+proposed_new_terms both state Na+ EXPORT/efflux is the defining core function and that an
+export term is the missing core annotation. Accepting import as core while proposing export
+as the missing core is contradictory.
+
+Fix: changed GO:0098719 action ACCEPT -> KEEP_AS_NON_CORE. Updated summary/reason to state
+that Na+ export/efflux from the cytosol is the core physiological function, and that the
+import direction captured by this term is a secondary, condition-dependent xylem-retrieval
+mode under severe salt stress (reflecting antiporter reversibility). Supporting_by evidence
+(PMID:11884687, falcon deep-research) retained unchanged. No other annotations weakened.
+Validation: Valid (1 pre-existing benign warning that GO:0098719 in core_functions[1] is not
+mirrored as a NEW annotation in existing_annotations).
 </content>
 </invoke>

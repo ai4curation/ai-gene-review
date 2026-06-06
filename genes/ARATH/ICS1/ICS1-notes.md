@@ -112,3 +112,19 @@ UNDECIDED actions required resolution (none were present).
   regulators (NAC90/61/36, CAMTAs, WRKYs). These describe the regulatory and
   downstream network around ICS1 rather than ICS1's own molecular function, so
   they remain background only.
+
+## PR #1417 review fixes (2026-06-06)
+
+- GO:0050832 "defense response to fungus" (PMID:17513501, Pythium irregulare):
+  P. irregulare is an OOMYCETE (stramenopile), not a true fungus. Changed
+  action KEEP_AS_NON_CORE -> MODIFY with proposed_replacement_terms
+  GO:0002229 "defense response to oomycetes". Verified via QuickGO API
+  (https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0002229):
+  name="defense response to oomycetes", isObsolete=false. (Broader verified
+  options were GO:0098542 "defense response to other organism" and GO:0006952
+  "defense response"; chose the most specific verified term.)
+- Schema fix: core_functions[*].directly_involved_in must be a YAML list.
+  Converted both single-mapping occurrences (GO:0009697 SA biosynthesis;
+  GO:0042372 phylloquinone biosynthesis) to list items.
+- Validation: ✓ Valid (1 non-blocking warning about phylloquinone term in
+  existing_annotations; term is in fact present).
