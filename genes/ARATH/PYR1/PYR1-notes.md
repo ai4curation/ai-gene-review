@@ -62,3 +62,31 @@ specific functions are better captured by other MF terms already annotated:
 - GO:0044389 ubiquitin-like protein ligase binding (RSL1): KEEP_AS_NON_CORE (regulatory turnover).
 - GO:1902584 positive regulation of response to water deprivation (IMP, PMID:29970817): ACCEPT as non-core downstream physiology.
 - IEA nucleus GO_REF:0000044 and ISM/ISS nucleus: ACCEPT (consistent with experimental nucleus).
+
+## Deep research synthesis (Falcon / Edison Scientific)
+
+The Falcon deep-research report (file:ARATH/PYR1/PYR1-deep-research-falcon.md) corroborates
+the existing review without changing any curation decision. Key points used to strengthen
+`supported_by` evidence:
+
+- Primary function is restated as PYR1 being an "intracellular ABA receptor** that binds
+  ABA and inhibits clade A PP2C phosphatases", and PYR1 "is best understood as a
+  **ligand-gated PP2C inhibitor** that converts ABA concentration into a change in
+  phosphatase activity" — supports GO:0004864 (protein phosphatase inhibitor activity) and
+  GO:0038023 (signaling receptor activity).
+- Direct ABA binding confirmed by NMR ("to PYR1 observed by NMR chemical shift perturbations
+  upon ABA addition") — supports GO:0010427 (ABA binding).
+- Double-negative core circuit PYR/PYL/RCAR —| PP2C —| SnRK2, "allowing activation of
+  SnRK2-driven phosphorylation cascades and ABA-responsive transcription" — supports the
+  GO:0009738 BP placement and the signaling-receptor core function.
+- PYR1 "forms a **homodimer** in apo and solution states; ABA induces a more compact
+  closed-lid conformation" — supports GO:0042803 (homodimerization).
+- RSL1 (plasma-membrane RING E3 ligase) "interacts with **PYR1** and promotes its
+  degradation" — supports GO:0044389 (ubiquitin-like protein ligase binding), kept non-core
+  as a regulatory turnover route.
+
+No new GO terms with verifiable IDs were introduced. The report adds context on receptor
+turnover (Bueso 2014 RSL1; García-León 2019 ALIX/ESCRT), Ca2+ feedback via CBL1/9–CIPK1
+(You 2023), and chemical-genetics modulation of the dimer interface (DBSA; Wang 2024), but
+these concern regulation/chemistry rather than new core PYR1 functions, so no new
+`existing_annotations` were created. No `UNDECIDED` actions were present to resolve.
