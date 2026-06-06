@@ -1,0 +1,228 @@
+# ASSAY_TO_FUNCTION rubric — what GO annotation each readout class licenses.
+#
+# Machine-readable companion to RUBRIC.md. Grounded in the publications-corpus
+# mining (see ASSAY_TO_FUNCTION.md): for each convergent phenotypic readout we
+# record the GO aspect it may license, whether it supports a direct
+# (`involved_in`) vs only a regulatory/response framing, the default core
+# status, and the discriminator a curator uses to decide whether a positive
+# readout reflects a *core* function or merely a peripheral/indirect effect.
+#
+# General principle (applies to every `phenotypic` + `high`-convergence class):
+#   A readout that reports the *state* of process P measures a downstream
+#   consequence, not the gene product's molecular activity. It therefore
+#   licenses at most a BP term ("response to P" / "regulation of P") and that
+#   annotation defaults to NON-CORE. It does NOT license an MF term, and does
+#   NOT license a process more distal than what the readout directly reports.
+#   Promote to core only when independent evidence places the gene product in
+#   the recognized core machinery / sensor set for P (see `promote_to_core_if`).
+
+general_principle:
+  licenses_aspect: [BP]            # CC where the readout is an organelle-health probe
+  never_licenses_aspect: [MF]      # a state readout does not measure molecular activity
+  default_core_status: non_core
+  default_framing: regulation_or_response   # not direct `involved_in` effector role
+  promote_to_core_if: >-
+    independent evidence (genetics, biochemistry, structure) shows the gene
+    product is a direct effector or sensor within the recognized machinery for
+    the process, not merely a perturbation that shifts the readout.
+
+readout_rubric:
+
+  APOPTOSIS_CASPASE:
+    example_probes: [CellEvent, caspase-3/7 activity, Annexin V, TUNEL, PARP cleavage]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0006915, GO:0043065, GO:0043066, GO:0097190]
+    promote_to_core_if: >-
+      gene is a recognized apoptosis effector/regulator (BCL2 family, caspases,
+      IAPs, APAF1, BH3-only proteins).
+    do_not:
+      - Annotate apoptosis as core for signaling/metabolic/structural genes that
+        merely shift caspase readout downstream of their real function.
+      - Use a tissue/context-specific apoptosis child term as evidence of a core role.
+    corpus_examples:
+      core_accept:
+        - {gene: BCL2,  term: negative regulation of apoptotic process, action: ACCEPT}
+        - {gene: AREL1, term: negative regulation of apoptotic process, action: ACCEPT}
+      non_core_or_over:
+        - {gene: Akt1,  term: negative regulation of intrinsic apoptotic signaling pathway, action: KEEP_AS_NON_CORE}
+        - {gene: BAG3,  term: negative regulation of striated muscle cell apoptotic process, action: KEEP_AS_NON_CORE}
+
+  VIABILITY_PROLIFERATION:
+    example_probes: [MTT, MTS, CCK-8, resazurin, BrdU, EdU, Ki-67, colony formation]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0008283, GO:0042127]
+    promote_to_core_if: >-
+      gene is core cell-cycle/division machinery (cyclins, CDKs, replication/
+      mitotic apparatus) acting directly on the cycle.
+    do_not:
+      - Annotate "regulation of cell population proliferation" as core for genes
+        whose proliferation effect is indirect (housekeeping, cytoskeletal,
+        metabolic). This is the single most frequent over-annotation in the corpus.
+    corpus_examples:
+      core_accept:
+        - {gene: CDK1, term: G2/M transition of mitotic cell cycle, action: ACCEPT}
+      non_core_or_over:
+        - {gene: ACTB, term: positive regulation of cell population proliferation, action: MARK_AS_OVER_ANNOTATED}
+        - {gene: AKT1, term: positive regulation of G1/S transition of mitotic cell cycle, action: KEEP_AS_NON_CORE}
+
+  OXIDATIVE_STRESS_ROS:
+    example_probes: [CellROX, H2DCFDA/DCF, MitoSOX, dihydroethidium, roGFP, HyPer, Amplex Red]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0006979, GO:0034599]
+    promote_to_core_if: >-
+      gene is a direct antioxidant enzyme / redox sensor (catalase, SOD,
+      peroxiredoxin, glutathione/thioredoxin system, KEAP1/NRF2).
+    do_not:
+      - Annotate "response to oxidative stress" for genes whose perturbation
+        merely raises ROS as a secondary consequence (e.g. organelle-biogenesis
+        factors). ROS is the most convergent readout of all.
+    corpus_examples:
+      core_accept:
+        - {gene: TP53, term: positive regulation of reactive oxygen species metabolic process, action: ACCEPT}
+        - {gene: RIM15, term: cellular response to oxidative stress, action: ACCEPT}
+      non_core_or_over:
+        - {gene: PEX10, term: cellular response to reactive oxygen species, action: MARK_AS_OVER_ANNOTATED}
+        - {gene: PEX13, term: cellular response to reactive oxygen species, action: MARK_AS_OVER_ANNOTATED}
+
+  AUTOPHAGY_FLUX:
+    example_probes: [GFP-LC3, mCherry-GFP-LC3, LC3-II, p62/SQSTM1, autophagic flux]
+    licenses_aspect: [BP, CC]
+    never_licenses_aspect: [MF]
+    default_core_status: context_dependent   # core for ATG machinery, else non-core
+    licensed_terms_examples: [GO:0006914, GO:0010506, GO:0000045]
+    promote_to_core_if: >-
+      gene is core autophagy machinery (ATG proteins, ULK/BECN1 complexes,
+      LC3/ATG8 conjugation system).
+    do_not:
+      - Annotate mitophagy/selective-autophagy child terms from a generic LC3
+        flux readout without evidence of the specific selective pathway.
+    corpus_examples:
+      core_accept:
+        - {gene: AMBRA1, term: autophagosome assembly, action: ACCEPT}
+        - {gene: AMBRA1, term: positive regulation of autophagy, action: ACCEPT}
+      non_core_or_over:
+        - {gene: ABI2,  term: mitophagy, action: MARK_AS_OVER_ANNOTATED}
+        - {gene: ATG2A, term: positive regulation of autophagosome assembly, action: MODIFY}
+
+  MITO_MEMBRANE_POTENTIAL:
+    example_probes: [TMRM, TMRE, JC-1, MitoTracker, mitochondrial membrane potential]
+    licenses_aspect: [CC, BP]   # mostly CC (localization); elevated MODIFY rate
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0005739, GO:0007005]
+    promote_to_core_if: >-
+      gene is a direct component of the respiratory chain / mitochondrial
+      bioenergetic or import machinery.
+    do_not:
+      - Rest on generic `mitochondrion` (GO:0005739) when a sub-mitochondrial
+        compartment is known; this readout class shows the highest MODIFY rate.
+      - Infer a bioenergetic *function* from a membrane-potential shift alone.
+    corpus_examples:
+      core_accept:
+        - {gene: ACAD9, term: mitochondrion, action: ACCEPT}
+        - {gene: ABCB7, term: mitochondrion, action: ACCEPT}
+      non_core_or_over:
+        - {gene: AFG3L2, term: mitochondrion, action: MODIFY}
+        - {gene: ATP5MC1, term: mitochondrion, action: KEEP_AS_NON_CORE}
+
+  UPR_ER_STRESS:
+    example_probes: [5xUPRE, XBP1 splicing, ERSE/ERAI, BiP/GRP78/CHOP/ATF4 reporters]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0006986, GO:0030968, GO:0034976]
+    promote_to_core_if: >-
+      gene is a UPR transducer/sensor (IRE1, PERK, ATF6, XBP1) or master ER
+      chaperone (BiP/HSPA5) acting directly in the response.
+    do_not:
+      - Assign `unfolded protein binding` (MF) from a UPR reporter — the reporter
+        reports pathway state, not chaperone activity (see IRE1 example).
+      - Annotate UPR as core for client/cargo proteins that merely burden the ER.
+    corpus_examples:
+      core_accept:
+        - {gene: ATF4, term: PERK-mediated unfolded protein response, action: ACCEPT}
+        - {gene: ATF4, term: response to endoplasmic reticulum stress, action: ACCEPT}
+      non_core_or_over:
+        - {gene: HSPA1A, term: endoplasmic reticulum unfolded protein response, action: KEEP_AS_NON_CORE}
+        - {gene: IRE1,   term: unfolded protein binding, action: MARK_AS_OVER_ANNOTATED}  # MF over-annotation
+
+  CALCIUM_FLUX:
+    example_probes: [Fluo-4, Fura-2, GCaMP, calcium imaging]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]   # MF only via independent Ca2+-binding evidence
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0019722, GO:0070588]
+    promote_to_core_if: >-
+      gene is a Ca2+ channel/pump/sensor with direct ion-handling or
+      Ca2+-binding (EF-hand) evidence.
+    do_not:
+      - Annotate "regulation of cytosolic calcium ion concentration" as core for
+        genes that shift Ca2+ indirectly.
+    corpus_examples:
+      core_accept:
+        - {gene: Calm2, term: calcium-dependent protein binding, action: ACCEPT}   # MF justified by EF-hand, not the imaging
+        - {gene: HMGB1, term: positive regulation of cytosolic calcium ion concentration, action: ACCEPT}
+      non_core_or_over:
+        - {gene: CDH23, term: regulation of cytosolic calcium ion concentration, action: MARK_AS_OVER_ANNOTATED}
+        - {gene: BCL2,  term: regulation of calcium ion transport, action: KEEP_AS_NON_CORE}
+
+  IRON_PROBE:
+    example_probes: [FeRhoNox, calcein quenching, labile iron pool]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    licensed_terms_examples: [GO:0006879, GO:0055072]
+    promote_to_core_if: >-
+      gene is a direct iron transporter, Fe-S cluster biogenesis factor, or
+      iron-storage/regulatory protein.
+    do_not:
+      - Annotate iron homeostasis as core for genes with only a downstream labile-
+        iron-pool effect.
+    corpus_examples:
+      core_accept:
+        - {gene: GLRX3, term: intracellular iron ion homeostasis, action: ACCEPT}
+        - {gene: ABCB7, term: intracellular iron ion homeostasis, action: ACCEPT}
+      non_core_or_over:
+        - {gene: GLRX5, term: intracellular iron ion homeostasis, action: KEEP_AS_NON_CORE}
+
+  pH_PROBE:
+    example_probes: [pHrodo, pHluorin, SNARF, BCECF]
+    licenses_aspect: [BP]
+    never_licenses_aspect: [MF]
+    default_core_status: non_core
+    promote_to_core_if: >-
+      gene is a direct proton pump/transporter or acidification machinery
+      component.
+    do_not:
+      - Infer transport function from a compartment-pH shift alone.
+    corpus_examples: {}   # too few aligned examples in current corpus to cite
+
+  TRANSCRIPTIONAL_REPORTER:
+    example_probes: [luciferase reporter, promoter-reporter, NF-kB/ARE/HSE/SRE/CRE reporters]
+    licenses_aspect: [BP, MF]   # MF (TF activity) only for bona fide TFs — see note
+    never_licenses_aspect: []
+    default_core_status: context_dependent
+    note: >-
+      Unlike the other hubs, a reporter assay legitimately supports an MF
+      `DNA-binding transcription factor activity` term FOR A GENUINE TF (corpus:
+      ATF2, ASCL1, ARNT — mostly ACCEPT). For non-TF genes a reporter shift
+      reports pathway output only and licenses at most a BP regulation term,
+      default non-core.
+    promote_to_core_if: >-
+      gene is a sequence-specific DNA-binding transcription factor or
+      transcriptional coregulator with direct evidence.
+    do_not:
+      - Assign TF-activity MF terms to signaling/upstream genes that move a
+        reporter without binding DNA.
+    corpus_examples:
+      core_accept:
+        - {gene: ATF2,  term: "DNA-binding transcription factor activity, RNA polymerase II-specific", action: ACCEPT}
+        - {gene: ASCL1, term: "DNA-binding transcription repressor activity, RNA polymerase II-specific", action: ACCEPT}
+      non_core_or_over:
+        - {gene: AIP, term: transcription coactivator activity, action: MARK_AS_OVER_ANNOTATED}

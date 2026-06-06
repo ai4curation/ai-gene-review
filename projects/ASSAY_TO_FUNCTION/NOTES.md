@@ -78,3 +78,17 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
 ### Next
 - Build the licensing rubric (per readout: aspect allowed, default core/non-core).
 - Tighten paper→annotation link (title/abstract or methods-section only).
+
+## 2026-06-06 (cont.) — rubric built
+
+- RUBRIC.md (narrative + decision procedure + quick-ref table + worked
+  contrasts) and rubric.yaml (machine-readable) written.
+- Core rule: phenotypic hub readout -> BP/CC "response to/regulation of P",
+  never MF, default non-core; promote to core only if gene is in P's recognized
+  machinery/sensor set. MF exception: transcriptional reporter for a real TF.
+- Every per-class rule anchored to ACCEPT-vs-downgrade corpus contrasts (BCL2 vs
+  Akt1; CDK1 vs ACTB; TP53 vs PEX10/13; ATF4 vs HSPA1A + IRE1 MF over-call;
+  AMBRA1 vs ABI2; ATF2/ASCL1 vs AIP). All examples verified against
+  paper_readout_matches.tsv.
+- Next: operationalize as a flagger (hub-readout + MF aspect, or core-call on a
+  non-machinery gene = re-review candidate).

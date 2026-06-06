@@ -204,16 +204,29 @@ non-specific organelle-health readout that gets refined to more proximal terms.
   which are refinements, not errors. The hard `rm/OA%` and the aspect/non-core
   breakdowns are the discriminating signals, not the raw downgrade rate.
 
+## The rubric (deliverable)
+
+The grounded, curator-facing rubric is in [`ASSAY_TO_FUNCTION/RUBRIC.md`](ASSAY_TO_FUNCTION/RUBRIC.md)
+(narrative + decision procedure + worked corpus contrasts) with a
+machine-readable companion in [`ASSAY_TO_FUNCTION/rubric.yaml`](ASSAY_TO_FUNCTION/rubric.yaml).
+
+Core rule: a convergent phenotypic readout licenses **at most** a BP (or CC)
+"response to / regulation of P" term, **never MF**, defaulting to **non-core** —
+promote to core only when independent evidence places the gene in P's recognized
+machinery. The single MF exception is a transcriptional reporter for a bona fide
+DNA-binding TF.
+
 ## Next steps
 
-1. **Build the rubric deliverable**: per readout class, the GO annotation it
-   does / does not license (now grounded — e.g. "caspase/CellEvent → BP only,
-   default non-core; never MF"), with the worked corpus examples above.
-2. **Expand the catalog** with more probe vocabularies and the convergent
+1. **Expand the catalog** with more probe vocabularies and the convergent
    *process-term* GO IDs each readout gets over-mapped to.
-3. **Tighten the link** from paper-assay to annotation, e.g. by restricting to
+2. **Tighten the link** from paper-assay to annotation, e.g. by restricting to
    papers whose *title/abstract* (not just full text) features the readout, or
    by parsing the methods section specifically.
+3. **Operationalize**: flag existing annotations whose source paper's only
+   relevant readout is a hub probe and whose aspect is MF, or whose action is
+   ACCEPT-as-core but the gene is not in the machinery set — candidate
+   over-annotations to re-review.
 
 ## Relationship to existing projects
 
