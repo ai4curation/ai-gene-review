@@ -245,6 +245,26 @@ larger triage queue dominated by `MITO_MEMBRANE_POTENTIAL` (85, mostly generic
 
 These are re-review *candidates*, not asserted errors.
 
+### Tier-1 re-review outcome (loop closed)
+
+All 7 original Tier-1 candidates were re-reviewed against their actual evidence
+(see [`ASSAY_TO_FUNCTION/REREVIEW_TIER1.md`](ASSAY_TO_FUNCTION/REREVIEW_TIER1.md)).
+Outcome: **none is a clean readout-driven over-annotation** — six KEEP, one
+(SIRT1 corepressor activity) a soft non-core suggestion. Three calibration
+findings fed back:
+
+1. **Binding MF is a direct activity, not a readout consequence** — Calm2/HRC
+   ("calcium … binding") were false positives. The flagger now excludes
+   `*binding` MF from Tier 1 (7 → 5), and the rubric's "never MF" rule is scoped
+   to *regulatory/process-like* MF, not binding/catalytic MF.
+2. **Coregulator MF is legitimate for genuine coregulators** (β-catenin, NICD);
+   the discriminator vs. the corpus's true over-annotation (`AIP → coactivator`)
+   is machinery membership, not aspect.
+3. **The standing-only filter works**: the real over-annotation (AIP) was
+   already `MARK_AS_OVER_ANNOTATED`, so was correctly not re-flagged. The
+   flagger's marginal value is therefore highest on *unreviewed* annotations and
+   the Tier-2 queue, not on re-litigating accepted MF calls.
+
 ## Next steps
 
 1. **Expand the catalog** with more probe vocabularies and the convergent

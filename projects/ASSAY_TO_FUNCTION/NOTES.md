@@ -104,3 +104,19 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
 - Tier 2 (core hub-aligned BP/CC): 291. Triage queue: MITO 85 (mostly generic
   mitochondrion), TRANSCRIPTIONAL 72, AUTOPHAGY 70, APOPTOSIS 24, VIABILITY 18.
 - Dedup per (organism, gene, go_id). Framed as re-review candidates, not errors.
+
+## 2026-06-06 (cont.) — Tier-1 re-review (loop closed)
+
+- Re-reviewed all 7 Tier-1 candidates vs actual file evidence (REREVIEW_TIER1.md).
+- Outcome: NONE a clean over-annotation. 6 KEEP, SIRT1 soft non-core. Flag
+  over-fired.
+- Calibration: (1) binding MF (Ca-binding: Calm2, HRC) is a direct activity, not
+  readout-licensed -> flagger now excludes *binding MF from Tier 1 (7->5).
+  (2) coregulator MF legit for real coregulators (β-catenin, NICD); discriminator
+  is machinery membership not aspect. (3) standing-only filter already excluded
+  the true over-annotation (AIP, already OVER_ANNOTATED) -> flagger best used on
+  UNREVIEWED annotations, not accepted ones.
+- No gene YAMLs edited (verdicts were KEEP / soft). Honest null-ish result; the
+  value was calibrating the rubric + confirming existing curation handled the
+  real MF over-calls.
+- Next: re-target flagger at unreviewed hub-aligned MF; work Tier-2 queue.

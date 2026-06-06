@@ -81,10 +81,17 @@ def main() -> None:
             if aspect == "MF":
                 if readout == "TRANSCRIPTIONAL_REPORTER" and TF_LEGIT_MF.search(label):
                     pass  # legitimate TF-activity MF from a reporter
+                elif "binding" in label.lower():
+                    # Ligand/ion/protein-binding MF is a direct molecular
+                    # activity established by binding assays (IPI/IDA), not
+                    # "licensed" by a state readout -- calibration finding from
+                    # the Tier-1 re-review (Calm2, HRC were false positives).
+                    pass
                 else:
                     tier, reason = 1, (
-                        f"MF term from {readout} (state readout cannot license "
-                        "molecular function)")
+                        f"regulatory MF term from {readout}; a reporter/state "
+                        "readout alone does not establish molecular activity -- "
+                        "verify direct (e.g. DNA-binding) evidence")
             if tier is None and action == "ACCEPT" and aspect in ("BP", "CC"):
                 tier, reason = 2, (
                     f"core (ACCEPT) {aspect} call aligned to {readout}; rubric "
