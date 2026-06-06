@@ -46,3 +46,15 @@
 
 ## Proposed
 - New MF term idea: "MAP kinase substrate binding" (child of protein kinase binding GO:0019901) to capture the many kinase-substrate IPIs informatively instead of discarding them as generic protein binding.
+
+## Deep research synthesis (Falcon / Edison Scientific, file:ARATH/MPK6/MPK6-deep-research-falcon.md)
+The Falcon deep-research report corroborates and does not contradict the existing review. Key points used to strengthen `supported_by` evidence:
+- Core MF: MPK6 is a "Proline-directed CMGC MAP kinase; terminal kinase in MAPK cascades activated by dual Thr/Tyr phosphorylation in the TxY motif" that "phosphorylates downstream substrates including transcription factors, enzymes, RNA-metabolism proteins, and developmental regulators, often redundantly with MPK3." Added to MAP kinase activity, protein serine kinase activity and core_functions.
+- MAPK cascade architecture: "MAPKs are terminal kinases in a conserved signaling architecture in which upstream kinases sequentially activate MAP2Ks and then MAPKs." Added to GO:0000165.
+- Immunity (defense response to bacterium): "the MEKK1–MKK4/5–MPK3/MPK6 PTI module downstream of FLS2 that contributes to pathogen resistance"; "MPK6 is a core component of immune MAPK cascades activated by pattern recognition receptors."
+- Ethylene: "MPK6 phosphorylates ACC synthase isoforms (e.g., ACS6) to affect stability and ethylene output" — supports response to ethylene.
+- Development (stomatal): "MPK3/MPK6 phosphorylate SPEECHLESS (SPCH) downstream of the YODA–MKK4/5 module, modulating stomatal initiation and lineage progression" — supports nucleus localization and developmental core function.
+- Freezing/ICE1: compiled substrates "include MYB41, MYB15, HsfA2, ICE1, DCP1 ... with outcomes such as enhanced DNA binding, altered protein stability, and nuclear accumulation" — supports response to freezing (ICE1).
+- Localization: substrates span nucleus and cytoplasm — "This implies a functional distribution spanning nucleus and cytoplasm"; "classic reports note stress-triggered nuclear translocation of MAPKs."
+- New 2023-2024 findings NOT added as GOA annotations (no verifiable GO IDs in current GOA/UniProt): MPK6 in stress granules / P-bodies via DCP1 phosphorylation (He et al. 2024 preprint); MYB36 phosphosites in endodermal SGN3/CIF signaling (Ma et al. 2024, Nature Plants); cat2-1 / glutathione modulation of flg22-induced MPK3/6 kinetics (Yang et al. 2024 preprint). These are recorded here for future review but are largely preprints and would need verifiable curated GO terms before annotation.
+- No `action: UNDECIDED` entries existed; none required resolution (all 43 cited publications were accessible).
