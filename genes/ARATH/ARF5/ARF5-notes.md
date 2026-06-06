@@ -98,3 +98,35 @@ NEW: GO:0140297 DNA-binding transcription factor binding (binds Aux/IAA represso
 RNA Pol II activity considered but GO:0003700 already captures activator TF activity. Add
 GO:0009734 auxin-activated signaling pathway (in UniProt DR line, IEA:UniProtKB-KW) — but this is not in GOA tsv,
 so add as NEW with KW support.
+
+## Deep research synthesis (Falcon / Edison Scientific, 2026-06-06)
+
+The Falcon deep-research report (`file:ARATH/ARF5/ARF5-deep-research-falcon.md`) fully corroborates the
+existing review and adds recent (2023-2024) mechanistic context; it did not surface any evidence that
+weakens prior decisions, and no UNDECIDED annotations were present to resolve.
+
+Key corroborating points used as `supported_by` evidence:
+- Core identity/function: "MP/ARF5 is a **nuclear auxin-dependent transcriptional activator** that binds
+  AuxREs and drives developmental gene programs." Acts "in the **nucleus** as a terminal effector of the
+  **nuclear auxin pathway (NAP)**, translating auxin levels into transcriptional outputs at
+  AuxRE-containing cis-regulatory elements." Supports GO:0003700, GO:0005634, GO:0006355, GO:0009733.
+- DNA binding via B3: DBD "containing a **B3** subdomain that recognizes AuxREs, plus additional DBD
+  substructures that enable dimerization and cooperative binding." Supports GO:0003677 MODIFY rationale.
+- Homodimerization: "For MP/ARF5, homodimerization is described as required for promoter binding and in
+  vivo specificity." Supports GO:0042802.
+- Auxin gating / NAP mechanism: "Increased auxin promotes **TIR1/AFB-mediated Aux/IAA degradation**,
+  releasing MP/ARF5 to activate transcription." "At low auxin, BDL/IAA12 binds MP/ARF5 and recruits
+  TPL/TPR co-repressors and HDA19 to maintain repression." Supports GO:0009734 (NEW) and the
+  GO:0140297 Aux/IAA-binding core function.
+- Chromatin coupling: "Activated MP/ARF5 then associates with chromatin remodelers and histone
+  acetylation machinery to induce transcription" (BRM/SYD SWI/SNF remodelers). Supports the
+  cis-regulatory binding core function and the proposed_new_term rationale.
+- PB1-mediated interactions: "a C-terminal PB1 domain for ARF–ARF and ARF–Aux/IAA interactions."
+  Supports GO:0140297 (NEW).
+
+Additional context noted but not annotated (no verifiable GO ID / outside GOA scope): ARF5 prefers the
+5'-TGTCGG-3' AuxRE over canonical TGTCTC and binds paired AuxREs with spacing/orientation grammar; PB1
+deletion (MPΔ / MP11ir isoform) broadens and de-auxin-sensitizes genomic binding (258 vs 3,405 promoters
+in one dataset); ~4,585 direct auxin-dependent targets reported; combinatorial partner TFs (e.g. bZIP11
+recruiting SAGA; GBF factors); and 2024 evolutionary work tracing the ARF DBD fold to a chromatin-regulator
+(PHIP-related crypto-Tudor) origin. These refine but do not change the existing annotation decisions.
