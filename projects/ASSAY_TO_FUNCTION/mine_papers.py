@@ -43,15 +43,48 @@ ASPECT_SHORT = {
     "cellular_component": "CC",
 }
 
+# Fast literal pre-screen per readout class: a *necessary superset* of tokens
+# (lowercase). If none appears in the paper, no pattern in that class can match,
+# so we skip the (relatively expensive) IGNORECASE regex entirely. Over-
+# inclusive is fine -- the precise regex confirms; only false negatives (a real
+# match the screen misses) would be a bug, so keep these broad enough to cover
+# every pattern. Must stay in sync with readout_catalog.yaml patterns.
+SCREEN: dict[str, tuple[str, ...]] = {
+    "UPR_ER_STRESS": ("upre", "erse", "xbp1", "erai", "grp78", "chop",
+                      "atf4", "atf6", "bip"),
+    "OXIDATIVE_STRESS_ROS": ("cellrox", "dcf", "mitosox", "dihydroethidium",
+                             "dhe", "rogfp", "hyper", "amplex"),
+    "APOPTOSIS_CASPASE": ("cellevent", "caspase", "annexin", "tunel", "parp",
+                          "devd"),
+    "AUTOPHAGY_FLUX": ("lc3", "autophag", "p62", "sqstm1"),
+    "MITO_MEMBRANE_POTENTIAL": ("tmrm", "tmre", "jc-1",
+                                "mitochondrial membrane potential",
+                                "mitotracker"),
+    "CALCIUM_FLUX": ("fluo", "fura", "gcamp", "calcium", "ca2+"),
+    "pH_PROBE": ("phrodo", "phluorin", "snarf", "bcecf"),
+    "IRON_PROBE": ("ferhonox", "labile iron", "calcein"),
+    "TRANSCRIPTIONAL_REPORTER": ("reporter", "luciferase"),
+    "VIABILITY_PROLIFERATION": ("mtt", "mts ", "cck", "resazurin", "alamar",
+                                "cell viability", "colony formation", "brdu",
+                                "edu", "ki67", "ki-67"),
+    "IN_VITRO_ENZYME": ("in vitro", "purified", "specific activity", "kcat",
+                        "km", "enzymatic assay", "reconstitut"),
+    "DIRECT_BINDING": ("isothermal", "itc", "surface plasmon", "spr",
+                       "crystal", "cryo"),
+}
+
 
 def load_catalog(path: Path) -> dict[str, dict[str, Any]]:
     data = yaml.safe_load(path.read_text())
     catalog = data["readouts"]
-    for spec in catalog.values():
-        # One alternation per class -> a single regex search per paper per class.
+    for name, spec in catalog.items():
         pats = spec.get("patterns", []) or []
         spec["_compiled"] = re.compile("|".join(f"(?:{p})" for p in pats),
                                        re.IGNORECASE) if pats else None
+        spec["_screen"] = SCREEN.get(name, ())
+        if pats and not spec["_screen"]:
+            raise ValueError(f"readout class {name!r} has patterns but no SCREEN "
+                             "entry; add a necessary-superset literal screen")
         alr = spec.get("aligned_label_regex")
         spec["_aligned"] = re.compile(alr, re.IGNORECASE) if alr else None
         spec["_overmapped"] = set(spec.get("commonly_overmapped_to", []) or [])
@@ -95,12 +128,19 @@ class PubCache:
         if not path.exists():
             self._cache[pmid] = None
             return None
-        text = path.read_text().lower()
-        classes = {
-            name for name, spec in self.catalog.items()
-            if spec["_compiled"] and spec["_compiled"].search(text)
-        }
-        result = (classes, "full_text_available: true" in text)
+        # Keep original case (the HyPer pattern is case-sensitive); screen on a
+        # lowercased copy with cheap substring tests, run the precise regex only
+        # when the screen passes.
+        text = path.read_text()
+        low = text.lower()
+        classes: set[str] = set()
+        for name, spec in self.catalog.items():
+            rx = spec["_compiled"]
+            if rx is None:
+                continue
+            if any(lit in low for lit in spec["_screen"]) and rx.search(text):
+                classes.add(name)
+        result = (classes, "full_text_available: true" in low)
         self._cache[pmid] = result
         return result
 
@@ -151,7 +191,7 @@ def main() -> None:
           file=sys.stderr, flush=True)
     for organism, gene, ann in iter_annotations(args.genes_dir):
         n_ann += 1
-        if n_ann % 10000 == 0:
+        if n_ann % 5000 == 0:
             print(f"  ...{n_ann} annotations, {len(pubs._cache)} papers read",
                   file=sys.stderr, flush=True)
         pmid = pmid_from_ref(ann.get("original_reference_id"))

@@ -116,22 +116,104 @@ that would have completely inverted the headline numbers:
 
 **Always inspect `matched_string_counts.tsv` before trusting a class total.**
 
+## Second pass — mining the publications corpus
+
+`ASSAY_TO_FUNCTION/mine_papers.py` does what the first pass showed was needed:
+the unit of analysis is now *(annotation, readout-class-used-in-the-source-paper)*.
+For each PMID-backed annotation it resolves the cached `publications/PMID_*.md`,
+detects which readout classes that paper uses, attaches the GO **aspect**
+(MF/BP/CC, from the GOA TSVs), and flags **thematic alignment** — whether the
+annotation's GO term is actually *about* the process the readout reports
+(GO id in `commonly_overmapped_to`, or label matches `aligned_label_regex`).
+
+```bash
+uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py
+```
+
+Coverage: **75,931 annotations; 36,660 PMID-backed; 36,449 papers resolved**
+(129 PMIDs not cached). 16,682 paper-level readout matches; **722 thematically
+aligned** (the high-precision subset where the readout plausibly *drove* the
+annotation).
+
+Performance note: detection is a two-stage filter — a cheap literal substring
+*screen* (`SCREEN` in the script, a necessary superset per class) gates the
+expensive `IGNORECASE` regex, which runs only on the rare screen hits. Screens
+were validated to lose zero matches vs. regex-only on a 350-paper sample
+(including the 50 largest). Detection is memoized per unique PMID.
+
+### Headline result: the aspect constraint holds
+
+For **thematically aligned** annotations, what GO aspect does each hub readout
+license?
+
+| readout_class | aspect distribution (aligned) |
+|---|---|
+| APOPTOSIS_CASPASE | **BP 68, MF 0** |
+| OXIDATIVE_STRESS_ROS | **BP 10, MF 0** |
+| VIABILITY_PROLIFERATION | **BP 87**, CC 3 |
+| AUTOPHAGY_FLUX | **BP 109**, CC 15 |
+| UPR_ER_STRESS | **BP 17**, MF 2 |
+| CALCIUM_FLUX | **BP 20**, MF 2 |
+| MITO_MEMBRANE_POTENTIAL | **CC 139**, BP 26 |
+| TRANSCRIPTIONAL_REPORTER | BP 143, **MF 71**, CC 1 |
+
+This directly supports the core hypothesis: phenotypic-hub readouts almost
+never license **MF** annotations. Caspase, ROS, autophagy, viability, and UPR
+readouts produce BP terms (ΔΨm probes produce mostly CC = mitochondrion
+localization). **The one exception is transcriptional reporters (MF 71)** — but
+inspecting those rows, they are bona fide TF-activity terms (`DNA-binding
+transcription factor activity`, `transcription cis-regulatory region binding`)
+on genuine transcription factors, mostly `ACCEPT`ed. A luciferase reporter
+legitimately supports MF *for a TF*; it is not over-annotation there.
+
+### The real over-annotation mode: correct-but-non-core, not wrong
+
+Action breakdown for aligned annotations (the strong-link subset):
+
+| readout_class | reviewed | ACCEPT | NON_CORE | rm/OA% | anyDn% |
+|---|--:|--:|--:|--:|--:|
+| VIABILITY_PROLIFERATION | 90 | 21 | **58** | 9% | **74%** |
+| APOPTOSIS_CASPASE | 63 | 25 | **34** | 3% | 59% |
+| OXIDATIVE_STRESS_ROS | 10 | 3 | 4 | 30% | 70% |
+| CALCIUM_FLUX | 22 | 10 | 7 | 18% | 50% |
+| MITO_MEMBRANE_POTENTIAL | 165 | 98 | 20 | **21%** | 38% |
+| UPR_ER_STRESS | 19 | 9 | 5 | 11% | 37% |
+| TRANSCRIPTIONAL_REPORTER | 207 | 146 | 36 | 7% | 28% |
+| AUTOPHAGY_FLUX | 124 | 80 | 20 | 5% | 24% |
+
+The key correction to the first-pass intuition: hub readouts are **not removed
+more often** than molecular evidence (hard `rm/OA%` is comparable — molecular
+controls run ~27% in the weak-link view). Instead their characteristic failure
+mode is **demotion to non-core**: viability/proliferation (58/90 → NON_CORE)
+and apoptosis (34/63) annotations are rarely *wrong*, but are overwhelmingly
+judged peripheral. That is the precise, defensible sense in which these
+readouts "over-annotate": they inflate the annotation set with correct-but-
+peripheral process terms rather than producing outright errors.
+
+Mitochondrial-membrane-potential readouts are the exception with a genuinely
+elevated *hard* downgrade rate (21%), often via `MODIFY` (31/165) — ΔΨm is a
+non-specific organelle-health readout that gets refined to more proximal terms.
+
+### Caveats
+
+- **Weak link.** A paper using assay R does not prove the *specific* annotation
+  was based on R. Thematic alignment mitigates this (722 high-precision rows)
+  but cannot fully establish causation.
+- The `any-downgrade` rate is high (40-60%) for *every* class including
+  molecular controls, because it is dominated by `KEEP_AS_NON_CORE`/`MODIFY`,
+  which are refinements, not errors. The hard `rm/OA%` and the aspect/non-core
+  breakdowns are the discriminating signals, not the raw downgrade rate.
+
 ## Next steps
 
-1. **Pivot to the publications corpus.** For each annotation, take its
-   `original_reference_id` (PMID), pull the cached `publications/PMID_*.md`,
-   detect the assay class used in *that paper*, and join paper → annotation →
-   action. ~1,517 cached publications already mention these probes — a far
-   richer signal than the 1,736 review-prose matches. Unit of analysis becomes
-   *(paper, annotation)*, with the assay coming from the paper.
-2. **Add a GO aspect axis.** Test the core claim directly: phenotypic-hub
-   readouts should rarely license MF or core-function annotations. Aspect can
-   come from the per-gene `*-goa.tsv` files.
-3. **Expand the catalog** with more probe vocabularies and, separately, the
-   convergent *process-term* GO IDs each readout tends to get over-mapped to.
-4. **Build the rubric deliverable**: per readout class, the GO annotation it
-   does / does not license (MF vs BP, direct vs regulatory, core vs non-core),
-   with worked examples drawn from the corpus.
+1. **Build the rubric deliverable**: per readout class, the GO annotation it
+   does / does not license (now grounded — e.g. "caspase/CellEvent → BP only,
+   default non-core; never MF"), with the worked corpus examples above.
+2. **Expand the catalog** with more probe vocabularies and the convergent
+   *process-term* GO IDs each readout gets over-mapped to.
+3. **Tighten the link** from paper-assay to annotation, e.g. by restricting to
+   papers whose *title/abstract* (not just full text) features the readout, or
+   by parsing the methods section specifically.
 
 ## Relationship to existing projects
 

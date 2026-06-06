@@ -40,3 +40,41 @@ Journal of decisions and findings. Append, don't rewrite.
    detect assay in the *paper* → join to annotation action. Richer signal.
 2. Add GO aspect (from `*-goa.tsv`) to test "hubs shouldn't drive MF" directly.
 3. Expand catalog; build the per-readout licensing rubric with worked examples.
+
+## 2026-06-06 (cont.) — publications-corpus pass (mine_papers.py)
+
+Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
+16,682 paper-level matches; 722 thematically aligned (high-precision subset).
+
+### Perf war story (don't repeat)
+- v1: 80 regex/annotation over full text → killed at 280s.
+- v2 memoize per pmid + 1 alternation/class → still ~10min (IGNORECASE scan of
+  ~MB papers is ~0.15s each, ×12 classes ×many large papers).
+- v3 combined single regex w/ named groups → SLOWER (0.2s/MB ×, alternation
+  tries every branch per char). Reverted.
+- v4 WINNER: two-stage filter. Cheap literal substring screen (necessary
+  superset per class, `SCREEN` dict) gates the precise regex. Validated 0 lost
+  matches vs regex-only on 350 papers (incl 50 largest). Full run ~4 min.
+- Keep text original-case so case-sensitive `(?-i:HyPer)` works; screen on a
+  lowercased copy.
+
+### Findings (the good stuff)
+- **Aspect constraint CONFIRMED**: aligned hub readouts license BP (or CC for
+  ΔΨm = mito localization), essentially never MF. Caspase BP68/MF0, ROS BP10/MF0,
+  viability BP87, autophagy BP109. Only exception: transcriptional reporters
+  MF71 — but those are real TF-activity terms on real TFs, mostly ACCEPT. Not
+  over-annotation.
+- **Real failure mode = non-core demotion, not error.** Hard removal (rm/OA) of
+  hub-readout annotations is ~comparable to molecular evidence (~27%). The
+  difference: viability (58/90) and apoptosis (34/63) aligned annotations get
+  KEEP_AS_NON_CORE. So hubs inflate the annotation set with correct-but-
+  peripheral BP terms rather than producing wrong calls.
+- ΔΨm is the one hub with elevated *hard* downgrade (21%), often via MODIFY —
+  refined to more proximal terms.
+- Caveat: any-downgrade is 40-60% for ALL classes incl molecular (dominated by
+  NON_CORE/MODIFY refinements). Don't headline that number; headline aspect +
+  non-core breakdown.
+
+### Next
+- Build the licensing rubric (per readout: aspect allowed, default core/non-core).
+- Tighten paper→annotation link (title/abstract or methods-section only).
