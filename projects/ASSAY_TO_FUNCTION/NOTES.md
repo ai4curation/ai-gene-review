@@ -1,0 +1,172 @@
+# ASSAY_TO_FUNCTION — working notes
+
+Journal of decisions and findings. Append, don't rewrite.
+
+## 2026-06-06 — project kickoff, first mining pass
+
+- Named the project ASSAY_TO_FUNCTION (branch: gene-readout-reliability).
+- Core thesis: `R → P` reliability = f(proximity, convergence); phenotypic +
+  high-convergence "hub" readouts (ROS, caspase, UPR, Ca²⁺, pH, ΔΨm) are the
+  over-annotation traps. GO evidence codes don't capture this axis.
+- Decision: start by mining the corpus (per user) rather than writing the rubric
+  first.
+
+### What I built
+- `readout_catalog.yaml` — editable, regex-based catalog of readout classes,
+  each tagged proximity/convergence + GO terms it's commonly over-mapped to.
+- `mine_readouts.py` — scans all `*-ai-review.yaml`, joins readout class to
+  reviewer action, writes matches + crosstab + QC string-count table.
+
+### Findings
+- 1,971 files / 75,931 annotations; 1,736 matches.
+- Phenotypic hubs with usable N: caspase/apoptosis 49% any-downgrade, ΔΨm 42%
+  vs molecular controls (in-vitro 24%, binding 18%). Directional but weak; most
+  hub classes are N<10.
+- **Key negative result**: probe brand names (CellROX, DCFDA, MitoSOX, pHrodo,
+  FeRhoNox) are essentially absent from curator *prose*. The review summaries
+  are synthesis, not methods. So review-text mining under-captures the very
+  readouts we care about.
+
+### Bugs caught in QC (don't repeat)
+- `HyPer` → matched "hyper-activation" (case + hyphen). Fix: `(?-i:HyPer)`.
+- `ERSE` → matched "diverse/reverse/adverse". Fix: `\bERSE\b`. (Had inflated
+  UPR 29→609.)
+- `MTS` → matched "MTs" (microtubules) + mito-targeting-sequence. Fix: require
+  "MTS assay/reagent/reduction".
+- Lesson: always read `matched_string_counts.tsv` before believing a total.
+
+### Next
+1. Pivot to publications corpus: PMID → cached `publications/PMID_*.md` →
+   detect assay in the *paper* → join to annotation action. Richer signal.
+2. Add GO aspect (from `*-goa.tsv`) to test "hubs shouldn't drive MF" directly.
+3. Expand catalog; build the per-readout licensing rubric with worked examples.
+
+## 2026-06-06 (cont.) — publications-corpus pass (mine_papers.py)
+
+Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
+16,682 paper-level matches; 722 thematically aligned (high-precision subset).
+
+### Perf war story (don't repeat)
+- v1: 80 regex/annotation over full text → killed at 280s.
+- v2 memoize per pmid + 1 alternation/class → still ~10min (IGNORECASE scan of
+  ~MB papers is ~0.15s each, ×12 classes ×many large papers).
+- v3 combined single regex w/ named groups → SLOWER (0.2s/MB ×, alternation
+  tries every branch per char). Reverted.
+- v4 WINNER: two-stage filter. Cheap literal substring screen (necessary
+  superset per class, `SCREEN` dict) gates the precise regex. Validated 0 lost
+  matches vs regex-only on 350 papers (incl 50 largest). Full run ~4 min.
+- Keep text original-case so case-sensitive `(?-i:HyPer)` works; screen on a
+  lowercased copy.
+
+### Findings (the good stuff)
+- **Aspect constraint CONFIRMED**: aligned hub readouts license BP (or CC for
+  ΔΨm = mito localization), essentially never MF. Caspase BP68/MF0, ROS BP10/MF0,
+  viability BP87, autophagy BP109. Only exception: transcriptional reporters
+  MF71 — but those are real TF-activity terms on real TFs, mostly ACCEPT. Not
+  over-annotation.
+- **Real failure mode = non-core demotion, not error.** Hard removal (rm/OA) of
+  hub-readout annotations is ~comparable to molecular evidence (~27%). The
+  difference: viability (58/90) and apoptosis (34/63) aligned annotations get
+  KEEP_AS_NON_CORE. So hubs inflate the annotation set with correct-but-
+  peripheral BP terms rather than producing wrong calls.
+- ΔΨm is the one hub with elevated *hard* downgrade (21%), often via MODIFY —
+  refined to more proximal terms.
+- Caveat: any-downgrade is 40-60% for ALL classes incl molecular (dominated by
+  NON_CORE/MODIFY refinements). Don't headline that number; headline aspect +
+  non-core breakdown.
+
+### Next
+- Build the licensing rubric (per readout: aspect allowed, default core/non-core).
+- Tighten paper→annotation link (title/abstract or methods-section only).
+
+## 2026-06-06 (cont.) — rubric built
+
+- RUBRIC.md (narrative + decision procedure + quick-ref table + worked
+  contrasts) and rubric.yaml (machine-readable) written.
+- Core rule: phenotypic hub readout -> BP/CC "response to/regulation of P",
+  never MF, default non-core; promote to core only if gene is in P's recognized
+  machinery/sensor set. MF exception: transcriptional reporter for a real TF.
+- Every per-class rule anchored to ACCEPT-vs-downgrade corpus contrasts (BCL2 vs
+  Akt1; CDK1 vs ACTB; TP53 vs PEX10/13; ATF4 vs HSPA1A + IRE1 MF over-call;
+  AMBRA1 vs ABI2; ATF2/ASCL1 vs AIP). All examples verified against
+  paper_readout_matches.tsv.
+- Next: operationalize as a flagger (hub-readout + MF aspect, or core-call on a
+  non-machinery gene = re-review candidate).
+
+## 2026-06-06 (cont.) — flagger built
+
+- flag_candidates.py consumes paper_readout_matches.tsv, applies rubric, writes
+  reports/flagged_candidates.tsv. Flags only standing + hub-aligned annotations.
+- Tier 1 (MF from hub): 7. Exactly the predicted pattern — reporter-driven
+  coactivator/corepressor MF for non-TF coregulators (CTNNB1, NOTCH1, SIRT1,
+  HMGB1) + Ca2+-binding MF (Calm2, HRC) that needs EF-hand evidence not imaging.
+  TF DNA-binding-activity MF excluded via TF_LEGIT_MF regex.
+- Tier 2 (core hub-aligned BP/CC): 291. Triage queue: MITO 85 (mostly generic
+  mitochondrion), TRANSCRIPTIONAL 72, AUTOPHAGY 70, APOPTOSIS 24, VIABILITY 18.
+- Dedup per (organism, gene, go_id). Framed as re-review candidates, not errors.
+
+## 2026-06-06 (cont.) — Tier-1 re-review (loop closed)
+
+- Re-reviewed all 7 Tier-1 candidates vs actual file evidence (REREVIEW_TIER1.md).
+- Outcome: NONE a clean over-annotation. 6 KEEP, SIRT1 soft non-core. Flag
+  over-fired.
+- Calibration: (1) binding MF (Ca-binding: Calm2, HRC) is a direct activity, not
+  readout-licensed -> flagger now excludes *binding MF from Tier 1 (7->5).
+  (2) coregulator MF legit for real coregulators (β-catenin, NICD); discriminator
+  is machinery membership not aspect. (3) standing-only filter already excluded
+  the true over-annotation (AIP, already OVER_ANNOTATED) -> flagger best used on
+  UNREVIEWED annotations, not accepted ones.
+- No gene YAMLs edited (verdicts were KEEP / soft). Honest null-ish result; the
+  value was calibrating the rubric + confirming existing curation handled the
+  real MF over-calls.
+- Next: re-target flagger at unreviewed hub-aligned MF; work Tier-2 queue.
+
+## 2026-06-06 (cont.) — Tier-2 queue + machinery discriminator
+
+- Re-aiming at *unreviewed* only yields 18 candidates (all BP/CC, no MF) — volume
+  is in the Tier-2 ACCEPT queue (291). So prioritized that instead.
+- flag_candidates.py now: --target {accepted,unreviewed,all}; Tier-2 ranked by
+  class any-downgrade rate (read from aligned crosstab); clean \n TSVs (miners too).
+- VIABILITY re-review (18): queue MIXES machinery (CDK1/MYC/RB1/TP53/Mtor =
+  correctly core) with indirect (IL21/PDGFB/VEGFA/Sirt2). Flag alone can't tell
+  them apart.
+- KEY: the gene's own MF is the discriminator. Added `indirect_ligand` tag =
+  gene has signaling-ligand MF (cytokine/growth factor/hormone/chemokine) ->
+  process is downstream of receptor signaling -> non-core. Surfaces 6 clean
+  candidates (IL21, PDGFB, VEGFA x2, HMGB1 x2) at top of queue. See REREVIEW_TIER2.md.
+- No YAML edits (defensible cases, respecting curation). Handed off as worklist.
+- Honest limit: discriminator only catches signaling-ligand indirects; other
+  indirect classes (transporters etc.) still need human judgement.
+
+## 2026-06-06 (cont.) — actual YAML edits (EDITS.md)
+
+- Carried analysis through to curation edits. Downgraded ACCEPT->KEEP_AS_NON_CORE:
+  PDGFB GO:0072126 (x2), HMGB1 GO:0007204, Sirt2 GO:0051781, VEGFA GO:0043066 (x2).
+  = 4 genes, 6 records. All re-validate clean.
+- Kept (false positives): VEGFA GO:0001938 EC prolif (defining fn), SIRT1 GO:0003714
+  corepressor (well-supported MF), Calm2/HRC binding MF, CTNNB1/NOTCH1 coactivator.
+- IMPORTANT: tried to downgrade IL21 GO:0042102 T-cell-prolif but the core_functions
+  pretool validation hook BLOCKED it — GO:0042102 is in IL21 core_functions
+  directly_involved_in (cytokine -> immune outputs, incl B cell prolif). Singling
+  out T cell prolif = inconsistent. Reverted; kept core. Good catch by the hook.
+- Lesson: a flag is a candidate; decline the edit when the "downstream" process is
+  the gene's defining role (VEGFA EC prolif, IL21 immune outputs). Tracked in EDITS.md.
+
+## 2026-06-06 (cont.) — IL21 deferred, PDGFB confirmed, rubric refined
+
+- Discussion w/ cmungall on IL21. Outcome:
+  - IL21 GO:0042102 (T cell prolif) x2: ACCEPT -> UNDECIDED (paper-backed:
+    PMID:17673207 abstract shows proliferative effect on anti-CD3 T cells).
+    Removed GO:0042102 from core_functions (else validation fails / inconsistent).
+    Created detailed GitHub issue #1418 for expert curator; NK cytotoxicity
+    (GO:0045954, IBA/IEA) raised there too. IL21 validates clean.
+  - PDGFB: considered reverting (mesangial = signature, KO-null lacks mesangial
+    cells) but user rightly noted that's necessity not mechanism -> ligand doesn't
+    directly regulate proliferation, receptor does. STAYS KEEP_AS_NON_CORE.
+  - Rubric refined: "signaling-ligand -> indirect" over-fires on DEDICATED
+    cytokines/growth factors. Better axis = signature vs incidental. Added caveat
+    to RUBRIC.md. (Flagger discriminator left as-is for now; the caveat documents
+    that signature outputs must not be auto-demoted.)
+- No new papers fetched; reasoning used background knowledge + already-cached
+  PMID:17673207 / PMID:15207081 to back the UNDECIDED. publications/ is write-
+  protected by hook anyway.
