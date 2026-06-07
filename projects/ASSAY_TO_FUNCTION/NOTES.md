@@ -220,3 +220,24 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   cited adjudication can settle. Result committed as provenance; verdict posted to
   #1422; annotation kept UNDECIDED (output is hypothesis-generating, not ground
   truth — verify cited PMIDs).
+
+## 2026-06-07 (cont.) — rubidium (86Rb) flux as a molecular positive control
+
+- Per cmungall: added RUBIDIUM_FLUX (86Rb+/Rb+ K+-channel/transporter assay) as a
+  MOLECULAR / low-convergence class (user picked this classification) — the MF-
+  licensing end of the proximity axis, the mirror image of the Ca2+ imaging hub.
+  Gave it aligned_label_regex + commonly_overmapped_to (K+ channel/transport) so
+  we could test whether it shows MF (unlike the hubs' ~zero MF).
+- QC clean: gated on unambiguous notations ("rubidium", "86rb", "rb-86", ...);
+  bare "rb" deliberately NOT a screen token (collides with RB1 gene + substring
+  "rb" everywhere). 86Rb matched 33 papers, no false positives.
+- HONEST NULL: only 1 (annotation, RUBIDIUM_FLUX) match in the whole corpus, and
+  it's Mtor "transmembrane transporter binding" (not a K+ channel, aligned=False).
+  Of 33 86Rb papers, ~none is an annotation's original_reference_id. So the MF-
+  licensing positive control can't be demonstrated in this corpus yet. Kept the
+  class (correct, future-proof); the null re-confirms the first-pass lesson that
+  MF annotations cite structural/biochemical refs, not functional-flux assays.
+  Also a known miner limitation: joins on original_reference_id only, not
+  supported_by.
+- Caveat documented: Rb+ flux is direct only for the pore-forming channel; flux
+  moved via an upstream regulator/subunit is as indirect as the hubs.

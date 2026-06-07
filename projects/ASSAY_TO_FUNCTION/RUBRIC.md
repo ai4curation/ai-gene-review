@@ -79,6 +79,27 @@ legitimately reports the *core* output of a bona fide pathway component (a
 Frizzled receptor, RelA, a HIF subunit) — promote to core only for those, demote
 for genes that merely perturb the reporter.
 
+### The molecular contrast: rubidium (⁸⁶Rb⁺) flux
+
+Not every ion readout is a convergent hub. **Rb⁺ flux** (⁸⁶Rb⁺ efflux/uptake, the
+classic K⁺-channel/transporter assay using Rb⁺ as a K⁺ congener) sits at the
+*molecular / low-convergence* end of the proximity axis: it is a near-direct
+measure of the gene product's own transport activity, so — unlike Ca²⁺ imaging (a
+second-messenger hub that licenses at most a BP term) — it **legitimately licenses
+an MF channel-activity term** (`potassium channel activity`, GO:0005267). It is
+the positive-control mirror image of the phenotypic hubs.
+
+*Caveat (the same proximity logic in reverse):* Rb⁺ flux is direct only for the
+**pore-forming channel**. If flux moves because an *upstream regulator, β-subunit,
+or trafficking factor* was perturbed, the inference is exactly as indirect as the
+hubs — BP-only, default non-core.
+
+*Corpus note:* ⁸⁶Rb is detected in 33 cached papers but is almost never the cited
+`original_reference_id` of a reviewed annotation (only 1, and it is not a K⁺
+channel), so the corpus is currently under-powered to demonstrate the MF licensing
+empirically. This re-illustrates the first-pass finding that MF annotations cite
+structural/biochemical references, not functional-flux assays.
+
 ## Worked contrasts from the corpus
 
 Each pair shows the **same readout** licensing a core annotation for the

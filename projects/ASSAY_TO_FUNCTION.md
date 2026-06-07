@@ -382,6 +382,26 @@ correctly curated — the flagger's precision on accepted calls remains low:
   and staged + submitted a cited OpenScientist hypothesis job (see below) rather
   than unilaterally demoting. See [`ASSAY_TO_FUNCTION/EDITS.md`](ASSAY_TO_FUNCTION/EDITS.md).
 
+### A molecular positive-control class: rubidium (⁸⁶Rb⁺) flux
+
+To probe the *other* end of the proximity axis, a `RUBIDIUM_FLUX` class was added
+as **molecular / low-convergence** — the classic ⁸⁶Rb⁺ K⁺-channel/transporter
+assay (Rb⁺ as a K⁺ congener). Unlike the Ca²⁺ imaging hub, Rb⁺ flux is a near-direct
+measure of the channel's own activity and should *license* an MF channel-activity
+term — the mirror image of the phenotypic hubs. QC is clean (the ⁸⁶Rb notation
+matched 33 papers with no RB1-gene/rubidium-salt false positives — bare `Rb` is
+deliberately excluded from the screen).
+
+**Honest result: under-powered to null.** Of the 33 ⁸⁶Rb papers, only one is the
+cited `original_reference_id` of a reviewed annotation (mTOR *transmembrane
+transporter binding*, not a K⁺ channel — correctly not aligned), so there are
+**zero aligned Rb-flux annotations**. The class is kept as a correctly-implemented
+control that future ion-channel-gene coverage would populate; the null re-confirms
+the first-pass lesson that MF annotations cite structural/biochemical references
+rather than functional-flux assays. Caveat for when it does populate: Rb⁺ flux is
+direct only for the pore-forming channel — flux moved by perturbing a regulator/
+subunit is the same indirect inference as the hubs.
+
 ## Cited-adjudication complement: staged OpenScientist jobs
 
 For borderline / signature-vs-incidental disputes, the project stages

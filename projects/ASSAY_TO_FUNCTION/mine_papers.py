@@ -92,6 +92,10 @@ SCREEN: dict[str, tuple[str, ...]] = {
                         "km", "enzymatic assay", "reconstitut"),
     "DIRECT_BINDING": ("isothermal", "itc", "surface plasmon", "spr",
                        "crystal", "cryo"),
+    # bare "rb" is NOT a screen token (collides with the RB1 gene and the
+    # substring "rb" in countless words); gate on the unambiguous notations.
+    "RUBIDIUM_FLUX": ("rubidium", "86rb", "86 rb", "(86)rb", "rb86", "rb-86",
+                      "rb 86"),
 }
 
 
