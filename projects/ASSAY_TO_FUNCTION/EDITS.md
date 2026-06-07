@@ -92,6 +92,16 @@ phenotypic-hub flags were re-reviewed and are all **machinery or signature**
 RB1/BRCA1 = cell-cycle machinery), so **no YAML edits** were warranted — the
 "core only if in the machinery / signature output" discriminators correctly hold.
 
+## Fourth batch (8 more classes) — no edits
+
+Added 4 molecular MF-licensing classes (protease, nuclease, lipid-transfer/
+flippase, proteasome) and 4 phenotypic hubs (protein turnover, redox balance,
+lipid peroxidation, translation); catalog now 43 classes. The molecular catalytic
+classes again license MF (nuclease MF 20, protease MF 15) and the phenotypic ones
+BP, reproducing the proximity axis. The 27 new phenotypic-hub flags are all
+degradation/proteostasis **machinery** (PSMA1/PSMB5 proteasome subunits, CUL3
+cullin E3, CDC37/PEX19 chaperones) — correctly core, so **no YAML edits**.
+
 ## Method note
 
 These edits are the curation output of the pipeline in

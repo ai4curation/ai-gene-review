@@ -277,3 +277,19 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   GATA3/SOX9 master diff TFs; RB1/BRCA1 cell cycle) -> correctly core, NO edits.
 - Perf note: broad screens (kinase, ubiquitin) make detection scan more papers;
   canonical run ~slower. Still fine. Two-stage filter holds.
+
+## 2026-06-07 (cont.) — 8 more classes (proteostasis/lipid/redox/nucleic acid) -> 43 total
+
+- Molecular: PROTEASE_ACTIVITY, NUCLEASE_ACTIVITY, LIPID_TRANSFER_FLIPPASE,
+  PROTEASOME_ACTIVITY. Phenotypic: PROTEIN_TURNOVER (CHX chase/half-life),
+  REDOX_BALANCE (GSH/GSSG, NAD(P)+/NAD(P)H), LIPID_PEROXIDATION (MDA/TBARS/4-HNE/
+  BODIPY-C11), TRANSLATION_ASSAY (SUnSET/polysome/35S-Met).
+- Axis holds: NUCLEASE MF20, PROTEASE MF15, LIPID_TRANSFER MF5 (MF) vs
+  PROTEIN_TURNOVER BP29, TRANSLATION BP13, LIPID_PEROXIDATION BP12 (BP).
+  PROTEASOME -> BP30/CC12 (catabolic process + complex, not bare endopeptidase MF).
+  REDOX_BALANCE under-powered (BP1).
+- Substring traps dodged (lesson #1): bare MDA (MDA-MB cell lines) -> malondialdehyde;
+  bare puromycin (selection antibiotic) -> puromycin incorporation/SUnSET; cyclic
+  nucleotide DROPPED this round to avoid cAMP->"hippocampus"/"campaign". QC clean.
+- Flags (27) all machinery again (PSMA1/PSMB5 proteasome subunits, CUL3 cullin,
+  CDC37/PEX19 chaperones) -> correctly core, NO edits.

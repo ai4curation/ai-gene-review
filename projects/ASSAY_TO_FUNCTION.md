@@ -460,6 +460,26 @@ on re-review — VEGFA→angiogenesis (signature), GATA3/SOX9 (master differenti
 TFs), RB1/BRCA1 (cell-cycle machinery) — so **no edits** were warranted (the
 "core only if in the machinery / signature output" discriminators at work again).
 
+### Further coverage: proteostasis, lipid, redox, nucleic-acid handling
+
+A fourth batch (8 classes, catalog now **43** readout classes total) extended into
+proteostasis, lipid, redox, and nucleic-acid assays and reproduced the axis once
+more. Molecular catalytic readouts license **MF** — NUCLEASE_ACTIVITY MF 20,
+PROTEASE_ACTIVITY MF 15, LIPID_TRANSFER_FLIPPASE MF 5 (canonical; NUCLEASE MF 42 /
+PROTEASE MF 33 with supporting refs). Phenotypic state readouts license **BP** —
+PROTEIN_TURNOVER (CHX chase/half-life) BP 29, TRANSLATION_ASSAY BP 13,
+LIPID_PEROXIDATION BP 12, REDOX_BALANCE BP 1 (under-powered). PROTEASOME_ACTIVITY
+aligns BP/CC (BP 30, CC 12) — its label regex maps to the catabolic-process and
+complex terms, i.e. it reads proteostasis *function/location* rather than a bare
+endopeptidase MF.
+
+QC clean, with three substring traps deliberately dodged: bare `MDA` (collides
+with the MDA-MB cell-line series) → `malondialdehyde`; bare `puromycin` (a
+selection antibiotic) → `puromycin incorporation`/SUnSET; cyclic-nucleotide
+deferred to avoid `cAMP`→"hippocampus"/"campaign". The 27 new phenotypic-hub
+flags are again all **machinery** (PSMA1/PSMB5 proteasome subunits, CUL3 cullin
+E3, CDC37/PEX19 chaperones) — correctly core, **no edits**.
+
 ## Cited-adjudication complement: staged OpenScientist jobs
 
 For borderline / signature-vs-incidental disputes, the project stages
