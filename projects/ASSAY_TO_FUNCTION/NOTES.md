@@ -241,3 +241,20 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   supported_by.
 - Caveat documented: Rb+ flux is direct only for the pore-forming channel; flux
   moved via an upstream regulator/subunit is as indirect as the hubs.
+
+## 2026-06-07 (cont.) — broader join on supported_by refs (--include-supporting)
+
+- Per cmungall (option a): added annotation_pmids() + --include-supporting to
+  mine_papers.py so an annotation joins to readout usage across ALL its cited
+  papers (supported_by / additional_reference_ids), not just original_reference_id.
+  Rows gain ref_role (primary/supporting). Default unchanged; broader run written
+  to reports/with_supporting/ to keep canonical strong-link reports intact.
+- Coverage jump: PMID-backed 37.6k->47.2k, matches 18.9k->28.1k, aligned
+  863->1200 (+39%; 337 from supporting). Headline STRENGTHENS: hubs stay
+  BP/CC-dominant, ~zero MF on the bigger sample. QC clean (only pre-existing
+  IN_VITRO_ENZYME 'km' token, not mine).
+- RUBIDIUM_FLUX STILL null (same 1 non-aligned Mtor hit) even with supporting
+  refs -> robust null: the 33 86Rb papers are disconnected from curated annotation
+  refs. Confirms MF annotations cite structural/biochemical, not flux assays.
+- Known remaining limitation: join is on PMIDs only (file:/reactome refs ignored);
+  supported_by weak-link is weaker than primary (use ref_role to separate).

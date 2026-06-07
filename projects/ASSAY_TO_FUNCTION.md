@@ -392,15 +392,34 @@ term — the mirror image of the phenotypic hubs. QC is clean (the ⁸⁶Rb nota
 matched 33 papers with no RB1-gene/rubidium-salt false positives — bare `Rb` is
 deliberately excluded from the screen).
 
-**Honest result: under-powered to null.** Of the 33 ⁸⁶Rb papers, only one is the
-cited `original_reference_id` of a reviewed annotation (mTOR *transmembrane
-transporter binding*, not a K⁺ channel — correctly not aligned), so there are
-**zero aligned Rb-flux annotations**. The class is kept as a correctly-implemented
-control that future ion-channel-gene coverage would populate; the null re-confirms
-the first-pass lesson that MF annotations cite structural/biochemical references
-rather than functional-flux assays. Caveat for when it does populate: Rb⁺ flux is
-direct only for the pore-forming channel — flux moved by perturbing a regulator/
-subunit is the same indirect inference as the hubs.
+**Honest result: under-powered to null (robust).** Of the 33 ⁸⁶Rb papers, only one
+is cited by any reviewed annotation (mTOR *transmembrane transporter binding*, not
+a K⁺ channel — correctly not aligned), so there are **zero aligned Rb-flux
+annotations** — and this holds even under the broader supported_by join below.
+The 33 ⁸⁶Rb papers are essentially disconnected from the curated annotation
+references. The class is kept as a correctly-implemented control that future
+ion-channel-gene coverage would populate; the null re-confirms the first-pass
+lesson that MF annotations cite structural/biochemical references rather than
+functional-flux assays. Caveat for when it does populate: Rb⁺ flux is direct only
+for the pore-forming channel — flux moved by perturbing a regulator/subunit is the
+same indirect inference as the hubs.
+
+### Broader join: supported_by references (not just the primary)
+
+`mine_papers.py --include-supporting` joins each annotation to readout usage
+across *all* its cited papers (`supported_by` / `additional_reference_ids`), not
+only `original_reference_id`, recording a `ref_role` (primary/supporting) per row.
+Written to `reports/with_supporting/` so the canonical strong-link analysis stays
+intact.
+
+Effect: PMID-backed annotations 37.6k → **47.2k**, paper-readout matches 18.9k →
+**28.1k**, thematically aligned **863 → 1,200** (+39%; 337 of the 1,200 from
+supporting refs). Crucially the **headline pattern strengthens** — the phenotypic
+hubs remain BP/CC-dominant with ~zero MF on the larger sample (apoptosis BP93/MF0,
+autophagy BP186/CC30/MF0, DNA-damage BP58/CC7/MF0; TRANSCRIPTIONAL_REPORTER's MF
+is the legitimate-TF exception). QC of the broader run is clean. The broader join
+did **not** rescue RUBIDIUM_FLUX, making that null robust rather than an artifact
+of the primary-only join.
 
 ## Cited-adjudication complement: staged OpenScientist jobs
 
