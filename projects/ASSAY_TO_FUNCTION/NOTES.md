@@ -258,3 +258,22 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   refs. Confirms MF annotations cite structural/biochemical, not flux assays.
 - Known remaining limitation: join is on PMIDs only (file:/reactome refs ignored);
   supported_by weak-link is weaker than primary (use ref_role to separate).
+
+## 2026-06-07 (cont.) — 10 more classes: proximity axis demonstrated BOTH ways
+
+- Added 5 molecular/MF-licensing classes (ELECTROPHYSIOLOGY, KINASE_ACTIVITY_ASSAY,
+  GTPASE_ACTIVITY, UBIQUITINATION_ASSAY, CHROMATIN_CHIP) + 5 phenotypic hubs
+  (CELL_DIFFERENTIATION, ANGIOGENESIS_TUBE, PHAGOCYTOSIS, CELL_CYCLE_FLOW,
+  BARRIER_PERMEABILITY). Chose common, well-cited molecular assays specifically to
+  deliver the MF positive control Rb flux couldn't.
+- HEADLINE: aspect of aligned splits cleanly on the axis. Molecular: ChIP MF136,
+  kinase MF106, GTPase MF55, ubiquitination MF39/CC24, electrophysiology MF18.
+  Phenotypic: differentiation BP19, angiogenesis BP22, cell-cycle BP16,
+  phagocytosis BP6, barrier CC5. Electrophysiology finally captured channel-MF
+  (MF18) that Rb flux missed. Even sharper with --include-supporting (ChIP MF212).
+- QC clean: required ChIP+suffix (no potato/microarray "chip"); broad "kinase"/
+  "ubiquitin"/"teer" screens gate precise regexes. matched_string_counts verified.
+- Curation: new-hub flags (26) all machinery or signature (VEGFA angiogenesis;
+  GATA3/SOX9 master diff TFs; RB1/BRCA1 cell cycle) -> correctly core, NO edits.
+- Perf note: broad screens (kinase, ubiquitin) make detection scan more papers;
+  canonical run ~slower. Still fine. Two-stage filter holds.

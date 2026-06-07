@@ -100,6 +100,24 @@ channel), so the corpus is currently under-powered to demonstrate the MF licensi
 empirically. This re-illustrates the first-pass finding that MF annotations cite
 structural/biochemical references, not functional-flux assays.
 
+### Molecular MF-licensing controls (the positive-control set)
+
+Where Rb⁺ flux was too niche, common molecular assays demonstrate the MF side of
+the proximity axis directly. Aligned-annotation aspect (canonical join):
+**ChIP/EMSA → MF 136**, in-vitro **kinase assay → MF 106**, **GTPase/GAP/GEF →
+MF 55**, in-vitro **ubiquitination/E3 → MF 39** (+CC 24 for the ligase complexes),
+**electrophysiology → MF 18**. These are the molecular mirror of the hubs: a
+readout of the gene product's *own* activity (DNA binding, phosphotransfer, GTP
+hydrolysis, ubiquitin transfer, ion conduction) legitimately licenses an MF term.
+Pairings to keep in mind when curating:
+
+- ChIP/EMSA (MF, direct DNA binding) ↔ transcriptional reporter (BP, pathway output)
+- electrophysiology (MF, channel activity) ↔ Ca²⁺/Rb⁺ imaging-flux (BP, ion state)
+- in-vitro kinase assay (MF) ↔ phospho-Western of a downstream substrate (BP, pathway state)
+
+Same caveat as Rb⁺ flux: these are direct for the assayed protein; if the readout
+moves because an *upstream regulator* was perturbed, the inference is indirect.
+
 ## Worked contrasts from the corpus
 
 Each pair shows the **same readout** licensing a core annotation for the

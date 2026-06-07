@@ -421,6 +421,45 @@ is the legitimate-TF exception). QC of the broader run is clean. The broader joi
 did **not** rescue RUBIDIUM_FLUX, making that null robust rather than an artifact
 of the primary-only join.
 
+## The proximity axis, demonstrated both ways (molecular vs phenotypic)
+
+The first extension showed phenotypic hubs license BP/CC and ~never MF. A second
+batch of 10 classes was added to test the *other* prediction directly — that
+**molecular** assays of the gene product's own activity license **MF** — by
+including common, well-cited molecular readouts (not just the niche Rb⁺ flux):
+electrophysiology, in-vitro kinase assays, GTPase/GAP/GEF assays, in-vitro
+ubiquitination/E3-ligase assays, and ChIP/EMSA; plus five more phenotypic hubs
+(differentiation, angiogenesis/tube-formation, phagocytosis, cell-cycle/flow,
+barrier/TEER).
+
+The aspect of thematically-aligned annotations splits exactly on the axis
+(canonical join; QC clean — e.g. ChIP required `ChIP`+suffix so no potato/
+microarray "chip" leaked, and the broad `kinase` screen still gated a precise
+`kinase assay` regex):
+
+| molecular / MF-licensing | aligned aspect | | phenotypic hub | aligned aspect |
+|---|---|---|---|---|
+| CHROMATIN_CHIP (ChIP/EMSA) | **MF 136** | | CELL_DIFFERENTIATION | BP 19 |
+| KINASE_ACTIVITY_ASSAY | **MF 106**, BP 10, CC 4 | | ANGIOGENESIS_TUBE | BP 22 |
+| GTPASE_ACTIVITY | **MF 55**, BP 8 | | CELL_CYCLE_FLOW | BP 16 |
+| UBIQUITINATION_ASSAY | **MF 39**, CC 24, BP 1 | | PHAGOCYTOSIS | BP 6 |
+| ELECTROPHYSIOLOGY | **MF 18**, BP 9, CC 1 | | BARRIER_PERMEABILITY | CC 5 |
+
+This is the framework's central claim shown as a single within-corpus contrast:
+a readout of the gene product's **own activity** (DNA binding, phosphotransfer,
+GTP hydrolysis, ubiquitin transfer, ion conduction) licenses an **MF** term,
+whereas a **downstream phenotype** (differentiation, a tube, an engulfed
+particle, a cell-cycle profile, a resistance drop) licenses **BP/CC and ~never
+MF**. Electrophysiology (MF 18) supplies the channel-activity positive control
+that the niche RUBIDIUM_FLUX class could not. The split is even sharper under the
+broader `--include-supporting` join (ChIP MF 212, kinase MF 153, GTPase MF 93,
+ubiquitination MF 51, electrophysiology MF 35).
+
+**Curation:** the new phenotypic-hub flags were all **machinery or signature**
+on re-review — VEGFA→angiogenesis (signature), GATA3/SOX9 (master differentiation
+TFs), RB1/BRCA1 (cell-cycle machinery) — so **no edits** were warranted (the
+"core only if in the machinery / signature output" discriminators at work again).
+
 ## Cited-adjudication complement: staged OpenScientist jobs
 
 For borderline / signature-vs-incidental disputes, the project stages

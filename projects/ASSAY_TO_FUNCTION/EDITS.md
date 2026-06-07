@@ -80,6 +80,18 @@ metabolic 3, adhesion 4, NF-κB 6, hypoxia 2, Notch/Hippo ~0) — directional on
 The well-powered new classes (migration 35, DNA-damage 36, Wnt 17,
 membrane-trafficking 14) all confirm the BP-not-MF + non-core-demotion regime.
 
+## Third batch (10 more classes) — no edits
+
+Added 5 molecular MF-licensing classes (electrophysiology, kinase, GTPase,
+ubiquitination, ChIP/EMSA) and 5 phenotypic hubs (differentiation, angiogenesis,
+phagocytosis, cell-cycle/flow, barrier). The molecular classes were a deliberate
+**positive control** for the proximity axis (aligned aspect: ChIP MF 136, kinase
+MF 106, … vs the hubs' BP/CC) — see `ASSAY_TO_FUNCTION.md`. The 26 new
+phenotypic-hub flags were re-reviewed and are all **machinery or signature**
+(VEGFA→angiogenesis = signature; GATA3/SOX9 = master differentiation TFs;
+RB1/BRCA1 = cell-cycle machinery), so **no YAML edits** were warranted — the
+"core only if in the machinery / signature output" discriminators correctly hold.
+
 ## Method note
 
 These edits are the curation output of the pipeline in
