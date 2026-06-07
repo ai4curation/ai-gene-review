@@ -284,30 +284,32 @@ rather than to an unverified PMID (see the KCTD14 caution).
   testis; ORF-specific perturbation (sparing the PIK3R3 CDS) with interactome/localization readout.
 - This is the deliberately-included *"we did not even know there was a player"* frontier.
 
-### KCTD14 (human) — least-studied KCTD-family BTB protein *(with a provenance caution)*
+### KCTD14 (human) — least-studied KCTD-family BTB protein
 
-- **Provenance caution:** the KCTD14 `-deep-research-cyberian.md` file cites PMIDs that fail
-  verification — e.g. its "PMID:30929316" is an SGLT/endothelial-senescence paper and its
-  "PMID:36362138" is a xylanase paper, neither about KCTD14. This entry is therefore anchored to
-  **file paths and the verifiable MGI statement only**; the unverified structural/CUL3 claims are
-  reported as *claims in the deep-research file*, not as established facts. (A live example of why
-  this project verifies every PMID.)
-- **Boundary:** small BTB/POZ-domain member of the 26-protein KCTD family; forms homo-oligomers
-  (IEA, GO:0051260). The deep-research files report (unverified) that it does *not* form a stable
-  CUL3 complex and so is unlikely to be a canonical CRL3 substrate adaptor. GOA carries only
-  homo-oligomerization (IEA) plus generic `protein binding`.
-- **Gap statement:** Its biochemical activity, bona fide substrate/partner, and biological process
-  are unknown (does it bind CUL3 at all? what, if anything, does it target?).
-- **Provenance (verbatim):** *"MGI reports that there is no experimental evidence to support
-  Molecular Function, Biological Process, or Cellular Component annotations for Kctd14 following
-  literature review"* (`genes/human/KCTD14/KCTD14-deep-research-cyberian.md`); *"there are no
-  specific enzymatic activities or substrates definitively attributed to it yet, and it has not
-  been conclusively tied to a particular signaling pathway or genetic disorder"*
-  (`genes/human/KCTD14/KCTD14-deep-research-openai.md`).
-- **Type:** biology gap (primary) + curation gap (literature interactors uncaptured; GOA holds only
-  IEA oligomerization + generic binding).
-- **Resolve:** endogenous AP-MS to fix the partner/substrate, plus a CUL3 co-IP to confirm the
-  reported negative; knockout/knockdown phenotyping with proteomics to assign a process.
+- **Boundary (PubMed-verified):** member of the potassium-channel-tetramerization-domain (KCTD)
+  family, which "consists of 26 members with mostly unknown functions"; many KCTDs act as BTB-domain
+  CUL3 substrate adaptors, but most members remain functionally uncharacterized (Liu et al. 2013,
+  *Cell Biosci*, PMID:24268103, [DOI](https://doi.org/10.1186/2045-3701-3-45)).
+- **Gap statement:** KCTD14's biochemical activity, bona fide substrate/partner, and biological
+  process are unknown — including whether it functions as a CUL3 substrate adaptor like several
+  paralogs, or via another mechanism.
+- **Provenance the gap is real (verifiable facts, not summary prose):** the gene's GOA record
+  (`genes/human/KCTD14/KCTD14-goa.tsv`) contains **no experimental function annotation** — its
+  entire molecular-function content is five `protein binding` (GO:0005515, IPI) rows plus one
+  electronic protein-homooligomerization term (GO:0051260, IEA), with no IDA/IMP/IGI evidence for
+  any specific activity, substrate, or process. Combined with the family review's explicit
+  "mostly unknown functions" (PMID:24268103), this establishes an unfilled molecular-function gap
+  rather than mere under-curation.
+- **Type:** biology gap (primary; no experiment defines its activity) + curation gap (the
+  high-throughput interactors behind the `protein binding` rows are uninformative and no specific MF
+  is captured).
+- **Resolve:** endogenous AP-MS to define the partner/substrate and a CUL3 co-IP to test the
+  adaptor hypothesis directly; knockout/knockdown phenotyping with proteomics to assign a process.
+- *Note:* an earlier draft leaned on the `-deep-research-cyberian.md` summary, which cited PMIDs
+  that fail verification (its "PMID:30929316" is an SGLT paper; "PMID:36362138" is a xylanase
+  paper). Those claims (including a reported CUL3-non-binding result attributed to an
+  unlocatable 2024 paper) are **excluded** here; the entry now rests only on the verified review and
+  the repo's own GOA data.
 
 ### C18orf21 (human) — ORF-named gene, a *closing* gap
 
@@ -600,28 +602,35 @@ ontology) and the residual-sub-gap framing have curated exemplars.
   chaperone separation-of-function allele to test whether processivity and histone-recycling
   phenotypes dissociate.)
 
-### AP3B2 (human) — neuronal adaptor, unknown cargo *(residual sub-gap; provenance caution)*
+### AP3B2 (human) — neuronal adaptor, unknown cargo *(residual sub-gap)*
 
-- **Provenance caution:** the AP3B2 `-deep-research-cyberian.md` file cites PMIDs that fail
-  verification — its "PMID:7545544" is an nNOS/dystrophin paper and "PMID:19116307" is an ADAMTS13
-  paper, neither about AP3B2. This entry is therefore anchored to **file paths** only (a second
-  live example, after KCTD14, of why every PMID is checked).
-- **Boundary:** neuron-specific β subunit (β-NAP / β3B) of the AP-3 adaptor complex, which sorts
-  cargo into synaptic vesicles / lysosome-related organelles, cooperating with BLOC-1 and
-  recognizing YxxØ and acidic-dileucine signals; loss is linked to a developmental/epileptic
-  encephalopathy (deep-research files).
-- **Gap statement:** The complete repertoire of neuron-specific cargoes selected by the β3B
-  (AP3B2) AP-3 isoform — and how that selection differs from the ubiquitous β3A (AP3B1) isoform —
-  is not defined.
-- **Provenance (verbatim):** *"The complete repertoire of neuronal AP-3 cargoes and how cargo
-  selection differs between neuronal and ubiquitous AP-3 isoforms remains to be fully
-  characterized."* (`genes/human/AP3B2/AP3B2-deep-research-cyberian.md`); *"How the neuronal β3B
-  isoform differs functionally from the ubiquitous β3A variant"*
-  (`genes/human/AP3B2/AP3B2-deep-research-falcon.md`).
-- **Type:** blend — biology gap (the cargo set / isoform divergence is uncharacterized) + ontology
-  dimension (GO annotates the subunit gene rather than the β3B-containing complex).
+- **Boundary (PubMed-verified):** AP3B2 encodes the **neuron-specific** β subunit of the AP-3
+  adaptor complex; the ubiquitous paralog AP3B1 instead causes Hermansky-Pudlak syndrome type 2, and
+  biallelic AP3B2 variants cause an early-onset epileptic encephalopathy with optic atrophy (Assoum
+  et al. 2016, *Am J Hum Genet*, PMID:27889060, [DOI](https://doi.org/10.1016/j.ajhg.2016.10.009);
+  further cases in Dilber et al. 2022, *Clin Neurol Neurosurg*, PMID:36356440,
+  [DOI](https://doi.org/10.1016/j.clineuro.2022.107509)). In mouse, the neuronal isoform knockout
+  (*Ap3b2⁻/⁻*) *reduces* selected synaptic-vesicle proteins — the opposite of the ubiquitous
+  *Ap3b1⁻/⁻* — establishing isoform-divergent SV biogenesis (Newell-Litwa et al. 2009, *Mol Biol
+  Cell*, PMID:19144828, [DOI](https://doi.org/10.1091/mbc.e08-05-0456)); AP-3 also regulates SV size
+  in a brain-region-specific manner (Newell-Litwa et al. 2010, *J Neurosci*, PMID:20089890,
+  [DOI](https://doi.org/10.1523/JNEUROSCI.3400-09.2010)).
+- **Gap statement:** The complete repertoire of neuron-specific cargoes selected by the β3B (AP3B2)
+  AP-3 isoform — and the molecular basis by which that selection differs from the ubiquitous β3A
+  (AP3B1) isoform — is not defined.
+- **Provenance the gap is real (verifiable facts):** the *Ap3b2* vs *Ap3b1* knockouts have *opposite*
+  effects on SV protein content (PMID:19144828) yet no study enumerates the β3B-specific cargo set;
+  correspondingly, the AP3B2 GOA record (`genes/human/AP3B2/AP3B2-goa.tsv`) carries **no
+  experimental (IDA/IMP/IGI) cargo or function annotation** — every term is IBA/IEA/NAS/ISS/TAS — so
+  the isoform-specific cargo specificity is genuinely undetermined, not merely uncurated.
+- **Type:** blend — biology gap (the β3B-specific cargo set / isoform divergence is
+  uncharacterized) + ontology dimension (GO annotates the subunit gene rather than the
+  β3B-containing complex).
 - **Resolve:** comparative quantitative proteomics of AP-3 vesicles immunoisolated from neuronal
   (β3B) vs non-neuronal (β3A) cells; β3B-specific-KO neuron SV proteomics vs β3A rescue.
+- *Note:* an earlier draft leaned on the `-deep-research-cyberian.md` summary, whose PMIDs fail
+  verification ("PMID:7545544" → nNOS/dystrophin; "PMID:19116307" → ADAMTS13); those are excluded
+  and the entry now rests on PubMed-verified primary papers plus the repo's GOA data.
 
 ### atg2 (SCHPO) — known lipid bridge, unresolved directionality *(residual sub-gap)*
 
@@ -664,6 +673,52 @@ For each candidate gene:
 Selection of *which genes to read* is curatorial, in the spirit of PomBase's "priority
 unstudied genes" determination (Wood 2019) — informed, but not decided, by the triage
 read-list.
+
+## Reviewing deep-research output
+
+Deep-research `-deep-research-{provider}.md` files are LLM-generated and are **leads, not sources**.
+Curating this project surfaced a consistent set of failure modes; the table below is grounded in
+actual errors caught during this work, because the cost of not catching them is a curated artifact
+that cites a real-looking paper that says something else.
+
+| Failure mode | Why it's dangerous | Examples caught here |
+|---|---|---|
+| **Mismatched-but-real PMID** (well-formed, resolves, *wrong paper*) | Passes format validation; only a content check catches it | RASA1 "36323259" (→ILC paper); KCTD14 "30929316/36362138" (→SGLT/xylanase); AP3B2 "7545544/19116307" (→nNOS/ADAMTS13); Edwards/Oprea/Kustatscher in the intro |
+| **Citation by DOI / PMC / citekey only** (no PMID) | Not verifiable by PMID tooling; easy to copy a wrong one | falcon files broadly; mxaC (Zhou 2025), tam10, C18orf21, MTC7 (Addinall) |
+| **Over-extrapolation** (real PMID, but it doesn't support the claim) | The citation "checks out" yet the claim is unsupported | RAB9A: DENND2-as-GEF cited to a general DENN-domain paper on *other* Rabs |
+| **Unlocatable citation** (claimed paper not findable at all) | Can't be confirmed or refuted | KCTD14's reported CUL3-non-binding "2024 paper" / PMC10856315 |
+| **Cross-provider disagreement** | One file's confident claim contradicts another's | tam10 domain content; C18orf21 "characterized" vs "uncharacterized" |
+
+**Mechanisms, layered from automated to manual:**
+
+1. **Automated PMID resolution + title-match (the missing layer).** Today
+   `src/ai_gene_review/tools/validate_pmid_references.py` checks only PMID *format* and that cited
+   PMIDs appear in the review YAML — it cannot catch a real PMID pointing at the wrong paper. The
+   high-leverage addition: for each PMID in a deep-research file, fetch metadata (reusing the
+   `refresh_pmid_titles` / publication-cache machinery) and compare the fetched title/first-author/
+   year against the text *adjacent to the citation*; flag low-similarity matches and emit a per-file
+   **citation-reliability score**. This directly catches the dominant failure mode.
+2. **Ground claims against authoritative repo data, not prose.** Each gene folder already ships
+   non-LLM ground truth — `-goa.tsv` (GO terms + evidence codes) and `-uniprot.txt`. Any claim about
+   annotation/function state should be checked against these, and a gap's provenance should prefer a
+   *checkable repo fact* (e.g. "GOA molecular_function is ND / IEA-only") over an LLM hedge. (This is
+   exactly how KCTD14 and AP3B2 were re-sourced above.)
+3. **Cross-provider corroboration.** Treat a claim asserted independently by ≥2 providers as
+   stronger; treat a single-provider *mechanistic* claim as a lead; route disagreements to a human.
+4. **Provider-reliability tracking.** Log citation-accuracy per provider over time (with a
+   small-sample caveat) so curators can weight accordingly — e.g. in this small sample the
+   `cyberian` files produced mismatched PMIDs twice (KCTD14, AP3B2), and `falcon` tends to cite by
+   DOI rather than PMID.
+5. **Promotion rule (human-in-the-loop).** Nothing enters a curated artifact (review YAML, project
+   page) unless its citation is **independently PubMed-verified** *or* anchored to a checkable repo
+   fact. Verbatim LLM hedges are starting points, never the provenance of record.
+6. **Quote-and-source discipline.** Require a verbatim supporting quote plus a locatable source for
+   each promoted claim; a claim with no findable quote+source is, by construction, unverified.
+
+**Recommendation:** implement mechanism 1 as a `validate-deep-research` check (or an opt-in,
+network-gated mode of the existing tool), reporting a reliability score and a list of
+mismatched/unresolvable PMIDs per file. Mechanisms 2, 5 and 6 are process rules already adopted in
+this project; 3 and 4 fall out for free once 1 produces structured per-file output.
 
 ## Relation to existing KB machinery
 
@@ -709,7 +764,7 @@ gap entries above.
 | swrD | BACSU | **worked** | ~71-aa swarming-motility enhancer; mechanism unknown |
 | mxaC | METEA | **worked** | VWA auxiliary protein for methanol oxidation; mechanism unknown |
 | TRAPPC12 | human | **worked** | Moonlighting TRAPP factor; mitotic function ill-defined |
-| KCTD14 | human | **worked** | Least-studied KCTD BTB protein; no MF/BP/CC evidence (MGI) |
+| KCTD14 | human | **worked** | Least-studied KCTD BTB protein; no experimental function in GOA |
 | C18orf21 | human | **worked** | ORF-named; a *closing* gap (2025 RNase MRP preprints) |
 | MTC7 | yeast | **worked** | Telomere-capping sequence orphan; all GO aspects ND |
 | RAB9A | human | **worked** | *Residual sub-gap*: known Rab, cognate GEF/GAP unidentified |
@@ -770,6 +825,9 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
 - [x] Third gap framing identified: the *residual sub-gap* of otherwise well-characterized genes
 - [x] Read-list deepening, batch 3 (5 added: METEA *mll* cluster, MAP7D1, POLE4, AP3B2, atg2; PMIDs PubMed-verified)
 - [x] All three gap kinds now have worked exemplars (biology = most; ontology = POLE4; curation = woven through MAP7D1/AP3B2)
+- [x] Re-sourced summary-only entries (KCTD14, AP3B2) onto verified primary literature + repo GOA data
+- [x] Documented deep-research review mechanisms (failure-mode table + layered checks)
+- [ ] Implement `validate-deep-research`: PMID resolution + title-match + per-file reliability score (extends `validate_pmid_references.py`)
 - [ ] Read-list deepening, batch 4: PUS3, CFAP418, SOCS4/SOCS5, RFT1, pef-1, fshr-1, alo1
 - [ ] Decide unit granularity (per-gap vs per-gene narrative)
 - [ ] Decide home: standalone register vs `knowledge_gaps` schema element (deferred)
@@ -807,5 +865,14 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
   carefully excluding the now-solved XoxG/XoxJ/MxcQE/MxbDM and the 2024 methylolanthanin discovery,
   PMID:39078674), and three residual sub-gaps (MAP7D1, AP3B2, atg2). PMID verification caught two
   more mis-citations in a deep-research file (AP3B2 cyberian: "PMID:7545544" → nNOS/dystrophin;
-  "PMID:19116307" → ADAMTS13), so AP3B2 is file-path-anchored with a caution. 22 worked entries now
+  "PMID:19116307" → ADAMTS13), so AP3B2 was initially flagged. 22 worked entries now
   cover all three gap kinds plus the residual-sub-gap framing.
+- 2026-06: Re-sourced the two summary-only entries (KCTD14, AP3B2) from primary literature after a
+  review flagged that anchoring a gap to an LLM-generated `-deep-research-*.md` — *especially one
+  whose PMIDs were just shown to be hallucinated* — is near-circular. KCTD14 now rests on the
+  PubMed-verified KCTD family review (PMID:24268103) plus the repo's own GOA record (no experimental
+  MF); AP3B2 on Assoum 2016 (PMID:27889060), Newell-Litwa 2009/2010 (PMID:19144828, PMID:20089890),
+  Dilber 2022 (PMID:36356440) plus its GOA record (no experimental cargo annotation). The
+  unlocatable KCTD14 CUL3-non-binding claim was dropped. General principle adopted: **provenance for
+  a gap must be a verified primary source or a checkable repo fact (GOA evidence codes), never an
+  unverified deep-research summary** — see the new "Reviewing deep-research output" section.
