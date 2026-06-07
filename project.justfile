@@ -257,6 +257,10 @@ assay-mine *args="":
 assay-flag *args="":
     uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
 
+# Consolidate the 60-class catalog + mined matches into summary TSV/MD + figure.
+assay-consolidate *args="":
+    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py {{args}}
+
 # Stage (human-gated) OpenScientist hypothesis prompts from flagged_candidates.tsv.
 # This writes committed prompt.md files and prints submit commands but NEVER
 # submits a (paid) job. Reserve submission for cases where a cited literature

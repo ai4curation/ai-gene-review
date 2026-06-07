@@ -220,3 +220,123 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   cited adjudication can settle. Result committed as provenance; verdict posted to
   #1422; annotation kept UNDECIDED (output is hypothesis-generating, not ground
   truth — verify cited PMIDs).
+
+## 2026-06-07 (cont.) — rubidium (86Rb) flux as a molecular positive control
+
+- Per cmungall: added RUBIDIUM_FLUX (86Rb+/Rb+ K+-channel/transporter assay) as a
+  MOLECULAR / low-convergence class (user picked this classification) — the MF-
+  licensing end of the proximity axis, the mirror image of the Ca2+ imaging hub.
+  Gave it aligned_label_regex + commonly_overmapped_to (K+ channel/transport) so
+  we could test whether it shows MF (unlike the hubs' ~zero MF).
+- QC clean: gated on unambiguous notations ("rubidium", "86rb", "rb-86", ...);
+  bare "rb" deliberately NOT a screen token (collides with RB1 gene + substring
+  "rb" everywhere). 86Rb matched 33 papers, no false positives.
+- HONEST NULL: only 1 (annotation, RUBIDIUM_FLUX) match in the whole corpus, and
+  it's Mtor "transmembrane transporter binding" (not a K+ channel, aligned=False).
+  Of 33 86Rb papers, ~none is an annotation's original_reference_id. So the MF-
+  licensing positive control can't be demonstrated in this corpus yet. Kept the
+  class (correct, future-proof); the null re-confirms the first-pass lesson that
+  MF annotations cite structural/biochemical refs, not functional-flux assays.
+  Also a known miner limitation: joins on original_reference_id only, not
+  supported_by.
+- Caveat documented: Rb+ flux is direct only for the pore-forming channel; flux
+  moved via an upstream regulator/subunit is as indirect as the hubs.
+
+## 2026-06-07 (cont.) — broader join on supported_by refs (--include-supporting)
+
+- Per cmungall (option a): added annotation_pmids() + --include-supporting to
+  mine_papers.py so an annotation joins to readout usage across ALL its cited
+  papers (supported_by / additional_reference_ids), not just original_reference_id.
+  Rows gain ref_role (primary/supporting). Default unchanged; broader run written
+  to reports/with_supporting/ to keep canonical strong-link reports intact.
+- Coverage jump: PMID-backed 37.6k->47.2k, matches 18.9k->28.1k, aligned
+  863->1200 (+39%; 337 from supporting). Headline STRENGTHENS: hubs stay
+  BP/CC-dominant, ~zero MF on the bigger sample. QC clean (only pre-existing
+  IN_VITRO_ENZYME 'km' token, not mine).
+- RUBIDIUM_FLUX STILL null (same 1 non-aligned Mtor hit) even with supporting
+  refs -> robust null: the 33 86Rb papers are disconnected from curated annotation
+  refs. Confirms MF annotations cite structural/biochemical, not flux assays.
+- Known remaining limitation: join is on PMIDs only (file:/reactome refs ignored);
+  supported_by weak-link is weaker than primary (use ref_role to separate).
+
+## 2026-06-07 (cont.) — 10 more classes: proximity axis demonstrated BOTH ways
+
+- Added 5 molecular/MF-licensing classes (ELECTROPHYSIOLOGY, KINASE_ACTIVITY_ASSAY,
+  GTPASE_ACTIVITY, UBIQUITINATION_ASSAY, CHROMATIN_CHIP) + 5 phenotypic hubs
+  (CELL_DIFFERENTIATION, ANGIOGENESIS_TUBE, PHAGOCYTOSIS, CELL_CYCLE_FLOW,
+  BARRIER_PERMEABILITY). Chose common, well-cited molecular assays specifically to
+  deliver the MF positive control Rb flux couldn't.
+- HEADLINE: aspect of aligned splits cleanly on the axis. Molecular: ChIP MF136,
+  kinase MF106, GTPase MF55, ubiquitination MF39/CC24, electrophysiology MF18.
+  Phenotypic: differentiation BP19, angiogenesis BP22, cell-cycle BP16,
+  phagocytosis BP6, barrier CC5. Electrophysiology finally captured channel-MF
+  (MF18) that Rb flux missed. Even sharper with --include-supporting (ChIP MF212).
+- QC clean: required ChIP+suffix (no potato/microarray "chip"); broad "kinase"/
+  "ubiquitin"/"teer" screens gate precise regexes. matched_string_counts verified.
+- Curation: new-hub flags (26) all machinery or signature (VEGFA angiogenesis;
+  GATA3/SOX9 master diff TFs; RB1/BRCA1 cell cycle) -> correctly core, NO edits.
+- Perf note: broad screens (kinase, ubiquitin) make detection scan more papers;
+  canonical run ~slower. Still fine. Two-stage filter holds.
+
+## 2026-06-07 (cont.) — 8 more classes (proteostasis/lipid/redox/nucleic acid) -> 43 total
+
+- Molecular: PROTEASE_ACTIVITY, NUCLEASE_ACTIVITY, LIPID_TRANSFER_FLIPPASE,
+  PROTEASOME_ACTIVITY. Phenotypic: PROTEIN_TURNOVER (CHX chase/half-life),
+  REDOX_BALANCE (GSH/GSSG, NAD(P)+/NAD(P)H), LIPID_PEROXIDATION (MDA/TBARS/4-HNE/
+  BODIPY-C11), TRANSLATION_ASSAY (SUnSET/polysome/35S-Met).
+- Axis holds: NUCLEASE MF20, PROTEASE MF15, LIPID_TRANSFER MF5 (MF) vs
+  PROTEIN_TURNOVER BP29, TRANSLATION BP13, LIPID_PEROXIDATION BP12 (BP).
+  PROTEASOME -> BP30/CC12 (catabolic process + complex, not bare endopeptidase MF).
+  REDOX_BALANCE under-powered (BP1).
+- Substring traps dodged (lesson #1): bare MDA (MDA-MB cell lines) -> malondialdehyde;
+  bare puromycin (selection antibiotic) -> puromycin incorporation/SUnSET; cyclic
+  nucleotide DROPPED this round to avoid cAMP->"hippocampus"/"campaign". QC clean.
+- Flags (27) all machinery again (PSMA1/PSMB5 proteasome subunits, CUL3 cullin,
+  CDC37/PEX19 chaperones) -> correctly core, NO edits.
+
+## 2026-06-07 (cont.) — 9 more classes (epigenetic/immune/2nd messenger) -> 52 total
+
+- Molecular: METHYLTRANSFERASE_ACTIVITY, ACETYLTRANSFERASE_DEACETYLASE,
+  PHOSPHATASE_ACTIVITY, POLYMERASE_ACTIVITY, HELICASE_ACTIVITY. Phenotypic:
+  CYCLIC_NUCLEOTIDE_SIGNALING, CYTOTOXICITY_KILLING (51Cr/killing),
+  CYTOKINE_PRODUCTION (ELISpot/ICS), HISTONE_MARK (H3K4me3 etc.).
+- Axis holds (5th time): acetyltransferase MF59, polymerase MF15, phosphatase MF8,
+  methyltransferase MF7, helicase MF7 (MF) vs histone-mark BP13, cyclic-nucleotide
+  BP10, cytokine BP7, cytotoxicity BP3 (BP). Nice epigenetic pair: enzyme assay
+  (HAT/HMT) = MF, mark state (H3K4me3) = BP.
+- Cyclic nucleotide added SAFELY: bare cAMP avoided (IGNORECASE \bcAMP\b hits
+  "camp"; substring collides w/ hippocampus/campaign); required assay/level/sensor
+  context. HAT requires "HAT assay/activity" not bare "hat". QC clean.
+- Flags (11) machinery/signature again: chromatin enzymes (RTT109 HAT, SET1 HMT,
+  CHD1 remodeler, ASF1 chaperone) + GPCRs whose cyclase signaling is signature
+  (ADRB2, Drd1) -> correctly core, NO edits.
+
+## 2026-06-07 (cont.) — 8 more classes (RNA/transport/chaperone/glyco; EMT/stem/aggreg/inflammasome) -> 60 total
+
+- Molecular: RNA_BINDING_CLIP (RNA counterpart to ChIP), TRANSPORTER_UPTAKE,
+  CHAPERONE_REFOLDING, GLYCOSYLTRANSFERASE_ACTIVITY. Phenotypic: EMT_MARKERS,
+  STEMNESS_SPHERE, PROTEIN_AGGREGATION (ThT/amyloid), INFLAMMASOME_PYROPTOSIS.
+- Axis holds (6th): chaperone MF49, glyco MF12, RNA-binding MF8, transporter MF7
+  (MF) vs aggregation BP22, inflammasome BP15, EMT BP9, stemness BP7 (BP).
+  Supporting: chaperone MF85, transporter MF25.
+- Substring trap dodged: bare RIP (receptor-interacting protein) avoided -> require
+  RIP-seq/RIP assay/RNA immunoprecipitation. QC clean (eclip/iclip/par-clip,
+  [3h]dopamine, holdase/foldase, gsdmd/pyroptosis, aggresome/thioflavin all real).
+- Flags (23) machinery/signature again: anti-aggregation chaperones (BAG3/CLU/
+  CRYAB), APP (amyloid precursor), FZD7 (Wnt receptor), anti-inflammatory cytokines
+  (IL10/IL36RN) -> correctly core, NO edits.
+- Milestone: 6 batches, 12->60 classes; proximity axis robust; flagger value is on
+  unreviewed annotations, not re-litigating accepted core calls.
+
+## 2026-06-07 (cont.) — consolidation pass (deliverable)
+
+- Built consolidate.py: reads readout_catalog.yaml + paper_readout_matches.tsv,
+  emits reports/catalog_summary.tsv (60 rows), reports/catalog_table.md (full
+  molecular-vs-phenotypic quick-ref), reports/proximity_axis.png (stacked aligned-
+  aspect bars, molecular grouped above phenotypic). just assay-consolidate.
+- HEADLINE (one line): aligned MF fraction molecular 77% (567/738) vs phenotypic
+  8% (90/1087). The phenotypic 8% is ~all TRANSCRIPTIONAL_REPORTER (MF72/90, the
+  legit TF exception); without it ~2%. Lone molecular outlier PROTEASOME (2% MF —
+  reads as catabolic process/complex, i.e. machinery).
+- Folded headline + figure + links into RUBRIC.md and ASSAY_TO_FUNCTION.md. Catalog
+  reference is now auto-generated/reproducible rather than hand-maintained.
