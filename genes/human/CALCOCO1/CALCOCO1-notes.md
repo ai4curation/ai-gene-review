@@ -95,6 +95,55 @@ experimental (ECO:0000269|PubMed:24245781).
 These are uninformative as "protein binding" per curation guidelines. They do, however,
 collectively corroborate the ATG8/GABARAP interactions underlying the autophagy-receptor role.
 
+## Falcon deep research findings (2026-06-07)
+
+The Falcon report (Edison) adds primary-literature support for several claims that the
+existing review previously sourced only from UniProt/notes, plus some new disease/biomarker
+links. Distinguishing CONFIRMS / NEW / PROVISIONAL:
+
+- **CONFIRMS + key NEW primary reference for the core function.** The foundational ER-phagy
+  paper Stefely et al. 2020 (Autophagy) [PMID:31971854 "we show that CALCOCO1 physically
+  interacts with MAP1LC3C ... Genetic deletion ... disrupted autophagy of the endoplasmic
+  reticulum (reticulophagy)"] was MISSING from the existing `references:` even though the
+  review's whole "core" autophagy-receptor narrative rests on it. It provides the direct
+  experimental basis: a canonical LIR (W47A abolishes LC3-family binding), a non-canonical
+  CLIR (L140A/V142A weakens MAP1LC3C binding) explaining MAP1LC3C preference, MTOR-regulated
+  turnover (MLN0128 lowers, chloroquine/bafilomycin raise CALCOCO1), and ER-phagy reporter
+  flux reduced ~50% (GST-LSCS-GFP-cb5) / ~25% (Keima-cb5) in knockouts. NOTE: this is a
+  *mouse/MEF + human cell* study; the genetic ER-phagy data are largely in mouse cells.
+  Now added to the review as a statement-only reference.
+- **NEW primary reference for the historical coactivator (non-core) role.** Kim et al. 2008
+  (Mol Cell) [PMID:18722177 "CCAR1, a key regulator of mediator complex recruitment to nuclear
+  receptor transcription complexes"] is the original CCAR1/CoCoA paper underpinning the
+  CCAR1-CoCoA-Mediator axis already described; previously only Mizuta 2014 (PMID:24245781) was
+  cited. Added as statement-only reference.
+- **NEW: direct experimental test of CALCOCO1 as a glucocorticoid-receptor coregulator.**
+  Wu et al. 2014 (Nucl Recept Signal) [PMID:25422592 "siRNA mediated depletion ... CCAR1,
+  CCAR2, CALCOCO1 and ZNF282 ... each coregulator acted in a selective and gene-specific
+  manner"] shows CALCOCO1 is a *gene-selective* GR coregulator with both positive and negative
+  effects - i.e. not a global coactivator. Reinforces the KEEP_AS_NON_CORE coactivator calls
+  and the steroid-hormone-signaling annotations. Added as statement-only reference.
+- **NEW / nuancing the Golgiphagy proposed term.** Kitta et al. 2024 (EMBO J) [PMID:38822137
+  "YIPF3 and YIPF4 ... constitute a Golgiphagy receptor"] tested CALCOCO1 in a HeLa Golgiphagy
+  reporter: CALCOCO1 knockdown alone did NOT decrease Golgiphagy, and triple YIPF3/YIPF4/CALCOCO1
+  knockdown retained activity - arguing CALCOCO1 is not the dominant Golgi receptor in that
+  context (redundancy / context-specific). This tempers the "Golgiphagy receptor activity"
+  proposed term: keep proposed but flag redundancy. Commentary Ma & Zhang 2024 (Life Metab)
+  [PMID:39871880] frames CALCOCO1 as a soluble ER-phagy receptor with a minor Golgi pool
+  (possibly via ZDHHC17), distinct from the YIPF3/4 mechanism. Both added as statement-only refs.
+- **PROVISIONAL / low-confidence disease links (NOT used to change annotations).**
+  (i) A tumor-associated **R12H** variant reduced MAP1LC3C association (Stefely 2020) - a
+  mechanistic, not disease-causal, observation. (ii) Meng et al. 2024 AD multi-omics
+  (DOI:10.1186/s13195-024-01578-6) reportedly lists CALCOCO1 among downregulated plasma proteins
+  in high-severity AD, but the abstract's top features are SKAP1/NEFL and CALCOCO1 is not named
+  there - treat as weak, association-only. (iii) Wei et al. 2023 (DOI:10.1186/s41065-023-00289-6)
+  is actually an **NPM3/LUAD** paper; CALCOCO1 appears only peripherally, so it is NOT a
+  CALCOCO1-focused reference and is intentionally kept out of the YAML.
+- **No change to existing annotation actions.** Falcon confirms the existing two-narrative
+  framing (cytoplasmic ER-phagy/Golgiphagy receptor = core; nuclear CoCoA coactivator =
+  non-core; generic protein binding = over-annotated). It adds primary citations and one
+  redundancy caveat (Golgiphagy) but does not contradict any existing action.
+
 ## Conclusion on core vs non-core
 
 - **Core (current understanding, not in GOA):** selective-autophagy receptor / cargo receptor
@@ -105,5 +154,3 @@ collectively corroborate the ATG8/GABARAP interactions underlying the autophagy-
   Real but secondary/context-dependent and largely "by similarity" at the human level.
 - **Over-annotated / uninformative:** generic "protein binding" (GO:0005515) from interactome
   screens; broad "signal transduction"; the calphoglin/PPA1-PGM activity (single old report).
-</content>
-</invoke>

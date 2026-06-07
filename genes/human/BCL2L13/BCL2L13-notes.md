@@ -91,3 +91,71 @@ The strongest evidence for the mitophagy-receptor / Atg32-homolog function (Mura
 is not in the cached publications, so verbatim supporting_text for that function is drawn only from
 the UniProt record (GABARAPL2 IntAct interaction; GO:0000423 mitophagy IEA) and is reflected in the
 description, core_functions, and proposed_new_terms rather than asserted from an inaccessible PMID.
+
+## Falcon deep research findings (2026-06-07)
+
+PMID correction: the foundational Murakawa et al. Nat Commun 2015 mitophagy/Atg32 paper is
+**PMID:26146385** (DOI 10.1038/ncomms8527), not PMID:26471991 as guessed earlier in these notes.
+Verified via PubMed ID conversion (DOI->PMID) and metadata lookup. None of the new papers below are
+cached in publications/, so they are added to the review as statement-only findings (no
+verbatim supporting_text).
+
+- CONFIRMS (now with a citable primary PMID): BCL2L13 is the mammalian Atg32 homolog; it binds LC3
+  via a WXXI/LIR motif and induces both mitochondrial fragmentation and mitophagy. BH domains drive
+  fragmentation; the WXXI/LIR motif drives mitophagy. Fragmentation occurs without DRP1/DNM1L, and
+  mitophagy proceeds in Parkin-deficient cells (ubiquitin-independent, Parkin-independent).
+  [PMID:26146385 "Bcl2-L-13 binds to LC3 through the WXXI motif and induces mitochondrial fragmentation
+  and mitophagy in HEK293 cells... BH domains are important for the fragmentation, while the WXXI motif
+  facilitates mitophagy... induces mitochondrial fragmentation in the absence of Drp1, while it induces
+  mitophagy in Parkin-deficient cells"] (Murakawa 2015, Nat Commun). This grounds the existing
+  description/core_functions that were previously inferred only from UniProt.
+
+- NEW (mechanism): Phosphorylation regulates the receptor. A Ser site adjacent to the LIR
+  (Ser272, mouse numbering; human LIR is WQQI at ~276-279) tunes LC3 binding and mitophagic activity;
+  PGAM5 acts as a negative regulator by dephosphorylating BCL2L13, and BCL2L13 has been reported to
+  recruit the ULK1 complex to the mitochondrial outer membrane to initiate autophagosome formation.
+  Additional reported interactors/modulators include ULK1, PGAM5, ANT (SLC25A4), VDAC, and CERS2/CERS6.
+  Source: Kataoka 2022 review [PMID:36589739] (review-level; mechanistic detail, treat as provisional
+  where based only on review synthesis).
+
+- NEW (localization/process): Beyond the mitochondrial outer membrane, BCL2L13 also localizes at
+  ER-mitochondria contact sites / mitochondria-associated membranes (MAMs) and regulates
+  ER-mitochondria Ca2+ homeostasis in skeletal muscle. Knockdown alters cytosolic Ca2+ release and
+  mitochondrial Ca2+ uptake without changing the NUMBER of ER-mito contacts (a functional, not
+  structural, contact-site effect); Bcl2l13-KO zebrafish show impaired muscle structure/function and
+  decreased mitochondrial complex activity. [PMID:39175772 "BCL2L13 at mitochondria, ER, and
+  mitochondria-associated membranes... knockdown of BCL2L13 in C2C12 cells changes cytosolic Ca release
+  and mitochondrial Ca uptake"] (Grepper 2024, iScience). This is a genuinely new functional context
+  (Ca2+ homeostasis at MAMs) not in the existing review.
+
+- NEW (disease / context-dependent fission wiring): In glioblastoma, BCL2L13 is upregulated and
+  promotes mitochondrial fission and high mitophagy flux by targeting DNM1L at Ser616, supporting tumor
+  proliferation/invasion. This is notable because it is DNM1L(DRP1)-DEPENDENT, in apparent contrast to
+  the DRP1-independent fragmentation seen by Murakawa 2015 - i.e., context-dependent fission wiring.
+  [PMID:37660127 "BCL2L13 targeted DNM1L at the Ser616 site, leading to mitochondrial fission and high
+  mitophagy flux"] (Wang 2023, Cell Death Dis). Do NOT use this to override the DRP1-independent core
+  claim; both are valid in their respective contexts.
+
+- NEW (interactor/pathway, disease): In diabetic kidney disease, BCL2L13 was identified by LC-MS/MS as
+  an interacting partner of the inner-membrane protease YME1L; YME1L promotes BCL2L13 phosphorylation,
+  strengthening BCL2L13-LC3 binding and mitophagy to restrain renal tubular senescence.
+  [PMID:38494498 "BCL2L13... as an interacting partner of YME1L. Furthermore, YME1L was found to
+  promote the phosphorylation of BCL2L13"] (Luo 2024, Biol Res). New YME1L interactor.
+
+- NEW (disease, prognosis): In clear-cell and papillary renal cell carcinoma, BCL2L13 is downregulated
+  and lower expression correlates with poorer prognosis (independent of grade); BCL2L13 is positively
+  correlated with and acts through SLC25A4/ANT in its pro-apoptotic pathway. [PMID:34193180
+  "Down-regulation of BCL2L13 renders poor prognosis in ccRCC and pRCC... actively correlates with
+  SLC25A4"] (Meng 2021, Cancer Cell Int). Contrasts with the pro-survival/oncogenic role in GBM,
+  reinforcing strong context/tissue dependence.
+
+- PROVISIONAL / not used to change annotations: a 2024 study reports miR-449b-5p directly targets the
+  BCL2L13 3'UTR in hypoxic AC16 cardiomyocytes, with BCL2L13 suppression being protective via PI3K/AKT
+  (Jiang 2024, Appl Biochem Biotechnol, DOI 10.1007/s12010-024-04931-5; 0 citations at report time).
+  Low-confidence/peripheral to GO core function; kept in notes only, no PMID added to the review.
+
+Curation impact: existing annotation actions are unchanged. The new primary references (Murakawa 2015,
+Kataoka 2022, Grepper 2024, Wang 2023, Luo 2024, Meng 2021) are added to references: as statement-only
+findings. Murakawa 2015 now provides a citable primary basis for the mitophagy-receptor core function.
+Grepper 2024 (ER-mito contact / Ca2+) and the YME1L/SLC25A4 interactors are the main genuinely-new
+biology; added suggested questions/experiments accordingly.
