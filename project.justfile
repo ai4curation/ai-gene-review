@@ -245,6 +245,28 @@ gene-hypothesis-research-all-core provider organism gene *args="":
 gene-hypothesis-research-combined-core provider organism gene *args="":
     uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} {{provider}} {{args}}
 
+# ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
+
+# Mine review prose and the publications corpus for assay/readout usage, then
+# QC + flag re-review candidates. Always inspect reports/*matched_string_counts*
+# for substring false positives before trusting a class total.
+assay-mine *args="":
+    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py {{args}}
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py {{args}}
+
+assay-flag *args="":
+    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
+
+# Stage (human-gated) OpenScientist hypothesis prompts from flagged_candidates.tsv.
+# This writes committed prompt.md files and prints submit commands but NEVER
+# submits a (paid) job. Reserve submission for cases where a cited literature
+# adjudication actually changes the curation decision.
+# Examples:
+#   just assay-stage-hypotheses --discriminator indirect_ligand --max 5
+#   just assay-stage-hypotheses --gene STAT3 --go-id GO:0030335
+assay-stage-hypotheses *args="":
+    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py {{args}}
+
 # Term deep research (open-ended biological concepts)
 # Examples:
 #   just term-deep-research-openai "JAK-STAT pathway"

@@ -316,6 +316,94 @@ discriminator over-fires on *dedicated* cytokines/growth factors, whose
 regulated processes can be core. The better axis is **signature vs incidental**
 (see `RUBRIC.md`).
 
+## Catalog extension — 12 new readout classes
+
+The catalog was extended beyond the seed hubs to cover more phenotypic assay
+families: **cell migration/invasion** (scratch, Transwell, Boyden, Matrigel),
+**cell adhesion/spreading**, **membrane trafficking/endocytosis** (transferrin/
+FM4-64/dextran uptake), **secretion/degranulation** (LDH release, CD107a,
+β-hexosaminidase), **metabolic flux** (Seahorse/OCR/ECAR, 2-NBDG glucose uptake),
+**DNA-damage foci** (γH2AX, comet, 53BP1/RAD51 foci), **senescence** (SA-β-gal,
+SASP), and pathway-specific transcriptional reporters for **Wnt** (TOPFlash),
+**NF-κB**, **hypoxia** (HRE/HIF), **Notch** (RBP-J/CSL), and **Hippo** (TEAD/GTIIC).
+Each class got an `aligned_label_regex`, `commonly_overmapped_to` GO IDs, regex
+patterns, and a necessary-superset literal `SCREEN` entry.
+
+`mine_papers.py` now also emits **`reports/paper_matched_string_counts.tsv`** — a
+corpus-level matched-substring QC (counted once per paper), the publications
+analogue of the prose miner's QC and the place substring bugs actually surface.
+
+### QC caught one substring bug
+`\bOCR\b` (oxygen consumption rate) matched the *C. elegans* **ocr-2** TRPV-channel
+gene (19 false hits). Dropped bare `OCR`; the class now relies on the spelled-out
+"oxygen consumption rate" / Seahorse / ECAR. After the fix
+`paper_matched_string_counts.tsv` is clean across all 12 new classes.
+
+### The aspect constraint generalizes
+
+Aligned annotations per new class (publications corpus):
+
+| readout_class | aligned N | aspect | non-core demotion |
+|---|--:|---|---|
+| CELL_MIGRATION_INVASION | 35 | **BP 37, MF 0** | 16/35 NON_CORE |
+| DNA_DAMAGE_FOCI | 36 | **BP 32, CC 4, MF 0** | (mostly machinery) |
+| WNT_REPORTER | 17 | **BP 15**, MF 1, CC 1 | 8/17 NON_CORE |
+| MEMBRANE_TRAFFICKING_ENDOCYTOSIS | 14 | **BP 12, CC 2, MF 0** | 7/14 NON_CORE |
+| SENESCENCE | 9 | **BP 9, MF 0** | 6/9 NON_CORE |
+| NFKB_REPORTER | 6 | **BP 7, MF 0** | 4/6 NON_CORE |
+| CELL_ADHESION_SPREADING | 4 | BP 4 | under-powered |
+| METABOLIC_FLUX | 3 | BP 3 | under-powered |
+| HYPOXIA_HIF | 2 | BP 2 | under-powered |
+| SECRETION_DEGRANULATION | 1 | BP 2 | under-powered |
+| NOTCH_REPORTER / HIPPO_TEAD | ~0 | — | under-powered |
+
+Every new class is BP/CC-dominant with ~zero MF (the sole MF, LRRK2 *β-catenin
+destruction complex binding*, is a binding MF already non-core), and the
+well-powered ones show the predicted elevated non-core demotion. The same
+BP-not-MF, default-non-core regime holds.
+
+### Re-review: machinery vs signature, again
+
+The standing-`ACCEPT` candidates in the new classes are, on re-review, almost all
+correctly curated — the flagger's precision on accepted calls remains low:
+
+- **Machinery → core (KEEP):** BRCA1/2, CHD1, RAD18 (DNA-damage); CLTC, TFRC
+  (endocytosis); CTNNB1, AXIN1, FZD7 (Wnt); TRAF6 (NF-κB); ARNT/HIF-1β (hypoxia);
+  TP53 (senescence) — the "core only if in the machinery" discriminator.
+- **Signature ligand outputs → core (DECLINE):** the `CELL_MIGRATION_INVASION`
+  `indirect_ligand` cluster (CCL11, PDGFA/B, VEGFA, HMGB1) is exactly the
+  signature-vs-incidental over-firing the rubric's caveat predicts — chemotaxis
+  *is* a chemokine's job; PDGF migration is already in `core_functions`.
+- **Genuine non-core/borderline → defer:** **STAT3 → positive regulation of cell
+  migration (GO:0030335, ×2 IMP)** — a transcription factor whose migration role
+  is a downstream transcriptional consequence, not motility machinery. High-profile
+  and contested (oncogenic EMT driver vs downstream), so set `ACCEPT → UNDECIDED`,
+  opened [issue #1422](https://github.com/ai4curation/ai-gene-review/issues/1422),
+  and staged + submitted a cited OpenScientist hypothesis job (see below) rather
+  than unilaterally demoting. See [`ASSAY_TO_FUNCTION/EDITS.md`](ASSAY_TO_FUNCTION/EDITS.md).
+
+## Cited-adjudication complement: staged OpenScientist jobs
+
+For borderline / signature-vs-incidental disputes, the project stages
+openscientist.io hypothesis jobs as a *cited literature complement* (the pattern
+from the IL21 #1418 run). A human-gated generator turns selected
+`flagged_candidates.tsv` rows into committed, frontmatter-free `prompt.md` files:
+
+```bash
+# stage prompts (writes prompt.md, prints submit commands, NEVER submits)
+uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py --discriminator indirect_ligand --max 5
+uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py --gene STAT3 --go-id GO:0030335
+# or: just assay-stage-hypotheses --gene STAT3 --go-id GO:0030335
+```
+
+It reuses `scripts/gene_hypothesis_deep_research.py` so staged prompts are
+identical to what that tool submits, specialized to the "core function vs
+downstream/context-dependent consequence?" question. A human reviews the staged
+prompts and submits only the few worth a paid (~15–30 min) job. The STAT3 job was
+run as the worked example; its verdict is posted to #1422 and treated as
+hypothesis-generating synthesis to verify against the cited PMIDs — the annotation
+stays `UNDECIDED` until an expert decides.
+
 ## Next steps
 
 1. **Curator triage** of the ranked `flagged_candidates.tsv`, starting with the
