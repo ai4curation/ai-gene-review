@@ -50,8 +50,38 @@ node (no behavior change — the mappings still propagate):
   `ext_mapping.yaml`; `test_ext_mapping_schema.py`, `test_pn_mapping_coverage.py`,
   and `test_pn_projection.py` all pass.
 
+## V-ATPase `GO:0007042 lysosomal lumen acidification` (follow-up 2)
+
+The PN workbook files all seven batch-4 acidification genes under
+`…|Lysosomal acidification|…` (the V-ATPase subunits as `V0/V1 lysosomal
+v-ATPase proton pump component`; CLCN7 as `Miscellaneous function - lysosomal
+acidification`), so the `GO:0007042` projection is internally consistent with
+PN membership. Reviewed gene by gene:
+
+- **Not added to any gene review.** The reviews are deliberately (and
+  defensibly) more conservative/specific than the projection:
+  - V-ATPase subunits used the broader parent `GO:0007035 vacuolar
+    acidification` (GO:0007042 is_a GO:0007035), appropriate for pleiotropic
+    pump subunits that acidify multiple compartments.
+  - `ATP6V1G2` (neuronal isoform) used `GO:0097401 synaptic vesicle lumen
+    acidification`; `ATP6V1E2` (testis isoform) localizes to the acrosomal
+    vesicle — neither is primarily lysosomal.
+  - `CLCN7`: its causal role in lysosomal lumen acidification *specifically*
+    is contested (knockout lysosomes still acidify; ClC-7's main role is
+    luminal Cl⁻ accumulation), so the review asserts chloride/proton antiporter
+    activity + chloride transport as the direct function and keeps acidification
+    as a non-core/context role.
+
+- **Mapping correction:** added gene-level `excluded_subjects` (ATP6V1E2,
+  ATP6V1G2) to the ALP `…|Regulation of lysosomal environment|Lysosomal
+  acidification` → `GO:0007042` node, with a note recording the
+  isoform-compartment specificity and the CLCN7 contested-causality caveat.
+  Verified: after the edit ATP6V1E2/ATP6V1G2 no longer receive GO:0007042
+  while the other five (ATP6V0E2, ATP6V1B1, ATP6V1C2, ATP6V1G3, CLCN7) retain
+  it.
+
 ## Not changed
 
 - No edits to the PN workbook itself (it is an external resource).
-- The V-ATPase `GO:0007042 lysosomal lumen acidification` question is tracked
-  separately (follow-up 2).
+- No `GO:0007042` annotations were added to the seven gene reviews (the reviews
+  were already the more defensible representation).
