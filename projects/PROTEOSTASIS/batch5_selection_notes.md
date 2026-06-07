@@ -133,3 +133,38 @@ For each gene:
 - **Compartment specificity:** assign ER vs mitochondrial vs cytosolic
   localization carefully (e.g. DNAJC11/15/19/30 mitochondrial; DNAJB11/C1/C3/C10
   ER-lumenal/membrane).
+
+## Feedback into the PN mapping sets (2026-06-07)
+
+The batch-5 gene reviews were fed back into the curated PN source-code -> GO
+mapping YAMLs (`projects/PROTEOSTASIS/mappings/`). Changes:
+
+- **Correction (er_proteostasis):** the `Protein disulfide isomerase reoxidation`
+  type node was retargeted from `GO:0003756` (PDI activity) to `GO:0016971`
+  (flavin-dependent sulfhydryl oxidase activity); ERO1A/ERO1B are PDI-reoxidizing
+  oxidases, not isomerases. ERO1A/ERO1B were ALSO added to the parent
+  `Protein disulfide isomerases` group `excluded_subjects` so the parent
+  PDI-activity term no longer double-propagates to them.
+- **Exclusions:** ERP27, ERP29 (non-catalytic, no CXXC) from the PDI group;
+  DNAJC27 (Rab/J MEK-ERK scaffold) from the cytonuclear J-domain cochaperone
+  node; DNAJC11 (structural MIB/MICOS subunit) from the mitochondrial J-domain
+  node; HSPA13/STCH (atypical, truncated SBD) from the ER HSP70 node; STIP1
+  from the CMA `Substrate selection` node (no CMA evidence).
+- **Confirmations + provenance:** added `file:` gene-review references to the
+  HSP90-cochaperone (FKBP4/5/8/FKBPL), small-HSP (HSPB2/3/7/8/9), cytonuclear
+  HSP70 (HSPA14), GET-pathway (SGTA), collagen processing (SERPINH1/PPIB/P4HB),
+  CASA/aggrephagy (HSPB8/STUB1), and mitophagy (FKBP8) nodes, with curation
+  notes (incl. that GO:0001671 / GO:0051082 are the more-specific J-protein /
+  small-HSP MFs supported at the gene level).
+
+Verified by re-running the PN projection against the affected genes: the
+excluded gene-GO pairs are gone and ERO1A/B project only to GO:0016971.
+
+**Caveat:** the canonical candidate-additions report
+(`reports/pn_projection/pn_projected_candidate_additions.tsv`) was NOT
+regenerated in this session because the DuckDB GOA source
+(`~/repos/go-db/db/goa_human.ddb`) is unavailable here; regenerating against
+only the local `genes/human` GOA folders would mark ~3000 workbook genes as
+`no_local_goa` and degrade the committed report. The projection should be
+regenerated against the DuckDB GOA source to propagate these mapping edits into
+the candidate queue.
