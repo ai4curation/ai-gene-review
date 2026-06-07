@@ -102,6 +102,16 @@ BP, reproducing the proximity axis. The 27 new phenotypic-hub flags are all
 degradation/proteostasis **machinery** (PSMA1/PSMB5 proteasome subunits, CUL3
 cullin E3, CDC37/PEX19 chaperones) — correctly core, so **no YAML edits**.
 
+## Fifth batch (9 more classes) — no edits
+
+Added 5 molecular MF-licensing classes (methyltransferase, acetyltransferase/
+deacetylase, phosphatase, polymerase, helicase) and 4 phenotypic hubs (cyclic
+nucleotide, cytotoxicity/killing, cytokine production, histone marks); catalog now
+52 classes. Axis reproduced (acetyltransferase MF 59 … vs histone-mark BP 13 …).
+The 11 new phenotypic-hub flags are all chromatin **machinery** (RTT109, SET1,
+CHD1, ASF1) or **signature** GPCR signaling (ADRB2, Drd1) — correctly core, so
+**no YAML edits**.
+
 ## Method note
 
 These edits are the curation output of the pipeline in

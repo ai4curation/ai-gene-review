@@ -480,6 +480,31 @@ deferred to avoid `cAMP`→"hippocampus"/"campaign". The 27 new phenotypic-hub
 flags are again all **machinery** (PSMA1/PSMB5 proteasome subunits, CUL3 cullin
 E3, CDC37/PEX19 chaperones) — correctly core, **no edits**.
 
+### Fifth batch: epigenetic enzymes, immune readouts, second messengers
+
+A fifth batch (9 classes; catalog now **52** readout classes) added epigenetic
+writers/erasers, immune assays, and the second-messenger class — done safely —
+and reproduced the axis a fifth time. Molecular catalytic readouts → **MF**:
+ACETYLTRANSFERASE_DEACETYLASE MF 59, POLYMERASE_ACTIVITY MF 15, PHOSPHATASE MF 8,
+METHYLTRANSFERASE MF 7, HELICASE MF 7 (with supporting refs: acetyl MF 76,
+polymerase MF 26). Phenotypic state readouts → **BP**: HISTONE_MARK (H3K4me3 etc.)
+BP 13, CYCLIC_NUCLEOTIDE_SIGNALING BP 10, CYTOKINE_PRODUCTION BP 7,
+CYTOTOXICITY_KILLING BP 3.
+
+The histone-mark vs methyltransferase/acetyltransferase pair is a nice epigenetic
+echo of the reporter-vs-ChIP one: the **enzyme assay** (HAT/HDAC/HMT) licenses an
+MF, while the **mark state** (H3K4me3, H4K16ac) is a downstream BP chromatin
+readout. The cyclic-nucleotide class was added without the `cAMP`→"hippocampus"
+substring trap by requiring an explicit assay/level/sensor context.
+
+QC clean. The 11 new phenotypic-hub flags are again machinery or signature —
+chromatin enzymes (RTT109 HAT, SET1 methyltransferase, CHD1 remodeler, ASF1
+chaperone) and GPCRs whose cyclase-activating signaling *is* their signature
+(ADRB2, Drd1) — correctly core, **no edits**.
+
+The proximity axis has now held across **five independent batches** spanning ~30
+molecular-vs-phenotypic assay families (43→52 classes).
+
 ## Cited-adjudication complement: staged OpenScientist jobs
 
 For borderline / signature-vs-incidental disputes, the project stages

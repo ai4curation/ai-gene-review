@@ -293,3 +293,20 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   nucleotide DROPPED this round to avoid cAMP->"hippocampus"/"campaign". QC clean.
 - Flags (27) all machinery again (PSMA1/PSMB5 proteasome subunits, CUL3 cullin,
   CDC37/PEX19 chaperones) -> correctly core, NO edits.
+
+## 2026-06-07 (cont.) — 9 more classes (epigenetic/immune/2nd messenger) -> 52 total
+
+- Molecular: METHYLTRANSFERASE_ACTIVITY, ACETYLTRANSFERASE_DEACETYLASE,
+  PHOSPHATASE_ACTIVITY, POLYMERASE_ACTIVITY, HELICASE_ACTIVITY. Phenotypic:
+  CYCLIC_NUCLEOTIDE_SIGNALING, CYTOTOXICITY_KILLING (51Cr/killing),
+  CYTOKINE_PRODUCTION (ELISpot/ICS), HISTONE_MARK (H3K4me3 etc.).
+- Axis holds (5th time): acetyltransferase MF59, polymerase MF15, phosphatase MF8,
+  methyltransferase MF7, helicase MF7 (MF) vs histone-mark BP13, cyclic-nucleotide
+  BP10, cytokine BP7, cytotoxicity BP3 (BP). Nice epigenetic pair: enzyme assay
+  (HAT/HMT) = MF, mark state (H3K4me3) = BP.
+- Cyclic nucleotide added SAFELY: bare cAMP avoided (IGNORECASE \bcAMP\b hits
+  "camp"; substring collides w/ hippocampus/campaign); required assay/level/sensor
+  context. HAT requires "HAT assay/activity" not bare "hat". QC clean.
+- Flags (11) machinery/signature again: chromatin enzymes (RTT109 HAT, SET1 HMT,
+  CHD1 remodeler, ASF1 chaperone) + GPCRs whose cyclase signaling is signature
+  (ADRB2, Drd1) -> correctly core, NO edits.
