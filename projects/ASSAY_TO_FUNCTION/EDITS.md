@@ -122,3 +122,13 @@ re-review against the actual file evidence. The key discipline: a flag is a
 a different, more proximal core function — and is declined when the "downstream"
 process is itself the gene's defining role (VEGFA EC proliferation, IL21 immune
 outputs).
+
+## Sixth batch (8 more classes) — no edits
+
+Added 4 molecular MF-licensing classes (RNA-binding/CLIP, transporter uptake,
+chaperone refolding, glycosyltransferase) and 4 phenotypic hubs (EMT, stemness/
+sphere, protein aggregation, inflammasome/pyroptosis); catalog now 60 classes.
+Axis reproduced (chaperone MF 49 … vs aggregation BP 22 …). The 23 new
+phenotypic-hub flags are all chaperone/Wnt machinery (BAG3, CLU, CRYAB, FZD7),
+the amyloid precursor APP, or signature anti-inflammatory cytokines (IL10,
+IL36RN) — correctly core, so **no YAML edits**.

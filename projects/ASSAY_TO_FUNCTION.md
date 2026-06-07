@@ -505,6 +505,31 @@ chaperone) and GPCRs whose cyclase-activating signaling *is* their signature
 The proximity axis has now held across **five independent batches** spanning ~30
 molecular-vs-phenotypic assay families (43→52 classes).
 
+### Sixth batch: RNA-binding, transport, chaperone, glyco; EMT/stemness/aggregation/inflammasome
+
+A sixth batch (8 classes; catalog now **60** readout classes) reproduced the axis
+a sixth time. Molecular → **MF**: CHAPERONE_REFOLDING MF 49, GLYCOSYLTRANSFERASE
+MF 12, RNA_BINDING_CLIP MF 8, TRANSPORTER_UPTAKE MF 7 (supporting refs: chaperone
+MF 85, transporter MF 25, glyco MF 21, RNA-binding MF 14). Phenotypic → **BP**:
+PROTEIN_AGGREGATION BP 22 (+MF 12 from amyloid-*binding* terms), INFLAMMASOME_
+PYROPTOSIS BP 15, EMT_MARKERS BP 9, STEMNESS_SPHERE BP 7. RNA_BINDING_CLIP is the
+RNA counterpart of CHROMATIN_CHIP (CLIP/RIP/REMSA → RNA-binding MF). QC clean; the
+bare-`RIP` trap (receptor-interacting protein) was dodged by requiring RIP-seq /
+RIP assay / RNA immunoprecipitation.
+
+The 23 new phenotypic-hub flags are again machinery or signature: anti-aggregation
+chaperones (BAG3, CLU, CRYAB — *negative regulation of amyloid fibril formation*
+is their function), APP (the amyloid precursor itself), FZD7 (Wnt receptor →
+stemness), and anti-inflammatory cytokines whose signature *is* inflammation
+regulation (IL10, IL36RN) — correctly core, **no edits**.
+
+**Six batches, ~36 assay families, 12→60 classes: the proximity axis is robust.**
+Across every batch, a readout of the gene product's own activity (catalysis,
+binding, transport) licenses MF, while a downstream phenotype licenses BP/CC and
+~never MF; and every standing-`ACCEPT` flag re-reviewed to machinery or a signature
+output, so the flagger's curation value remains on unreviewed annotations rather
+than re-litigating accepted core calls.
+
 ## Cited-adjudication complement: staged OpenScientist jobs
 
 For borderline / signature-vs-incidental disputes, the project stages

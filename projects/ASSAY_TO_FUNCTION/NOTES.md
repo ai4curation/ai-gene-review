@@ -310,3 +310,20 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
 - Flags (11) machinery/signature again: chromatin enzymes (RTT109 HAT, SET1 HMT,
   CHD1 remodeler, ASF1 chaperone) + GPCRs whose cyclase signaling is signature
   (ADRB2, Drd1) -> correctly core, NO edits.
+
+## 2026-06-07 (cont.) — 8 more classes (RNA/transport/chaperone/glyco; EMT/stem/aggreg/inflammasome) -> 60 total
+
+- Molecular: RNA_BINDING_CLIP (RNA counterpart to ChIP), TRANSPORTER_UPTAKE,
+  CHAPERONE_REFOLDING, GLYCOSYLTRANSFERASE_ACTIVITY. Phenotypic: EMT_MARKERS,
+  STEMNESS_SPHERE, PROTEIN_AGGREGATION (ThT/amyloid), INFLAMMASOME_PYROPTOSIS.
+- Axis holds (6th): chaperone MF49, glyco MF12, RNA-binding MF8, transporter MF7
+  (MF) vs aggregation BP22, inflammasome BP15, EMT BP9, stemness BP7 (BP).
+  Supporting: chaperone MF85, transporter MF25.
+- Substring trap dodged: bare RIP (receptor-interacting protein) avoided -> require
+  RIP-seq/RIP assay/RNA immunoprecipitation. QC clean (eclip/iclip/par-clip,
+  [3h]dopamine, holdase/foldase, gsdmd/pyroptosis, aggresome/thioflavin all real).
+- Flags (23) machinery/signature again: anti-aggregation chaperones (BAG3/CLU/
+  CRYAB), APP (amyloid precursor), FZD7 (Wnt receptor), anti-inflammatory cytokines
+  (IL10/IL36RN) -> correctly core, NO edits.
+- Milestone: 6 batches, 12->60 classes; proximity axis robust; flagger value is on
+  unreviewed annotations, not re-litigating accepted core calls.
