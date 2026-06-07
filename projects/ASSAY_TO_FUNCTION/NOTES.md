@@ -327,3 +327,16 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
   (IL10/IL36RN) -> correctly core, NO edits.
 - Milestone: 6 batches, 12->60 classes; proximity axis robust; flagger value is on
   unreviewed annotations, not re-litigating accepted core calls.
+
+## 2026-06-07 (cont.) — consolidation pass (deliverable)
+
+- Built consolidate.py: reads readout_catalog.yaml + paper_readout_matches.tsv,
+  emits reports/catalog_summary.tsv (60 rows), reports/catalog_table.md (full
+  molecular-vs-phenotypic quick-ref), reports/proximity_axis.png (stacked aligned-
+  aspect bars, molecular grouped above phenotypic). just assay-consolidate.
+- HEADLINE (one line): aligned MF fraction molecular 77% (567/738) vs phenotypic
+  8% (90/1087). The phenotypic 8% is ~all TRANSCRIPTIONAL_REPORTER (MF72/90, the
+  legit TF exception); without it ~2%. Lone molecular outlier PROTEASOME (2% MF —
+  reads as catabolic process/complex, i.e. machinery).
+- Folded headline + figure + links into RUBRIC.md and ASSAY_TO_FUNCTION.md. Catalog
+  reference is now auto-generated/reproducible rather than hand-maintained.

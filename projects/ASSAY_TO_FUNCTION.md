@@ -204,6 +204,26 @@ non-specific organelle-health readout that gets refined to more proximal terms.
   which are refinements, not errors. The hard `rm/OA%` and the aspect/non-core
   breakdowns are the discriminating signals, not the raw downgrade rate.
 
+## Consolidated catalog (deliverable)
+
+`ASSAY_TO_FUNCTION/consolidate.py` folds the 60-class catalog and the mined
+aligned matches into a single summary — `reports/catalog_summary.tsv`,
+`reports/catalog_table.md` (a complete molecular-vs-phenotypic quick-reference),
+and `reports/proximity_axis.png` (the summary figure).
+
+```bash
+uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py
+```
+
+**One-line result:** across thematically-aligned annotations, the licensed GO
+aspect tracks **proximity** — **molecular readouts 77% MF (567/738) vs phenotypic
+hubs 8% MF (90/1087)**, a ~10× separation over 60 assay families. The phenotypic
+8% is almost entirely the legitimate `TRANSCRIPTIONAL_REPORTER → TF-activity`
+exception (72/90; ≈2% without it); the lone molecular outlier is
+`PROTEASOME_ACTIVITY` (2% MF — read as proteostasis process/complex). See
+[`RUBRIC.md`](ASSAY_TO_FUNCTION/RUBRIC.md#consolidated-catalog-all-60-classes) for
+the figure and table.
+
 ## The rubric (deliverable)
 
 The grounded, curator-facing rubric is in [`ASSAY_TO_FUNCTION/RUBRIC.md`](ASSAY_TO_FUNCTION/RUBRIC.md)

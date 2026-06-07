@@ -43,6 +43,37 @@ Is the evidence a state/phenotype readout (not a molecular assay of G)?
                        gene's real function clearly lies elsewhere).
 ```
 
+## Consolidated catalog (all 60 classes)
+
+The catalog now spans **60 readout classes** across six mining batches. The full
+machine-readable summary (per-class proximity/convergence, aligned-annotation
+GO-aspect counts, %MF, licensing) is auto-generated:
+
+- `reports/catalog_summary.tsv` — one row per class
+- `reports/catalog_table.md` — the same as a Markdown quick-reference (molecular vs
+  phenotypic), regenerated from the catalog + mined matches
+- `reports/proximity_axis.png` — the summary figure
+
+```bash
+uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py
+```
+
+**The headline, in one line:** across thematically-aligned annotations, the GO
+aspect a readout licenses is set by **proximity** —
+
+> **molecular readouts → 77% MF (567/738); phenotypic hubs → 8% MF (90/1087).**
+
+…and that 8% is almost entirely the *legitimate* `TRANSCRIPTIONAL_REPORTER →
+DNA-binding-TF-activity` exception (MF 72 of the 90); excluding it, phenotypic MF
+≈ 2%. The one molecular outlier is `PROTEASOME_ACTIVITY` (2% MF) — its aligned
+terms are the catabolic-*process* / *complex*, i.e. it reads as proteostasis
+machinery rather than a bare endopeptidase MF.
+
+![proximity axis](reports/proximity_axis.png)
+
+The curated quick-reference below keeps the headline over-annotation hubs with
+their machinery discriminators; see `catalog_table.md` for the exhaustive list.
+
 ## Quick reference
 
 | Readout class | Licenses | Never | Default | Core only if G is… |
