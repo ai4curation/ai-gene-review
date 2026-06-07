@@ -67,3 +67,23 @@ The Falcon deep-research report corroborates and does not contradict the existin
   - GO:0005938 cell cortex (two entries, PMID:25843888): title / paraphrase -> verbatim "Phosphorylated BASL functions as a scaffold and recruits the MAPKKK YODA and MPK3/6 to spatially concentrate signaling at the cortex". (The earlier "Recruited by BASL at the cell cortex in a polarized manner" was a paraphrase, not an exact substring.)
 - Remaining bare-title supporting_text instances are all on action: REMOVE annotations (uninformative protein binding being removed) and high-throughput interactome screens; left as-is as lower priority.
 - Validation: `uv run ai-gene-review validate genes/ARATH/MPK6/MPK6-ai-review.yaml` -> Valid (2 pre-existing unrelated warnings). All supporting_text now exact substrings of cited sources.
+
+## PR review follow-up: title-as-supporting_text on non-REMOVE annotations (2026-06-07)
+
+Reviewer (ai4c-agent) flagged ~19 annotations whose supporting_text was merely the cited paper's title. Focused on the NON-REMOVE subset (ACCEPT / KEEP_AS_NON_CORE). Replaced bare titles with verbatim excerpts:
+- GO:0106310 protein serine kinase activity (ACCEPT, PMID:15500467) -> "transient activation of 43 and 45 kDa MAPKs. These were identified as AtMPK3 and AtMPK6".
+- GO:0009738 ABA-activated signaling (KEEP, PMID:27913741) -> "The activity of MPK6 was increased by ABA ... the AIK1-MKK5-MPK6 cascade functions in the ABA regulation of primary root growth and stomatal response".
+- GO:1902065 response to L-glutamate (KEEP, PMID:29344832) -> "In-gel phosphorylation assays revealed a rapid and dose-dependent induction of MPK6 and MPK3 activities ... in response to L-Glu".
+- GO:0006468 protein phosphorylation (ACCEPT, PMID:29056553) -> "mitogen-activated protein kinase 3 (MPK3) and MPK6 interact with and phosphorylate ICE1, which reduces its stability and transcriptional activity".
+- GO:0050826 response to freezing (KEEP, PMID:29056553) -> "the mpk3 and mpk6 single mutants and the mpk3 mpk6 double mutants show enhanced freezing tolerance, whereas MPK3/MPK6 activation attenuates freezing tolerance".
+- GO:0009555 pollen development (KEEP, PMID:24830428) -> "epitope-tagged WRKY34 is temporally phosphorylated by MPK3 and MPK6 ... at early stages in pollen development".
+- GO:0009620 response to fungus (KEEP, PMID:21947882) -> "It was observed that the expression of both MAP2K9 and MAPK6 simultaneously increased up to middle stage of disease progression".
+- GO:0010224 response to UV-B (KEEP, PMID:21790814) -> "The MKP1-interacting proteins MPK3 and MPK6 are activated by UV-B stress ... mutants mpk3 and mpk6 exhibit elevated UV-B tolerance".
+- GO:0080136 priming of cellular response to stress (KEEP, PMID:19318610) -> "priming is associated with accumulation of mRNA and inactive proteins of ... MPK3 and MPK6. Upon challenge exposure ... more strongly activated in primed plants".
+- GO:0048481 plant ovule development (KEEP, PMID:18364464) -> "two closely related mitogen-activated protein kinases ... MPK3 and MPK6, share a novel function in ovule development ...".
+- GO:0042542 response to hydrogen peroxide (KEEP, PMID:17933903) -> "MPK6 and MPK7 were both activated by H(2)O(2), but only MPK7 activation was enhanced by MKK3".
+
+Set to UNDECIDED (no quotable evidence in cached source):
+- GO:0005829 cytosol (was ACCEPT, HDA, PMID:28887381): cached publication text (a global membrane-protein oligomerization proteomics study) does not mention MPK6/MAPK6 or its localization; the assignment lives only in supplementary dataset tables not present in the cached markdown, so no verbatim excerpt can substantiate it. Action -> UNDECIDED.
+
+REMOVE annotations with bare-title supporting_text left as-is (out of scope; REMOVE stands on the protein-binding curation guideline).
