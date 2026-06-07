@@ -124,4 +124,61 @@ existing molecular-function term is GO:0140311 "protein sequestering activity"? 
 mitophagy receptor activity. Existing process term GO:0000423 "mitophagy" (in UniProt DR but not in GOA
 seeded set) and GO:1905037 "autophagosome organization" are relevant. I propose adding the molecular
 function for the cargo-receptor/Atg8-binding role.
-</content>
+
+## Falcon deep research findings (2026-06-07)
+
+The Falcon report (BNIP3L-deep-research-falcon.md) reinforces the established mitophagy-receptor core
+already in the review, and adds several mechanistic/regulatory findings (mostly 2022-2024) not previously
+captured. PMIDs below were resolved from the report DOIs via PubMed and verified by title.
+
+- CONFIRMS (core): NIX is an OMM tail-anchored selective-autophagy (mitophagy) receptor that engages
+  ATG8/LC3-GABARAP via its LIR and is central to programmed mitochondrial clearance in erythroid
+  maturation; also contributes to basal mitophagy. Consistent with existing GO:1901524 / GO:0005741 /
+  PMID:20200478 annotations. [PMID:39377319 Niemi & Friedman 2024 review "Coordinating BNIP3/NIX-mediated
+  mitophagy in space and time"]; [PMID:34597467 Marinkovic & Novak 2021 review].
+
+- NEW (mechanism — initiation beyond LC3 binding): Beyond the LIR, NIX has a minimal essential region
+  (MER) that binds and recruits the autophagy effector WIPI2 to mitochondria; both LIR and MER are
+  required for robust mitophagy, and the LIR reorganizes WIPI2 into puncta even without ATG8s. This
+  places NIX-driven initiation downstream of canonical initiation complexes. [PMID:37621214 Bunker et al.
+  2023 "Nix interacts with WIPI2 to induce mitophagy", EMBO J].
+
+- NEW (negative regulation — receptor turnover): SCF(FBXL4) localizes to the OMM in unstressed cells and
+  constitutively ubiquitylates/degrades NIX and BNIP3 to suppress basal mitophagy; an independent CRISPR
+  screen of 606 E3 ligases identified VHL and FBXL4 as the strongest negative regulators of basal
+  mitophagy (VHL acts indirectly by limiting HIF-1alpha-driven transcription of NIX/BNIP3; FBXL4 acts
+  post-translationally). Pathogenic FBXL4 variants fail to degrade NIX/BNIP3, linking dysregulated NIX
+  turnover to FBXL4-associated mtDNA depletion syndrome (MTDPS13 / mitochondrial encephalomyopathy).
+  [PMID:37161784 Nguyen-Dien et al. 2023 "FBXL4 suppresses mitophagy by restricting the accumulation of
+  NIX and BNIP3 mitophagy receptors", EMBO J]; [PMID:37102372 Elcocks et al. 2023 "FBXL4 ubiquitin ligase
+  deficiency promotes mitophagy by elevating NIX levels", EMBO J]. The neddylation inhibitor MLN4924
+  (cullin-RING ligase inhibition) elevates NIX/BNIP3 and strongly induces mitophagy (research tool).
+
+- NEW (negative regulation — cofactor): The mitochondrial phosphatase PPTC7 is an essential cofactor for
+  SCF(FBXL4)-mediated turnover of BNIP3/NIX. A dual-localized (matrix + OMM) pool of PPTC7 acts as an
+  adaptor linking BNIP3/NIX to FBXL4; this turnover function is independent of PPTC7 catalytic
+  (phosphatase) activity in one study, and an NIX motif (Arg147-centered) is required for PPTC7 binding.
+  Pptc7-KO mice show fully penetrant perinatal lethality with metabolic defects. [PMID:38991726 Wei et al.
+  2024 "Dual-localized PPTC7 limits mitophagy through proximal and dynamic interactions with BNIP3 and
+  NIX", Life Sci Alliance]; [PMID:38992176 Nguyen-Dien et al. 2024 "PPTC7 antagonizes mitophagy by
+  promoting BNIP3 and NIX degradation via SCF", EMBO Rep].
+
+- NEW (second cargo — pexophagy): NIX is not restricted to mitochondria; it independently localizes to
+  peroxisomes and drives pexophagy (selective peroxisome autophagy), e.g. under iron chelation and during
+  cardiomyocyte/erythrocyte differentiation; Nix-null mouse tissue has higher peroxisomal content. This
+  broadens NIX cargo selectivity beyond mitochondria and is not represented in the current annotation set.
+  [PMID:36215693 Wilhelm et al. 2022 "BNIP3L/NIX regulates both mitophagy and pexophagy", EMBO J].
+
+- PROVISIONAL / context (do NOT use to change annotations): phosphoregulation of NIX activity
+  (Ser34/Ser35 near the LIR enhancing autophagosome recruitment; C-terminal Ser212 tied to monomer-dimer
+  equilibrium) and TM-domain dimerization are cited from a 2021 review (PMID:34597467) without primary
+  residue-level data in the report; TMEM11 as a spatial restrictor of BNIP3/NIX mitophagy is mentioned in
+  the 2024 review (PMID:39377319) but not primary here. A VHL-inhibitor (VH298) pexophagy study
+  (Kim et al. 2024, Molecules, doi:10.3390/molecules29020482; 0 citations at time of report) is
+  NBR1/ATG5/HIF-1alpha-dependent and only positions NIX as a plausible downstream effector — treat as
+  low-confidence/peripheral. The "field2024 role of NIX in calcium/skeletal muscle" item has no resolvable
+  journal/PMID and is not used.
+
+Net: the most material, citable NEW additions are the receptor-turnover axis (FBXL4/PPTC7; PMID:37161784,
+37102372, 38991726, 38992176), the WIPI2/MER initiation mechanism (PMID:37621214), and pexophagy
+(PMID:36215693). These augment but do not contradict any existing annotation action.
