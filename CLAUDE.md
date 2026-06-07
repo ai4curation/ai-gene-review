@@ -150,6 +150,35 @@ ActionEnum:
         
 ```      
 
+### Do not overrule curators from incomplete evidence
+
+PomBase, and the GO consortium databases generally, are highly reliable. Curators
+who make an experimental annotation (IDA, IMP, IPI, IGI, etc.) have read the **full
+text**, which is often NOT in our `publications/PMID_*.md` cache — many cached entries
+are **abstract-only** (check the `full_text_available:` field). A paper's **title or
+abstract frequently foregrounds one gene (or a paralog) while the full text also assays
+the gene being annotated** — this is normal, not a curation error.
+
+Therefore:
+
+- **Never use `REMOVE` (or assert "wrong gene / paralog mis-attribution / name confusion")
+  for an experimental annotation just because the cached title/abstract is about a
+  different gene, paralog, or organism.** You cannot see what the curator saw. If you
+  genuinely cannot verify the supporting evidence, use `UNDECIDED` (per the enum) or, if
+  the function is clearly correct for the gene, `ACCEPT` and defer to the curator.
+- Before claiming an annotation is mis-attributed, **verify the actual GO term definition**
+  (via the OLS MCP / QuickGO) and the **organism in the paper** (read the abstract; for
+  abstract-only papers, try WebSearch or the article MCP for full text). E.g. GO:0003925
+  "G protein activity" includes small monomeric GTPases; a title naming a paralog does not
+  mean the gene was not also assayed.
+- `REMOVE` is appropriate for: genuinely contradicted functions, EC/IEA mappings that are
+  demonstrably wrong, or over-propagated electronic (IEA/IBA) inferences you can argue
+  against on biological grounds — **not** for second-guessing an experimental annotation
+  whose full text you have not read.
+- Reserve confident "this reference is about organism/gene X" caveats for cases where the
+  **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
+  not infer the organism or assay details that the abstract does not state.
+
 ## Tools
 
 Use the OLS MCP to find relevant ontology terms, if the terms you need are not in existing_annotations.
