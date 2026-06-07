@@ -150,6 +150,40 @@ ActionEnum:
         
 ```      
 
+## Reviewing references
+
+Entries in the top-level `references:` list can carry an optional `reference_review` object recording
+your **manual** assessment of each reference. The `id` and `title` are machine-fetched (title comes
+from the cached `publications/PMID_xxxx.md`); `reference_review` is reviewer-supplied judgment. Use it
+especially to flag citation problems that format validation cannot catch (e.g. a well-formed PMID that
+points to the wrong paper).
+
+```yaml
+references:
+  - id: PMID:24268103
+    title: "The KCTD family of proteins: structure, function, disease relevance"
+    reference_review:
+      relevance: HIGH          # how relevant the reference is to THIS gene's function/review
+      correctness: VERIFIED    # citation correctness + scientific soundness (most salient issue)
+      review_notes: "PubMed-verified; supports the family-level 'mostly unknown' framing"
+```
+
+- **`relevance`** (`ReferenceRelevanceEnum`): `HIGH` (directly establishes/strongly informs the gene's
+  function) · `MEDIUM` (supporting/corroborating) · `LOW` (background/contextual or passing mention) ·
+  `NONE` (not relevant to this gene; candidate for removal).
+- **`correctness`** (`ReferenceCorrectnessEnum`, single-valued — record the most salient issue, detail
+  in `review_notes`): `VERIFIED` (identifier resolves to the intended, supporting paper, no soundness
+  concerns) · `UNVERIFIED` (not yet checked) · `WRONG_IDENTIFIER` (resolves to a different paper than
+  intended) · `MISCITED` (right paper, but it does not support the claim) · `DISPUTED` (correctly cited
+  but the claim is contested) · `LOW_QUALITY` (correctly cited but methodologically weak/preliminary).
+- **`review_notes`**: free text explaining the judgment (e.g. what you verified, or why it is wrong).
+
+This complements (does not replace) the existing `is_invalid` (retracted/replaced) and
+`full_text_unavailable` flags. All fields are optional; an absent `reference_review` simply means the
+reference has not been manually adjudicated. **Verify, don't trust**: confirm a PMID against PubMed (or
+anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
+LLM-generated deep-research summary asserting a citation is not sufficient.
+
 ## Tools
 
 Use the OLS MCP to find relevant ontology terms, if the terms you need are not in existing_annotations.
