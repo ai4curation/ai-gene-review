@@ -1,6 +1,7 @@
 ---
+name: pm
 description: Manage and drive forward an ongoing project, tracked in projects/ dir
-argument-hint: [PROJECT_NAME]
+argument-hint: "[PROJECT_NAME]"
 ---
 
 You should find either a file or a folder:

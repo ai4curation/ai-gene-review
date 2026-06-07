@@ -31,6 +31,9 @@ Curation decisions:
   annotations as non-core context.
 - Accept proteasome-mediated protein catabolism process annotations only when they
   stay at the proteasome-process level.
+- Avoid annotating PSMA1 as independently enabling protease activity; the reviewed
+  evidence supports a non-catalytic alpha-ring structural role, while proteolytic
+  chemistry occurs at beta subunits.
 - Mark generic protein binding as over-annotated. The interactions may be real, but
   the term does not distinguish PSMA1's proteasome-specific role.
 - Mark immune, DNA repair, apoptosis, spermatogenesis, cell-cycle, and similar

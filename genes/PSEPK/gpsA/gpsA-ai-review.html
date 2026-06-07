@@ -1,0 +1,2918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gpsA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gpsA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FC9" target="_blank" class="term-link">
+                        Q88FC9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gpsA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FC9" data-a="DESCRIPTION: gpsA (locus PP_4169) encodes the biosynthetic glyc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>gpsA (locus PP_4169) encodes the biosynthetic glycerol-3-phosphate dehydrogenase [NAD(P)+] (EC 1.1.1.94) of Pseudomonas putida KT2440. The cytoplasmic enzyme catalyzes the NAD(P)H-dependent reduction of the glycolytic intermediate dihydroxyacetone phosphate (glycerone phosphate, DHAP) to sn-glycerol 3-phosphate (G3P). G3P is the committed precursor for glycerophospholipid (membrane) biosynthesis, making GpsA the entry point that links central carbon metabolism to phospholipid synthesis. The enzyme belongs to the NAD-dependent glycerol-3-phosphate dehydrogenase family, with an N-terminal NAD(P)-binding Rossmann-like domain, and can use either NAD(H) or NADP(H) as the redox cofactor. In vivo the physiologically relevant flux is in the biosynthetic (reductive) DHAP-to-G3P direction.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is directly supported by the UniProt subcellular-location statement for this soluble dehydrogenase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GpsA is a soluble cytoplasmic enzyme; the UniProt record explicitly assigns it to the cytoplasm.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol is compatible with the cytoplasmic location but is a redundant, more specific compartment term and is not the core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt cytoplasm assignment; retained as a non-core location annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro-based transfer is misleading. GpsA is a glycerophospholipid-precursor enzyme; its substrate DHAP is a glycolytic intermediate, but the enzyme does not function in carbohydrate metabolism. The biosynthetic process terms capture its true role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The enzyme reduces DHAP to glycerol-3-phosphate to feed phospholipid synthesis, not carbohydrate metabolism; replace with the specific glycerophospholipid biosynthetic process term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046474" target="_blank" class="term-link">
+                                    glycerophospholipid biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">key precursor for phospholipid synthesis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006072" target="_blank" class="term-link">
+                                    GO:0006072
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0006072" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. The enzyme participates in glycerol-3-phosphate metabolism, but its specific role is the biosynthetic (production) branch.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A correct parent process; the more specific biosynthetic term is preferred for core annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P), the</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006650" target="_blank" class="term-link">
+                                    GO:0006650
+                                </a>
+                            </span>
+                            <span class="term-label">glycerophospholipid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0006650" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. GpsA supplies the G3P precursor for glycerophospholipid synthesis; the biosynthetic child term is more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A correct parent process; the specific glycerophospholipid biosynthetic process term better represents the gene&#39;s role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Membrane lipid metabolism; glycerophospholipid metabolism.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0016616" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but broad. This is a parent of the specific glycerol-3-phosphate dehydrogenase [NAD(P)+] activity, which is annotated; this general term is an over-annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The specific activity term GO:0047952 is present and captures the function more precisely; the general oxidoreductase class adds no information.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">sn-glycerol 3-phosphate + NAD(+) = dihydroxyacetone phosphate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046167" target="_blank" class="term-link">
+                                    GO:0046167
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0046167" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate core process. GpsA produces sn-glycerol 3-phosphate from DHAP, the defining biosynthetic step.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the UniProt function statement describing reduction of DHAP to G3P.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P), the</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046168" target="_blank" class="term-link">
+                                    GO:0046168
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0046168" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect for this gene. gpsA is the biosynthetic isozyme that produces G3P; it does not catabolize it. G3P catabolism is carried out by the distinct respiratory GlpD/GlpABC dehydrogenases. This is a family-level InterPro transfer that conflates the two directions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The biosynthetic GpsA produces rather than degrades glycerol-3-phosphate; the catabolic annotation is the wrong direction for this gene. PANTHER classifies gpsA in the biosynthetic NAD(P)+ glycerol-3-phosphate dehydrogenase family/subfamily (PTHR11728 / PTHR11728:SF1), despite the eukaryote-biased &#34;, CHLOROPLASTIC&#34; subfamily naming artifact, reinforcing the G3P-producing rather than G3P-catabolizing assignment.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">key precursor for phospholipid synthesis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">this biosynthetic isozyme (gpsA) produces G3P</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR11728:SF1; GLYCEROL-3-PHOSPHATE DEHYDROGENASE [NAD(+)] 2, CHLOROPLASTIC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046474" target="_blank" class="term-link">
+                                    GO:0046474
+                                </a>
+                            </span>
+                            <span class="term-label">glycerophospholipid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0046474" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate core process. By producing G3P, the committed precursor, GpsA feeds glycerophospholipid (membrane) biosynthesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> G3P is described as the key precursor for phospholipid synthesis, and the UniPathway assignment is glycerophospholipid metabolism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">key precursor for phospholipid synthesis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047952" target="_blank" class="term-link">
+                                    GO:0047952
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate dehydrogenase [NAD(P)+] activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0047952" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function (EC 1.1.1.94). This is the precise activity of GpsA, using NAD(H) or NADP(H).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly matches the UniProt RecName and the dual NAD(+)/NADP(+) catalytic-activity reactions (EC 1.1.1.94).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=1.1.1.94 {ECO:0000255|HAMAP-Rule:MF_00394};</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">sn-glycerol 3-phosphate + NADP(+) = dihydroxyacetone phosphate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR11728; GLYCEROL-3-PHOSPHATE DEHYDROGENASE</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The enzyme binds NAD(P) cofactor via its Rossmann-like domain, but this broad cofactor-binding term is over-annotated relative to the specific catalytic activity, and it under-represents the NADP(H) usage.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cofactor binding is implied by the specific dehydrogenase activity; the generic NAD binding term adds little and omits the NADP specificity of this enzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the NAD-dependent glycerol-3-phosphate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141152" target="_blank" class="term-link">
+                                    GO:0141152
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0141152" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate Rhea-derived sub-activity. The enzyme catalyzes the NAD(+)-linked reaction (RHEA:11092).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt catalytic-activity block records the NAD(+) reaction mapped to RHEA:11092.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">sn-glycerol 3-phosphate + NAD(+) = dihydroxyacetone phosphate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141153" target="_blank" class="term-link">
+                                    GO:0141153
+                                </a>
+                            </span>
+                            <span class="term-label">glycerol-3-phosphate dehydrogenase (NADP+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FC9" data-a="GO:0141153" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate Rhea-derived sub-activity. The enzyme also catalyzes the NADP(+)-linked reaction (RHEA:11096), reflecting its dual cofactor specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt catalytic-activity block records the NADP(+) reaction mapped to RHEA:11096.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gpsA/gpsA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">sn-glycerol 3-phosphate + NADP(+) = dihydroxyacetone phosphate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytoplasmic NAD(P)H-dependent glycerol-3-phosphate dehydrogenase that reduces dihydroxyacetone phosphate to sn-glycerol 3-phosphate, the committed precursor for glycerophospholipid (membrane) biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88FC9" data-a="FUNCTION: Cytoplasmic NAD(P)H-dependent glycerol-3-phosphate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047952" target="_blank" class="term-link">
+                            glycerol-3-phosphate dehydrogenase [NAD(P)+] activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046167" target="_blank" class="term-link">
+                                glycerol-3-phosphate biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046474" target="_blank" class="term-link">
+                                glycerophospholipid biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gpsA/gpsA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P), the</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gpsA/gpsA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">key precursor for phospholipid synthesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gpsA/gpsA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC=1.1.1.94 {ECO:0000255|HAMAP-Rule:MF_00394};</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/gpsA/gpsA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88FC9 (GPDA_PSEPK), Glycerol-3-phosphate dehydrogenase [NAD(P)+], annotated by HAMAP-Rule MF_00394</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GpsA reduces the glycolytic intermediate dihydroxyacetone phosphate to sn-glycerol 3-phosphate, the key precursor for phospholipid synthesis (EC 1.1.1.94), using NAD(H) or NADP(H), and is a cytoplasmic member of the NAD-dependent glycerol-3-phosphate dehydrogenase family.</div>
+                        
+                        <div class="finding-text">"Catalyzes the reduction of the glycolytic intermediate"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/gpsA/gpsA-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator research notes for gpsA (Q88FC9), P. putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GpsA is the biosynthetic NAD(P)H-dependent glycerol-3-phosphate dehydrogenase that produces sn-glycerol 3-phosphate for glycerophospholipid biosynthesis; the catabolic (G3P-consuming) reaction is carried out by GlpD/GlpABC.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR11728/PTHR11728-metadata.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER family PTHR11728 (NAD-DEPENDENT GLYCEROL-3-PHOSPHATE DEHYDROGENASE) and subfamily PTHR11728:SF1 (GLYCEROL-3-PHOSPHATE DEHYDROGENASE [NAD(+)] 2, CHLOROPLASTIC)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GpsA is classified in PANTHER family PTHR11728 (GLYCEROL-3-PHOSPHATE DEHYDROGENASE) and subfamily PTHR11728:SF1 (GLYCEROL-3-PHOSPHATE DEHYDROGENASE [NAD(+)] 2, CHLOROPLASTIC).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The &#34;, CHLOROPLASTIC&#34; subfamily tag is a eukaryote-biased naming artifact reflecting the plant/algal reference members; the bacterial enzyme is the biosynthetic NAD(P)+ glycerol-3-phosphate dehydrogenase that produces G3P, so the classification supports the biosynthetic (G3P-producing) GpsA assignment.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of the KT2440 genome and gene model for locus PP_4169 (gpsA); not an enzyme-specific functional study.</div>
+                        
+                        <div class="finding-text">"Complete genome sequence and comparative analysis of the metabolically"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is GpsA the sole route to sn-glycerol 3-phosphate for phospholipid biosynthesis in P. putida KT2440, or can G3P also be supplied by glycerol kinase (GlpK) under glycerol-rich conditions?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pseudomonas lipid metabolism experts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FC9" data-a="Q: Is GpsA the sole route to sn-glycerol 3-phosphate ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vivo cofactor preference (NADH vs NADPH) of P. putida GpsA, and how does it integrate with the cell&#39;s redox/NADPH balance during membrane lipid synthesis?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bacterial enzymology experts</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FC9" data-a="Q: What is the in vivo cofactor preference (NADH vs N..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant P. putida GpsA and measure steady-state kinetics for DHAP reduction with NADH and with NADPH to quantify dual cofactor specificity and the preferred physiological direction.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: enzyme kinetics assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FC9" data-a="EXPERIMENT: Express and purify recombinant P. putida GpsA and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a gpsA deletion in KT2440 and test for glycerol-3-phosphate auxotrophy and membrane phospholipid defects, with complementation to confirm the biosynthetic role.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: gene knockout / complementation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FC9" data-a="EXPERIMENT: Construct a gpsA deletion in KT2440 and test for g..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use isotopically labeled glucose/DHAP and lipidomics to trace flux through GpsA into sn-glycerol 3-phosphate and downstream glycerophospholipids in KT2440.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: metabolite tracing</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FC9" data-a="EXPERIMENT: Use isotopically labeled glucose/DHAP and lipidomi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gpsA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FC9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gpsa-q88fc9-pseudomonas-putida-kt2440-psepk">gpsA (Q88FC9) — Pseudomonas putida KT2440 (PSEPK)</h1>
+<p>Glycerol-3-phosphate dehydrogenase [NAD(P)+], biosynthetic. Locus PP_4169.<br />
+UniProt entry GPDA_PSEPK; evidence level PE 3 (inferred from homology), annotated by HAMAP-Rule MF_00394.</p>
+<h2 id="function">FUNCTION</h2>
+<p>GpsA catalyzes the NAD(P)H-dependent reduction of the glycolytic intermediate<br />
+dihydroxyacetone phosphate (DHAP, glycerone phosphate) to sn-glycerol 3-phosphate (G3P),<br />
+the committed precursor for glycerophospholipid (membrane) biosynthesis.</p>
+<ul>
+<li>[UniProt "Catalyzes the reduction of the glycolytic intermediate"]</li>
+<li>[UniProt "dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P), the"]</li>
+<li>[UniProt "key precursor for phospholipid synthesis."]</li>
+</ul>
+<p>The physiologically relevant direction in vivo is the biosynthetic (reductive) direction,<br />
+DHAP -&gt; G3P (the catalytic activity reactions are written in the oxidative direction but<br />
+flagged right-to-left as physiological).</p>
+<ul>
+<li>[UniProt "PhysiologicalDirection=right-to-left; Xref=Rhea:RHEA:11094;"]</li>
+</ul>
+<h2 id="catalytic-activity">CATALYTIC ACTIVITY</h2>
+<p>EC 1.1.1.94. The enzyme can use either NAD(H) or NADP(H):</p>
+<ul>
+<li>NAD form: [UniProt "sn-glycerol 3-phosphate + NAD(+) = dihydroxyacetone phosphate"] / [UniProt "+ NADH + H(+); Xref=Rhea:RHEA:11092,"]</li>
+<li>NADP form: [UniProt "sn-glycerol 3-phosphate + NADP(+) = dihydroxyacetone phosphate"] / [UniProt "+ NADPH + H(+); Xref=Rhea:RHEA:11096,"]</li>
+<li>EC number: [UniProt "EC=1.1.1.94 {ECO:0000255|HAMAP-Rule:MF_00394};"]</li>
+</ul>
+<p>Active site: proton acceptor at residue 191. Multiple binding residues for NADPH and for<br />
+sn-glycerol 3-phosphate are annotated (e.g. NADPH-binding at 14, 15, 35, 108, 140, 255, 279, 281;<br />
+G3P-binding at 108, 136, 191, 244, 254, 255, 256).</p>
+<ul>
+<li>[UniProt "ACT_SITE        191"]</li>
+<li>[UniProt "/note=\"Proton acceptor\""]</li>
+</ul>
+<h2 id="nadp-binding-fold">NAD(P) BINDING / FOLD</h2>
+<p>Member of the NAD-dependent glycerol-3-phosphate dehydrogenase family, with an<br />
+N-terminal NAD(P)-binding Rossmann-like domain.</p>
+<ul>
+<li>[UniProt "Belongs to the NAD-dependent glycerol-3-phosphate"]</li>
+<li>[UniProt "dehydrogenase family. {ECO:0000255|HAMAP-Rule:MF_00394}."]</li>
+<li>InterPro/Gene3D: NAD(P)-binding Rossmann-fold domain (3.40.50.720).</li>
+</ul>
+<h2 id="pathway">PATHWAY</h2>
+<p>Membrane lipid metabolism; glycerophospholipid metabolism. UniPathway UPA00940.</p>
+<ul>
+<li>[UniProt "Membrane lipid metabolism; glycerophospholipid metabolism."]</li>
+</ul>
+<h2 id="subcellular-location">SUBCELLULAR LOCATION</h2>
+<p>Cytoplasm.</p>
+<ul>
+<li>[UniProt "SUBCELLULAR LOCATION: Cytoplasm {ECO:0000255|HAMAP-Rule:MF_00394}."]</li>
+</ul>
+<h2 id="curation-reasoning-annotation-review">Curation reasoning (annotation review)</h2>
+<p>Core molecular function: glycerol-3-phosphate dehydrogenase [NAD(P)+] activity (GO:0047952,<br />
+EC 1.1.1.94). The Rhea-derived NAD+-specific (GO:0141152) and NADP+-specific (GO:0141153)<br />
+terms are accurate sub-activities reflecting the dual cofactor specificity and are accepted.</p>
+<p>Core biological process: the biosynthetic role — production of sn-glycerol 3-phosphate as the<br />
+precursor for membrane phospholipids. GO:0046167 (glycerol-3-phosphate biosynthetic process)<br />
+and GO:0046474 (glycerophospholipid biosynthetic process) best capture this. GO:0006072<br />
+(glycerol-3-phosphate metabolic process) and GO:0006650 (glycerophospholipid metabolic process)<br />
+are correct but broader parents — kept as non-core.</p>
+<p>Over-annotations / broad terms relative to the specific dehydrogenase activity:<br />
+- GO:0016616 (oxidoreductase activity, acting on CH-OH group, NAD or NADP as acceptor): true but<br />
+  broad parent of GO:0047952 -&gt; over-annotated.<br />
+- GO:0051287 (NAD binding): the enzyme does bind NAD(P), but this is a broad cofactor-binding term;<br />
+  marked over-annotated given the specific activity terms are present. (It also under-represents the<br />
+  NADP usage.)</p>
+<p>Likely incorrect / spurious homology transfers:<br />
+- GO:0005975 (carbohydrate metabolic process): InterPro transfer; GpsA is a lipid-precursor enzyme,<br />
+  not a carbohydrate-metabolism enzyme. The "glycolytic intermediate" DHAP substrate is incidental.<br />
+  -&gt; MODIFY toward the glycerophospholipid biosynthetic process, or REMOVE as a misleading parent.<br />
+- GO:0046168 (glycerol-3-phosphate catabolic process): this biosynthetic isozyme (gpsA) produces G3P;<br />
+  it does not catabolize it. G3P catabolism is performed by the distinct GlpD/GlpABC respiratory<br />
+  G3P dehydrogenases. This InterPro transfer to the family conflates biosynthetic and catabolic roles.<br />
+  -&gt; REMOVE (wrong direction for this gene).</p>
+<h2 id="references">References</h2>
+<ul>
+<li>file:PSEPK/gpsA/gpsA-uniprot.txt (UniProt Q88FC9, HAMAP-Rule MF_00394)</li>
+<li>PMID:12534463 — KT2440 genome sequence (source of gene model/locus PP_4169); not enzyme-specific.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FC9
+gene_symbol: gpsA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  gpsA (locus PP_4169) encodes the biosynthetic glycerol-3-phosphate dehydrogenase
+  [NAD(P)+] (EC 1.1.1.94) of Pseudomonas putida KT2440. The cytoplasmic enzyme catalyzes
+  the NAD(P)H-dependent reduction of the glycolytic intermediate dihydroxyacetone phosphate
+  (glycerone phosphate, DHAP) to sn-glycerol 3-phosphate (G3P). G3P is the committed
+  precursor for glycerophospholipid (membrane) biosynthesis, making GpsA the entry point
+  that links central carbon metabolism to phospholipid synthesis. The enzyme belongs to the
+  NAD-dependent glycerol-3-phosphate dehydrogenase family, with an N-terminal NAD(P)-binding
+  Rossmann-like domain, and can use either NAD(H) or NADP(H) as the redox cofactor. In vivo
+  the physiologically relevant flux is in the biosynthetic (reductive) DHAP-to-G3P direction.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is directly supported by the UniProt subcellular-location
+      statement for this soluble dehydrogenase.
+    action: ACCEPT
+    reason: GpsA is a soluble cytoplasmic enzyme; the UniProt record explicitly assigns it
+      to the cytoplasm.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Cytosol is compatible with the cytoplasmic location but is a redundant, more
+      specific compartment term and is not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with the UniProt cytoplasm assignment; retained as a non-core location
+      annotation.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: This InterPro-based transfer is misleading. GpsA is a glycerophospholipid-precursor
+      enzyme; its substrate DHAP is a glycolytic intermediate, but the enzyme does not function
+      in carbohydrate metabolism. The biosynthetic process terms capture its true role.
+    action: MODIFY
+    reason: The enzyme reduces DHAP to glycerol-3-phosphate to feed phospholipid synthesis,
+      not carbohydrate metabolism; replace with the specific glycerophospholipid biosynthetic
+      process term.
+    proposed_replacement_terms:
+    - id: GO:0046474
+      label: glycerophospholipid biosynthetic process
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: key precursor for phospholipid synthesis.
+- term:
+    id: GO:0006072
+    label: glycerol-3-phosphate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct but broad. The enzyme participates in glycerol-3-phosphate metabolism,
+      but its specific role is the biosynthetic (production) branch.
+    action: KEEP_AS_NON_CORE
+    reason: A correct parent process; the more specific biosynthetic term is preferred for
+      core annotation.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P),
+        the
+- term:
+    id: GO:0006650
+    label: glycerophospholipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct but broad. GpsA supplies the G3P precursor for glycerophospholipid
+      synthesis; the biosynthetic child term is more informative.
+    action: KEEP_AS_NON_CORE
+    reason: A correct parent process; the specific glycerophospholipid biosynthetic process
+      term better represents the gene&#39;s role.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: &#39;PATHWAY: Membrane lipid metabolism; glycerophospholipid metabolism.&#39;
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP
+      as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: True but broad. This is a parent of the specific glycerol-3-phosphate
+      dehydrogenase [NAD(P)+] activity, which is annotated; this general term is an
+      over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The specific activity term GO:0047952 is present and captures the function more
+      precisely; the general oxidoreductase class adds no information.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: sn-glycerol 3-phosphate + NAD(+) = dihydroxyacetone phosphate
+- term:
+    id: GO:0046167
+    label: glycerol-3-phosphate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Accurate core process. GpsA produces sn-glycerol 3-phosphate from DHAP, the
+      defining biosynthetic step.
+    action: ACCEPT
+    reason: Directly supported by the UniProt function statement describing reduction of DHAP
+      to G3P.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P),
+        the
+- term:
+    id: GO:0046168
+    label: glycerol-3-phosphate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Incorrect for this gene. gpsA is the biosynthetic isozyme that produces G3P; it
+      does not catabolize it. G3P catabolism is carried out by the distinct respiratory GlpD/GlpABC
+      dehydrogenases. This is a family-level InterPro transfer that conflates the two directions.
+    action: REMOVE
+    reason: The biosynthetic GpsA produces rather than degrades glycerol-3-phosphate; the
+      catabolic annotation is the wrong direction for this gene. PANTHER classifies gpsA in
+      the biosynthetic NAD(P)+ glycerol-3-phosphate dehydrogenase family/subfamily
+      (PTHR11728 / PTHR11728:SF1), despite the eukaryote-biased &#34;, CHLOROPLASTIC&#34; subfamily
+      naming artifact, reinforcing the G3P-producing rather than G3P-catabolizing assignment.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: key precursor for phospholipid synthesis.
+    - reference_id: file:PSEPK/gpsA/gpsA-notes.md
+      supporting_text: this biosynthetic isozyme (gpsA) produces G3P
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: &#39;PTHR11728:SF1; GLYCEROL-3-PHOSPHATE DEHYDROGENASE [NAD(+)] 2,
+        CHLOROPLASTIC&#39;
+- term:
+    id: GO:0046474
+    label: glycerophospholipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Accurate core process. By producing G3P, the committed precursor, GpsA feeds
+      glycerophospholipid (membrane) biosynthesis.
+    action: ACCEPT
+    reason: G3P is described as the key precursor for phospholipid synthesis, and the UniPathway
+      assignment is glycerophospholipid metabolism.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: key precursor for phospholipid synthesis.
+- term:
+    id: GO:0047952
+    label: glycerol-3-phosphate dehydrogenase [NAD(P)+] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct core molecular function (EC 1.1.1.94). This is the precise activity of
+      GpsA, using NAD(H) or NADP(H).
+    action: ACCEPT
+    reason: Directly matches the UniProt RecName and the dual NAD(+)/NADP(+) catalytic-activity
+      reactions (EC 1.1.1.94).
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: EC=1.1.1.94 {ECO:0000255|HAMAP-Rule:MF_00394};
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: sn-glycerol 3-phosphate + NADP(+) = dihydroxyacetone phosphate
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: PTHR11728; GLYCEROL-3-PHOSPHATE DEHYDROGENASE
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The enzyme binds NAD(P) cofactor via its Rossmann-like domain, but this broad
+      cofactor-binding term is over-annotated relative to the specific catalytic activity, and
+      it under-represents the NADP(H) usage.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Cofactor binding is implied by the specific dehydrogenase activity; the generic
+      NAD binding term adds little and omits the NADP specificity of this enzyme.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: Belongs to the NAD-dependent glycerol-3-phosphate
+- term:
+    id: GO:0141152
+    label: glycerol-3-phosphate dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: Accurate Rhea-derived sub-activity. The enzyme catalyzes the NAD(+)-linked
+      reaction (RHEA:11092).
+    action: ACCEPT
+    reason: The UniProt catalytic-activity block records the NAD(+) reaction mapped to RHEA:11092.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: sn-glycerol 3-phosphate + NAD(+) = dihydroxyacetone phosphate
+- term:
+    id: GO:0141153
+    label: glycerol-3-phosphate dehydrogenase (NADP+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: Accurate Rhea-derived sub-activity. The enzyme also catalyzes the NADP(+)-linked
+      reaction (RHEA:11096), reflecting its dual cofactor specificity.
+    action: ACCEPT
+    reason: The UniProt catalytic-activity block records the NADP(+) reaction mapped to RHEA:11096.
+    supported_by:
+    - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+      supporting_text: sn-glycerol 3-phosphate + NADP(+) = dihydroxyacetone phosphate
+core_functions:
+- description: Cytoplasmic NAD(P)H-dependent glycerol-3-phosphate dehydrogenase that reduces
+    dihydroxyacetone phosphate to sn-glycerol 3-phosphate, the committed precursor for
+    glycerophospholipid (membrane) biosynthesis.
+  molecular_function:
+    id: GO:0047952
+    label: glycerol-3-phosphate dehydrogenase [NAD(P)+] activity
+  directly_involved_in:
+  - id: GO:0046167
+    label: glycerol-3-phosphate biosynthetic process
+  - id: GO:0046474
+    label: glycerophospholipid biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+    supporting_text: dihydroxyacetone phosphate (DHAP) to sn-glycerol 3-phosphate (G3P),
+      the
+  - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+    supporting_text: key precursor for phospholipid synthesis.
+  - reference_id: file:PSEPK/gpsA/gpsA-uniprot.txt
+    supporting_text: EC=1.1.1.94 {ECO:0000255|HAMAP-Rule:MF_00394};
+proposed_new_terms: []
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/gpsA/gpsA-uniprot.txt
+  title: UniProt entry Q88FC9 (GPDA_PSEPK), Glycerol-3-phosphate dehydrogenase [NAD(P)+],
+    annotated by HAMAP-Rule MF_00394
+  findings:
+  - statement: GpsA reduces the glycolytic intermediate dihydroxyacetone phosphate to
+      sn-glycerol 3-phosphate, the key precursor for phospholipid synthesis (EC 1.1.1.94),
+      using NAD(H) or NADP(H), and is a cytoplasmic member of the NAD-dependent glycerol-3-phosphate
+      dehydrogenase family.
+    supporting_text: Catalyzes the reduction of the glycolytic intermediate
+- id: file:PSEPK/gpsA/gpsA-notes.md
+  title: Curator research notes for gpsA (Q88FC9), P. putida KT2440
+  findings:
+  - statement: GpsA is the biosynthetic NAD(P)H-dependent glycerol-3-phosphate dehydrogenase
+      that produces sn-glycerol 3-phosphate for glycerophospholipid biosynthesis; the
+      catabolic (G3P-consuming) reaction is carried out by GlpD/GlpABC.
+- id: file:interpro/panther/PTHR11728/PTHR11728-metadata.yaml
+  title: &#39;PANTHER family PTHR11728 (NAD-DEPENDENT GLYCEROL-3-PHOSPHATE DEHYDROGENASE)
+    and subfamily PTHR11728:SF1 (GLYCEROL-3-PHOSPHATE DEHYDROGENASE [NAD(+)] 2,
+    CHLOROPLASTIC)&#39;
+  findings:
+  - statement: GpsA is classified in PANTHER family PTHR11728 (GLYCEROL-3-PHOSPHATE
+      DEHYDROGENASE) and subfamily PTHR11728:SF1 (GLYCEROL-3-PHOSPHATE DEHYDROGENASE
+      [NAD(+)] 2, CHLOROPLASTIC).
+  - statement: The &#34;, CHLOROPLASTIC&#34; subfamily tag is a eukaryote-biased naming
+      artifact reflecting the plant/algal reference members; the bacterial enzyme is
+      the biosynthetic NAD(P)+ glycerol-3-phosphate dehydrogenase that produces G3P,
+      so the classification supports the biosynthetic (G3P-producing) GpsA assignment.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440.
+  findings:
+  - statement: Source of the KT2440 genome and gene model for locus PP_4169 (gpsA); not an
+      enzyme-specific functional study.
+    supporting_text: Complete genome sequence and comparative analysis of the metabolically
+suggested_questions:
+- question: Is GpsA the sole route to sn-glycerol 3-phosphate for phospholipid biosynthesis in
+    P. putida KT2440, or can G3P also be supplied by glycerol kinase (GlpK) under glycerol-rich
+    conditions?
+  experts:
+  - Pseudomonas lipid metabolism experts
+- question: What is the in vivo cofactor preference (NADH vs NADPH) of P. putida GpsA, and how
+    does it integrate with the cell&#39;s redox/NADPH balance during membrane lipid synthesis?
+  experts:
+  - Bacterial enzymology experts
+suggested_experiments:
+- experiment_type: enzyme kinetics assay
+  description: Express and purify recombinant P. putida GpsA and measure steady-state kinetics
+    for DHAP reduction with NADH and with NADPH to quantify dual cofactor specificity and the
+    preferred physiological direction.
+- experiment_type: gene knockout / complementation
+  description: Construct a gpsA deletion in KT2440 and test for glycerol-3-phosphate auxotrophy
+    and membrane phospholipid defects, with complementation to confirm the biosynthetic role.
+- experiment_type: metabolite tracing
+  description: Use isotopically labeled glucose/DHAP and lipidomics to trace flux through GpsA
+    into sn-glycerol 3-phosphate and downstream glycerophospholipids in KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

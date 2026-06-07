@@ -51,6 +51,8 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
     assert schema["slots"]["subject_curations"]["range"] == "SubjectCuration"
     assert schema["slots"]["curation_status"]["range"] == "CurationStatusEnum"
     assert schema["slots"]["curation_status"]["required"] is True
+    assert schema["slots"]["condition_level"]["range"] == "MappingConditionLevelEnum"
+    assert "gene_symbol" in schema["enums"]["MappingConditionLevelEnum"]["permissible_values"]
     assert schema["enums"]["GOTermEnum"]["reachable_from"]["source_nodes"] == [
         "GO:0003674",
         "GO:0008150",
@@ -111,9 +113,9 @@ def test_ext_mapping_sets_use_unified_subject_curations() -> None:
     }
     assert status_counts == {
         "pending_review": 0,
-        "mapped": 483,
-        "context_only": 88,
-        "no_mapping": 1458,
+        "mapped": 480,
+        "context_only": 90,
+        "no_mapping": 1459,
         "deferred": 0,
     }
 

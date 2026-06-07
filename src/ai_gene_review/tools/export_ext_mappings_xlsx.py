@@ -112,6 +112,12 @@ README_ROWS = [
         "level=code. Blank means the mapping applies without additional conditions.",
     ),
     (
+        "excluded_subjects",
+        "Optional blocked descendants or gene-level exceptions, formatted as "
+        "level=code. These rows match the mapped PN subject but should not inherit "
+        "the projected GO annotation.",
+    ),
+    (
         "rationale",
         "Manual curator explanation of why the mapping is defensible.",
     ),
@@ -159,6 +165,7 @@ class MappingRow:
     target_go_label: str
     representative_genes: str
     conditions: str
+    excluded_subjects: str
     rationale: str
     notes: str
     references: str
@@ -259,6 +266,7 @@ def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[Unmappe
                         target_go_label=_clean_value(target_term.get("label")),
                         representative_genes=_format_string_list(entry.get("representative_genes")),
                         conditions=_format_conditions(entry.get("conditions")),
+                        excluded_subjects=_format_conditions(entry.get("excluded_subjects")),
                         rationale=_clean_value(entry.get("rationale")),
                         notes=_clean_value(entry.get("notes")),
                         references=_format_references(entry.get("references")),
@@ -531,6 +539,7 @@ def build_workbook(
         "target_go_label",
         "representative_genes",
         "conditions",
+        "excluded_subjects",
         "rationale",
         "notes",
         "references",
@@ -553,6 +562,7 @@ def build_workbook(
             row.target_go_label,
             row.representative_genes,
             row.conditions,
+            row.excluded_subjects,
             row.rationale,
             row.notes,
             row.references,
@@ -652,6 +662,7 @@ def build_workbook(
                 row.target_go_label,
                 row.representative_genes,
                 row.conditions,
+                row.excluded_subjects,
                 row.rationale,
                 row.notes,
                 row.references,
@@ -674,6 +685,7 @@ def build_workbook(
                 "",
                 "",
                 row.conditions,
+                "",
                 row.rationale,
                 row.notes,
                 row.references,
@@ -695,6 +707,7 @@ def build_workbook(
         "target_go_label",
         "representative_genes",
         "conditions",
+        "excluded_subjects",
         "rationale",
         "notes",
         "references",

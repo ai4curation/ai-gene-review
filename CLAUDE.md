@@ -73,7 +73,7 @@ gene_symbol: <HGNC symbol>
 taxon:
   id: <NCBI taxon id>
   label: <taxon label>
-description: <your own summary of the gene>
+description: <your own standalone biological summary of the gene>
 references:
   <all relevant reference, including both literature and bioinformatics sources; includes all but not limited to those used in existing_annotations>
 existing_annotations:
@@ -89,6 +89,18 @@ suggested_experiments:
 ```
 
 See the schema and existing files for more details.
+
+### Description field quality
+
+The top-level `description` field is for a project-independent biological summary
+that a biologist can read without knowing the current curation project. It should
+describe what the gene product is, where it acts, and its major biological roles.
+
+Do not put project, workflow, or curation commentary in `description`, including
+phrases such as `Proteostasis Network`, `PN`, `this review`, `curation`, `GOA
+correctly captures`, or `should/should not be annotated`. Put that material in
+the gene notes file (`GENE-notes.md`), in `review.reason` for a specific
+annotation, or in `core_functions`/`suggested_questions` as appropriate.
 
 When creating a new review, always make sure files are in place:
 
@@ -137,6 +149,40 @@ ActionEnum:
       NEW:
         
 ```      
+
+## Reviewing references
+
+Entries in the top-level `references:` list can carry an optional `reference_review` object recording
+your **manual** assessment of each reference. The `id` and `title` are machine-fetched (title comes
+from the cached `publications/PMID_xxxx.md`); `reference_review` is reviewer-supplied judgment. Use it
+especially to flag citation problems that format validation cannot catch (e.g. a well-formed PMID that
+points to the wrong paper).
+
+```yaml
+references:
+  - id: PMID:24268103
+    title: "The KCTD family of proteins: structure, function, disease relevance"
+    reference_review:
+      relevance: HIGH          # how relevant the reference is to THIS gene's function/review
+      correctness: VERIFIED    # citation correctness + scientific soundness (most salient issue)
+      review_notes: "PubMed-verified; supports the family-level 'mostly unknown' framing"
+```
+
+- **`relevance`** (`ReferenceRelevanceEnum`): `HIGH` (directly establishes/strongly informs the gene's
+  function) · `MEDIUM` (supporting/corroborating) · `LOW` (background/contextual or passing mention) ·
+  `NONE` (not relevant to this gene; candidate for removal).
+- **`correctness`** (`ReferenceCorrectnessEnum`, single-valued — record the most salient issue, detail
+  in `review_notes`): `VERIFIED` (identifier resolves to the intended, supporting paper, no soundness
+  concerns) · `UNVERIFIED` (not yet checked) · `WRONG_IDENTIFIER` (resolves to a different paper than
+  intended) · `MISCITED` (right paper, but it does not support the claim) · `DISPUTED` (correctly cited
+  but the claim is contested) · `LOW_QUALITY` (correctly cited but methodologically weak/preliminary).
+- **`review_notes`**: free text explaining the judgment (e.g. what you verified, or why it is wrong).
+
+This complements (does not replace) the existing `is_invalid` (retracted/replaced) and
+`full_text_unavailable` flags. All fields are optional; an absent `reference_review` simply means the
+reference has not been manually adjudicated. **Verify, don't trust**: confirm a PMID against PubMed (or
+anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
+LLM-generated deep-research summary asserting a citation is not sufficient.
 
 ## Tools
 
@@ -283,4 +329,3 @@ The `generate-pages` workflow runs on push to main when gene YAMLs, schema, temp
 
 There is also support code in `src/ai_gene_review`, see the CLAUDE.md file in that directory for more details
 on best practices for working with the code.
-

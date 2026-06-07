@@ -1,0 +1,3115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNAS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GNAS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95467" target="_blank" class="term-link">
+                        O95467
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GNAS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95467" data-a="DESCRIPTION: NESP55 (UniProt O95467) is a maternally expressed,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NESP55 (UniProt O95467) is a maternally expressed, chromogranin-like neuroendocrine secretory protein encoded by the complex GNAS locus. NESP55 is distinct from the canonical Gs-alpha products of the same locus; it is expressed in neuroendocrine/chromaffin lineages, processed into smaller peptides, and functions as a regulated secretory-granule precursor and marker of neuroendocrine differentiation. GNAS-locus imprinting defects involving the NESP55 region can cause endocrine disease, but those locus-level effects are distinct from direct NESP55 protein activity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NESP55 is a secretory precursor, so extracellular-region annotation is plausible for processed/secreted material but is not the most specific functional compartment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NESP55 is a secretory precursor and the extracellular-region term is a valid broad location for processed/secreted material, although secretory granule is the more specific intracellular context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link">
+                                        PMID:10729789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NESP55 open reading frame encoded a hydrophilic protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/GNAS/GNAS-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">May be proteolytically processed to give rise to a number of active peptides.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030133" target="_blank" class="term-link">
+                                    GO:0030133
+                                </a>
+                            </span>
+                            <span class="term-label">transport vesicle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0030133" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transport vesicle is too generic; the evidence for NESP55 points more specifically to neuroendocrine secretory granules/secretory pathway compartments.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NESP55 is chromogranin-like and shows finely granular cytoplasmic staining in pituitary adenomas, fitting secretory granule biology better than a generic transport vesicle term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030141" target="_blank" class="term-link">
+                                    secretory granule
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                        PMID:21584660
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">marker of the constitutive secretory pathway</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                        PMID:21584660
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">brown finely granular cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071107" target="_blank" class="term-link">
+                                    GO:0071107
+                                </a>
+                            </span>
+                            <span class="term-label">response to parathyroid hormone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0071107" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PTH-response evidence reflects GNAS-locus imprinting and methylation effects rather than a direct NESP55 protein activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22378814 shows that a deletion removing NESP55 affects imprinting and PHP1B, but this is a regulatory-locus effect. It should not be treated as a core biological process of the NESP55 protein product.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22378814" target="_blank" class="term-link">
+                                        PMID:22378814
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A novel deletion of 18,988 bp that removes NESP55</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22378814" target="_blank" class="term-link">
+                                        PMID:22378814
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NESP55 is an additional imprinting</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane is not supported as a normal NESP55 protein location by the reviewed literature; NESP55 is a secretory/granin-like product.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The evidence points to secretory granule/cytoplasmic granular staining and secretion rather than a plasma-membrane resident role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                        PMID:21584660
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">brown finely granular cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120162" target="_blank" class="term-link">
+                                    GO:0120162
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cold-induced thermogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20374964" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20374964
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TODO: Fetch title
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0120162" data-r="PMID:20374964" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cold-induced thermogenesis is a Gs-alpha/adipose signaling phenotype and should not be assigned to the NESP55 protein product represented by O95467.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:20374964 studies Gs-alpha deficiency in adipose tissue. That is not evidence for NESP55 acting in cold-induced thermogenesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20374964" target="_blank" class="term-link">
+                                        PMID:20374964
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Gsalpha plays a critical role in adipogenesis in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20862257" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20862257
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TODO: Fetch title
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0005737" data-r="PMID:20862257" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is supported as broad localization for NESP55-containing secretory granules and cytoplasmic immunostaining.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is broad but compatible with the granular cytoplasmic staining seen in pituitary adenomas and neuroendocrine/chromaffin cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                        PMID:21584660
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">brown finely granular cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20862257" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20862257
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TODO: Fetch title
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0005634" data-r="PMID:20862257" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is not supported as a normal NESP55 location in the reviewed sources.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The main evidence supports cytoplasmic secretory granule/neuroendocrine localization, not nuclear residence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20862257" target="_blank" class="term-link">
+                                        PMID:20862257
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NESP55 is a highly specific marker for chromaffin cell types during development</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0040015" target="_blank" class="term-link">
+                                    GO:0040015
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of multicellular organism growth</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0040015" data-r="GO_REF:0000024" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negative regulation of organism growth is a broad GNAS-locus/Gs-alpha phenotype and not a direct NESP55 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The NESP55 product is a chromogranin-like secretory precursor; growth phenotypes from GNAS models should not be propagated to this product without product-specific evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/GNAS/GNAS-deep-research-falcon_artifacts/artifact-00.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">NESP55 should not be conflated with canonical Gsalpha signaling protein products.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048471" target="_blank" class="term-link">
+                                    GO:0048471
+                                </a>
+                            </span>
+                            <span class="term-label">perinuclear region of cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21584660
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Immunohistochemical expression of neuroendocrine secretory p...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0048471" data-r="PMID:21584660" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Perinuclear cytoplasmic localization is plausible for secretory-pathway/granular staining but is not the core location term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NESP55 is associated with neuroendocrine secretory compartments; perinuclear cytoplasm can be retained as broad localization evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                        PMID:21584660
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">brown finely granular cytoplasmic staining</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071107" target="_blank" class="term-link">
+                                    GO:0071107
+                                </a>
+                            </span>
+                            <span class="term-label">response to parathyroid hormone</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22378814" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22378814
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A new deletion ablating NESP55 causes loss of maternal impri...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0071107" data-r="PMID:22378814" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The PTH-response evidence reflects GNAS-locus imprinting and methylation effects rather than a direct NESP55 protein activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PMID:22378814 shows that a deletion removing NESP55 affects imprinting and PHP1B, but this is a regulatory-locus effect. It should not be treated as a core biological process of the NESP55 protein product.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22378814" target="_blank" class="term-link">
+                                        PMID:22378814
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A novel deletion of 18,988 bp that removes NESP55</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22378814" target="_blank" class="term-link">
+                                        PMID:22378814
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NESP55 is an additional imprinting</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007565" target="_blank" class="term-link">
+                                    GO:0007565
+                                </a>
+                            </span>
+                            <span class="term-label">female pregnancy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10729789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuroendocrine secretory protein 55 (NESP55): alternative sp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0007565" data-r="PMID:10729789" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Female pregnancy is not supported as a direct process for the NESP55 protein product.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cited NESP55 cloning/processing paper describes a neuroendocrine secretory protein and tissue-specific splicing, not a direct pregnancy function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link">
+                                        PMID:10729789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NESP55 open reading frame encoded a hydrophilic protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009306" target="_blank" class="term-link">
+                                    GO:0009306
+                                </a>
+                            </span>
+                            <span class="term-label">protein secretion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10729789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuroendocrine secretory protein 55 (NESP55): alternative sp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95467" data-a="GO:0009306" data-r="PMID:10729789" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NESP55 is a secretory protein/cargo, but the available evidence does not show that it actively mediates protein secretion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A secreted or processed cargo should not automatically receive a protein secretion process annotation as if it controls secretion machinery.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link">
+                                        PMID:10729789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">posttranslational processing of a maternally expressed protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                        PMID:21584660
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">marker of the constitutive secretory pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NESP55 acts as a chromogranin-like neuroendocrine secretory precursor in chromaffin/neuroendocrine cells, undergoing post-translational processing and marking secretory-granule differentiation rather than catalyzing a defined biochemical reaction.</h3>
+                <span class="vote-buttons" data-g="O95467" data-a="FUNCTION: NESP55 acts as a chromogranin-like neuroendocrine ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030141" target="_blank" class="term-link">
+                                secretory granule
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link">
+                                PMID:10729789
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">NESP55 open reading frame encoded a hydrophilic protein</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link">
+                                PMID:10729789
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">posttranslational processing of a maternally expressed protein</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                                PMID:21584660
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">marker of the constitutive secretory pathway</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20862257" target="_blank" class="term-link">
+                                PMID:20862257
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">NESP55 is a highly specific marker for chromaffin cell types during development</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10729789" target="_blank" class="term-link">
+                            PMID:10729789
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Neuroendocrine secretory protein 55 (NESP55): alternative splicing onto transcripts of the GNAS gene and posttranslational processing of a maternally expressed protein.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20374964" target="_blank" class="term-link">
+                            PMID:20374964
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TODO: Fetch title</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20862257" target="_blank" class="term-link">
+                            PMID:20862257
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TODO: Fetch title</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21584660" target="_blank" class="term-link">
+                            PMID:21584660
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Immunohistochemical expression of neuroendocrine secretory protein-55 (NESP-55) in pituitary adenomas.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22378814" target="_blank" class="term-link">
+                            PMID:22378814
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A new deletion ablating NESP55 causes loss of maternal imprint of A/B GNAS and autosomal dominant pseudohypoparathyroidism type Ib.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/GNAS/GNAS-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for GNAS/NESP55</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/GNAS/GNAS-deep-research-falcon_artifacts/artifact-00.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research artifact for GNAS/NESP55</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which processed NESP55 peptides have reproducible physiological activity in human neuroendocrine tissues?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95467" data-a="Q: Which processed NESP55 peptides have reproducible ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Can GNAS annotations be separated more cleanly by product so that NESP55-specific annotations are not mixed with Gs-alpha signaling phenotypes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95467" data-a="Q: Can GNAS annotations be separated more cleanly by ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use isoform/product-specific antibodies or tagged endogenous NESP55 to define secretory granule localization and secretion dynamics in neuroendocrine cells.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NESP55 will localize to regulated secretory compartments and be secreted or processed in neuroendocrine cells.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95467" data-a="EXPERIMENT: Use isoform/product-specific antibodies or tagged ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Profile processed NESP55 peptides by targeted mass spectrometry in pituitary, adrenal medulla, and neuroendocrine tumor samples.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Product-specific peptide profiling will identify which NESP55-derived peptides are reproducibly produced in relevant tissues.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95467" data-a="EXPERIMENT: Profile processed NESP55 peptides by targeted mass..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GNAS-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95467" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">23 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-02T20:43:45.220980</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="GNAS-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="GNAS-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000010 The main schematic figure of the GNAS locus and its imprinting control regions (ICRs) is shown in Figure 1A. This diagram illustrat</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-gnas-locus-product-nesp55-uniprot-o95467functional-annotation">Research Report: Human <strong>GNAS</strong> locus product <strong>NESP55</strong> (UniProt <strong>O95467</strong>)—functional annotation</h2>
+<h3 id="0-target-verification-critical-disambiguation">0) Target verification (critical disambiguation)</h3>
+<p>The UniProt accession <strong>O95467</strong> corresponds to <strong>Neuroendocrine secretory protein 55 (NESP55)</strong>, a neuroendocrine secretory/granin-like protein produced from the <strong>human imprinted GNAS locus</strong> and <strong>distinct from</strong> the canonical stimulatory G-protein α subunit <strong>Gsα</strong> (which is encoded by different GNAS exons and functions in GPCR–cAMP signaling). (fonin2019multifunctionalityofproteins pages 15-17, yang2023gnaslocusbone pages 1-2)</p>
+<p>A key distinction is transcript architecture and imprinting: <strong>NESP55 uses its own upstream promoter/first exon (NESP55 exon) and is expressed from the maternal allele</strong>, whereas <strong>Gsα is generally biallelic</strong> (with tissue-specific paternal silencing) and is encoded by the shared GNAS coding exons 1–13. (iwasaki2023thelongrangeinteraction pages 1-2, yang2023gnaslocusbone pages 1-2, raut2025contracttokill pages 1-3)</p>
+<h3 id="1-key-concepts-and-current-definitions">1) Key concepts and current definitions</h3>
+<h4 id="11-the-gnas-locus-as-a-compleximprinted-gene">1.1 The GNAS locus as a “complex/imprinted” gene</h4>
+<p>Recent and authoritative sources describe <strong>GNAS</strong> as a complex locus with multiple products initiated from different promoters/first exons, including <strong>Gsα</strong>, <strong>XLαs</strong>, <strong>A/B</strong>, <strong>antisense transcripts</strong>, and <strong>NESP55</strong>, each with distinct imprinting patterns. (raut2025contracttokill pages 1-3, iwasaki2023thelongrangeinteraction pages 1-2, yang2023gnaslocusbone pages 1-2, cipriano2024genotype–phenotypecorrelationof pages 1-2)</p>
+<p><strong>Figure evidence (locus concept):</strong> A schematic of the GNAS locus showing <strong>NESP55</strong>, <strong>Gsα</strong>, other transcripts, and differentially methylated regions (DMRs)/imprinting control regions (ICRs) is provided in Iwasaki et al. (JCI, 2023). (iwasaki2023thelongrangeinteraction media 2311e80e)</p>
+<h4 id="12-what-nesp55-is-and-is-not">1.2 What NESP55 is (and is not)</h4>
+<p>NESP55 is best understood as a <strong>chromogranin/granin-like neuroendocrine secretory precursor protein</strong>, rather than an enzyme, transporter, or canonical signal transducer such as Gsα. (bastepe2007thegnaslocus pages 13-13, bastepe2007thegnaslocus pages 1-2)</p>
+<p>A structural feature consistent with granin-like behavior is its high predicted intrinsic disorder: one structure–function review reports NESP55 is <strong>highly intrinsically disordered</strong> (high predicted disorder fraction) and shares <strong>no sequence similarity with other GNAS isoforms</strong>, emphasizing that “GNAS” literature about Gsα cannot be assumed to apply to NESP55. (fonin2019multifunctionalityofproteins pages 15-17)</p>
+<h3 id="2-molecular-function-biochemical-nature-processing-and-inferred-mechanism">2) Molecular function: biochemical nature, processing, and inferred mechanism</h3>
+<h4 id="21-precursor-and-peptide-processing">2.1 Precursor and peptide processing</h4>
+<p>Older but authoritative review-level synthesis reports NESP55 was cloned as a <strong>novel chromogranin-like precursor</strong> and undergoes <strong>post-translational processing into peptides</strong>; one processed peptide was reported to have <strong>5‑HT1B receptor antagonist activity</strong>. (bastepe2007thegnaslocus pages 13-13)</p>
+<p><strong>Interpretation (current understanding):</strong> based on available evidence, NESP55’s primary molecular role is most consistent with being a <strong>regulated secretory pathway cargo/precursor</strong> that can be processed into bioactive peptides, rather than performing a defined catalytic reaction. (bastepe2007thegnaslocus pages 13-13)</p>
+<h4 id="22-subcellular-localization-and-secretion-context">2.2 Subcellular localization and secretion context</h4>
+<p>NESP55 has been reported to localize preferentially in neuroendocrine secretory cell types, including <strong>adrenal medulla adrenaline-synthesizing cells</strong>, consistent with localization to neuroendocrine secretory compartments (e.g., secretory granules) characteristic of granin-family proteins. (bastepe2007thegnaslocus pages 13-13)</p>
+<h3 id="3-expression-and-localization-in-tissues-current-evidence">3) Expression and localization in tissues (current evidence)</h3>
+<p>NESP55 is described as a neuroendocrine-enriched product; a 2024 clinical marker paper summarizes reported presence in <strong>chromaffin cells</strong>, <strong>pituitary</strong>, and neuroendocrine tumors such as <strong>pheochromocytoma</strong>, <strong>neuroblastoma</strong>, and pancreatic neuroendocrine tumors (including insulinoma). (юкина2024поискновыхиммуногистохимических pages 2-3)</p>
+<h3 id="4-pathways-and-regulatory-biology-recent-developments-prioritized">4) Pathways and regulatory biology (recent developments prioritized)</h3>
+<h4 id="41-imprinting-control-of-nesp55-2023-mechanistic-advance">4.1 Imprinting control of NESP55 (2023 mechanistic advance)</h4>
+<p>A key 2023 mechanistic study using human embryonic stem cell models identified long-range regulatory logic at GNAS:<br />
+- The <strong>NESP imprinting control region (NESP‑ICR)</strong> is required for maternal allele methylation/transcriptional silencing at the A/B region.<br />
+- The <strong>STX16‑ICR</strong> functions as a <strong>long-range enhancer of NESP55 transcription</strong> in an embryonic-stage-specific manner. (iwasaki2023thelongrangeinteraction pages 1-2)</p>
+<p>This work reframes NESP55 not only as a secretory precursor protein, but also as a transcript whose <strong>proper expression is integral to establishing/maintaining GNAS imprinting states</strong>. (iwasaki2023thelongrangeinteraction pages 1-2)</p>
+<h4 id="42-nesp55nespas-region-variants-and-pseudohypoparathyroidism-type-1b-2024-genetic-advance">4.2 NESP55/NESPAS region variants and pseudohypoparathyroidism type 1B (2024 genetic advance)</h4>
+<p>A 2024 JCI Insight study identified <strong>recurrent small variants in the NESP55/NESPAS region</strong> in families with <strong>broad GNAS methylation defects</strong> causing pseudohypoparathyroidism type 1B, and reported that <strong>AS (antisense) transcripts were increased while NESP was decreased</strong> in cells from affected patients, supporting a mechanistic link between variants near NESP55/NESPAS and altered imprinting/transcription. (li2024recurrentsmallvariants pages 1-2)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-tumor-marker-exploration-in-pancreatic-neuroendocrine-tumors-pnets-and-insulinoma">5.1 Tumor marker exploration in pancreatic neuroendocrine tumors (P‑NETs) and insulinoma</h4>
+<p>A 2024 insulinoma-focused study (Problems of Endocrinology; <strong>n=41</strong>, with extended IHC in <strong>n=10</strong>) evaluated multiple candidate circulating and tissue markers, including NESP55. It reported that circulating marker levels overall did not change significantly post-surgery and that marker expression did not correlate with aggressiveness; the authors concluded that <strong>NESP55 was not supported as a promising marker</strong> in their dataset. (юкина2024поискновыхиммуногистохимических pages 1-2)</p>
+<p>In contrast, the same 2024 paper cites a prior study reporting <strong>NESP55 immunoreactivity in 90.9% of P‑NETs</strong>, illustrating that NESP55 may show high IHC positivity in some P‑NET cohorts but may not generalize as a clinically useful circulating/tissue marker for insulinoma aggressiveness in all settings. (юкина2024поискновыхиммуногистохимических pages 2-3, юкина2024поискновыхиммуногистохимических pages 1-2)</p>
+<h4 id="52-clinical-genetics-diagnostics-relevance-via-imprinting">5.2 Clinical genetics / diagnostics relevance via imprinting</h4>
+<p>Although much of clinical GNAS genetics focuses on <strong>Gsα</strong>, recent human studies implicate the <strong>NESP55-region imprinting machinery</strong> in disease mechanisms (e.g., pseudohypoparathyroidism type 1B through methylation defects involving DMRs connected to NESP). (iwasaki2023thelongrangeinteraction pages 1-2, li2024recurrentsmallvariants pages 1-2)</p>
+<h3 id="6-relevant-statistics-and-recent-data-points-explicitly-evidenced">6) Relevant statistics and recent data points (explicitly evidenced)</h3>
+<ul>
+<li><strong>90.9%</strong>: NESP55 immunoreactivity in pancreatic neuroendocrine tumors (P‑NETs) reported by a cited study in a 2024 insulinoma marker paper. (юкина2024поискновыхиммуногистохимических pages 2-3)</li>
+<li><strong>n=41</strong> insulinoma patients; <strong>n=10</strong> with extended immunohistochemistry in the 2024 marker evaluation; NESP55 not supported as a promising marker in that cohort. (юкина2024поискновыхиммуногистохимических pages 1-2)</li>
+</ul>
+<h3 id="7-expert-synthesis-and-evidence-gaps">7) Expert synthesis and evidence gaps</h3>
+<p>Across recent literature, the <strong>dominant 2023–2024 advances relevant to NESP55 are regulatory</strong> (imprinting control elements, enhancer logic, and disease-associated methylation/transcriptional shifts) rather than new protein biochemistry. (iwasaki2023thelongrangeinteraction pages 1-2, li2024recurrentsmallvariants pages 1-2)</p>
+<p>Direct, modern (2023–2024) experimental evidence in the retrieved set remains limited regarding:<br />
+- precise <strong>human</strong> subcellular localization at high resolution,<br />
+- proteolytic processing sites/peptide repertoire in humans,<br />
+- validated receptor targets and mechanisms for NESP55-derived peptides.<br />
+Accordingly, the most defensible functional annotation from the current evidence is that NESP55 is a <strong>maternally expressed, granin-like secretory precursor</strong> whose transcriptional regulation is embedded within the <strong>GNAS imprinting network</strong>. (bastepe2007thegnaslocus pages 13-13, iwasaki2023thelongrangeinteraction pages 1-2)</p>
+<hr />
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key points</th>
+<th>Evidence &amp; notes (paper, year)</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / exon structure / imprinting</td>
+<td>UniProt O95467 corresponds to NESP55, a distinct protein product of the human GNAS locus rather than Gsα. It is produced from its own upstream promoter/first exon and is maternally expressed because the NESP promoter/DMR is methylated on the paternal allele.</td>
+<td>Explicitly identified as “NESP55 (UniProt ID: O95467)” and described as transcriptionally/structurally distinct from Gsα; multiple GNAS reviews and primary studies state NESP55 is a separate imprinted GNAS product with maternal expression (Fonin et al., 2019; Iwasaki et al., 2023; Yang et al., 2023; Cipriano et al., 2024).</td>
+<td>(fonin2019multifunctionalityofproteins pages 15-17, iwasaki2023thelongrangeinteraction pages 1-2, yang2023gnaslocusbone pages 1-2, cipriano2024genotype–phenotypecorrelationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Identity / exon structure / imprinting</td>
+<td>The GNAS locus is complex and produces multiple products (Gsα, XLαs, A/B, antisense transcripts, NESP55). NESP55 should not be conflated with canonical Gsα signaling protein products.</td>
+<td>Recent reviews and mechanistic studies emphasize distinct promoters/first exons and different imprinting patterns across GNAS products; Figure 1A in Iwasaki et al. schematizes NESP55 separately from Gsα and other transcripts (Iwasaki et al., 2023).</td>
+<td>(raut2025contracttokill pages 1-3, iwasaki2023thelongrangeinteraction pages 1-2, yang2023gnaslocusbone pages 1-2, iwasaki2023thelongrangeinteraction media 2311e80e)</td>
+</tr>
+<tr>
+<td>Biochemical nature &amp; processing</td>
+<td>NESP55 is a chromogranin-like/neuroendocrine secretory precursor rather than an enzyme or transporter. It undergoes post-translational processing to smaller peptides.</td>
+<td>Review summarizing foundational cloning/biochemistry describes NESP55 as a “novel chromogranin-like precursor” that is post-translationally processed into peptides; one processed peptide was reported to have 5-HT1B antagonist activity (Bastepe, 2007, citing earlier primary work).</td>
+<td>(bastepe2007thegnaslocus pages 13-13)</td>
+</tr>
+<tr>
+<td>Biochemical nature &amp; processing</td>
+<td>NESP55 is highly intrinsically disordered relative to Gsα isoforms, consistent with granin/secretory precursor behavior.</td>
+<td>Structure-function review reports NESP55 has high predicted disorder (~86.5% PDR) and no sequence similarity to other GNAS isoforms, reinforcing that it is biochemically distinct from G protein α-subunits (Fonin et al., 2019).</td>
+<td>(fonin2019multifunctionalityofproteins pages 15-17)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>NESP55 localizes to neuroendocrine secretory compartments and is associated with chromogranin-like granules/regulated secretion rather than plasma membrane signal transduction.</td>
+<td>Bastepe review summarizes localization studies showing preferential localization in adrenaline-synthesizing cells of bovine and rat adrenal medulla, consistent with secretory granules and a neuroendocrine secretory role (Bastepe, 2007).</td>
+<td>(bastepe2007thegnaslocus pages 13-13)</td>
+</tr>
+<tr>
+<td>Expression / tissues</td>
+<td>NESP55 is a neuroendocrine-enriched product; reported in adrenal medulla/chromaffin cells and other neuroendocrine tissues/tumors.</td>
+<td>Review and biomarker literature note presence in chromaffin cells, pituitary, pheochromocytoma tissue, neuroblastomas, insulinomas, and other pancreatic neuroendocrine tumors; older tissue-distribution work in bovine tissues is summarized by Bastepe (2007), and Yukina et al. (2024) reiterate neuroendocrine distribution.</td>
+<td>(bastepe2007thegnaslocus pages 13-13, юкина2024поискновыхиммуногистохимических pages 2-3)</td>
+</tr>
+<tr>
+<td>Physiology / functional inference</td>
+<td>NESP55 is not assigned a canonical catalytic reaction; current understanding supports a role as a regulated secretory-granule precursor within neuroendocrine cells.</td>
+<td>The available evidence supports precursor/secretory function and peptide generation, while recent GNAS-locus papers focus mainly on imprinting control rather than direct molecular mechanism of NESP55 action (Bastepe, 2007; Iwasaki et al., 2023; Li et al., 2024).</td>
+<td>(bastepe2007thegnaslocus pages 13-13, iwasaki2023thelongrangeinteraction pages 1-2, li2024recurrentsmallvariants pages 1-2)</td>
+</tr>
+<tr>
+<td>Disease / clinical relevance</td>
+<td>NESP55 transcript regulation matters clinically through GNAS imprinting disorders: reduced NESP expression and altered antisense transcription are implicated in pseudohypoparathyroidism type 1B with broad GNAS methylation defects.</td>
+<td>Li et al. (2024) identified recurrent small variants in the NESP55/NESPAS region in affected families and observed increased antisense transcripts with decreased NESP expression in patient cells, linking NESP55-region disruption to PHP1B pathogenesis.</td>
+<td>(li2024recurrentsmallvariants pages 1-2)</td>
+</tr>
+<tr>
+<td>Disease / clinical relevance</td>
+<td>NESP55 has been explored as a neuroendocrine tumor marker, but evidence is mixed and context-dependent.</td>
+<td>Yukina et al. (2024) note a prior study reporting NESP55 immunoreactivity in 90.9% of pancreatic neuroendocrine tumors, but in their own insulinoma cohort NESP55 was not supported as a promising tissue/circulating marker.</td>
+<td>(юкина2024поискновыхиммуногистохимических pages 2-3, юкина2024поискновыхиммуногистохимических pages 1-2)</td>
+</tr>
+<tr>
+<td>Disease / clinical relevance</td>
+<td>In a 2024 insulinoma study, NESP55 did not show convincing value for association with insulin-producing tumors or aggressiveness.</td>
+<td>Cohort size was 41 patients, with extended IHC in 10; marker levels before surgery and 2–12 months after surgery did not change significantly overall, and NESP55 was among markers not supported for further study in insulinoma (Yukina et al., 2024).</td>
+<td>(юкина2024поискновыхиммуногистохимических pages 1-2)</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 developments</td>
+<td>Major recent advances concern the regulatory biology of the NESP55 region within GNAS imprinting rather than new protein-level biochemistry.</td>
+<td>Iwasaki et al. (2023) showed the STX16-ICR acts as a long-range enhancer of maternal NESP55 transcription and that the NESP-ICR is required for A/B methylation/silencing; Li et al. (2024) connected recurrent NESP55/NESPAS-region variants to broad GNAS methylation defects in PHP1B.</td>
+<td>(iwasaki2023thelongrangeinteraction pages 1-2, li2024recurrentsmallvariants pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes evidence-backed functional annotation for human NESP55 (GNAS; UniProt O95467), including identity, processing, localization, expression, and clinical relevance. It emphasizes what is directly supported by the retrieved literature, especially 2023-2024 studies on GNAS imprinting and biomarker use.</em></p>
+<hr />
+<h3 id="key-references-with-urls-and-publication-dates">Key references (with URLs and publication dates)</h3>
+<ul>
+<li>Iwasaki Y. et al. <em>The long-range interaction between two GNAS imprinting control regions delineates pseudohypoparathyroidism type 1B pathogenesis.</em> <strong>Journal of Clinical Investigation</strong>. <strong>Apr 2023</strong>. https://doi.org/10.1172/jci167953 (iwasaki2023thelongrangeinteraction pages 1-2, iwasaki2023thelongrangeinteraction media 2311e80e)</li>
+<li>Yang W. et al. <em>GNAS locus: bone related diseases and mouse models.</em> <strong>Frontiers in Endocrinology</strong>. <strong>Oct 2023</strong>. https://doi.org/10.3389/fendo.2023.1255864 (yang2023gnaslocusbone pages 1-2, yang2023gnaslocusbone pages 12-13)</li>
+<li>Li D. et al. <em>Recurrent small variants in NESP55/NESPAS associated with broad GNAS methylation defects and pseudohypoparathyroidism type 1B.</em> <strong>JCI Insight</strong>. <strong>Dec 2024</strong>. https://doi.org/10.1172/jci.insight.185874 (li2024recurrentsmallvariants pages 1-2)</li>
+<li>Cipriano L. et al. <em>Genotype–Phenotype Correlation of GNAS Gene: Review and Disease Management of a Hotspot Mutation.</em> <strong>International Journal of Molecular Sciences</strong>. <strong>Oct 2024</strong>. https://doi.org/10.3390/ijms252010913 (cipriano2024genotype–phenotypecorrelationof pages 1-2)</li>
+<li>Yukina M.Y. et al. <em>Поиск новых иммуногистохимических и циркулирующих маркеров инсулиномы</em> (Search for new IHC and circulating markers of insulinoma). <strong>Problems of Endocrinology</strong>. <strong>May 2024</strong>. https://doi.org/10.14341/probl13466 (юкина2024поискновыхиммуногистохимических pages 2-3, юкина2024поискновыхиммуногистохимических pages 1-2)</li>
+<li>Bastepe M. <em>The GNAS Locus: Quintessential Complex Gene Encoding Gsα, XLαs, and other Imprinted Transcripts.</em> <strong>Current Genomics</strong>. <strong>Sep 2007</strong>. https://doi.org/10.2174/138920207783406488 (bastepe2007thegnaslocus pages 13-13, bastepe2007thegnaslocus pages 1-2)</li>
+<li>Fonin A.V. et al. <em>Multi-functionality of proteins involved in GPCR and G protein signaling…</em> <strong>Cellular and Molecular Life Sciences</strong>. <strong>Aug 2019</strong>. https://doi.org/10.1007/s00018-019-03276-1 (fonin2019multifunctionalityofproteins pages 15-17)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(fonin2019multifunctionalityofproteins pages 15-17): Alexander V. Fonin, April L. Darling, Irina M. Kuznetsova, Konstantin K. Turoverov, and Vladimir N. Uversky. Multi-functionality of proteins involved in gpcr and g protein signaling: making sense of structure–function continuum with intrinsic disorder-based proteoforms. Cellular and Molecular Life Sciences, 76:4461-4492, Aug 2019. URL: https://doi.org/10.1007/s00018-019-03276-1, doi:10.1007/s00018-019-03276-1. This article has 78 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2023gnaslocusbone pages 1-2): Wan Yang, Yiyi Zuo, Nuo Zhang, Kangning Wang, Runze Zhang, Ziyi Chen, and Qing He. Gnas locus: bone related diseases and mouse models. Frontiers in Endocrinology, Oct 2023. URL: https://doi.org/10.3389/fendo.2023.1255864, doi:10.3389/fendo.2023.1255864. This article has 19 citations.</p>
+</li>
+<li>
+<p>(iwasaki2023thelongrangeinteraction pages 1-2): Yorihiro Iwasaki, Cagri Aksu, Monica Reyes, Birol Ay, Qing He, and Murat Bastepe. The long-range interaction between two gnas imprinting control regions delineates pseudohypoparathyroidism type 1b pathogenesis. Journal of Clinical Investigation, Apr 2023. URL: https://doi.org/10.1172/jci167953, doi:10.1172/jci167953. This article has 25 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raut2025contracttokill pages 1-3): Pratima Raut, Poompozhil Mathivanan, Surinder K. Batra, and Moorthy P. Ponnusamy. Contract to kill: gnas mutation. Molecular Cancer, Mar 2025. URL: https://doi.org/10.1186/s12943-025-02247-4, doi:10.1186/s12943-025-02247-4. This article has 5 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cipriano2024genotype–phenotypecorrelationof pages 1-2): Lorenzo Cipriano, Rosario Ferrigno, Immacolata Andolfo, Roberta Russo, Daniela Cioffi, Maria Cristina Savanelli, Valeria Pellino, Antonella Klain, Achille Iolascon, and Carmelo Piscopo. Genotype–phenotype correlation of gnas gene: review and disease management of a hotspot mutation. International Journal of Molecular Sciences, 25:10913, Oct 2024. URL: https://doi.org/10.3390/ijms252010913, doi:10.3390/ijms252010913. This article has 1 citations.</p>
+</li>
+<li>
+<p>(iwasaki2023thelongrangeinteraction media 2311e80e): Yorihiro Iwasaki, Cagri Aksu, Monica Reyes, Birol Ay, Qing He, and Murat Bastepe. The long-range interaction between two gnas imprinting control regions delineates pseudohypoparathyroidism type 1b pathogenesis. Journal of Clinical Investigation, Apr 2023. URL: https://doi.org/10.1172/jci167953, doi:10.1172/jci167953. This article has 25 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bastepe2007thegnaslocus pages 13-13): Murat Bastepe. The gnas locus: quintessential complex gene encoding gs&amp;#945;, xl&amp;#945;s, and other imprinted transcripts. Current Genomics, 8:398-414, Sep 2007. URL: https://doi.org/10.2174/138920207783406488, doi:10.2174/138920207783406488. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bastepe2007thegnaslocus pages 1-2): Murat Bastepe. The gnas locus: quintessential complex gene encoding gs&amp;#945;, xl&amp;#945;s, and other imprinted transcripts. Current Genomics, 8:398-414, Sep 2007. URL: https://doi.org/10.2174/138920207783406488, doi:10.2174/138920207783406488. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(юкина2024поискновыхиммуногистохимических pages 2-3): © М.Ю. Юкина, Е. А. Трошина, Л.С. Урусова, Нурана Фейзуллаевна Нуралиева, Лариса Вячеславовна Никанкина, В.А. Иоутси, О. Ю. Реброва, Н. Г. Мокрышева, M. Y. Yukina, E. Troshina, L. Urusova, N. Nuralieva, L. V. Nikankina, V. A. Ioutsi, O. Rebrova, and N. G. Mokrysheva. Поиск новых иммуногистохимических и циркулирующих маркеров инсулиномы. Problems of Endocrinology, 70:15-26, May 2024. URL: https://doi.org/10.14341/probl13466, doi:10.14341/probl13466. This article has 1 citations.</p>
+</li>
+<li>
+<p>(li2024recurrentsmallvariants pages 1-2): Dong Li, Suzanne Jan de Beur, Cuiping Hou, Maura R.Z. Ruzhnikov, Hilary Seeley, Garry R. Cutting, Molly B. Sheridan, and Michael A. Levine. Recurrent small variants in nesp55/nespas associated with broad gnas methylation defects and pseudohypoparathyroidism type 1b. JCI Insight, Dec 2024. URL: https://doi.org/10.1172/jci.insight.185874, doi:10.1172/jci.insight.185874. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(юкина2024поискновыхиммуногистохимических pages 1-2): © М.Ю. Юкина, Е. А. Трошина, Л.С. Урусова, Нурана Фейзуллаевна Нуралиева, Лариса Вячеславовна Никанкина, В.А. Иоутси, О. Ю. Реброва, Н. Г. Мокрышева, M. Y. Yukina, E. Troshina, L. Urusova, N. Nuralieva, L. V. Nikankina, V. A. Ioutsi, O. Rebrova, and N. G. Mokrysheva. Поиск новых иммуногистохимических и циркулирующих маркеров инсулиномы. Problems of Endocrinology, 70:15-26, May 2024. URL: https://doi.org/10.14341/probl13466, doi:10.14341/probl13466. This article has 1 citations.</p>
+</li>
+<li>
+<p>(yang2023gnaslocusbone pages 12-13): Wan Yang, Yiyi Zuo, Nuo Zhang, Kangning Wang, Runze Zhang, Ziyi Chen, and Qing He. Gnas locus: bone related diseases and mouse models. Frontiers in Endocrinology, Oct 2023. URL: https://doi.org/10.3389/fendo.2023.1255864, doi:10.3389/fendo.2023.1255864. This article has 19 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="GNAS-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000010 The main schematic figure of the GNAS locus and its imprinting control regions (ICRs) is shown in Figure 1A. This diagram illustrat" src="GNAS-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>fonin2019multifunctionalityofproteins pages 15-17</li>
+<li>bastepe2007thegnaslocus pages 13-13</li>
+<li>iwasaki2023thelongrangeinteraction pages 1-2</li>
+<li>li2024recurrentsmallvariants pages 1-2</li>
+<li>yang2023gnaslocusbone pages 1-2</li>
+<li>raut2025contracttokill pages 1-3</li>
+<li>bastepe2007thegnaslocus pages 1-2</li>
+<li>yang2023gnaslocusbone pages 12-13</li>
+<li>https://doi.org/10.1172/jci167953</li>
+<li>https://doi.org/10.3389/fendo.2023.1255864</li>
+<li>https://doi.org/10.1172/jci.insight.185874</li>
+<li>https://doi.org/10.3390/ijms252010913</li>
+<li>https://doi.org/10.14341/probl13466</li>
+<li>https://doi.org/10.2174/138920207783406488</li>
+<li>https://doi.org/10.1007/s00018-019-03276-1</li>
+<li>https://doi.org/10.1007/s00018-019-03276-1,</li>
+<li>https://doi.org/10.3389/fendo.2023.1255864,</li>
+<li>https://doi.org/10.1172/jci167953,</li>
+<li>https://doi.org/10.1186/s12943-025-02247-4,</li>
+<li>https://doi.org/10.3390/ijms252010913,</li>
+<li>https://doi.org/10.2174/138920207783406488,</li>
+<li>https://doi.org/10.14341/probl13466,</li>
+<li>https://doi.org/10.1172/jci.insight.185874,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GNAS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95467" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gnas-notes">GNAS notes</h1>
+<h2 id="2026-06-02">2026-06-02</h2>
+<p>PITA context: The MONDO issue references GNAS for PITA3, but this local review is for UniProt <code>O95467</code>, the NESP55 product of the complex GNAS locus. This matters because many GNAS biological phenotypes belong to canonical Gs-alpha products or locus-level imprinting rather than direct NESP55 protein function.</p>
+<p>Deep research status: Falcon deep research succeeded for GNAS and produced <code>GNAS-deep-research-falcon.md</code> plus an artifact table. The artifact explicitly warned that "NESP55 should not be conflated with canonical Gsalpha signaling protein products" [file:human/GNAS/GNAS-deep-research-falcon_artifacts/artifact-00.md "NESP55 should not be conflated with canonical Gsalpha signaling protein products"].</p>
+<p>Functional summary: NESP55 is a chromogranin-like neuroendocrine secretory product. The cloning/processing paper found that the "NESP55 open reading frame encoded a hydrophilic protein" and characterized "posttranslational processing of a maternally expressed protein" [PMID:10729789 "NESP55 open reading frame encoded a hydrophilic protein"; PMID:10729789 "posttranslational processing of a maternally expressed protein"]. Pituitary adenoma IHC describes NESP55 as a "marker of the constitutive secretory pathway" with "brown finely granular cytoplasmic staining" [PMID:21584660 "marker of the constitutive secretory pathway"; PMID:21584660 "brown finely granular cytoplasmic staining"].</p>
+<p>Annotation decisions: I kept cytoplasmic/secretory-context annotations, modified generic transport vesicle to secretory granule, and removed or over-annotation-marked Gs-alpha/locus-level phenotypes such as thermogenesis, organism growth, PTH response, and pregnancy. The PTH paper shows a deletion "that removes NESP55" and supports NESP55 as an "additional imprinting control element" [PMID:22378814 "A novel deletion of 18,988 bp that removes NESP55"; PMID:22378814 "NESP55 is an additional imprinting control element"], but that is not direct NESP55 protein activity.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95467
+gene_symbol: GNAS
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: NESP55 (UniProt O95467) is a maternally expressed, chromogranin-like neuroendocrine
+  secretory protein encoded by the complex GNAS locus. NESP55 is distinct from the canonical
+  Gs-alpha products of the same locus; it is expressed in neuroendocrine/chromaffin lineages,
+  processed into smaller peptides, and functions as a regulated secretory-granule precursor and
+  marker of neuroendocrine differentiation. GNAS-locus imprinting defects involving the NESP55
+  region can cause endocrine disease, but those locus-level effects are distinct from direct
+  NESP55 protein activity.
+alternative_products:
+- name: Nesp55 {ECO:0000269|PubMed:10729789, ECO:0000269|PubMed:10749992,
+  id: O95467-1
+- name: XLas-1
+  id: Q5JWF2-1
+  sequence_note: External
+- name: XLas-2
+  id: Q5JWF2-2
+  sequence_note: External
+- name: XLas-3
+  id: Q5JWF2-3
+  sequence_note: External
+- name: Gnas-1 {ECO:0000305} (Alpha-S2 {ECO:0000305}, GNASl)
+  id: P63092-1, P04895-1
+  sequence_note: External
+- name: Gnas-2 {ECO:0000305} (Alpha-S1 {ECO:0000305}, GNASs)
+  id: P63092-2, P04895-2
+  sequence_note: External
+- name: &#39;3&#39;
+  id: P63092-3
+  sequence_note: External
+- name: &#39;4&#39;
+  id: P63092-4
+  sequence_note: External
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: NESP55 is a secretory precursor, so extracellular-region annotation is plausible
+      for processed/secreted material but is not the most specific functional compartment.
+    action: ACCEPT
+    reason: NESP55 is a secretory precursor and the extracellular-region term is a valid broad
+      location for processed/secreted material, although secretory granule is the more specific
+      intracellular context.
+    supported_by:
+    - reference_id: PMID:10729789
+      supporting_text: NESP55 open reading frame encoded a hydrophilic protein
+    - reference_id: file:human/GNAS/GNAS-uniprot.txt
+      supporting_text: May be proteolytically processed to give rise to a number of active peptides.
+- term:
+    id: GO:0030133
+    label: transport vesicle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Transport vesicle is too generic; the evidence for NESP55 points more specifically
+      to neuroendocrine secretory granules/secretory pathway compartments.
+    action: MODIFY
+    reason: NESP55 is chromogranin-like and shows finely granular cytoplasmic staining in pituitary
+      adenomas, fitting secretory granule biology better than a generic transport vesicle term.
+    proposed_replacement_terms:
+    - id: GO:0030141
+      label: secretory granule
+    supported_by:
+    - reference_id: PMID:21584660
+      supporting_text: marker of the constitutive secretory pathway
+    - reference_id: PMID:21584660
+      supporting_text: brown finely granular cytoplasmic staining
+- term:
+    id: GO:0071107
+    label: response to parathyroid hormone
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: The PTH-response evidence reflects GNAS-locus imprinting and methylation effects
+      rather than a direct NESP55 protein activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: PMID:22378814 shows that a deletion removing NESP55 affects imprinting and PHP1B,
+      but this is a regulatory-locus effect. It should not be treated as a core biological process
+      of the NESP55 protein product.
+    supported_by:
+    - reference_id: PMID:22378814
+      supporting_text: A novel deletion of 18,988 bp that removes NESP55
+    - reference_id: PMID:22378814
+      supporting_text: NESP55 is an additional imprinting
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Plasma membrane is not supported as a normal NESP55 protein location by the reviewed
+      literature; NESP55 is a secretory/granin-like product.
+    action: REMOVE
+    reason: The evidence points to secretory granule/cytoplasmic granular staining and secretion
+      rather than a plasma-membrane resident role.
+    supported_by:
+    - reference_id: PMID:21584660
+      supporting_text: brown finely granular cytoplasmic staining
+- term:
+    id: GO:0120162
+    label: positive regulation of cold-induced thermogenesis
+  evidence_type: ISS
+  original_reference_id: PMID:20374964
+  qualifier: involved_in
+  review:
+    summary: Cold-induced thermogenesis is a Gs-alpha/adipose signaling phenotype and should not
+      be assigned to the NESP55 protein product represented by O95467.
+    action: REMOVE
+    reason: PMID:20374964 studies Gs-alpha deficiency in adipose tissue. That is not evidence
+      for NESP55 acting in cold-induced thermogenesis.
+    supported_by:
+    - reference_id: PMID:20374964
+      supporting_text: Gsalpha plays a critical role in adipogenesis in vivo
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:20862257
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization is supported as broad localization for NESP55-containing
+      secretory granules and cytoplasmic immunostaining.
+    action: ACCEPT
+    reason: The term is broad but compatible with the granular cytoplasmic staining seen in pituitary
+      adenomas and neuroendocrine/chromaffin cells.
+    supported_by:
+    - reference_id: PMID:21584660
+      supporting_text: brown finely granular cytoplasmic staining
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:20862257
+  qualifier: located_in
+  review:
+    summary: Nuclear localization is not supported as a normal NESP55 location in the reviewed
+      sources.
+    action: REMOVE
+    reason: The main evidence supports cytoplasmic secretory granule/neuroendocrine localization,
+      not nuclear residence.
+    supported_by:
+    - reference_id: PMID:20862257
+      supporting_text: NESP55 is a highly specific marker for chromaffin cell types during development
+- term:
+    id: GO:0040015
+    label: negative regulation of multicellular organism growth
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: Negative regulation of organism growth is a broad GNAS-locus/Gs-alpha phenotype and
+      not a direct NESP55 function.
+    action: REMOVE
+    reason: The NESP55 product is a chromogranin-like secretory precursor; growth phenotypes from
+      GNAS models should not be propagated to this product without product-specific evidence.
+    supported_by:
+    - reference_id: file:human/GNAS/GNAS-deep-research-falcon_artifacts/artifact-00.md
+      supporting_text: NESP55 should not be conflated with canonical Gsalpha signaling protein
+        products.
+- term:
+    id: GO:0048471
+    label: perinuclear region of cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:21584660
+  qualifier: located_in
+  review:
+    summary: Perinuclear cytoplasmic localization is plausible for secretory-pathway/granular
+      staining but is not the core location term.
+    action: KEEP_AS_NON_CORE
+    reason: NESP55 is associated with neuroendocrine secretory compartments; perinuclear cytoplasm
+      can be retained as broad localization evidence.
+    supported_by:
+    - reference_id: PMID:21584660
+      supporting_text: brown finely granular cytoplasmic staining
+- term:
+    id: GO:0071107
+    label: response to parathyroid hormone
+  evidence_type: IMP
+  original_reference_id: PMID:22378814
+  qualifier: involved_in
+  review:
+    summary: The PTH-response evidence reflects GNAS-locus imprinting and methylation effects
+      rather than a direct NESP55 protein activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: PMID:22378814 shows that a deletion removing NESP55 affects imprinting and PHP1B,
+      but this is a regulatory-locus effect. It should not be treated as a core biological process
+      of the NESP55 protein product.
+    supported_by:
+    - reference_id: PMID:22378814
+      supporting_text: A novel deletion of 18,988 bp that removes NESP55
+    - reference_id: PMID:22378814
+      supporting_text: NESP55 is an additional imprinting
+- term:
+    id: GO:0007565
+    label: female pregnancy
+  evidence_type: NAS
+  original_reference_id: PMID:10729789
+  qualifier: involved_in
+  review:
+    summary: Female pregnancy is not supported as a direct process for the NESP55 protein product.
+    action: REMOVE
+    reason: The cited NESP55 cloning/processing paper describes a neuroendocrine secretory protein
+      and tissue-specific splicing, not a direct pregnancy function.
+    supported_by:
+    - reference_id: PMID:10729789
+      supporting_text: NESP55 open reading frame encoded a hydrophilic protein
+- term:
+    id: GO:0009306
+    label: protein secretion
+  evidence_type: NAS
+  original_reference_id: PMID:10729789
+  qualifier: involved_in
+  review:
+    summary: NESP55 is a secretory protein/cargo, but the available evidence does not show that
+      it actively mediates protein secretion.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: A secreted or processed cargo should not automatically receive a protein secretion
+      process annotation as if it controls secretion machinery.
+    supported_by:
+    - reference_id: PMID:10729789
+      supporting_text: posttranslational processing of a maternally expressed protein
+    - reference_id: PMID:21584660
+      supporting_text: marker of the constitutive secretory pathway
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by
+    curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:10729789
+  title: &#39;Neuroendocrine secretory protein 55 (NESP55): alternative splicing onto transcripts
+    of the GNAS gene and posttranslational processing of a maternally expressed protein.&#39;
+  findings: []
+- id: PMID:20374964
+  title: &#39;TODO: Fetch title&#39;
+  findings: []
+- id: PMID:20862257
+  title: &#39;TODO: Fetch title&#39;
+  findings: []
+- id: PMID:21584660
+  title: Immunohistochemical expression of neuroendocrine secretory protein-55 (NESP-55) in pituitary
+    adenomas.
+  findings: []
+- id: PMID:22378814
+  title: A new deletion ablating NESP55 causes loss of maternal imprint of A/B GNAS and autosomal
+    dominant pseudohypoparathyroidism type Ib.
+  findings: []
+- id: file:human/GNAS/GNAS-uniprot.txt
+  title: UniProt record for GNAS/NESP55
+  findings: []
+- id: file:human/GNAS/GNAS-deep-research-falcon_artifacts/artifact-00.md
+  title: Falcon deep research artifact for GNAS/NESP55
+  findings: []
+core_functions:
+- description: NESP55 acts as a chromogranin-like neuroendocrine secretory precursor in chromaffin/neuroendocrine
+    cells, undergoing post-translational processing and marking secretory-granule differentiation
+    rather than catalyzing a defined biochemical reaction.
+  locations:
+  - id: GO:0030141
+    label: secretory granule
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:10729789
+    supporting_text: NESP55 open reading frame encoded a hydrophilic protein
+  - reference_id: PMID:10729789
+    supporting_text: posttranslational processing of a maternally expressed protein
+  - reference_id: PMID:21584660
+    supporting_text: marker of the constitutive secretory pathway
+  - reference_id: PMID:20862257
+    supporting_text: NESP55 is a highly specific marker for chromaffin cell types during development
+proposed_new_terms: []
+suggested_questions:
+- question: Which processed NESP55 peptides have reproducible physiological activity in human
+    neuroendocrine tissues?
+- question: Can GNAS annotations be separated more cleanly by product so that NESP55-specific
+    annotations are not mixed with Gs-alpha signaling phenotypes?
+suggested_experiments:
+- description: Use isoform/product-specific antibodies or tagged endogenous NESP55 to define secretory
+    granule localization and secretion dynamics in neuroendocrine cells.
+  hypothesis: NESP55 will localize to regulated secretory compartments and be secreted or processed
+    in neuroendocrine cells.
+- description: Profile processed NESP55 peptides by targeted mass spectrometry in pituitary, adrenal
+    medulla, and neuroendocrine tumor samples.
+  hypothesis: Product-specific peptide profiling will identify which NESP55-derived peptides are
+    reproducibly produced in relevant tissues.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

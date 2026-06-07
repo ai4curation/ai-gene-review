@@ -1,5 +1,5 @@
 ---
-name: reference-findings-summarize
+name: reference-findings-summarizer
 description: Use this agent when you need to extract and summarize key findings from scientific references that are relevant to a gene's function. This agent should be used after references have been identified in a gene review to provide detailed supporting evidence from the literature. The agent will look up cached publications and extract only the most relevant findings related to the gene's direct function, excluding irrelevant experimental details unless they directly inform gene function.
 model: inherit
 ---

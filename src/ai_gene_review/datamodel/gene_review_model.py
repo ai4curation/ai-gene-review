@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-03-22T20:13:53
+# Generation date: 2026-06-07T13:35:43
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -184,7 +184,9 @@ class GeneReview(YAMLRoot):
 
         self._normalize_inlined_as_dict(slot_name="existing_annotations", slot_type=ExistingAnnotation, key_name="evidence_type", keyed=False)
 
-        self._normalize_inlined_as_dict(slot_name="core_functions", slot_type=CoreFunction, key_name="molecular_function", keyed=False)
+        if not isinstance(self.core_functions, list):
+            self.core_functions = [self.core_functions] if self.core_functions is not None else []
+        self.core_functions = [v if isinstance(v, CoreFunction) else CoreFunction(**as_dict(v)) for v in self.core_functions]
 
         self._normalize_inlined_as_dict(slot_name="proposed_new_terms", slot_type=ProposedOntologyTerm, key_name="proposed_name", keyed=False)
 
@@ -376,6 +378,7 @@ class Reference(YAMLRoot):
     findings: Optional[Union[Union[dict, "Finding"], list[Union[dict, "Finding"]]]] = empty_list()
     is_invalid: Optional[Union[bool, Bool]] = None
     full_text_unavailable: Optional[Union[bool, Bool]] = None
+    reference_review: Optional[Union[dict, "ReferenceReview"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self._is_empty(self.id):
@@ -397,6 +400,40 @@ class Reference(YAMLRoot):
 
         if self.full_text_unavailable is not None and not isinstance(self.full_text_unavailable, Bool):
             self.full_text_unavailable = Bool(self.full_text_unavailable)
+
+        if self.reference_review is not None and not isinstance(self.reference_review, ReferenceReview):
+            self.reference_review = ReferenceReview(**as_dict(self.reference_review))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ReferenceReview(YAMLRoot):
+    """
+    Manual reviewer assessment of a reference - how relevant it is to the gene's function, and whether it is correctly
+    cited and scientifically sound. Distinct from the machine-fetched id/title fields; all fields are optional and
+    reviewer-supplied.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ReferenceReview"]
+    class_class_curie: ClassVar[str] = "gene_review:ReferenceReview"
+    class_name: ClassVar[str] = "ReferenceReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ReferenceReview
+
+    relevance: Optional[Union[str, "ReferenceRelevanceEnum"]] = None
+    correctness: Optional[Union[str, "ReferenceCorrectnessEnum"]] = None
+    review_notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.relevance is not None and not isinstance(self.relevance, ReferenceRelevanceEnum):
+            self.relevance = ReferenceRelevanceEnum(self.relevance)
+
+        if self.correctness is not None and not isinstance(self.correctness, ReferenceCorrectnessEnum):
+            self.correctness = ReferenceCorrectnessEnum(self.correctness)
+
+        if self.review_notes is not None and not isinstance(self.review_notes, str):
+            self.review_notes = str(self.review_notes)
 
         super().__post_init__(**kwargs)
 
@@ -587,9 +624,9 @@ class CoreFunction(YAMLRoot):
     class_name: ClassVar[str] = "CoreFunction"
     class_model_uri: ClassVar[URIRef] = GENE_REVIEW.CoreFunction
 
-    molecular_function: Union[dict, Term] = None
     description: Optional[str] = None
     supported_by: Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]] = empty_list()
+    molecular_function: Optional[Union[dict, Term]] = None
     contributes_to_molecular_function: Optional[Union[dict, Term]] = None
     directly_involved_in: Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]] = empty_dict()
     locations: Optional[Union[dict[Union[str, TermId], Union[dict, Term]], list[Union[dict, Term]]]] = empty_dict()
@@ -598,15 +635,13 @@ class CoreFunction(YAMLRoot):
     in_complex: Optional[Union[dict, Term]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
-        if self._is_empty(self.molecular_function):
-            self.MissingRequiredField("molecular_function")
-        if not isinstance(self.molecular_function, Term):
-            self.molecular_function = Term(**as_dict(self.molecular_function))
-
         if self.description is not None and not isinstance(self.description, str):
             self.description = str(self.description)
 
         self._normalize_inlined_as_dict(slot_name="supported_by", slot_type=SupportingTextInReference, key_name="reference_id", keyed=False)
+
+        if self.molecular_function is not None and not isinstance(self.molecular_function, Term):
+            self.molecular_function = Term(**as_dict(self.molecular_function))
 
         if self.contributes_to_molecular_function is not None and not isinstance(self.contributes_to_molecular_function, Term):
             self.contributes_to_molecular_function = Term(**as_dict(self.contributes_to_molecular_function))
@@ -1853,11 +1888,11 @@ class AnnotationQualifierEnum(EnumDefinitionImpl):
 
 class GOTermEnum(EnumDefinitionImpl):
     """
-    A term in the GO ontology
+    A term in the GO ontology (including roots, to allow ND annotations)
     """
     _defn = EnumDefinition(
         name="GOTermEnum",
-        description="A term in the GO ontology",
+        description="A term in the GO ontology (including roots, to allow ND annotations)",
     )
 
 class GOMolecularActivityEnum(EnumDefinitionImpl):
@@ -2509,6 +2544,59 @@ class PredictionErrorTypeEnum(EnumDefinitionImpl):
         description="""Types of errors that lead to incorrect functional predictions, based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034).""",
     )
 
+class ReferenceRelevanceEnum(EnumDefinitionImpl):
+    """
+    Reviewer's assessment of how relevant a reference is to the gene's function and review.
+    """
+    HIGH = PermissibleValue(
+        text="HIGH",
+        description="""Directly establishes or strongly informs the gene's function, mechanism, process, or localization""")
+    MEDIUM = PermissibleValue(
+        text="MEDIUM",
+        description="Provides supporting or corroborating evidence for a function or annotation")
+    LOW = PermissibleValue(
+        text="LOW",
+        description="Background or contextual only (e.g. family/pathway reviews, methods, or a passing mention)")
+    NONE = PermissibleValue(
+        text="NONE",
+        description="Not relevant to this gene's function (a candidate for removal from the references)")
+
+    _defn = EnumDefinition(
+        name="ReferenceRelevanceEnum",
+        description="Reviewer's assessment of how relevant a reference is to the gene's function and review.",
+    )
+
+class ReferenceCorrectnessEnum(EnumDefinitionImpl):
+    """
+    Reviewer's overall manual assessment of a reference's trustworthiness, spanning both citation correctness (does
+    the identifier point to the intended paper that supports its use) and scientific soundness (is that paper's claim
+    reliable). Single-valued: record the most salient issue and elaborate in review_notes. Complements is_invalid
+    (retracted/replaced) and full_text_unavailable.
+    """
+    VERIFIED = PermissibleValue(
+        text="VERIFIED",
+        description="""Identifier resolves to the intended paper, which supports how it is used, with no soundness concerns""")
+    UNVERIFIED = PermissibleValue(
+        text="UNVERIFIED",
+        description="Not yet manually checked (the default state)")
+    WRONG_IDENTIFIER = PermissibleValue(
+        text="WRONG_IDENTIFIER",
+        description="""Identifier resolves to a DIFFERENT paper than intended (e.g. a PMID pointing to an unrelated article)""")
+    MISCITED = PermissibleValue(
+        text="MISCITED",
+        description="Paper is correctly identified but does not actually support the claim it is cited for")
+    DISPUTED = PermissibleValue(
+        text="DISPUTED",
+        description="Correctly cited, but the paper's central claim is contradicted or contested by other evidence")
+    LOW_QUALITY = PermissibleValue(
+        text="LOW_QUALITY",
+        description="Correctly cited, but methodologically weak or preliminary; treat its conclusions with caution")
+
+    _defn = EnumDefinition(
+        name="ReferenceCorrectnessEnum",
+        description="""Reviewer's overall manual assessment of a reference's trustworthiness, spanning both citation correctness (does the identifier point to the intended paper that supports its use) and scientific soundness (is that paper's claim reliable). Single-valued: record the most salient issue and elaborate in review_notes. Complements is_invalid (retracted/replaced) and full_text_unavailable.""",
+    )
+
 # Slots
 class slots:
     pass
@@ -2624,6 +2712,18 @@ slots.isoform = Slot(uri=GENE_REVIEW.isoform, name="isoform", curie=GENE_REVIEW.
 slots.review = Slot(uri=GENE_REVIEW.review, name="review", curie=GENE_REVIEW.curie('review'),
                    model_uri=GENE_REVIEW.review, domain=None, range=Optional[Union[dict, Review]])
 
+slots.reference_review = Slot(uri=GENE_REVIEW.reference_review, name="reference_review", curie=GENE_REVIEW.curie('reference_review'),
+                   model_uri=GENE_REVIEW.reference_review, domain=None, range=Optional[Union[dict, ReferenceReview]])
+
+slots.relevance = Slot(uri=GENE_REVIEW.relevance, name="relevance", curie=GENE_REVIEW.curie('relevance'),
+                   model_uri=GENE_REVIEW.relevance, domain=None, range=Optional[Union[str, "ReferenceRelevanceEnum"]])
+
+slots.correctness = Slot(uri=GENE_REVIEW.correctness, name="correctness", curie=GENE_REVIEW.curie('correctness'),
+                   model_uri=GENE_REVIEW.correctness, domain=None, range=Optional[Union[str, "ReferenceCorrectnessEnum"]])
+
+slots.review_notes = Slot(uri=GENE_REVIEW.review_notes, name="review_notes", curie=GENE_REVIEW.curie('review_notes'),
+                   model_uri=GENE_REVIEW.review_notes, domain=None, range=Optional[str])
+
 slots.ontology = Slot(uri=GENE_REVIEW.ontology, name="ontology", curie=GENE_REVIEW.curie('ontology'),
                    model_uri=GENE_REVIEW.ontology, domain=None, range=Optional[str])
 
@@ -2685,7 +2785,7 @@ slots.coreFunction__supported_by = Slot(uri=GENE_REVIEW.supported_by, name="core
                    model_uri=GENE_REVIEW.coreFunction__supported_by, domain=None, range=Optional[Union[Union[dict, SupportingTextInReference], list[Union[dict, SupportingTextInReference]]]])
 
 slots.coreFunction__molecular_function = Slot(uri=GENE_REVIEW.molecular_function, name="coreFunction__molecular_function", curie=GENE_REVIEW.curie('molecular_function'),
-                   model_uri=GENE_REVIEW.coreFunction__molecular_function, domain=None, range=Union[dict, Term])
+                   model_uri=GENE_REVIEW.coreFunction__molecular_function, domain=None, range=Optional[Union[dict, Term]])
 
 slots.coreFunction__contributes_to_molecular_function = Slot(uri=GENE_REVIEW.contributes_to_molecular_function, name="coreFunction__contributes_to_molecular_function", curie=GENE_REVIEW.curie('contributes_to_molecular_function'),
                    model_uri=GENE_REVIEW.coreFunction__contributes_to_molecular_function, domain=None, range=Optional[Union[dict, Term]])
@@ -3082,9 +3182,6 @@ slots.Term_id = Slot(uri=GENE_REVIEW.id, name="Term_id", curie=GENE_REVIEW.curie
 
 slots.Term_label = Slot(uri=RDFS.label, name="Term_label", curie=RDFS.curie('label'),
                    model_uri=GENE_REVIEW.Term_label, domain=Term, range=str)
-
-slots.ExistingAnnotation_term = Slot(uri=GENE_REVIEW.term, name="ExistingAnnotation_term", curie=GENE_REVIEW.curie('term'),
-                   model_uri=GENE_REVIEW.ExistingAnnotation_term, domain=ExistingAnnotation, range=Optional[Union[dict, Term]])
 
 slots.CoreFunction_description = Slot(uri=DCTERMS.description, name="CoreFunction_description", curie=DCTERMS.curie('description'),
                    model_uri=GENE_REVIEW.CoreFunction_description, domain=CoreFunction, range=Optional[str])

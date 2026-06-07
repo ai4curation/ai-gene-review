@@ -51,3 +51,9 @@ functions of Hsp70s."]. Cheng et al. report PCNA binding in a hepatocellular
 carcinoma context, not folding-chaperone biochemistry [PMID:32128976 "HSPA12A
 directly binds to PCNA and promotes its trimerization, which is an essential
 functional conformation of PCNA for carcinogenesis."].
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: PN placement in the HSP70 system appears based on family/domain context, but current evidence supports only a narrow SorLA/SORL1-selective adaptor-like trafficking role.
