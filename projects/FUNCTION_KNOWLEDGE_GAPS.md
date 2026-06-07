@@ -77,6 +77,12 @@ Two axes. First, *what kind of ignorance* (this determines who can fix it):
 Most real entries are a *blend* (CFAP300 below is biology-dominant with an ontology shadow),
 and naming the blend is the actionable part.
 
+A useful third framing emerged from curation, cutting across the above: the **residual sub-gap** —
+a gene whose *core* function is textbook-solid but which still hides one sharp, load-bearing
+mechanistic hole (e.g. RAB9A's unidentified GEF/GAP, RASA1's catalysis-independent scaffolding,
+atg101's WF-finger recruit). These are easy to miss precisely because the gene *looks* finished;
+flagging them is high-value because the hole is often the rate-limiting unknown for the pathway.
+
 Second, *which GO aspect is dark* — most "dark" genes are not uniformly dark:
 
 - **MF-dark** — process/location known, molecular mechanism unknown (the most common and most
@@ -325,6 +331,181 @@ rather than to an unverified PMID (see the KCTD14 caution).
 - A clean illustration of a *closing* gap — and of why preprint-only evidence must **not** be
   auto-annotated.
 
+## Worked gap entries — second batch (read-list deepening)
+
+Curating the un-vetted leads surfaced a useful third category alongside the wholly-dark genes:
+the **residual sub-gap** — a gene whose *core* function is textbook-solid, but which still hides a
+sharp, specific mechanistic hole (RAB9A's missing GEF/GAP, RASA1's catalysis-independent
+scaffolding, atg101's WF-finger recruit). These matter because a heavily annotated gene can *look*
+finished while a load-bearing mechanism is undetermined — exactly the failure mode the project's
+core principle warns about. All eight leads adjudicated to **real gaps** (none were spurious);
+every PMID below was PubMed-verified, and one mis-attributed citation was caught and dropped.
+
+### MTC7 (yeast / *S. cerevisiae*) — telomere-capping sequence orphan
+
+- **Boundary:** small ~139-aa basic protein; *mtc7Δ* clusters genetically with short-telomere /
+  telomere-maintenance deletions and is synthetically sick with *cdc13-1* in a genome-wide screen
+  (Addinall et al. 2008, *Genetics* — cited in the files only by DOI/PMC, no verified PMID;
+  [DOI](https://doi.org/10.1534/genetics.108.092577)). GOA marks every functional aspect **ND**
+  (no data) plus one IEA membrane keyword.
+- **Gap statement:** Mtc7's biochemical activity, substrate/partner, and the mechanism by which it
+  influences telomere capping/length are entirely unknown.
+- **Provenance (verbatim):** *"MTC7 (YEL033W) encodes a protein of unknown molecular function. No
+  enzymatic activity or specific biochemical function has been demonstrated to date"*
+  (`genes/yeast/MTC7/MTC7-deep-research.md`); *"No study in the retrieved corpus provides a direct
+  molecular function for Mtc7 ... MTC7 remains functionally unannotated mechanistically"*
+  (`genes/yeast/MTC7/MTC7-deep-research-falcon.md`).
+- **Type:** biology gap (primary) + curation gap (a telomere-maintenance BP is arguably capturable
+  from the genetic evidence as IGI, yet GOA still carries only ND).
+- **Resolve:** AP-MS / Y2H for physical partners; GFP localization + telomere-length / TPE assays
+  in *mtc7Δ*.
+
+### RAB9A (human) — known Rab, unknown switch *(residual sub-gap)*
+
+- **Boundary:** endosome-to-TGN retrograde Rab GTPase that recycles mannose-6-phosphate receptors
+  (Lombardi et al. 1993, *EMBO J*, PMID:8440258,
+  [DOI](https://doi.org/10.1002/j.1460-2075.1993.tb05701.x)); has well-defined effectors including
+  the p40 effector (Díaz et al. 1997, *J Cell Biol*, PMID:9230071,
+  [DOI](https://doi.org/10.1083/jcb.138.2.283)) and TIP47/GCC185 (deep-research files).
+- **Gap statement:** The specific GEF that activates RAB9A on late endosomes and the GAP that
+  inactivates it have not been definitively identified.
+- **Provenance (verbatim):** *"the specific guanine nucleotide exchange factor (GEF) that activates
+  RAB9A and the GTPase-activating protein (GAP) that inactivates it have not been definitively
+  identified"* (`genes/human/RAB9A/RAB9A-deep-research-cyberian.md`); *"Regulators specific to
+  RAB9A (cognate GEFs/GAPs) ... remain less well defined"*
+  (`genes/human/RAB9A/RAB9A-deep-research-falcon.md`). (A claim in the openai file that DENND2 is
+  the GEF rests on a general DENN-domain paper covering *other* Rabs, not RAB9A — an
+  over-extrapolation that reinforces that no validated RAB9A GEF exists.)
+- **Type:** biology gap — the regulators are genuinely undiscovered.
+- **Resolve:** in vitro GEF assays across candidate DENN-domain GEFs; a TBC-domain GAP screen with
+  a CI-MPR mis-sorting readout on knockdown.
+
+### RASA1 (human) — catalysis solved, scaffolding unsolved *(residual sub-gap)*
+
+- **Boundary:** p120 RasGAP; accelerates Ras GTP hydrolysis ~10⁵-fold via the arginine finger
+  Arg789, structurally defined with the transition-state (AlF) mimic (Scheffzek et al. 1997,
+  *Science*, PMID:9219684, [DOI](https://doi.org/10.1126/science.277.5324.333)); multidomain
+  (SH2-SH3-SH2, PH, C2, GAP) with tandem-SH2 phosphotyrosine engagement
+  (`genes/human/RASA1/RASA1-deep-research-falcon.md`).
+- **Gap statement:** The molecular mechanism of RASA1's GAP-activity-**independent** (scaffolding)
+  functions — e.g. how p190RhoGAP recruitment drives directed cell movement and contributes to
+  blood-vessel formation independently of its own Ras-GAP activity — is unresolved.
+- **Provenance (verbatim):** *"Experimental evidence indicates RASA1 is necessary for directed cell
+  movement in vitro, and this role depends on its ability to recruit p190^RhoGAP (independent of
+  RASA1's own Ras-GAP activity)"*; *"the embryonic blood vessel defects in RASA1-null embryos are
+  partly due to Ras-independent actions of RASA1"* (`RASA1-deep-research-openai.md`); *"How these
+  two functions are coordinated, and whether they can be separated therapeutically, warrants
+  further study."* (`RASA1-deep-research-cyberian.md`).
+- **Type:** blend — biology gap (the scaffolding mechanism is unresolved) + curation gap (GO
+  captures the catalytic GAP branch; the p190RhoGAP-recruitment role in migration is
+  under-annotated).
+- **Resolve:** GAP-dead (Arg789) vs scaffold-dead (SH2/SH3) separation-of-function knock-ins
+  scoring migration / vascular tube formation; BioID of GAP-dead RASA1 to map the
+  catalysis-independent interactome.
+
+### BAIAP2L2 (human) — Pinkbar, dark in its native tissue
+
+- **Boundary:** epithelial I-BAR/IMD protein ("Pinkbar") that binds phosphoinositide membranes and
+  generates planar membrane sheets, localizing to Rab13 vesicles and intercellular junctions in
+  intestine/kidney (Pykäläinen et al. 2011, *Nat Struct Mol Biol*, PMID:21743456,
+  [DOI](https://doi.org/10.1038/nsmb.2079)). In cochlear hair cells it is a row-2 stereocilia-tip
+  component (deep-research files).
+- **Gap statement:** The molecular function of BAIAP2L2/Pinkbar in its name-defining native
+  intestinal/renal epithelium — what membrane/junctional structure it builds, and through which
+  partner — is unknown, because knockout mice show no overt epithelial phenotype.
+- **Provenance (verbatim):** *"mice lacking BAIAP2L2 display normal kidney and colon tissue
+  morphology and maintain normal electrolyte homeostasis and tissue architecture under
+  physiological conditions"*; *"BAIAP2L2's relationship to microvillar formation and maintenance in
+  intestinal brush borders remains incompletely understood."*
+  (`genes/human/BAIAP2L2/BAIAP2L2-deep-research-perplexity.md`).
+- **Type:** biology gap (primary; the epithelial MF was never measured) + curation gap (the
+  epithelial GO terms are IEA/ISS/IBA inferences).
+- **Resolve:** challenge-condition / conditional-KO phenotyping of intestinal & renal epithelium
+  (barrier integrity, brush-border architecture under stress); Pinkbar proximity-labeling
+  interactome in polarized enterocytes.
+
+### SCGB1C1 (human) — orphan secretoglobin
+
+- **Boundary:** small secreted secretoglobin-fold protein localized to Bowman's glands of the
+  olfactory mucosa, with a hydrophobic cavity capable of binding small ligands; in a mouse
+  OVA-asthma model, recombinant SCGB1C1 suppressed Th2 inflammation and expanded Tregs (Kim et al.
+  2024, *Int J Mol Sci*, PMID:38892470, [DOI](https://doi.org/10.3390/ijms25116282)). GOA carries
+  only a single IEA extracellular-region term.
+- **Gap statement:** The endogenous physiological ligand(s) SCGB1C1 binds in vivo, and the
+  cell-surface receptor / signaling mechanism behind its immunomodulatory (Treg-expanding) effect,
+  are unidentified.
+- **Provenance (verbatim):** *"The specific hydrophobic ligands that SCGB1C1 binds in vivo remain
+  incompletely characterized."*; *"The exact receptors and signaling cascades through which SCGB1C1
+  mediates these immunomodulatory effects remain to be definitively identified, representing an
+  important area for future investigation."* (`SCGB1C1-deep-research-perplexity.md`).
+- **Type:** biology gap (ligand + receptor genuinely undiscovered) + curation gap (only one IEA CC
+  term; the established secretoglobin fold and the mouse phenotype are uncaptured).
+- **Resolve:** a biochemical ligand-binding screen (lipidomic / odorant affinity) on recombinant
+  human SCGB1C1; receptor identification by pulldown/proximity-labeling on Tregs + LOF validation.
+
+### FGFRL1 (human) — a receptor that signals without a kinase
+
+- **Boundary:** atypical FGFR with three Ig-like ectodomains but **no** tyrosine-kinase domain;
+  binds FGF ligands and heparin and acts as a decoy receptor (Trueb et al. 2003, *J Biol Chem*,
+  PMID:12813049, [DOI](https://doi.org/10.1074/jbc.M300281200)); forms constitutive dimers and
+  mediates HSPG-dependent cell adhesion (Rieckmann et al. 2007, *Exp Cell Res*, PMID:18061161,
+  [DOI](https://doi.org/10.1016/j.yexcr.2007.10.029)); essential for kidney, diaphragm and skull
+  development, with the cytoplasmic tail dispensable (deep-research files).
+- **Gap statement:** The precise molecular mechanism by which kinase-dead FGFRL1 modulates
+  FGF/FGFR signaling in vivo (pure ligand sink vs inhibitory FGFR complexes vs intracellular
+  Sprouty/Spred recruitment), and the identity of its Ig3 cell-fusion partner, are unknown.
+- **Provenance (verbatim):** *"manipulating FGFRL1 levels in vitro did not measurably change cell
+  proliferation or ERK phosphorylation"*; *"How exactly does FGFRL1 regulate FGF signaling in vivo?
+  Is it purely by sequestering FGFs (acting as a sink), or does it form inhibitory complexes with
+  the signaling receptors?"*; *"The 'target protein' involved in FGFRL1-mediated cell fusion is
+  currently unknown."* (`genes/human/FGFRL1/FGFRL1-deep-research.md`).
+- **Type:** biology gap (primary; transduction mechanism undetermined) + curation gap (the GOA term
+  `GO:0005007` "fibroblast growth factor receptor activity" overstates canonical signaling for a
+  kinase-dead receptor — a candidate MODIFY).
+- **Resolve:** FGFRL1–FGFR1/2/3/4 co-IP + live-cell co-imaging during ligand stimulation to test
+  sink-vs-complex models; a fusion-defective Ig3 point-mutant knock-in plus a screen for the Ig3
+  partner.
+
+### atg101 (SCHPO) — known subunit, unknown recruit *(residual sub-gap)*
+
+- **Boundary:** core subunit of the *S. pombe* Atg1/ULK autophagy-initiation complex (Yu et al.
+  2021, *J Cell Sci*, PMID:34499173, [DOI](https://doi.org/10.1242/jcs.258774)); forms an obligate
+  HORMA heterodimer that stabilizes the Atg13 HORMA domain, and its conserved "WF finger" recruits
+  downstream factors (Suzuki et al. 2015, *Nat Struct Mol Biol*, PMID:26030876,
+  [DOI](https://doi.org/10.1038/nsmb.3036)).
+- **Gap statement:** The molecular identity of the downstream factor(s) recruited by the Atg101
+  WF-finger surface in *S. pombe* is unknown, despite that surface being genetically required for
+  autophagy independent of Atg13 binding.
+- **Provenance (verbatim):** *"A WF-finger triple mutant (W110A, P111A, F112A) retained Atg13
+  binding but impaired autophagy, indicating Atg101 has functional roles beyond stabilizing/binding
+  Atg13."* (`atg101-deep-research-falcon.md`; the underlying WF-finger result is from a thesis, no
+  PMID); *"The precise protein targets of the WF finger motif remain incompletely characterized,
+  though WIPI family proteins represent likely candidates."* (`atg101-deep-research-perplexity.md`).
+- **Type:** biology gap (the binding partner is unidentified) + minor curation gap (no MF term for
+  the WF-finger recruitment; the key evidence sits in an uncited thesis, not a curatable PMID).
+- **Resolve:** IP-MS comparing WT vs WF-finger AAA mutant in starved *S. pombe*; targeted binding
+  tests against candidate WIPI / Atg18 orthologs.
+
+### irg-1 (worm) — famous reporter, mystery protein
+
+- **Boundary:** intestinal infection-response gene transcriptionally induced by *Pseudomonas
+  aeruginosa* via the bZIP factor ZIP-2 (Estes et al. 2010, *PNAS*, PMID:20133860,
+  [DOI](https://doi.org/10.1073/pnas.0914643107)); annotated to antibacterial innate immune
+  response by IEP (expression) evidence; the protein carries predicted NADAR/YbiA-like domains (a
+  domain prediction only).
+- **Gap statement:** The actual biochemical/enzymatic activity of the IRG-1 protein — whether its
+  predicted NADAR/YbiA-like domain confers a real catalytic function, and on what substrate — is
+  undefined; everything known concerns its transcriptional *induction*, not what the protein
+  *does*. GOA records `molecular_function` as **ND**.
+- **Provenance (verbatim):** *"irg-1 enables GO:0003674 molecular_function ... ND"*
+  (`genes/worm/irg-1/irg-1-goa.tsv`); *"Despite domain predictions (NADAR/YbiA-like), no direct
+  enzymatic reaction, substrate specificity, or transport function has been experimentally defined
+  for the IRG-1 protein in C. elegans."* (`genes/worm/irg-1/irg-1-deep-research-falcon.md`).
+- **Type:** biology gap (MF genuinely unknown), honestly reflected as an MF ND annotation — not a
+  curation/ontology defect. A clean BP-known / MF-dark exemplar.
+- **Resolve:** assay recombinant IRG-1 for NADAR-family activity (NAD / ADP-ribose-related
+  hydrolase) against candidate substrates; structure-guided catalytic-residue mutagenesis + rescue.
+
 ## Methodology
 
 For each candidate gene:
@@ -391,16 +572,24 @@ gap entries above.
 | TRAPPC12 | human | **worked** | Moonlighting TRAPP factor; mitotic function ill-defined |
 | KCTD14 | human | **worked** | Least-studied KCTD BTB protein; no MF/BP/CC evidence (MGI) |
 | C18orf21 | human | **worked** | ORF-named; a *closing* gap (2025 RNase MRP preprints) |
+| MTC7 | yeast | **worked** | Telomere-capping sequence orphan; all GO aspects ND |
+| RAB9A | human | **worked** | *Residual sub-gap*: known Rab, cognate GEF/GAP unidentified |
+| RASA1 | human | **worked** | *Residual sub-gap*: catalysis solved, scaffolding mechanism unsolved |
+| BAIAP2L2 | human | **worked** | Pinkbar; native epithelial function unmeasured (KO normal) |
+| SCGB1C1 | human | **worked** | Orphan secretoglobin; ligand + receptor unidentified |
+| FGFRL1 | human | **worked** | Kinase-dead FGFR; signaling mechanism unresolved |
+| atg101 | SCHPO | **worked** | *Residual sub-gap*: WF-finger recruitment partner unknown |
+| irg-1 | worm | **worked** | BP-known / MF-dark; IRG-1 protein activity undefined (MF ND) |
 
 ### Reproducible read-list (ignorance-signal scan)
 
 A grep of every `genes/**/*-deep-research-*.md` for author hedges (`remains unknown / unclear /
 undetermined / elusive / uncharacterized / to be determined`) and for `precise (function|role|
 mechanism) ... (unknown|unclear|not)` surfaced **~60 files** carrying explicit ignorance
-statements — a reproducible candidate pool beyond the triage table. Strong un-curated leads
-spotted in that scan (not yet read in depth, listed honestly as un-vetted): yeast/MTC7,
-human/RAB9A, human/RASA1, human/BAIAP2L2, human/SCGB1C1, human/FGFRL1, SCHPO/atg101, worm/irg-1,
-and the METEA *mxa/mll/xox* methanol-oxidation auxiliary genes as a cluster.
+statements — a reproducible candidate pool beyond the triage table. The strongest leads from that
+scan have now been curated (the second-batch entries above); remaining un-vetted clusters worth
+reading next include the METEA *mxa/mll/xox* methanol-oxidation auxiliary genes (mllA/F/G/H/J,
+mxbM, mxcQ, xoxG, mluI) as a group, plus human/MAP7D1, human/POLE4, human/AP3B2, and SCHPO/atg2.
 
 > **Curation caution (learned here):** deep-research files frequently cite sources only by DOI,
 > and some cite PMIDs that do not resolve to the right paper (e.g. the KCTD14 cyberian file). Every
@@ -433,7 +622,9 @@ and the METEA *mxa/mll/xox* methanol-oxidation auxiliary genes as a cluster.
 - [x] One worked exemplar (CFAP300)
 - [x] Curate the seed read-list into worked gap entries (8 added: swrD, mxaC, TRAPPC12, AGR3, tam10, P3R3URF, KCTD14, C18orf21; all cited PMIDs PubMed-verified)
 - [x] Reproducible ignorance-signal read-list established (~60 deep-research files)
-- [ ] Read-list deepening: curate the un-vetted leads (MTC7, RAB9A, RASA1, …)
+- [x] Read-list deepening, batch 2 (8 added: MTC7, RAB9A, RASA1, BAIAP2L2, SCGB1C1, FGFRL1, atg101, irg-1; all adjudicated to real gaps; PMIDs PubMed-verified)
+- [x] Third gap framing identified: the *residual sub-gap* of otherwise well-characterized genes
+- [ ] Read-list deepening, batch 3: METEA mxa/mll/xox cluster, MAP7D1, POLE4, AP3B2, atg2
 - [ ] Decide unit granularity (per-gap vs per-gene narrative)
 - [ ] Decide home: standalone register vs `knowledge_gaps` schema element (deferred)
 - [ ] Conservation / disease prioritization pass over candidates
@@ -454,3 +645,11 @@ and the METEA *mxa/mll/xox* methanol-oxidation auxiliary genes as a cluster.
   to-file-path rule. *Span of gap types now covered:* enzyme-adjacent bacterial (swrD, mxaC),
   moonlighting eukaryotic (TRAPPC12), noncanonical-fold (AGR3), sequence orphan (tam10),
   microprotein (P3R3URF), unstudied family member (KCTD14), and a *closing* gap (C18orf21).
+- 2026-06: Second curation batch — eight read-list leads (MTC7, RAB9A, RASA1, BAIAP2L2, SCGB1C1,
+  FGFRL1, atg101, irg-1) each adjudicated by reading their deep-research/GOA files; all eight were
+  genuine gaps (no spurious calls). Surfaced the *residual sub-gap* category (RAB9A GEF/GAP, RASA1
+  scaffolding, atg101 WF-finger) — a sharp mechanistic hole inside an otherwise well-characterized
+  gene. PMID verification again paid off: PMID:36323259, cited by a deep-research summary as the
+  RASA1 tandem-SH2 reference, resolves to an unrelated stem-cell/ILC paper and was dropped;
+  RASA1's domain architecture is anchored to the file path instead. Sixteen worked entries now
+  span bacterial, fungal (budding + fission yeast), nematode, and human genes.
