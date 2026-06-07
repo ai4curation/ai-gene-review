@@ -118,3 +118,53 @@ is uninformative -> MARK_AS_OVER_ANNOTATED.
 6. CC: endoplasmic reticulum lumen.
 Secondary (non-core): cell-surface eat-me signal / phagocytosis, extracellular pools,
 C1q binding, cytosolic/nuclear moonlighting (nuclear export, integrin binding, mRNA binding).
+
+## Falcon deep research findings (2026-06-07)
+
+The Falcon report (`CALR-deep-research-falcon.md`) overwhelmingly CONFIRMS the existing
+review for canonical biology (ER-luminal lectin chaperone of the CNX/CRT cycle, binds
+monoglucosylated N-glycans, recruits ERp57/PDIA3 via the P-domain, high-capacity/low-affinity
+ER Ca2+ buffer, KDEL retrieval, ecto-CALR eat-me/ICD role). The genuinely NEW material is the
+oncogenic exon 9 mutant-CALR / MPN axis, which is entirely absent from the existing
+`existing_annotations` (correctly, since these are neomorphic disease mutations not in GOA),
+plus a more explicit receptor mechanism for the eat-me signal. Key points:
+
+- NEW (disease, well established): Somatic exon 9 frameshift (+1 bp) CALR mutations are driver
+  lesions in JAK2/MPL-nonmutated myeloproliferative neoplasms (essential thrombocythemia,
+  primary myelofibrosis), replacing the acidic Ca2+-binding C-terminus + KDEL with a shared
+  novel basic tail. First described in two 2013 NEJM papers [PMID:24325356 "Somatic insertions
+  or deletions in exon 9 of CALR"; PMID:24325359 "Mutations were located in exon 9 and
+  generated a +1 base-pair frameshift"]. Type 1 (del52) and type 2 (ins5) ~80% of mutant cases.
+  This is mutation biology, not a function of WT CALR -> does NOT alter existing_annotations;
+  recorded here and as statement-only references for context.
+
+- NEW (mechanism): Mutant CALR gains a neomorphic, ligand(TPO)-independent interaction with the
+  thrombopoietin receptor MPL (N-domain recognition of MPL N-glycans plus the mutant basic
+  C-terminus), driving constitutive JAK2/STAT5(3), ERK1/2 and AKT activation and megakaryocytic
+  transformation; MPL is required [PMID:27177927 Han 2016 "Exogenous expression of MPL led to
+  constitutive activation of STAT3 and 5, ERK1/2, and AKT, cytokine-independent growth"]. Mutant
+  CALR also shows accelerated degradation and Golgi-mediated secretion (same paper).
+
+- NEW (mechanism, ties to Ca2+ core): Type 1 (but not type 2) mutants lose more acidic
+  Ca2+-binding residues, directly impairing Ca2+ binding -> ER Ca2+ depletion -> selective
+  activation of the IRE1alpha/XBP1 UPR arm; IRE1alpha/XBP1 inhibition selectively kills type 1
+  mutant cells in vivo [PMID:35405004 Ibarra 2022 "loss of Ca2+ binding residues in the type I
+  mutant CALR protein directly impairs its Ca2+ binding ability...activation of the IRE1alpha/XBP1
+  pathway"]. Mechanistically links the WT high-capacity Ca2+-buffer function to disease.
+
+- CONFIRMS + refines (interaction/pathway): ecto-CALR drives pro-phagocytic clearance via the
+  LRP1/CD91 receptor on phagocytes/APCs (the existing review notes phagocytosis/eat-me and SCARF1/
+  MSR1 scavenger receptors but not LRP1/CD91 by name). Falcon supports this only via 2024 review
+  sources (janssens2024, reid/galassi2024), not primary data -> treat as PROVISIONAL receptor
+  detail; not used to change annotations. GO:0050766 (positive regulation of phagocytosis) already
+  KEEP_AS_NON_CORE.
+
+- CONFIRMS (translational, not GO-actionable): mutant-CALR neo-C-terminus is a cell-surface
+  neoantigen; active immunotherapy programs (peptide vaccine NCT05025488; bispecific JNJ-88549968
+  NCT06150157) and antibody efforts (kramer2024 review). Context only; no annotation impact.
+
+- Provenance caveats: Falcon's quantitative MPN prevalence figures vary across sources
+  (~20% MPN / ~25-30% ET / ~40% ET+PMF) due to different denominators; the Faiz 2023 source is a
+  thesis ("Unknown journal") and reid2024 has 0 citations -> low-confidence, kept out of the YAML.
+  Only the four primary/peer-reviewed PMIDs above were resolved (via PubMed) and added as
+  statement-only references.
