@@ -53,6 +53,14 @@ review_batches:
     target_gene_count: 30
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch4_selection_notes.md
+  - id: proteostasis-batch-2026-06-07b
+    title: "Proteostasis PN candidate additions batch 5 (protein-folding chaperone & co-chaperone network: DNAJ/HSP40 family, small HSPs, HSP70/HSP90 hub co-chaperones, FKBP immunophilins, ER oxidative folding/PPIases)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch5_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
