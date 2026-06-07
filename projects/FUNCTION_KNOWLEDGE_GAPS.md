@@ -72,7 +72,7 @@ Two axes. First, *what kind of ignorance* (this determines who can fix it):
    annotated too generically. Resolved by curation (much of it in-house).
 3. **Ontology gap** — the knowledge exists but no GO term can express it (e.g. "structural
    subunit of complex X", or a novel activity). Resolved by ontology development;
-   tracked via `proposed_new_terms`.
+   tracked via `proposed_new_terms`. *Worked exemplar: POLE4 below.*
 
 Most real entries are a *blend* (CFAP300 below is biology-dominant with an ontology shadow),
 and naming the blend is the actionable part.
@@ -506,6 +506,145 @@ every PMID below was PubMed-verified, and one mis-attributed citation was caught
 - **Resolve:** assay recombinant IRG-1 for NADAR-family activity (NAD / ADP-ribose-related
   hydrolase) against candidate substrates; structure-guided catalytic-residue mutagenesis + rescue.
 
+## Worked gap entries — third batch (cluster + subunit cases)
+
+This batch closes out the taxonomy: it adds the project's first worked **ontology-dominant** entry
+(POLE4 — the structural-subunit pattern that the core-principle table estimates at ~64% of
+apparent MF-darkness), a **consolidated cluster** gap (the *M. extorquens* lanthanophore accessory
+genes), and three more **residual sub-gaps**. With these, all three gap *kinds* (biology, curation,
+ontology) and the residual-sub-gap framing have curated exemplars.
+
+### *M. extorquens* methanol/lanthanide cluster — uncharacterized accessory genes *(consolidated)*
+
+- **Scope & boundary:** the *mxa* (Ca²⁺-dependent MDH), *xox* (lanthanide-dependent MDH), and
+  *mll* (lanthanophore biosynthesis) clusters drive methanol oxidation in METEA. Several accessory
+  components are now firmly defined and are **not** gaps: XoxG (cytochrome c_L) and XoxJ are
+  biochemically/structurally characterized (Featherston et al. 2019, *ChemBioChem*, PMID:31017712,
+  [DOI](https://doi.org/10.1002/cbic.201900184)); the lanthanide-switch regulatory cascade
+  MxcQE→MxbDM→*mxa/xox* is mapped (Skovran et al. 2011, *J Bacteriol*, PMID:21873495,
+  [DOI](https://doi.org/10.1128/JB.05367-11)); and the lanthanophore **methylolanthanin** plus its
+  biosynthetic machinery were identified in 2024 (Zytnick et al. 2024, *PNAS*, PMID:39078674,
+  [DOI](https://doi.org/10.1073/pnas.2322096121)).
+- **Shared gap statement:** for the *mll* accessory genes (mllG, mllH, mllJ and the NIS-synthetase
+  components mllA/mllF), no enzyme of the methylolanthanin pathway has been biochemically
+  reconstituted — the specific reaction, substrate, and direct molecular role of each protein are
+  inferred from homology and cluster context, not demonstrated.
+- **Per-gene provenance (verbatim):** mllG — *"No enzymatic activities have been directly
+  demonstrated for mllG through standard biochemical assays in the current literature."*
+  (`genes/METEA/mllG/mllG-deep-research-perplexity.md`); mllA — *"No direct biochemical studies
+  have been conducted on the mllA enzyme, and its precise substrate specificity, catalytic rate
+  constants, and reaction mechanism await experimental determination..."*
+  (`genes/METEA/mllA/mllA-deep-research-perplexity.md`); mllH — *"Direct enzymatic characterization
+  of recombinant META1p4137 protein has not yet been reported in the peer-reviewed literature..."*
+  (`genes/METEA/mllH/mllH-deep-research-perplexity.md`); mllJ — *"The primary molecular function of
+  MexAM1_META1p4138 (mllJ) remains partially characterized due to its recent discovery and the
+  presence of a domain of unknown function classification."*
+  (`genes/METEA/mllJ/mllJ-deep-research-perplexity.md`).
+- **Type:** biology gap (dominant — no reconstituted enzymology for the *mll* accessory proteins) +
+  ontology shadow (GO lacks precise terms for lanthanide / metallophore handling).
+- **Resolve:** in vitro reconstitution of the methylolanthanin pathway with purified MllA/F/H plus
+  carriers (as done for aerobactin/petrobactin); single-gene (not whole-cluster) deletions of
+  mllG/H/J with lanthanide-bioaccumulation phenotyping and localization to assign individual roles.
+
+### MAP7D1 (human) — paralog-specific mechanism unknown *(residual sub-gap)*
+
+- **Boundary:** MAP7-family microtubule-associated protein; binds MTs via its N-terminal half and
+  recruits/activates kinesin-1 via the MAP7 domain; all four paralogs bind kinesin-1 and act
+  redundantly in HeLa (Hooikaas et al. 2019, *J Cell Biol*, PMID:30770434,
+  [DOI](https://doi.org/10.1083/jcb.201808065)); MAP7D1 is specifically required to maintain
+  acetylated/stable microtubules, mechanistically distinct from MAP7D2 (Kikuchi et al. 2022, *Life
+  Sci Alliance*, PMID:35470240, [DOI](https://doi.org/10.26508/lsa.202201390)).
+- **Gap statement:** The precise molecular mechanism by which MAP7D1 *specifically* maintains
+  acetylated/stable microtubules (vs its paralogs), and how it scaffolds nuclear DNA-damage-response
+  factors from the cytoplasm, are unknown.
+- **Provenance (verbatim):** *"How exactly does MAP7D1 maintain acetylated tubulin levels? Does it
+  regulate acetyltransferases, inhibit deacetylases, or protect acetylated microtubules from
+  depolymerization?"*; *"What is the precise molecular mechanism by which MAP7D1 participates in DNA
+  damage response? How do cytoplasmic MAP proteins interact with nuclear DDR machinery...?"*
+  (`genes/human/MAP7D1/MAP7D1-deep-research-cyberian.md`).
+- **Type:** blend — biology gap (the acetylation-maintenance and DDR-scaffolding mechanisms are
+  unresolved) + curation gap (GOA carries only family-level/IBA terms plus uninformative `protein
+  binding`; the experimentally supported kinesin-1-activation and acetylated-MT-maintenance roles
+  are not captured as specific MF/BP terms).
+- **Resolve:** test whether MAP7D1 depletion alters ATAT1/HDAC6 activity or protects the
+  K40-acetylated lattice (in-cell + in-vitro); map the MAP7D1 region binding DDR factors and test
+  whether it is required for damage-focus formation.
+
+### POLE4 (human) — a structural subunit GO can't describe *(ontology-dominant)*
+
+- **Verdict & framing:** this is the project's worked exemplar of the **ontology gap** — the
+  apparent MF-darkness is GO's inability to express "be part of / stabilize the machine," not true
+  biological ignorance. POLE4's biology is largely solved.
+- **Boundary:** accessory subunit of DNA polymerase ε with no catalytic activity of its own; a
+  structural scaffold required for holoenzyme stability (in *Pole4*-KO mice the whole Polε complex
+  is destabilized) (Bellelli et al. 2018, *Mol Cell*, PMID:29754823,
+  [DOI](https://doi.org/10.1016/j.molcel.2018.04.008)); with POLE3 it is a bona fide histone
+  H3–H4 chaperone coupling replication to nucleosome assembly (Bellelli et al. 2018, *Mol Cell*,
+  PMID:30217558, [DOI](https://doi.org/10.1016/j.molcel.2018.08.043)).
+- **Gap statement:** Whether POLE4 has any molecular function beyond a histone-fold
+  structural/scaffolding subunit and (with POLE3) an H3–H4 chaperone — and *how that scaffolding
+  role should be expressed in GO* — is the open question, not its biology.
+- **Provenance (verbatim):** *"Whether POLE4 plays a functional role in ATAC-mediated transcription
+  or whether this association reflects promiscuous histone fold interactions remains to be
+  determined."* (`genes/human/POLE4/POLE4-deep-research-cyberian.md`); *"The 2024 human Pol ε–PCNA
+  structures do not resolve the non-catalytic lobe (POLE2–POLE3–POLE4)..."*
+  (`genes/human/POLE4/POLE4-deep-research-falcon.md`).
+- **Type:** ontology-dominant + curation cleanup. GOA captures the biology adequately at the
+  complex level (`part_of` epsilon DNA polymerase complex GO:0008622; involved in DNA replication),
+  but the MF rows fall back to uninformative `protein binding` (×7) and an inferred
+  DNA-directed DNA polymerase activity (GO:0003887, TAS) that POLE4 does **not** itself perform.
+- **Resolve (ontology + curation, not experiment):** annotate the scaffolding role with a
+  structural-constituent MF term (`structural molecule activity`, GO:0005198, or a replisome child)
+  and a histone-chaperone-activity MF term for the H3–H4 function; MODIFY/demote the misleading
+  polymerase-activity row and the generic `protein binding`. (Biology residue: a dimerization-vs-
+  chaperone separation-of-function allele to test whether processivity and histone-recycling
+  phenotypes dissociate.)
+
+### AP3B2 (human) — neuronal adaptor, unknown cargo *(residual sub-gap; provenance caution)*
+
+- **Provenance caution:** the AP3B2 `-deep-research-cyberian.md` file cites PMIDs that fail
+  verification — its "PMID:7545544" is an nNOS/dystrophin paper and "PMID:19116307" is an ADAMTS13
+  paper, neither about AP3B2. This entry is therefore anchored to **file paths** only (a second
+  live example, after KCTD14, of why every PMID is checked).
+- **Boundary:** neuron-specific β subunit (β-NAP / β3B) of the AP-3 adaptor complex, which sorts
+  cargo into synaptic vesicles / lysosome-related organelles, cooperating with BLOC-1 and
+  recognizing YxxØ and acidic-dileucine signals; loss is linked to a developmental/epileptic
+  encephalopathy (deep-research files).
+- **Gap statement:** The complete repertoire of neuron-specific cargoes selected by the β3B
+  (AP3B2) AP-3 isoform — and how that selection differs from the ubiquitous β3A (AP3B1) isoform —
+  is not defined.
+- **Provenance (verbatim):** *"The complete repertoire of neuronal AP-3 cargoes and how cargo
+  selection differs between neuronal and ubiquitous AP-3 isoforms remains to be fully
+  characterized."* (`genes/human/AP3B2/AP3B2-deep-research-cyberian.md`); *"How the neuronal β3B
+  isoform differs functionally from the ubiquitous β3A variant"*
+  (`genes/human/AP3B2/AP3B2-deep-research-falcon.md`).
+- **Type:** blend — biology gap (the cargo set / isoform divergence is uncharacterized) + ontology
+  dimension (GO annotates the subunit gene rather than the β3B-containing complex).
+- **Resolve:** comparative quantitative proteomics of AP-3 vesicles immunoisolated from neuronal
+  (β3B) vs non-neuronal (β3A) cells; β3B-specific-KO neuron SV proteomics vs β3A rescue.
+
+### atg2 (SCHPO) — known lipid bridge, unresolved directionality *(residual sub-gap)*
+
+- **Boundary:** chorein-N-family lipid-transfer protein that bridges membranes through an extended
+  hydrophobic channel, carrying tens of lipids at once (Lees & Reinisch 2020, *Curr Opin Cell
+  Biol*, PMID:32213462, [DOI](https://doi.org/10.1016/j.ceb.2020.02.008)); acts at the phagophore
+  rim / ER–phagophore contact and is required for autophagosome formation in *S. pombe* (Wang et
+  al. 2023, *Nat Commun*, PMID:37553386, [DOI](https://doi.org/10.1038/s41467-023-40530-4)).
+- **Gap statement:** How directionality, timing, and regulation of lipid flow are enforced in the
+  coupled Atg2–Atg9(scramblase)–Atg18/WIPI system at ER–phagophore contact sites is
+  mechanistically unresolved.
+- **Provenance (verbatim):** *"precise molecular coordination among ATG2, ATG9, and Atg18/WIPI
+  (timing, directionality, and regulation of lipid flow) remains incompletely resolved."*
+  (`genes/SCHPO/atg2/atg2-deep-research-falcon.md`); *"the calculated transfer rates appeared
+  insufficient to account for the tens of millions of lipids required to build an entire
+  autophagosome"* (`genes/SCHPO/atg2/atg2-deep-research-perplexity.md`).
+- **Type:** biology gap (residual mechanistic). The core MF/BP/CC are correctly captured by
+  experimental GO annotations, so this is **not** a curation or ontology gap — only the mechanism of
+  directional lipid coupling is open.
+- **Resolve:** reconstitute Atg2–Atg9–Atg18 on asymmetric proteoliposomes with leaflet-specific
+  reporters to test whether scramblase coupling sets net directionality; cryo-EM of the Atg2–Atg9
+  junction at the phagophore rim.
+
 ## Methodology
 
 For each candidate gene:
@@ -580,6 +719,11 @@ gap entries above.
 | FGFRL1 | human | **worked** | Kinase-dead FGFR; signaling mechanism unresolved |
 | atg101 | SCHPO | **worked** | *Residual sub-gap*: WF-finger recruitment partner unknown |
 | irg-1 | worm | **worked** | BP-known / MF-dark; IRG-1 protein activity undefined (MF ND) |
+| METEA *mll* cluster | METEA | **worked** | Consolidated: lanthanophore accessory enzymes unreconstituted |
+| MAP7D1 | human | **worked** | *Residual sub-gap*: paralog-specific MT-acetylation mechanism |
+| POLE4 | human | **worked** | **Ontology gap exemplar**: structural Polε subunit GO can't express |
+| AP3B2 | human | **worked** | *Residual sub-gap*: β3B vs β3A neuron-specific cargo undefined |
+| atg2 | SCHPO | **worked** | *Residual sub-gap*: directionality of Atg2–Atg9 lipid flow |
 
 ### Reproducible read-list (ignorance-signal scan)
 
@@ -587,9 +731,9 @@ A grep of every `genes/**/*-deep-research-*.md` for author hedges (`remains unkn
 undetermined / elusive / uncharacterized / to be determined`) and for `precise (function|role|
 mechanism) ... (unknown|unclear|not)` surfaced **~60 files** carrying explicit ignorance
 statements — a reproducible candidate pool beyond the triage table. The strongest leads from that
-scan have now been curated (the second-batch entries above); remaining un-vetted clusters worth
-reading next include the METEA *mxa/mll/xox* methanol-oxidation auxiliary genes (mllA/F/G/H/J,
-mxbM, mxcQ, xoxG, mluI) as a group, plus human/MAP7D1, human/POLE4, human/AP3B2, and SCHPO/atg2.
+scan have now been curated (the second- and third-batch entries above). Remaining un-vetted leads
+worth reading next, spotted in the same scan: human/PUS3, human/FGFRL1-adjacent CFAP418,
+human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q72DT1.
 
 > **Curation caution (learned here):** deep-research files frequently cite sources only by DOI,
 > and some cite PMIDs that do not resolve to the right paper (e.g. the KCTD14 cyberian file). Every
@@ -624,7 +768,9 @@ mxbM, mxcQ, xoxG, mluI) as a group, plus human/MAP7D1, human/POLE4, human/AP3B2,
 - [x] Reproducible ignorance-signal read-list established (~60 deep-research files)
 - [x] Read-list deepening, batch 2 (8 added: MTC7, RAB9A, RASA1, BAIAP2L2, SCGB1C1, FGFRL1, atg101, irg-1; all adjudicated to real gaps; PMIDs PubMed-verified)
 - [x] Third gap framing identified: the *residual sub-gap* of otherwise well-characterized genes
-- [ ] Read-list deepening, batch 3: METEA mxa/mll/xox cluster, MAP7D1, POLE4, AP3B2, atg2
+- [x] Read-list deepening, batch 3 (5 added: METEA *mll* cluster, MAP7D1, POLE4, AP3B2, atg2; PMIDs PubMed-verified)
+- [x] All three gap kinds now have worked exemplars (biology = most; ontology = POLE4; curation = woven through MAP7D1/AP3B2)
+- [ ] Read-list deepening, batch 4: PUS3, CFAP418, SOCS4/SOCS5, RFT1, pef-1, fshr-1, alo1
 - [ ] Decide unit granularity (per-gap vs per-gene narrative)
 - [ ] Decide home: standalone register vs `knowledge_gaps` schema element (deferred)
 - [ ] Conservation / disease prioritization pass over candidates
@@ -653,3 +799,13 @@ mxbM, mxcQ, xoxG, mluI) as a group, plus human/MAP7D1, human/POLE4, human/AP3B2,
   RASA1 tandem-SH2 reference, resolves to an unrelated stem-cell/ILC paper and was dropped;
   RASA1's domain architecture is anchored to the file path instead. Sixteen worked entries now
   span bacterial, fungal (budding + fission yeast), nematode, and human genes.
+- 2026-06: Third curation batch (5 entries) completes the taxonomy. Added the first worked
+  **ontology-dominant** gap (POLE4 — a structural Polε subunit whose apparent MF-darkness is GO's
+  inability to say "structural constituent / scaffold," not real ignorance; the fix is curation +
+  a structural-molecule/histone-chaperone MF term, not an experiment), a **consolidated cluster**
+  entry for the *M. extorquens* lanthanophore (*mll*) accessory genes (unreconstituted enzymology,
+  carefully excluding the now-solved XoxG/XoxJ/MxcQE/MxbDM and the 2024 methylolanthanin discovery,
+  PMID:39078674), and three residual sub-gaps (MAP7D1, AP3B2, atg2). PMID verification caught two
+  more mis-citations in a deep-research file (AP3B2 cyberian: "PMID:7545544" → nNOS/dystrophin;
+  "PMID:19116307" → ADAMTS13), so AP3B2 is file-path-anchored with a caution. 22 worked entries now
+  cover all three gap kinds plus the residual-sub-gap framing.
