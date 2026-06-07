@@ -45,6 +45,14 @@ review_batches:
     target_gene_count: 20
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch3_selection_notes.md
+  - id: proteostasis-batch-2026-06-07
+    title: "Proteostasis PN candidate additions batch 4 (V-ATPase tissue isoforms + ClC-7, mito/ER chaperones, collagen biogenesis, histone chaperones, CRL/UPS adaptors, CK2/CK1)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 30
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch4_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
