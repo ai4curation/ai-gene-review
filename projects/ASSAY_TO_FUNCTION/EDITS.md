@@ -46,6 +46,40 @@ Documented so the analysis is honest about precision and to prevent re-flagging.
 | **Calm2 / HRC** | calcium(-dependent) binding (GO:0048306 / GO:0005509) | Direct binding MF established by binding/IPI assays — not licensed by, nor reducible to, a calcium-imaging readout. |
 | **CTNNB1 / NOTCH1** | transcription coactivator activity (GO:0003713) | β-catenin and NICD are bona fide transcriptional coactivators (machinery); reporter-supported MF is appropriate. |
 
+## Catalog extension (second-pass readout classes)
+
+Added 12 new readout classes (migration/invasion, adhesion, endocytosis,
+secretion, metabolic flux, DNA-damage foci, senescence, and pathway reporters for
+Wnt/NF-κB/Notch/Hippo/hypoxia). The new `CELL_MIGRATION_INVASION` class is the
+standout (35 aligned annotations) and produced a clean `indirect_ligand` cluster.
+Re-review confirmed the rubric generalizes; net new curation output is **one
+deferral**, the rest **deliberate declines**.
+
+### Deferred to expert curator (ACCEPT → UNDECIDED)
+
+| gene | term (GO) | refs | why deferred |
+|---|---|---|---|
+| **STAT3** (human) | positive regulation of cell migration (GO:0030335, ×2) | PMID:31638206, PMID:24846175 | STAT3's core is signal-dependent DNA-binding TF activity; migration is plausibly a downstream transcriptional consequence (IMP perturbation phenotype, gene not in motility machinery) — the rubric default is non-core. But STAT3 is a high-profile oncogenic EMT/invasion driver, so migration may be a *signature* output. Genuinely contested → set `UNDECIDED` and deferred to expert review (**issue [#1422](https://github.com/ai4curation/ai-gene-review/issues/1422)**) rather than unilaterally demoted. A cited OpenScientist hypothesis job was staged + submitted (`genes/human/STAT3/STAT3-hypotheses/readout-go-0030335/`) as a complement; the annotation stays `UNDECIDED` pending expert adjudication. STAT3 re-validates clean. |
+
+### Re-reviewed but deliberately NOT changed (flag was a false positive)
+
+The `indirect_ligand` cluster from `CELL_MIGRATION_INVASION` is the
+signature-vs-incidental over-firing the rubric's caveat predicts — for a dedicated
+chemokine/growth factor, chemotaxis/migration *is* the signature function.
+
+| gene | candidate term | why kept as-is |
+|---|---|---|
+| **CCL11** (eotaxin) | cell chemotaxis (GO:0060326), positive regulation of cell migration (GO:0030335) | Chemotaxis is the *defining* function of a chemokine; the description and `core_functions` (eosinophil chemotaxis) treat it as core. |
+| **PDGFA / PDGFB** | cell migration / chemotaxis / smooth-muscle-cell migration | Already in `core_functions` (PDGFA `positive regulation of cell migration`; PDGFB `cell chemotaxis`) — driving mesenchymal migration/chemotaxis is the signature PDGF output; demoting would be inconsistent (cf. the IL21 hook catch). |
+| **VEGFA** | endothelial migration / chemotaxis terms | Signature angiogenic function (consistent with retaining VEGFA EC proliferation as core in the first pass). |
+| **HMGB1** | positive regulation of monocyte chemotaxis (GO:0090026) | Curator deliberately marked this "core extracellular function" — recruiting inflammatory cells is HMGB1's signature DAMP activity (contrast its calcium flux from the *same* paper PMID:22370717, correctly non-core). |
+| **machinery genes** (BRCA1/2, CHD1, RAD18, CLTC, TFRC, CTNNB1, AXIN1, FZD7, TRAF6, ARNT/HIF-1β, TP53, FN1) | DNA-repair / endocytosis / Wnt / NF-κB / hypoxia / senescence BP-CC terms | These genes *are* the recognized machinery/sensor set for the flagged process — the rubric's "promote to core only if in the machinery" discriminator → keep core. The flagger surfaces them; re-review confirms KEEP. |
+
+**Honest scoping:** several new classes are under-powered (aligned N: secretion 1,
+metabolic 3, adhesion 4, NF-κB 6, hypoxia 2, Notch/Hippo ~0) — directional only.
+The well-powered new classes (migration 35, DNA-damage 36, Wnt 17,
+membrane-trafficking 14) all confirm the BP-not-MF + non-core-demotion regime.
+
 ## Method note
 
 These edits are the curation output of the pipeline in

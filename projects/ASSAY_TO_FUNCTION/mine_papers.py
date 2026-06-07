@@ -67,6 +67,27 @@ SCREEN: dict[str, tuple[str, ...]] = {
     "VIABILITY_PROLIFERATION": ("mtt", "mts ", "cck", "resazurin", "alamar",
                                 "cell viability", "colony formation", "brdu",
                                 "edu", "ki67", "ki-67"),
+    "CELL_MIGRATION_INVASION": ("scratch", "wound", "transwell", "boyden",
+                                "matrigel", "invasion", "migration"),
+    "CELL_ADHESION_SPREADING": ("adhesion", "spreading", "attachment"),
+    "MEMBRANE_TRAFFICKING_ENDOCYTOSIS": ("transferrin", "fm1", "fm 1", "fm4",
+                                         "fm 4", "dextran", "ldl",
+                                         "endocytosis", "internaliz"),
+    "SECRETION_DEGRANULATION": ("degranulation", "hexosaminidase", "ldh",
+                                "lactate dehydrogenase", "cd107a",
+                                "insulin secretion", "secretion"),
+    "METABOLIC_FLUX": ("seahorse", "oxygen consumption",
+                       "extracellular acidification", "ecar", "nbdg", "deoxy",
+                       "dg uptake", "glucose uptake", "mito stress"),
+    "DNA_DAMAGE_FOCI": ("h2a", "comet", "53bp1", "rad51"),
+    "SENESCENCE": ("gal", "senescence", "sasp"),
+    "WNT_REPORTER": ("topflash", "top-flash", "top flash", "fopflash",
+                     "fop-flash", "fop flash", "top/fop", "topfop", "tcf"),
+    "NFKB_REPORTER": ("nfκb", "nf-κb", "nfkb", "nf-kb", "nf κb", "nf kb"),
+    "HYPOXIA_HIF": ("hre", "hypoxia", "hif", "pimonidazole", "ef5"),
+    "NOTCH_REPORTER": ("rbp-j", "rbpj", "csl", "cbf-1", "cbf1", "tp-1", "tp1",
+                       "hes1"),
+    "HIPPO_TEAD_REPORTER": ("gtiic", "tead", "yap"),
     "IN_VITRO_ENZYME": ("in vitro", "purified", "specific activity", "kcat",
                         "km", "enzymatic assay", "reconstitut"),
     "DIRECT_BINDING": ("isothermal", "itc", "surface plasmon", "spr",
@@ -120,6 +141,12 @@ class PubCache:
         self.pubs_dir = pubs_dir
         self.catalog = catalog
         self._cache: dict[str, tuple[set[str], bool] | None] = {}
+        # QC: tally the actual substrings each class matched across the corpus
+        # (counted once per unique paper, matching how class presence is
+        # counted). This is the publications-corpus analogue of mine_readouts'
+        # matched_string_counts.tsv -- the place substring false positives
+        # (HyPer->"hyper", ERSE->"diverse", MTS->"MTs") show up. Always inspect.
+        self.matched_counts: dict[str, Counter] = defaultdict(Counter)
 
     def detect(self, pmid: str) -> tuple[set[str], bool] | None:
         if pmid in self._cache:
@@ -138,8 +165,14 @@ class PubCache:
             rx = spec["_compiled"]
             if rx is None:
                 continue
-            if any(lit in low for lit in spec["_screen"]) and rx.search(text):
-                classes.add(name)
+            if any(lit in low for lit in spec["_screen"]):
+                m = rx.search(text)
+                if m:
+                    classes.add(name)
+                    # record the distinct matched substrings for QC (cheap: only
+                    # runs on the rare screen-passing papers)
+                    for mm in rx.finditer(text):
+                        self.matched_counts[name][mm.group(0).lower()] += 1
         result = (classes, "full_text_available: true" in low)
         self._cache[pmid] = result
         return result
@@ -296,6 +329,15 @@ def main() -> None:
     print(f"GO->aspect map entries: {len(aspect_map)}.")
     print(f"Readout matches (paper mentions): {len(rows)}; "
           f"thematically aligned: {len(aligned_rows)}.")
+
+    # --- QC: matched-string distribution per class (surfaces substring bugs) ---
+    qc_tsv = args.out_dir / "paper_matched_string_counts.tsv"
+    with qc_tsv.open("w", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
+        w.writerow(["readout_class", "matched_string", "papers"])
+        for name in catalog:
+            for s, c in pubs.matched_counts.get(name, Counter()).most_common():
+                w.writerow([name, s, c])
 
     write_crosstab(args.out_dir / "paper_action_crosstab_all.tsv",
                    rows, "ALL paper mentions (weak link)")

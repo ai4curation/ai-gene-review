@@ -57,9 +57,27 @@ Is the evidence a state/phenotype readout (not a molecular assay of G)?
 | Iron probe | BP | MF | non-core | Fe transporter / Fe-S biogenesis / storage |
 | pH probe | BP | MF | non-core | proton pump/transporter |
 | Transcriptional reporter | BP, **MF** | — | context | sequence-specific TF / coregulator |
+| Cell migration / invasion | BP | MF | non-core | actin/adhesion-turnover machinery, or a ligand/guidance cue whose *signature* is motility |
+| Cell adhesion / spreading | BP | MF | non-core | integrin/adhesion-receptor or matrix (ECM) component |
+| Membrane trafficking / endocytosis | BP, CC | MF | context | clathrin/adaptor/Rab/ESCRT machinery or the internalized receptor |
+| Secretion / degranulation | BP | MF | non-core | SNARE/exocytic machinery or the regulated cargo's dedicated secretagogue |
+| Metabolic flux (glucose/Seahorse) | BP | MF | non-core | glycolytic/OXPHOS enzyme or glucose transporter |
+| DNA-damage foci (γH2AX/comet) | BP, CC | MF | context | DDR/repair machinery (ATM/ATR, BRCA, RAD51, 53BP1, MRN) |
+| Senescence (SA-β-gal) | BP | MF | non-core | core senescence effector (p53/p21, p16-RB) |
+| Wnt reporter (TOPFlash) | BP | MF | context | Wnt pathway component (ligand/receptor/destruction complex/TCF) |
+| NF-κB reporter | BP | MF | context | NF-κB pathway component (RelA/IκB/IKK/TRAF) |
+| Hypoxia reporter (HRE/HIF) | BP | MF | non-core | HIF subunit/PHD/VHL oxygen-sensing machinery |
+| Notch reporter (RBP-J/CSL) | BP | MF | context | Notch receptor/ligand/CSL transcription complex |
+| Hippo reporter (TEAD/GTIIC) | BP | MF | context | Hippo kinase cassette or YAP/TAZ/TEAD |
 
 \* Ca²⁺-binding MF (EF-hand) can be justified by independent structural/binding
 evidence, not by the imaging readout itself.
+
+The pathway-reporter rows (Wnt/NF-κB/Notch/Hippo/hypoxia) are `context` rather
+than `non-core` because, like a transcriptional reporter, the same readout
+legitimately reports the *core* output of a bona fide pathway component (a
+Frizzled receptor, RelA, a HIF subunit) — promote to core only for those, demote
+for genes that merely perturb the reporter.
 
 ## Worked contrasts from the corpus
 
@@ -80,6 +98,29 @@ machinery vs. an over-annotation for a gene acting indirectly:
 - **Transcription (the MF exception):** `ATF2`/`ASCL1` → *DNA-binding
   transcription factor activity* (ACCEPT — genuine TFs) vs `AIP` →
   *transcription coactivator activity* (OVER_ANNOTATED).
+
+Extended set (second-pass readout classes):
+
+- **Cell migration / invasion:** `CLTC`-style adhesion/cytoskeletal machinery and
+  guidance ligands whose *signature* is motility stay core — `CCL11`/eotaxin →
+  *cell chemotaxis* and `PDGFA`/`PDGFB` → *cell migration / chemotaxis* are
+  ACCEPT (these are already in `core_functions`: a chemokine's defining output is
+  chemotaxis). Contrast `STAT3` → *positive regulation of cell migration* (a
+  transcription factor; migration is a downstream transcriptional consequence,
+  not in the motility machinery) — the genuine non-core/borderline case.
+- **DNA-damage foci:** `BRCA1`/`BRCA2`/`CHD1`/`RAD18` → *double-strand break
+  repair* / *DNA repair complex* (ACCEPT — DDR machinery) vs a gene that merely
+  shows γH2AX foci after perturbation (non-core "response to DNA damage").
+- **Endocytosis:** `CLTC` (clathrin) / `TFRC` (transferrin receptor) →
+  *clathrin-dependent endocytosis* / *receptor-mediated endocytosis* (ACCEPT —
+  the machinery and the internalized receptor) vs a cargo that is merely taken
+  up (non-core).
+- **Wnt reporter:** `CTNNB1`/`AXIN1`/`FZD7` → *canonical Wnt signaling pathway*
+  (ACCEPT — pathway machinery) vs a gene that only shifts TOPFlash (non-core).
+- **Senescence / NF-κB / hypoxia:** `TP53` → *cellular senescence*, `TRAF6` →
+  *NF-κB signal transduction*, `ARNT`/HIF-1β → *response to hypoxia* are ACCEPT
+  because the gene is the pathway's core effector/transducer — the reporter
+  reports its own output.
 
 ## Caveat: dedicated signaling ligands (signature vs incidental)
 
@@ -115,3 +156,16 @@ distinguishing action is **non-core demotion**, not removal — see the action
 and aspect tables in [`../ASSAY_TO_FUNCTION.md`](../ASSAY_TO_FUNCTION.md). The
 "core only if in the machinery" discriminator is read directly off the
 ACCEPT-vs-downgrade contrasts above.
+
+**Extension validates the constraint.** Adding 12 new readout classes (migration/
+invasion, adhesion, endocytosis, secretion, metabolic flux, DNA-damage foci,
+senescence, and pathway reporters for Wnt/NF-κB/Notch/Hippo/hypoxia) reproduced
+the same pattern: every new aligned class is BP/CC-dominant with ~zero MF (the
+sole MF, LRRK2 *β-catenin destruction complex binding*, is a binding MF already
+non-core), and each shows elevated non-core demotion (migration 16/35,
+membrane-trafficking 7/14, Wnt 8/17). Re-review of the standing-`ACCEPT`
+candidates again found the flagger's precision-on-accepted-calls low: they are
+either the **machinery** (BRCA1/2, CLTC, TFRC, CTNNB1, TRAF6, ARNT, TP53 —
+correctly core) or a **signature output** of a dedicated ligand (CCL11/PDGF
+chemotaxis — correctly core, already in `core_functions`). The machinery and
+signature-vs-incidental discriminators are doing the real work.

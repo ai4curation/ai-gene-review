@@ -170,3 +170,53 @@ Coverage: 36,449 of 36,660 PMID-backed annotations resolved to cached papers.
 - No new papers fetched; reasoning used background knowledge + already-cached
   PMID:17673207 / PMID:15207081 to back the UNDECIDED. publications/ is write-
   protected by hook anyway.
+
+## 2026-06-07 — catalog extension to 12 new readout classes
+
+- Added readout classes: CELL_MIGRATION_INVASION, CELL_ADHESION_SPREADING,
+  MEMBRANE_TRAFFICKING_ENDOCYTOSIS, SECRETION_DEGRANULATION, METABOLIC_FLUX,
+  DNA_DAMAGE_FOCI, SENESCENCE, and pathway reporters WNT/NFKB/HYPOXIA_HIF/
+  NOTCH/HIPPO_TEAD. Each: aligned_label_regex + commonly_overmapped_to GO IDs +
+  patterns + a necessary-superset SCREEN entry in mine_papers.py.
+- Built a corpus-level QC: mine_papers.py now writes
+  reports/paper_matched_string_counts.tsv (matched substrings counted once per
+  paper) — the publications analogue of the prose miner's QC. This is where
+  substring bugs actually surface in the corpus that matters.
+
+### Substring bug caught in QC (don't repeat)
+- `\bOCR\b` (oxygen consumption rate) matched the C. elegans **ocr-2** TRPV gene
+  (19 false hits in prose). Dropped bare OCR; rely on "oxygen consumption rate",
+  Seahorse, ECAR. After the fix, paper_matched_string_counts.tsv is clean across
+  all 12 new classes (transwell, γh2ax, topflash, sa-β-gal, fm4-64, cd107a, …).
+  Lesson reconfirmed: short all-caps abbreviations collide with gene symbols.
+
+### Findings (the aspect constraint generalizes)
+- Every new aligned class is BP/CC-dominant, ~zero MF. Sole MF: LRRK2
+  *β-catenin destruction complex binding* (a binding MF, already non-core).
+- Non-core demotion elevated as predicted: migration 16/35, membrane-traffic
+  7/14, Wnt 8/17, senescence 6/9.
+- Well-powered new hubs: migration 35, DNA-damage 36, Wnt 17, endocytosis 14.
+  Under-powered (flagged honestly): secretion 1, metabolic 3, adhesion 4,
+  NF-κB 6, hypoxia 2, Notch/Hippo ~0.
+
+### Re-review (flagger precision on accepted calls is again low)
+- New `CELL_MIGRATION_INVASION` indirect_ligand cluster = CCL11/PDGFA/PDGFB/
+  VEGFA/HMGB1 — all SIGNATURE outputs (chemotaxis IS a chemokine's job; PDGF
+  migration already in core_functions). Declined; documented in EDITS.md.
+- Non-ligand Tier-2 in new classes = the MACHINERY (BRCA1/2, CHD1, CLTC, TFRC,
+  CTNNB1, AXIN1, FZD7, TRAF6, ARNT, TP53). Correctly core → KEEP.
+- The one genuine non-core/borderline: STAT3 GO:0030335 (TF; migration is
+  downstream). High-profile + contested → ACCEPT→UNDECIDED, issue #1422, and a
+  staged+submitted OpenScientist job (worked example of the user's workflow).
+
+### Tooling for the OpenScientist workflow (user request)
+- `stage_hypotheses.py` (+ `just assay-stage-hypotheses`): human-gated generator
+  that turns selected flagged_candidates.tsv rows into committed, frontmatter-free
+  prompt.md files under genes/<sp>/<gene>/<gene>-hypotheses/<slug>/ and prints the
+  submit command — but NEVER submits. Reuses scripts/gene_hypothesis_deep_research.py
+  record/template machinery; specializes the seed to the "core vs downstream?"
+  question. Added `just assay-mine` / `just assay-flag` too.
+- Submitted ONE job (STAT3) as the worked example since it's a contested case a
+  cited adjudication can settle. Result committed as provenance; verdict posted to
+  #1422; annotation kept UNDECIDED (output is hypothesis-generating, not ground
+  truth — verify cited PMIDs).
