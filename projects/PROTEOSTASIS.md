@@ -144,6 +144,17 @@ the projected candidate additions report and has `50` human gene-review PR rows
 in the same sidecar. Merged PRs record `merged_at`; open PRs keep that field
 empty until merged.
 
+Subsequent candidate-addition batches continued the rereview queue:
+`proteostasis-batch-2026-06-06` (`20` genes), `proteostasis-batch-2026-06-07`
+(`30` genes), and `proteostasis-batch-2026-06-07b` (`50` genes — the
+protein-folding chaperone & co-chaperone network: the DNAJ/HSP40 J-domain family,
+small heat-shock proteins, HSP70/HSP90 hub co-chaperones such as STUB1/CHIP,
+STIP1/HOP, SGTA and SERPINH1/HSP47, FKBP immunophilin co-chaperones, and ER
+oxidative-folding/PPIase enzymes including P4HB/PDI, ERO1A/B, ERP27/29 and
+PPIB). The mega-hubs `HSPA5`, `HSP90AA1` and `HSP90AB1` were deliberately
+deferred to dedicated single-gene reviews (50+ GOA terms each). See
+[batch5_selection_notes.md](PROTEOSTASIS/batch5_selection_notes.md).
+
 ## What The PN Resource Actually Contains
 
 The workbook is a row-per-role annotation table, not a gene-centered review file.
