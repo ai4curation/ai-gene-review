@@ -188,6 +188,38 @@ def pmid_from_ref(ref: Any) -> str | None:
     return None
 
 
+def annotation_pmids(ann: dict, include_supporting: bool) -> list[tuple[str, str]]:
+    """Return [(pmid, role)] for an annotation, primary first, de-duplicated.
+
+    role is "primary" for original_reference_id and "supporting" for PMIDs drawn
+    from review.supported_by / annotation supported_by / additional_reference_ids.
+    With include_supporting=False this is just the primary reference (the original,
+    conservative join).
+    """
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    def add(ref: Any, role: str) -> None:
+        pm = pmid_from_ref(ref)
+        if pm and pm not in seen:
+            seen.add(pm)
+            out.append((pm, role))
+
+    add(ann.get("original_reference_id"), "primary")
+    if not include_supporting:
+        return out
+    for ref in ann.get("additional_reference_ids") or []:
+        add(ref, "supporting")
+    for sb in ann.get("supported_by") or []:
+        if isinstance(sb, dict):
+            add(sb.get("reference_id"), "supporting")
+    review = ann.get("review") or {}
+    for sb in review.get("supported_by") or []:
+        if isinstance(sb, dict):
+            add(sb.get("reference_id"), "supporting")
+    return out
+
+
 def iter_annotations(genes_dir: Path):
     for path in sorted(genes_dir.rglob("*-ai-review.yaml")):
         try:
@@ -212,6 +244,9 @@ def main() -> None:
                     default=Path("projects/ASSAY_TO_FUNCTION/readout_catalog.yaml"))
     ap.add_argument("--out-dir", type=Path,
                     default=Path("projects/ASSAY_TO_FUNCTION/reports"))
+    ap.add_argument("--include-supporting", action="store_true",
+                    help="also join on supported_by / additional_reference_ids "
+                    "PMIDs, not just original_reference_id (broader, weaker link)")
     args = ap.parse_args()
 
     catalog = load_catalog(args.catalog)
@@ -231,16 +266,30 @@ def main() -> None:
         if n_ann % 5000 == 0:
             print(f"  ...{n_ann} annotations, {len(pubs._cache)} papers read",
                   file=sys.stderr, flush=True)
-        pmid = pmid_from_ref(ann.get("original_reference_id"))
-        if not pmid:
+        pmids = annotation_pmids(ann, args.include_supporting)
+        if not pmids:
             continue
         n_pmid += 1
-        detected = pubs.detect(pmid)
-        if detected is None:
-            missing_pmids.add(pmid)
+        # Detect across every cited paper; union the readout classes and remember
+        # the first paper (preferring the primary reference) that evidenced each
+        # class, so the row carries its provenance.
+        class_src: dict[str, tuple[str, str]] = {}
+        any_resolved = False
+        full_text = False
+        for pm, role in pmids:
+            det = pubs.detect(pm)
+            if det is None:
+                missing_pmids.add(pm)
+                continue
+            any_resolved = True
+            cls, ft = det
+            full_text = full_text or ft
+            for c in cls:
+                if c not in class_src:
+                    class_src[c] = (pm, role)
+        if not any_resolved:
             continue
         n_resolved += 1
-        readout_classes, full_text = detected
 
         review = ann.get("review") or {}
         action = (review.get("action") or "").strip() or "UNREVIEWED"
@@ -249,7 +298,7 @@ def main() -> None:
         go_label = term.get("label", "") or ""
         aspect = aspect_map.get(go_id, "?")
 
-        for name in readout_classes:
+        for name, (pmid, role) in class_src.items():
             spec = catalog[name]
             aligned = bool(
                 go_id in spec["_overmapped"]
@@ -257,6 +306,7 @@ def main() -> None:
             )
             rows.append({
                 "organism": organism, "gene": gene, "pmid": pmid,
+                "ref_role": role,
                 "go_id": go_id, "go_label": go_label, "aspect": aspect,
                 "evidence_type": ann.get("evidence_type", ""),
                 "negated": str(bool(ann.get("negated", False))),
@@ -268,8 +318,8 @@ def main() -> None:
             })
 
     # --- write match rows ---
-    fields = ["organism", "gene", "pmid", "go_id", "go_label", "aspect",
-              "evidence_type", "negated", "action", "readout_class",
+    fields = ["organism", "gene", "pmid", "ref_role", "go_id", "go_label",
+              "aspect", "evidence_type", "negated", "action", "readout_class",
               "proximity", "convergence", "aligned", "full_text"]
     matches_tsv = args.out_dir / "paper_readout_matches.tsv"
     with matches_tsv.open("w", newline="") as fh:
