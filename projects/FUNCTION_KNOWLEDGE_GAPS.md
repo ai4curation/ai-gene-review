@@ -141,7 +141,7 @@ IDA-specific steps.
    PMID:29727693).
 2. Its sole domain is **DUF4498 — a "domain of unknown function"**
    (`genes/human/CFAP300/CFAP300-deep-research-falcon.md`).
-3. **The trajectory is the strongest evidence:** seven years and many cohorts on (Polish 2019
+3. **The trajectory is the strongest evidence:** seven years and many cohorts on (Slavic 2019
    PMID:30916986; Cypriot 2021 PMID:33715250; Russian 2024 PMID:39180133; ALI-culture 2025
    PMID:40806783), every follow-up is *diagnostic* — confirming loss — not *mechanistic*. A
    durable mechanistic silence despite clear motivation is the signature of a genuine gap, and
