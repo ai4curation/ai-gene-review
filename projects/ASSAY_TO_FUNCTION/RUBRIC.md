@@ -43,6 +43,37 @@ Is the evidence a state/phenotype readout (not a molecular assay of G)?
                        gene's real function clearly lies elsewhere).
 ```
 
+## Consolidated catalog (all 60 classes)
+
+The catalog now spans **60 readout classes** across six mining batches. The full
+machine-readable summary (per-class proximity/convergence, aligned-annotation
+GO-aspect counts, %MF, licensing) is auto-generated:
+
+- `reports/catalog_summary.tsv` — one row per class
+- `reports/catalog_table.md` — the same as a Markdown quick-reference (molecular vs
+  phenotypic), regenerated from the catalog + mined matches
+- `reports/proximity_axis.png` — the summary figure
+
+```bash
+uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py
+```
+
+**The headline, in one line:** across thematically-aligned annotations, the GO
+aspect a readout licenses is set by **proximity** —
+
+> **molecular readouts → 77% MF (567/738); phenotypic hubs → 8% MF (90/1087).**
+
+…and that 8% is almost entirely the *legitimate* `TRANSCRIPTIONAL_REPORTER →
+DNA-binding-TF-activity` exception (MF 72 of the 90); excluding it, phenotypic MF
+≈ 2%. The one molecular outlier is `PROTEASOME_ACTIVITY` (2% MF) — its aligned
+terms are the catabolic-*process* / *complex*, i.e. it reads as proteostasis
+machinery rather than a bare endopeptidase MF.
+
+![proximity axis](reports/proximity_axis.png)
+
+The curated quick-reference below keeps the headline over-annotation hubs with
+their machinery discriminators; see `catalog_table.md` for the exhaustive list.
+
 ## Quick reference
 
 | Readout class | Licenses | Never | Default | Core only if G is… |
@@ -78,6 +109,45 @@ than `non-core` because, like a transcriptional reporter, the same readout
 legitimately reports the *core* output of a bona fide pathway component (a
 Frizzled receptor, RelA, a HIF subunit) — promote to core only for those, demote
 for genes that merely perturb the reporter.
+
+### The molecular contrast: rubidium (⁸⁶Rb⁺) flux
+
+Not every ion readout is a convergent hub. **Rb⁺ flux** (⁸⁶Rb⁺ efflux/uptake, the
+classic K⁺-channel/transporter assay using Rb⁺ as a K⁺ congener) sits at the
+*molecular / low-convergence* end of the proximity axis: it is a near-direct
+measure of the gene product's own transport activity, so — unlike Ca²⁺ imaging (a
+second-messenger hub that licenses at most a BP term) — it **legitimately licenses
+an MF channel-activity term** (`potassium channel activity`, GO:0005267). It is
+the positive-control mirror image of the phenotypic hubs.
+
+*Caveat (the same proximity logic in reverse):* Rb⁺ flux is direct only for the
+**pore-forming channel**. If flux moves because an *upstream regulator, β-subunit,
+or trafficking factor* was perturbed, the inference is exactly as indirect as the
+hubs — BP-only, default non-core.
+
+*Corpus note:* ⁸⁶Rb is detected in 33 cached papers but is almost never the cited
+`original_reference_id` of a reviewed annotation (only 1, and it is not a K⁺
+channel), so the corpus is currently under-powered to demonstrate the MF licensing
+empirically. This re-illustrates the first-pass finding that MF annotations cite
+structural/biochemical references, not functional-flux assays.
+
+### Molecular MF-licensing controls (the positive-control set)
+
+Where Rb⁺ flux was too niche, common molecular assays demonstrate the MF side of
+the proximity axis directly. Aligned-annotation aspect (canonical join):
+**ChIP/EMSA → MF 136**, in-vitro **kinase assay → MF 106**, **GTPase/GAP/GEF →
+MF 55**, in-vitro **ubiquitination/E3 → MF 39** (+CC 24 for the ligase complexes),
+**electrophysiology → MF 18**. These are the molecular mirror of the hubs: a
+readout of the gene product's *own* activity (DNA binding, phosphotransfer, GTP
+hydrolysis, ubiquitin transfer, ion conduction) legitimately licenses an MF term.
+Pairings to keep in mind when curating:
+
+- ChIP/EMSA (MF, direct DNA binding) ↔ transcriptional reporter (BP, pathway output)
+- electrophysiology (MF, channel activity) ↔ Ca²⁺/Rb⁺ imaging-flux (BP, ion state)
+- in-vitro kinase assay (MF) ↔ phospho-Western of a downstream substrate (BP, pathway state)
+
+Same caveat as Rb⁺ flux: these are direct for the assayed protein; if the readout
+moves because an *upstream regulator* was perturbed, the inference is indirect.
 
 ## Worked contrasts from the corpus
 

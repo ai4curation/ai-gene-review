@@ -80,6 +80,38 @@ metabolic 3, adhesion 4, NF-κB 6, hypoxia 2, Notch/Hippo ~0) — directional on
 The well-powered new classes (migration 35, DNA-damage 36, Wnt 17,
 membrane-trafficking 14) all confirm the BP-not-MF + non-core-demotion regime.
 
+## Third batch (10 more classes) — no edits
+
+Added 5 molecular MF-licensing classes (electrophysiology, kinase, GTPase,
+ubiquitination, ChIP/EMSA) and 5 phenotypic hubs (differentiation, angiogenesis,
+phagocytosis, cell-cycle/flow, barrier). The molecular classes were a deliberate
+**positive control** for the proximity axis (aligned aspect: ChIP MF 136, kinase
+MF 106, … vs the hubs' BP/CC) — see `ASSAY_TO_FUNCTION.md`. The 26 new
+phenotypic-hub flags were re-reviewed and are all **machinery or signature**
+(VEGFA→angiogenesis = signature; GATA3/SOX9 = master differentiation TFs;
+RB1/BRCA1 = cell-cycle machinery), so **no YAML edits** were warranted — the
+"core only if in the machinery / signature output" discriminators correctly hold.
+
+## Fourth batch (8 more classes) — no edits
+
+Added 4 molecular MF-licensing classes (protease, nuclease, lipid-transfer/
+flippase, proteasome) and 4 phenotypic hubs (protein turnover, redox balance,
+lipid peroxidation, translation); catalog now 43 classes. The molecular catalytic
+classes again license MF (nuclease MF 20, protease MF 15) and the phenotypic ones
+BP, reproducing the proximity axis. The 27 new phenotypic-hub flags are all
+degradation/proteostasis **machinery** (PSMA1/PSMB5 proteasome subunits, CUL3
+cullin E3, CDC37/PEX19 chaperones) — correctly core, so **no YAML edits**.
+
+## Fifth batch (9 more classes) — no edits
+
+Added 5 molecular MF-licensing classes (methyltransferase, acetyltransferase/
+deacetylase, phosphatase, polymerase, helicase) and 4 phenotypic hubs (cyclic
+nucleotide, cytotoxicity/killing, cytokine production, histone marks); catalog now
+52 classes. Axis reproduced (acetyltransferase MF 59 … vs histone-mark BP 13 …).
+The 11 new phenotypic-hub flags are all chromatin **machinery** (RTT109, SET1,
+CHD1, ASF1) or **signature** GPCR signaling (ADRB2, Drd1) — correctly core, so
+**no YAML edits**.
+
 ## Method note
 
 These edits are the curation output of the pipeline in
@@ -90,3 +122,13 @@ re-review against the actual file evidence. The key discipline: a flag is a
 a different, more proximal core function — and is declined when the "downstream"
 process is itself the gene's defining role (VEGFA EC proliferation, IL21 immune
 outputs).
+
+## Sixth batch (8 more classes) — no edits
+
+Added 4 molecular MF-licensing classes (RNA-binding/CLIP, transporter uptake,
+chaperone refolding, glycosyltransferase) and 4 phenotypic hubs (EMT, stemness/
+sphere, protein aggregation, inflammasome/pyroptosis); catalog now 60 classes.
+Axis reproduced (chaperone MF 49 … vs aggregation BP 22 …). The 23 new
+phenotypic-hub flags are all chaperone/Wnt machinery (BAG3, CLU, CRYAB, FZD7),
+the amyloid precursor APP, or signature anti-inflammatory cytokines (IL10,
+IL36RN) — correctly core, so **no YAML edits**.

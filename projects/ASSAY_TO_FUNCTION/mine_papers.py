@@ -92,6 +92,151 @@ SCREEN: dict[str, tuple[str, ...]] = {
                         "km", "enzymatic assay", "reconstitut"),
     "DIRECT_BINDING": ("isothermal", "itc", "surface plasmon", "spr",
                        "crystal", "cryo"),
+    # bare "rb" is NOT a screen token (collides with the RB1 gene and the
+    # substring "rb" in countless words); gate on the unambiguous notations.
+    "RUBIDIUM_FLUX": ("rubidium", "86rb", "86 rb", "(86)rb", "rb86", "rb-86",
+                      "rb 86"),
+    "CELL_DIFFERENTIATION": ("alizarin", "oil red", "alcian blue", "von kossa",
+                             "differentiation assay", "osteogenic differentiation",
+                             "adipogenic differentiation", "chondrogenic differentiation",
+                             "myogenic differentiation", "neurogenic differentiation",
+                             "lineage marker", "lineage commitment"),
+    "ANGIOGENESIS_TUBE": ("tube formation", "tubule formation", "capillary-like",
+                          "capillary like", "aortic ring", "chorioallantoic",
+                          "cam assay", "matrigel plug", "sprouting assay"),
+    "PHAGOCYTOSIS": ("phagocytosis assay", "phagocytic", "engulfment",
+                     "efferocytosis", "zymosan", "bioparticle", "latex bead",
+                     "apoptotic cell clearance", "apoptotic cell engulf",
+                     "apoptotic cell uptake"),
+    "CELL_CYCLE_FLOW": ("cell cycle analysis", "cell cycle distribution",
+                        "cell cycle profil", "cell cycle arrest", "propidium iodide",
+                        "sub-g1", "subg1", "g0/g1", "g2/m"),
+    "BARRIER_PERMEABILITY": ("teer", "transepithelial", "transendothelial",
+                             "paracellular", "fitc-dextran", "fitcdextran",
+                             "barrier function", "barrier integrity",
+                             "barrier permeability"),
+    "ELECTROPHYSIOLOGY": ("patch-clamp", "patch clamp", "patchclamp",
+                          "voltage-clamp", "voltage clamp", "voltageclamp",
+                          "whole-cell", "whole cell", "wholecell",
+                          "single-channel", "single channel", "singlechannel",
+                          "tevc", "two-electrode", "two electrode",
+                          "current-voltage", "current voltage", "electrophysiolog"),
+    "KINASE_ACTIVITY_ASSAY": ("kinase", "32p", "adp-glo", "adpglo",
+                              "autophosphorylat"),
+    "GTPASE_ACTIVITY": ("gtp hydrolysis", "gtpase assay", "gtpase-activating",
+                        "gtpase activating", "nucleotide exchange", "gst-rbd",
+                        "gst-pbd", "gstrbd", "gstpbd", "gtpγs", "gtpgammas"),
+    "UBIQUITINATION_ASSAY": ("ubiquitin", "thioester"),
+    "CHROMATIN_CHIP": ("chromatin immunoprecip", "chip-seq", "chip-qpcr",
+                       "chip-pcr", "chipchip", "chip assay", "chip analysis",
+                       "chip experiment", "chip peak", "emsa",
+                       "electrophoretic mobility", "gel shift", "dna pulldown",
+                       "dna pull-down"),
+    "PROTEIN_TURNOVER": ("cycloheximide", "chx chase", "pulse-chase",
+                         "pulse chase", "pulsechase", "protein half-life",
+                         "protein half life", "protein halflife",
+                         "protein stability", "protein turnover", "degradation rate"),
+    "REDOX_BALANCE": ("gsh/gssg", "gssg/gsh", "gssg", "glutathione ratio",
+                      "glutathione redox", "glutathione disulfide",
+                      "oxidized glutathione", "nad+/nadh", "nad/nadh",
+                      "nadh/nad", "nadp+/nadph", "nadp/nadph", "nadph/nadp"),
+    "LIPID_PEROXIDATION": ("malondialdehyde", "tbars", "4-hne", "4hne",
+                           "hydroxynonenal", "bodipy", "c11-bodipy",
+                           "lipid peroxidation", "lipid ros"),
+    "TRANSLATION_ASSAY": ("sunset", "puromycin label", "puromycin labelling",
+                          "puromycin incorpor", "puromycin-label", "polysome",
+                          "polyribosome", "35s-methionine", "35s methionine",
+                          "[35s]met", "[35s] met", "[35s]-met", "[35s]methionine",
+                          "nascent protein", "nascent peptide",
+                          "de novo protein synthesis"),
+    "PROTEASE_ACTIVITY": ("protease assay", "peptidase assay", "proteolytic",
+                          "fluorogenic", "zymography"),
+    "NUCLEASE_ACTIVITY": ("nuclease", "dna cleavage", "rna cleavage"),
+    "LIPID_TRANSFER_FLIPPASE": ("flippase", "floppase", "scramblase",
+                                "phospholipid translocat", "phospholipid flip",
+                                "phospholipid scrambl", "nbd-pc", "nbd-ps",
+                                "nbd-pe", "nbd-pg", "nbd-lipid", "nbd-phospho",
+                                "nbdpc", "lipid transfer", "cholesterol transfer",
+                                "sterol transfer", "lipid transport assay"),
+    "PROTEASOME_ACTIVITY": ("llvy", "chymotrypsin-like", "chymotrypsin like",
+                            "proteasome activity", "20s proteasome"),
+    "CYCLIC_NUCLEOTIDE_SIGNALING": ("cyclic amp", "cyclic adenosine monophosphate",
+                                    "cyclic gmp", "cyclic guanosine monophosphate",
+                                    "camp assay", "cgmp assay", "camp accumulation",
+                                    "cgmp accumulation", "camp level", "cgmp level",
+                                    "camp production", "cgmp production",
+                                    "camp response", "camp elevation", "cgmp elevation",
+                                    "camp formation", "camp elisa", "cgmp elisa",
+                                    "camp biosensor", "cgmp biosensor",
+                                    "intracellular camp", "intracellular cgmp", "epac"),
+    "CYTOTOXICITY_KILLING": ("51cr", "chromium release", "[51cr]",
+                             "calcein release", "calcein-am release",
+                             "cytotoxicity assay", "killing assay", "cytolytic",
+                             "specific lysis", "target cell lysis",
+                             "target cell killing"),
+    "CYTOKINE_PRODUCTION": ("elispot", "intracellular cytokine", "cytokine elisa",
+                            "cytokine bead array", "cytokine multiplex",
+                            "cytokine secretion assay", "cytokine production assay"),
+    "HISTONE_MARK": ("h3k", "h4k", "histone h3 lysine", "histone h3 k",
+                     "trimethylation of h3", "dimethylation of h3"),
+    "METHYLTRANSFERASE_ACTIVITY": ("methyltransferase", "dnmt assay", "prmt assay",
+                                   "hmtase", "hmt assay", "hmt activity",
+                                   "[3h]-sam", "[3h] sam", "[3h]sam",
+                                   "tritiated sam", "tritiated-sam", "methylation assay"),
+    "ACETYLTRANSFERASE_DEACETYLASE": ("hat assay", "hat activity", "acetyltransferase",
+                                      "hdac assay", "hdac activity", "deacetylase",
+                                      "acetylation assay", "deacetylation assay",
+                                      "fluor-de-lys", "fluor de lys", "fluordelys"),
+    "PHOSPHATASE_ACTIVITY": ("phosphatase assay", "phosphatase activity", "pnpp",
+                             "p-nitrophenyl", "nitrophenyl phosphate",
+                             "malachite green", "dephosphorylation assay",
+                             "in vitro dephosphorylation"),
+    "POLYMERASE_ACTIVITY": ("polymerase assay", "polymerase activity",
+                            "primer extension", "in vitro transcription",
+                            "in vitro replication", "nucleotide incorporation",
+                            "strand displacement", "reverse transcriptase activity"),
+    "HELICASE_ACTIVITY": ("helicase assay", "helicase activity", "unwinding assay",
+                          "unwinding activity", "strand separation", "duplex unwinding"),
+    "EMT_MARKERS": ("epithelial-mesenchymal", "epithelial to mesenchymal",
+                    "epithelial mesenchymal", "emt marker", "emt phenotype",
+                    "emt process", "emt program", "emt induction", "emt signature",
+                    "mesenchymal marker", "mesenchymal phenotype", "cadherin switch"),
+    "STEMNESS_SPHERE": ("sphere formation", "tumorsphere", "tumoursphere",
+                        "mammosphere", "neurosphere", "self-renewal", "self renewal",
+                        "stemness marker", "stemness assay", "side population"),
+    "PROTEIN_AGGREGATION": ("thioflavin", "tht assay", "tht fluoresc", "tht binding",
+                            "amyloid fibril", "amyloid aggregation", "amyloid formation",
+                            "amyloid assay", "protein aggregation assay", "aggresome",
+                            "inclusion body formation", "congo red",
+                            "aggregation kinetics", "aggregation propensity"),
+    "INFLAMMASOME_PYROPTOSIS": ("inflammasome", "nlrp3", "asc speck",
+                                "caspase-1 activation", "caspase-1 cleavage",
+                                "caspase-1 activity", "caspase1 activation",
+                                "caspase1 cleavage", "il-1β", "il-1beta", "il1β",
+                                "il1beta", "pyroptosis", "gsdmd", "gasdermin"),
+    "RNA_BINDING_CLIP": ("clip-seq", "clipseq", "hits-clip", "par-clip", "iclip",
+                         "eclip", "rna immunoprecip", "rip-seq", "ripseq",
+                         "rip-qpcr", "rip assay", "rna pulldown", "rna pull-down",
+                         "rna emsa", "filter binding assay"),
+    "TRANSPORTER_UPTAKE": ("glutamate uptake", "gaba uptake", "dopamine uptake",
+                           "serotonin uptake", "noradrenaline uptake",
+                           "taurocholate uptake", "bile acid uptake", "cystine uptake",
+                           "glutamine uptake", "leucine uptake", "arginine uptake",
+                           "choline uptake", "radiolabel", "substrate uptake",
+                           "na-dependent uptake", "na+-dependent uptake",
+                           "na+ dependent uptake", "na dependent uptake", "[3h]", "[14c]"),
+    "CHAPERONE_REFOLDING": ("in vitro folding", "in vitro refolding",
+                            "protein refolding", "luciferase refolding",
+                            "citrate synthase aggregation", "citrate synthase thermal",
+                            "aggregation prevention", "aggregation suppression",
+                            "holdase", "foldase", "chaperone activity",
+                            "thermal aggregation"),
+    "GLYCOSYLTRANSFERASE_ACTIVITY": ("glycosyltransferase", "sialyltransferase",
+                                     "fucosyltransferase", "galactosyltransferase",
+                                     "glucosyltransferase", "mannosyltransferase",
+                                     "glycosylation assay", "in vitro glycosylation",
+                                     "udp-glucose", "udp-galactose", "udp-glcnac",
+                                     "udp-galnac", "udp-["),
 }
 
 
@@ -184,6 +329,38 @@ def pmid_from_ref(ref: Any) -> str | None:
     return None
 
 
+def annotation_pmids(ann: dict, include_supporting: bool) -> list[tuple[str, str]]:
+    """Return [(pmid, role)] for an annotation, primary first, de-duplicated.
+
+    role is "primary" for original_reference_id and "supporting" for PMIDs drawn
+    from review.supported_by / annotation supported_by / additional_reference_ids.
+    With include_supporting=False this is just the primary reference (the original,
+    conservative join).
+    """
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    def add(ref: Any, role: str) -> None:
+        pm = pmid_from_ref(ref)
+        if pm and pm not in seen:
+            seen.add(pm)
+            out.append((pm, role))
+
+    add(ann.get("original_reference_id"), "primary")
+    if not include_supporting:
+        return out
+    for ref in ann.get("additional_reference_ids") or []:
+        add(ref, "supporting")
+    for sb in ann.get("supported_by") or []:
+        if isinstance(sb, dict):
+            add(sb.get("reference_id"), "supporting")
+    review = ann.get("review") or {}
+    for sb in review.get("supported_by") or []:
+        if isinstance(sb, dict):
+            add(sb.get("reference_id"), "supporting")
+    return out
+
+
 def iter_annotations(genes_dir: Path):
     for path in sorted(genes_dir.rglob("*-ai-review.yaml")):
         try:
@@ -208,6 +385,9 @@ def main() -> None:
                     default=Path("projects/ASSAY_TO_FUNCTION/readout_catalog.yaml"))
     ap.add_argument("--out-dir", type=Path,
                     default=Path("projects/ASSAY_TO_FUNCTION/reports"))
+    ap.add_argument("--include-supporting", action="store_true",
+                    help="also join on supported_by / additional_reference_ids "
+                    "PMIDs, not just original_reference_id (broader, weaker link)")
     args = ap.parse_args()
 
     catalog = load_catalog(args.catalog)
@@ -227,16 +407,30 @@ def main() -> None:
         if n_ann % 5000 == 0:
             print(f"  ...{n_ann} annotations, {len(pubs._cache)} papers read",
                   file=sys.stderr, flush=True)
-        pmid = pmid_from_ref(ann.get("original_reference_id"))
-        if not pmid:
+        pmids = annotation_pmids(ann, args.include_supporting)
+        if not pmids:
             continue
         n_pmid += 1
-        detected = pubs.detect(pmid)
-        if detected is None:
-            missing_pmids.add(pmid)
+        # Detect across every cited paper; union the readout classes and remember
+        # the first paper (preferring the primary reference) that evidenced each
+        # class, so the row carries its provenance.
+        class_src: dict[str, tuple[str, str]] = {}
+        any_resolved = False
+        full_text = False
+        for pm, role in pmids:
+            det = pubs.detect(pm)
+            if det is None:
+                missing_pmids.add(pm)
+                continue
+            any_resolved = True
+            cls, ft = det
+            full_text = full_text or ft
+            for c in cls:
+                if c not in class_src:
+                    class_src[c] = (pm, role)
+        if not any_resolved:
             continue
         n_resolved += 1
-        readout_classes, full_text = detected
 
         review = ann.get("review") or {}
         action = (review.get("action") or "").strip() or "UNREVIEWED"
@@ -245,7 +439,7 @@ def main() -> None:
         go_label = term.get("label", "") or ""
         aspect = aspect_map.get(go_id, "?")
 
-        for name in readout_classes:
+        for name, (pmid, role) in class_src.items():
             spec = catalog[name]
             aligned = bool(
                 go_id in spec["_overmapped"]
@@ -253,6 +447,7 @@ def main() -> None:
             )
             rows.append({
                 "organism": organism, "gene": gene, "pmid": pmid,
+                "ref_role": role,
                 "go_id": go_id, "go_label": go_label, "aspect": aspect,
                 "evidence_type": ann.get("evidence_type", ""),
                 "negated": str(bool(ann.get("negated", False))),
@@ -264,8 +459,8 @@ def main() -> None:
             })
 
     # --- write match rows ---
-    fields = ["organism", "gene", "pmid", "go_id", "go_label", "aspect",
-              "evidence_type", "negated", "action", "readout_class",
+    fields = ["organism", "gene", "pmid", "ref_role", "go_id", "go_label",
+              "aspect", "evidence_type", "negated", "action", "readout_class",
               "proximity", "convergence", "aligned", "full_text"]
     matches_tsv = args.out_dir / "paper_readout_matches.tsv"
     with matches_tsv.open("w", newline="") as fh:
