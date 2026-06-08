@@ -61,6 +61,14 @@ review_batches:
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch5_selection_notes.md
+  - id: proteostasis-batch-2026-06-07c
+    title: "Proteostasis PN candidate additions batch 6 (co-translational quality control: ribosome-associated QC & ribosome rescue, UFMylation, NMD surveillance, nascent-chain N-terminal acetylation)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch6_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
