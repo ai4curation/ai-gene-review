@@ -110,3 +110,14 @@ retries), per-annotation review against GO guidelines with verbatim
   the modifier, not an enzyme.
 - **Moonlighting:** RACK1, EIF5A, NAA10 have well-documented non-RQC moonlighting
   roles — capture the core translation/QC function, mark over-annotations.
+
+## Correction: USP21 / USP25 synonym collision
+
+`fetch-gene human USP21` resolved to **USP25** (UniProt Q9UHP3, UBP25_HUMAN),
+because UniProt lists `USP21` as a gene-name *synonym* of USP25. The review was
+relabeled to USP25 (a legitimate ERAD-associated proteostasis DUB) and its folder
+renamed `USP21/` -> `USP25/`. The **correct USP21** (Q9UK80, UBP21_HUMAN) was then
+fetched explicitly by accession and reviewed separately. Batch 6 therefore covers
+**51** genes (the 49 other selections + USP25 + USP21). Lesson: when a target gene
+symbol is also a documented synonym of another gene, fetch by explicit UniProt
+accession.

@@ -163,6 +163,18 @@ PPIB). The mega-hubs `HSPA5`, `HSP90AA1` and `HSP90AB1` were deliberately
 deferred to dedicated single-gene reviews (50+ GOA terms each). See
 [batch5_selection_notes.md](PROTEOSTASIS/batch5_selection_notes.md).
 
+`proteostasis-batch-2026-06-07c` (`51` reviewed) covers the Translation
+branch's co-translational quality-control machinery: ribosome-associated quality
+control and ribosome rescue (LTN1, NEMF, ZNF598, PELO/HBS1L, GTPBP1/2, the
+makorin and RNF14/RNF25 E3s, GIGYF1/2–4EHP, RACK1, TRIP4, MAP3K20/ZAK, GCN1,
+NPLOC4/UFD1), the UFMylation cascade (UFM1, UBA5, UFC1, UFL1, UFSP1/2, DDRGK1),
+NMD surveillance (UPF1/2/3A/3B), and nascent-chain N-terminal acetylation (HYPK,
+NAA10/15/25/30/35/38/40), plus ribosome recycling (DENR/MCTS1/EIF2D/GTPBP6/
+EEF2K). `HUWE1` and `OGT` were deferred as mega/pleiotropic. The batch totals
+`51` because the `USP21` symbol resolved to the synonym gene `USP25` (also a
+valid ERAD-associated DUB); both were reviewed. See
+[batch6_selection_notes.md](PROTEOSTASIS/batch6_selection_notes.md).
+
 ## What The PN Resource Actually Contains
 
 The workbook is a row-per-role annotation table, not a gene-centered review file.
