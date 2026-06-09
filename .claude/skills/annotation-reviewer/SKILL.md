@@ -67,6 +67,22 @@ Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need
 It may also be OK for IEAs to be broader than what is determined by IBA or literature, you can just mark these as accept,
 unless you think the mapping is too general.
 
+**Do not overrule curators from incomplete evidence.** PomBase and the GO consortium
+databases are highly reliable, and curators who make an experimental annotation (IDA,
+IMP, IPI, IGI) have read the **full text** — which is often NOT in our cached
+`publications/PMID_*.md` files (many are abstract-only; check `full_text_available:`). A
+paper's title/abstract frequently foregrounds one gene or paralog while the full text
+also assays the annotated gene — this is normal, not an error. Therefore: **never
+`REMOVE` an experimental annotation, or assert "wrong gene / paralog mis-attribution /
+name confusion", just because the cached title/abstract is about a different gene,
+paralog, or organism.** If you cannot verify the evidence, use `UNDECIDED`; if the
+function is clearly correct for the gene, `ACCEPT` and defer to the curator. Before
+calling anything mis-attributed, verify the real GO term definition (OLS/QuickGO) and the
+organism actually stated in the abstract (use WebSearch / the article MCP for full text
+when the cache is abstract-only). `REMOVE` is for genuinely contradicted functions or
+demonstrably wrong EC/IEA/over-propagated IBA inferences — not for second-guessing
+experimental annotations whose full text you have not read.
+
 
 5. **Detailed Justification**: For each annotation, provide:
    - Clear rationale for the assigned action
