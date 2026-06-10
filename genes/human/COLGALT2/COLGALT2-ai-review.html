@@ -1,0 +1,2804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLGALT2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>COLGALT2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8IYK4" target="_blank" class="term-link">
+                        Q8IYK4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "COLGALT2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8IYK4" data-a="DESCRIPTION: COLGALT2 (collagen beta(1-O)galactosyltransferase ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>COLGALT2 (collagen beta(1-O)galactosyltransferase 2; also known as GLT25D2, glycosyltransferase 25 family member 2) is an endoplasmic reticulum-luminal, manganese-dependent glycosyltransferase that catalyzes the transfer of beta-galactose from UDP-galactose to hydroxylysine residues of collagens, forming galactosyl-O-hydroxylysine (Gal-O-Hyl). This is the first step of collagen O-glycosylation, which precedes glucosylation to generate the glucosylgalactosyl-hydroxylysine (Glc-Gal-O-Hyl) disaccharide found on collagens and other proteins with collagenous domains. It is a member of the glycosyltransferase 25 (GT25) family and a paralog of COLGALT1, with which it shares procollagen galactosyltransferase activity (EC 2.4.1.50) but no glucosyltransferase activity. The mature protein is a soluble ER-luminal enzyme retained in the ER by a C-terminal SRDEL (KDEL-like) retention signal. Compared with the ubiquitously expressed COLGALT1, COLGALT2 has a more restricted tissue distribution, with expression enriched in brain and skeletal muscle.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050211" target="_blank" class="term-link">
+                                    GO:0050211
+                                </a>
+                            </span>
+                            <span class="term-label">procollagen galactosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0050211" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. COLGALT2 is a procollagen galactosyltransferase that transfers beta-galactose to collagen hydroxylysine residues. This phylogenetic (IBA) inference is concordant with direct biochemical characterization of the human enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the well-established core activity of COLGALT2, directly demonstrated biochemically (EC 2.4.1.50) and consistent across IBA, IEA and TAS evidence. The IBA transfer within the GT25 procollagen galactosyltransferase family is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Beta-galactosyltransferase that transfers beta-galactose to hydroxylysine residues of collagen.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005788" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core cellular component. COLGALT2 is a soluble ER-luminal enzyme bearing a C-terminal SRDEL ER-retention motif, consistent with action on collagens during their transit through the ER.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ER lumen localization is supported by the UniProt subcellular location and the C-terminal KDEL-like (...SRDEL) retention signal that prevents secretion. This annotation correctly localizes the enzyme to its site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050211" target="_blank" class="term-link">
+                                    GO:0050211
+                                </a>
+                            </span>
+                            <span class="term-label">procollagen galactosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0050211" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function inferred by automated mapping from the RHEA reaction and EC number (EC 2.4.1.50). Concordant with the direct biochemical characterization of COLGALT2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The EC 2.4.1.50 / RHEA:12637 mapping accurately reflects the experimentally demonstrated galactosyltransferase activity of COLGALT2 on collagen hydroxylysine.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=2.4.1.50</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from a high-throughput interactome screen. This term is uninformative and does not identify a specific, functionally meaningful partner relevant to COLGALT2&#39;s galactosyltransferase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 protein binding conveys no specific functional information. The interaction (with UBQLN1) derives from a proteome-scale binary interactome map and has no validated functional relationship to collagen galactosylation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from a high-throughput affinity-purification interactome study. Uninformative about COLGALT2&#39;s actual function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 protein binding is non-informative and the interactors (e.g. SEMG1, C1QTNF3) come from a large-scale interactome screen with no demonstrated functional role in collagen glycosylation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from the HuRI reference binary interactome map. Does not specify an informative function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 protein binding is uninformative; the reported interactors (HPCAL1, UBQLN2) are from a systematic interactome screen and are not validated functional partners relevant to COLGALT2&#39;s enzymatic role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#39;protein binding&#39; from a proteome-scale interactome remodeling study. Uninformative regarding COLGALT2 function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 protein binding adds no specific functional information; the underlying interactions are high-throughput and lack a demonstrated link to collagen galactosylation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030199" target="_blank" class="term-link">
+                                    GO:0030199
+                                </a>
+                            </span>
+                            <span class="term-label">collagen fibril organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-1650814
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0030199" data-r="Reactome:R-HSA-1650814" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pathway-level biological process annotation placing COLGALT2 within collagen biosynthesis and modification. COLGALT2 contributes to collagen post-translational modification, but its direct, evolved role is the galactosylation reaction rather than fibril organization per se, which is a downstream consequence of properly modified collagen.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> COLGALT2 acts upstream of fibril assembly by glycosylating collagen hydroxylysines; its effect on collagen fibril organization is indirect/downstream. Retain as a non-core contextual annotation rather than a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Beta-galactosyltransferase that transfers beta-galactose to hydroxylysine residues of collagen.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050211" target="_blank" class="term-link">
+                                    GO:0050211
+                                </a>
+                            </span>
+                            <span class="term-label">procollagen galactosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-1981120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0050211" data-r="Reactome:R-HSA-1981120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function captured from Reactome (galactosylation of collagen propeptide hydroxylysines). Concordant with the direct biochemical evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This TAS annotation correctly reflects COLGALT2&#39;s experimentally established galactosyltransferase activity on collagen hydroxylysine residues.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Beta-galactosyltransferase that transfers beta-galactose to hydroxylysine residues of collagen.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-1981120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005788" data-r="Reactome:R-HSA-1981120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER lumen localization from Reactome, consistent with the UniProt subcellular location and the C-terminal ER-retention signal.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization of COLGALT2 to the ER lumen, its site of action on collagen during biosynthesis.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8948228
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005788" data-r="Reactome:R-HSA-8948228" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER lumen localization from a Reactome reaction (COLGALT1,COLGALT2 bind lysyl hydroxylated collagen propeptides). Redundant with the other ER lumen annotations but correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the established ER-luminal localization of COLGALT2; redundant with other ER lumen annotations but accurate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-8948231
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0005788" data-r="Reactome:R-HSA-8948231" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER lumen localization from a Reactome reaction (dissociation of COLGALT enzymes from galactosyl-hydroxylysyl collagen propeptides). Redundant but correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the established ER-luminal localization of COLGALT2; redundant with other ER lumen annotations but accurate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180062" target="_blank" class="term-link">
+                                    GO:0180062
+                                </a>
+                            </span>
+                            <span class="term-label">protein O-linked glycosylation via galactose</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IYK4" data-a="GO:0180062" data-r="GO_REF:0000033" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. COLGALT2 galactosylates collagen hydroxylysine residues (Gal-O-Hyl), which is the protein O-linked glycosylation via galactose step of collagen O-glycosylation. This BP is more directly representative of COLGALT2&#39;s evolved function than collagen fibril organization, and is the curated IMP-supported process for its paralog COLGALT1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely captures the biological process effected by COLGALT2&#39;s galactosyltransferase activity. It is proposed as a NEW annotation because the existing BP block only contains the more downstream collagen fibril organization term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/COLGALT2/COLGALT2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Beta-galactosyltransferase that transfers beta-galactose to hydroxylysine residues of collagen.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Manganese-dependent transfer of beta-galactose from UDP-galactose to collagen hydroxylysine residues in the ER lumen, forming galactosyl-O-hydroxylysine, the first committed step of collagen O-glycosylation.</h3>
+                <span class="vote-buttons" data-g="Q8IYK4" data-a="FUNCTION: Manganese-dependent transfer of beta-galactose fro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050211" target="_blank" class="term-link">
+                            procollagen galactosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180062" target="_blank" class="term-link">
+                                protein O-linked glycosylation via galactose
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                endoplasmic reticulum lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/COLGALT2/COLGALT2-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Beta-galactosyltransferase that transfers beta-galactose to hydroxylysine residues of collagen.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/COLGALT2/COLGALT2-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC=2.4.1.50</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/COLGALT2/COLGALT2-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19075007" target="_blank" class="term-link">
+                            PMID:19075007
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Core glycosylation of collagen is initiated by two beta(1-O)galactosyltransferases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">COLGALT2 (GLT25D2) is a beta(1-O)galactosyltransferase that transfers galactose to hydroxylysine residues of collagen, initiating the core glycosylation of collagen; it has no glucosyltransferase activity and is expressed in brain and skeletal muscle.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-1650814
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Collagen biosynthesis and modifying enzymes</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-1981120
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Galactosylation of collagen propeptide hydroxylysines by procollagen galactosyltransferases 1, 2</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8948228
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">COLGALT1,COLGALT2 bind Lysyl hydroxylated collagen propeptides</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-8948231
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">COLGALT1,COLGALT2:Galactosyl-hydroxylysyl collagen propeptides dissociates</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why does COLGALT2 have a more restricted (brain/skeletal-muscle-enriched) tissue distribution than the ubiquitously expressed COLGALT1, and which collagen types are its preferred substrates in those tissues?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IYK4" data-a="Q: Why does COLGALT2 have a more restricted (brain/sk..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does COLGALT2 have non-redundant, tissue-specific functions in collagen glycosylation that cannot be compensated by COLGALT1, and is there an associated human phenotype?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IYK4" data-a="Q: Does COLGALT2 have non-redundant, tissue-specific ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> In vitro galactosyltransferase assays with purified recombinant COLGALT2 against a panel of hydroxylysine-containing collagen substrates, varying Mn2+ and UDP-galactose, to define substrate preference and metal dependence relative to COLGALT1.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: COLGALT2 galactosylates collagen hydroxylysine with Mn2+ dependence and has substrate preferences distinct from COLGALT1.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: enzymology/biochemistry</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IYK4" data-a="EXPERIMENT: In vitro galactosyltransferase assays with purifie..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CRISPR knockout of COLGALT2 (alone and combined with COLGALT1) in brain- and muscle-derived cell models, followed by mass-spectrometric quantification of Gal-O-Hyl and Glc-Gal-O-Hyl on collagens to assess its non-redundant contribution.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of COLGALT2 reduces collagen hydroxylysine galactosylation in a tissue-restricted manner not fully rescued by COLGALT1.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic manipulation/glycoproteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IYK4" data-a="EXPERIMENT: CRISPR knockout of COLGALT2 (alone and combined wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Tissue-resolved expression and localization profiling (RNA-seq plus immunohistochemistry/fractionation) to map where COLGALT2 versus COLGALT1 act and confirm ER-luminal residence in vivo.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: COLGALT2 is the predominant collagen galactosyltransferase in specific tissues such as brain and skeletal muscle.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: expression profiling/cell biology</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IYK4" data-a="EXPERIMENT: Tissue-resolved expression and localization profil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(COLGALT2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IYK4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="colgalt2-q8iyk4-review-notes">COLGALT2 (Q8IYK4) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Gene: COLGALT2 (HGNC:16790); synonyms C1orf17, GLT25D2, KIAA0584.</li>
+<li>Protein: Procollagen galactosyltransferase 2 / Collagen beta(1-O)galactosyltransferase 2 (ColGalT 2) / Glycosyltransferase 25 family member 2 / Hydroxylysine galactosyltransferase 2.</li>
+<li>UniProt RecName lists EC=2.4.1.50 [file:human/COLGALT2/COLGALT2-uniprot.txt "EC=2.4.1.50 {ECO:0000269|PubMed:19075007}"].</li>
+<li>626 aa precursor, signal peptide 1..27, C-terminal "...SRDEL" ER-retention motif (623..626, "Prevents secretion from ER", PROSITE PRU10138) [file:human/COLGALT2/COLGALT2-uniprot.txt].</li>
+<li>CAZy family GT25; belongs to the glycosyltransferase 25 family [file:human/COLGALT2/COLGALT2-uniprot.txt "Belongs to the glycosyltransferase 25 family"].</li>
+<li>Paralog of COLGALT1 (Q8NBJ5).</li>
+</ul>
+<h2 id="function">Function</h2>
+<ul>
+<li>"Beta-galactosyltransferase that transfers beta-galactose to hydroxylysine residues of collagen." [file:human/COLGALT2/COLGALT2-uniprot.txt FUNCTION, ECO:0000269|PubMed:19075007].</li>
+<li>Catalytic activity: (5R)-5-hydroxy-L-lysyl-[collagen] + UDP-alpha-D-galactose = (5R)-5-O-(beta-D-galactosyl)-5-hydroxy-L-lysyl-[collagen] + UDP + H(+); RHEA:12637; EC 2.4.1.50 [file:human/COLGALT2/COLGALT2-uniprot.txt CATALYTIC ACTIVITY].</li>
+<li>This is the first step of collagen O-glycosylation (Gal-O-Hyl), preceding glucosylation to form Glc-Gal-O-Hyl. Original characterization: Schegg B et al., Mol Cell Biol 2009 (PMID:19075007), "Core glycosylation of collagen is initiated by two beta(1-O)galactosyltransferases." (paper not cached in repo).</li>
+<li>Kinetics: KM=33.5 uM for UDP-galactose [file:human/COLGALT2/COLGALT2-uniprot.txt BIOPHYSICOCHEMICAL PROPERTIES, ECO:0000269|PubMed:19075007].</li>
+<li>CAUTION: Has no glucosyltransferase activity [file:human/COLGALT2/COLGALT2-uniprot.txt "Has no glucosyltransferase activity"].</li>
+<li>Mn2+-dependent: GT25 collagen galactosyltransferases are manganese-dependent (DXD motif metal coordination). Note: a manganese binding GO annotation is NOT present in the current GOA; established for the family/paralog in the literature.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>SUBCELLULAR LOCATION: Endoplasmic reticulum lumen [file:human/COLGALT2/COLGALT2-uniprot.txt SUBCELLULAR LOCATION, ECO:0000255|PROSITE-ProRule:PRU10138]. Consistent with soluble ER-luminal enzyme bearing a C-terminal ...DEL ER-retention signal. The paralog GLT25D1/COLGALT1 was shown to be a soluble ER-localized protein (PMID:20470363).</li>
+</ul>
+<h2 id="tissue-specificity">Tissue specificity</h2>
+<ul>
+<li>"Expressed in brain and skeletal muscle." [file:human/COLGALT2/COLGALT2-uniprot.txt TISSUE SPECIFICITY, ECO:0000269|PubMed:19075007]. HPA: tissue enhanced (brain). More restricted expression than ubiquitous COLGALT1.</li>
+</ul>
+<h2 id="existing-go-annotations-goa">Existing GO annotations (GOA)</h2>
+<ul>
+<li>GO:0050211 procollagen galactosyltransferase activity — IBA (GO_REF:0000033), IEA (GO_REF:0000120, RHEA/EC), TAS (Reactome R-HSA-1981120). Core MF; well supported by direct biochemistry (PMID:19075007) and EC mapping. ACCEPT.</li>
+<li>GO:0005788 endoplasmic reticulum lumen — IEA (GO_REF:0000044 SubCell mapping) and TAS (Reactome x3). Core CC consistent with UniProt SUBCELLULAR LOCATION and DEL retention motif. ACCEPT one as representative.</li>
+<li>GO:0030199 collagen fibril organization — TAS Reactome (R-HSA-1650814). BP; downstream/pathway-level. COLGALT2 contributes to collagen biosynthesis/modification but a direct role in fibril organization is indirect. Keep as non-core.</li>
+<li>GO:0005515 protein binding — IPI, 4 separate high-throughput interactome papers (PMID:25416956 Rolland; PMID:28514442 Luck/Huttlin community map; PMID:32296183 Luck HuRI; PMID:33961781 BioPlex). Interactors are heterogeneous (C1QTNF3, HPCAL1, SEMG1, UBQLN1, UBQLN2 per UniProt INTERACTION) and not functionally informative. Bare "protein binding" is uninformative -&gt; MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="interactions-uniprot-interaction-block">Interactions (UniProt INTERACTION block)</h2>
+<ul>
+<li>C1QTNF3 (Q9BXJ4), HPCAL1 (P37235), SEMG1 (P04279), UBQLN1 (Q9UMX0-2), UBQLN2 (Q9UHD9). These derive from binary interactome screens; no validated functional partnership relevant to galactosyltransferase activity.</li>
+</ul>
+<h2 id="decisions-summary">Decisions summary</h2>
+<ul>
+<li>ACCEPT: galactosyltransferase activity (GO:0050211), ER lumen (GO:0005788).</li>
+<li>KEEP_AS_NON_CORE: collagen fibril organization (GO:0030199) — pathway-level/indirect.</li>
+<li>MARK_AS_OVER_ANNOTATED: all GO:0005515 protein binding (uninformative, HT interactome).</li>
+<li>Core function: collagen hydroxylysine galactosyltransferase (Gal-O-Hyl), first step of collagen O-glycosylation, in the ER lumen, Mn2+-dependent.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8IYK4
+gene_symbol: COLGALT2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: COLGALT2 (collagen beta(1-O)galactosyltransferase 2; also known as GLT25D2,
+  glycosyltransferase 25 family member 2) is an endoplasmic reticulum-luminal, manganese-dependent
+  glycosyltransferase that catalyzes the transfer of beta-galactose from UDP-galactose
+  to hydroxylysine residues of collagens, forming galactosyl-O-hydroxylysine (Gal-O-Hyl).
+  This is the first step of collagen O-glycosylation, which precedes glucosylation to
+  generate the glucosylgalactosyl-hydroxylysine (Glc-Gal-O-Hyl) disaccharide found on
+  collagens and other proteins with collagenous domains. It is a member of the glycosyltransferase
+  25 (GT25) family and a paralog of COLGALT1, with which it shares procollagen galactosyltransferase
+  activity (EC 2.4.1.50) but no glucosyltransferase activity. The mature protein is a soluble
+  ER-luminal enzyme retained in the ER by a C-terminal SRDEL (KDEL-like) retention signal.
+  Compared with the ubiquitously expressed COLGALT1, COLGALT2 has a more restricted tissue
+  distribution, with expression enriched in brain and skeletal muscle.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+- id: PMID:19075007
+  title: Core glycosylation of collagen is initiated by two beta(1-O)galactosyltransferases.
+  findings:
+  - statement: COLGALT2 (GLT25D2) is a beta(1-O)galactosyltransferase that transfers
+      galactose to hydroxylysine residues of collagen, initiating the core glycosylation
+      of collagen; it has no glucosyltransferase activity and is expressed in brain
+      and skeletal muscle.
+    reference_section_type: ABSTRACT
+- id: Reactome:R-HSA-1650814
+  title: Collagen biosynthesis and modifying enzymes
+  findings: []
+- id: Reactome:R-HSA-1981120
+  title: Galactosylation of collagen propeptide hydroxylysines by procollagen galactosyltransferases
+    1, 2
+  findings: []
+- id: Reactome:R-HSA-8948228
+  title: COLGALT1,COLGALT2 bind Lysyl hydroxylated collagen propeptides
+  findings: []
+- id: Reactome:R-HSA-8948231
+  title: COLGALT1,COLGALT2:Galactosyl-hydroxylysyl collagen propeptides dissociates
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0050211
+    label: procollagen galactosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Core molecular function. COLGALT2 is a procollagen galactosyltransferase
+      that transfers beta-galactose to collagen hydroxylysine residues. This phylogenetic
+      (IBA) inference is concordant with direct biochemical characterization of the
+      human enzyme.
+    action: ACCEPT
+    reason: This is the well-established core activity of COLGALT2, directly demonstrated
+      biochemically (EC 2.4.1.50) and consistent across IBA, IEA and TAS evidence. The
+      IBA transfer within the GT25 procollagen galactosyltransferase family is appropriate.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: Beta-galactosyltransferase that transfers beta-galactose to
+        hydroxylysine residues of collagen.
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Core cellular component. COLGALT2 is a soluble ER-luminal enzyme bearing
+      a C-terminal SRDEL ER-retention motif, consistent with action on collagens during
+      their transit through the ER.
+    action: ACCEPT
+    reason: ER lumen localization is supported by the UniProt subcellular location and
+      the C-terminal KDEL-like (...SRDEL) retention signal that prevents secretion. This
+      annotation correctly localizes the enzyme to its site of action.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#34;
+- term:
+    id: GO:0050211
+    label: procollagen galactosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function inferred by automated mapping from the RHEA reaction
+      and EC number (EC 2.4.1.50). Concordant with the direct biochemical characterization
+      of COLGALT2.
+    action: ACCEPT
+    reason: The EC 2.4.1.50 / RHEA:12637 mapping accurately reflects the experimentally
+      demonstrated galactosyltransferase activity of COLGALT2 on collagen hydroxylysine.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: EC=2.4.1.50
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Bare &#39;protein binding&#39; from a high-throughput interactome screen. This term
+      is uninformative and does not identify a specific, functionally meaningful partner
+      relevant to COLGALT2&#39;s galactosyltransferase function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 protein binding conveys no specific functional information. The
+      interaction (with UBQLN1) derives from a proteome-scale binary interactome map and
+      has no validated functional relationship to collagen galactosylation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: Bare &#39;protein binding&#39; from a high-throughput affinity-purification interactome
+      study. Uninformative about COLGALT2&#39;s actual function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 protein binding is non-informative and the interactors (e.g. SEMG1,
+      C1QTNF3) come from a large-scale interactome screen with no demonstrated functional
+      role in collagen glycosylation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Bare &#39;protein binding&#39; from the HuRI reference binary interactome map. Does
+      not specify an informative function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 protein binding is uninformative; the reported interactors (HPCAL1,
+      UBQLN2) are from a systematic interactome screen and are not validated functional
+      partners relevant to COLGALT2&#39;s enzymatic role.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: Bare &#39;protein binding&#39; from a proteome-scale interactome remodeling study.
+      Uninformative regarding COLGALT2 function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 protein binding adds no specific functional information; the underlying
+      interactions are high-throughput and lack a demonstrated link to collagen galactosylation.
+- term:
+    id: GO:0030199
+    label: collagen fibril organization
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1650814
+  qualifier: involved_in
+  review:
+    summary: Pathway-level biological process annotation placing COLGALT2 within collagen
+      biosynthesis and modification. COLGALT2 contributes to collagen post-translational
+      modification, but its direct, evolved role is the galactosylation reaction rather
+      than fibril organization per se, which is a downstream consequence of properly modified
+      collagen.
+    action: KEEP_AS_NON_CORE
+    reason: COLGALT2 acts upstream of fibril assembly by glycosylating collagen hydroxylysines;
+      its effect on collagen fibril organization is indirect/downstream. Retain as a non-core
+      contextual annotation rather than a core function.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: Beta-galactosyltransferase that transfers beta-galactose to
+        hydroxylysine residues of collagen.
+- term:
+    id: GO:0050211
+    label: procollagen galactosyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1981120
+  qualifier: enables
+  review:
+    summary: Core molecular function captured from Reactome (galactosylation of collagen
+      propeptide hydroxylysines). Concordant with the direct biochemical evidence.
+    action: ACCEPT
+    reason: This TAS annotation correctly reflects COLGALT2&#39;s experimentally established
+      galactosyltransferase activity on collagen hydroxylysine residues.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: Beta-galactosyltransferase that transfers beta-galactose to
+        hydroxylysine residues of collagen.
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1981120
+  qualifier: located_in
+  review:
+    summary: ER lumen localization from Reactome, consistent with the UniProt subcellular
+      location and the C-terminal ER-retention signal.
+    action: ACCEPT
+    reason: Correct localization of COLGALT2 to the ER lumen, its site of action on collagen
+      during biosynthesis.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#34;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8948228
+  qualifier: located_in
+  review:
+    summary: ER lumen localization from a Reactome reaction (COLGALT1,COLGALT2 bind lysyl
+      hydroxylated collagen propeptides). Redundant with the other ER lumen annotations
+      but correct.
+    action: ACCEPT
+    reason: Consistent with the established ER-luminal localization of COLGALT2; redundant
+      with other ER lumen annotations but accurate.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#34;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-8948231
+  qualifier: located_in
+  review:
+    summary: ER lumen localization from a Reactome reaction (dissociation of COLGALT
+      enzymes from galactosyl-hydroxylysyl collagen propeptides). Redundant but correct.
+    action: ACCEPT
+    reason: Consistent with the established ER-luminal localization of COLGALT2; redundant
+      with other ER lumen annotations but accurate.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#34;
+- term:
+    id: GO:0180062
+    label: protein O-linked glycosylation via galactose
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Core biological process. COLGALT2 galactosylates collagen hydroxylysine
+      residues (Gal-O-Hyl), which is the protein O-linked glycosylation via galactose
+      step of collagen O-glycosylation. This BP is more directly representative of COLGALT2&#39;s
+      evolved function than collagen fibril organization, and is the curated IMP-supported
+      process for its paralog COLGALT1.
+    action: NEW
+    reason: This term precisely captures the biological process effected by COLGALT2&#39;s
+      galactosyltransferase activity. It is proposed as a NEW annotation because the
+      existing BP block only contains the more downstream collagen fibril organization term.
+    supported_by:
+    - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+      supporting_text: Beta-galactosyltransferase that transfers beta-galactose to
+        hydroxylysine residues of collagen.
+core_functions:
+- description: Manganese-dependent transfer of beta-galactose from UDP-galactose to
+    collagen hydroxylysine residues in the ER lumen, forming galactosyl-O-hydroxylysine,
+    the first committed step of collagen O-glycosylation.
+  molecular_function:
+    id: GO:0050211
+    label: procollagen galactosyltransferase activity
+  directly_involved_in:
+  - id: GO:0180062
+    label: protein O-linked glycosylation via galactose
+  locations:
+  - id: GO:0005788
+    label: endoplasmic reticulum lumen
+  supported_by:
+  - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+    supporting_text: Beta-galactosyltransferase that transfers beta-galactose to
+      hydroxylysine residues of collagen.
+  - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+    supporting_text: EC=2.4.1.50
+  - reference_id: file:human/COLGALT2/COLGALT2-uniprot.txt
+    supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Why does COLGALT2 have a more restricted (brain/skeletal-muscle-enriched)
+    tissue distribution than the ubiquitously expressed COLGALT1, and which collagen
+    types are its preferred substrates in those tissues?
+- question: Does COLGALT2 have non-redundant, tissue-specific functions in collagen
+    glycosylation that cannot be compensated by COLGALT1, and is there an associated
+    human phenotype?
+suggested_experiments:
+- description: In vitro galactosyltransferase assays with purified recombinant COLGALT2
+    against a panel of hydroxylysine-containing collagen substrates, varying Mn2+ and
+    UDP-galactose, to define substrate preference and metal dependence relative to COLGALT1.
+  experiment_type: enzymology/biochemistry
+  hypothesis: COLGALT2 galactosylates collagen hydroxylysine with Mn2+ dependence and
+    has substrate preferences distinct from COLGALT1.
+- description: CRISPR knockout of COLGALT2 (alone and combined with COLGALT1) in brain-
+    and muscle-derived cell models, followed by mass-spectrometric quantification of
+    Gal-O-Hyl and Glc-Gal-O-Hyl on collagens to assess its non-redundant contribution.
+  experiment_type: genetic manipulation/glycoproteomics
+  hypothesis: Loss of COLGALT2 reduces collagen hydroxylysine galactosylation in a tissue-restricted
+    manner not fully rescued by COLGALT1.
+- description: Tissue-resolved expression and localization profiling (RNA-seq plus immunohistochemistry/fractionation)
+    to map where COLGALT2 versus COLGALT1 act and confirm ER-luminal residence in vivo.
+  experiment_type: expression profiling/cell biology
+  hypothesis: COLGALT2 is the predominant collagen galactosyltransferase in specific tissues
+    such as brain and skeletal muscle.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
