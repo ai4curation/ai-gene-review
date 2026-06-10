@@ -1,0 +1,11 @@
+# NPLOC4 (Q8TAT6) research notes
+
+## Summary
+NPLOC4 (Nuclear protein localization protein 4 homolog, NPL4) is an essential ubiquitin-binding cofactor of the AAA+ ATPase VCP/p97. With UFD1 it forms the obligate UFD1-NPL4 heterodimer, the principal substrate-recruiting adaptor of p97, generating the VCP-NPL4-UFD1 segregase complex. NPL4 binds polyubiquitin chains through its C-terminal RanBP2-type zinc finger and, together with UFD1, engages and unfolds the initiating ubiquitin to thread substrates into the p97 central pore. The complex extracts ubiquitinated proteins from membranes, chromatin, and macromolecular assemblies and delivers them for proteasomal degradation. It is central to endoplasmic-reticulum-associated degradation (ERAD), where it drives retrotranslocation of misfolded proteins from the ER to the cytosol, and it participates in many other p97-dependent processes including ribosome-associated quality control, spindle disassembly and nuclear-envelope reformation at the end of mitosis, and Golgi membrane reassembly. NPL4 also contributes to a non-canonical role of the p97 complex in innate immunity, acting as a negative regulator of type I interferon production by helping bind RIG-I (RIGI/DDX58) and recruit RNF125 for its ubiquitination and degradation. NPL4 contains an MPN(-like) domain, a ubiquitin-like region, and the RanBP2-type zinc finger, and localizes to the cytosol, the ER membrane and the nucleus.
+
+## Core functions (from review)
+- **GO:0043130 ubiquitin binding** — Polyubiquitin-binding cofactor of the AAA+ ATPase VCP/p97 that, as part of the obligate UFD1-NPL4 heterodimer, recognizes (notably K48-linked) polyubiquitinated substrates via its RanBP2-type zinc finger and presents them to p97 for ATP-driven extraction/unfolding.
+- **GO:0051117 ATPase binding** — Substrate-recruiting adaptor subunit of the VCP-NPL4-UFD1 segregase that binds the p97 ATPase and drives ubiquitin-dependent extraction of substrates from membranes and complexes, including ER-to-cytosol retrotranslocation of misfolded proteins during ERAD, delivering them for proteasomal degradation.
+
+## Provenance
+Research and verbatim supporting quotes are recorded inline in `NPLOC4-ai-review.yaml` (per-annotation `supported_by` and `references` findings). This notes file summarizes the completed review; see the YAML for evidence citations.

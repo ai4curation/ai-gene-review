@@ -53,6 +53,22 @@ review_batches:
     target_gene_count: 30
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch4_selection_notes.md
+  - id: proteostasis-batch-2026-06-07b
+    title: "Proteostasis PN candidate additions batch 5 (protein-folding chaperone & co-chaperone network: DNAJ/HSP40 family, small HSPs, HSP70/HSP90 hub co-chaperones, FKBP immunophilins, ER oxidative folding/PPIases)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch5_selection_notes.md
+  - id: proteostasis-batch-2026-06-07c
+    title: "Proteostasis PN candidate additions batch 6 (co-translational quality control: ribosome-associated QC & ribosome rescue, UFMylation, NMD surveillance, nascent-chain N-terminal acetylation)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch6_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
@@ -135,6 +151,29 @@ The current PN review batch, `proteostasis-batch-2026-06-03`, was selected from
 the projected candidate additions report and has `50` human gene-review PR rows
 in the same sidecar. Merged PRs record `merged_at`; open PRs keep that field
 empty until merged.
+
+Subsequent candidate-addition batches continued the rereview queue:
+`proteostasis-batch-2026-06-06` (`20` genes), `proteostasis-batch-2026-06-07`
+(`30` genes), and `proteostasis-batch-2026-06-07b` (`50` genes — the
+protein-folding chaperone & co-chaperone network: the DNAJ/HSP40 J-domain family,
+small heat-shock proteins, HSP70/HSP90 hub co-chaperones such as STUB1/CHIP,
+STIP1/HOP, SGTA and SERPINH1/HSP47, FKBP immunophilin co-chaperones, and ER
+oxidative-folding/PPIase enzymes including P4HB/PDI, ERO1A/B, ERP27/29 and
+PPIB). The mega-hubs `HSPA5`, `HSP90AA1` and `HSP90AB1` were deliberately
+deferred to dedicated single-gene reviews (50+ GOA terms each). See
+[batch5_selection_notes.md](PROTEOSTASIS/batch5_selection_notes.md).
+
+`proteostasis-batch-2026-06-07c` (`51` reviewed) covers the Translation
+branch's co-translational quality-control machinery: ribosome-associated quality
+control and ribosome rescue (LTN1, NEMF, ZNF598, PELO/HBS1L, GTPBP1/2, the
+makorin and RNF14/RNF25 E3s, GIGYF1/2–4EHP, RACK1, TRIP4, MAP3K20/ZAK, GCN1,
+NPLOC4/UFD1), the UFMylation cascade (UFM1, UBA5, UFC1, UFL1, UFSP1/2, DDRGK1),
+NMD surveillance (UPF1/2/3A/3B), and nascent-chain N-terminal acetylation (HYPK,
+NAA10/15/25/30/35/38/40), plus ribosome recycling (DENR/MCTS1/EIF2D/GTPBP6/
+EEF2K). `HUWE1` and `OGT` were deferred as mega/pleiotropic. The batch totals
+`51` because the `USP21` symbol resolved to the synonym gene `USP25` (also a
+valid ERAD-associated DUB); both were reviewed. See
+[batch6_selection_notes.md](PROTEOSTASIS/batch6_selection_notes.md).
 
 ## What The PN Resource Actually Contains
 
