@@ -49,5 +49,3 @@ So the CORE molecular role is a **pre-targeting/bridging scaffold (protein carri
 - The interactome-screen IPIs (PMID:21516116, 24722188, 25416956, 28514442, 32296183, 33961781, 40205054) are high-throughput protein-binding; KEEP_AS_NON_CORE. Among these the GET3 (O43681) and BAG6 (P46379-2) captures are biologically meaningful; FBN1/NUP85/KRTAP9-3/DUSP21/etc. are likely incidental.
 
 No REMOVE warranted: all experimental annotations are consistent with established GET4 biology; the IEA/IBA are also consistent. No MODIFY strictly required, though GO:0045048 is a more general parent — I keep it ACCEPT as a valid (if general) term rather than MODIFY, since 0071816/0006620 already capture the specific function and both are present.
-</content>
-</invoke>
