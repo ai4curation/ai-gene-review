@@ -89,5 +89,3 @@ secondary/legacy.
 - cytoplasm (IEA/EXP/TAS): ACCEPT. ER (IEA/EXP): ACCEPT. ER membrane (NAS): ACCEPT (GET complex resides there).
 - nucleolus (IEA/IDA/TAS), nucleoplasm (IDA): KEEP_AS_NON_CORE (legacy/HPA localization, not core function).
 - extracellular exosome (HDA): KEEP_AS_NON_CORE (proteomic catalog).
-</content>
-</invoke>

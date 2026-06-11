@@ -26,3 +26,9 @@
 - GO:0016020 membrane (generic parent of ER membrane) -> KEEP_AS_NON_CORE.
 - GO:0005515 protein binding IPIs (PMID:26496610/32296183/33961781/35271311/40205054, mostly the EMC2 interaction) -> KEEP_AS_NON_CORE (real high-throughput interactions but uninformative bare term).
 - No REMOVE/MODIFY/UNDECIDED needed; experimental insertase/process annotations are well supported by full-text and the EMC3-specific mutagenesis.
+
+## Verification pass (2026-06-11)
+- All 22 PENDING annotations reviewed and filled; status COMPLETE.
+- Verbatim supporting substrings confirmed present: uniprot "Component of the ER membrane protein complex (EMC).", "SUBCELLULAR LOCATION: Endoplasmic reticulum membrane", "Multi-pass membrane protein", "Q9P0I2; Q15006: EMC2", "No effect on EMC assembly but decreased" (EMC3 vestibule/Met-loop mutagenesis), "post-translational insertion of tail-anchored/TA proteins in", "stop-transfer membrane-anchor sequences become ER membrane spanning"; PMID:29242231 "transmembrane domain insertase" / "tail-anchored membrane proteins with moderately hydrophobic transmembrane" / "EMC3 is a distant homolog of Get1"; PMID:32439656 "formed by the subunits EMC3 and EMC6" / "enclosed hydrophilic" / "methionine-rich cytosolic loop"; PMID:30415835 "G protein-coupled receptors".
+- IPI partners: PMID:26496610/33961781/35271311/40205054 -> EMC2 (Q15006); PMID:32296183 -> Q13126 (non-EMC, likely incidental/client). All bare protein binding -> KEEP_AS_NON_CORE.
+- CORE molecular function GO:0032977 (contributes_to) is the catalytic insertase activity; ACCEPT. No REMOVE/MODIFY/UNDECIDED needed.

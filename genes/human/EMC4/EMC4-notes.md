@@ -30,3 +30,9 @@ UniProt: Q5J8M3 (EMC4_HUMAN). 183 aa. Synonyms TMEM85, PIG17, HSPC184. Gene on c
 - GO:0016020 membrane: redundant/generic vs ER membrane -> KEEP_AS_NON_CORE.
 - apoptotic process (GO:0006915, IEA KW): from old yeast/human TMEM85 H2O2-cell-death observation [PMID:18586032]; this is an indirect/pleiotropic downstream effect, MARK_AS_OVER_ANNOTATED (note: this term is a UniProtKB-KW IEA and appears in the DR GO block but is not in goa.tsv, so not in existing_annotations list).
 </content>
+
+## Verification pass (2026-06-11)
+- All 18 PENDING annotations reviewed and filled; status COMPLETE.
+- Verbatim substrings confirmed in cache/uniprot: uniprot "Component of the ER membrane protein complex (EMC).", "SUBCELLULAR LOCATION: Endoplasmic reticulum membrane", "Q5J8M3; Q9NRM0-1: SLC2A9", "Q5J8M3; PRO_0000449624 [P0DTD1]: rep", "enables the energy-independent insertion into endoplasmic", "post-translational insertion of tail-anchored/TA proteins in", "stop-transfer membrane-anchor sequences become ER membrane spanning"; PMID:29242231 "transmembrane domain insertase" / "tail-anchored membrane proteins with moderately hydrophobic transmembrane"; PMID:30415835 "G protein-coupled receptors".
+- IPI partners: PMID:31695625 -> GLUT9/SLC2A9 (multipass transporter client; KEEP_AS_NON_CORE); PMID:33845483/34232536/36217030 -> SARS-CoV-2 replicase rep (P0DTD1, viral; KEEP_AS_NON_CORE).
+- EMC4 is a non-catalytic accessory membrane subunit; GO:0032977 insertase activity carries contributes_to and is ACCEPTed at complex level. CORE = EMC complex membership + ER membrane + TA/stop-transfer insertion processes. No REMOVE/MODIFY/UNDECIDED.
