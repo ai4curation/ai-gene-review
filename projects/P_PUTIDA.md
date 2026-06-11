@@ -137,6 +137,46 @@ present gene folders.
 | **hpd** | Q88HC7 | 4-hydroxyphenylpyruvate dioxygenase |
 | **fcs** | Q88HK0 | Feruloyl-CoA synthetase (ferulate catabolism) |
 
+## Batch 3 — Aromatic Amino Acid (AAA) Biosynthesis Pathway (16 genes, stubs created)
+
+The shikimate → chorismate → Trp/Phe/Tyr biosynthetic pathway in KT2440 (taxon
+160488). Complements the existing aromatic *catabolism* coverage (ben/cat/pca) with the
+*anabolic* route to aromatic amino acids. Stubs seeded via `fetch-gene`; Falcon (Edison)
+deep-research reports generated per gene. Name variants not resolving as primary UniProt
+symbols in KT2440 are covered by a resolved paralog (aroD→aroQ, aroF/aroG→aroH, aroL→aroK)
+or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
+
+### Shikimate trunk (common pathway, 7)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **aroH** | Q88LR3 | DAHP synthase (3-deoxy-D-arabino-heptulosonate-7-P synthase) |
+| **aroB** | Q88CV2 | 3-dehydroquinate synthase |
+| **aroQ** | Q88IJ6 | 3-dehydroquinate dehydratase (type II) |
+| **aroE** | Q88IJ7 | Shikimate dehydrogenase |
+| **aroK** | Q88CV1 | Shikimate kinase |
+| **aroA** | Q88M05 | EPSP synthase (3-phosphoshikimate 1-carboxyvinyltransferase) |
+| **aroC** | Q88LU7 | Chorismate synthase |
+
+### Tryptophan branch (6)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **trpE** | Q88QS1 | Anthranilate synthase component I |
+| **trpD** | Q88QR7 | Anthranilate phosphoribosyltransferase |
+| **trpC** | Q88QR6 | Indole-3-glycerol-phosphate synthase |
+| **trpF** | Q88LE0 | N-(5'-phosphoribosyl)anthranilate isomerase |
+| **trpA** | Q88RP7 | Tryptophan synthase α |
+| **trpB** | Q88RP6 | Tryptophan synthase β |
+
+### Phe/Tyr branch & aromatic aminotransferases (3)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **pheA** | Q88M06 | Chorismate mutase / prephenate dehydratase (P-protein) |
+| **tyrB** | Q88LG1 | Aromatic-amino-acid aminotransferase |
+| **hisC** | Q88P86 | Histidinol-phosphate / aromatic aminotransferase |
+
 ## Priority Genes for Future Review
 
 ### Aromatic Catabolism (core P. putida biology)
