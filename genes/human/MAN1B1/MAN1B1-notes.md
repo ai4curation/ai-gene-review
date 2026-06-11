@@ -98,5 +98,4 @@ The earlier view (strict single-mannose trimming) was revised:
   it is the generic mannosidase activity acting on a viral glycoprotein, not a distinct function.
 - GO:0036510 trimming of terminal mannose on C branch (Reactome TAS) — ACCEPT (specific correct sub-step).
 - Many redundant Reactome TAS GO:0004571 and GO:0044322 entries — ACCEPT (correct, redundant).
-</content>
-</invoke>
+
