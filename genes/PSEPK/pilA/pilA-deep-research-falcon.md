@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-11T21:37:54.906439'
-end_time: '2026-06-11T22:07:25.618103'
-duration_seconds: 1770.71
+start_time: '2026-06-11T22:05:46.595092'
+end_time: '2026-06-11T22:26:51.855946'
+duration_seconds: 1265.26
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: PSEPK
@@ -25,7 +25,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 34
+citation_count: 35
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -42,9 +42,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000017 I have extracted Table 2 from page 13,
-    which lists virulence factors related to adherence. This table includes the "Type
-    IV pili" s'
+  description: '## Context ID: pqac-00000018 Figure 1 is the most informative schematic
+    showing the overall structure and assembly components of the type IVa pilus (T4aP).
+    It d'
 ---
 
 ## Question
@@ -155,241 +155,229 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Functional annotation of **pilA** (UniProt **Q88Q62**; locus **PP_0634**) in *Pseudomonas putida* KT2440
+# Research Report: Functional Annotation of **pilA** (UniProt **Q88Q62**, locus **PP_0634**) in *Pseudomonas putida* KT2440
 
-### Executive summary
-**PilA (PP_0634; UniProt Q88Q62)** in *Pseudomonas putida* KT2440 is the predicted **major type IV pilin** subunit (N‑methyl‑phenylalanine pilin family) that polymerizes into **type IV pili (T4P)**—dynamic extracellular filaments involved broadly in **surface adhesion, twitching motility, biofilm development, and DNA uptake** in many bacteria. Direct KT2440 experimental characterization of PilA itself was limited in the retrieved corpus; however, KT2440-specific genome analyses map **pilA → PP_0634** and indicate KT2440 retains a **partial T4P gene set**, including **pilA, pilC, pilD**, and **pilT**, while lacking some canonical components such as **pilB** (with a hypothesis of functional compensation by **xcpR** in the type II secretion machinery). Mechanistic details of PilA maturation, localization, and function are well-established in authoritative T4P literature and align with the UniProt family/domain annotation for Q88Q62. (udaondo2025transcriptionalregulatorysystems pages 12-14, udaondo2025transcriptionalregulatorysystems media 6adbec71, santos2004insightsintothe pages 10-11, mattick2002typeivpili pages 8-10, burrows2012pseudomonasaeruginosatwitching pages 11-13, little2024typeivpili pages 6-8)
+## 0) Scope, identity verification, and evidence limits
 
----
+### Target identity verification (critical)
+The gene symbol **pilA** is highly ambiguous across bacteria; here the target is **UniProt Q88Q62** from *Pseudomonas putida* strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950). In the retrieved literature, **PP_0634** in KT2440 is explicitly mapped as the ortholog of *Pseudomonas aeruginosa* **pilA** (major type IV pilin gene) in a type IV pili/adherence gene mapping table, supporting that KT2440 **PP_0634 encodes PilA**. (udaondo2025transcriptionalregulatorysystems pages 12-14)
 
-### 1) Mandatory verification: correct gene/protein identity (disambiguation)
+A sequence-comparison study of type IVa pilins includes a *P. putida* KT2440 entry (accession **NP_742795**) among “other bacteria with type IVa pilin genes,” consistent with PilA of KT2440 being a **type IVa pilin-family protein** and aligning with the UniProt description of Q88Q62 as Pilin. (harvey2009singleresiduechangesin pages 4-5)
 
-**Gene symbol ambiguity:** “pilA” is widely used across bacteria for major pilin proteins; therefore, KT2440-specific mapping is required.
+### Evidence limitation (KT2440-specific phenotypes)
+Within the retrieved full texts, I did **not** find direct KT2440 experiments (e.g., KT2440 pilA knockout/complementation) that quantify PilA-dependent twitching motility, adhesion, biofilm formation, or competence. Therefore, **KT2440-specific molecular identity is directly supported**, while **functional/mechanistic annotation relies heavily on conserved, well-established type IVa pilus (T4aP) biology** from authoritative reviews and *Pseudomonas* model systems, supplemented by a primary *Pseudomonas putida* paper (strain GB-1) directly describing PilD/PilA processing and methylation and noting relevant gene clusters in KT2440. (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2)
 
-**KT2440 mapping to PP_0634 (target confirmation):** A comparative table of type IV pili genes explicitly maps *P. putida* KT2440 **pilA** to locus tag **PP_0634** (with *P. aeruginosa* PAO1 pilA = PA4525), confirming that KT2440 “pilA” corresponds to **PP_0634** and thus supports the UniProt-provided target identity (Q88Q62). (udaondo2025transcriptionalregulatorysystems pages 12-14, udaondo2025transcriptionalregulatorysystems media 6adbec71)
+## 1) Key concepts and definitions (current understanding)
 
-**Scope control:** All evidence about “pilA/PilA” from other organisms (e.g., *P. aeruginosa*, Enterobacteriaceae) is used **only** to support conserved mechanistic inference about major pilins; it is not treated as direct KT2440 PilA experimentation. (mattick2002typeivpili pages 8-10, burrows2012pseudomonasaeruginosatwitching pages 11-13, little2024typeivpili pages 6-8)
+### 1.1 Type IV pili (T4P) and “type 4 filaments” (T4F)
+Type IV pili (T4P) are members of the broader **type 4 filament (T4F)** superfamily: filamentous polymers made of type 4 pilin subunits assembled by a conserved multi-protein machinery. Core conserved components include the pilin(s), a **prepilin peptidase**, an **extension ATPase**, and a **platform protein**; addition of a **PilT-like retraction motor** enables retraction in retractile systems. (pelicic2023mechanismofassembly pages 2-3, pelicic2023mechanismofassembly pages 5-6)
 
----
+### 1.2 What PilA is
+**PilA** denotes the **major pilin** (major structural subunit) of type IVa pili in many Gram-negative bacteria, including *Pseudomonas* model systems; large numbers of PilA monomers polymerize to form the extracellular pilus fiber. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, jacobsen2020structureandfunction pages 1-3)
 
-### 2) Key concepts and definitions (current understanding)
+### 1.3 Prepilin processing and N-terminal methylation
+Type IV pilins are synthesized as **prepilins** carrying an N-terminal leader peptide (“SPIII signal peptide” in T4F terminology). A dedicated inner-membrane prepilin peptidase—classically **PilD** in many bacteria—**cleaves the leader peptide** to yield the mature pilin that can be assembled into pili; PilD is frequently described as **bifunctional**, also catalyzing **N-terminal methylation** of the newly exposed N-terminus. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10)
 
-#### 2.1 What is PilA?
-PilA is generally the **major pilin** subunit of type IV pili: a small protein (~145–160 aa typical) that polymerizes to form a long helical surface filament. (mattick2002typeivpili pages 8-10)
+In *Pseudomonas aeruginosa*, primary mechanistic work emphasizes that **PilD cleavage is required for assembly**, whereas N-terminal methylation is conserved but can be **not strictly required** for pilus assembly in certain settings. (kuchma2022surfaceinducedcampsignaling pages 1-2)
 
-#### 2.2 Type IV pili (T4P) as a system
-T4P are retractile surface filaments used for multiple functions. Canonical associations include **twitching motility** (surface translocation), **adhesion**, **microcolony/biofilm formation**, and **DNA uptake** (natural transformation) in many species. (mattick2002typeivpili pages 8-10, little2024typeivpili pages 2-4)
+## 2) Functional annotation of *P. putida* KT2440 PilA (Q88Q62 / PP_0634)
 
-#### 2.3 Structural parameters
-T4P filaments are typically ~**5–7 nm** in diameter with ~**5 subunits per helical turn** (reviewed for type IV pili and twitching motility). (mattick2002typeivpili pages 8-10)
+### 2.1 Molecular function: major pilin subunit (structural)
+**Primary function (best-supported):** PilA (Q88Q62 / PP_0634) is inferred to be the **major pilin subunit** that polymerizes into the extracellular **type IV pilus filament** in *P. putida* KT2440, based on direct mapping of PP_0634 to pilA within a type IV pili/adherence gene set and sequence-family placement among type IVa pilins. (udaondo2025transcriptionalregulatorysystems pages 12-14, harvey2009singleresiduechangesin pages 4-5)
 
----
+**Protein family/domain consistency (literature-based):** The KT2440 PilA sequence is treated as a type IVa pilin in comparative analysis of a characteristic C-terminal disulfide-bonded loop region across pilins, consistent with a PilA-like fold. (harvey2009singleresiduechangesin pages 4-5)
 
-### 3) PilA maturation, processing, and biochemical features
+### 2.2 Subcellular localization and cellular context
+#### 2.2.1 Where PilA resides before assembly
+Authoritative structural reviews describe pilins as being **stored in the inner membrane** after synthesis/processing, where they serve as a reservoir of subunits for pilus assembly. (mccallum2019thedynamicstructures pages 1-3)
 
-PilA is synthesized as a **prepilin** with an N-terminal leader peptide that must be processed for assembly.
+#### 2.2.2 Where PilA functions after assembly
+Upon polymerization, PilA subunits form a **surface-exposed pilus fiber** that is extruded through an outer-membrane secretin pore (**PilQ** in *Pseudomonas* systems). (tala2022characterizationofpseudomonas pages 15-21, mccallum2019thedynamicstructures media 6fa112b3)
 
-**Leader cleavage and N-methylation by PilD:** Authoritative reviews describe the dedicated **prepilin peptidase PilD** as performing (i) cleavage of the N-terminal leader peptide and (ii) **N-methylation** of the newly exposed N-terminus. (mattick2002typeivpili pages 8-10, burrows2012pseudomonasaeruginosatwitching pages 11-13, little2024typeivpili pages 6-8)
+### 2.3 Maturation/processing steps relevant to KT2440 PilA
+Direct *Pseudomonas putida* evidence (strain GB-1) states that **xcpA (also called pilD)** encodes a leader peptidase (prepilin peptidase) required for **processing and methylation** of the **PilA prepilin** precursor; it also notes that the unannotated KT2440 genome contains related secretion/pilus gene clusters. This supports the inference that KT2440 PilA is matured by a PilD-like prepilin peptidase. (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2)
 
-**N-methyl-phenylalanine hallmark:** In many type IVa systems, the mature pilin N-terminus is frequently **N‑methyl‑phenylalanine**, consistent with the UniProt statement that KT2440 Q88Q62 belongs to the **N‑Me‑Phe pilin family**. (mattick2002typeivpili pages 8-10, little2024typeivpili pages 6-8)
+More broadly, pilin maturation is described as: (i) insertion/targeting such that the prepilin is positioned in the inner membrane, (ii) **PilD cleavage** of the leader peptide, and (iii) **N-terminal methylation** of the newly exposed amino terminus by PilD in systems possessing the methylase domain. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, pelicic2023mechanismofassembly pages 5-6)
 
-**Conserved Glu5:** Major pilins commonly possess a conserved acidic residue at position +5 (often **Glu5**) important for assembly and efficient processing/methylation in multiple systems. (mattick2002typeivpili pages 8-10, little2024typeivpili pages 6-8, mattick2002typeivpili pages 12-14)
+### 2.4 Pathway placement: type IV pilus biogenesis and dynamics
+#### 2.4.1 Core biogenesis machinery
+T4aP biogenesis requires a conserved envelope-spanning apparatus, including:
+- **PilC** (platform protein) and ATPases for dynamics: **PilB** for extension/polymerization and **PilT/PilU** for retraction/depolymerization in *P. aeruginosa* systems. (kuchma2022surfaceinducedcampsignaling pages 1-2, tala2022characterizationofpseudomonas pages 15-21)
+- The **PilMNOP** alignment/stabilization complex and **PilQ** secretin pore for outer-membrane transit. (tala2022characterizationofpseudomonas pages 15-21, mccallum2019thedynamicstructures media 6fa112b3)
 
-**Implication for KT2440 Q88Q62:** While the retrieved texts do not provide the KT2440 PilA sequence, the UniProt-described family/domain membership and the KT2440 presence of **pilD (PP_0632)** (see KT2440 gene context below) support inference that KT2440 PilA follows the same prepilin processing logic. (udaondo2025transcriptionalregulatorysystems pages 12-14)
+A structural review provides filament parameters and emphasizes how the PilA N-terminal α-helix packs into a hydrophobic core in the assembled filament while other loops are surface exposed, supporting PilA’s role as a structural subunit optimized for extracellular interaction. (mccallum2019thedynamicstructures pages 1-3)
 
----
+#### 2.4.2 Retraction-driven functions (twitching motility, sensing)
+T4P systems are classically implicated in **twitching motility**, adhesion, DNA uptake (competence), and biofilm-related behaviors across many bacteria. (singh2022landmarkdiscoveriesand pages 5-7, jacobsen2020structureandfunction pages 1-3)
 
-### 4) Cellular localization and biological role of PilA/T4P
+In *P. aeruginosa*, T4P retraction is also linked to surface-sensing signaling (cAMP induction), and PilT-driven retraction is required and sufficient for robust surface-dependent cAMP signaling in one mechanistic study. While this is not KT2440-specific, it provides an example of how PilA-containing pili can couple mechanical engagement to signaling. (kuchma2022surfaceinducedcampsignaling pages 1-2)
 
-**Membrane pool and assembly into extracellular filament:** Major pilins are initially stored as **inner-membrane** proteins via their hydrophobic N-termini; during pilus biogenesis, they are polymerized into an extracellular filament that traverses the periplasm and exits through an outer membrane pore (secretin). (little2024typeivpili pages 4-6, little2024typeivpili pages 6-8)
+## 3) Recent developments and latest research (prioritizing 2023–2024)
 
-**Functional roles (conserved across systems):** T4P mediate adhesion and surface motility via cycles of extension and retraction and can participate in DNA binding/uptake in competence-like contexts. (mattick2002typeivpili pages 8-10, little2024typeivpili pages 2-4)
+### 3.1 2023: Unified mechanistic model of type 4 filament assembly
+A 2023 review synthesizes a holistic mechanistic model of T4F assembly, emphasizing conserved components (prepilin peptidase, extension ATPase, platform) and the role of PilT-like motors in enabling retractile behavior. This kind of synthesis is directly relevant when functionally annotating PilA homologs in non-pathogenic environmental bacteria (like *P. putida* KT2440) because it clarifies which aspects of function can be inferred from conserved machinery. (pelicic2023mechanismofassembly pages 2-3, pelicic2023mechanismofassembly pages 5-6)
 
-**Expert structural view (Pseudomonas pilins):** Structural work on *P. aeruginosa* PilA emphasizes a long hydrophobic N-terminal α-helix and a globular C-terminal domain with a disulfide-bonded loop implicated in adhesive interactions and/or intersubunit contacts; these provide motifs to expect in a homolog like KT2440 PilA but are not KT2440-specific experiments. (harvey2009singleresiduechangesin pages 1-2)
+### 3.2 2024: Population genomics of the *P. putida* group highlights surface-adhesion systems
+A 2024 review on the genomic diversity of the *Pseudomonas putida* group notes (at a group level) the presence of **type IV pili assembly genes** and indicates their importance for adhesion to surfaces. While not specific to PP_0634, it supports the ecological relevance of T4P in *P. putida* group lifestyles. (vrind2003identificationofa pages 2-3)
 
----
+### 3.3 2024: Applied strain engineering targeting pili/appendage biogenesis for fermentation
+A 2024 applied study engineered *P. putida* (strain PCL1760, not KT2440) by deleting genes including **pilQ** (outer-membrane secretin of T4P systems) along with **flhA** and **algA**, aiming to reduce motility/biofilm burdens in bioreactors. This is a real-world implementation demonstrating industrial motivation to modulate pili-related functions, even though it does not directly probe PilA. (frolov2024constructionofthe pages 1-2)
 
-### 5) KT2440-specific genomic context and pathway placement
+## 4) Current applications and real-world implementations
 
-#### 5.1 KT2440 type IV pili gene set and PP_0634 context
-A KT2440/PAO1 comparison table lists KT2440 orthologs for multiple T4P components and explicitly includes **pilA = PP_0634**, alongside **pilC = PP_0633** and **pilD = PP_0632**, and other components such as **pilQ = PP_5080** and **pilT = PP_5093** (while many pil/chp genes are “not identified” in that analysis). (udaondo2025transcriptionalregulatorysystems pages 12-14)
+### 4.1 Bioprocessing/fermentation: reducing biofilm and motility burdens
+In the 2024 fermentation-focused work, deletion of genes involved in alginate, flagellar export, and pili formation (including **pilQ**) reduced biofilm formation by **~40% after 72 h** and increased viable counts in bioreactor-like growth conditions (see §5 for numerical data). This illustrates a practical application of manipulating surface-attachment/motility machinery (where PilA is the major pilus subunit) to improve industrial robustness. (frolov2024constructionofthe pages 1-2)
 
-A KT2440 genome/ecology paper also states KT2440 has a **type IV fimbrial biogenesis gene set** supporting attachment/surface interactions. (santos2004insightsintothe pages 10-11)
+### 4.2 Mechanobiology and surface sensing (model-system insight)
+Although focused on *P. aeruginosa*, contemporary mechanistic studies and reviews emphasize that T4P can act as **mechanosensors**, transmitting force through the pilus to regulate second-messenger pathways (cAMP or c-di-GMP) during early surface colonization. Such frameworks inform hypotheses for environmental pseudomonads including KT2440. (kuchma2022surfaceinducedcampsignaling pages 1-2)
 
-#### 5.2 Notable KT2440 difference: pilB absence and proposed compensation
-The KT2440 genome analysis reports that KT2440 **lacks pilB**, described there as a nucleotide-binding pilus assembly protein considered essential for pilus assembly in other organisms, and proposes that this deficiency might be compensated by **xcpR (PP1047)** in the general secretion machinery (type II secretion backbone). (santos2004insightsintothe pages 10-11)
+## 5) Quantitative statistics and data (recent and authoritative)
 
-**Interpretation for annotation:** This creates uncertainty about the exact architecture/operation of the KT2440 T4P assembly motor relative to canonical models. The safest KT2440-specific annotation is therefore: **PilA (PP_0634) is a major pilin homolog encoded in a partial T4P biogenesis context; assembly may use non-canonical or shared ATPase components (hypothesized xcpR involvement) in KT2440**. (santos2004insightsintothe pages 10-11, udaondo2025transcriptionalregulatorysystems pages 12-14)
+### 5.1 Structural/biophysical parameters of type IV pili (relevant to PilA fibers)
+From a structural review of T4aP:
+- The assembled filament’s helical parameters are reported as a **helical rise ≈10 Å** and **twist 80–100°** in structural analyses. (mccallum2019thedynamicstructures pages 1-3)
 
----
+From a major review summarizing the field:
+- Single pilus retraction forces have been reported up to **~80 pN**, consistent with powerful mechanical functions such as surface motility and mechanosensing. (singh2022landmarkdiscoveriesand pages 5-7)
 
-### 6) Expression and regulation evidence (P. putida evidence and limits)
+### 5.2 Industrial/engineering metrics in *P. putida* (pili-related intervention)
+In *P. putida* PCL1760 derivatives with **pilQ** (plus flhA, algA) deleted:
+- Biofilm formation was **40% lower after 72 h**. (frolov2024constructionofthe pages 1-2)
+- Rich medium bioreactor-like growth: **1.39 × 10^10 CFU/mL** (mutant) vs **6.4 × 10^9 CFU/mL** (wild type). (frolov2024constructionofthe pages 1-2)
+- Mineral medium bioreactor-like growth: **6.11 × 10^9 CFU/mL** (mutant) vs **1.36 × 10^9 CFU/mL** (wild type). (frolov2024constructionofthe pages 1-2)
 
-#### 6.1 Surface-associated induction of PilA in P. putida (non-KT2440 strain)
-In *Pseudomonas putida* **ATCC 39168** (not KT2440), PilA protein was detected after surface attachment and during biofilm growth but not in planktonic cultures; this was supported by immunoblotting, and several pilus-related genes were upregulated within hours of attachment (e.g., within 6 h). (sauer2001characterizationofphenotypic pages 6-8, sauer2001characterizationofphenotypic pages 8-9, sauer2001characterizationofphenotypic pages 1-2, sauer2001characterizationofphenotypic pages 5-6)
+These data demonstrate the magnitude of performance changes possible when modifying surface-appendage pathways related to type IV pili. (frolov2024constructionofthe pages 1-2)
 
-**Relevance to KT2440:** This is strong genus/species-level evidence that PilA expression can be **surface/biofilm induced** in *P. putida*, but it is not direct KT2440 PilA expression evidence. (sauer2001characterizationofphenotypic pages 1-2)
+## 6) Expert opinions and synthesis from authoritative sources
 
----
+### 6.1 Consensus view: PilA is central to T4P as a multifunctional nanofiber subunit
+Authoritative reviews converge on the concept that the major pilin (PilA) is the foundational building block of a retractable nanofiber that supports multiple behaviors (twitching, adhesion, competence, biofilm dynamics), and that its conserved maturation (PilD cleavage ± methylation) is essential to make subunits assembly-competent. (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, jacobsen2020structureandfunction pages 1-3)
 
-### 7) Recent developments (prioritizing 2023–2024) and real-world implementations
+### 6.2 Modern frontier: integrating structure, dynamics, and signaling
+Recent Pseudomonas-focused mechanistic work frames T4P not only as a motility machine but as an input into intracellular signaling cascades (e.g., surface-induced cAMP) and emphasizes disentangling which pilus features are required for signaling versus motility. This is important for functional annotation because it argues that PilA-containing pili can have separable roles beyond locomotion (e.g., sensing and regulation). (kuchma2022surfaceinducedcampsignaling pages 1-2)
 
-#### 7.1 KT2440 as a synthetic biology chassis (2024)
-A 2024 *Journal of Bacteriology* review describes *P. putida* KT2440’s evolution into a **synthetic biology chassis** and highlights engineering strategies that explicitly include modifications of **surface traits** and **conditional biofilm generation** as useful for immobilization and catalysis; it also discusses “surface-naked” derivatives optimized for surface display applications. This underscores that appendages and surface structures (including pili in general) are practical levers for industrial design, even though the excerpt does not discuss pilA/PP_0634 specifically. (lorenzo2024pseudomonasputidakt2440 pages 7-9)
+## 7) Visual schematic (architecture)
+A widely used architectural schematic of the type IVa pilus machine, showing the location of the **PilA filament** and associated inner-membrane motors/platform and outer-membrane secretin, is available from McCallum et al. (2019). (mccallum2019thedynamicstructures media 6fa112b3)
 
-**URL/date:** https://doi.org/10.1128/jb.00136-24 (July 2024). (lorenzo2024pseudomonasputidakt2440 pages 7-9)
+## 8) Practical functional annotation for Q88Q62 (PP_0634) in KT2440 (recommended language)
 
-#### 7.2 Quantitative engineering example in P. putida affecting pili-related machinery (2024; non-KT2440)
-A 2024 applied study engineered *P. putida* (strain PCL1760) to reduce biofilm formation and motility by deleting **pilQ** (outer membrane secretin for pili), **flhA** (flagellar export), and **algA** (alginate-related). Although this is not KT2440 and not pilA-specific, it is a direct real-world implementation that targets the **pili/attachment/biofilm apparatus** for fermentation robustness. (frolov2024constructionofthe pages 5-8)
+### 8.1 Recommended primary annotation (high confidence)
+- **Protein:** PilA (major type IV pilin) (udaondo2025transcriptionalregulatorysystems pages 12-14, harvey2009singleresiduechangesin pages 4-5)
+- **System:** Type IVa pilus biogenesis / adherence-associated locus (udaondo2025transcriptionalregulatorysystems pages 12-14)
+- **Molecular role:** Major structural subunit polymerized into extracellular pilus fiber (inference consistent with T4aP biology) (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10)
+- **Processing:** Prepilin leader cleavage and N-terminal methylation by PilD-like prepilin peptidase (directly described for *P. putida* in GB-1 and broadly conserved) (vrind2003identificationofa pages 2-3, mccallum2019thedynamicstructures pages 1-3)
+- **Localization:** Inner membrane (pre-assembly reservoir) and cell surface (assembled pilus fiber) (mccallum2019thedynamicstructures pages 1-3, mccallum2019thedynamicstructures media 6fa112b3)
 
-Key quantitative outcomes:
-- Motility diameter decreased from **32 ± 2 mm** (wild type) to **5 ± 1 mm** (flhA-containing deletion strains) on soft agar assays. (frolov2024constructionofthe pages 5-8)
-- Biofilm reduction: **20–30%** lower at 24 h; for the triple deletion LN6160, **33.3%** lower at 48 h and **40%** lower at 72 h. (frolov2024constructionofthe pages 5-8)
-- Growth kinetics were similar/slightly improved: µ = **0.74 ± 0.04 h⁻¹** (WT) vs **0.79 ± 0.03 h⁻¹** (mutant); doubling times ~0.94 h vs ~0.90 h. (frolov2024constructionofthe pages 5-8)
+### 8.2 Recommended secondary (putative) process terms (lower confidence for KT2440 without direct mutant phenotype)
+- **Putative biological processes:** twitching motility, surface adhesion, early biofilm formation, surface sensing (supported for T4P generally and in *Pseudomonas* models but not directly demonstrated for KT2440 PilA in the retrieved corpus) (singh2022landmarkdiscoveriesand pages 5-7, kuchma2022surfaceinducedcampsignaling pages 1-2)
 
-**URL/date:** https://doi.org/10.3390/fermentation10120606 (Nov 2024). (frolov2024constructionofthe pages 5-8)
+## 9) Evidence summary table
 
-#### 7.3 Updated 2024 synthesis of type IV pilin concepts (mechanistic, not KT2440-specific)
-A 2024 EcoSal Plus review provides updated synthesis of major pilin processing and conserved motifs (e.g., Glu5, N-methylated N-termini), and emphasizes roles in adhesion, biofilms, and DNA uptake; while focused on Enterobacteriaceae, it integrates cross-system knowledge relevant for functional inference for KT2440 PilA. (little2024typeivpili pages 2-4, little2024typeivpili pages 6-8)
-
-**URL/date:** https://doi.org/10.1128/ecosalplus.esp-0003-2023 (Dec 2024). (little2024typeivpili pages 2-4)
-
----
-
-### 8) Expert opinions / authoritative analysis
-
-**Consensus view of T4P function and PilA’s role:** Highly cited reviews characterize PilA as a major pilus subunit whose processing by PilD and incorporation into dynamic filaments underlies twitching motility and adhesion-related phenotypes. (mattick2002typeivpili pages 8-10, burrows2012pseudomonasaeruginosatwitching pages 11-13)
-
-**KT2440 ecological framing:** KT2440 is portrayed as environmentally adapted with many genes associated with cell surface components and attachment capacity, including a type IV fimbrial biogenesis gene set, supporting the plausibility that PilA contributes to surface-associated lifestyle features in soil/rhizosphere contexts. (santos2004insightsintothe pages 10-11)
-
----
-
-### 9) Practical functional annotation for **KT2440 PilA (PP_0634; Q88Q62)**
-
-#### 9.1 Primary function (most defensible statement)
-**Structural subunit of a type IV pilus:** KT2440 pilA (PP_0634; Q88Q62) encodes a **major pilin** predicted to be processed by a prepilin peptidase (PilD-like) and polymerized into a surface filament that mediates surface-associated behaviors typical of T4P systems. This is directly supported for identity (PP_0634 mapping) and gene context (T4P gene set) in KT2440, and mechanistically supported by authoritative T4P reviews. (udaondo2025transcriptionalregulatorysystems pages 12-14, udaondo2025transcriptionalregulatorysystems media 6adbec71, santos2004insightsintothe pages 10-11, mattick2002typeivpili pages 8-10, little2024typeivpili pages 6-8)
-
-#### 9.2 Localization
-- **Pre-assembly:** inner membrane (hydrophobic N-terminus) as part of a membrane pilin pool. (little2024typeivpili pages 6-8, little2024typeivpili pages 4-6)
-- **Post-assembly:** extracellular pilus filament on the cell surface, extruded through an outer membrane secretin pore (PilQ in canonical systems). (little2024typeivpili pages 4-6)
-
-#### 9.3 Pathways and interacting modules
-- **Type IV pilus biogenesis pathway:** KT2440 retains multiple pil genes including pilA (PP_0634), pilC (PP_0633), pilD (PP_0632), pilQ (PP_5080), and pilT (PP_5093) in comparative annotation. (udaondo2025transcriptionalregulatorysystems pages 12-14)
-- **Non-canonical assembly hypothesis:** KT2440 lacks pilB (in one genome analysis), with possible compensation by xcpR (PP1047) in general secretion (type II secretion) machinery, implying possible cross-talk or component sharing between pilus and secretion systems in KT2440. (santos2004insightsintothe pages 10-11)
-
-#### 9.4 Evidence limitations (important for downstream curation)
-- No KT2440-specific study in the retrieved set directly reports **PilA deletion phenotypes**, **PilA-dependent twitching motility**, **PilA localization imaging**, or **PilA post-translational modification** state for PP_0634/Q88Q62.
-- Surface/biofilm induction of PilA is supported in *P. putida* ATCC 39168 (non-KT2440), and is reasonable but should be labeled as **species-level** rather than KT2440-strain-level evidence. (sauer2001characterizationofphenotypic pages 6-8, sauer2001characterizationofphenotypic pages 1-2)
-
----
-
-### Evidence summary table
-
-| Evidence type | Key finding | Strain/organism | Source (year, DOI/URL) |
-|---|---|---|---|
-| Identity mapping | KT2440 **pilA** is explicitly mapped to **PP_0634** in a type IV pili gene comparison table, supporting correspondence to UniProt **Q88Q62** and confirming the correct target gene/protein identity. (udaondo2025transcriptionalregulatorysystems pages 12-14, udaondo2025transcriptionalregulatorysystems media 6adbec71) | *Pseudomonas putida* KT2440 | Udaondo et al., 2025, https://doi.org/10.3390/ijms26104677 |
-| Gene context | KT2440 contains a **type IV fimbrial biogenesis gene set** associated with attachment/surface colonization. (santos2004insightsintothe pages 10-11) | *Pseudomonas putida* KT2440 | dos Santos et al., 2004, https://doi.org/10.1111/j.1462-2920.2004.00734.x |
-| Gene presence/absence | In a comparative table, KT2440 retains **pilA/PP_0634, pilC/PP_0633, pilD/PP_0632, pilE/PP_0611, pilF/PP_0851, pilQ/PP_5080, pilT/PP_5093**, while many canonical pil/chp genes are annotated as **not identified**, including **pilB**. (udaondo2025transcriptionalregulatorysystems pages 12-14) | *Pseudomonas putida* KT2440 | Udaondo et al., 2025, https://doi.org/10.3390/ijms26104677 |
-| Possible compensation for missing pilB | KT2440 lacks **pilB**, considered important for pilus assembly in other species; the genome paper proposes possible compensation by **xcpR (PP1047)** in the general secretion machinery. (santos2004insightsintothe pages 10-11) | *Pseudomonas putida* KT2440 | dos Santos et al., 2004, https://doi.org/10.1111/j.1462-2920.2004.00734.x |
-| Mechanistic processing | Major type IV pilins are synthesized as **prepilins**; **PilD** cleaves the N-terminal leader peptide and **N-methylates** the newly exposed N-terminus. Mature T4a pilins commonly begin with **N-methyl-phenylalanine**. (mattick2002typeivpili pages 8-10, burrows2012pseudomonasaeruginosatwitching pages 11-13, little2024typeivpili pages 6-8) | General T4P/Pseudomonas background, relevant to KT2440 PilA family | Mattick, 2002, https://doi.org/10.1146/annurev.micro.56.012302.160938; Burrows, 2012, https://doi.org/10.1146/annurev-micro-092611-150055; Little et al., 2024, https://doi.org/10.1128/ecosalplus.esp-0003-2023 |
-| Conserved motifs / family inference | Major pilins typically contain a conserved hydrophobic N-terminal helix and an acidic residue at **position +5 (often Glu5)** required for efficient assembly; these features align with UniProt annotation placing Q88Q62 in the **N-Me-Phe pilin family**. (mattick2002typeivpili pages 8-10, little2024typeivpili pages 6-8, mattick2002typeivpili pages 12-14) | General T4P/Pseudomonas background, relevant to KT2440 PilA family | Mattick, 2002, https://doi.org/10.1146/annurev.micro.56.012302.160938; Little et al., 2024, https://doi.org/10.1128/ecosalplus.esp-0003-2023 |
-| Localization / structural role | Before assembly (and after retraction), pilins reside in the **inner membrane** via their hydrophobic N-termini; after polymerization they become the major subunits of the **cell-surface pilus filament**, which mediates adhesion and twitching motility. (little2024typeivpili pages 2-4, little2024typeivpili pages 6-8, little2024typeivpili pages 4-6) | General T4P background, applicable by inference to KT2440 PilA | Little et al., 2024, https://doi.org/10.1128/ecosalplus.esp-0003-2023 |
-| Expression / regulation | In *P. putida* biofilms, **PilA was not detected in planktonic culture but was detected after surface attachment and throughout biofilm development**; four pilus-related genes were upregulated within **6 h** of attachment. This is strong *P. putida* evidence, but from **ATCC 39168**, not KT2440. (sauer2001characterizationofphenotypic pages 6-8, sauer2001characterizationofphenotypic pages 8-9, sauer2001characterizationofphenotypic pages 1-2, sauer2001characterizationofphenotypic pages 5-6) | *Pseudomonas putida* ATCC 39168 | Sauer & Camper, 2001, https://doi.org/10.1128/jb.183.22.6579-6589.2001 |
-| Quantitative application / engineering | In a 2024 *P. putida* engineering study, deletion of **pilQ, flhA, algA** reduced biofilm formation by **20–30% at 24 h**, **33.3% at 48 h**, and **40% at 72 h**; motility diameters dropped from **32 ± 2 mm** (WT) to **5 ± 1 mm** in strains carrying **flhA** deletion; growth rates were **0.74 ± 0.04 h⁻¹** (WT) vs **0.79 ± 0.03 h⁻¹** (mutant). This study is informative for pili-associated phenotypes but was done in **PCL1760**, not KT2440. (frolov2024constructionofthe pages 5-8, frolov2024constructionofthe pages 1-2) | *Pseudomonas putida* PCL1760-derived strains | Frolov et al., 2024, https://doi.org/10.3390/fermentation10120606 |
-| Expert / applications context | Recent KT2440 review literature emphasizes active engineering of **surface structures**, including conditional biofilm generation and “surface-naked” chassis strains for display/adhesion applications, underscoring the practical relevance of appendages such as pili in chassis design even when **pilA** itself is not directly tested. (lorenzo2024pseudomonasputidakt2440 pages 7-9) | *Pseudomonas putida* KT2440 | de Lorenzo et al., 2024, https://doi.org/10.1128/jb.00136-24 |
+| Claim/Concept | Evidence summary | Organism/system (KT2440 vs other) | Quantitative data (if any) | Primary source (first author year, journal) | Publication date (month/year) | URL |
+|---|---|---|---|---|---|---|
+| PP_0634 maps to pilA in *Pseudomonas putida* KT2440 | Comparative mapping of adherence/type IV pili genes lists *P. aeruginosa* **pilA** (PA4525) corresponding to *P. putida* KT2440 **PP_0634**, supporting that UniProt Q88Q62/PP_0634 is the KT2440 **pilA** ortholog (udaondo2025transcriptionalregulatorysystems pages 12-14). | KT2440 | None reported | Udaondo 2025, *Int. J. Mol. Sci.* | 05/2025 | https://doi.org/10.3390/ijms26104677 |
+| KT2440 PilA is a type IVa pilin-family protein | A sequence survey of type IVa pilins includes a *P. putida* KT2440 entry (NP_742795) among “other bacteria with type IVa pilin genes”; the KT2440 sequence carries the conserved C-terminal disulfide-bonded loop features typical of type IVa pilins (harvey2009singleresiduechangesin pages 4-5). | KT2440 | DSL sequence listed as **CTTDIEDDLAPKGC** (harvey2009singleresiduechangesin pages 4-5) | Harvey 2009, *J. Bacteriol.* | 11/2009 | https://doi.org/10.1128/jb.00943-09 |
+| PilA is the major pilin subunit of type IV pili | Reviews define PilA as the major pilin/prepilin whose polymerization forms the type IVa pilus fiber; thousands of PilA-like subunits can build a filament (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10, jacobsen2020structureandfunction pages 1-3). | Other *Pseudomonas* / general T4P biology | None specific | McCallum 2019, *Microbiol. Spectrum* | 04/2019 | https://doi.org/10.1128/microbiolspec.psib-0006-2018 |
+| PilA precursor processing requires prepilin peptidase PilD and includes N-terminal methylation | Authoritative reviews and primary studies state that PilA is synthesized as a prepilin with an N-terminal leader peptide that is cleaved by **PilD**; PilD is bifunctional and methylates the nascent N terminus. Cleavage is essential for pilus biogenesis, whereas methylation is conserved and in some systems not strictly required for assembly (kuchma2022surfaceinducedcampsignaling pages 1-2, pelicic2023mechanismofassembly pages 5-6, singh2022landmarkdiscoveriesand pages 9-10, graupner2000typeivpilus pages 5-6, wellerstuart2015genomicandfunctionala pages 60-63). | Other *Pseudomonas* / general T4P biology | Prepilin hydrophobic stretch typically **20–25 aa** (pelicic2023mechanismofassembly pages 5-6) | Kuchma 2022, *J. Bacteriol.* | 10/2022 | https://doi.org/10.1128/jb.00186-22 |
+| Direct *P. putida* evidence linking PilD to PilA processing/methylation | In *P. putida* GB-1, **xcpA/pilD** is described as a leader peptidase (prepilin peptidase) required for processing and methylation of the PilA prepilin; the paper also notes that KT2440 contains related Xcp/Gsp-like clusters, supporting the presence of cognate maturation machinery in *P. putida* genomes (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2). | *P. putida* GB-1 with mention of KT2440 gene clusters | None reported | De Vrind 2003, *Mol. Microbiol.* | 02/2003 | https://doi.org/10.1046/j.1365-2958.2003.03339.x |
+| Localization and architecture of the T4P machine relevant to PilA function | Pilins are stored in the **inner membrane** before assembly; assembled pili extend through the **outer-membrane secretin PilQ**. The motor/platform subcomplex includes **PilC** with ATPases **PilB** (extension) and **PilT/PilU** (retraction), while PilMNOP stabilizes the envelope-spanning apparatus (mccallum2019thedynamicstructures pages 1-3, kuchma2022surfaceinducedcampsignaling pages 1-2, tala2022characterizationofpseudomonas pages 15-21, mccallum2019thedynamicstructures media 6fa112b3). | Other *Pseudomonas* / general T4P biology | Pilus diameter about **6 nm** and can extend **tens of microns** (tala2022characterizationofpseudomonas pages 15-21) | Talà 2022, dissertation | 01/2022 | https://doi.org/10.5075/epfl-thesis-8646 |
+| Structural organization of PilA in the filament | PilA has a long N-terminal α-helix and C-terminal globular domain; in assembled pili the α1N helices pack into a hydrophobic core, while the αβ-loop/D-loop are surface exposed and variable, consistent with extracellular interaction roles (mccallum2019thedynamicstructures pages 1-3, singh2022landmarkdiscoveriesand pages 9-10). | Other *Pseudomonas* / general T4P biology | Helical rise about **10 Å**; twist about **80–100°** (mccallum2019thedynamicstructures pages 1-3) | McCallum 2019, *Microbiol. Spectrum* | 04/2019 | https://doi.org/10.1128/microbiolspec.psib-0006-2018 |
+| Biophysical output of T4P retraction | T4P retraction is ATP-driven and can generate very large forces; classic and modern measurements summarized in review literature report single-pilus forces up to about **80 pN**, supporting roles in twitching motility, surface engagement, and mechanosensing (singh2022landmarkdiscoveriesand pages 5-7). | General T4P biology | Force up to **~80 pN** (singh2022landmarkdiscoveriesand pages 5-7) | Singh 2022, *MMBR* | 09/2022 | https://doi.org/10.1128/mmbr.00076-22 |
+| Functional pathway context of PilA | T4P systems support twitching motility, adhesion, biofilm formation, DNA uptake/natural competence, and surface sensing; in *P. aeruginosa*, PilT-driven retraction is required for robust surface-induced cAMP signaling, illustrating how PilA-containing pili connect mechanics to signaling (kuchma2022surfaceinducedcampsignaling pages 1-2, jacobsen2020structureandfunction pages 1-3, pelicic2023mechanismofassembly pages 2-3, singh2022landmarkdiscoveriesand pages 5-7). | Other *Pseudomonas* / general T4P biology | Intracellular spread speed reported for WT *P. aeruginosa* cytosolic twitching **>0.05 μm s−1** in one study (kuchma2022surfaceinducedcampsignaling pages 1-2) | Kuchma 2022, *J. Bacteriol.* | 10/2022 | https://doi.org/10.1128/jb.00186-22 |
+| Evidence limit for KT2440-specific phenotypes | Available evidence directly verifies **identity/family assignment** of PP_0634 as KT2440 PilA, but the gathered sources did **not** provide a KT2440-specific pilA mutant phenotype for twitching, adhesion, biofilm, or competence; these functions are therefore best treated as family-based inference unless future KT2440 experiments are found (udaondo2025transcriptionalregulatorysystems pages 12-14, harvey2009singleresiduechangesin pages 4-5). | KT2440 | None | Udaondo 2025, *Int. J. Mol. Sci.*; Harvey 2009, *J. Bacteriol.* | 05/2025; 11/2009 | https://doi.org/10.3390/ijms26104677 ; https://doi.org/10.1128/jb.00943-09 |
+| Applied implementation: engineering pili-related functions for fermentation | A 2024 applied study engineered *P. putida* PCL1760 by deleting **algA, flhA, and pilQ** (not pilA) to reduce motility/biofilm. This shows real-world value of targeting T4P biogenesis for industrial strain optimization, though it is not direct evidence on KT2440 PilA itself (frolov2024constructionofthe pages 1-2, frolov2024constructionofthe pages 8-10). | *P. putida* PCL1760 (not KT2440) | Biofilm **40% lower after 72 h**; rich medium **1.39×10^10 vs 6.4×10^9 CFU/mL** mutant vs WT; mineral medium **6.11×10^9 vs 1.36×10^9 CFU/mL** mutant vs WT (frolov2024constructionofthe pages 1-2, frolov2024constructionofthe pages 8-10) | Frolov 2024, *Fermentation* | 11/2024 | https://doi.org/10.3390/fermentation10120606 |
+| Energetic rationale for appendage engineering | The same applied study cites energetic costs of motility appendages, helping explain why disabling flagellar/pilus systems can improve bioreactor growth; this provides context for why PilA/T4P-related systems matter in biotechnology (frolov2024constructionofthe pages 8-10). | *P. putida* PCL1760 / broader *Pseudomonas* context | Flagellar biosynthesis about **2%** of biosynthetic resources; rotation about **0.1%** of cell energy (frolov2024constructionofthe pages 8-10) | Frolov 2024, *Fermentation* | 11/2024 | https://doi.org/10.3390/fermentation10120606 |
 
 
-*Table: This table compiles the strongest retrieved evidence for PilA/PP_0634 in Pseudomonas putida KT2440, separating direct KT2440 genomic evidence from broader mechanistic inference and non-KT2440 functional data. It is useful for building a careful functional annotation with explicit limits on strain-specific evidence.*
+*Table: This table compiles direct KT2440-specific evidence for PP_0634 as pilA together with carefully labeled family-level type IV pilus biology needed for functional annotation. It also includes an applied Pseudomonas implementation example showing why pili-related systems matter in biotechnology.*
 
----
+## References (URLs and dates)
+The most directly relevant sources used above include:
+- Udaondo et al., 2025-05, *Int. J. Mol. Sci.* (PP_0634 ↔ pilA mapping): https://doi.org/10.3390/ijms26104677 (udaondo2025transcriptionalregulatorysystems pages 12-14)
+- Harvey et al., 2009-11, *J. Bacteriol.* (KT2440 pilin sequence in type IVa pilin comparison): https://doi.org/10.1128/jb.00943-09 (harvey2009singleresiduechangesin pages 4-5)
+- McCallum et al., 2019-04, *Microbiology Spectrum* (T4aP structure, PilD processing, filament parameters): https://doi.org/10.1128/microbiolspec.psib-0006-2018 (mccallum2019thedynamicstructures pages 1-3, mccallum2019thedynamicstructures media 6fa112b3)
+- Pelicic, 2023-03, *Microbiology* (T4F assembly mechanisms): https://doi.org/10.1099/mic.0.001311 (pelicic2023mechanismofassembly pages 5-6, pelicic2023mechanismofassembly pages 2-3)
+- Singh et al., 2022-09, *MMBR* (landmarks; force up to ~80 pN): https://doi.org/10.1128/mmbr.00076-22 (singh2022landmarkdiscoveriesand pages 5-7, singh2022landmarkdiscoveriesand pages 9-10)
+- Kuchma & O’Toole, 2022-10, *J. Bacteriol.* (PilA processing, PilB/PilT/PilU, surface-induced cAMP signaling): https://doi.org/10.1128/jb.00186-22 (kuchma2022surfaceinducedcampsignaling pages 1-2)
+- De Vrind et al., 2003-02, *Mol. Microbiol.* (*P. putida* PilD required for PilA processing/methylation; KT2440 clusters): https://doi.org/10.1046/j.1365-2958.2003.03339.x (vrind2003identificationofa pages 2-3, vrind2003identificationofa pages 1-2)
+- Frolov et al., 2024-11, *Fermentation* (industrial strain engineering targeting pilQ; quantitative outcomes): https://doi.org/10.3390/fermentation10120606 (frolov2024constructionofthe pages 1-2, frolov2024constructionofthe pages 8-10)
 
-### Key references (URLs; publication dates)
-- Mattick JS. *Type IV pili and twitching motility.* **Annual Review of Microbiology**. **Oct 2002**. https://doi.org/10.1146/annurev.micro.56.012302.160938 (mattick2002typeivpili pages 8-10)
-- Burrows LL. *Pseudomonas aeruginosa twitching motility: Type IV pili in action.* **Annual Review of Microbiology**. **Oct 2012**. https://doi.org/10.1146/annurev-micro-092611-150055 (burrows2012pseudomonasaeruginosatwitching pages 11-13)
-- Little JI et al. *Type IV pili of Enterobacteriaceae species.* **EcoSal Plus**. **Dec 2024**. https://doi.org/10.1128/ecosalplus.esp-0003-2023 (little2024typeivpili pages 2-4)
-- dos Santos VAPM et al. *Insights into the genomic basis of niche specificity of Pseudomonas putida KT2440.* **Environmental Microbiology**. **Dec 2004**. https://doi.org/10.1111/j.1462-2920.2004.00734.x (santos2004insightsintothe pages 10-11)
-- de Lorenzo V et al. *Pseudomonas putida KT2440: the long journey… to become a synthetic biology chassis.* **Journal of Bacteriology**. **Jul 2024**. https://doi.org/10.1128/jb.00136-24 (lorenzo2024pseudomonasputidakt2440 pages 7-9)
-- Frolov M et al. *Construction of the Pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation.* **Fermentation (MDPI)**. **Nov 2024**. https://doi.org/10.3390/fermentation10120606 (frolov2024constructionofthe pages 5-8)
-
----
-
-### Conclusion
-The best-supported functional annotation for **PilA (PP_0634; UniProt Q88Q62)** in *P. putida* KT2440 is that it encodes a **major type IV pilin** subunit of a T4P-like system, likely processed by **PilD** and incorporated into a surface filament involved in **surface-associated colonization behaviors**. KT2440 genomics show a **partial but identifiable T4P gene set** and suggest a potentially **non-canonical assembly solution** due to **pilB absence** with hypothesized **xcpR compensation**. Recent (2024) KT2440 literature emphasizes engineering of surface traits/biofilm control in SynBio applications, and recent quantitative strain engineering in *P. putida* demonstrates practical benefits of tuning pili-related machinery to reduce biofilm and motility in fermentation contexts. (udaondo2025transcriptionalregulatorysystems media 6adbec71, udaondo2025transcriptionalregulatorysystems pages 12-14, santos2004insightsintothe pages 10-11, lorenzo2024pseudomonasputidakt2440 pages 7-9, frolov2024constructionofthe pages 5-8)
 
 References
 
 1. (udaondo2025transcriptionalregulatorysystems pages 12-14): Zulema Udaondo, Kelsey Aguirre Schilder, Ana Rosa Márquez Blesa, Mireia Tena-Garitaonaindia, José Canto Mangana, and Abdelali Daddaoua. Transcriptional regulatory systems in pseudomonas: a comparative analysis of helix-turn-helix domains and two-component signal transduction networks. International Journal of Molecular Sciences, 26:4677, May 2025. URL: https://doi.org/10.3390/ijms26104677, doi:10.3390/ijms26104677. This article has 1 citations.
 
-2. (udaondo2025transcriptionalregulatorysystems media 6adbec71): Zulema Udaondo, Kelsey Aguirre Schilder, Ana Rosa Márquez Blesa, Mireia Tena-Garitaonaindia, José Canto Mangana, and Abdelali Daddaoua. Transcriptional regulatory systems in pseudomonas: a comparative analysis of helix-turn-helix domains and two-component signal transduction networks. International Journal of Molecular Sciences, 26:4677, May 2025. URL: https://doi.org/10.3390/ijms26104677, doi:10.3390/ijms26104677. This article has 1 citations.
+2. (harvey2009singleresiduechangesin pages 4-5): Hanjeong Harvey, Marc Habash, Francisca Aidoo, and Lori L. Burrows. Single-residue changes in the c-terminal disulfide-bonded loop of the<i>pseudomonas aeruginosa</i>type iv pilin influence pilus assembly and twitching motility. Nov 2009. URL: https://doi.org/10.1128/jb.00943-09, doi:10.1128/jb.00943-09. This article has 57 citations and is from a peer-reviewed journal.
 
-3. (santos2004insightsintothe pages 10-11): V. A. P. Martins Dos Santos, S. Heim, E. R. B. Moore, M. Strätz, and K. N. Timmis. Insights into the genomic basis of niche specificity of pseudomonas putida kt2440. Environmental microbiology, 6 12:1264-86, Dec 2004. URL: https://doi.org/10.1111/j.1462-2920.2004.00734.x, doi:10.1111/j.1462-2920.2004.00734.x. This article has 339 citations and is from a domain leading peer-reviewed journal.
+3. (vrind2003identificationofa pages 2-3): Johannes De Vrind, Arjan De Groot, Geert Jan Brouwers, Jan Tommassen, and Elisabeth De Vrind‐de Jong. Identification of a novel gsp‐related pathway required for secretion of the manganese‐oxidizing factor of pseudomonas putida strain gb‐1. Molecular Microbiology, 47:993-1006, Feb 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03339.x, doi:10.1046/j.1365-2958.2003.03339.x. This article has 65 citations and is from a domain leading peer-reviewed journal.
 
-4. (mattick2002typeivpili pages 8-10): John S. Mattick. Type iv pili and twitching motility. Annual review of microbiology, 56:289-314, Oct 2002. URL: https://doi.org/10.1146/annurev.micro.56.012302.160938, doi:10.1146/annurev.micro.56.012302.160938. This article has 1744 citations and is from a peer-reviewed journal.
+4. (vrind2003identificationofa pages 1-2): Johannes De Vrind, Arjan De Groot, Geert Jan Brouwers, Jan Tommassen, and Elisabeth De Vrind‐de Jong. Identification of a novel gsp‐related pathway required for secretion of the manganese‐oxidizing factor of pseudomonas putida strain gb‐1. Molecular Microbiology, 47:993-1006, Feb 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03339.x, doi:10.1046/j.1365-2958.2003.03339.x. This article has 65 citations and is from a domain leading peer-reviewed journal.
 
-5. (burrows2012pseudomonasaeruginosatwitching pages 11-13): Lori L. Burrows. <i>pseudomonas aeruginosa</i> twitching motility: type iv pili in action. Annual Review of Microbiology, 66:493-520, Oct 2012. URL: https://doi.org/10.1146/annurev-micro-092611-150055, doi:10.1146/annurev-micro-092611-150055. This article has 966 citations and is from a peer-reviewed journal.
+5. (pelicic2023mechanismofassembly pages 2-3): Vladimir Pelicic. Mechanism of assembly of type 4 filaments: everything you always wanted to know (but were afraid to ask). Mar 2023. URL: https://doi.org/10.1099/mic.0.001311, doi:10.1099/mic.0.001311. This article has 49 citations and is from a peer-reviewed journal.
 
-6. (little2024typeivpili pages 6-8): Janay I. Little, Pradip K. Singh, Jinlei Zhao, Shakeera Dunn, Hanover Matz, and Michael S. Donnenberg. Type iv pili of <i>enterobacteriaceae</i> species. EcoSal Plus, Dec 2024. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2023, doi:10.1128/ecosalplus.esp-0003-2023. This article has 11 citations.
+6. (pelicic2023mechanismofassembly pages 5-6): Vladimir Pelicic. Mechanism of assembly of type 4 filaments: everything you always wanted to know (but were afraid to ask). Mar 2023. URL: https://doi.org/10.1099/mic.0.001311, doi:10.1099/mic.0.001311. This article has 49 citations and is from a peer-reviewed journal.
 
-7. (little2024typeivpili pages 2-4): Janay I. Little, Pradip K. Singh, Jinlei Zhao, Shakeera Dunn, Hanover Matz, and Michael S. Donnenberg. Type iv pili of <i>enterobacteriaceae</i> species. EcoSal Plus, Dec 2024. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2023, doi:10.1128/ecosalplus.esp-0003-2023. This article has 11 citations.
+7. (mccallum2019thedynamicstructures pages 1-3): Matthew McCallum, Lori L. Burrows, and P. Lynne Howell. The dynamic structures of the type iv pilus. Apr 2019. URL: https://doi.org/10.1128/microbiolspec.psib-0006-2018, doi:10.1128/microbiolspec.psib-0006-2018. This article has 92 citations and is from a domain leading peer-reviewed journal.
 
-8. (mattick2002typeivpili pages 12-14): John S. Mattick. Type iv pili and twitching motility. Annual review of microbiology, 56:289-314, Oct 2002. URL: https://doi.org/10.1146/annurev.micro.56.012302.160938, doi:10.1146/annurev.micro.56.012302.160938. This article has 1744 citations and is from a peer-reviewed journal.
+8. (singh2022landmarkdiscoveriesand pages 9-10): Pradip Kumar Singh, Janay Little, and Michael S. Donnenberg. Landmark discoveries and recent advances in type iv pilus research. Microbiology and Molecular Biology Reviews, Sep 2022. URL: https://doi.org/10.1128/mmbr.00076-22, doi:10.1128/mmbr.00076-22. This article has 37 citations and is from a domain leading peer-reviewed journal.
 
-9. (little2024typeivpili pages 4-6): Janay I. Little, Pradip K. Singh, Jinlei Zhao, Shakeera Dunn, Hanover Matz, and Michael S. Donnenberg. Type iv pili of <i>enterobacteriaceae</i> species. EcoSal Plus, Dec 2024. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2023, doi:10.1128/ecosalplus.esp-0003-2023. This article has 11 citations.
+9. (jacobsen2020structureandfunction pages 1-3): Theis Jacobsen, Benjamin Bardiaux, Olivera Francetic, Nadia Izadi-Pruneyre, and Michael Nilges. Structure and function of minor pilins of type iv pili. Medical Microbiology and Immunology, 209:301-308, Nov 2020. URL: https://doi.org/10.1007/s00430-019-00642-5, doi:10.1007/s00430-019-00642-5. This article has 118 citations and is from a peer-reviewed journal.
 
-10. (harvey2009singleresiduechangesin pages 1-2): Hanjeong Harvey, Marc Habash, Francisca Aidoo, and Lori L. Burrows. Single-residue changes in the c-terminal disulfide-bonded loop of the<i>pseudomonas aeruginosa</i>type iv pilin influence pilus assembly and twitching motility. Nov 2009. URL: https://doi.org/10.1128/jb.00943-09, doi:10.1128/jb.00943-09. This article has 57 citations and is from a peer-reviewed journal.
+10. (kuchma2022surfaceinducedcampsignaling pages 1-2): Sherry L. Kuchma and George A. O’Toole. Surface-induced camp signaling requires multiple features of the pseudomonas aeruginosa type iv pili. Oct 2022. URL: https://doi.org/10.1128/jb.00186-22, doi:10.1128/jb.00186-22. This article has 32 citations and is from a peer-reviewed journal.
 
-11. (sauer2001characterizationofphenotypic pages 6-8): Karin Sauer and Anne K. Camper. Characterization of phenotypic changes inpseudomonas putida in response to surface-associated growth. Journal of Bacteriology, 183:6579-6589, Nov 2001. URL: https://doi.org/10.1128/jb.183.22.6579-6589.2001, doi:10.1128/jb.183.22.6579-6589.2001. This article has 553 citations and is from a peer-reviewed journal.
+11. (tala2022characterizationofpseudomonas pages 15-21): Characterization of Pseudomonas aeruginosa mechanosensing through label-free imaging of type IV pili This article has 1 citations.
 
-12. (sauer2001characterizationofphenotypic pages 8-9): Karin Sauer and Anne K. Camper. Characterization of phenotypic changes inpseudomonas putida in response to surface-associated growth. Journal of Bacteriology, 183:6579-6589, Nov 2001. URL: https://doi.org/10.1128/jb.183.22.6579-6589.2001, doi:10.1128/jb.183.22.6579-6589.2001. This article has 553 citations and is from a peer-reviewed journal.
+12. (mccallum2019thedynamicstructures media 6fa112b3): Matthew McCallum, Lori L. Burrows, and P. Lynne Howell. The dynamic structures of the type iv pilus. Apr 2019. URL: https://doi.org/10.1128/microbiolspec.psib-0006-2018, doi:10.1128/microbiolspec.psib-0006-2018. This article has 92 citations and is from a domain leading peer-reviewed journal.
 
-13. (sauer2001characterizationofphenotypic pages 1-2): Karin Sauer and Anne K. Camper. Characterization of phenotypic changes inpseudomonas putida in response to surface-associated growth. Journal of Bacteriology, 183:6579-6589, Nov 2001. URL: https://doi.org/10.1128/jb.183.22.6579-6589.2001, doi:10.1128/jb.183.22.6579-6589.2001. This article has 553 citations and is from a peer-reviewed journal.
+13. (singh2022landmarkdiscoveriesand pages 5-7): Pradip Kumar Singh, Janay Little, and Michael S. Donnenberg. Landmark discoveries and recent advances in type iv pilus research. Microbiology and Molecular Biology Reviews, Sep 2022. URL: https://doi.org/10.1128/mmbr.00076-22, doi:10.1128/mmbr.00076-22. This article has 37 citations and is from a domain leading peer-reviewed journal.
 
-14. (sauer2001characterizationofphenotypic pages 5-6): Karin Sauer and Anne K. Camper. Characterization of phenotypic changes inpseudomonas putida in response to surface-associated growth. Journal of Bacteriology, 183:6579-6589, Nov 2001. URL: https://doi.org/10.1128/jb.183.22.6579-6589.2001, doi:10.1128/jb.183.22.6579-6589.2001. This article has 553 citations and is from a peer-reviewed journal.
+14. (frolov2024constructionofthe pages 1-2): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.
 
-15. (lorenzo2024pseudomonasputidakt2440 pages 7-9): Victor de Lorenzo, Danilo Pérez-Pantoja, and Pablo I. Nikel. <i>pseudomonas putida</i> kt2440: the long journey of a soil-dweller to become a synthetic biology chassis. Journal of Bacteriology, Jul 2024. URL: https://doi.org/10.1128/jb.00136-24, doi:10.1128/jb.00136-24. This article has 78 citations and is from a peer-reviewed journal.
+15. (graupner2000typeivpilus pages 5-6): Stefan Graupner, Verena Frey, Rozita Hashemi, Michael G. Lorenz, Gudrun Brandes, and Wilfried Wackernagel. Type iv pilus genes pila andpilc of pseudomonas stutzeri are required for natural genetic transformation, and pila can be replaced by corresponding genes from nontransformable species. Journal of Bacteriology, 182:2184-2190, Apr 2000. URL: https://doi.org/10.1128/jb.182.8.2184-2190.2000, doi:10.1128/jb.182.8.2184-2190.2000. This article has 79 citations and is from a peer-reviewed journal.
 
-16. (frolov2024constructionofthe pages 5-8): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.
+16. (wellerstuart2015genomicandfunctionala pages 60-63): T Weller-Stuart. Genomic and functional characterization of motility in pantoea ananatis. Unknown journal, 2015.
 
-17. (frolov2024constructionofthe pages 1-2): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.
+17. (frolov2024constructionofthe pages 8-10): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](pilA-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000017 I have extracted Table 2 from page 13, which lists virulence factors related to adherence. This table includes the "Type IV pili" s](pilA-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000018 Figure 1 is the most informative schematic showing the overall structure and assembly components of the type IVa pilus (T4aP). It d](pilA-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. mattick2002typeivpili pages 8-10
-2. udaondo2025transcriptionalregulatorysystems pages 12-14
-3. harvey2009singleresiduechangesin pages 1-2
-4. santos2004insightsintothe pages 10-11
-5. sauer2001characterizationofphenotypic pages 1-2
-6. frolov2024constructionofthe pages 5-8
-7. little2024typeivpili pages 2-4
-8. little2024typeivpili pages 4-6
-9. burrows2012pseudomonasaeruginosatwitching pages 11-13
-10. little2024typeivpili pages 6-8
-11. mattick2002typeivpili pages 12-14
-12. sauer2001characterizationofphenotypic pages 6-8
-13. sauer2001characterizationofphenotypic pages 8-9
-14. sauer2001characterizationofphenotypic pages 5-6
-15. frolov2024constructionofthe pages 1-2
-16. https://doi.org/10.1128/jb.00136-24
-17. https://doi.org/10.3390/fermentation10120606
-18. https://doi.org/10.1128/ecosalplus.esp-0003-2023
-19. https://doi.org/10.3390/ijms26104677
-20. https://doi.org/10.1111/j.1462-2920.2004.00734.x
-21. https://doi.org/10.1146/annurev.micro.56.012302.160938;
-22. https://doi.org/10.1146/annurev-micro-092611-150055;
-23. https://doi.org/10.1128/jb.183.22.6579-6589.2001
-24. https://doi.org/10.1146/annurev.micro.56.012302.160938
-25. https://doi.org/10.1146/annurev-micro-092611-150055
+1. udaondo2025transcriptionalregulatorysystems pages 12-14
+2. harvey2009singleresiduechangesin pages 4-5
+3. kuchma2022surfaceinducedcampsignaling pages 1-2
+4. mccallum2019thedynamicstructures pages 1-3
+5. vrind2003identificationofa pages 2-3
+6. frolov2024constructionofthe pages 1-2
+7. singh2022landmarkdiscoveriesand pages 5-7
+8. pelicic2023mechanismofassembly pages 5-6
+9. tala2022characterizationofpseudomonas pages 15-21
+10. frolov2024constructionofthe pages 8-10
+11. vrind2003identificationofa pages 1-2
+12. pelicic2023mechanismofassembly pages 2-3
+13. singh2022landmarkdiscoveriesand pages 9-10
+14. jacobsen2020structureandfunction pages 1-3
+15. graupner2000typeivpilus pages 5-6
+16. wellerstuart2015genomicandfunctionala pages 60-63
+17. https://doi.org/10.3390/ijms26104677
+18. https://doi.org/10.1128/jb.00943-09
+19. https://doi.org/10.1128/microbiolspec.psib-0006-2018
+20. https://doi.org/10.1128/jb.00186-22
+21. https://doi.org/10.1046/j.1365-2958.2003.03339.x
+22. https://doi.org/10.5075/epfl-thesis-8646
+23. https://doi.org/10.1128/mmbr.00076-22
+24. https://doi.org/10.3390/fermentation10120606
+25. https://doi.org/10.1099/mic.0.001311
 26. https://doi.org/10.3390/ijms26104677,
-27. https://doi.org/10.1111/j.1462-2920.2004.00734.x,
-28. https://doi.org/10.1146/annurev.micro.56.012302.160938,
-29. https://doi.org/10.1146/annurev-micro-092611-150055,
-30. https://doi.org/10.1128/ecosalplus.esp-0003-2023,
-31. https://doi.org/10.1128/jb.00943-09,
-32. https://doi.org/10.1128/jb.183.22.6579-6589.2001,
-33. https://doi.org/10.1128/jb.00136-24,
+27. https://doi.org/10.1128/jb.00943-09,
+28. https://doi.org/10.1046/j.1365-2958.2003.03339.x,
+29. https://doi.org/10.1099/mic.0.001311,
+30. https://doi.org/10.1128/microbiolspec.psib-0006-2018,
+31. https://doi.org/10.1128/mmbr.00076-22,
+32. https://doi.org/10.1007/s00430-019-00642-5,
+33. https://doi.org/10.1128/jb.00186-22,
 34. https://doi.org/10.3390/fermentation10120606,
+35. https://doi.org/10.1128/jb.182.8.2184-2190.2000,
