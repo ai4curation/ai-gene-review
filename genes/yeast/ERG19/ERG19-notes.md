@@ -105,10 +105,45 @@ UniPathway: UPA00057 / UER00100 (IPP from (R)-mevalonate, step 3/3).
 
 ## Provenance note
 
-Automated deep research (`just deep-research-falcon yeast ERG19 --fallback
-perplexity-lite`) did not return output (stalled >10 min and was cancelled), so no
-`-deep-research-{provider}.md` file was generated. This review is instead grounded in
-the UniProt record (P32377), the six cached primary publications (PMID:8626466,
-15169949, 9244250, 1779710, 28904410, 14562095), the structural-genomics paper for
-PDB 1FI4 (PMID:11698677), and the PANTHER family data (PTHR10977). For this
-well-characterized essential metabolic enzyme these sources are sufficient.
+Automated deep research succeeded on a third attempt:
+`ERG19-deep-research-falcon.md` (falcon / "Edison Scientific Literature", 17 citations,
+~19 min runtime). The first two attempts failed only because the wrapper's default
+600 s cap killed the provider mid-run; re-running with `--timeout 3600` let it finish.
+(The `WARNING - agentapi not found in PATH` line in the logs is benign and unrelated to
+the timeout.) The review is grounded in the UniProt record (P32377), the six cached
+primary publications (PMID:8626466, 15169949, 9244250, 1779710, 28904410, 14562095),
+the structural-genomics paper for PDB 1FI4 (PMID:11698677), the PANTHER family data
+(PTHR10977), and this deep-research report.
+
+## Deep research (falcon) — corroboration & additions
+
+The falcon report independently confirms the core review and contradicts nothing:
+
+- **Reaction / cofactors:** confirms the ATP-dependent decarboxylation of
+  mevalonate-5-diphosphate to IPP, and additionally states the reaction **requires
+  Mg2+** and is coupled to ATP hydrolysis (products IPP + CO2 + ADP)
+  [Cordier 1999, doi:10.1023/a:1006181720100; Garay 2026 preprint,
+  doi:10.20944/preprints202605.0182.v1]. This reinforces the added ATP-binding
+  molecular function; Mg2+ dependence is family/review-level here (flagged as inferred
+  by the report) and is not annotated as metal binding in UniProt P32377, so no
+  metal-ion GO term was added.
+- **Mechanism:** GHMP-kinase-superfamily mechanism via ATP-dependent phosphorylation of
+  the substrate C3-hydroxyl (transient 3-phospho-MVAPP) then decarboxylation/elimination
+  — consistent with the Asp302/Lys18 active-site biochemistry [Garay 2026].
+- **Localization:** independently described as a **cytosolic homodimer** / cytoplasmic
+  precursor-module enzyme [Johnston 2020 Yeast, doi:10.1002/yea.3452; Garay 2026]. This
+  further supports flagging the NAS vacuole annotation (GO:0005773) as over-annotated.
+- **Essentiality:** an Arabidopsis MVD cDNA complements a yeast thermosensitive
+  MVD-deficient strain and rescues the lethal **ERG19 deletion** [Cordier 1999] —
+  additional support for essentiality alongside PMID:9244250.
+- **Regulation (context, non-core):** ERG genes including ERG19 are controlled by
+  Upc2/Ecm22 (sterol-responsive) and Hap1/Rox1/Mot3 (heme/oxygen); early-module genes
+  (ERG8, ERG13, ERG19) are down-regulated as oxygen decreases [Jorda & Puig 2020 Genes,
+  doi:10.3390/genes11070795 = PMID:32679672].
+- **Applied context (non-core):** ERG19 is included in MVA-pathway overexpression
+  cassettes for terpenoid production (e.g. 528 mg/L taxadiene, Karaca 2024) and is
+  discussed as part of the essential fungal sterol axis for antifungal targeting
+  (Gutierrez-Perez & Cramer 2025; fungal vs human homolog <50% identity).
+
+None of these change the annotation actions; they corroborate the core MF/BP/CC calls
+and the vacuole over-annotation flag.
