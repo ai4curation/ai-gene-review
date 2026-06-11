@@ -43,14 +43,21 @@ Systematic AI-assisted review of GO annotations for *Pseudomonas putida*, focusi
 |------|-------------|----------|
 | **Q88CC1** | reviewed | Uncharacterized |
 
-## Batch 2 — Selected for Review (50 new genes, stubs created)
+## Batch 2 — Selected for Review (50 new genes)
 
 Fifty additional well-characterized KT2440 (taxon 160488) genes selected to broaden
 functional coverage beyond the initial aromatic-catabolism/biotechnology focus, into
 central carbon metabolism, stress response, DNA repair, motility, and membrane transport.
-All were seeded via `fetch-gene` (UniProt + GOA), creating `*-ai-review.yaml` stubs with
-GOA annotations marked `PENDING` and awaiting review. None overlap with previously
-present gene folders.
+All were seeded via `fetch-gene` (UniProt + GOA). None overlap with previously present
+gene folders.
+
+**Status: reviews complete.** Each gene has a Falcon (Edison Scientific) deep-research
+report (`*-deep-research-falcon.md`) and a fully reviewed `*-ai-review.yaml` — all GOA
+annotations adjudicated (no `PENDING`), with descriptions, `core_functions`, and
+references. The review pass corrected a number of mis-annotations and citation errors
+surfaced in the raw reports (e.g. wrong PMIDs in exbB/fur/relA/pilA/hpd; cofactor terms
+in fur (Zn→Fe(II)) and icd (NADP-specific); TreeGrafter/InterPro2GO over-propagations in
+mdh, sdhA, groES, hfq, pvdQ; sigma-factor GO convention for rpoD/rpoH).
 
 ### Stress response, chaperones & global regulation (12)
 
@@ -137,12 +144,14 @@ present gene folders.
 | **hpd** | Q88HC7 | 4-hydroxyphenylpyruvate dioxygenase |
 | **fcs** | Q88HK0 | Feruloyl-CoA synthetase (ferulate catabolism) |
 
-## Batch 3 — Aromatic Amino Acid (AAA) Biosynthesis Pathway (16 genes, stubs created)
+## Batch 3 — Aromatic Amino Acid (AAA) Biosynthesis Pathway (16 genes)
 
 The shikimate → chorismate → Trp/Phe/Tyr biosynthetic pathway in KT2440 (taxon
 160488). Complements the existing aromatic *catabolism* coverage (ben/cat/pca) with the
-*anabolic* route to aromatic amino acids. Stubs seeded via `fetch-gene`; Falcon (Edison)
-deep-research reports generated per gene. Name variants not resolving as primary UniProt
+*anabolic* route to aromatic amino acids. Seeded via `fetch-gene`; Falcon (Edison)
+deep-research reports generated per gene. **Status: reviews complete** — all
+annotations adjudicated, descriptions/core_functions/references populated (e.g. trpC and
+aroQ over-propagation fixes; aroA bifunctional EPSPS/TyrA module captured). Name variants not resolving as primary UniProt
 symbols in KT2440 are covered by a resolved paralog (aroD→aroQ, aroF/aroG→aroH, aroL→aroK)
 or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 
