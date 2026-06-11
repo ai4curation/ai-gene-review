@@ -44,5 +44,3 @@
 - CORE BP: SRP-dependent cotranslational protein targeting to membrane (GO:0006614 and children GO:0006617/GO:0006613).
 - Non-core: generic RNA binding (GO:0003723, parent of 7S RNA binding); ribosome binding (contributes_to, complex-level); protein binding (IPI to SRP68); nucleus/nucleolus/nucleoplasm/cytoplasm localizations (assembly + steady-state compartments, not the defining ER-targeting site).
 - No GTPase function (SRP19 is not a GTPase).
-</content>
-</invoke>
