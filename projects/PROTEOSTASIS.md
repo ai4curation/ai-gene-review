@@ -69,6 +69,14 @@ review_batches:
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch6_selection_notes.md
+  - id: proteostasis-batch-2026-06-11
+    title: "Proteostasis PN candidate additions batch 7 (ER protein biogenesis & ERAD: SRP/translocon/signal peptidase, EMC & GET membrane-protein insertion, ER glycoprotein-folding QC mannosidases/lectins, collagen prolyl hydroxylases & ER thioredoxins, ERAD ubiquitin machinery)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch7_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
@@ -174,6 +182,33 @@ EEF2K). `HUWE1` and `OGT` were deferred as mega/pleiotropic. The batch totals
 `51` because the `USP21` symbol resolved to the synonym gene `USP25` (also a
 valid ERAD-associated DUB); both were reviewed. See
 [batch6_selection_notes.md](PROTEOSTASIS/batch6_selection_notes.md).
+
+`proteostasis-batch-2026-06-11` (`50` reviewed) covers the **ER proteostasis
+branch**, walking the full ER lifecycle of a secretory/membrane protein:
+co-translational SRP targeting (`SRP9/19/68/72`, `SRPRB`), Sec61-translocon
+association and signal-peptide processing (`SEC62/63`, `SEC11A/C`,
+`SPCS1/2/3`, `SERP1/2`), ER membrane-protein insertion by the EMC
+(`EMC1/2/3/4/6/7/8/9/10`, `MMGT1`/EMC5) and GET/TRC tail-anchor pathway
+(`GET1/3/4`), ER glycoprotein-folding quality control via the ERAD
+mannosidases and cargo lectins (`EDEM1/2/3`, `MAN1B1`, `LMAN1/2`, `LMAN1L`,
+`LMAN2L`), ER oxidative folding and collagen prolyl hydroxylation
+(`P3H1/2`, `P4HA1/2/3`, `TXNDC11/12/16`), and the ERAD ubiquitin machinery and
+membrane cofactors (`RNF5/185/170`, `FAF2`, `UBAC2`, `ERLIN1/2`). All `50`
+review YAMLs validate; across `1347` reviewed annotations the action mix was
+`783` ACCEPT, `476` KEEP_AS_NON_CORE, `75` MARK_AS_OVER_ANNOTATED, `8` REMOVE,
+`3` MODIFY, `1` UNDECIDED, `1` NEW. Notable curation calls: REMOVE of
+pathway-bleed-through IEA terms (`transmembrane transport` / `ER mannose
+trimming` on the RNF5/RNF185 ERAD E3s), REMOVE of an over-propagated IBA serine
+endopeptidase MF on the `UBAC2` rhomboid **pseudoprotease**, MARK_AS_OVER_ANNOTATED
+of `ERLIN2` plasma-membrane and `MMGT1` legacy magnesium-transporter
+annotations, and handling of negated (NOT) historical mannosidase annotations on
+`EDEM1/EDEM2`. A shared caveat flagged for human follow-up: `PMID:23264731`
+(MTR120/KIAA1383 microtubule study) is cited for a `cytoplasmic microtubule`
+IDA on both `SERP1` (removed; full text confirms wrong gene) and `SRPRB`
+(left UNDECIDED where full text was unavailable). The mega-hub ER chaperones
+`HSPA5`/BiP, `HSP90B1`/GRP94 and the IRE1/PERK UPR sensors were deferred to
+dedicated reviews. See
+[batch7_selection_notes.md](PROTEOSTASIS/batch7_selection_notes.md).
 
 ## What The PN Resource Actually Contains
 
