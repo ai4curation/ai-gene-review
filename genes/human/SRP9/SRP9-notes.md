@@ -84,4 +84,3 @@ guidelines; keep as non-core (do not REMOVE experimental IPI annotations).
 - GO:0006617 signal sequence recognition (NAS, ComplexPortal): signal-sequence recognition
   is SRP54's role, not SRP9's; SRP9 contributes elongation arrest. Keep as non-core
   (it is a complex-level NAS annotation; SRP9 is part of the complex that performs this).
-</content>
