@@ -43,6 +43,100 @@ Systematic AI-assisted review of GO annotations for *Pseudomonas putida*, focusi
 |------|-------------|----------|
 | **Q88CC1** | reviewed | Uncharacterized |
 
+## Batch 2 — Selected for Review (50 new genes, stubs created)
+
+Fifty additional well-characterized KT2440 (taxon 160488) genes selected to broaden
+functional coverage beyond the initial aromatic-catabolism/biotechnology focus, into
+central carbon metabolism, stress response, DNA repair, motility, and membrane transport.
+All were seeded via `fetch-gene` (UniProt + GOA), creating `*-ai-review.yaml` stubs with
+GOA annotations marked `PENDING` and awaiting review. None overlap with previously
+present gene folders.
+
+### Stress response, chaperones & global regulation (12)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **dnaK** | Q88DU2 | Hsp70 chaperone (protein folding) |
+| **groEL** | Q88N55 | GroEL chaperonin |
+| **groES** | Q88N56 | GroES co-chaperonin |
+| **grpE** | Q88DU1 | DnaK nucleotide-exchange factor |
+| **htpG** | Q88FB9 | Hsp90 chaperone |
+| **rpoH** | Q7CCA6 | Heat-shock sigma factor (σ32) |
+| **rpoD** | Q88QU7 | Primary/housekeeping sigma factor (σ70) |
+| **fur** | Q88DT9 | Ferric uptake regulator |
+| **oxyR** | Q88C74 | Peroxide-responsive transcription regulator |
+| **relA** | Q88MB8 | (p)ppGpp synthetase (stringent response) |
+| **hfq** | Q88DD3 | RNA chaperone / sRNA-mediated regulation |
+| **ppk** | Q88CG4 | Polyphosphate kinase |
+
+### DNA repair & recombination (7)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **recA** | Q88ME4 | Recombinase / SOS response |
+| **recB** | Q88DZ5 | Exonuclease V β subunit |
+| **ruvB** | Q88NJ0 | Holliday junction branch-migration helicase |
+| **uvrB** | Q88LF9 | Excinuclease ABC subunit B (NER) |
+| **uvrC** | Q88FJ7 | Excinuclease ABC subunit C (NER) |
+| **mutL** | Q88DD1 | DNA mismatch repair (MutL) |
+| **mutS** | Q88ME7 | DNA mismatch repair (MutS) |
+
+### Central carbon metabolism — TCA cycle (8)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **gltA** | Q88FA4 | Citrate synthase |
+| **acnB** | Q88KF1 | Aconitase B |
+| **icd** | Q88FS2 | Isocitrate dehydrogenase |
+| **sucA** | Q88FA9 | 2-oxoglutarate dehydrogenase E1 |
+| **sucC** | Q88FB2 | Succinyl-CoA synthetase β |
+| **sdhA** | Q88FA7 | Succinate dehydrogenase flavoprotein |
+| **fumC** | Q88M20 | Fumarase C |
+| **mdh** | Q88Q44 | Malate dehydrogenase |
+
+### Glycolysis / ED / anaplerotic & overflow metabolism (9)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **gapA** | Q88P44 | Glyceraldehyde-3-phosphate dehydrogenase |
+| **pgk** | Q88D64 | Phosphoglycerate kinase |
+| **eno** | Q88MF9 | Enolase |
+| **tpiA** | Q88DV4 | Triosephosphate isomerase |
+| **pykA** | Q88N54 | Pyruvate kinase |
+| **ppc** | Q88MR4 | PEP carboxylase (anaplerotic) |
+| **pgl** | Q88P30 | 6-phosphogluconolactonase (ED/PPP) |
+| **aceA** | Q88FI0 | Isocitrate lyase (glyoxylate shunt) |
+| **pta** | Q88PS4 | Phosphate acetyltransferase (acetate overflow) |
+
+### Chemotaxis & motility (4)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **cheY** | Q88EW2 | Chemotaxis response regulator |
+| **cheZ** | Q88EW3 | CheY-P phosphatase |
+| **fliG** | Q88ET5 | Flagellar motor switch (C-ring) |
+| **pilA** | Q88Q62 | Type IV pilin |
+
+### Membrane transport, iron & nitrogen acquisition (8)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **oprD** | Q88NK1 | Outer-membrane porin D |
+| **oprE** | Q88R99 | Outer-membrane porin E (anaerobically induced) |
+| **tonB** | Q88C75 | TonB (energization of OM transport) |
+| **exbB** | Q88C77 | ExbB (TonB system) |
+| **amtB** | Q88CE8 | Ammonium transporter |
+| **glnK** | Q88CE7 | PII nitrogen-regulatory protein |
+| **pvdQ** | Q88IU8 | Pyoverdine maturation acylase |
+| **fpvA** | Q88F81 | Ferripyoverdine TonB-dependent receptor |
+
+### Aromatic / aromatic-amino-acid catabolism (2)
+
+| Gene | UniProt | Function |
+|------|---------|----------|
+| **hpd** | Q88HC7 | 4-hydroxyphenylpyruvate dioxygenase |
+| **fcs** | Q88HK0 | Feruloyl-CoA synthetase (ferulate catabolism) |
+
 ## Priority Genes for Future Review
 
 ### Aromatic Catabolism (core P. putida biology)
