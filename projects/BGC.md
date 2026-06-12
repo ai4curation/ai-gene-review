@@ -100,12 +100,34 @@ For each protein in a selected complex:
 
 | Gene / protein | Complex | Stage |
 |---|---|---|
-| PqsB (PSEAE) | PQS condensing heterodimer | Queued |
-| PqsC (PSEAE) | PQS condensing heterodimer | Queued |
+| PqsB (PSEAE, Q9I4X2) | PqsBC condensing heterodimer (non-catalytic subunit) | **Review complete** |
+| PqsC (PSEAE, Q9I4X1) | PqsBC condensing heterodimer (catalytic subunit) | **Review complete** |
 | ActVA region pair (STRCO) | actinorhodin tailoring | Queued |
 | Erythromycin DEBS pair (SACEN) | modular PKS | Queued |
 | Nosiheptide pair (STRAT) | thiopeptide RiPP | Queued |
 | Pyoluteorin pair (PSEF5) | edge-case control | Queued |
+
+### First worked example: PqsBC (BGC0000922)
+
+The PqsB/PqsC pair validates the project premise. Reviewing both subunits
+(`genes/PSEAE/pqsB`, `genes/PSEAE/pqsC`) surfaced exactly the annotation issues the
+"only-functional-when-assembled" framing predicts:
+
+- **Over-annotation of the catalytic MF to a non-catalytic subunit.** PqsB carries
+  the condensing-enzyme fold but lacks the active-site Cys-129/His-269 (which are in
+  PqsC; PDB 5DWZ, PMID:26811339), yet it was IEA-annotated `enables acyltransferase
+  activity` → flagged MARK_AS_OVER_ANNOTATED (better: `contributes_to` / annotate to
+  the PqsBC complex).
+- **Fold-based process mis-propagation.** PqsC inherited `fatty acid biosynthetic
+  process` and `3-oxoacyl-ACP synthase activity` from the FabH/KAS III signature,
+  but PqsBC makes a quinolone QS signal (octanoate is a substrate, not the product;
+  PMID:24239007) → REMOVE / MODIFY respectively.
+- **Missing specific MF.** EC 2.3.1.230 ("2-heptyl-4(1H)-quinolone synthase") has no
+  GO term → `proposed_new_terms`.
+
+The predicted complex (ipTM 0.95, matching PDB 5DWZ) agreed with the experimentally
+established obligate heterodimer — a positive-control case where the structural
+prediction corroborated, rather than drove, the curation.
 
 ## Caveats when using the predictions as evidence
 
