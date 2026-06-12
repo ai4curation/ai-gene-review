@@ -110,7 +110,7 @@ def test_build_command_maps_codex_to_cyberian_agent_type(tmp_path):
 
 
 def test_module_template_renders_through_deep_research_processor():
-    from deep_research_client.processing import ResearchProcessor
+    from deep_research_client.processing import ResearchProcessor  # type: ignore[import-untyped]
 
     processor = ResearchProcessor()
     query, metadata = processor.process_template_file(

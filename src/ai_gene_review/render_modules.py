@@ -67,7 +67,8 @@ def descriptor_text(descriptor: Any) -> str:
     """Return the preferred display text for a descriptor."""
     if not isinstance(descriptor, dict):
         return ""
-    term = descriptor.get("term") if isinstance(descriptor.get("term"), dict) else {}
+    term_value = descriptor.get("term")
+    term: dict[str, Any] = term_value if isinstance(term_value, dict) else {}
     return (
         descriptor.get("preferred_term")
         or term.get("label")
@@ -305,7 +306,8 @@ def make_summary(
     index_path: Path,
 ) -> dict[str, Any]:
     """Build a compact summary used by the module index page."""
-    module = data.get("module") if isinstance(data.get("module"), dict) else {}
+    module_value = data.get("module")
+    module: dict[str, Any] = module_value if isinstance(module_value, dict) else {}
     concepts = [
         descriptor_text(concept)
         for concept in as_list(module.get("concepts"))
