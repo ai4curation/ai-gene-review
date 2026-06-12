@@ -103,3 +103,25 @@ question (Pawlowski 2018) are now answered.
 Note on providers: perplexity not configured in this container (only openai/falcon); openai API key invalid
 (401). falcon's wrapper reported a 600s timeout but the Edison run actually completed and wrote the report +
 artifacts. `just` is not installed here, so underlying `uv run ai-gene-review ...` commands were used directly.
+
+## Update: CARD ARO:3000318 (mphB) — curated AMR data incorporated
+
+CARD entry https://card.mcmaster.ca/ARO:3000318 (AMR Gene Family: Macrolide phosphotransferase (MPH);
+mechanism: antibiotic inactivation; Protein Homolog Model, BLASTP bitscore cutoff 600). Curated drug list:
+erythromycin, roxithromycin, clarithromycin, dirithromycin, oleandomycin (14-membered), azithromycin
+(15-membered), spiramycin, tylosin (16-membered), and the ketolide telithromycin. Mechanism: phosphorylation
+at the 2'-OH of the desosamine sugar of 14- and 16-membered macrolides. Two CARD-cited PMIDs newly added:
+
+- PMID:8900063 — Noguchi et al. 1996, FEMS Microbiol Lett. Original cloning/sequencing of mphB. KEY identity
+  anchor: encodes a 302-aa / 34483-Da protein, matching this UniProt entry (302 aa, 34485 MW) exactly.
+  [PMID:8900063 "mphB encoded a protein of 302 amino acids with a molecular mass of 34483 Da."]
+- PMID:17302923 — Chesneau et al. 2007, FEMS Microbiol Lett. Resistance phenotypes of mph genes in an
+  efflux-deficient E. coli AG100A host. mphB confers spiramycin + telithromycin resistance; in this older
+  study azithromycin resistance was attributed uniquely to mphA — the narrow-spectrum view of MphB later
+  overturned by Pawlowski 2018 (PMID:29317655).
+  [PMID:17302923 "The mph(C) gene, as reported for mph(B), also conferred resistance to spiramycin"]
+  [PMID:17302923 "The four investigated genes conferred resistance to telithromycin."]
+
+Net effect: identity now triple-anchored (UniProt SubName + CARD ARO:3000318 + cloning paper exact 302aa/
+34483Da match + NCBIfam NF000242 macrolide_MphB HMM). Description substrate range expanded to the full
+curated CARD drug list and the historical narrow→broad spectrum reassessment documented. GO calls unchanged.
