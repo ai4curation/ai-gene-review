@@ -39,3 +39,43 @@ ER membrane domains. Disease: autosomal recessive spastic paraplegia SPG62 (vari
 - protein-containing complex (GO:0032991): generic → KEEP_AS_NON_CORE.
 - protein binding (GO:0005515) IPI: uninformative → KEEP_AS_NON_CORE.
 - Do NOT over-claim catalytic MF: ERLIN1 is a scaffold/lipid-binding SPFH protein, not an enzyme.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+Falcon corroborates the existing review (ERLIN1/2 ring complex, IP3R ERAD with RNF170, cholesterol
+binding, SREBP restriction, lipid-raft ER domains) and adds three verifiable, mostly newer references:
+
+- ERLIN1/2 scaffolds bridge the full-length isoform of TMUB1 with the E3 ligase RNF170 (conserved
+  luminal N-terminal motif binding adjacent ERLIN SPFH domains), and restrict cholesterol
+  esterification, thereby favouring ER-to-Golgi cholesterol transport and regulating Golgi morphology
+  and the secretory pathway. [PMID:38782601 "we demonstrate a role of ERLIN scaffolds in limiting
+  cholesterol esterification, thereby favouring cholesterol transport from the ER to the Golgi
+  apparatus and regulating Golgi morphology and the secretory pathway"] (PubMed-verified;
+  doi:10.26508/lsa.202402620; Veronese et al. 2024). NEW mechanism (TMUB1-L/RNF170 bridging +
+  cholesterol esterification/SOAT1 + secretory pathway) beyond the prior single-client IP3R-ERAD
+  model. Added as a top-level reference (relevance HIGH). Loss of ERLINs abolished the TMUB1-RNF170
+  interaction; reported SOAT1 tendency to increase in DKO (log2FC 0.40, q=0.07), ER tubule collapse,
+  Golgi fragmentation, lipid-droplet accumulation, avasimibe (SOAT1 inhibitor) rescue.
+- Largest SPG62 case series to date: 13 individuals from six families with biallelic ERLIN1 variants,
+  childhood-onset slowly progressive predominantly pure spastic paraparesis (possible cerebellar /
+  peripheral-nerve involvement); three new variants predicted to disrupt the bell-shaped ERLIN1/ERLIN2
+  ring. [PMID:39367212 "Biallelic pathogenic ERLIN1 variants induce a rare, predominantly pure,
+  spastic paraparesis, with possible cerebellar and peripheral nerve involvement"] (PubMed-verified;
+  doi:10.1007/s00439-024-02702-0; Cogan et al. 2024). Expands disease genetics beyond the G50V variant
+  noted in the prior review. Added as a top-level reference (relevance HIGH).
+- ERLIN1 is a host factor required for efficient hepatitis C virus infection; it is a cholesterol-
+  binding ER detergent-resistant-membrane protein, and its knockdown reduces HCV RNA replication
+  initiation, viral protein expression, and infectious virus production downstream of entry/primary
+  translation. [PMID:31810281 "erlin-1 protein is required early in the infection, downstream of cell
+  entry and primary translation, specifically to initiate RNA replication, and later in the infection
+  to support infectious virus production"] (PubMed-verified; doi:10.3390/cells8121555; Whitten-Bauer
+  et al. 2019). Corroborates the cholesterol-homeostasis/ER-raft role already in the review (which
+  also has the USP25-Erlin1/2 antiviral angle via PMID:37683630). Added as a top-level reference
+  (relevance MEDIUM).
+- Manganelli 2021 (PMID:34572057, already a review reference) plus its companion paper
+  (doi:10.1080/15548627.2020.1834207) describe ERLIN1 at MAM raft-like microdomains interacting with
+  AMBRA1 to support starvation-induced autophagy initiation. Not added as a new annotation/reference;
+  noted here as additional context for a potential MAM/autophagy role.
+- Note: none of the three new references were cached in publications/, so no paraphrased
+  supporting_text was added to existing annotations (reference validator requires verbatim cached
+  substrings). They were added as top-level references with reference_review only.
