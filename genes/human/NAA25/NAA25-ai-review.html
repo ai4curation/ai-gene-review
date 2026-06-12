@@ -1,0 +1,2427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAA25 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NAA25</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q14CX7" target="_blank" class="term-link">
+                        Q14CX7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NAA25";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q14CX7" data-a="DESCRIPTION: NAA25 (N-alpha-acetyltransferase 25; also MDM20, N..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NAA25 (N-alpha-acetyltransferase 25; also MDM20, NAP1, p120) is the large non-catalytic auxiliary subunit of the human NatB N-terminal acetyltransferase complex. NatB is composed of the catalytic subunit NAA20 and the auxiliary subunit NAA25, and it co-translationally acetylates the alpha-amino group of N-terminal methionine residues that are retained in front of acidic or amide side chains (Met-Asp, Met-Glu, Met-Asn and Met-Gln N-termini). NAA25 is a TPR-repeat/alpha-solenoid protein that cradles and stabilizes the catalytic NAA20 subunit and anchors the complex to ribosomes, positioning it to act on nascent polypeptides. It is a cytoplasmic protein and is required for normal cell-cycle progression. Loss of NatB activity (e.g. NAA20 variants) is associated with neurodevelopmental disease, underscoring the physiological importance of NatB-mediated N-terminal acetylation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007010" target="_blank" class="term-link">
+                                    GO:0007010
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeleton organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0007010" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred from NatB orthologs (yeast/fly), where NatB-mediated N-terminal acetylation of actin and tropomyosin affects actin cytoskeleton and tropomyosin function. For human NAA25 this is a downstream biological-process consequence of NatB substrate acetylation, not a direct molecular activity of the auxiliary subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plausible process annotation inherited by phylogenetic transfer from NatB orthologs whose substrates (tropomyosin/actin) link N-terminal acetylation to the cytoskeleton; it is indirect and peripheral to NAA25&#39;s core complex/scaffold role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0007010 cytoskeleton organization biological_process ECO:0000318 IBA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010698" target="_blank" class="term-link">
+                                    GO:0010698
+                                </a>
+                            </span>
+                            <span class="term-label">acetyltransferase activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0010698" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAA25 is the non-catalytic auxiliary subunit of NatB that binds and activates/scaffolds the catalytic subunit NAA20. Acetyltransferase activator activity is the appropriate molecular function for this auxiliary role, since NAA25 itself does not catalyze acetyl transfer but is required for full NatB activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term correctly captures NAA25&#39;s core non-catalytic function as the activating/scaffolding subunit of the NatB acetyltransferase, consistent with the requirement of NAA25 for the NatB complex to display N-terminal acetyltransferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link">
+                                        PMID:18570629
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">They form a stable complex and in vitro display sequence-specific N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Non-catalytic subunit of the NatB complex which catalyzes acetylation of the N-terminal methionine residues of peptides beginning with Met-Asp, Met-Glu, Met-Asn and Met-Gln.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031416" target="_blank" class="term-link">
+                                    GO:0031416
+                                </a>
+                            </span>
+                            <span class="term-label">NatB complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0031416" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAA25 is a constitutive component of the NatB N-terminal acetyltransferase complex (NAA20 + NAA25). This is the core cellular component for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Membership in the NatB complex is established experimentally (co-purification, cryo-EM) and by phylogenetic inference; it is the defining cellular component of NAA25.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Component of the N-terminal acetyltransferase B (NatB) complex which is composed of NAA20 and NAA25.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of cytoplasmic localization, consistent with the experimentally documented cytoplasmic location of NatB.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct compartment for this cytoplasmic, ribosome-associated complex subunit; agrees with experimental IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18570629
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the human N(alpha)-acetyltransferase compl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0005515" data-r="PMID:18570629" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-derived interaction with NAA20 (P61599), the catalytic NatB subunit. The bare protein binding term is uninformative; the biologically meaningful interaction is assembly of the NatB complex, already captured by the NatB complex annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records a real, functionally relevant interaction (with the catalytic subunit NAA20) but the uninformative GO:0005515 term is not core; the informative content is the NatB complex membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:18570629 UniProtKB:P61599</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (HPA) evidence for cytosolic localization, consistent with NAA25&#39;s role in the cytoplasmic NatB complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA-supported cytosolic localization agrees with the documented cytoplasmic site of action of NatB.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005829 cytosol cellular_component ECO:0000314 IDA GO_REF:0000052</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18570629
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the human N(alpha)-acetyltransferase compl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0005737" data-r="PMID:18570629" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (ComplexPortal, from the hNatB identification study) for cytoplasmic localization of the NatB complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported cytoplasmic localization consistent with co-translational action on ribosomes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031416" target="_blank" class="term-link">
+                                    GO:0031416
+                                </a>
+                            </span>
+                            <span class="term-label">NatB complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18570629
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the human N(alpha)-acetyltransferase compl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0031416" data-r="PMID:18570629" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal/IPI evidence that NAA25 is part of the NatB complex, from the study that identified the human NatB complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for NatB complex membership; the defining cellular component of NAA25.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link">
+                                        PMID:18570629
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">They form a stable complex and in vitro display sequence-specific N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34230638" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34230638
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Missense NAA20 variants impairing the NatB protein N-termina...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q14CX7" data-a="GO:0005515" data-r="PMID:34230638" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with NAA20 (P61599) documented in the study of disease-causing NAA20 variants. The bare protein binding term is uninformative; the interaction reflects NatB complex assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Real interaction with the catalytic NatB subunit but uninformative as a GO:0005515 annotation; the NatB complex membership term captures the meaningful content.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/NAA25/NAA25-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:34230638 UniProtKB:P61599</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic auxiliary subunit of the NatB N-terminal acetyltransferase complex that binds, activates and scaffolds the catalytic subunit NAA20, enabling co-translational N-terminal acetylation of Met-Asp/Met-Glu/Met-Asn/Met-Gln protein N-termini.</h3>
+                <span class="vote-buttons" data-g="Q14CX7" data-a="FUNCTION: Non-catalytic auxiliary subunit of the NatB N-term..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010698" target="_blank" class="term-link">
+                            acetyltransferase activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031416" target="_blank" class="term-link">
+                                NatB complex
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/NAA25/NAA25-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Non-catalytic subunit of the NatB complex which catalyzes acetylation of the N-terminal methionine residues of peptides beginning with Met-Asp, Met-Glu, Met-Asn and Met-Gln.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link">
+                                PMID:18570629
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">They form a stable complex and in vitro display sequence-specific N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18570629" target="_blank" class="term-link">
+                            PMID:18570629
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of the human N(alpha)-acetyltransferase complex B (hNatB): a complex important for cell-cycle progression.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The human NatB complex consists of the catalytic subunit hNAT3 (NAA20) and the auxiliary subunit hMDM20 (NAA25); they form a stable complex with sequence-specific N-terminal acetyltransferase activity on Met-Asp- N-termini.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">hNAT3 and hMDM20 co-sediment with ribosomal pellets, supporting co-translational action of NatB on nascent polypeptides.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Knockdown of hMDM20 (NAA25) disrupts normal cell-cycle progression and inhibits growth of HeLa cells.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34230638" target="_blank" class="term-link">
+                            PMID:34230638
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Missense NAA20 variants impairing the NatB protein N-terminal acetyltransferase cause autosomal recessive developmental delay, intellectual disability, and microcephaly.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NatB is composed of NAA20 and NAA25; impairment of NatB N-terminal acetyltransferase activity by NAA20 variants causes a recessive neurodevelopmental disorder, underscoring the physiological importance of NatB.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the NAA25 alpha-solenoid scaffold contribute to ribosome anchoring of NatB independently of NAA20, and which surface mediates ribosome binding?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q14CX7" data-a="Q: Does the NAA25 alpha-solenoid scaffold contribute ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there human NAA25 (as opposed to NAA20) loss-of-function variants, and do they phenocopy the NAA20-associated neurodevelopmental disorder?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q14CX7" data-a="Q: Are there human NAA25 (as opposed to NAA20) loss-o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cryo-EM of the NatB-ribosome-nascent chain complex to define how NAA25 positions the catalytic NAA20 subunit at the ribosomal exit tunnel.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q14CX7" data-a="EXPERIMENT: Cryo-EM of the NatB-ribosome-nascent chain complex..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Separation-of-function mutagenesis of the NAA25 TPR/solenoid surfaces to dissect NAA20-binding (activation) from ribosome-anchoring, assayed by in vitro N-terminal acetylation and ribosome co-sedimentation.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q14CX7" data-a="EXPERIMENT: Separation-of-function mutagenesis of the NAA25 TP..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> N-terminomics (e.g. SILAC-based COFRADIC) of NAA25-depleted human cells to map the NatB substrate repertoire whose N-terminal acetylation depends on the auxiliary subunit.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q14CX7" data-a="EXPERIMENT: N-terminomics (e.g. SILAC-based COFRADIC) of NAA25..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NAA25-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q14CX7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="naa25-n-alpha-acetyltransferase-25-natb-auxiliary-subunit-mdm20-research-notes">NAA25 (N-alpha-acetyltransferase 25, NatB auxiliary subunit / MDM20) research notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt Q14CX7; HGNC:25783; aka MDM20, NAP1, C12orf30, p120. 972 aa, TPR-repeat / α-solenoid protein.</li>
+<li><strong>AUXILIARY (non-catalytic) subunit of the human NatB N-terminal acetyltransferase complex.</strong> NatB = NAA20 (catalytic) + NAA25 (auxiliary). The catalytic subunit (acetyltransferase activity) is NAA20, NOT NAA25.</li>
+</ul>
+<h2 id="core-function">Core function</h2>
+<ul>
+<li>Non-catalytic scaffold of NatB; NatB acetylates N-terminal Met of substrates retaining iMet before acidic/amide residues (Met-Asp, Met-Glu, Met-Asn, Met-Gln).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18570629" title="They form a stable complex and in vitro display sequence-specific N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-">PMID:18570629</a></li>
+<li>NatB acts co-translationally; subunits co-sediment with ribosomes.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18570629" title="hNAT3 and hMDM20 co-sediment with ribosomal pellets, thus supporting a model where hNatB acts co-translationally on nascent polypeptides">PMID:18570629</a></li>
+<li>hMDM20/NAA25 is required for normal cell-cycle progression; knockdown disrupts cell cycle.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18570629" title="Specific knockdown of hNAT3 and hMDM20 disrupts normal cell-cycle progression, and induces growth inhibition in HeLa cells">PMID:18570629</a></li>
+<li>NatB N-terminal acetylation of actin/tropomyosin in yeast is linked to actin cytoskeleton/tropomyosin function (origin of the IBA "cytoskeleton organization" annotation from yeast/fly NatB phenotypes). In humans this is an inferred downstream BP, not a direct molecular activity of NAA25.</li>
+</ul>
+<h2 id="structure-complex">Structure / complex</h2>
+<ul>
+<li>NatB complex composed of NAA20 + NAA25. [UniProt SUBUNIT "composed of NAA20 and NAA25"; PMID:34230638]</li>
+<li>Cryo-EM structures of human NatB (PDB 6VP9, 7STX, 8G0L) confirm NAA25 as the large α-solenoid auxiliary subunit cradling catalytic NAA20.</li>
+<li>NAA20 missense variants impairing NatB cause autosomal-recessive developmental delay/ID/microcephaly. <a href="https://pubmed.ncbi.nlm.nih.gov/34230638">PMID:34230638</a></li>
+</ul>
+<h2 id="annotation-notes">Annotation notes</h2>
+<ul>
+<li>GO:0010698 acetyltransferase activator activity (IBA) — appropriate MF for an auxiliary subunit that activates/scaffolds the catalytic subunit; this is the best available non-catalytic MF. ACCEPT as core (auxiliary role).</li>
+<li>GO:0031416 NatB complex (part_of) — well supported (IBA/IPI/ComplexPortal). Core CC.</li>
+<li>GO:0007010 cytoskeleton organization (IBA) — downstream BP from yeast NatB substrate (tropomyosin/actin); keep non-core.</li>
+<li>protein binding IPI (PMID:18570629, PMID:34230638) both WITH NAA20 (P61599) — the real catalytic partner; better captured by NatB complex membership. Non-core / modify-adjacent; KEEP_AS_NON_CORE.</li>
+<li>cytoplasm/cytosol localizations consistent (IDA HPA, IDA ComplexPortal, IEA). Golgi IDA (HPA) is in UniProt DR but not in the GOA stub — not reviewed.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q14CX7
+gene_symbol: NAA25
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: NAA25 (N-alpha-acetyltransferase 25; also MDM20, NAP1, p120) is the large
+  non-catalytic auxiliary subunit of the human NatB N-terminal acetyltransferase complex.
+  NatB is composed of the catalytic subunit NAA20 and the auxiliary subunit NAA25,
+  and it co-translationally acetylates the alpha-amino group of N-terminal methionine
+  residues that are retained in front of acidic or amide side chains (Met-Asp, Met-Glu,
+  Met-Asn and Met-Gln N-termini). NAA25 is a TPR-repeat/alpha-solenoid protein that
+  cradles and stabilizes the catalytic NAA20 subunit and anchors the complex to ribosomes,
+  positioning it to act on nascent polypeptides. It is a cytoplasmic protein and is
+  required for normal cell-cycle progression. Loss of NatB activity (e.g. NAA20 variants)
+  is associated with neurodevelopmental disease, underscoring the physiological importance
+  of NatB-mediated N-terminal acetylation.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q14CX7-1
+- name: &#39;2&#39;
+  id: Q14CX7-2
+  sequence_note: VSP_026629, VSP_026630
+existing_annotations:
+- term:
+    id: GO:0007010
+    label: cytoskeleton organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetically inferred from NatB orthologs (yeast/fly), where NatB-mediated
+      N-terminal acetylation of actin and tropomyosin affects actin cytoskeleton and
+      tropomyosin function. For human NAA25 this is a downstream biological-process
+      consequence of NatB substrate acetylation, not a direct molecular activity of
+      the auxiliary subunit.
+    action: KEEP_AS_NON_CORE
+    reason: Plausible process annotation inherited by phylogenetic transfer from NatB
+      orthologs whose substrates (tropomyosin/actin) link N-terminal acetylation to
+      the cytoskeleton; it is indirect and peripheral to NAA25&#39;s core complex/scaffold
+      role.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-goa.tsv
+      supporting_text: GO:0007010 cytoskeleton organization biological_process ECO:0000318
+        IBA
+- term:
+    id: GO:0010698
+    label: acetyltransferase activator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: NAA25 is the non-catalytic auxiliary subunit of NatB that binds and activates/scaffolds
+      the catalytic subunit NAA20. Acetyltransferase activator activity is the appropriate
+      molecular function for this auxiliary role, since NAA25 itself does not catalyze
+      acetyl transfer but is required for full NatB activity.
+    action: ACCEPT
+    reason: This term correctly captures NAA25&#39;s core non-catalytic function as the
+      activating/scaffolding subunit of the NatB acetyltransferase, consistent with
+      the requirement of NAA25 for the NatB complex to display N-terminal acetyltransferase
+      activity.
+    supported_by:
+    - reference_id: PMID:18570629
+      supporting_text: They form a stable complex and in vitro display sequence-specific
+        N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-.
+    - reference_id: file:human/NAA25/NAA25-uniprot.txt
+      supporting_text: Non-catalytic subunit of the NatB complex which catalyzes acetylation
+        of the N-terminal methionine residues of peptides beginning with Met-Asp, Met-Glu,
+        Met-Asn and Met-Gln.
+- term:
+    id: GO:0031416
+    label: NatB complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: NAA25 is a constitutive component of the NatB N-terminal acetyltransferase
+      complex (NAA20 + NAA25). This is the core cellular component for the gene.
+    action: ACCEPT
+    reason: Membership in the NatB complex is established experimentally (co-purification,
+      cryo-EM) and by phylogenetic inference; it is the defining cellular component
+      of NAA25.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-uniprot.txt
+      supporting_text: Component of the N-terminal acetyltransferase B (NatB) complex
+        which is composed of NAA20 and NAA25.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Electronic annotation of cytoplasmic localization, consistent with the
+      experimentally documented cytoplasmic location of NatB.
+    action: ACCEPT
+    reason: Correct compartment for this cytoplasmic, ribosome-associated complex subunit;
+      agrees with experimental IDA evidence.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18570629
+  qualifier: enables
+  review:
+    summary: IntAct-derived interaction with NAA20 (P61599), the catalytic NatB subunit.
+      The bare protein binding term is uninformative; the biologically meaningful interaction
+      is assembly of the NatB complex, already captured by the NatB complex annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Records a real, functionally relevant interaction (with the catalytic subunit
+      NAA20) but the uninformative GO:0005515 term is not core; the informative content
+      is the NatB complex membership.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI
+        PMID:18570629 UniProtKB:P61599
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence (HPA) evidence for cytosolic localization, consistent
+      with NAA25&#39;s role in the cytoplasmic NatB complex.
+    action: ACCEPT
+    reason: IDA-supported cytosolic localization agrees with the documented cytoplasmic
+      site of action of NatB.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-goa.tsv
+      supporting_text: GO:0005829 cytosol cellular_component ECO:0000314 IDA GO_REF:0000052
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:18570629
+  qualifier: located_in
+  review:
+    summary: Direct experimental evidence (ComplexPortal, from the hNatB identification
+      study) for cytoplasmic localization of the NatB complex.
+    action: ACCEPT
+    reason: Experimentally supported cytoplasmic localization consistent with co-translational
+      action on ribosomes.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0031416
+    label: NatB complex
+  evidence_type: IPI
+  original_reference_id: PMID:18570629
+  qualifier: part_of
+  review:
+    summary: ComplexPortal/IPI evidence that NAA25 is part of the NatB complex, from
+      the study that identified the human NatB complex.
+    action: ACCEPT
+    reason: Direct experimental support for NatB complex membership; the defining cellular
+      component of NAA25.
+    supported_by:
+    - reference_id: PMID:18570629
+      supporting_text: They form a stable complex and in vitro display sequence-specific
+        N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34230638
+  qualifier: enables
+  review:
+    summary: Interaction with NAA20 (P61599) documented in the study of disease-causing
+      NAA20 variants. The bare protein binding term is uninformative; the interaction
+      reflects NatB complex assembly.
+    action: KEEP_AS_NON_CORE
+    reason: Real interaction with the catalytic NatB subunit but uninformative as a
+      GO:0005515 annotation; the NatB complex membership term captures the meaningful
+      content.
+    supported_by:
+    - reference_id: file:human/NAA25/NAA25-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI
+        PMID:34230638 UniProtKB:P61599
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:18570629
+  title: &#39;Identification of the human N(alpha)-acetyltransferase complex B (hNatB):
+    a complex important for cell-cycle progression.&#39;
+  findings:
+  - statement: The human NatB complex consists of the catalytic subunit hNAT3 (NAA20)
+      and the auxiliary subunit hMDM20 (NAA25); they form a stable complex with sequence-specific
+      N-terminal acetyltransferase activity on Met-Asp- N-termini.
+    reference_section_type: ABSTRACT
+  - statement: hNAT3 and hMDM20 co-sediment with ribosomal pellets, supporting co-translational
+      action of NatB on nascent polypeptides.
+    reference_section_type: ABSTRACT
+  - statement: Knockdown of hMDM20 (NAA25) disrupts normal cell-cycle progression and
+      inhibits growth of HeLa cells.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches the YAML title; GOA also anchors this PMID to IPI for GO:0031416 (NatB complex). This is the NatB complex-characterization paper establishing NAA25 (hMDM20) as the auxiliary subunit partnering NAA20, the gene&#39;s core function.
+- id: PMID:34230638
+  title: Missense NAA20 variants impairing the NatB protein N-terminal acetyltransferase
+    cause autosomal recessive developmental delay, intellectual disability, and microcephaly.
+  findings:
+  - statement: NatB is composed of NAA20 and NAA25; impairment of NatB N-terminal acetyltransferase
+      activity by NAA20 variants causes a recessive neurodevelopmental disorder, underscoring
+      the physiological importance of NatB.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Cached publication title matches the YAML title; concerns disease variants in the catalytic subunit NAA20 (not NAA25 itself) but establishes the physiological importance of the NatB complex of which NAA25 is the auxiliary subunit. Supporting/contextual for NAA25.
+core_functions:
+- description: Non-catalytic auxiliary subunit of the NatB N-terminal acetyltransferase
+    complex that binds, activates and scaffolds the catalytic subunit NAA20, enabling
+    co-translational N-terminal acetylation of Met-Asp/Met-Glu/Met-Asn/Met-Gln protein
+    N-termini.
+  molecular_function:
+    id: GO:0010698
+    label: acetyltransferase activator activity
+  locations:
+  - id: GO:0031416
+    label: NatB complex
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:human/NAA25/NAA25-uniprot.txt
+    supporting_text: Non-catalytic subunit of the NatB complex which catalyzes acetylation
+      of the N-terminal methionine residues of peptides beginning with Met-Asp, Met-Glu,
+      Met-Asn and Met-Gln.
+  - reference_id: PMID:18570629
+    supporting_text: They form a stable complex and in vitro display sequence-specific
+      N(alpha)-acetyltransferase activity on a peptide with the N-terminus Met-Asp-.
+proposed_new_terms: []
+suggested_questions:
+- question: Does the NAA25 alpha-solenoid scaffold contribute to ribosome anchoring
+    of NatB independently of NAA20, and which surface mediates ribosome binding?
+- question: Are there human NAA25 (as opposed to NAA20) loss-of-function variants,
+    and do they phenocopy the NAA20-associated neurodevelopmental disorder?
+suggested_experiments:
+- description: Cryo-EM of the NatB-ribosome-nascent chain complex to define how NAA25
+    positions the catalytic NAA20 subunit at the ribosomal exit tunnel.
+- description: Separation-of-function mutagenesis of the NAA25 TPR/solenoid surfaces
+    to dissect NAA20-binding (activation) from ribosome-anchoring, assayed by in vitro
+    N-terminal acetylation and ribosome co-sedimentation.
+- description: N-terminomics (e.g. SILAC-based COFRADIC) of NAA25-depleted human cells
+    to map the NatB substrate repertoire whose N-terminal acetylation depends on the
+    auxiliary subunit.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
