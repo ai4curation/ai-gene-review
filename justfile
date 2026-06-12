@@ -62,10 +62,13 @@ mypy:
 format:
 	uv run ruff check .
 
-# Validate SSSOM mapping files (e.g. projects/mappings/*.sssom.yaml) against the SSSOM schema.
-# Resolves the installed sssom_schema path dynamically so it is python-version independent.
+# Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
+# (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
+# linkml-term-validator on the regenerated nested term-tuple file.
 validate-mappings:
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/mappings/*.sssom.yaml
+	uv run python projects/mappings/sssom_to_terms.py projects/mappings/aro2go.sssom.yaml -o projects/mappings/aro2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/mappings/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
 
 # Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
 aro2go-pipeline: validate-mappings

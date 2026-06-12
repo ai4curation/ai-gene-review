@@ -6,9 +6,26 @@ Part of the [Antimicrobial Resistance project](../ANTIMICROBIAL_RESISTANCE.md).
 
 | File | What it is |
 |------|------------|
-| `aro2go.sssom.yaml` | Curated **ARO → GO** mapping set in [SSSOM](https://mapping-commons.github.io/sssom/) format. CURIE+label tuples throughout; validates with `linkml-validate`. |
+| `aro2go.sssom.yaml` | Curated **ARO → GO** mapping set in [SSSOM](https://mapping-commons.github.io/sssom/) format (source of truth). CURIE+label tuples throughout; validates with `linkml-validate`. |
+| `aro2go.terms.yaml` | **Generated** nested term-tuple form of the mapping, validated by `linkml-term-validator` (do not edit by hand). |
+| `sssom_to_terms.py` | Converter: reshapes the flat SSSOM rows into the nested `{id,label}` form the term-validator checks. |
 | `uniprot2aro2go.py` | Pipeline that chains **UniProt → ARO → GO** by applying the SSSOM mapping. |
 | `examples/rgi_example_mphA.txt` | Tiny example of CARD RGI tab-delimited output, used to demonstrate the sequence-based route. |
+
+## Validation: `just validate-mappings`
+
+Two layers, both run by the recipe (and by `tests/test_aro2go_mapping.py`):
+
+1. **Structural** — `linkml-validate` against the SSSOM LinkML schema (required slots, shape).
+2. **Ontology terms** — `linkml-term-validator` checks every **ARO** and **GO** CURIE in the mapping
+   both *resolves* (ARO via `sqlite:obo:aro`, GO via `sqlite:obo:go`) and that the supplied **label
+   matches the ontology label** — the "curie+label tuple" guarantee. This uses the sidecar schema
+   `src/ai_gene_review/schema/aro_go_mapping.yaml`, whose `subject`/`object` are `{id,label}` tuples
+   with `bindings` to dynamic enums (`AROTermEnum` reachable from `ARO:1000001`; `GOTermEnum` from the
+   three GO roots). Prefix→adapter resolution is configured in `conf/oak_config.yaml`.
+
+A label typo or a wrong id fails the build, e.g.:
+`Label mismatch for 'GO:0050073': expected 'macrolide 2'-kinase activity', got '...'`.
 
 ## Why a pipeline?
 
@@ -72,16 +89,38 @@ A TSV of **candidate** GO annotations with full provenance — `uniprot_acc`, `a
 and `route` (`DR_CARD` or `RGI`).
 
 These are **leads for a curator, not final annotations**: the `enables`/`relatedMatch` predicates
-indicate the relationship type, and a family-level mapping is only a prior for its members. The
-mapping currently covers the MPH family plus beta-lactamase, chloramphenicol acetyltransferase,
-the aminoglycoside-modifying families (APH/AAC/ANT), Erm rRNA methyltransferases,
-trimethoprim-resistant DHFR, sulfonamide-resistant DHPS, and the six ARO resistance-mechanism
-classes. As a sanity check, the pipeline reproduces exactly the GO terms curators assigned by hand:
+indicate the relationship type, and a family-level mapping is only a prior for its members. As a
+sanity check, the pipeline reproduces exactly the GO terms curators assigned by hand:
 
 - **MphB** (`DR CARD` route) → `GO:0050073` macrolide 2'-kinase activity + `GO:0046677` response to antibiotic
 - **MphA** (RGI route) → `GO:0050073` macrolide 2'-kinase activity
 
+## Coverage (18 mappings)
+
+- **Mechanism → `GO:0046677` response to antibiotic** (`skos:relatedMatch`): antibiotic inactivation,
+  efflux, target alteration, target protection, target replacement, reduced permeability.
+- **AMR gene family → GO MF** (`RO:0002327` enables, unless noted): MPH (`GO:0050073`),
+  beta-lactamase (`GO:0008800`), CAT (`GO:0008811`), APH/AAC/ANT (`GO:0034071`/`0034069`/`0034068`),
+  Erm (`GO:0052910`), dfr (`GO:0004146`), sul (`GO:0004156`), FosA (`GO:0004364`, `relatedMatch`).
+- **Determinant → GO MF** (`enables`): mphA, mphB (`GO:0050073`).
+
+### Deliberately NOT mapped (verification record)
+
+Checked and intentionally left out because GO has no correct specific MF term (mapping to the nearest
+term would assert a paralog or the wrong chemistry):
+
+| ARO family | Why not mapped |
+|---|---|
+| rifampin ADP-ribosyltransferase (Arr, `ARO:3000390`) | `GO:0003950` is **poly**-ADP-ribosyltransferase; Arr is mono-ADP-ribosyltransferase. No mono term fits. |
+| glycopeptide VanA ligase (`ARO:3000010`) | `GO:0008716` is D-Ala-**D-Ala** ligase; VanA makes D-Ala-**D-Lac**. No D-Ala-D-Lac GO MF term. |
+| Cfr 23S rRNA methyltransferase (`ARO:3000202`) | `GO:0070040` is the **C2** (RlmN housekeeping) activity; Cfr methylates **C8**. No C8 term. |
+| macrolide esterase (Ere, `ARO:3000320`) | No macrolide/erythromycin esterase GO MF term exists. |
+| rifampin monooxygenase (`ARO:3000445`) | No rifampin/rifamycin monooxygenase GO MF term exists. |
+| tetracycline efflux | No single ARO efflux-family node; GO efflux-transporter terms are non-specific. |
+
 ## Validation & tests
 
-- SSSOM file: `just validate-mappings` (runs `linkml-validate -C "mapping set"`).
+- `just validate-mappings` — structural (`linkml-validate`) **and** ontology-term
+  (`linkml-term-validator`, checks every ARO/GO id resolves + label matches).
+- `tests/test_aro2go_mapping.py` — SSSOM structure, terms-file sync, and (integration) term-validator.
 - Pipeline parser: doctest — `uv run python -m doctest projects/mappings/uniprot2aro2go.py`.
