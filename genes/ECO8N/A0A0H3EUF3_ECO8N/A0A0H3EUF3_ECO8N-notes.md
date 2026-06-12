@@ -73,3 +73,33 @@
 - PMID:1330822 — Purification & characterization of MPH(2')II (Kono et al. 1992). KEY biochemistry.
 - PMID:9503630 — mphB expression in S. aureus; 16-membered macrolide (spiramycin) resistance (Noguchi 1998).
 - PMID:10428938 — Functional amino acids (catalytic Asp residues) of MPH(2')II (Taniguchi 1999). KEY mechanism.
+
+## Update: falcon deep research (2026-06-12) — additional references incorporated
+
+Falcon deep research completed (genes/ECO8N/.../A0A0H3EUF3_ECO8N-deep-research-falcon.md, 24 citations)
+and surfaced three additional high-value primary papers, now cached and added to the review:
+
+- PMID:28416110 — Fong et al. 2017, Structure. "Structural Basis for Kinase-Mediated Macrolide Antibiotic
+  Resistance." First crystal structures of MPH(2')-I and MPH(2')-II (the MphB class), apo and with GTP analogs
+  + six macrolides. Confirms the bi-lobed APH/protein-kinase-like fold with a large interdomain linker forming
+  an expanded, hydrophobic macrolide-binding pocket (conserved aspartate negative patch) → rationalizes broad
+  spectrum. Structures captured with GTP analogs (GTP a preferred donor in vitro).
+  [PMID:28416110 "We present structures for MPH(2')-I and MPH(2')-II in the apo state, and in complex with GTP analogs and six different macrolides."]
+- PMID:29317655 — Pawlowski et al. 2018, Nat Commun (PMC5760710, full text). "The evolution of substrate
+  discrimination in macrolide antibiotic resistance enzymes." Mass-spec confirms MphB phosphorylates the
+  desosamine 2'-OH of erythromycin; revises older narrow-spectrum view — MphB inactivates azithromycin AND
+  telithromycin and confers resistance to all macrolides tested. MphB widespread/mobilized in Gram-negatives.
+  [PMID:29317655 "we found that MphB confers resistance to all macrolides tested...and inactivates both telithromycin and azithromycin"]
+  [PMID:29317655 "Using tandem mass spectrometry, we also confirmed that MphB phosphorylates the desosamine 2′-OH of erythromycin"]
+- PMID:15033229 — Taniguchi et al. 2004, FEMS Microbiol Lett. "The role of histidine residues conserved in the
+  putative ATP-binding region of macrolide 2'-phosphotransferase II." His205 critical (H205A <1% activity).
+  [PMID:15033229 "the specific activity of the H205A mutant enzyme was reduced to less than 1% of that of the wild enzyme."]
+
+Net effect on review: description strengthened (broad spectrum incl. azithromycin/telithromycin; crystal
+structures; GTP preference; His205). GO calls unchanged (GO:0050073 MF, GO:0046677 BP) — now multiply
+supported. suggested_questions/experiments revised since the structure (Fong 2017) and broad-spectrum
+question (Pawlowski 2018) are now answered.
+
+Note on providers: perplexity not configured in this container (only openai/falcon); openai API key invalid
+(401). falcon's wrapper reported a 600s timeout but the Edison run actually completed and wrote the report +
+artifacts. `just` is not installed here, so underlying `uv run ai-gene-review ...` commands were used directly.
