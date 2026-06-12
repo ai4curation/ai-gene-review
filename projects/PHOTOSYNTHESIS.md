@@ -157,4 +157,3 @@ manually instead, with all GO IDs and PMIDs independently verified.
 **Follow-up infra note:** the `{concept}` → `{{ concept }}` template substitution bug in
 `templates/concept_research.md.j2` affects *all* concept deep-research runs and is worth
 fixing separately before the next `term-deep-research` invocation.
-</content>

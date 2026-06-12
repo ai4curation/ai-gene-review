@@ -203,5 +203,3 @@ According to PubMed:
   were written instead, with GO IDs verified against `cache/go/terms.csv` + GOlr and the
   four key references verified via PubMed. Gene reviews deferred per the chosen scope
   ("just the concept writeup"); candidate genes tracked in `projects/PHOTOSYNTHESIS.md`.
-</content>
-</invoke>
