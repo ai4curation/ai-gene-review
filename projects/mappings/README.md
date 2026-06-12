@@ -71,9 +71,12 @@ A TSV of **candidate** GO annotations with full provenance — `uniprot_acc`, `a
 `aro_label`, `predicate_id`/`predicate_label`, `go_id`/`go_label`, `mapping_justification`,
 and `route` (`DR_CARD` or `RGI`).
 
-These are **leads for a curator, not final annotations**: the mapping is curated only for the
-MPH family so far, and `enables`/`relatedMatch` predicates indicate the relationship type. As a
-sanity check, the pipeline reproduces exactly the GO terms curators assigned by hand:
+These are **leads for a curator, not final annotations**: the `enables`/`relatedMatch` predicates
+indicate the relationship type, and a family-level mapping is only a prior for its members. The
+mapping currently covers the MPH family plus beta-lactamase, chloramphenicol acetyltransferase,
+the aminoglycoside-modifying families (APH/AAC/ANT), Erm rRNA methyltransferases,
+trimethoprim-resistant DHFR, sulfonamide-resistant DHPS, and the six ARO resistance-mechanism
+classes. As a sanity check, the pipeline reproduces exactly the GO terms curators assigned by hand:
 
 - **MphB** (`DR CARD` route) → `GO:0050073` macrolide 2'-kinase activity + `GO:0046677` response to antibiotic
 - **MphA** (RGI route) → `GO:0050073` macrolide 2'-kinase activity
