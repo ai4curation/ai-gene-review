@@ -109,3 +109,34 @@ ER-to-Golgi transport vesicle membrane). Correct compartments; redundant. Reacto
 R-HSA-5694431 "Hexameric LMAN1:MCFD2 bind glycosylated Factor V and VIII precursors" and
 R-HSA-947991 "Transport of glycoproteins with Man8 (or Man9) N-glycans to the Golgi" directly
 reflect the cargo-receptor function.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- NEW structure (2024): full-length cryo-EM of human ERGIC-53/LMAN1 in complex with MCFD2 resolves a
+  **homotetramer** ("four-leaf clover" head + long four-helix-bundle coiled-coil stalk + TM anchor),
+  **revising the older hexamer model** that the current top-level description and Reactome
+  R-HSA-5694431 still reference [PMID:38493152 (Watanabe et al., Nat Commun 2024) "Structure of
+  full-length ERGIC-53 in complex with MCFD2 for cargo transport"; DOI 10.1038/s41467-024-46747-1].
+  The structure proposes cargo capture/release regulation via stalk bending and metal binding,
+  including an N-terminal Zn2+ site in MCFD2. Added as a HIGH-relevance reference; description not
+  edited (additive-only scope), but this is the strongest current evidence on oligomeric state.
+- NEW cargo (2024): **thrombopoietin (TPO)** is an LMAN1-dependent, **MCFD2-independent** cargo.
+  Lman1-/- and hepatocyte-specific Lman1-knockout mice have reduced plasma TPO and thrombocytopenia
+  despite unchanged hepatic Tpo mRNA; TPO co-IPs with LMAN1 but MCFD2 does not co-IP with TPO
+  [PMID:39499573 (Everett et al., JCI Insight 2024) "LMAN1 serves as a cargo receptor for
+  thrombopoietin"; DOI 10.1172/jci.insight.175704]. This expands the cargo repertoire beyond
+  FV/FVIII/A1AT and links LMAN1 to platelet homeostasis; supports the broader "what cargoes depend on
+  LMAN1 vs MCFD2" question already in suggested_questions. Added as HIGH-relevance reference.
+- Cargo-recognition/trafficking-motif synthesis (2023 review): Tang & Ginsburg frame ERGIC-53/LMAN1
+  as a prototypical L-type lectin cargo receptor and dissect the cytosolic **KKFF** motif: **FF** is
+  an ER-exit/COPII determinant and **KK** mediates COPI-dependent retrieval/recycling [PMID:36594468
+  (Tang & Ginsburg, J Clin Invest 2023) "Cargo selection in endoplasmic reticulum-to-Golgi transport
+  and relevant diseases"; DOI 10.1172/jci163838]. Consistent with the existing description (dilysine/
+  diphenylalanine motif); added as MEDIUM-relevance reference. F5F8D attributed ~70% LMAN1 / ~30%
+  MCFD2 (consistent with existing review).
+- Lectin-independent cargo recognition for some clients reaffirmed by Falcon (carbohydrate-binding
+  mutants still rescue much FVIII secretion), consistent with PMID:36490287 already in the review
+  (MCFD2 carries cargo binding; LMAN1 shuttles). No annotation change.
+- Diagnostic/therapeutic context (Falcon; not gene-function): F5F8D prevalence ~1:1,000,000;
+  GalNAc-siRNA knockdown of LMAN1/MCFD2 explored as an anticoagulation strategy in mice (Ma 2024).
+  Clinical-implementation only; notes-only, not added to YAML.
