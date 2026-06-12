@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T02:13:57.714478'
-end_time: '2026-06-12T02:34:54.786708'
-duration_seconds: 1257.07
+start_time: '2026-06-12T02:30:42.942790'
+end_time: '2026-06-12T02:56:28.930682'
+duration_seconds: 1545.99
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -24,10 +24,10 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 29
-artifact_count: 3
+citation_count: 59
+artifact_count: 2
 artifact_sources:
-  edison_answer_artifacts: 2
+  edison_answer_artifacts: 1
   edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
@@ -36,20 +36,14 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
-- filename: artifact-01.md
-  path: SRP9-deep-research-falcon_artifacts/artifact-01.md
-  media_type: text/markdown
-  source: edison_answer_artifacts
-  data_storage_id: null
-  description: Edison artifact artifact-01
 - filename: image-1.png
   path: SRP9-deep-research-falcon_artifacts/image-1.png
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000015 Figure 6 and Figure 4 show SRP9/14 binding
-    to 40S ribosomal subunits and localization to stress granules, respectively. -
-    **Figure '
+  description: '## Context ID: pqac-00000047 The requested structural information
+    is displayed in Figures 2 and 3 of the document. Figure 2A provides the high-resolution
+    crysta'
 ---
 
 ## Question
@@ -160,216 +154,239 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Human SRP9 (UniProt P49458) — functional annotation and recent literature
+## Research Report: Human SRP9 (UniProt P49458)
 
-### 0) Identity verification (critical disambiguation)
-The target gene/protein is **SRP9**, the **signal recognition particle 9 kDa protein** in **Homo sapiens**, UniProt **P49458**, which functions as an obligate heterodimer with SRP14 (**SRP9/14**) and binds the **Alu domain** of **7SL (SRP) RNA**. The core literature reviewed here explicitly studies SRP9 in the context of SRP9/14, 7SL/Alu-family RNAs, ribosomes (40S), stress granules, and SRP biogenesis, matching the UniProt description and SRP9-family/domain expectations. (berger2014directbindingof pages 2-3, faoro2021noncanonicalfunctionsand pages 3-4, kellogg2023unravelingsrpbiogenesis pages 23-26)
+### 1. Key concepts and definitions (current understanding)
 
-### 1) Key concepts and definitions (current understanding)
+**Gene/protein identity and complex membership.** Human **SRP9** encodes the **signal recognition particle 9 kDa protein**, which functions as an obligate heterodimer with **SRP14** (SRP9/14) and binds the **Alu domain** of the SRP RNA (7SL/RN7SL1). This SRP9/14–RNA module is the Alu domain of mammalian SRP and is positioned at the ribosome factor-binding (GTPase) center where it modulates translation elongation during co-translational targeting. (faoro2021noncanonicalfunctionsand pages 3-4, kellogg2021srpassingcotranslationaltargeting pages 11-13, voorhees2015structuresofthe pages 7-9)
 
-#### 1.1 Signal recognition particle (SRP) and the SRP9/14 “Alu domain” module
-The eukaryotic SRP is a ribonucleoprotein (RNP) that supports **co-translational targeting** of secretory and membrane proteins to the ER. The **Alu domain** is formed by the **5′ and 3′ ends of 7SL RNA** bound by the **SRP9/14 heterodimer**, and is classically associated with **translation elongation arrest** during membrane docking. (faoro2021noncanonicalfunctionsand pages 3-4, kellogg2023unravelingsrpbiogenesis pages 23-26)
+**Canonical SRP pathway role.** In mammalian SRP, SRP9/14 stabilizes a compact (“closed”) Alu RNA architecture that fits into the elongation-factor binding site of the ribosome and is mechanistically consistent with **translation slowing/retardation** to increase the time window for successful ER targeting. Structural reconstructions of scanning vs engaged SRP–ribosome complexes show Alu-domain density at the ribosomal GTPase center in both states, supporting a model in which SRP9/14 contributes to dynamic competition with elongation factors rather than being the primary determinant of SRP binding affinity. (voorhees2015structuresofthe pages 12-14, voorhees2015structuresofthe pages 14-15, wild2019reconstitutionofthe pages 1-2)
 
-SRP9 and SRP14 form a **stable obligate heterodimer**; in mammals, **neither SRP9 nor SRP14 binds 7SL RNA efficiently alone**, because the RNA-binding surface is formed by the heterodimer. (kellogg2023unravelingsrpbiogenesis pages 23-26, gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2)
+**SRP9 as an RNA-binding structural protein rather than an enzyme.** SRP9 does not catalyze a chemical reaction; its primary function is **RNA binding and RNP architecture**, acting as part of an RNA–protein clamp/chaperone that stabilizes specific RNA folds (7SL Alu domain and Alu-derived RNAs). High-resolution structural analysis of a human Alu RNP (SRP9/14 + Alu RNA) shows extensive protein–RNA interfaces consistent with this architectural role. (ahl2015retrotranspositionandcrystal pages 5-6, ahl2015retrotranspositionandcrystal pages 6-7)
 
-#### 1.2 SRP9 structure and molecular function
-Authoritative synthesis of SRP component biology describes SRP9/14 as adopting an **αβββα fold** and specifically recognizing a conserved motif at the 5′ end of 7SL RNA’s Alu domain (a UGUNR motif at the τ-junction). (faoro2021noncanonicalfunctionsand pages 3-4)
+### 2. Recent developments and latest research (prioritizing 2023–2024)
 
-Functionally, SRP9 is **not an enzyme**; its primary “reaction” is **macromolecular recognition and scaffolding**: binding SRP RNA (7SL Alu domain) and engaging ribosomes to modulate translation dynamics. As part of SRP9/14, SRP9 contributes to **elongation arrest** and also participates in **noncanonical translational control** via 40S binding and Alu-family RNA interactions. (faoro2021noncanonicalfunctionsand pages 3-4, kellogg2023unravelingsrpbiogenesis pages 23-26, berger2014directbindingof pages 8-9)
+#### 2.1 Nuclear SRP9/14 as a Pol III transcriptional regulator (2023)
+A major update is the demonstration of a **nuclear role** for SRP9/14 in regulating Pol III transcripts.
 
-### 2) Canonical function and pathway placement
+In MCF-7 cells, SRP9/14 was reported to be **heavily localized in the nucleus** by immunofluorescence and subcellular fractionation, and siRNA knockdown of either SRP9 or SRP14 caused reduction of both proteins, consistent with mutual stabilization of the heterodimer. Knockdown produced selective decreases in **Alu-like Pol III transcripts**—notably **7SL (RN7SL1)** and **BC200 (BCYRN1)**—with minimal effect on other Pol III RNAs (e.g., a tRNA control). Quantitatively, 7SL RNA decreased modestly by 48 h and more strongly by 72 h (~40% by RT-qPCR), whereas BC200 was dramatically reduced (>80% by 48 h and ~95% by 72 h). (Gussakovsky et al., *RNA*, May 2023, https://doi.org/10.1261/rna.079649.123) (gussakovsky2023nuclearsrp9srp14heterodimer pages 2-3, gussakovsky2023nuclearsrp9srp14heterodimer pages 3-5)
 
-#### 2.1 SRP9 in the SRP cycle (protein targeting)
-In current mechanistic models, SRP9/14 is positioned near the **elongation-factor binding site** on the ribosome and can physically impede translation elongation, consistent with the Alu-domain role in **translational elongation arrest** during SRP-mediated targeting. (kellogg2023unravelingsrpbiogenesis pages 23-26)
+Mechanistically, this phenotype was attributed to **transcriptional regulation**, not altered RNA stability: measured half-lives were similar and short (7SL 1.7 h, 95% CI 1.4–2.1; BC200 1.5 h, 95% CI 1.3–1.6) and were not changed upon SRP9/14 depletion. In contrast, Pol III occupancy (ChIP-qPCR) decreased over time; for example, at the 7SL locus Pol III occupancy decreased ~15% at 48 h (P=1.3×10−2) and remained ~15% reduced at 72 h (P=6.5×10−5). At BC200, Pol III occupancy decreased progressively (15% at 24 h, P=6.8×10−3; 32% at 48 h, P=2.0×10−3; 48% at 72 h, P=1.9×10−4). (Gussakovsky et al., *RNA*, May 2023, https://doi.org/10.1261/rna.079649.123) (gussakovsky2023nuclearsrp9srp14heterodimer pages 5-7)
 
-#### 2.2 SRP biogenesis and localization logic (nuclear → nucleolar → cytosolic maturation)
-Recent SRP biogenesis work emphasizes that SRP is assembled through nuclear/nucleolar phases: 7SL RNA is transcribed by RNA polymerase III and SRP proteins (including SRP9/SRP14) assemble with 7SL in the **nucleolus**, while SRP54 is added after export in the cytoplasm. (issa2024thenucleolarphase pages 2-3)
+#### 2.2 SRP9/14 in Alu-exon splicing regulation (2023)
+Borovská et al. provided strong evidence that SRP9/14 functions beyond canonical SRP in **splicing regulation** of Alu-derived exons, where RNA **structure** (closed vs open Alu conformations) predicts exon inclusion better than sequence-motif heuristics. The authors combined structure-guided mutagenesis of an AluJ exon in the human *F8* gene, biochemical probing/pull-down assays, and cellular RNAi experiments to show SRP9/14 binds specific Alu RNA conformations and modulates exon inclusion in a mutation-dependent manner. (Borovská et al., *Nucleic Acids Research*, Jun 2023, https://doi.org/10.1093/nar/gkad500) (borovska2023alurnafold pages 1-2, borovska2023alurnafold pages 9-11)
 
-A key principle emerging from these studies is that **nucleolar integrity is required** for correct SRP protein localization and thus efficient SRP production. (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 8-9)
+#### 2.3 SRP biogenesis and nucleolar coordination (2024)
+Issa et al. (2024) investigated SRP assembly and the nucleolar phase using quantitative interactome proteomics and imaging. They reported SRP proteins associate with many nucleolar and ribosome-biogenesis factors, identifying **95 newly identified nucleolar/ribosome-biogenesis-related SRP interactors** (173 total SRP-associated nucleolar/ribosome biogenesis factors). Their localization experiments indicated GFP-SRP9 appeared mostly nuclear with faint cytoplasmic staining and that GFP-SRP9/SRP14 heterodimers can stall in assembly intermediates, supporting the idea that **nucleolar integrity is required for proper localization** and that SRP assembly may involve additional compartments such as Cajal bodies. (Issa et al., *Life Science Alliance*, Jun 2024, https://doi.org/10.26508/lsa.202402614) (issa2024thenucleolarphase pages 9-10, issa2024thenucleolarphase pages 3-5)
 
-### 3) Cellular localization of SRP9 (where it functions)
+#### 2.4 Updated synthesis of SRP9/14 regulation of Alu RNAs (2024 review)
+A 2024 review emphasizes SRP9/14’s breadth of **Alu RNA regulation**, including Alu RNA maturation, trafficking, and functional diversification, and highlights quantitative constraints relevant to cellular competition between 7SL and other Alu-family transcripts: primate SRP9/14 is described as present in ~**20-fold molar excess** over assembled SRP, and binding to 7SL is described as **sub-nanomolar**. (Gussakovsky et al., *RNA Biology*, Nov 2024, https://doi.org/10.1080/15476286.2024.2430817) (gussakovsky2024theroleof pages 1-2, gussakovsky2024theroleof pages 2-4)
 
-#### 3.1 Cytoplasm and stress granules
-In human cells, SRP9 and SRP14 show **strong cytoplasmic localization** by immunofluorescence, and following oxidative stress (arsenite), a fraction of SRP9/14 relocalizes to **cytoplasmic stress granules (SGs)** while cytoplasmic staining persists. (berger2014directbindingof pages 2-3)
+### 3. Current applications and real-world implementations
 
-Quantitatively, in one experimental system (14-9VN fusion), SRP9/14 localization to SGs was observed in **74 ± 10%** of transfected, SG-positive cells (**n = 8**). (berger2014directbindingof pages 7-8)
+**Clinical pathology / prognosis (pancreatic cancer).** Sato et al. used immunohistochemistry on **38 resected pancreatic cancer** cases (no preoperative therapy) and stratified tumors by SRP9 nuclear staining (>50% vs ≤50%). The >50% nuclear-staining group (n=24) showed significantly improved recurrence-free survival (**P=0.037**) compared with the ≤50% group (n=14), while overall survival did not differ significantly (P=0.604). Their cell-based work further linked SRP9 nuclear translocation to nutrient status (amino-acid deficiency suppressed nuclear translocation with P<0.0001 in quantified assays). (Sato et al., *International Journal of Oncology*, Jun 2024, https://doi.org/10.3892/ijo.2024.5662) (sato2024significanceofsignal pages 11-12, sato2024significanceofsignal pages 12-13, sato2024significanceofsignal pages 5-8)
 
-#### 3.2 Nuclear/chromatin-associated pools
-A major 2023 advance is evidence that SRP9/14 also exists as a **distinct nuclear/chromatin-associated pool** in MCF-7 cells, consistent with transcription-related functions at Pol III loci. (gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2, gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8)
+**Biotechnology relevance: retrotransposition and RNA–protein fold stabilization.** Structural and functional work on SRP9/14-bound Alu RNPs provides a mechanistic framework for how Alu RNAs form retrotransposition-competent RNPs by co-opting SRP proteins, relevant to contexts where retroelement behavior is measured or engineered (e.g., retrotransposon-derived tools). (Ahl et al., *Molecular Cell*, Dec 2015, https://doi.org/10.1016/j.molcel.2015.10.003) (ahl2015retrotranspositionandcrystal pages 3-4, ahl2015retrotranspositionandcrystal pages 11-12)
 
-#### 3.3 Nucleolus and Cajal bodies during SRP assembly
-SRP assembly is coordinated with nucleolar organization. Proteomic and imaging approaches show SRP subunits (including SRP14 and other SRP proteins) transiently localize to nucleoli during assembly, and some SRP components (e.g., SRP19 and SRP72) are detected in **Cajal bodies** in ~**50%** of observed structures in the tested U2OS imaging assays (95 and 45 cells analyzed for SRP19 and SRP72, respectively). (issa2024thenucleolarphase pages 2-3, issa2024thenucleolarphase pages 8-9)
+### 4. Expert opinions and analysis (authoritative interpretations)
 
-### 4) Molecular interactions: RNA and ribosome binding as the functional core
+**Translation slowdown as a kinetic facilitator rather than absolute arrest in mammals.** Structural analyses argue for a kinetic model in which the Alu domain (SRP9/14) transiently occupies and is displaced from the GTPase center through the elongation cycle, yielding a modest slowdown that expands the targeting window; scanning-state SRP is more readily displaced by a translational GTPase surrogate, whereas engaged-state SRP is more stable. This reconciles Alu positioning with ongoing translation and emphasizes SRP9/14’s regulatory (not necessarily essential binding) contribution. (Voorhees & Hegde, *eLife*, Jul 2015, https://doi.org/10.7554/eLife.07975) (voorhees2015structuresofthe pages 12-14, voorhees2015structuresofthe pages 9-10, voorhees2015structuresofthe pages 14-15)
 
-#### 4.1 RNA partners: 7SL RNA and Alu-family RNAs (including BC200)
-SRP9/14 binds the **Alu domain of 7SL RNA** (canonical SRP RNA partner) and also binds **Alu-family RNAs** that share a related structural motif. (faoro2021noncanonicalfunctionsand pages 3-4, gussakovsky2024theroleof pages 6-7)
+**Domain contributions to ribosome binding and why SRP9/14 may be hard to quantify by affinity alone.** Reconstitution and MST show SRP54 and SRP68/72 dominate measurable SRP–ribosome binding, while the Alu domain contributes little to affinity in those assays. This supports the interpretation that SRP9/14’s key role is geometric/steric regulation at the factor-binding site rather than driving high-affinity docking of SRP to ribosomes. (Wild et al., *Nucleic Acids Research*, Jan 2019, https://doi.org/10.1093/nar/gky1324) (wild2019reconstitutionofthe pages 10-11, wild2019reconstitutionofthe pages 5-5)
 
-A 2024 review synthesizes evidence that SRP9/14 is involved not only in cytoplasmic SRP function, but also in **transcriptional regulation, nucleolar trafficking, and post-transcriptional processing** of **7SL, BC200, and other Alu RNAs**, including trimming/adenylation and modifications. The review also highlights that mutations such as **G24A** reduce SRP9/14 binding to 7SL and impair cytoplasmic accumulation in trafficking assays. (gussakovsky2024theroleof pages 6-7)
+**Noncanonical roles as a consequence of SRP9/14 abundance and shared structural motifs across Alu-family RNAs.** Reviews highlight that the same structural motif enabling SRP9/14 binding to 7SL is shared with primate-specific Alu RNAs, implying that a large pool of SRP9/14 can regulate Alu-family transcripts in nucleus and cytoplasm (splicing, retrotransposition, translation regulation), especially given the reported ~20-fold molar excess over assembled SRP. (Faoro & Ataide, *Frontiers in Molecular Biosciences*, May 2021, https://doi.org/10.3389/fmolb.2021.679584; Gussakovsky et al., *RNA Biology*, Nov 2024, https://doi.org/10.1080/15476286.2024.2430817) (faoro2021noncanonicalfunctionsand pages 3-4, gussakovsky2024theroleof pages 1-2)
 
-#### 4.2 Ribosome binding and stress-granule biology: direct 40S engagement
-A key experimentally supported noncanonical function is that SRP9/14 **directly binds 40S ribosomal subunits** and this interaction promotes **stress granule formation**. (berger2014directbindingof pages 2-3, berger2014directbindingof pages 10-11)
+### 5. Relevant statistics and data highlights
 
-Mechanistically, SRP9/14 binding to **40S** is **mutually exclusive** with binding to **Alu RNA**, supporting a competitive switching model between RNA-bound and ribosome-bound pools. In a protein-transfer assay, about **41%** of SRP9/14 dissociated from Alu RNA and transferred to 40S subunits. (berger2014directbindingof pages 8-9)
+**Structural and energetic constraints on SRP9/14–Alu RNP function.** The human Alu RNP crystal structure was solved at **2.0 Å**; SRP9/14 binds with a total interface area ~**1,820 Å²** (SRP9 ~700 Å²; SRP14 ~1,120 Å²). Mutations weakening SRP9/14 interaction beyond **ΔΔG > 3.5 kcal/mol** abolished retrotransposition, providing a quantitative link between SRP9/14 binding energy and retroelement activity. (Ahl et al., 2015, https://doi.org/10.1016/j.molcel.2015.10.003) (ahl2015retrotranspositionandcrystal pages 5-6, ahl2015retrotranspositionandcrystal pages 9-11)
 
-This 40S binding and SG phenotype are supported by figure-based evidence (binding assays, sucrose gradients, and quantification) from Berger et al. 2014. (berger2014directbindingof media 31c38859, berger2014directbindingof media 4c1fcce8)
+**Human SRP–ribosome binding constants (domain-resolved).** Reconstituted binding experiments indicate very tight binding of assembled SRP to ribosomes (sub-nanomolar in the assay configuration), with key determinants including SRP54 (KD ~30 nM for isolated SRP54) and SRP68/72 (KD ~160 ± 20 nM, Hill coefficient ~2.3). (Wild et al., 2019, https://doi.org/10.1093/nar/gky1324) (wild2019reconstitutionofthe pages 6-7, wild2019reconstitutionofthe pages 5-5)
 
-### 5) Recent developments (prioritized 2023–2024)
+**Transcriptional regulation metrics (SRP9/14 knockdown).** SRP9/14 depletion did not change measured RNA half-lives (7SL 1.7 h; BC200 1.5 h) but reduced Pol III occupancy at target loci with statistically significant P-values and caused marked time-dependent decreases in steady-state RNA, particularly BC200 (up to ~95% reduction by 72 h). (Gussakovsky et al., 2023, https://doi.org/10.1261/rna.079649.123) (gussakovsky2023nuclearsrp9srp14heterodimer pages 5-7, gussakovsky2023nuclearsrp9srp14heterodimer pages 2-3)
 
-#### 5.1 2023: SRP9/14 transcriptionally regulates 7SL and BC200 (noncanonical nuclear function)
-Gussakovsky et al. (RNA, 2023; published May 2023) report that SRP9/14 has **distinct nuclear localization** and **chromatin association**, and that SRP9/14 knockdown reduces transcriptional activity at **7SL** and **BC200** loci, supporting a model in which SRP9/14 **cotranscriptionally regulates** these Pol III transcripts. (gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2)
+**Clinical association statistics (pancreatic cancer).** In a surgical cohort, SRP9 nuclear staining >50% was associated with improved recurrence-free survival (P=0.037), while proliferation (Ki-67) showed no trend (R²=0.007; P=0.622). (Sato et al., 2024, https://doi.org/10.3892/ijo.2024.5662) (sato2024significanceofsignal pages 11-12, sato2024significanceofsignal pages 12-13)
 
-Quantitatively, SRP9/SRP14 ChIP enrichments ranged from **8-fold to 510-fold** relative to controls. Pol III occupancy at 7SL was dynamically regulated (e.g., **83% reduction** with actinomycin D and **75% increase** after 2 h serum reintroduction), while SRP9/SRP14 occupancy remained relatively stable in the described conditions, consistent with a stabilizing/co-transcriptional model. (gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8)
+**Functional-genomics disease associations (hypothesis-generating).** Open Targets lists SRP9 associations with disease categories including neurodegenerative disease and osteoarthritis, with association scores (e.g., neurodegenerative disease score ~0.542) and evidence counts of 5 in the returned set; these represent aggregated functional-genomics evidence rather than direct clinical causality. (OpenTargets Search: -SRP9)
 
-#### 5.2 2024: nucleolar phase of SRP assembly (SRP production depends on nucleolar integrity)
-Issa et al. (Life Science Alliance, June 2024) report a nucleolar phase of SRP assembly and show that SRP proteins associate with **scores of nucleolar proteins** linked to ribosome biogenesis and nucleolar structure; disrupting nucleolar integrity alters SRP protein localization. (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 8-9)
+### Visual evidence from primary literature
 
-A notable biochemical detail from this study is that RNase A treatment strongly reduces interactions between Alu-domain binders (SRP9/14) and S-domain binders (SRP19/54/68/72), consistent with 7SL RNA acting as the central assembly scaffold. (issa2024thenucleolarphase pages 2-3)
+Structural placement of SRP9/14-bound Alu RNP at the ribosomal elongation factor-binding site and overlay with eEF2 are shown in cropped figures from Ahl et al. 2015. (ahl2015retrotranspositionandcrystal media 866dee84, ahl2015retrotranspositionandcrystal media c0bafdb5)
 
-Proteomics also links SRP-associated subunits (including SRP14, SRP19, SRP72) to proteasome/RQC pathway components, suggesting coupling between SRP biogenesis and protein quality-control pathways. (issa2024thenucleolarphase pages 10-13)
+### Summary
 
-#### 5.3 2024: SRP9 nuclear translocation in pancreatic cancer—prognostic and functional implications
-Sato et al. (International Journal of Oncology, June 2024) directly investigate **SRP9 nuclear translocation** in human pancreatic cancer specimens (n = 38). Patients stratified by SRP9 nuclear staining percentage (>50% vs ≤50%) showed that the **>50% nuclear translocation group** had significantly better **recurrence-free survival** (**P = 0.037**). (sato2024significanceofsignal pages 1-2, sato2024significanceofsignal pages 2-3)
+Human SRP9 (UniProt P49458) is best understood as an RNA-binding structural subunit of the SRP Alu domain that, through an obligate heterodimer with SRP14, stabilizes RNA conformations that interact with the ribosomal factor-binding center to slow translation and facilitate co-translational ER targeting. Quantitative binding studies suggest SRP9/14 is not the primary driver of SRP’s overall ribosome affinity, consistent with a regulatory/steric function. Recent 2023–2024 work substantially expands SRP9/14 biology to include nuclear roles in Pol III transcriptional control of 7SL and BC200, a mechanistic role in Alu exon splicing regulation, and potential clinical relevance via SRP9 nuclear localization patterns in pancreatic cancer prognosis.
 
-The study further uses SRP9 splice-variant constructs (v1 and v2) and quantifies nuclear localization via imaging metrics, and reports that amino-acid deprivation conditions reduce SRP9 nuclear translocation in vitro. (sato2024significanceofsignal pages 5-8, sato2024significanceofsignal pages 3-5)
-
-### 6) Current applications and real-world implementations
-
-#### 6.1 Research and biotech implementations
-SRP9 function is frequently operationalized through:
-- **Stress-granule assays** and **ribosome-binding assays** (e.g., sucrose gradient fractionation, protein transfer assays) to quantify SRP9/14 engagement with 40S and SG formation phenotypes. (berger2014directbindingof pages 10-11, berger2014directbindingof media 31c38859)
-- **Cell-line engineering with GFP-tagged SRP subunits** paired with quantitative proteomics and nucleolar-disruption perturbations to map SRP assembly pathways (including nucleolar and Cajal-body steps). (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 2-3)
-
-#### 6.2 Clinical and translational relevance
-- **Prognostic pathology**: SRP9 nuclear localization assessed by IHC in pancreatic cancer specimens was used to stratify recurrence-free survival outcomes (50% nuclear staining cutoff; P = 0.037). (sato2024significanceofsignal pages 1-2)
-- **Autoimmune diagnostics**: Anti-SRP autoantibodies are used as biomarkers in immune-mediated necrotizing myopathy; reviews note anti-SRP positivity defines a clinically distinct anti-SRP syndrome and includes complement-mediated features. (faoro2021noncanonicalfunctionsand pages 10-11)
-
-### 7) Expert opinion and synthesis (authoritative interpretations)
-A 2021 review of mammalian SRP components emphasizes that SRP9/14 has **noncanonical functions** interconnecting SRP biology with stress responses and disease processes; for SRP9/14 specifically, the review summarizes evidence that Alu RNPs can modulate translation initiation via SRP9/14 binding to 40S and that SRP9/14 localization to stress granules depends on its competitive binding to 40S vs Alu RNA pools. (faoro2021noncanonicalfunctionsand pages 7-9)
-
-A 2024 RNA Biology review further expands the SRP9 annotation landscape by highlighting SRP9/14 regulation of Alu-family RNAs (including BC200) across transcriptional, trafficking, and processing steps, framing SRP9/14 as an RNP regulator beyond the canonical SRP cycle. (gussakovsky2024theroleof pages 6-7)
-
-### 8) Key statistics and data points (for evidence-based annotation)
-- **Stress granule localization**: 74 ± 10% of SG-positive cells showed SRP9/14 fusion localization to SGs (n = 8). (berger2014directbindingof pages 7-8)
-- **Competitive switching between Alu RNA and 40S**: ~41% of SRP9/14 transferred from Alu RNA to 40S in a protein-transfer competition assay. (berger2014directbindingof pages 8-9)
-- **Chromatin association at Pol III loci**: SRP9/SRP14 ChIP enrichments 8–510 fold; Pol III occupancy at loci changed by 83% decrease (actinomycin D) and 75% increase (serum reintroduction), while SRP9/14 occupancy remained relatively stable. (gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8)
-- **Pancreatic cancer prognosis**: SRP9 nuclear translocation >50% associated with better RFS (P = 0.037) in n = 38. (sato2024significanceofsignal pages 1-2, sato2024significanceofsignal pages 2-3)
-
-### Summary tables
-The following tables consolidate the evidence into an annotation-ready format.
-
-| Category | Key points | Best supporting sources |
-|---|---|---|
-| definition/concept | • Human SRP9 (UniProt P49458) is the 9 kDa signal recognition particle subunit that forms an obligate SRP9/SRP14 heterodimer. • The heterodimer recognizes the Alu domain of 7SL RNA; neither subunit binds 7SL efficiently alone. • Structurally, SRP9/14 adopts an αβββα fold and forms the Alu-domain protein module of mammalian SRP. | (faoro2021noncanonicalfunctionsand pages 3-4, kellogg2023unravelingsrpbiogenesis pages 23-26, issa2024thenucleolarphase pages 1-2) |
-| molecular function | • Canonical function: as part of the SRP Alu domain, SRP9/14 contributes to translation elongation arrest during cotranslational protein targeting. • SRP9/14 also directly binds 40S ribosomal subunits; this interaction promotes stress-granule assembly and can inhibit translation initiation in Alu RNP contexts. • Binding to 40S and binding to Alu RNA are mutually exclusive. | (kellogg2023unravelingsrpbiogenesis pages 23-26, berger2014directbindingof pages 8-9, berger2014directbindingof pages 10-11) |
-| RNA partners | • Major RNA partner is 7SL RNA, specifically its Alu domain. • SRP9/14 also binds Alu-family RNAs, including scAlu/scB1 experimental RNAs and BC200-related RNAs. • Recent work supports roles in transcription, nucleolar trafficking, stabilization, trimming, adenylation, and modification of 7SL/BC200/Alu RNAs; mutations such as G24A reduce SRP9/14 binding. | (gussakovsky2024theroleof pages 6-7, gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2) |
-| protein partners | • Principal obligate partner is SRP14. • Within SRP biogenesis, SRP9/14 functionally interfaces with other SRP proteins assembled on 7SL RNA, including SRP19, SRP68, SRP72, with SRP54 added later in cytoplasm. • Direct physical partner outside canonical SRP is the 40S ribosomal subunit; proteomic work also links SRP-associated subunits to nucleolar/ribosome-biogenesis and RQC factors. | (kellogg2023unravelingsrpbiogenesis pages 23-26, issa2024thenucleolarphase pages 2-3, issa2024thenucleolarphase pages 10-13) |
-| cellular localization | • Predominantly cytoplasmic in human cells, with SRP14 also detected in nucleoli depending on fixation; a fraction of SRP9/14 relocalizes to stress granules after arsenite stress. • Recent fractionation/imaging supports nuclear and chromatin-associated SRP9/SRP14 in MCF-7 cells. • SRP biogenesis includes a nucleolar phase; intact nucleoli are required for proper SRP protein localization, and some SRP components are also detected in Cajal bodies. | (berger2014directbindingof pages 2-3, gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2, issa2024thenucleolarphase pages 1-2) |
-| pathway/process | • Core pathway: SRP-mediated cotranslational targeting of secretory and membrane proteins to the ER, with SRP9/14 providing the Alu-domain elongation-arrest module. • SRP assembly proceeds through nuclear/nucleolar steps on 7SL RNA before cytoplasmic maturation. • SRP9/14 also participates in stress-responsive translational control through 40S engagement and Alu-RNP biology. | (kellogg2023unravelingsrpbiogenesis pages 23-26, issa2024thenucleolarphase pages 1-2, berger2014directbindingof pages 8-9) |
-| noncanonical roles | • SRP9/14 promotes stress-granule formation by binding 40S subunits; depletion reduces SG formation/size without altering arsenite-induced eIF2α phosphorylation. • Nuclear SRP9/SRP14 transcriptionally regulates 7SL and BC200 RNA expression, consistent with cotranscriptional binding/stabilization of nascent Pol III transcripts. • SRP9/14-sensitive Alu exon regulation and possible RNA-chaperone-like effects on Alu-derived exonization have been reported. | (berger2014directbindingof pages 8-9, gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8, gussakovsky2024theroleof pages 6-7) |
-| key quantitative findings | • SG localization: SRP9/14 fusion localized to SGs in 74 ± 10% of transfected SG-positive cells (n = 8). • 40S transfer/competition: ~41% of SRP9/14 dissociated from Alu RNA and transferred to 40S in protein-transfer assays. • Chromatin/transcription metrics: SRP9/SRP14 ChIP enrichments ranged 8-fold to 510-fold; actinomycin D reduced Pol III occupancy by 83%, serum readdition increased it by 75%; GFP-SRP19/GFP-SRP72 were present in ~50% of Cajal bodies (95 and 45 cells analyzed, respectively). | (berger2014directbindingof pages 7-8, berger2014directbindingof pages 8-9, gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8, issa2024thenucleolarphase pages 2-3) |
+| Category | Key claim | Evidence type | Quantitative/statistical details | Primary source with year and DOI URL | Citation ID placeholder |
+|---|---|---|---|---|---|
+| Canonical SRP function | SRP9 forms an obligate SRP9/14 heterodimer that clamps the 5′ and 3′ ends of the Alu domain RNA, stabilizing the closed ribosome-stalling conformation required for translational slowdown during co-translational targeting. | Structure | Human Alu RNP crystal structure solved at 2.0 Å; SRP9 contributes ~700 Å² of protein-RNA interface within a total ~1,820 Å² SRP9/14-RNA interface; docking places the complex at the elongation factor-binding site. | Ahl et al., 2015, Molecular Cell. https://doi.org/10.1016/j.molcel.2015.10.003 | (ahl2015retrotranspositionandcrystal pages 5-6, ahl2015retrotranspositionandcrystal pages 6-7, ahl2015retrotranspositionandcrystal pages 1-3) |
+| Canonical SRP function | In mammalian scanning and engaged SRP-ribosome states, the SRP9/14-containing Alu domain sits at the ribosomal GTPase center, where it can compete with elongation factors and prolong the targeting window. | Cryo-EM structure/biochemical competition | Hbs1-DN displaced SRP from scanning ribosome-nascent chain complexes by up to ~70% but not from engaged complexes, supporting dynamic Alu competition at the factor-binding center. | Voorhees & Hegde, 2015, eLife. https://doi.org/10.7554/eLife.07975 | (voorhees2015structuresofthe pages 6-7, voorhees2015structuresofthe pages 7-9, voorhees2015structuresofthe pages 9-10) |
+| Canonical SRP function | SRP9/14 is not the dominant ribosome affinity determinant for human SRP; SRP54 and SRP68/72 account for most measurable binding, while the Alu domain contributes little or only slightly in reconstituted assays. | MST binding/reconstitution | Full SRP binds in the (sub-)nanomolar range; isolated SRP54 KD ~30 nM; SRP68/72 KD ~160 ± 20 nM with Hill coefficient ~2.3; SR heterodimer KD 410 ± 50 nM; Alu contribution not quantifiable or minor. | Wild et al., 2019, Nucleic Acids Research. https://doi.org/10.1093/nar/gky1324 | (wild2019reconstitutionofthe pages 5-5, wild2019reconstitutionofthe pages 10-11, wild2019reconstitutionofthe pages 6-7, wild2019reconstitutionofthe pages 4-5, wild2019reconstitutionofthe pages 7-8) |
+| SRP biogenesis/localization | SRP9/14 participates in nuclear/nucleolar phases of SRP assembly; most SRP proteins assemble with 7SL in the nucleus/nucleolus before final cytoplasmic maturation. | Review of assembly data/in vitro assembly | Ordered assembly summarized as SRP19 → SRP68/72 → SRP9/14 on 7SL RNA before cytoplasmic completion with SRP54. | Kellogg et al., 2021, Int J Mol Sci. https://doi.org/10.3390/ijms22126284 | (kellogg2021srpassingcotranslationaltargeting pages 11-13, kellogg2021srpassingcotranslationaltargeting pages 6-7) |
+| SRP biogenesis/localization | GFP-SRP9 is found mostly in the nucleus with faint cytoplasmic signal; SRP9/14 heterodimer accumulates in nucleoplasm, and nucleolar integrity is required for proper SRP protein localization. | Microscopy, GFP-trap IP, SILAC proteomics | Study identified 95 newly found nucleolar/ribosome-biogenesis-related SRP interactors, bringing total SRP-associated nucleolar/ribosome biogenesis factors to 173. | Issa et al., 2024, Life Science Alliance. https://doi.org/10.26508/lsa.202402614 | (issa2024thenucleolarphase pages 3-5, issa2024thenucleolarphase pages 9-10, issa2024thenucleolarphase pages 1-2) |
+| SRP biogenesis/localization | In SR receptor knockout cells, SRP9 protein remains present and SRP complex composition is retained, indicating SR loss does not collapse SRP abundance. | TMT-SILAC proteomics | In membrane proteome analysis, only ~25% of 287 polytopic and ~20% of 350 single-pass membrane proteins were downregulated; SRP9, SRP14, SRP19, SRP54, SRP68, SRP72 were still detected in both channels. | Child et al., 2023, RNA. https://doi.org/10.1261/rna.079643.123 | (child2023examiningsrppathway pages 6-8) |
+| Alu/retrotransposition | SRP9/14-bound Alu RNP mimics the SRP Alu domain and occupies the ribosomal elongation factor-binding site, linking ribosome stalling to Alu retrotransposition. | Structure/mutagenesis/retrotransposition assays | PDB 5AOX; mutations weakening SRP9/14 interaction by >3.5 kcal/mol abolish retrotransposition; exemplar constructs showed ~111%, 11%, and 83% relative activities depending on retained folding features. | Ahl et al., 2015, Molecular Cell. https://doi.org/10.1016/j.molcel.2015.10.003 | (ahl2015retrotranspositionandcrystal pages 3-4, ahl2015retrotranspositionandcrystal pages 9-11, ahl2015retrotranspositionandcrystal pages 11-12, ahl2015retrotranspositionandcrystal media 866dee84) |
+| Alu/retrotransposition | SRP9/14 binds 7SL and related Alu RNAs with high affinity and exists in substantial molar excess over assembled SRP, enabling extensive extra-canonical regulation of Alu-family RNAs. | Review synthesis of primary biochemical studies | Human SRP9/14 binds 7SL with sub-nanomolar affinity; primate SRP9/14 is present at ~20-fold molar excess over intact SRP; Alu elements comprise ~10% of the human genome. | Gussakovsky et al., 2024, RNA Biology. https://doi.org/10.1080/15476286.2024.2430817 | (gussakovsky2024theroleof pages 1-2, gussakovsky2024theroleof pages 2-4) |
+| Splicing regulation | SRP9/14 binds compact/closed Alu RNA conformations and modulates exonization of Alu-derived exons, acting functionally like an RNA chaperone in pre-mRNA splicing decisions. | Structure-guided mutagenesis, pull-down/immunoblot, footprinting, RNAi splicing assays | Splicing analysis covered 38 reporters; ~15 endogenous transcripts screened; six additional endogenous SRP9/14-regulated Alu exons identified; 16.5 µg recombinant SRP9/14 used in footprinting; SRP9/14 is ~20-fold in excess over SRP. | Borovská et al., 2023, Nucleic Acids Research. https://doi.org/10.1093/nar/gkad500 | (borovska2023alurnafold pages 9-11, borovska2023alurnafold pages 11-14, borovska2023alurnafold pages 14-15, borovska2023alurnafold pages 5-6) |
+| SRP biogenesis/localization | Nuclear SRP9/SRP14 positively regulates steady-state 7SL and BC200 levels by promoting transcription rather than RNA stability. | ChIP-qPCR, siRNA knockdown, BRIC/actinomycin D decay assays, fractionation | 7SL reduced ~40% by 72 h knockdown; BC200 reduced >80% by 48 h and ~95% by 72 h; 7SL half-life 1.7 h (95% CI 1.4–2.1), BC200 1.5 h (95% CI 1.3–1.6); Pol III occupancy at 7SL fell ~15% at 48 h (P=1.3×10^-2) and ~15% at 72 h (P=6.5×10^-5); BC200 occupancy fell 15% (P=6.8×10^-3), 32% (P=2.0×10^-3), 48% (P=1.9×10^-4). | Gussakovsky et al., 2023, RNA. https://doi.org/10.1261/rna.079649.123 | (gussakovsky2023nuclearsrp9srp14heterodimer pages 3-5, gussakovsky2023nuclearsrp9srp14heterodimer pages 2-3, gussakovsky2023nuclearsrp9srp14heterodimer pages 5-7, gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8, gussakovsky2023nuclearsrp9srp14heterodimer pages 10-12) |
+| Disease/biomarker | In pancreatic ductal adenocarcinoma, higher nuclear SRP9 localization is associated with better recurrence-free survival and with distinct translation/cancer-pathway RNA associations. | IHC, immunocytochemistry, splice-variant transfection, RIP-seq | Surgical cohort n=38; >50% nuclear-staining group n=24 vs ≤50% group n=14; better RFS P=0.037; OS not significant P=0.604; Ki-67 correlation R²=0.007, P=0.622; lymphatic invasion distribution differed (ly0:ly1 = 5:9 vs 17:7, P=0.047); amino-acid deficiency lowered nuclear translocation with P<0.0001 in cell assays. | Sato et al., 2024, International Journal of Oncology. https://doi.org/10.3892/ijo.2024.5662 | (sato2024significanceofsignal pages 11-12, sato2024significanceofsignal pages 12-13, sato2024significanceofsignal pages 1-2, sato2024significanceofsignal pages 13-15, sato2024significanceofsignal pages 5-8) |
+| Disease/biomarker | Public genetics/functional-association resources connect SRP9 to several disease areas, but current evidence is indirect and driven largely by functional-genomics datasets rather than established clinical causality. | Database association/functional genomics aggregation | Open Targets scores: neurodegenerative disease 0.542; abnormality of skeletal system 0.450; osteoarthritis 0.413; osteoarthritis, knee 0.331; lysosomal storage disease 0.109; evidence count 5 per listed association. | Open Targets Platform query for SRP9, accessed via tool context. https://platform.opentargets.org | (OpenTargets Search: -SRP9) |
 
 
-*Table: This table summarizes the best-supported functional annotation for human SRP9, emphasizing its canonical role in the SRP Alu domain and newer 2023-2024 evidence for nuclear and stress-related functions. It also captures the main quantitative findings that are useful for evidence-based annotation.*
-
-| Study (first author year) | Publication date | System/assay | Main finding relevant to SRP9 | Quantitative/statistical highlights | URL | Evidence citation IDs |
-|---|---|---|---|---|---|---|
-| Gussakovsky 2023 | May 2023 | Human MCF-7 cells; immunofluorescence, subcellular fractionation, SRP9/SRP14 knockdown, ChIP-qPCR, Pol III occupancy assays | Nuclear SRP9/SRP14 has a noncanonical transcriptional role, associating with chromatin near 7SL and BC200 loci and promoting their expression; supports a nuclear function for SRP9 beyond cytoplasmic SRP biology | SRP9/SRP14 chromatin enrichments ranged from 8-fold to 510-fold; H3K4Me3 vs H3K9Me3 at 7SL: 2.8% vs 1.3% (P = 1.6 × 10−4); at tRNASer(GCT): 15.4% vs 0.43% (P = 6.1 × 10−4); actinomycin D reduced Pol III occupancy by 83%; serum readdition increased it by 75% (gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2, gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8) | https://doi.org/10.1261/rna.079649.123 | (gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2, gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8) |
-| Issa 2024 | Jun 2024 | Human inducible GFP-tagged SRP cell lines; quantitative proteomics, pull-downs, RNase sensitivity, nucleolar disruption, imaging | SRP biogenesis includes a nucleolar phase relevant to SRP9 because SRP9/SRP14 heterodimer formation and 7SL-dependent assembly are coordinated with nucleolar organization; tagged SRP9/SRP14 largely existed as heterodimers rather than mature SRP under tested conditions | Five of six SRP proteins assemble in the nucleolus; three SRP14 bands detected by Western blot; GFP-SRP19 and GFP-SRP72 were present in ~50% of Cajal bodies (95 and 45 cells analyzed, respectively); RNase A strongly reduced interactions between Alu- and S-domain binders (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 2-3, issa2024thenucleolarphase pages 8-9) | https://doi.org/10.26508/lsa.202402614 | (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 2-3, issa2024thenucleolarphase pages 8-9) |
-| Gussakovsky 2024 | Nov 2024 | Review of human SRP9/SRP14 and Alu-family RNA biology, integrating prior cell, biochemical, and trafficking studies | Synthesizes evidence that SRP9/SRP14 regulates 7SL/BC200/Alu RNAs at transcriptional, trafficking, and processing levels, expanding SRP9 annotation beyond canonical ER targeting | Reports rapid nucleolar targeting and cytoplasmic accumulation after nuclear injection/localization assays (~18 h nucleolar targeting; cytoplasmic accumulation by 24 h); highlights that G24A and related mutations reduce SRP9/SRP14 binding and cytoplasmic accumulation; notes significant Pol III occupancy changes at 7SL/BC200 loci in prior work, though no new meta-statistics are provided in the review (gussakovsky2024theroleof pages 6-7) | https://doi.org/10.1080/15476286.2024.2430817 | (gussakovsky2024theroleof pages 6-7) |
-| Sato 2024 | Jun 2024 | Human pancreatic cancer specimens (n = 38); IHC, cell imaging, amino-acid deprivation, splice-variant transfection, RIP-seq | Nuclear translocation of human SRP9 is clinically associated with pancreatic cancer behavior and suggests a distinct nuclear functional state affecting translation- and cancer-related RNA programs | Tumors with >50% nuclear SRP9 had better recurrence-free survival than those with ≤50% nuclear SRP9 (P = 0.037); amino-acid deprivation reduced nuclear translocation; in cell assays, significance thresholds included **P < 0.01, ***P < 0.001, ****P < 0.0001; median age 70 years (range 50–87) in the patient cohort (sato2024significanceofsignal pages 2-3, sato2024significanceofsignal pages 5-8, sato2024significanceofsignal pages 1-2) | https://doi.org/10.3892/ijo.2024.5662 | (sato2024significanceofsignal pages 2-3, sato2024significanceofsignal pages 5-8, sato2024significanceofsignal pages 1-2) |
-
-
-*Table: This table summarizes key 2023–2024 developments for human SRP9/SRP14, emphasizing noncanonical nuclear/nucleolar roles and emerging clinical relevance. It is useful for quickly separating canonical SRP biology from newer evidence in transcriptional regulation, assembly, and cancer-associated localization.*
-
-### Figure-based evidence (selected)
-Berger et al. (Nucleic Acids Research, 2014) provides figure-based biochemical and cell biology evidence supporting direct SRP9/14 binding to 40S and stress-granule localization with quantification. (berger2014directbindingof media 31c38859, berger2014directbindingof media 4c1fcce8)
-
-### Notes on evidence scope and limitations
-This report focuses strictly on evidence directly relevant to **human SRP9 (P49458)** and SRP9/14 biology. Some broader claims (e.g., cancer biomarker proposals across many tumor types) appear in reviews but were not expanded here unless supported by specific, SRP9-targeted primary data in the gathered corpus. (faoro2021noncanonicalfunctionsand pages 11-12, faoro2021noncanonicalfunctionsand pages 9-10)
+*Table: This table summarizes the strongest mechanistic, localization, regulatory, and disease-linked evidence for human SRP9 (UniProt P49458). It emphasizes the distinction between canonical SRP/Alu-domain functions and emerging nuclear, splicing, and biomarker-related roles supported by recent literature and database evidence.*
 
 References
 
-1. (berger2014directbindingof pages 2-3): Audrey Berger, Elena V. Ivanova, C. Gareau, Anne Scherrer, R. Mazroui, and K. Strub. Direct binding of the alu binding protein dimer srp9/14 to 40s ribosomal subunits promotes stress granule formation and is regulated by alu rna. Nucleic Acids Research, 42:11203-11217, Sep 2014. URL: https://doi.org/10.1093/nar/gku822, doi:10.1093/nar/gku822. This article has 46 citations and is from a highest quality peer-reviewed journal.
+1. (faoro2021noncanonicalfunctionsand pages 3-4): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
 
-2. (faoro2021noncanonicalfunctionsand pages 3-4): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
+2. (kellogg2021srpassingcotranslationaltargeting pages 11-13): Morgana K. Kellogg, Sarah C. Miller, Elena B. Tikhonova, and Andrey L. Karamyshev. Srpassing co-translational targeting: the role of the signal recognition particle in protein targeting and mrna protection. International Journal of Molecular Sciences, 22:6284, Jun 2021. URL: https://doi.org/10.3390/ijms22126284, doi:10.3390/ijms22126284. This article has 70 citations.
 
-3. (kellogg2023unravelingsrpbiogenesis pages 23-26): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
+3. (voorhees2015structuresofthe pages 7-9): Rebecca M Voorhees and Ramanujan S Hegde. Structures of the scanning and engaged states of the mammalian srp-ribosome complex. eLife, Jul 2015. URL: https://doi.org/10.7554/elife.07975, doi:10.7554/elife.07975. This article has 172 citations and is from a domain leading peer-reviewed journal.
 
-4. (gussakovsky2023nuclearsrp9srp14heterodimer pages 1-2): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
+4. (voorhees2015structuresofthe pages 12-14): Rebecca M Voorhees and Ramanujan S Hegde. Structures of the scanning and engaged states of the mammalian srp-ribosome complex. eLife, Jul 2015. URL: https://doi.org/10.7554/elife.07975, doi:10.7554/elife.07975. This article has 172 citations and is from a domain leading peer-reviewed journal.
 
-5. (berger2014directbindingof pages 8-9): Audrey Berger, Elena V. Ivanova, C. Gareau, Anne Scherrer, R. Mazroui, and K. Strub. Direct binding of the alu binding protein dimer srp9/14 to 40s ribosomal subunits promotes stress granule formation and is regulated by alu rna. Nucleic Acids Research, 42:11203-11217, Sep 2014. URL: https://doi.org/10.1093/nar/gku822, doi:10.1093/nar/gku822. This article has 46 citations and is from a highest quality peer-reviewed journal.
+5. (voorhees2015structuresofthe pages 14-15): Rebecca M Voorhees and Ramanujan S Hegde. Structures of the scanning and engaged states of the mammalian srp-ribosome complex. eLife, Jul 2015. URL: https://doi.org/10.7554/elife.07975, doi:10.7554/elife.07975. This article has 172 citations and is from a domain leading peer-reviewed journal.
 
-6. (issa2024thenucleolarphase pages 2-3): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
+6. (wild2019reconstitutionofthe pages 1-2): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
 
-7. (issa2024thenucleolarphase pages 1-2): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
+7. (ahl2015retrotranspositionandcrystal pages 5-6): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
 
-8. (issa2024thenucleolarphase pages 8-9): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
+8. (ahl2015retrotranspositionandcrystal pages 6-7): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
 
-9. (berger2014directbindingof pages 7-8): Audrey Berger, Elena V. Ivanova, C. Gareau, Anne Scherrer, R. Mazroui, and K. Strub. Direct binding of the alu binding protein dimer srp9/14 to 40s ribosomal subunits promotes stress granule formation and is regulated by alu rna. Nucleic Acids Research, 42:11203-11217, Sep 2014. URL: https://doi.org/10.1093/nar/gku822, doi:10.1093/nar/gku822. This article has 46 citations and is from a highest quality peer-reviewed journal.
+9. (gussakovsky2023nuclearsrp9srp14heterodimer pages 2-3): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
 
-10. (gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
+10. (gussakovsky2023nuclearsrp9srp14heterodimer pages 3-5): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
 
-11. (gussakovsky2024theroleof pages 6-7): Daniel Gussakovsky, Nicole A. Black, Evan P. Booy, and Sean A. McKenna. The role of srp9/srp14 in regulating alu rna. Nov 2024. URL: https://doi.org/10.1080/15476286.2024.2430817, doi:10.1080/15476286.2024.2430817. This article has 7 citations and is from a peer-reviewed journal.
+11. (gussakovsky2023nuclearsrp9srp14heterodimer pages 5-7): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
 
-12. (berger2014directbindingof pages 10-11): Audrey Berger, Elena V. Ivanova, C. Gareau, Anne Scherrer, R. Mazroui, and K. Strub. Direct binding of the alu binding protein dimer srp9/14 to 40s ribosomal subunits promotes stress granule formation and is regulated by alu rna. Nucleic Acids Research, 42:11203-11217, Sep 2014. URL: https://doi.org/10.1093/nar/gku822, doi:10.1093/nar/gku822. This article has 46 citations and is from a highest quality peer-reviewed journal.
+12. (borovska2023alurnafold pages 1-2): Ivana Borovská, Igor Vořechovský, and Jana Královičová. Alu rna fold links splicing with signal recognition particle proteins. Nucleic Acids Research, 51:8199-8216, Jun 2023. URL: https://doi.org/10.1093/nar/gkad500, doi:10.1093/nar/gkad500. This article has 10 citations and is from a highest quality peer-reviewed journal.
 
-13. (berger2014directbindingof media 31c38859): Audrey Berger, Elena V. Ivanova, C. Gareau, Anne Scherrer, R. Mazroui, and K. Strub. Direct binding of the alu binding protein dimer srp9/14 to 40s ribosomal subunits promotes stress granule formation and is regulated by alu rna. Nucleic Acids Research, 42:11203-11217, Sep 2014. URL: https://doi.org/10.1093/nar/gku822, doi:10.1093/nar/gku822. This article has 46 citations and is from a highest quality peer-reviewed journal.
+13. (borovska2023alurnafold pages 9-11): Ivana Borovská, Igor Vořechovský, and Jana Královičová. Alu rna fold links splicing with signal recognition particle proteins. Nucleic Acids Research, 51:8199-8216, Jun 2023. URL: https://doi.org/10.1093/nar/gkad500, doi:10.1093/nar/gkad500. This article has 10 citations and is from a highest quality peer-reviewed journal.
 
-14. (berger2014directbindingof media 4c1fcce8): Audrey Berger, Elena V. Ivanova, C. Gareau, Anne Scherrer, R. Mazroui, and K. Strub. Direct binding of the alu binding protein dimer srp9/14 to 40s ribosomal subunits promotes stress granule formation and is regulated by alu rna. Nucleic Acids Research, 42:11203-11217, Sep 2014. URL: https://doi.org/10.1093/nar/gku822, doi:10.1093/nar/gku822. This article has 46 citations and is from a highest quality peer-reviewed journal.
+14. (issa2024thenucleolarphase pages 9-10): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
 
-15. (issa2024thenucleolarphase pages 10-13): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
+15. (issa2024thenucleolarphase pages 3-5): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
 
-16. (sato2024significanceofsignal pages 1-2): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
+16. (gussakovsky2024theroleof pages 1-2): Daniel Gussakovsky, Nicole A. Black, Evan P. Booy, and Sean A. McKenna. The role of srp9/srp14 in regulating alu rna. Nov 2024. URL: https://doi.org/10.1080/15476286.2024.2430817, doi:10.1080/15476286.2024.2430817. This article has 7 citations and is from a peer-reviewed journal.
 
-17. (sato2024significanceofsignal pages 2-3): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
+17. (gussakovsky2024theroleof pages 2-4): Daniel Gussakovsky, Nicole A. Black, Evan P. Booy, and Sean A. McKenna. The role of srp9/srp14 in regulating alu rna. Nov 2024. URL: https://doi.org/10.1080/15476286.2024.2430817, doi:10.1080/15476286.2024.2430817. This article has 7 citations and is from a peer-reviewed journal.
 
-18. (sato2024significanceofsignal pages 5-8): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
+18. (sato2024significanceofsignal pages 11-12): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
 
-19. (sato2024significanceofsignal pages 3-5): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
+19. (sato2024significanceofsignal pages 12-13): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
 
-20. (faoro2021noncanonicalfunctionsand pages 10-11): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
+20. (sato2024significanceofsignal pages 5-8): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
 
-21. (faoro2021noncanonicalfunctionsand pages 7-9): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
+21. (ahl2015retrotranspositionandcrystal pages 3-4): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
 
-22. (faoro2021noncanonicalfunctionsand pages 11-12): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
+22. (ahl2015retrotranspositionandcrystal pages 11-12): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
 
-23. (faoro2021noncanonicalfunctionsand pages 9-10): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
+23. (voorhees2015structuresofthe pages 9-10): Rebecca M Voorhees and Ramanujan S Hegde. Structures of the scanning and engaged states of the mammalian srp-ribosome complex. eLife, Jul 2015. URL: https://doi.org/10.7554/elife.07975, doi:10.7554/elife.07975. This article has 172 citations and is from a domain leading peer-reviewed journal.
+
+24. (wild2019reconstitutionofthe pages 10-11): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
+
+25. (wild2019reconstitutionofthe pages 5-5): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
+
+26. (ahl2015retrotranspositionandcrystal pages 9-11): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
+
+27. (wild2019reconstitutionofthe pages 6-7): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
+
+28. (OpenTargets Search: -SRP9): Open Targets Query (-SRP9, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+
+29. (ahl2015retrotranspositionandcrystal media 866dee84): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
+
+30. (ahl2015retrotranspositionandcrystal media c0bafdb5): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
+
+31. (ahl2015retrotranspositionandcrystal pages 1-3): Valentina Ahl, Heiko Keller, Steffen Schmidt, and Oliver Weichenrieder. Retrotransposition and crystal structure of an alu rnp in the ribosome-stalling conformation. Molecular cell, 60 5:715-727, Dec 2015. URL: https://doi.org/10.1016/j.molcel.2015.10.003, doi:10.1016/j.molcel.2015.10.003. This article has 92 citations and is from a highest quality peer-reviewed journal.
+
+32. (voorhees2015structuresofthe pages 6-7): Rebecca M Voorhees and Ramanujan S Hegde. Structures of the scanning and engaged states of the mammalian srp-ribosome complex. eLife, Jul 2015. URL: https://doi.org/10.7554/elife.07975, doi:10.7554/elife.07975. This article has 172 citations and is from a domain leading peer-reviewed journal.
+
+33. (wild2019reconstitutionofthe pages 4-5): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
+
+34. (wild2019reconstitutionofthe pages 7-8): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
+
+35. (kellogg2021srpassingcotranslationaltargeting pages 6-7): Morgana K. Kellogg, Sarah C. Miller, Elena B. Tikhonova, and Andrey L. Karamyshev. Srpassing co-translational targeting: the role of the signal recognition particle in protein targeting and mrna protection. International Journal of Molecular Sciences, 22:6284, Jun 2021. URL: https://doi.org/10.3390/ijms22126284, doi:10.3390/ijms22126284. This article has 70 citations.
+
+36. (issa2024thenucleolarphase pages 1-2): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
+
+37. (child2023examiningsrppathway pages 6-8): Jessica R. Child, Alex C. Hofler, Qiang Chen, Brenda H. Yang, JohnCarlo Kristofich, Tianli Zheng, Molly M. Hannigan, Andrew L. Elles, David W. Reid, and Christopher V. Nicchitta. Examining srp pathway function in mrna localization to the endoplasmic reticulum. RNA, 29:1703-1724, Aug 2023. URL: https://doi.org/10.1261/rna.079643.123, doi:10.1261/rna.079643.123. This article has 13 citations and is from a domain leading peer-reviewed journal.
+
+38. (borovska2023alurnafold pages 11-14): Ivana Borovská, Igor Vořechovský, and Jana Královičová. Alu rna fold links splicing with signal recognition particle proteins. Nucleic Acids Research, 51:8199-8216, Jun 2023. URL: https://doi.org/10.1093/nar/gkad500, doi:10.1093/nar/gkad500. This article has 10 citations and is from a highest quality peer-reviewed journal.
+
+39. (borovska2023alurnafold pages 14-15): Ivana Borovská, Igor Vořechovský, and Jana Královičová. Alu rna fold links splicing with signal recognition particle proteins. Nucleic Acids Research, 51:8199-8216, Jun 2023. URL: https://doi.org/10.1093/nar/gkad500, doi:10.1093/nar/gkad500. This article has 10 citations and is from a highest quality peer-reviewed journal.
+
+40. (borovska2023alurnafold pages 5-6): Ivana Borovská, Igor Vořechovský, and Jana Královičová. Alu rna fold links splicing with signal recognition particle proteins. Nucleic Acids Research, 51:8199-8216, Jun 2023. URL: https://doi.org/10.1093/nar/gkad500, doi:10.1093/nar/gkad500. This article has 10 citations and is from a highest quality peer-reviewed journal.
+
+41. (gussakovsky2023nuclearsrp9srp14heterodimer pages 7-8): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
+
+42. (gussakovsky2023nuclearsrp9srp14heterodimer pages 10-12): Daniel Gussakovsky, Evan P. Booy, Mira J.F. Brown, and Sean A. McKenna. Nuclear srp9/srp14 heterodimer transcriptionally regulates 7sl and bc200 rna expression. RNA, 29:1185-1200, May 2023. URL: https://doi.org/10.1261/rna.079649.123, doi:10.1261/rna.079649.123. This article has 7 citations and is from a domain leading peer-reviewed journal.
+
+43. (sato2024significanceofsignal pages 1-2): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
+
+44. (sato2024significanceofsignal pages 13-15): Hiromichi Sato, Sikun Meng, Kazuki Sasaki, Shogo Kobayashi, Kansuke Kido, Yoshiko Tsuji, Yasuko Arao, Yoshiko Saito, Yoshifumi Iwagami, Daisaku Yamada, Yoshito Tomimaru, Takehiro Noda, Hidenori Takahashi, Daisuke Motooka, Shizuka Uchida, Ken Ofusa, Taroh Satoh, Yuichiro Doki, Hidetoshi Eguchi, Tomoaki Hara, and Hideshi Ishii. Significance of signal recognition particle 9 nuclear translocation: implications for pancreatic cancer prognosis and functionality. International Journal of Oncology, Jun 2024. URL: https://doi.org/10.3892/ijo.2024.5662, doi:10.3892/ijo.2024.5662. This article has 0 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](SRP9-deep-research-falcon_artifacts/artifact-00.md)
-- [Edison artifact artifact-01](SRP9-deep-research-falcon_artifacts/artifact-01.md)
-![## Context ID: pqac-00000015 Figure 6 and Figure 4 show SRP9/14 binding to 40S ribosomal subunits and localization to stress granules, respectively. - **Figure ](SRP9-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000047 The requested structural information is displayed in Figures 2 and 3 of the document. Figure 2A provides the high-resolution crysta](SRP9-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. faoro2021noncanonicalfunctionsand pages 3-4
-2. kellogg2023unravelingsrpbiogenesis pages 23-26
-3. issa2024thenucleolarphase pages 2-3
-4. berger2014directbindingof pages 2-3
-5. berger2014directbindingof pages 7-8
-6. gussakovsky2024theroleof pages 6-7
-7. berger2014directbindingof pages 8-9
-8. issa2024thenucleolarphase pages 10-13
-9. sato2024significanceofsignal pages 1-2
-10. faoro2021noncanonicalfunctionsand pages 10-11
-11. faoro2021noncanonicalfunctionsand pages 7-9
-12. issa2024thenucleolarphase pages 1-2
-13. issa2024thenucleolarphase pages 8-9
-14. berger2014directbindingof pages 10-11
-15. sato2024significanceofsignal pages 2-3
-16. sato2024significanceofsignal pages 5-8
-17. sato2024significanceofsignal pages 3-5
-18. faoro2021noncanonicalfunctionsand pages 11-12
-19. faoro2021noncanonicalfunctionsand pages 9-10
-20. https://doi.org/10.1261/rna.079649.123
-21. https://doi.org/10.26508/lsa.202402614
-22. https://doi.org/10.1080/15476286.2024.2430817
-23. https://doi.org/10.3892/ijo.2024.5662
-24. https://doi.org/10.1093/nar/gku822,
-25. https://doi.org/10.3389/fmolb.2021.679584,
-26. https://doi.org/10.1261/rna.079649.123,
-27. https://doi.org/10.26508/lsa.202402614,
-28. https://doi.org/10.1080/15476286.2024.2430817,
-29. https://doi.org/10.3892/ijo.2024.5662,
+1. child2023examiningsrppathway pages 6-8
+2. faoro2021noncanonicalfunctionsand pages 3-4
+3. kellogg2021srpassingcotranslationaltargeting pages 11-13
+4. voorhees2015structuresofthe pages 7-9
+5. voorhees2015structuresofthe pages 12-14
+6. voorhees2015structuresofthe pages 14-15
+7. wild2019reconstitutionofthe pages 1-2
+8. ahl2015retrotranspositionandcrystal pages 5-6
+9. ahl2015retrotranspositionandcrystal pages 6-7
+10. borovska2023alurnafold pages 1-2
+11. borovska2023alurnafold pages 9-11
+12. issa2024thenucleolarphase pages 9-10
+13. issa2024thenucleolarphase pages 3-5
+14. gussakovsky2024theroleof pages 1-2
+15. gussakovsky2024theroleof pages 2-4
+16. sato2024significanceofsignal pages 11-12
+17. sato2024significanceofsignal pages 12-13
+18. sato2024significanceofsignal pages 5-8
+19. ahl2015retrotranspositionandcrystal pages 3-4
+20. ahl2015retrotranspositionandcrystal pages 11-12
+21. voorhees2015structuresofthe pages 9-10
+22. wild2019reconstitutionofthe pages 10-11
+23. wild2019reconstitutionofthe pages 5-5
+24. ahl2015retrotranspositionandcrystal pages 9-11
+25. wild2019reconstitutionofthe pages 6-7
+26. ahl2015retrotranspositionandcrystal pages 1-3
+27. voorhees2015structuresofthe pages 6-7
+28. wild2019reconstitutionofthe pages 4-5
+29. wild2019reconstitutionofthe pages 7-8
+30. kellogg2021srpassingcotranslationaltargeting pages 6-7
+31. issa2024thenucleolarphase pages 1-2
+32. borovska2023alurnafold pages 11-14
+33. borovska2023alurnafold pages 14-15
+34. borovska2023alurnafold pages 5-6
+35. sato2024significanceofsignal pages 1-2
+36. sato2024significanceofsignal pages 13-15
+37. https://doi.org/10.1261/rna.079649.123
+38. https://doi.org/10.1093/nar/gkad500
+39. https://doi.org/10.26508/lsa.202402614
+40. https://doi.org/10.1080/15476286.2024.2430817
+41. https://doi.org/10.3892/ijo.2024.5662
+42. https://doi.org/10.1016/j.molcel.2015.10.003
+43. https://doi.org/10.7554/eLife.07975
+44. https://doi.org/10.1093/nar/gky1324
+45. https://doi.org/10.3389/fmolb.2021.679584;
+46. https://doi.org/10.3390/ijms22126284
+47. https://doi.org/10.1261/rna.079643.123
+48. https://platform.opentargets.org
+49. https://doi.org/10.3389/fmolb.2021.679584,
+50. https://doi.org/10.3390/ijms22126284,
+51. https://doi.org/10.7554/elife.07975,
+52. https://doi.org/10.1093/nar/gky1324,
+53. https://doi.org/10.1016/j.molcel.2015.10.003,
+54. https://doi.org/10.1261/rna.079649.123,
+55. https://doi.org/10.1093/nar/gkad500,
+56. https://doi.org/10.26508/lsa.202402614,
+57. https://doi.org/10.1080/15476286.2024.2430817,
+58. https://doi.org/10.3892/ijo.2024.5662,
+59. https://doi.org/10.1261/rna.079643.123,
