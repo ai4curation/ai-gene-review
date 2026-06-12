@@ -43,5 +43,26 @@ Curated alongside MphB (A0A0H3EUF3_ECO8N) to capture the MphA vs MphB substrate-
 - PMID:28416110 — Fong et al. 2017, Structure. MPH(2')-I crystal structures (5IGH/5IGI).
 - PMID:29317655 — Pawlowski et al. 2018, Nat Commun. Mph phylogeny/specificity; MphA widespread in Gram-negatives.
 
-Deep research not run for this gene (providers flaky in-env; primary literature is comprehensive). `just`
-not installed in container — used `uv run ai-gene-review ...` directly.
+Initial curation used primary literature directly; falcon deep research was subsequently run (see Update
+below). `just` not installed in container — used `uv run ai-gene-review ...` directly.
+
+## Update: falcon deep research (2026-06-12) — additional references incorporated
+
+Falcon deep research completed (Q47396_ECOLX-deep-research-falcon.md). New verifiable findings added:
+
+- PMID:30177927 — Golkar et al. 2018, Front Microbiol. Review of enzyme-mediated macrolide resistance.
+  KEY secondary-source confirmation of the MphA/MphB distinction and GTP donor:
+  [PMID:30177927 "MPH(2′)-I can only efficiently inactivate 14- and 15-membered lactone macrolides, whereas MPH(2′)-II can additionally inactivate 16-membered lactone macrolides and the ketolide, telithromycin"]
+  [PMID:30177927 "These MPHs all mediate the transfer of the γ-phosphate group from GTP onto the macrolide substrates"]
+- PMID:38318209 — Wang et al. 2024, Infect Drug Resist. Contemporary mobile genetic context: mphA carried in
+  an IS26/IS6100 composite transposon (IS26-mphA-mrx(A)-mphR(A)-IS6100), predominantly on IncF plasmids.
+  [PMID:38318209 "the mphA-mrx(A)-mphR(A) operon conferring macrolide resistance was flanked by IS26 and IS6100, forming the IS26-mphA-mrx(A)-mphR(A)-IS6100 transposable structure"]
+
+Other deep-research points (clinical/epidemiology, not added as GO-supporting): mphA is the major azithromycin
+resistance determinant in Enterobacterales with high MICs (≥256 µg/mL); MphR(A) derepressed ~100× more
+effectively by 14-membered than 16-membered macrolides; mphA alone = low-level, mphA+mrx = high-level
+resistance (Noguchi 2000). The Golkar quote was also added to the MphB review to reinforce the I-vs-II contrast.
+
+The "GTP exclusively" claim (deep research, attributed to Fong 2017 full text) was NOT asserted in the review —
+cached Fong is abstract-only and O'Hara 1989 shows GTP/ITP/ATP all function (GTP listed first), so the review
+states "GTP favored" rather than "exclusive" (verify-don't-trust).
