@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T03:47:28.880663'
-end_time: '2026-06-12T04:09:10.366451'
-duration_seconds: 1301.49
+start_time: '2026-06-12T04:04:14.094768'
+end_time: '2026-06-12T04:18:55.911842'
+duration_seconds: 881.82
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -26,10 +26,10 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 32
-artifact_count: 2
+citation_count: 16
+artifact_count: 3
 artifact_sources:
-  edison_answer_artifacts: 1
+  edison_answer_artifacts: 2
   edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
@@ -38,14 +38,19 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
+- filename: artifact-01.md
+  path: LMAN1L-deep-research-falcon_artifacts/artifact-01.md
+  media_type: text/markdown
+  source: edison_answer_artifacts
+  data_storage_id: null
+  description: Edison artifact artifact-01
 - filename: image-1.png
   path: LMAN1L-deep-research-falcon_artifacts/image-1.png
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000022 The provided document does not contain
-    a main figure or schematic specifically illustrating ERGL (LMAN1L) or the proposed
-    ERGIC-53/'
+  description: '## Context ID: pqac-00000009 The overall architecture and domain organization
+    of the full-length ERGIC-53 tetramer in complex with MCFD2 is shown in this cryo-E'
 ---
 
 ## Question
@@ -156,201 +161,183 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Human **LMAN1L** (UniProt **Q9HAT1**; gene **LMAN1L**; synonym **ERGL**) — functional annotation
+## Research report: Human **LMAN1L** (UniProt **Q9HAT1**; gene **LMAN1L**, synonym **ERGL**) — functional annotation with evidence grading
 
-### 0) Target identity verification (critical)
-The literature retrieved here uses **ERGL** explicitly to denote **ERGIC-53-like protein / LMAN1L** (human), and consistently contrasts it with **LMAN1/ERGIC-53** and the related lectin cargo receptors **VIP36/LMAN2** and **VIPL/LMAN2L**. This supports that the report below is focused on the correct human target: **LMAN1L (Q9HAT1)**, not LMAN1 or LMAN2L. (watanabe2024structureoffulllength pages 7-8, watanabe2024structureoffulllength pages 8-9, tempio2020thepivotalrole pages 1-2, suzuki2021foldingandquality pages 12-14)
+### 0) Executive summary (evidence-graded)
+* **High-confidence identity:** LMAN1L is a distinct human gene/protein (Ensembl ENSG00000140506; “lectin, mannose binding 1 like”) and is explicitly named as a member of the **animal L‑type lectin** family (LMAN1/ERGIC‑53, LMAN1L, LMAN2/VIP36, LMAN2L/VIPL). (OpenTargets Search: -LMAN1L, baines2007receptormediatedproteintransport pages 4-6)
+* **Direct functional data gap:** Within the retrieved full-text corpus, **no primary study directly characterizes** LMAN1L’s cargo, binding partners, or subcellular localization. Therefore, most mechanistic statements below are **explicitly labeled as inference** from the closest, well-studied paralog **LMAN1/ERGIC‑53** and general cargo-receptor biology. (baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5)
+* **Most likely function (inference):** By family membership and domain annotation supplied in the prompt (legume/ConA‑like lectin domain), LMAN1L is most plausibly an **early secretory pathway lectin/cargo receptor or lectin-like chaperone**, acting in **ER↔ERGIC↔cis-Golgi** trafficking and binding selected glycoprotein cargoes via **high‑mannose N‑glycans** in a **Ca2+/pH‑sensitive** manner. This inference is grounded in mechanistic and structural work on LMAN1. (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3, ergicUnknownyearvaijayantidas pages 31-37, das2012structuralbasisofa pages 25-31)
+* **Recent structural advance (2024, paralog evidence):** Cryo‑EM resolved full-length **ERGIC‑53/LMAN1** in complex with **MCFD2**, defining a tetrameric architecture with a clover-like head and long coiled-coil stalk—useful as a structural analog for LMAN1L. (watanabe2024structureoffulllength media 33178de8)
+* **Human genetics/traits (database-level association):** OpenTargets aggregates evidence linking LMAN1L to complex traits including hypertension, alcohol drinking, and osteoarthritis; these are **association signals** rather than mechanism-resolving functional studies. (OpenTargets Search: -LMAN1L)
 
-### 1) Key concepts and current definitions
-#### 1.1 L-type (legume-like) lectins in the early secretory pathway
-Animal **L-type lectins** are luminal lectin domains (structurally related to legume seed lectins) commonly embedded in type I membrane proteins that localize to the **ER–Golgi interface** (ER exit sites/ERGIC/cis-Golgi). In this family, the lectin **carbohydrate-recognition domain (CRD)** typically recognizes **high-mannose N-glycans**, often in a **Ca2+-dependent** manner, enabling selective trafficking (“cargo receptor” function) rather than bulk flow. (gupta2012ltypelectinsin pages 1-2)
+### 1) Key concepts and definitions (current understanding)
+#### 1.1 ER-to-Golgi cargo receptors and the ERGIC
+Proteins entering the secretory pathway are synthesized in the ER, packaged into COPII vesicles, and delivered to the **ER–Golgi intermediate compartment (ERGIC)** before reaching the cis-Golgi. Cargo receptors typically **cycle** between ER and ERGIC/cis-Golgi: they capture cargo in the ER and are retrieved back to the ER after cargo unloading. (baines2007receptormediatedproteintransport pages 1-2, zhang2023mammaliancargoreceptors pages 3-3)
 
-A canonical reference point is **LMAN1/ERGIC-53**, which binds certain glycoprotein cargos in the ER in a **carbohydrate- and Ca2+-dependent** manner, releases cargo in ERGIC, and cycles between ER and Golgi using coat-dependent motifs. (gupta2012ltypelectinsin pages 8-9, fu2019proteostasismaintenanceof pages 103-114)
+A canonical, well-defined mammalian cargo receptor complex is **LMAN1–MCFD2**, established as required for efficient secretion of specific soluble glycoproteins such as coagulation factors V and VIII. (baines2007receptormediatedproteintransport pages 1-2, baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5)
 
-#### 1.2 What LMAN1L/ERGL is (definition)
-**LMAN1L (ERGL)** is described as an **ERGIC-53 homolog** and part of the mammalian L-type lectin repertoire at the ER–Golgi interface (often discussed alongside ERGIC-53/LMAN1 and VIP36/VIPL lectins). (gupta2012ltypelectinsin pages 2-3, tempio2020thepivotalrole pages 1-2, suzuki2021foldingandquality pages 12-14)
+#### 1.2 Animal L-type lectins (LMAN family)
+A foundational review explicitly frames **LMAN1 (ERGIC‑53)** as part of a larger family of related animal L‑type lectins including **LMAN1L**, **LMAN2 (VIP36)**, and **LMAN2L (VIPL)**; some members (LMAN2 and LMAN2L) had been proposed to function in cargo transport. (baines2007receptormediatedproteintransport pages 4-6)
 
-### 2) Molecular features of LMAN1L: domains, topology, and inferred mechanism
-#### 2.1 Domains/topology (current understanding)
-Reviews summarize the general ERGIC L-type lectin architecture as a luminal region organized into (i) an **N-terminal L-type lectin domain/CRD**, (ii) a **proline-rich (P) domain**, and (iii) a membrane-proximal region described as a **Ca2+-binding domain** near the transmembrane segment. ERGL/LMAN1L is discussed within this framework as an ERGIC-53-related protein in the early secretory pathway. (gupta2012ltypelectinsin pages 2-3, gupta2012ltypelectinsin pages 1-2)
+**Interpretation for LMAN1L:** This family context is the strongest direct evidence that LMAN1L should be interpreted within secretory pathway lectin/cargo receptor biology (and not confused with unrelated lectins). (baines2007receptormediatedproteintransport pages 4-6)
 
-A 2024 cryo-EM study resolved **full-length ERGIC-53** architecture (head + long coiled-coil stalk + TM) and, importantly for LMAN1L inference, noted ERGL/LMAN1L is predicted to have a **coiled-coil stalk** (low sequence similarity but similar predicted architecture) and could plausibly form tetramers or heterotetramers with ERGIC-53 via coiled-coils based on AlphaFold multimer modeling. (watanabe2024structureoffulllength pages 7-8)
+### 2) LMAN1L: what is directly supported vs inferred
+A structured evidence map is provided below.
 
-**Figure evidence:** the ERGIC-53 domain architecture (CRD “head”, coiled-coil “stalk”, and TM) is shown in the extracted images from Watanabe et al. 2024, providing structural context for ERGL/LMAN1L homology-based models. (watanabe2024structureoffulllength media 673423b5, watanabe2024structureoffulllength media 54d9b05c, watanabe2024structureoffulllength media ea80d90b)
-
-#### 2.2 Sorting motifs and cycling vs retention (distinguishing LMAN1L from LMAN1)
-A key question is whether LMAN1L is a **cycling cargo receptor** (like LMAN1) or a more **ER-retained** lectin. One review describes human **LMAN1L/ERGL** as a type I transmembrane protein with a short cytosolic tail ending in **KRFY** (a recycling-related motif) but with an additional arginine forming an **RKR** signal, which correlates with **ER retention/localization** and a **non-cycling, ER-resident** behavior (primarily ER; partly Golgi), contrasting with LMAN1’s robust ER↔ERGIC cycling. (gupta2012ltypelectinsin pages 15-16)
-
-This contrasts with the well-established model for LMAN1/ERGIC-53, whose cytosolic tail contains motifs enabling coat interactions (e.g., COPII export and COPI retrieval), supporting continual cycling and cargo capture/release across compartments. (fu2019proteostasismaintenanceof pages 103-114, dancourt2010proteinsortingreceptors pages 9-10)
-
-### 3) Subcellular localization of LMAN1L (evidence)
-Direct protein-level localization data for LMAN1L is limited in the retrieved set. The most concrete synthesis is from the review evidence above: LMAN1L is described as primarily **ER-localized** with some presence in Golgi/ERGIC-related compartments, consistent with an ER-retained or ER-biased protein rather than a strongly cycling receptor. (gupta2012ltypelectinsin pages 15-16)
-
-An earlier dissertation-style source emphasized that (at that time) protein expression/localization data for ERGL remained limited (“until now no data on protein expression are available”), highlighting the historical gap in direct characterization. (veronika2010theroleof pages 28-32)
-
-### 4) Binding specificity and biochemical activity (what is known vs uncertain)
-The strongest specific claims about LMAN1L binding come from a review summarizing primary experiments:
-
-* **Mixed lectin activity results:** in some assays, HA-tagged LMAN1L/VIPL (as described in that source) failed to bind immobilized mannose or Glc/GlcNAc conjugates; this led to a view that it might lack sugar-binding activity. (gupta2012ltypelectinsin pages 15-16)
-* **Defined high-mannose motif binding:** recombinant soluble LMAN1L (sVIPL, in the cited summary) bound a **high-mannose Man1–2Man1–2Man motif**; binding decreased when an outer mannose was **glucosylated** (suggesting sensitivity to glycan processing state). (gupta2012ltypelectinsin pages 15-16)
-* **pH dependence:** binding was stronger at **neutral (ER-like) pH** than at acidic pH. (gupta2012ltypelectinsin pages 15-16)
-
-**Ca2+ dependence:** while Ca2+-dependent binding is a general property of L-type lectins and is clearly supported for LMAN1/ERGIC-53, the retrieved excerpts do **not** provide direct experimental proof that LMAN1L itself is Ca2+-dependent; thus Ca2+ dependence for LMAN1L should be treated as **inferred but not confirmed** here. (gupta2012ltypelectinsin pages 1-2, fu2019proteostasismaintenanceof pages 103-114, gupta2012ltypelectinsin pages 15-16)
-
-### 5) Functional role in trafficking: cargo receptor, regulator, or auxiliary factor?
-#### 5.1 Consensus model (qualitative)
-Multiple authoritative reviews and a recent high-impact structural paper converge on a cautious view: LMAN1L/ERGL is an ERGIC-53-family lectin that likely contributes to **selective handling of glycoprotein cargo** at the ER–Golgi interface, but its exact cargo spectrum and mechanism are not as firmly established as LMAN1. (tempio2020thepivotalrole pages 1-2, suzuki2021foldingandquality pages 12-14, watanabe2024structureoffulllength pages 7-8)
-
-#### 5.2 Evidence for functional relationship to ERGIC-53
-A review argues that LMAN1L/ERGL may act as a **regulator of ERGIC-53** rather than a simple redundant replacement; it also reports that LMAN1L does **not compete** with ERGIC-53 for binding to immobilized mannose in one summarized assay. (gupta2012ltypelectinsin pages 15-16)
-
-The 2024 Nature Communications cryo-EM paper proposes (based on sequence/structure prediction) that ERGL may form **homotetramers** or **heterotetramers** with ERGIC-53 via coiled-coil stalk interactions, and therefore could function as an **additional/auxiliary cargo receptor** in some tissues/cells, though the paper notes ERGL’s contribution may be negligible in HEK293-based rescue assays (suggesting strong cell-type dependence). (watanabe2024structureoffulllength pages 7-8)
-
-#### 5.3 Reported cargo-related phenotypes (limited)
-The same review summarized that **siRNA knockdown** of the ER-retained lectin (LMAN1L/VIPL as described there) slowed secretion of two glycoproteins, consistent with a possible role in ER export of specific glycoproteins; however, the excerpt does not provide the full experimental context or cargo identity details. (gupta2012ltypelectinsin pages 15-16)
-
-A 2024 discussion section notes a “recent study” reported ERGL involvement in secretion of **factor VIII** in **HCT116** cells, suggesting possible overlap or compensation with the LMAN1/MCFD2 pathway in some contexts, though the detailed methods/results of that “recent study” were not captured in the retrieved corpus. (watanabe2024structureoffulllength pages 8-9)
-
-### 6) Recent developments (prioritizing 2023–2024)
-#### 6.1 2024: structural mechanism of ERGIC-53 (context for ERGL/LMAN1L)
-Watanabe et al. (Nature Communications, **Mar 2024**, URL: https://doi.org/10.1038/s41467-024-46747-1) resolved the full-length ERGIC-53–MCFD2 complex by cryo-EM and proposed mechanistic features (tetrameric architecture; flexible coiled-coil stalk; metal-binding modulation in MCFD2). Within that updated mechanistic framework, the authors explicitly discuss ERGL/LMAN1L as a homolog potentially forming tetramers or heterotetramers with ERGIC-53 (predicted by AF2 multimer) and as part of broader secretory cargo homeostasis models. (watanabe2024structureoffulllength pages 7-8, watanabe2024structureoffulllength pages 8-9)
-
-#### 6.2 2023: human genetics in relevant tissue — cartilage AEI at CSK–LMAN1L locus
-de Almeida et al. (Rheumatology, **Aug 2023**, URL: https://doi.org/10.1093/rheumatology/keac498) used RNA-seq from osteoarthritis patient tissues to identify allelic expression imbalance (AEI) at GWAS loci. They report AEI signals in **articular cartilage** at a locus annotated **CSK—LMAN1L**, with OA risk SNP **rs35206230** linked to proxy transcript SNPs including **rs12487 (r²=0.72; chr15:74851253)** and **rs1127796 (r²=0.63; chr15:74900663)**, providing tissue-relevant genetic support implicating this genomic region in OA biology. (almeida2023allelicexpressionimbalance pages 4-6)
-
-### 7) Human disease/trait associations and statistics
-#### 7.1 Open Targets genetic association overview (database-integrated)
-Open Targets reports genetic association evidence (credible sets) linking **LMAN1L (ENSG00000140506)** to traits including **hypertension**, **essential hypertension**, **osteoarthritis**, **hip osteoarthritis**, **alcohol drinking**, and **pregnancy-induced hypertension**, with internal association scores (e.g., hypertension overall score ~0.39 in the excerpt). The extracted Open Targets output provides literature PubMed IDs but does not provide p-values/effect sizes in the shown rows; therefore, these should be treated as **association signals requiring follow-up in the primary GWAS papers**. (OpenTargets Search: -LMAN1L, OpenTargets Search: hypertension,osteoarthritis-LMAN1L)
-
-#### 7.2 CNV/microdeletion context
-In the context of **15q24.1 microdeletion syndrome**, Ng et al. (Twin Research and Human Genetics, **Aug 2011**, URL: https://doi.org/10.1375/twin.14.4.333) note that **LMAN1L encodes an integral membrane protein** and is “highly expressed in normal and neoplastic prostate” but also expressed in **brain** (citing Yerushalmi et al. 2001). They discuss LMAN1L among deleted genes with reproductive tissue expression when considering contributors to genital/reproductive phenotypes in the microdeletion syndrome. (ng2011anadditionalcase pages 5-6)
-
-### 8) Current applications and real-world implementations
-No direct clinical diagnostic, therapeutic, or biotechnology application specific to **LMAN1L** is established in the retrieved evidence. Practical relevance at present is mainly:
-
-1. **Hypothesis generation in secretion biology:** LMAN1L is considered an ERGIC-53-family factor potentially modulating or supplementing lectin cargo receptor function in certain tissues. (watanabe2024structureoffulllength pages 7-8, tempio2020thepivotalrole pages 1-2)
-2. **Human genetics prioritization:** cartilage AEI and Open Targets associations make LMAN1L a candidate gene for follow-up functional studies in **osteoarthritis** and cardiovascular traits, though causality and mechanism remain to be validated. (almeida2023allelicexpressionimbalance pages 4-6, OpenTargets Search: -LMAN1L)
-
-### 9) Expert synthesis and critical gaps (authoritative analysis)
-Authoritative sources repeatedly emphasize that **LMAN1/ERGIC-53** is the best-characterized member of this lectin cargo receptor family, while **LMAN1L/ERGL** remains comparatively under-characterized at the mechanistic level. (suzuki2021foldingandquality pages 12-14, veronika2010theroleof pages 28-32)
-
-The strongest “expert consensus” that can be supported from the retrieved evidence is:
-
-* LMAN1L is very likely a **type I membrane L-type lectin** acting in the early secretory pathway, but its precise **cycling dynamics**, **glycan specificity**, and **cargo repertoire** are incompletely defined. (gupta2012ltypelectinsin pages 15-16, tempio2020thepivotalrole pages 1-2, suzuki2021foldingandquality pages 12-14)
-* It may act as an **auxiliary receptor/regulator** of ERGIC-53 rather than a direct functional duplicate, and its functional impact appears **cell-type dependent**. (gupta2012ltypelectinsin pages 15-16, watanabe2024structureoffulllength pages 7-8)
-
-Major evidence gaps that limit definitive functional annotation include the scarcity (in this corpus) of:
-
-* a dedicated LMAN1L localization study (endogenous protein),
-* a definitive glycan-binding/Ca2+-dependence characterization for LMAN1L,
-* validated client cargo lists or interaction partners (analogous to FV/FVIII–LMAN1/MCFD2 for LMAN1). (gupta2012ltypelectinsin pages 15-16, veronika2010theroleof pages 28-32, watanabe2024structureoffulllength pages 7-8)
-
-### Summary evidence map
-The table below consolidates the major findings, evidence types, and URLs/dates.
-
-| Aspect | Key findings | Evidence type (review/primary/DB) | Key citations (pqac ids) | URLs & publication dates |
-|---|---|---|---|---|
-| Identity | Target verified as human **LMAN1L** / **ERGL** / **lectin, mannose-binding 1-like**, an ERGIC-53-like L-type lectin distinct from **LMAN1/ERGIC-53** and **LMAN2L/VIPL**; recent structural paper explicitly names ERGL as **LMAN1L**. | Review + primary | (gupta2012ltypelectinsin pages 15-16, watanabe2024structureoffulllength pages 7-8, watanabe2024structureoffulllength pages 8-9, suzuki2021foldingandquality pages 12-14) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Watanabe et al. 2024: https://doi.org/10.1038/s41467-024-46747-1 (Mar 2024); Suzuki & Fujihira 2021: https://doi.org/10.1016/b978-0-12-409547-2.14947-9 (Dec 2021) |
-| Domains | Family/domain evidence supports a **type I membrane L-type lectin** with luminal **carbohydrate-recognition domain (CRD)**, proline-rich/P-like region, and membrane-proximal Ca2+-related region typical of ERGIC lectins; recent ERGIC-53 work suggests ERGL has a **putative coiled-coil stalk** analogous to ERGIC-53. | Review + inference from family + primary structural comparison | (gupta2012ltypelectinsin pages 2-3, gupta2012ltypelectinsin pages 1-2, watanabe2024structureoffulllength pages 7-8, watanabe2024structureoffulllength media 673423b5) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Watanabe et al. 2024: https://doi.org/10.1038/s41467-024-46747-1 (Mar 2024) |
-| Localization | Best-supported localization is **primarily ER** with some Golgi/early secretory pathway presence; one review emphasizes an **RKR-like ER-retention/localization signal** and argues LMAN1L is likely a **non-cycling ER-resident** protein, unlike LMAN1. Earlier literature noted localization/function remained insufficiently defined. | Review | (gupta2012ltypelectinsin pages 15-16, veronika2010theroleof pages 28-32, tempio2020thepivotalrole pages 1-2) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Reiterer 2010: https://doi.org/10.5451/unibas-005405317 (2010); Tempio & Anelli 2020: https://doi.org/10.1242/jcs.240366 (Nov 2020) |
-| Binding | Direct binding evidence is **mixed**: some assays found no binding to immobilized mannose/Glc/GlcNAc ligands, but soluble recombinant LMAN1L reportedly bound a **Man1-2Man1-2Man high-mannose motif**, with weaker binding after glucosylation and stronger binding at **neutral vs acidic pH**. **Direct Ca2+ dependence for LMAN1L itself remains unproven**; it is inferred from family membership. | Review summarizing primary data | (gupta2012ltypelectinsin pages 15-16, gupta2012ltypelectinsin pages 1-2) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012) |
-| Interactions | Proposed functional relationship with **ERGIC-53/LMAN1**: LMAN1L may **regulate ERGIC-53** and does **not compete** with ERGIC-53 for immobilized mannose in one summarized study. 2024 structural analysis predicts possible **ERGIC-53:ERGL heterotetramers** via coiled-coils, but this remains **computational/predictive**, not demonstrated biochemically in the cited excerpt. | Review + primary structural modeling | (gupta2012ltypelectinsin pages 15-16, watanabe2024structureoffulllength pages 7-8) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Watanabe et al. 2024: https://doi.org/10.1038/s41467-024-46747-1 (Mar 2024) |
-| Role/function | Current consensus is **tentative**: LMAN1L is an **L-type lectin in the early secretory pathway** likely involved in **selective ER export/handling of glycoproteins or membrane proteins**. Reviews cite evidence that knockdown slows secretion of some glycoproteins and suggest roles in export of **type I/polytopic membrane proteins**; 2024 discussion notes a report implicating ERGL in **factor VIII secretion in HCT116 cells**. | Review + primary mention | (gupta2012ltypelectinsin pages 2-3, watanabe2024structureoffulllength pages 8-9, tempio2020thepivotalrole pages 1-2) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Watanabe et al. 2024: https://doi.org/10.1038/s41467-024-46747-1 (Mar 2024); Tempio & Anelli 2020: https://doi.org/10.1242/jcs.240366 (Nov 2020) |
-| Distinction from LMAN1 | **LMAN1/ERGIC-53** is well established as a **cycling, Ca2+-dependent cargo receptor** with COPII/COPI sorting motifs and defined cargos (FV/FVIII, cathepsins, A1AT, etc.), whereas **LMAN1L lacks comparable direct mechanistic evidence**, may be more ER-retained, and has no equally validated cargo repertoire. | Review + primary comparator | (gupta2012ltypelectinsin pages 8-9, fu2019proteostasismaintenanceof pages 103-114, gupta2012ltypelectinsin pages 9-10, suzuki2021foldingandquality pages 12-14) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Dancourt & Barlowe 2010: https://doi.org/10.1146/annurev-biochem-061608-091319 (Jun 2010); Suzuki & Fujihira 2021: https://doi.org/10.1016/b978-0-12-409547-2.14947-9 (Dec 2021) |
-| Disease links | Human genetic links are currently **association-level**, not clearly mechanistic: Open Targets lists associations with **hypertension, pregnancy-induced hypertension, alcohol drinking, osteoarthritis, and hip osteoarthritis**. A 2023 cartilage AEI study implicated the **CSK–LMAN1L locus** in osteoarthritis, including cartilage signals at **rs12487** and **rs1127796** linked to GWAS SNP **rs35206230**. | DB + primary genetics | (OpenTargets Search: -LMAN1L, almeida2023allelicexpressionimbalance pages 4-6) | Open Targets Platform (query evidence summarized in 2025 platform paper context); de Almeida et al. 2023: https://doi.org/10.1093/rheumatology/keac498 (Aug 2023) |
-| Applications | No established therapeutic or diagnostic use specific to LMAN1L in humans yet. The main practical relevance is as a **candidate glycoprotein trafficking factor** and **trait-associated gene**; its family context informs secretion biology and may eventually aid biomarker or cargo-engineering strategies, but such applications are not yet validated for LMAN1L itself. | Synthesis from family evidence + DB | (watanabe2024structureoffulllength pages 7-8, tempio2020thepivotalrole pages 1-2, OpenTargets Search: -LMAN1L) | Watanabe et al. 2024: https://doi.org/10.1038/s41467-024-46747-1 (Mar 2024); Tempio & Anelli 2020: https://doi.org/10.1242/jcs.240366 (Nov 2020) |
-| Gaps | Major gaps: **very limited direct primary literature on human LMAN1L**, uncertain **subcellular cycling behavior**, unresolved **glycan specificity/Ca2+ dependence**, few verified **interaction partners/cargos**, and limited **protein-level expression/localization** data across tissues. Much current annotation remains **inferred from homology to LMAN1 family proteins** rather than directly demonstrated. | Evidence synthesis | (gupta2012ltypelectinsin pages 15-16, veronika2010theroleof pages 28-32, watanabe2024structureoffulllength pages 7-8, watanabe2024structureoffulllength pages 8-9) | Gupta 2012: https://doi.org/10.1007/978-3-7091-1065-2_7 (Mar 2012); Reiterer 2010: https://doi.org/10.5451/unibas-005405317 (2010); Watanabe et al. 2024: https://doi.org/10.1038/s41467-024-46747-1 (Mar 2024) |
+| Claim/Topic | Evidence type | Key details | Best supporting source |
+|---|---|---|---|
+| Gene identity / nomenclature | Direct for LMAN1L | Human target verified as **LMAN1L** (approved name: *lectin, mannose binding 1 like*), Ensembl **ENSG00000140506**; UniProt target in this task is **Q9HAT1** with synonyms including **ERGL**. OpenTargets confirms LMAN1L as a distinct human gene target. (OpenTargets Search: -LMAN1L) | OpenTargets target page / evidence context, PMIDs listed in database evidence; context for ENSG00000140506, accessed via OpenTargets (no DOI; database context) (OpenTargets Search: -LMAN1L) |
+| L-type lectin family membership | Direct for LMAN1L | A foundational review explicitly lists **LMAN1L** as a member of the **animal L-type lectin** family, separate from **LMAN1/ERGIC-53**, **LMAN2/VIP36**, and **LMAN2L/VIPL**. (baines2007receptormediatedproteintransport pages 4-6) | Baines & Zhang 2007, *Trends Biochem Sci*; DOI: https://doi.org/10.1016/j.tibs.2007.06.006 (2007) (baines2007receptormediatedproteintransport pages 4-6) |
+| Domain architecture / topology | Inference for LMAN1L | Based on its placement in the L-type lectin family and the UniProt/domain annotation supplied in the prompt (lectin legume-like / ConA-like domain), LMAN1L is likely a **type I membrane protein** with a **luminal carbohydrate-recognition domain (CRD)**, stalk/coiled-coil region, transmembrane helix, and short cytosolic tail; this is strongly inferred from the closest paralog LMAN1. (das2012structuralbasisofa pages 25-31, ergicUnknownyearvaijayantidas pages 25-31) | Das 2012 thesis/article on LMAN1 structural basis (no clear journal DOI in retrieved context); summarized structural features of LMAN1 as analog (2012) (das2012structuralbasisofa pages 25-31, ergicUnknownyearvaijayantidas pages 25-31) |
+| Trafficking signals / cycling concept | Direct for LMAN1; Inference for LMAN1L | LMAN1 contains a **C-terminal FF motif** for COPII-mediated ER exit and **KK motif** for COPI-mediated retrieval, cycling between **ER, ERGIC, and cis-Golgi**. LMAN1L likely uses analogous early secretory pathway cycling logic if it retains similar motifs/topology. (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 2-3, das2012structuralbasisof pages 31-37, das2012structuralbasisofa pages 31-37, zhang2023mammaliancargoreceptors pages 3-3) | Baines & Zhang 2007, *Trends Biochem Sci*; DOI: https://doi.org/10.1016/j.tibs.2007.06.006 (2007) (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 2-3) |
+| Cargo receptor mechanism (COPII/COPI, pH/Ca2+) | Direct for LMAN1; Inference for LMAN1L | For LMAN1-family cargo receptors, cargo loading occurs in ER and unloading in ERGIC/Golgi; this is influenced by **luminal pH** and **Ca2+** differences. LMAN1 mannose binding is Ca2+-sensitive, and the receptor recycles after cargo release. LMAN1L is therefore plausibly a **Ca2+/pH-sensitive lectin cargo receptor or transporter-like lectin** in the early secretory pathway. (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3, zhang2023mammaliancargoreceptors pages 5-6) | Zhang et al. 2023, *Biochem Soc Trans*; DOI: https://doi.org/10.1042/bst20220713 (2023) (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3, zhang2023mammaliancargoreceptors pages 5-6) |
+| Structural architecture (cryo-EM 2024 analog) | Direct for LMAN1; Inference for LMAN1L | Full-length **ERGIC-53/LMAN1** was resolved by cryo-EM as a **tetramer** with a four-leaf-clover head, long coiled-coil stalk, and transmembrane domain, in complex with **MCFD2**. This provides the best modern structural analog for inferring LMAN1L overall architecture as an L-type lectin family member, though it is **not** direct LMAN1L evidence. (watanabe2024structureoffulllength media 33178de8) | Watanabe et al. 2024, *Nature Communications*; DOI: https://doi.org/10.1038/s41467-024-46747-1 (2024) (watanabe2024structureoffulllength media 33178de8) |
+| Known cargos for LMAN1 as analogs | Direct for LMAN1; Inference for LMAN1L | LMAN1–MCFD2 is a validated cargo receptor for **coagulation factors V and VIII**; other reported cargos/affected proteins include **α1-antitrypsin (A1AT)**, **cathepsin C**, **cathepsin Z**, and additional proposed cargos such as **Mac-2BP**, **GABAARs**, and **MMP-9**. These establish the kind of glycoprotein-trafficking role LMAN1L might have, but **no specific LMAN1L cargo** was retrieved. (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5) | Baines & Zhang 2007, *Trends Biochem Sci*; DOI: https://doi.org/10.1016/j.tibs.2007.06.006 (2007); Zhang et al. 2023, *Biochem Soc Trans*; DOI: https://doi.org/10.1042/bst20220713 (2023) (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5) |
+| Disease / trait associations for LMAN1L | Database association | OpenTargets links LMAN1L to several complex traits including **hypertension**, **alcohol drinking**, **osteoarthritis**, **hip osteoarthritis**, and **pregnancy-induced hypertension**; these appear to reflect aggregated association evidence rather than mechanism-resolving functional studies, so biological interpretation should be cautious. (OpenTargets Search: -LMAN1L) | OpenTargets disease-target association context for LMAN1L (database evidence; no DOI in retrieved context) (OpenTargets Search: -LMAN1L) |
+| Localization | Inference for LMAN1L | No direct localization study for human LMAN1L was retrieved. Because LMAN1 and related L-type lectins operate in the **early secretory pathway**, the strongest current inference is that LMAN1L localizes to **ER/ERGIC/cis-Golgi-associated compartments** rather than being a classic cell-surface lectin. (baines2007receptormediatedproteintransport pages 4-6, ergicUnknownyearvaijayantidas pages 31-37, das2012structuralbasisof pages 31-37, zhang2023mammaliancargoreceptors pages 3-3) | Baines & Zhang 2007, *Trends Biochem Sci*; DOI: https://doi.org/10.1016/j.tibs.2007.06.006 (2007) plus LMAN1 structural/functional analog evidence (baines2007receptormediatedproteintransport pages 4-6, ergicUnknownyearvaijayantidas pages 31-37, das2012structuralbasisof pages 31-37, zhang2023mammaliancargoreceptors pages 3-3) |
+| Limitations / knowledge gaps | Direct for LMAN1L | The retrieved corpus contains **very limited direct experimental literature** for human **LMAN1L/Q9HAT1**. No retrieved primary study directly established its cargo spectrum, precise subcellular localization, binding partners, or pathway-specific mechanism. Therefore, most functional annotation currently rests on **family membership plus paralog-based inference**, which must be labeled accordingly. (OpenTargets Search: -LMAN1L, baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5) | Constraint from retrieved evidence set; explicit family-only mention in Baines & Zhang 2007 and absence of direct mechanistic LMAN1L studies in retrieved corpus (OpenTargets Search: -LMAN1L, baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5) |
 
 
-*Table: This table summarizes the available functional annotation evidence for human LMAN1L/ERGL, separating direct findings from homology-based inference. It is useful for quickly identifying what is established, what is tentative, and where key knowledge gaps remain.*
+*Table: This table separates what is directly supported for human LMAN1L from what is inferred using the best-studied paralog LMAN1/ERGIC-53 and modern cargo receptor biology. It is useful for building a cautious functional annotation while making evidence strength explicit.*
 
-### Key references (with URLs and publication dates)
-* Watanabe S. et al. **Nature Communications** (Mar **2024**). “Structure of full-length ERGIC-53 in complex with MCFD2 for cargo transport.” https://doi.org/10.1038/s41467-024-46747-1 (watanabe2024structureoffulllength pages 7-8, watanabe2024structureoffulllength pages 8-9)
-* de Almeida R.C. et al. **Rheumatology** (Aug **2023**). “Allelic expression imbalance in articular cartilage and subchondral bone refined genome-wide association signals in osteoarthritis.” https://doi.org/10.1093/rheumatology/keac498 (almeida2023allelicexpressionimbalance pages 4-6)
-* Tempio T., Anelli T. **Journal of Cell Science** (Nov **2020**). “The pivotal role of ERp44 in patrolling protein secretion.” https://doi.org/10.1242/jcs.240366 (tempio2020thepivotalrole pages 1-2, tempio2020thepivotalrole pages 2-3)
-* Suzuki T., Fujihira H. **Comprehensive Glycoscience** (Dec **2021**). “Folding and Quality Control of Glycoproteins.” https://doi.org/10.1016/b978-0-12-409547-2.14947-9 (suzuki2021foldingandquality pages 12-14)
-* Gupta G.S. Book chapter (Mar **2012**). “L-Type Lectins in ER-Golgi Intermediate Compartment.” https://doi.org/10.1007/978-3-7091-1065-2_7 (gupta2012ltypelectinsin pages 15-16, gupta2012ltypelectinsin pages 2-3)
-* Open Targets Platform (queried 2026; platform paper context indicated as NAR 2025 in the tool output). https://platform.opentargets.org/ (association evidence summarized in tool output) (OpenTargets Search: -LMAN1L, OpenTargets Search: hypertension,osteoarthritis-LMAN1L)
+### 3) Molecular function, biological processes, and localization
+#### 3.1 Direct evidence for LMAN1L
+**Direct mechanistic statements about LMAN1L were not found** in the retrieved full-text set beyond its explicit listing as an L‑type lectin family member. (baines2007receptormediatedproteintransport pages 4-6)
 
+#### 3.2 Likely molecular function (inference from LMAN1/ERGIC-53)
+LMAN1 is described as a lectin cargo receptor with features typical of receptors that cycle in the early secretory pathway (transmembrane protein, luminal carbohydrate-recognition domain, and cytosolic motifs that mediate COPII export and COPI retrieval). (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 2-3, das2012structuralbasisof pages 31-37, das2012structuralbasisofa pages 31-37)
+
+LMAN1-family cargo receptor behavior is also framed by compartmental chemistry: the ER lumen is relatively neutral with higher Ca2+ compared with the more acidic, lower Ca2+ ERGIC/Golgi, and these gradients can influence cargo loading/unloading. (zhang2023mammaliancargoreceptors pages 3-3)
+
+**Inference for LMAN1L:** Given that LMAN1L is an animal L‑type lectin family member and (per user-provided UniProt context) contains legume/ConA-like lectin domains, the most plausible primary function is **selective binding of specific glycoproteins (likely via high‑mannose-type N‑glycans and/or conformational protein determinants) to promote their ER exit and/or proper trafficking to ERGIC/cis-Golgi**. This inference should be treated as a working hypothesis until direct LMAN1L experimental characterization is available. (baines2007receptormediatedproteintransport pages 4-6, das2012structuralbasisofa pages 25-31, zhang2023mammaliancargoreceptors pages 3-3)
+
+#### 3.3 Likely subcellular localization (inference)
+LMAN1 is described as largely localized to the ERGIC at steady state but cycling back to the ER via COPI-dependent retrieval signals, consistent with ER↔ERGIC trafficking. (baines2007receptormediatedproteintransport pages 3-4)
+
+**Inference for LMAN1L:** LMAN1L is therefore most likely an **ER/ERGIC/cis-Golgi-associated cycling membrane lectin** rather than a stable plasma membrane receptor. (baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 3-3)
+
+### 4) Recent developments (prioritizing 2023–2024)
+
+| Year | Source | Contribution | Relevance to LMAN1L functional inference |
+|---|---|---|---|
+| 2007 | Baines & Zhang, *Trends in Biochemical Sciences* (Aug 2007), DOI: https://doi.org/10.1016/j.tibs.2007.06.006 | Foundational review of receptor-mediated protein transport in the early secretory pathway; explicitly identifies **LMAN1L** as a distinct member of the **animal L-type lectin** family alongside LMAN1/ERGIC-53, LMAN2/VIP36, and LMAN2L/VIPL. (baines2007receptormediatedproteintransport pages 4-6) | Provides the key evidence that the target is the correct human family member and should be interpreted within L-type lectin biology rather than confused with LMAN1 or LMAN2 paralogs. (baines2007receptormediatedproteintransport pages 4-6) |
+| 2023 | Zhang, Srivastava & Zhang, *Biochemical Society Transactions* (Jun 2023), DOI: https://doi.org/10.1042/bst20220713 | Authoritative recent review of mammalian ER-to-Golgi cargo receptors; synthesizes evidence that **LMAN1** cycles between ER and ERGIC/Golgi, uses glycan and protein interactions for cargo recognition, and is regulated by compartmental **pH/Ca2+** conditions. (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3, zhang2023mammaliancargoreceptors pages 5-6) | Supplies the strongest recent mechanistic framework for inferring likely **LMAN1L** roles as an early secretory pathway lectin/cargo receptor, while making clear that these are paralog-based inferences rather than direct LMAN1L experiments. (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 5-6, zhang2023mammaliancargoreceptors pages 3-3) |
+| 2024 | Watanabe et al., *Nature Communications* (Mar 2024), DOI: https://doi.org/10.1038/s41467-024-46747-1 | Cryo-EM structure of full-length **ERGIC-53/LMAN1** in complex with **MCFD2**; defines overall architecture as a long stalked tetramer with a clover-like head and transmembrane domain. (watanabe2024structureoffulllength media 33178de8) | Gives the best current structural analog for **LMAN1L** domain organization and supports high-confidence inference that LMAN1L, as an L-type lectin family member, likely shares a comparable secretory-pathway lectin architecture. (watanabe2024structureoffulllength media 33178de8) |
+
+
+*Table: This table summarizes the key sources used to anchor LMAN1L annotation, highlighting direct family-membership evidence and the most relevant recent mechanistic and structural analogs. It is useful for separating what is known directly about LMAN1L from what is inferred from the best-studied paralog, LMAN1/ERGIC-53.*
+
+#### 4.1 2023: Mechanistic synthesis for mammalian cargo receptors
+A 2023 review synthesizes current understanding of mammalian ER-to-Golgi cargo receptors (with emphasis on LMAN1–MCFD2 and SURF4). For LMAN1, it summarizes separable binding for high-mannose glycans and MCFD2, notes physiologically relevant cargoes (FV, FVIII, and α1-antitrypsin) and ER retention when LMAN1/MCFD2 are absent, and highlights how luminal pH/Ca2+ conditions influence cargo loading/unloading. (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3)
+
+**Relevance to LMAN1L:** This is the most authoritative recent framework for hypothesizing LMAN1L’s possible cargo receptor role and regulatory logic (Ca2+/pH sensitivity), but it does not provide direct LMAN1L data. (zhang2023mammaliancargoreceptors pages 4-5)
+
+#### 4.2 2024: Structural mechanism of ERGIC-53/LMAN1
+A 2024 Nature Communications paper reports cryo‑EM structures of full-length ERGIC‑53/LMAN1 in complex with MCFD2, showing a tetrameric organization with a clover-like head and long coiled-coil stalk and proposing mechanisms of cargo capture/release. (watanabe2024structureoffulllength media 33178de8)
+
+The most informative figure panel retrieved is cited here as a structural reference:
+(watanabe2024structureoffulllength media 33178de8)
+
+**Relevance to LMAN1L:** LMAN1L likely shares a related overall fold/domain organization as an L‑type lectin family member (inference), making this structure a useful analog for conceptualizing how LMAN1L could present a luminal lectin head connected to the membrane by an extended coiled-coil. (baines2007receptormediatedproteintransport pages 4-6, watanabe2024structureoffulllength media 33178de8)
+
+### 5) Interacting partners/cargo and pathway placement
+#### 5.1 What is known for LMAN1 (closest paralog; direct)
+LMAN1–MCFD2 is the best-defined mammalian cargo receptor complex; the review describes that it is required for efficient secretion of FV and FVIII and that in the associated inherited disorder plasma FV and FVIII can be reduced to **5–30% of normal**. (baines2007receptormediatedproteintransport pages 3-4)
+
+The same review reports that under chemical cross-linking conditions, an estimated **5–20% of FVIII** is detected in a tertiary complex with LMAN1 and MCFD2, offering direct evidence of receptor–cargo interaction for the LMAN1 pathway. (baines2007receptormediatedproteintransport pages 4-6)
+
+#### 5.2 Implications for LMAN1L (inference)
+If LMAN1L acts as a cargo receptor, two nonexclusive mechanisms are plausible by analogy to LMAN1:
+1) **Lectin-mediated glycan recognition** (e.g., high-mannose N-glycans) coupled to COPII packaging and COPI retrieval cycling. (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 2-3, das2012structuralbasisofa pages 25-31)
+2) **Protein–protein interactions** that cooperate with glycan recognition and are modulated by luminal **Ca2+/pH** changes between ER and ERGIC/Golgi to promote release. (zhang2023mammaliancargoreceptors pages 3-3)
+
+However, **no specific LMAN1L cargoes or binding partners** were identified in the retrieved evidence, so cargo assignment for LMAN1L remains an open question in this tool-limited corpus. (baines2007receptormediatedproteintransport pages 4-6)
+
+### 6) Current applications and real-world implementations
+Direct translational/industrial applications for LMAN1L were not supported in the retrieved corpus. By analogy, cargo receptors like SURF4 have been suggested as engineering targets to increase recombinant protein secretion; similarly, partial inhibition or modulation of LMAN1 has been discussed as potentially sufficient to modulate FV/FVIII levels in vivo (paralog evidence). (zhang2023mammaliancargoreceptors pages 4-5)
+
+**Inference for LMAN1L:** If LMAN1L proves to be a selective cargo receptor for a therapeutically relevant secreted glycoprotein, it could become a target for (i) secretion engineering in biomanufacturing or (ii) modulation of specific circulating proteins. This is speculative and requires direct evidence. (zhang2023mammaliancargoreceptors pages 4-5)
+
+### 7) Expert synthesis / authoritative opinions
+Authoritative reviews emphasize that, despite the enormous diversity of secretory cargo, only a small set of mammalian cargo receptors are well-defined, and receptor-mediated transport requires (i) a cycling transmembrane component, (ii) selective impairment of cargo transport upon deficiency, and (iii) evidence of specific receptor–cargo interaction. (baines2007receptormediatedproteintransport pages 3-4)
+
+**Interpretation for LMAN1L:** Because LMAN1L currently lacks the latter two criteria in the retrieved literature set, the most defensible “expert” position is that LMAN1L is a plausible candidate cargo receptor by homology, but its **specific physiological cargo and mechanism remain insufficiently established** in the accessible corpus. (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 4-6)
+
+### 8) Disease associations, statistics, and data
+#### 8.1 LMAN1L disease/trait links (database-level)
+OpenTargets aggregates evidence connecting LMAN1L to multiple complex traits/diseases, including **hypertension**, **alcohol drinking**, and **osteoarthritis** (including hip OA) and **pregnancy-induced hypertension**. These are association scores/evidence counts and should be treated as hypothesis-generating rather than causal mechanism. (OpenTargets Search: -LMAN1L)
+
+#### 8.2 Quantitative data (from primary/review sources; paralog pathway)
+* In combined factor V and VIII deficiency (F5F8D) caused by LMAN1/MCFD2 pathway defects, plasma FV and FVIII levels are reported as **5–30% of normal**. (baines2007receptormediatedproteintransport pages 3-4)
+* Under chemical cross-linking, **5–20% of FVIII** is detected in a tertiary complex with LMAN1 and MCFD2. (baines2007receptormediatedproteintransport pages 4-6)
+
+These values provide benchmarks for the magnitude of effect a true cargo receptor can have on secretion and for detectability of receptor–cargo complexes, but they do not specifically implicate LMAN1L. (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 4-6)
+
+### 9) Conclusions and prioritized hypotheses for LMAN1L (evidence-aware)
+1) **Primary functional hypothesis (inference):** LMAN1L is an early secretory pathway **lectin/cargo receptor-like** protein that binds a subset of glycoprotein clients and supports ER-to-ERGIC/Golgi trafficking in a manner regulated by compartmental Ca2+/pH, analogous to LMAN1/ERGIC‑53. (baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3)
+2) **Localization hypothesis (inference):** LMAN1L most likely resides in **ER/ERGIC/cis-Golgi** compartments and cycles via COPII/COPI logic rather than being primarily cell-surface. (baines2007receptormediatedproteintransport pages 3-4, zhang2023mammaliancargoreceptors pages 3-3)
+3) **Human genetics hypothesis (database association):** LMAN1L may influence complex traits (e.g., hypertension, osteoarthritis) through effects on secretion/processing of specific extracellular proteins; this remains unproven and requires gene-to-phenotype mechanistic work. (OpenTargets Search: -LMAN1L)
+
+### References (URLs and publication dates)
+* Baines AC, Zhang B. *Receptor-mediated protein transport in the early secretory pathway.* **Aug 2007**. Trends Biochem Sci. DOI/URL: https://doi.org/10.1016/j.tibs.2007.06.006 (baines2007receptormediatedproteintransport pages 3-4, baines2007receptormediatedproteintransport pages 2-3, baines2007receptormediatedproteintransport pages 1-2, baines2007receptormediatedproteintransport pages 4-6)
+* Zhang Y, Srivastava V, Zhang B. *Mammalian cargo receptors for endoplasmic reticulum-to-Golgi transport: mechanisms and interactions.* **Jun 2023**. Biochem Soc Trans. DOI/URL: https://doi.org/10.1042/bst20220713 (zhang2023mammaliancargoreceptors pages 4-5, zhang2023mammaliancargoreceptors pages 3-3, zhang2023mammaliancargoreceptors pages 5-6)
+* Watanabe S, et al. *Structure of full-length ERGIC-53 in complex with MCFD2 for cargo transport.* **Mar 2024**. Nat Commun. DOI/URL: https://doi.org/10.1038/s41467-024-46747-1 (watanabe2024structureoffulllength media 33178de8)
+* OpenTargets association evidence for LMAN1L (ENSG00000140506). Database context with literature links (PMIDs listed in evidence rows). (OpenTargets Search: -LMAN1L)
+
+### Transparency note (scope limitation)
+This report is constrained by the retrieved corpus: **direct experimental studies on human LMAN1L/Q9HAT1 were not accessible via the tool searches**, so functional annotation necessarily relies on (i) explicit family membership evidence and (ii) structured inference from LMAN1/ERGIC‑53 and general cargo receptor biology. (baines2007receptormediatedproteintransport pages 4-6, zhang2023mammaliancargoreceptors pages 4-5)
 
 References
 
-1. (watanabe2024structureoffulllength pages 7-8): Satoshi Watanabe, Yoshiaki Kise, Kento Yonezawa, Mariko Inoue, Nobutaka Shimizu, Osamu Nureki, and Kenji Inaba. Structure of full-length ergic-53 in complex with mcfd2 for cargo transport. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46747-1, doi:10.1038/s41467-024-46747-1. This article has 14 citations and is from a highest quality peer-reviewed journal.
+1. (OpenTargets Search: -LMAN1L): Open Targets Query (-LMAN1L, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-2. (watanabe2024structureoffulllength pages 8-9): Satoshi Watanabe, Yoshiaki Kise, Kento Yonezawa, Mariko Inoue, Nobutaka Shimizu, Osamu Nureki, and Kenji Inaba. Structure of full-length ergic-53 in complex with mcfd2 for cargo transport. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46747-1, doi:10.1038/s41467-024-46747-1. This article has 14 citations and is from a highest quality peer-reviewed journal.
+2. (baines2007receptormediatedproteintransport pages 4-6): Andrea C. Baines and Bin Zhang. Receptor-mediated protein transport in the early secretory pathway. Trends in biochemical sciences, 32 8:381-8, Aug 2007. URL: https://doi.org/10.1016/j.tibs.2007.06.006, doi:10.1016/j.tibs.2007.06.006. This article has 62 citations and is from a domain leading peer-reviewed journal.
 
-3. (tempio2020thepivotalrole pages 1-2): Tiziana Tempio and Tiziana Anelli. The pivotal role of erp44 in patrolling protein secretion. Journal of Cell Science, Nov 2020. URL: https://doi.org/10.1242/jcs.240366, doi:10.1242/jcs.240366. This article has 47 citations and is from a domain leading peer-reviewed journal.
+3. (zhang2023mammaliancargoreceptors pages 4-5): Yuanbao Zhang, Vishal Srivastava, and Bin Zhang. Mammalian cargo receptors for endoplasmic reticulum-to-golgi transport: mechanisms and interactions. Biochemical Society Transactions, 51:971-981, Jun 2023. URL: https://doi.org/10.1042/bst20220713, doi:10.1042/bst20220713. This article has 23 citations and is from a peer-reviewed journal.
 
-4. (suzuki2021foldingandquality pages 12-14): Tadashi Suzuki and Haruhiko Fujihira. Folding and quality control of glycoproteins. Comprehensive Glycoscience, pages 1-28, Dec 2021. URL: https://doi.org/10.1016/b978-0-12-409547-2.14947-9, doi:10.1016/b978-0-12-409547-2.14947-9. This article has 12 citations.
+4. (zhang2023mammaliancargoreceptors pages 3-3): Yuanbao Zhang, Vishal Srivastava, and Bin Zhang. Mammalian cargo receptors for endoplasmic reticulum-to-golgi transport: mechanisms and interactions. Biochemical Society Transactions, 51:971-981, Jun 2023. URL: https://doi.org/10.1042/bst20220713, doi:10.1042/bst20220713. This article has 23 citations and is from a peer-reviewed journal.
 
-5. (gupta2012ltypelectinsin pages 1-2): G. S. Gupta. L-type lectins in er-golgi intermediate compartment. Animal Lectins: Form, Function and Clinical Applications, pages 145-161, Mar 2012. URL: https://doi.org/10.1007/978-3-7091-1065-2\_7, doi:10.1007/978-3-7091-1065-2\_7. This article has 3 citations.
+5. (ergicUnknownyearvaijayantidas pages 31-37): RIN ERGIC. Vaijayanti das. Unknown journal, Unknown year.
 
-6. (gupta2012ltypelectinsin pages 8-9): G. S. Gupta. L-type lectins in er-golgi intermediate compartment. Animal Lectins: Form, Function and Clinical Applications, pages 145-161, Mar 2012. URL: https://doi.org/10.1007/978-3-7091-1065-2\_7, doi:10.1007/978-3-7091-1065-2\_7. This article has 3 citations.
+6. (das2012structuralbasisofa pages 25-31): V Das. Structural basis of lman1 cargo capture in er & release in ergic. Unknown journal, 2012.
 
-7. (fu2019proteostasismaintenanceof pages 103-114): Y Fu. Proteostasis maintenance of γ-aminobutyric acid type a receptors (gabaars). Unknown journal, 2019.
+7. (watanabe2024structureoffulllength media 33178de8): Satoshi Watanabe, Yoshiaki Kise, Kento Yonezawa, Mariko Inoue, Nobutaka Shimizu, Osamu Nureki, and Kenji Inaba. Structure of full-length ergic-53 in complex with mcfd2 for cargo transport. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46747-1, doi:10.1038/s41467-024-46747-1. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-8. (gupta2012ltypelectinsin pages 2-3): G. S. Gupta. L-type lectins in er-golgi intermediate compartment. Animal Lectins: Form, Function and Clinical Applications, pages 145-161, Mar 2012. URL: https://doi.org/10.1007/978-3-7091-1065-2\_7, doi:10.1007/978-3-7091-1065-2\_7. This article has 3 citations.
+8. (baines2007receptormediatedproteintransport pages 1-2): Andrea C. Baines and Bin Zhang. Receptor-mediated protein transport in the early secretory pathway. Trends in biochemical sciences, 32 8:381-8, Aug 2007. URL: https://doi.org/10.1016/j.tibs.2007.06.006, doi:10.1016/j.tibs.2007.06.006. This article has 62 citations and is from a domain leading peer-reviewed journal.
 
-9. (watanabe2024structureoffulllength media 673423b5): Satoshi Watanabe, Yoshiaki Kise, Kento Yonezawa, Mariko Inoue, Nobutaka Shimizu, Osamu Nureki, and Kenji Inaba. Structure of full-length ergic-53 in complex with mcfd2 for cargo transport. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46747-1, doi:10.1038/s41467-024-46747-1. This article has 14 citations and is from a highest quality peer-reviewed journal.
+9. (ergicUnknownyearvaijayantidas pages 25-31): RIN ERGIC. Vaijayanti das. Unknown journal, Unknown year.
 
-10. (watanabe2024structureoffulllength media 54d9b05c): Satoshi Watanabe, Yoshiaki Kise, Kento Yonezawa, Mariko Inoue, Nobutaka Shimizu, Osamu Nureki, and Kenji Inaba. Structure of full-length ergic-53 in complex with mcfd2 for cargo transport. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46747-1, doi:10.1038/s41467-024-46747-1. This article has 14 citations and is from a highest quality peer-reviewed journal.
+10. (baines2007receptormediatedproteintransport pages 3-4): Andrea C. Baines and Bin Zhang. Receptor-mediated protein transport in the early secretory pathway. Trends in biochemical sciences, 32 8:381-8, Aug 2007. URL: https://doi.org/10.1016/j.tibs.2007.06.006, doi:10.1016/j.tibs.2007.06.006. This article has 62 citations and is from a domain leading peer-reviewed journal.
 
-11. (watanabe2024structureoffulllength media ea80d90b): Satoshi Watanabe, Yoshiaki Kise, Kento Yonezawa, Mariko Inoue, Nobutaka Shimizu, Osamu Nureki, and Kenji Inaba. Structure of full-length ergic-53 in complex with mcfd2 for cargo transport. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46747-1, doi:10.1038/s41467-024-46747-1. This article has 14 citations and is from a highest quality peer-reviewed journal.
+11. (baines2007receptormediatedproteintransport pages 2-3): Andrea C. Baines and Bin Zhang. Receptor-mediated protein transport in the early secretory pathway. Trends in biochemical sciences, 32 8:381-8, Aug 2007. URL: https://doi.org/10.1016/j.tibs.2007.06.006, doi:10.1016/j.tibs.2007.06.006. This article has 62 citations and is from a domain leading peer-reviewed journal.
 
-12. (gupta2012ltypelectinsin pages 15-16): G. S. Gupta. L-type lectins in er-golgi intermediate compartment. Animal Lectins: Form, Function and Clinical Applications, pages 145-161, Mar 2012. URL: https://doi.org/10.1007/978-3-7091-1065-2\_7, doi:10.1007/978-3-7091-1065-2\_7. This article has 3 citations.
+12. (das2012structuralbasisof pages 31-37): V Das. Structural basis of lman1 cargo capture in er & release in ergic. Unknown journal, 2012.
 
-13. (dancourt2010proteinsortingreceptors pages 9-10): Julia Dancourt and Charles Barlowe. Protein sorting receptors in the early secretory pathway. Annual review of biochemistry, 79:777-802, Jun 2010. URL: https://doi.org/10.1146/annurev-biochem-061608-091319, doi:10.1146/annurev-biochem-061608-091319. This article has 382 citations and is from a domain leading peer-reviewed journal.
+13. (das2012structuralbasisofa pages 31-37): V Das. Structural basis of lman1 cargo capture in er & release in ergic. Unknown journal, 2012.
 
-14. (veronika2010theroleof pages 28-32): Veronika Reiterer. The role of the lectin vip36 in the early secretory pathway. ArXiv, 2010. URL: https://doi.org/10.5451/unibas-005405317, doi:10.5451/unibas-005405317. This article has 0 citations.
-
-15. (almeida2023allelicexpressionimbalance pages 4-6): Rodrigo Coutinho de Almeida, Margo Tuerlings, Yolande Ramos, Wouter Den Hollander, Eka Suchiman, Nico Lakenberg, Rob G H H Nelissen, Hailiang Mei, and Ingrid Meulenbelt. Allelic expression imbalance in articular cartilage and subchondral bone refined genome-wide association signals in osteoarthritis. Rheumatology, 62:1669-1676, Aug 2023. URL: https://doi.org/10.1093/rheumatology/keac498, doi:10.1093/rheumatology/keac498. This article has 17 citations and is from a peer-reviewed journal.
-
-16. (OpenTargets Search: -LMAN1L): Open Targets Query (-LMAN1L, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-17. (OpenTargets Search: hypertension,osteoarthritis-LMAN1L): Open Targets Query (hypertension,osteoarthritis-LMAN1L, 2 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-18. (ng2011anadditionalcase pages 5-6): Ivy S. L. Ng, Wai-Hoe Chin, Eileen C. P. Lim, and Ene-Choo Tan. An additional case of the recurrent 15q24.1 microdeletion syndrome and review of the literature. Twin Research and Human Genetics, 14:333-339, Aug 2011. URL: https://doi.org/10.1375/twin.14.4.333, doi:10.1375/twin.14.4.333. This article has 10 citations and is from a peer-reviewed journal.
-
-19. (gupta2012ltypelectinsin pages 9-10): G. S. Gupta. L-type lectins in er-golgi intermediate compartment. Animal Lectins: Form, Function and Clinical Applications, pages 145-161, Mar 2012. URL: https://doi.org/10.1007/978-3-7091-1065-2\_7, doi:10.1007/978-3-7091-1065-2\_7. This article has 3 citations.
-
-20. (tempio2020thepivotalrole pages 2-3): Tiziana Tempio and Tiziana Anelli. The pivotal role of erp44 in patrolling protein secretion. Journal of Cell Science, Nov 2020. URL: https://doi.org/10.1242/jcs.240366, doi:10.1242/jcs.240366. This article has 47 citations and is from a domain leading peer-reviewed journal.
+14. (zhang2023mammaliancargoreceptors pages 5-6): Yuanbao Zhang, Vishal Srivastava, and Bin Zhang. Mammalian cargo receptors for endoplasmic reticulum-to-golgi transport: mechanisms and interactions. Biochemical Society Transactions, 51:971-981, Jun 2023. URL: https://doi.org/10.1042/bst20220713, doi:10.1042/bst20220713. This article has 23 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](LMAN1L-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000022 The provided document does not contain a main figure or schematic specifically illustrating ERGL (LMAN1L) or the proposed ERGIC-53/](LMAN1L-deep-research-falcon_artifacts/image-1.png)
+- [Edison artifact artifact-01](LMAN1L-deep-research-falcon_artifacts/artifact-01.md)
+![## Context ID: pqac-00000009 The overall architecture and domain organization of the full-length ERGIC-53 tetramer in complex with MCFD2 is shown in this cryo-E](LMAN1L-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. gupta2012ltypelectinsin pages 1-2
-2. watanabe2024structureoffulllength pages 7-8
-3. gupta2012ltypelectinsin pages 15-16
-4. veronika2010theroleof pages 28-32
-5. watanabe2024structureoffulllength pages 8-9
-6. almeida2023allelicexpressionimbalance pages 4-6
-7. ng2011anadditionalcase pages 5-6
-8. suzuki2021foldingandquality pages 12-14
-9. tempio2020thepivotalrole pages 1-2
-10. gupta2012ltypelectinsin pages 8-9
-11. fu2019proteostasismaintenanceof pages 103-114
-12. gupta2012ltypelectinsin pages 2-3
-13. dancourt2010proteinsortingreceptors pages 9-10
-14. gupta2012ltypelectinsin pages 9-10
-15. tempio2020thepivotalrole pages 2-3
-16. https://doi.org/10.1038/s41467-024-46747-1
-17. https://doi.org/10.1093/rheumatology/keac498
-18. https://doi.org/10.1375/twin.14.4.333
-19. https://doi.org/10.1007/978-3-7091-1065-2_7
-20. https://doi.org/10.1016/b978-0-12-409547-2.14947-9
-21. https://doi.org/10.5451/unibas-005405317
-22. https://doi.org/10.1242/jcs.240366
-23. https://doi.org/10.1146/annurev-biochem-061608-091319
-24. https://platform.opentargets.org/
-25. https://doi.org/10.1038/s41467-024-46747-1,
-26. https://doi.org/10.1242/jcs.240366,
-27. https://doi.org/10.1016/b978-0-12-409547-2.14947-9,
-28. https://doi.org/10.1007/978-3-7091-1065-2\_7,
-29. https://doi.org/10.1146/annurev-biochem-061608-091319,
-30. https://doi.org/10.5451/unibas-005405317,
-31. https://doi.org/10.1093/rheumatology/keac498,
-32. https://doi.org/10.1375/twin.14.4.333,
+1. baines2007receptormediatedproteintransport pages 4-6
+2. zhang2023mammaliancargoreceptors pages 3-3
+3. baines2007receptormediatedproteintransport pages 3-4
+4. zhang2023mammaliancargoreceptors pages 4-5
+5. das2012structuralbasisofa pages 25-31
+6. baines2007receptormediatedproteintransport pages 1-2
+7. baines2007receptormediatedproteintransport pages 2-3
+8. das2012structuralbasisof pages 31-37
+9. das2012structuralbasisofa pages 31-37
+10. zhang2023mammaliancargoreceptors pages 5-6
+11. https://doi.org/10.1016/j.tibs.2007.06.006
+12. https://doi.org/10.1042/bst20220713
+13. https://doi.org/10.1038/s41467-024-46747-1
+14. https://doi.org/10.1016/j.tibs.2007.06.006,
+15. https://doi.org/10.1042/bst20220713,
+16. https://doi.org/10.1038/s41467-024-46747-1,
