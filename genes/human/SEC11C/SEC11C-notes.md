@@ -36,3 +36,28 @@ Ser/His/Asp charge-relay catalytic triad (catalytic Ser-68). It is the paralog o
   PMID:32296183, BioPlex PMID:33961781, cell-map PMID:40205054) + intra-complex SPCS2/SPCS3 (PMID:34388369).
   KEEP_AS_NON_CORE.
 - No "response to virus" annotation for SEC11C (unlike SEC11A).
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+The Falcon report (Edison Scientific) for SEC11C is built almost entirely on literature already in
+the review: Liaci 2021 SPC cryo-EM (PMID:34388369), the Zanotti/Feige SPC quality-control function
+(PMID:36454823, Science 2022), Chung 2024 Spc2 yeast study (PMID:39565596), and cavinafungin
+(PMID:28423309). All already incorporated.
+
+- NEW reference added: Cui et al. 2015, competitive inhibition of ER signal peptidase by
+  non-cleavable preprotein cargos [PMID:26446786 "it binds to the catalytic SPase subunit SEC11A,
+  inhibiting SPase activity in a dose-dependent manner"]. PubMed-verified (DOI 10.1074/jbc.M115.692350,
+  J Biol Chem 2015). Note: the abstract names SEC11A (not SEC11C) as the bound catalytic subunit, so
+  relevance to SEC11C is LOW (background for the conserved eukaryotic SPase catalytic mechanism and
+  druggability). Not in GOA; no new GO annotation.
+- Falcon emphasises SEC11A/SEC11C paralog redundancy: SEC11A knockdown did not abolish noncanonical
+  cleavage of Cx32, "consistent with compensation by SEC11C," and notes SEC11C can be hard to detect
+  in some cell lines at baseline, suggesting a context-dependent/backup catalytic role
+  [PMID:36454823 (Zanotti 2022) / the linked Zanotti 2023 thesis (heidok.00033417)]. This already
+  matches the SEC11C review framing; no annotation change. The thesis (heidok.00033417) is a
+  non-PMID secondary version of the Science paper and was not added as a separate reference.
+- Falcon notes both SEC11A- and SEC11C-containing SPC paralogs cleaved a pre-beta-lactamase model
+  substrate with similar efficiency in vitro (Liaci 2021), supporting that SEC11C is a fully active
+  catalytic paralog [PMID:34388369]. Consistent with existing GO:0009003/GO:0004252 ACCEPT decisions;
+  no change.
+- Falcon's "ssrn.3778304" DOI for the Liaci structure is the preprint of PMID:34388369; not added.

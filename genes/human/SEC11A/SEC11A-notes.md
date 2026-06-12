@@ -39,3 +39,25 @@ Ser/His/Asp charge-relay catalytic triad (catalytic Ser-56). The other catalytic
   signal peptidase processing of viral substrates, not a dedicated antiviral response.
 - protein binding (GO:0005515) IPI rows: high-throughput captures (HuRI PMID:32296183, BioPlex
   PMID:33961781, cell-map PMID:40205054) + intra-complex SPCS2/SPCS3 (PMID:34388369). KEEP_AS_NON_CORE.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+The Falcon report (Edison Scientific) for SEC11A largely recapitulates literature already in the
+review: Liaci 2021 SPC cryo-EM (PMID:34388369), the SPC quality-control function (PMID:36454823),
+cavinafungin (PMID:28423309), the Chung 2024 Spc2 yeast mechanism (PMID:39565596), and the two
+cancer biomarker papers (gastric PMID:36456166; HNSC PMID:35653344). All were already incorporated.
+
+- NEW reference added: competitive inhibition of ER signal peptidase by non-cleavable preproteins.
+  The non-cleavable variant "binds to the catalytic SPase subunit SEC11A, inhibiting SPase activity
+  in a dose-dependent manner" and impairs processing in trans, including of viral polypeptides; the
+  authors propose eukaryotic SPase as an antiviral drug target [PMID:26446786 "it binds to the
+  catalytic SPase subunit SEC11A, inhibiting SPase activity in a dose-dependent manner"]. PubMed-
+  verified (DOI 10.1074/jbc.M115.692350, J Biol Chem 2015). Added to references (relevance MEDIUM,
+  correctness VERIFIED). Not in GOA, so no new GO annotation; supports SEC11A's signal peptidase
+  activity (GO:0009003/GO:0004252) and its druggability. The Falcon report cites this paper only in
+  its SEC11C report, but the abstract names SEC11A specifically.
+- Falcon quantitative context (already consistent with review): SPC processes ~3,000 human signal
+  peptides; membrane-thinning TM window reduces bilayer from ~4 nm to ~2.3-2.6 nm; ~1,500 membrane
+  proteins predicted to carry cryptic SPC cleavage sites [PMID:36454823]. No annotation change.
+- Falcon's "ssrn.3778304" DOI for the Liaci structure is the preprint of the published Mol Cell paper
+  already cited as PMID:34388369; no separate reference added.

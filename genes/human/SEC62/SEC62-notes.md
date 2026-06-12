@@ -52,3 +52,28 @@ recovery-phase ER-phagy (reticulophagy) via an LC3/GABARAP-interacting region.
 ## Disease / other
 SEC62 is amplified/overexpressed in prostate and lung (and other) cancers (located at 3q26 amplicon);
 this is a disease/expression association, not a clean GO biological process.
+
+## Falcon deep-research findings (incorporated 2026-06)
+- Substrate-specificity "rules": SEC62/SEC63 clients share signal peptides with longer but
+  less hydrophobic H-regions and lower C-region polarity; a slowly gating signal peptide plus
+  a downstream positively charged cluster is decisive for SEC62/SEC63 (and BiP) dependence
+  [PMID:32133789 "those previously unknown substrates share signal peptides (SP) with comparatively longer but less hydrophobic hydrophobic region of SP and lower carboxy-terminal region of SP (C-region) polarity"].
+- 22 novel SEC62/SEC63 substrates identified in intact human cells by unbiased proteomics, in
+  addition to ERj3 [PMID:32133789 "we identified 22 novel Sec62/Sec63 substrates under these in vivo-like conditions"].
+- Two proposed gating models: the SEC62/SEC63 complex may support Sec61 opening either by direct
+  interaction with the cytosolic N-terminus of Sec61alpha or via recruitment of BiP to ER-lumenal
+  loop 7 of Sec61alpha [PMID:32133789 "by direct interaction with the cytosolic amino-terminal peptide of Sec61α or via recruitment of BiP and its interaction with the ER-lumenal loop 7 of Sec61α"].
+- SEC62 knockdown proteomics altered steady-state levels of ~329 proteins (208 down, 121 up;
+  q<0.05), enriched for cleavable signal-peptide and N-glycosylated proteins (Falcon; cf. PMID:32133789).
+- Calcium / calmodulin role reaffirmed (already in review via PMID:24304694): SEC62 regulates the
+  Sec61 Ca2+ leak via a Ca2+-sensitive interaction; SEC62 depletion >=2-fold increases basal cytosolic
+  Ca2+; CaM antagonists (trifluoperazine) phenocopy SEC62 silencing [PMID:24304694, Linxweiler 2013 BMC Cancer, doi:10.1186/1471-2407-13-574].
+- recovER-phagy reaffirmed (already in review via GO:0061709): SEC62 acts as an ER-phagy receptor
+  during recovery from ER stress, distinct from starvation-induced ER-phagy (Falcon review framing).
+- Pan-cancer context (3q26 amplicon): SEC62 alterations (mostly amplifications) reported in 2,595 of
+  >72,000 cancer patients; SEC62-altered median survival 54.2 vs 95.6 months unaltered
+  [Sicking et al. 2021 Cells, doi:10.3390/cells10051036 — not added as ref (disease/expression context)].
+- Zimmermann 2025 review frames SEC62 as a substrate-selective Sec61 translocon effector
+  [PMID:41009394, doi:10.3390/ijms26188823] — added as reference.
+- No new mechanistic structural finding for SEC62 itself beyond the substrate-specificity work;
+  Falcon's 2023-2024 "novelty" for SEC62 is mainly conceptual integration into ER-phagy/Ca2+ frameworks.

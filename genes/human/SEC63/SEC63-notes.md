@@ -56,3 +56,29 @@ Loss-of-function SEC63 variants cause autosomal dominant polycystic liver diseas
 ## Disease
 PCLD2 (autosomal dominant polycystic liver disease) caused by SEC63 LoF/truncating variants
 [file:human/SEC63/SEC63-uniprot.txt; PMID:15133510; PMID:28375157].
+
+## Falcon deep-research findings (incorporated 2026-06)
+- Substrate-specificity "rules" for SEC62/SEC63-dependent import directly establish SEC63 client
+  selectivity: clients carry signal peptides with longer but less hydrophobic H-regions and lower
+  C-region polarity, plus a slowly gating SP and downstream positive-charge cluster
+  [PMID:32133789 "those previously unknown substrates share signal peptides (SP) with comparatively longer but less hydrophobic hydrophobic region of SP and lower carboxy-terminal region of SP (C-region) polarity"].
+- SEC63 J-domain HPD motif is essential: mutating the conserved HPD (H132Q in the Falcon framing;
+  H132 in UniProt mutagenesis) abolishes productive BiP interaction and fails to rescue Sec63
+  depletion phenotypes (Falcon; consistent with UniProt MUTAGEN H132 and PMID:29719251).
+- Paper explicitly links the SEC62/SEC63 substrate rules to the etiology of SEC63-linked polycystic
+  liver disease [PMID:32133789 "contribute to our understanding of the etiology of SEC63-linked polycystic liver disease"].
+- "Dynamic brace" gating model: Sec62/Sec63 can fully open / strongly brace open the Sec61 lateral
+  gate, lowering the barrier for nonoptimal signal sequences to initiate translocation
+  [Shao 2023, Mol Biol Cell, doi:10.1091/mbc.e21-09-0451 — review; not added as ref, mechanism already in review].
+- Co-translational recruitment to paused translocation sites: marginally hydrophobic signal sequences/
+  TMDs cause Sec61 pausing until Sec63-mediated BiP engagement releases the pause and ensures folding
+  [already in review via PMID:36459117, Sun et al. 2022 JCB, doi:10.1083/jcb.202203070].
+- Non-canonical IRE1alpha-SEC63-ACLY axis in HCC (already in review via PMID:37122003): ER stress
+  -> IRE1alpha phosphorylates SEC63 at T537 -> SEC63 stabilizes ACLY and enters nucleus to raise
+  acetyl-CoA / Snail1, promoting metastasis [Hu et al. 2023, J Exp Clin Cancer Res, doi:10.1186/s13046-023-02656-7].
+- Clinical genetics (already in review via PMID:38689396): in a 2024 Japanese severe-PLD cohort
+  (hTLV >1800 mL/m, n=49), 44/49 (90%) genetically solved; SEC63 = 1/44 (2%) [doi:10.34067/KID.0000000000000461].
+- LOH/two-hit evidence for SEC63 cysts appears less frequent than PRKCSH/PKD genes (1/14 cysts, 7%)
+  [Wills et al. 2016 EJHG, doi:10.1038/ejhg.2016.97 — not added as ref; background ADPLD genetics].
+- Zimmermann 2025 review [PMID:41009394, doi:10.3390/ijms26188823] frames SEC63 as a substrate-
+  selective Sec61 translocon accessory/co-chaperone — added as reference.
