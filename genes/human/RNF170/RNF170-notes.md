@@ -36,3 +36,12 @@ ER membrane (PMID:21610068, PMID:31076723), multi-pass. This is the core compart
 - protein ubiquitination (GO:0016567, IEA UniPathway): KEEP_AS_NON_CORE (generic parent).
 - protein binding (GO:0005515, IPI x2): KEEP_AS_NON_CORE (uninformative; includes PSMA6 proteasome subunit and isoform-5 interactome partners).
 - proposed_new_term: ITPR1/IP3R ERAD + ERLIN complex membership (the defining function, currently missing from GOA).
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- Recessive (biallelic) RNF170 variants cause autosomal recessive HSP (SPG85), established in four unrelated families with functional validation in patient fibroblasts, mutant SH-SY5Y cells, and zebrafish knockdown [PMID:31636353 "mutations in the ubiquitin E3 ligase gene RNF170, which targets inositol 1,4,5-trisphosphate receptors for degradation, are the likely cause of autosomal recessive HSP in four unrelated families"]. Added as a reference; previously the SPG85 link was only in description without a cited primary genetics paper.
+- That genetics study mechanistically ties disease to failure of the RNF170-mediated ITPR1/IP3R ERAD pathway and altered ER Ca2+ release signaling [PMID:31636353 "Activated inositol 1,4,5-trisphosphate receptors are then rapidly degraded by the endoplasmic reticulum-associated degradation pathway"], reinforcing the existing core IP3R-ERAD function annotation (added PMID:31636353 id to that NEW annotation's supported_by).
+- Falcon reports patient-derived fibroblasts fail to show stimulus-dependent IP3R-3 degradation and RNF170-KO SH-SY5Y cells show elevated basal IP3R-1 with rescue by WT RNF170 (Wagner 2019); consistent with RNF170 constraining IP3R abundance [DOI:10.1038/s41467-019-12620-9].
+- ERLIN1/2 SPFH scaffolds bind a conserved luminal N-terminal motif shared by RNF170 and TMUB1-L, bridging them in cholesterol-rich ER nanodomains (already in review as PMID:38782601) [DOI:10.26508/lsa.202402620].
+- Falcon also surfaced the ERLIN1 SPG62 cohort (Cogan 2024, n=13) and a Trends Neurosci review (Van de Vondel 2024) framing the ERLIN1/2-RNF170-IP3R module as a recurrent neurogenetic mechanism; these are about ERLIN1/pathway context rather than RNF170 directly, so not added as RNF170 references [DOI:10.1007/s00439-024-02702-0; DOI:10.1016/j.tins.2024.01.004].
+- Song 2020 TLR3 study (already PMID:31076723) and the Lu 2011 founding IP3R-ERAD paper (already PMID:21610068) were re-confirmed by Falcon; no change.

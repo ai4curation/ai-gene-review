@@ -40,3 +40,11 @@ lipid-droplet / fatty-acid metabolism.
 - The many bare "protein binding" (GO:0005515) IPI annotations: KEEP_AS_NON_CORE (uninformative term), though several map to informative interactions captured by specific terms.
 - ATPase complex (GO:1904949) NAS / proteasomal protein catabolic process (GO:0010498) IEA: generic parents; keep non-core.
 </content>
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- Systematic VCP-UBXD adaptor interactome (Raman 2015) classifies FAF2/UBXD8 as a membrane-tethered p97 adaptor in ERAD/lipid-droplet homeostasis, recovering interactors AMFR, DERLIN2, AUP1, BAG6, UBAC2 plus the shared UFD1L/NPLOC4 module [PMID:26389662 "a network of over 195 interacting proteins, implicating VCP in diverse cellular pathways"]. Added as a MEDIUM-relevance reference (PMID:26389662; DOI:10.1038/ncb3238) and id-only to the ERAD-pathway supported_by.
+- All other major 2022-2025 Falcon papers were ALREADY incorporated in the completed review: Fujisawa 2022 eLife ubiquitin-threshold (PMID:35920641), Ganji 2023 ER-mito contact/lipid-saturation (PMID:36746962), Koyano 2024 basal pexophagy (PMID:39472561), Huo 2025 UBH-UBX module (PMID:41258083), and Olzmann 2013 ATGL/lipid-droplet (PMID:23297223). No new additions needed for these.
+- Falcon reiterates FAF2's UBH (ubiquitin-binding helix) adjacent to UBX amplifies p97-UFD1L-NPLOC4 unfolding ~2-fold and is sufficient (with UFD1/NPLOC4) to extract membrane proteins from ER and mitochondria; FAF2-KO stabilized CD4 ~10-fold (already captured via PMID:41258083) [DOI:10.1038/s41467-025-65166-4].
+- Falcon confirms FAF2/p97 suppresses basal pexophagy by extracting ubiquitylated PMP70/PEX16, preventing OPTN recruitment (already captured via PMID:39472561) [DOI:10.1038/s41467-024-53558-x].
+- No new disease/substrate/localization finding for FAF2 beyond what the completed review already documents; the review was already comprehensive for the recent literature.

@@ -38,3 +38,39 @@ and recessive intellectual disability/joint-contractures syndrome.
 - protein-containing complex (GO:0032991): generic → KEEP_AS_NON_CORE.
 - protein binding (GO:0005515) IPI: uninformative → KEEP_AS_NON_CORE (TMEM41B interaction PMID:30352685 etc.).
 - Do NOT over-claim catalytic MF: ERLIN2 is a scaffold/lipid-binding SPFH protein.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+All four cited papers below were PMID-verified via PubMed (DOI-to-PMID); none are in the
+publications/ cache, so no verbatim supporting_text was added to the review — references
+added with reference_review only, plus the Veronese ref id on the E3-ligase/TMUB1 core_function.
+
+- ERLIN1/2 scaffolds form "large ring-like cup-shaped structures on the ER membrane" that
+  "bind cholesterol and E3 ubiquitin ligases, potentially defining functional nanodomains."
+  [PMID:38782601 "ERLIN1 and ERLIN2 ... form large ring-like cup-shaped structures on the endoplasmic reticulum (ER) membrane and serve as platforms to bind cholesterol and E3 ubiquitin ligases"]
+- New mechanistic link: ERLIN scaffolds bridge full-length TMUB1 and RNF170 through a conserved
+  luminal N-terminal motif that binds the SPFH/prohibitin domain of two adjacent ERLIN subunits;
+  HSP-linked variants map to these interfaces.
+  [PMID:38782601 "ERLIN scaffolds mediate the interaction between the full-length isoform of TMUB1 ... and RNF170 ... binds the stomatin/prohibitin/flotillin/HflKC domain of two adjacent ERLIN subunits at different interfaces. Protein variants that preclude these interactions have been previously linked to hereditary spastic paraplegia"]
+- New cell-biology role beyond classical ERAD: ERLINs limit cholesterol esterification, favouring
+  ER-to-Golgi cholesterol transport and regulating Golgi morphology and the secretory pathway
+  (HeLa double-KO phenotype).
+  [PMID:38782601 "a role of ERLIN scaffolds in limiting cholesterol esterification, thereby favouring cholesterol transport from the ER to the Golgi apparatus and regulating Golgi morphology and the secretory pathway"]
+- Falcon also notes SOAT1 inhibition (avasimibe) rescues lipid-droplet/Golgi phenotypes in
+  ERLIN-deficient cells (from figures); treat as a translational/pharmacology lead, not a GO
+  annotation. (Veronese 2024, PMID:38782601)
+- Proposed dominant disease mechanism: a heterozygous ERLIN2 p.Val71Ala recruits the E3 ligase
+  RNF213 (NOT RNF170) to degrade IP3R1, lowering free Ca2+, triggering ER-stress apoptosis and
+  suppressing MAPK/proliferation in patient-derived iPSC models.
+  [PMID:40225166 "the ERLIN2 heterozygous missense variant protein recruited the ubiquitin E3 ligase RNF213 to degrade IP3R1 ... reduction of intracellular free calcium, which triggered endoplasmic reticulum (ER) stress-mediated apoptosis"]
+- SPG18 inheritance is broader than classic recessive: monoallelic/autosomal-dominant ERLIN2
+  variants (often pure, late-onset) occur, with HSP-to-ALS phenoconversion (2/5 cases) and a
+  recurrent monoallelic c.502G>A hotspot for an ALS-like phenotype.
+  [PMID:38427163 "Recent cases of late-onset, pure HSP with monoallelic ERLIN2 variants ... two cases out of five exhibiting HSP-ALS phenoconversion ... relatively high incidence of the c.502G>A variant in monoallelic SPG18 cases"]
+- An AD ERLIN2 p.V168M family showed variable expressivity (ALS phenoconversion, pure HSP, and a
+  complicated form with psychomotor delay/epilepsy) but NORMAL erlin2 oligomerization, arguing
+  against a dominant-negative oligomerization defect for this variant.
+  [PMID:38607533 "a phenoconversion to amyotrophic lateral sclerosis (ALS) ... pure HSP ... a complicated form with psychomotor delay and epilepsy ... Erlin2 oligomerization was found to be normal ... we ruled out a dominant negative effect of V168M on erlin2 oligomerization"]
+- Caveat: the Falcon report's "cryo-EM of the ERLIN complex" framing is not directly supported by
+  a retrieved structural paper; Veronese 2024 uses 3D modelling, not cryo-EM. The existing
+  suggested_question about a cryo-EM-resolved architecture remains a forward-looking question.

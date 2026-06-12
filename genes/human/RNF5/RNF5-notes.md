@@ -56,3 +56,12 @@ UniProt records Cell membrane (plasma membrane, PMID:9533025 early study), Mitoc
 - endoplasmic reticulum mannose trimming (GO:1904380, IEA ARBA / Reactome TAS): MARK_AS_OVER_ANNOTATED — RNF5 does not trim mannose; this is pathway-adjacency over-annotation.
 - ER quality control compartment (GO:0044322, IEA inter-ontology link): KEEP_AS_NON_CORE / ACCEPT — plausible localization from ERAD inference.
 - identical protein binding (GO:0042802): KEEP_AS_NON_CORE (RNF5 self-interaction in interactome screens).
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+Reviewed `RNF5-deep-research-falcon.md` (Edison/Falcon, 2026-06-12). Most content (ERAD/CFTR-F508del, STING/MAVS antiviral negative regulation, ATG4B/autophagy, RNF5/RNF185 redundancy) is already captured in this review. Genuinely new items:
+
+- NEW cardioprotective role via ASK1: RNF5 is downregulated in infarcted heart; RNF5 KO worsens and overexpression ameliorates myocardial infarction, attributed to inhibition of ASK1 (MAP3K5) activation. [PMID:39098896 "RING finger protein 5 protects against acute myocardial infarction by inhibiting ASK1"] (DOI 10.1186/s12872-024-04070-z). Added to references (relevance MEDIUM); directness of RNF5 ubiquitination of ASK1 not established in the abstract, and full text is not cached, so no GO annotation or supporting_text was added.
+- 2024 genome-wide CRISPR screen (Riepe et al., MBoC, DOI 10.1091/mbc.e23-08-0336) confirms RNF5 is the top E3 hit but only modest single-KO effect on CFTR-F508del ERAD, with RNF185 as the redundant ligase and UBE2D3 as a shared E2 — consistent with the redundancy already documented; not separately added (peripheral, not cached, RNF185-focused mechanism covered in the RNF185 review).
+- Thiadiazole RNF5 inhibitors (inh-2 / analogue 16; Brusa et al. 2023 J Med Chem, DOI 10.1021/acs.jmedchem.3c00608) and the 2024 CF ubiquitination-targeting review (Okiyoneda et al., DOI 10.1007/s00018-024-05295-z) are translational/medicinal-chemistry context only; no new functional annotation implied. Noted for completeness, not added as functional refs.
+- Falcon also restates the Ge & Zhang 2024 Front Immunol review (RNF5 negative regulator of STING/MAVS/IRF3; DOI 10.3389/fimmu.2023.1324516) — review-level, corroborates existing non-core antiviral annotations; not added.

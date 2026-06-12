@@ -37,3 +37,30 @@ catalytic Ser/His dyad of active rhomboid proteases is NOT conserved, so it has 
 - negative regulation of canonical Wnt (GO:0090090) IMP/IEA: LMBR1L/AMFR Wnt role → ACCEPT (non-core
   relative to ERAD/ER-phagy, but experimentally supported).
 - protein binding (GO:0005515) IPI: uninformative term → KEEP_AS_NON_CORE.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+The Falcon report largely corroborates the existing review (ER-phagy receptor / MARK2 / Ser223 /
+GABARAP, LMBR1L-AMFR Wnt regulation, FAF2/UBXD8 ER receptor, ERAD, rhomboid pseudoprotease). The
+genuinely new, verifiable additions are the disease-genetics references:
+
+- UBAC2 is a confirmed Behçet's disease (BD) susceptibility locus in Han Chinese (two-stage study,
+  477 BD cases / 1,334 controls). The risk T allele of promoter SNP rs3825427 has lower promoter
+  activity and lowers UBAC2 transcript variant 1 expression, suggesting disease risk acts via
+  transcriptional modulation of UBAC2. [PMID:22455605 "This study replicates a predisposition gene
+  to BD, UBAC2, and suggests that UBAC2 may be involved in the development of BD through its
+  transcriptional modulation"] (PubMed-verified; doi:10.1186/ar3789). Added as a top-level reference
+  (relevance MEDIUM) — locus/regulatory evidence, not tied to a specific GO term.
+- The 13q32 locus near UBAC2 (variant rs7335046) confers susceptibility to cutaneous basal cell
+  carcinoma and squamous cell carcinoma. [PMID:21700618 "In the locus on 13q32 near the UBAC2 gene
+  encoding ubiquitin-associated domain-containing protein 2, we also identified a variant conferring
+  susceptibility to BCC"] (PubMed-verified; doi:10.1093/hmg/ddr287). Added as a top-level reference
+  (relevance LOW) — locus-level GWAS only, does not establish UBAC2 as the causal gene.
+- Falcon also cites several rhomboid/ERAD reviews (Adrain 2020 FEBS J doi:10.1111/febs.15548; Kandel
+  2020 BBA-MCR doi:10.1016/j.bbamcr.2020.118793; Lemberg 2016 Semin Cell Dev Biol
+  doi:10.1016/j.semcdb.2016.06.022) reiterating the UBA-domain/polyubiquitin-binding adapter and
+  FAF2/UBXD8 lipid-droplet-trafficking role already captured in the review; not added as separate
+  references since they only restate existing primary-evidence-backed content.
+- Note: the Falcon report repeatedly cites the ER-phagy paper as "doi:10.1038/s44318-024-00232-z";
+  this is the same study already in the review as PMID:39284914 (He et al. 2024, EMBO J). No new
+  ER-phagy finding beyond what is already annotated.
