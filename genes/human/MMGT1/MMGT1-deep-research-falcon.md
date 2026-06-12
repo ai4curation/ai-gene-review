@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T01:26:07.612775'
-end_time: '2026-06-12T01:46:08.158306'
-duration_seconds: 1200.55
+start_time: '2026-06-12T01:42:52.613060'
+end_time: '2026-06-12T02:01:01.584203'
+duration_seconds: 1088.97
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -26,7 +26,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 34
+citation_count: 33
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -43,9 +43,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000020 Figure 1 shows the architecture of the
-    human ER membrane protein complex (EMC). Subunit EMC5 is labeled in all panels
-    (A-D). Panels'
+  description: '## Context ID: pqac-00000016 I have extracted the requested figures
+    and panels: - **Figure 1** (image-008) details the structural study of the VDAC1-bound
+    EMC c'
 ---
 
 ## Question
@@ -156,210 +156,243 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research Report: Human **MMGT1** (UniProt **Q8N4V1**) / **EMC5** / **TMEM32**
+## Research Report: Functional Annotation of Human **MMGT1** (UniProt **Q8N4V1**) / **EMC5** / **TMEM32**
 
 ### Executive summary
-Human MMGT1 (UniProt Q8N4V1) corresponds to **ER membrane protein complex subunit 5 (EMC5)**, an **integral ER membrane** component of the **ER membrane protein complex (EMC)**, a conserved membrane-protein-biogenesis machine that functions as a **co-/post-translational insertase** and broader **membrane-protein chaperone/quality-control factor**. Across the structural and mechanistic EMC literature reviewed here, **EMC5 is consistently treated as a core EMC subunit**, not as a validated independent magnesium transporter; no direct experimental evidence supporting Mg2+ transport by EMC5/MMGT1 was found in these sources. Key recent advances (2023–2024) place EMC/EMC5 in (i) preventing **mistranslocation/misinsertion** at the ER via a selectivity filter and (ii) **post-translational topology rectification** of C-terminal transmembrane domains (TMDs) in multipass proteins—potentially impacting **~250** proteins including Cys-loop ion channels important for neurotransmission. (pleiner2020structuralbasisfor pages 1-3, pleiner2023aselectivityfilter pages 19-23, wu2024emcrectifiesthe pages 1-2)
+Human **MMGT1 (Q8N4V1)** is best supported as **EMC5**, a **core integral-membrane subunit of the endoplasmic reticulum (ER) membrane protein complex (EMC)** that participates in **membrane protein biogenesis**, rather than as a well-established standalone magnesium transporter. Multiple authoritative sources explicitly equate **MMGT1 = EMC5** and place it in the ER-resident EMC complex. (rother2021signalpeptidasecomplex pages 1-2, chitwood2019theroleof pages 2-4)
 
-| Topic | Key takeaways | Key sources with year + URL |
-|---|---|---|
-| Identity / aliases | UniProt Q8N4V1 corresponds to human **MMGT1**, better known in the EMC literature as **EMC5** and also annotated as **TMEM32**. In primary EMC studies, the protein is consistently treated as an **ER membrane protein complex subunit**, not as a validated standalone Mg²⁺ transporter (pleiner2020structuralbasisfor pages 1-3, whittsette2022theendoplasmicreticulum pages 1-2). | Pleiner et al., 2020, *Science* — https://doi.org/10.1126/science.abb5008; Whittsette et al., 2022, *iScience* — https://doi.org/10.1016/j.isci.2022.104754; OpenTargets MMGT1 associations — https://platform.opentargets.org (OpenTargets Search: -MMGT1, pleiner2020structuralbasisfor pages 1-3, whittsette2022theendoplasmicreticulum pages 1-2) |
-| Localization / topology | EMC5 is an **integral ER membrane** subunit of the mammalian EMC. Structural work indicates **two transmembrane helices**, association with **EMC6**, and a **cytosolic C-terminus**; EMC5 helps anchor cytosolic and membrane regions of the complex (hegde2022thefunctionstructure pages 13-14, hegde2022thefunctionstructure pages 19-20, pleiner2020structuralbasisfor pages 1-3). | Hegde, 2022, *Annu Rev Biochem* — https://doi.org/10.1146/annurev-biochem-032620-104553; Pleiner et al., 2020, *Science* — https://doi.org/10.1126/science.abb5008 (hegde2022thefunctionstructure pages 13-14, hegde2022thefunctionstructure pages 19-20, pleiner2020structuralbasisfor pages 1-3) |
-| Molecular function | Current best-supported function is **structural/core subunit of the EMC insertase/chaperone machinery** that supports membrane protein biogenesis. EMC5 stabilizes weak transmembrane interfaces, especially in the EMC3–EMC6 core region, rather than catalyzing an enzymatic reaction of its own (pleiner2020structuralbasisfor pages 1-3, hegde2022thefunctionstructure pages 4-6). | Pleiner et al., 2020, *Science* — https://doi.org/10.1126/science.abb5008; Hegde, 2022, *Annu Rev Biochem* — https://doi.org/10.1146/annurev-biochem-032620-104553 (pleiner2020structuralbasisfor pages 1-3, hegde2022thefunctionstructure pages 4-6) |
-| Mechanism | EMC acts as a **co-/post-translational insertase** using an EMC3/EMC6-lined **hydrophilic vestibule** plus cytosolic capture elements; EMC5 contributes to the backside groove/cleft with EMC3 and EMC6 and to assembly interfaces with EMC2/EMC8. EMC also appears to have **chaperone-like** roles beyond insertion (hegde2022thefunctionstructure pages 13-14, pleiner2020structuralbasisfor pages 1-3, hegde2022thefunctionstructure pages 20-22). | Pleiner et al., 2020, *Science* — https://doi.org/10.1126/science.abb5008; Hegde, 2022, *Annu Rev Biochem* — https://doi.org/10.1146/annurev-biochem-032620-104553 (hegde2022thefunctionstructure pages 13-14, pleiner2020structuralbasisfor pages 1-3, hegde2022thefunctionstructure pages 20-22) |
-| Recent 2023–2024 developments | **Pleiner 2023** showed the EMC contains a **charge-based selectivity filter** that limits misinsertion of mitochondrial TA proteins and enforces topology, with EMC5 contributing to a cleft lined by EMC3/EMC5/EMC6. **Wu 2024** showed EMC performs **post-translational topology rectification** of C-terminal TMDs in multipass proteins and estimated this may affect **~250 proteins** (pleiner2023aselectivityfilter pages 19-23, pleiner2023aselectivityfilter pages 1-2, wu2024emcrectifiesthe pages 7-9, wu2024emcrectifiesthe pages 1-2, wu2024emcrectifiesthe pages 2-3). | Pleiner et al., 2023, *J Cell Biol* — https://doi.org/10.1083/jcb.202212007; Wu et al., 2024, *Nat Struct Mol Biol* — https://doi.org/10.1038/s41594-023-01120-6; Li et al., 2024, *Aging* — https://doi.org/10.18632/aging.205660 (pleiner2023aselectivityfilter pages 19-23, pleiner2023aselectivityfilter pages 1-2, wu2024emcrectifiesthe pages 7-9, wu2024emcrectifiesthe pages 1-2, wu2024emcrectifiesthe pages 2-3) |
-| Disease / phenotypes / applications | EMC function is important for **GABAA receptor**, other ion-channel, and secretory-pathway proteostasis; EMC perturbation reduces receptor surface expression and can trigger ER stress/UPR. Overexpression of **EMC5+EMC6** rescued trafficking/function of pathogenic GABAA receptor variants, suggesting a possible **proteostasis-modulation** strategy rather than a direct MMGT1-targeted therapy (whittsette2022theendoplasmicreticulum pages 14-16, whittsette2022theendoplasmicreticuluma pages 35-41, whittsette2022theendoplasmicreticulum pages 1-2). | Whittsette et al., 2022, *iScience* — https://doi.org/10.1016/j.isci.2022.104754; OpenTargets MMGT1 disease associations — https://platform.opentargets.org (whittsette2022theendoplasmicreticulum pages 14-16, whittsette2022theendoplasmicreticuluma pages 35-41, whittsette2022theendoplasmicreticulum pages 1-2, OpenTargets Search: -MMGT1) |
-| Quantitative stats | Examples: EMC4 knockdown reduced induced **GABAA receptor surface expression to <50%**; loss of EMC impaired GABRA1 C-tail glycosylation/insertion by **>50%**; EMC5+EMC6 overexpression increased surface α1 levels to **380%, 235%, 285%** for three pathogenic variants and raised peak currents up to **550%** in one assay. Ribosome-proximity profiling found **~53 enriched mRNAs**, and one proteomics study identified **21 proteins with ≥50% reduction** after EMC perturbation (wu2024emcrectifiesthe pages 3-4, whittsette2022theendoplasmicreticulum pages 14-16, hegde2022thefunctionstructure pages 19-20, wu2024emcrectifiesthe pages 2-3, whittsette2022theendoplasmicreticuluma pages 35-41). | Wu et al., 2024, *Nat Struct Mol Biol* — https://doi.org/10.1038/s41594-023-01120-6; Whittsette et al., 2022, *iScience* — https://doi.org/10.1016/j.isci.2022.104754; Hegde, 2022, *Annu Rev Biochem* — https://doi.org/10.1146/annurev-biochem-032620-104553 (wu2024emcrectifiesthe pages 3-4, whittsette2022theendoplasmicreticulum pages 14-16, hegde2022thefunctionstructure pages 19-20, wu2024emcrectifiesthe pages 2-3, whittsette2022theendoplasmicreticuluma pages 35-41) |
+Recent (2023–2024) structural and mechanistic work has substantially refined the **current understanding of EMC function**—including **charge-based selectivity and topology enforcement** (Pleiner 2023), **post-translational insertion of C-terminal transmembrane domains (TMDs) to “rectify” multipass topology** (Wu 2024), and high-resolution **cryo-EM structures of human EMC** (Li 2024). Although MMGT1’s historical name suggests Mg2+ transport, critical reviews conclude that **direct functional evidence for MMgT/MMGT1 as a Mg2+ transporter remains limited**, and alternative functions are plausible. (schaffers2018theriseand pages 1-2, chitwood2019theroleof pages 4-6)
 
+### Verification of gene/protein identity (critical disambiguation)
+The target protein identity is consistent across the retrieved literature:
 
-*Table: This table summarizes the most evidence-supported functional annotation for human MMGT1/EMC5 (UniProt Q8N4V1), emphasizing its role as an EMC core subunit in ER membrane protein biogenesis. It also highlights recent 2023–2024 mechanistic advances, disease relevance, and key quantitative findings.*
+* **MMGT1 is explicitly equated with EMC5** in a Zika virus host-factor context (“MMGT1 = EMC5”), placing it within EMC. (Rother & Naumann, 2021; publication month April 2021; URL in citation) (rother2021signalpeptidasecomplex pages 1-2)
+* An authoritative EMC review enumerates EMC subunits and lists **“EMC5  MMGT1  15 kDa”**, indicating that MMGT1 is the canonical name used for EMC subunit 5 in humans. (Chitwood & Hegde, 2019; May 2019; https://doi.org/10.1016/j.tcb.2019.01.007) (chitwood2019theroleof pages 2-4)
+
+No evidence in the retrieved corpus suggested a different human gene/protein being conflated with MMGT1 for UniProt Q8N4V1.
+
+### 1) Key concepts and definitions (current understanding)
+
+#### 1.1 The ER membrane protein complex (EMC)
+The **EMC** is an abundant, conserved, **ER-resident multi-subunit complex** involved in membrane protein biogenesis, including acting as a **transmembrane-domain insertase** and more broadly supporting client folding/assembly. (chitwood2019theroleof pages 1-2, chitwood2019theroleof pages 6-8)
+
+A key conceptual framework is that EMC lowers barriers for insertion/topogenesis of challenging TMDs (e.g., lower hydrophobicity or problematic sequence features), complementing the Sec61 translocon and other insertases. (chitwood2019theroleof pages 6-8)
+
+#### 1.2 MMGT1/EMC5 as a “core” EMC subunit
+Knockdown/knockout experiments in mammalian cells suggest that loss of **EMC5 (MMGT1)** strongly impairs integrity of remaining subunits, supporting that EMC5 is part of the **core structural/functional scaffold** of EMC. (chitwood2019theroleof pages 2-4)
+
+#### 1.3 Insertase vs “magnesium transporter” nomenclature
+While MMGT1’s alternative name (“membrane magnesium transporter 1”) implies ion transport, critical review literature argues that for **MMgT/MMGT1**, **functional evidence for Mg2+ transport is limited** and that **other functions have been suggested**. (Schäffers et al., 2018; first published Feb 7 2018; https://doi.org/10.1152/ajprenal.00634.2017) (schaffers2018theriseand pages 1-2)
+
+In parallel, EMC-focused literature notes that a reported Mg2+ transport phenotype upon EMC5 overexpression may be **unrelated** to EMC’s core insertase role. (chitwood2019theroleof pages 4-6)
+
+### 2) Recent developments and latest research (prioritizing 2023–2024)
+
+#### 2.1 EMC selectivity filter enforces correct targeting and topology (2023)
+Pleiner et al. (J Cell Biol, 2023; May 2023; https://doi.org/10.1083/jcb.202212007) describe a mechanistic **selectivity filter** at the EMC hydrophilic vestibule that uses **charge repulsion** to:
+
+* reduce misinsertion of mitochondrial tail-anchored proteins into the ER, and
+* enforce correct topology ("positive-inside" rule) for a subset of multipass substrates.
+
+This work used **mutagenesis, site-specific crosslinking, and split-GFP insertion reporters** to track insertion outcomes and mechanistically connect EMC structure to client discrimination. (pleiner2023aselectivityfilter pages 1-2, pleiner2023aselectivityfilter pages 10-11)
+
+Although this study focuses strongly on EMC3 residues controlling vestibule charge, the mechanistic implications apply to EMC as a whole and therefore contextualize EMC5 as a core membrane-subunit component of an insertase/selectivity machine. (pleiner2023aselectivityfilter pages 1-2)
+
+#### 2.2 EMC-mediated post-translational insertion “rectifies” multipass topology (2024 issue; published online 2023)
+Wu et al. (Nature Structural & Molecular Biology; published online **Nov 13, 2023**; in **January 2024** issue; https://doi.org/10.1038/s41594-023-01120-6) report that TMDs near the carboxyl terminus of mammalian multipass proteins can be inserted **post-translationally by EMC**, with **site-specific crosslinking** showing proximity of a pre-translocated C-terminal tail to EMC’s cytosol-facing hydrophilic vestibule.
+
+Key quantitative statement: the authors propose that this sequential co-translational + post-translational mechanism may apply to **~250** diverse multipass proteins. (wu2024emcrectifiesthe pages 1-2)
+
+This strengthens the view that EMC (and by extension EMC5/MMGT1 as a core subunit) is critical for **topology completion and quality control evasion** for a sizable membrane-protein subset. (wu2024emcrectifiesthe pages 1-2)
+
+#### 2.3 Structural biology of human EMC and EMC5-enabled purification (2024)
+Li et al. (Aging (Albany NY), 2024; published **Mar 15, 2024**; https://doi.org/10.18632/aging.205660) report cryo-EM structures of human EMC in apo and VDAC-bound states at **3.47 Å** and **3.32 Å**, respectively. (li2024structuralinsightsinto pages 1-3)
+
+Critically for MMGT1/EMC5 annotation and real-world implementation, Li et al. purified endogenous human EMC using a **two-step affinity strategy** with a **3×FLAG tag on EMC2 and a Twin-Strep tag on EMC5**, followed by SEC, indicating EMC5 is an experimentally tractable handle for isolating native EMC. (li2024structuralinsightsinto pages 1-3)
+
+The paper further emphasizes two transmembrane cavities—**hydrophilic vestibule** and **lipid-filled hydrophobic groove**—and identifies a **gating plug** segment (from EMC3) in the vestibule, supporting a regulatory mechanism for client insertion activity. (li2024structuralinsightsinto pages 1-3)
+
+**Visual evidence:** EMC architecture and the EMC5-tag purification approach are depicted in Li et al.’s figure panels retrieved here. (li2024structuralinsightsinto media 7677c970, li2024structuralinsightsinto media 0611078d, li2024structuralinsightsinto media bf66669f, li2024structuralinsightsinto media 34b7fb19)
+
+#### 2.4 EMC as a chaperone/holdase for ion channel assembly (2023)
+Chen et al. (Nature, 2023; published in final form July 2023; https://doi.org/10.1038/s41586-023-06175-5) provide cryo-EM structures of a large complex containing **human CaV1.2–CaVβ3 bound to EMC**, describing EMC “TM” and “Cyto” docks that remodel a client channel and facilitate handoff to CaVα2δ, supporting an EMC “holdase” role in channel biogenesis/assembly. (chen2023emcchaperone–cavstructure pages 1-3)
+
+While this does not isolate EMC5’s unique biochemical action, it provides a high-authority example of EMC’s **client-chaperone** function consistent with the broad membrane-protein biogenesis framework in which EMC5 is a core membrane component. (chen2023emcchaperone–cavstructure pages 1-3, klose2025theemcacts pages 1-2)
+
+### 3) Current applications and real-world implementations
+
+#### 3.1 EMC5 as an experimental handle for native EMC purification and structural biology
+In practice, EMC5 tagging is used to obtain native EMC for cryo-EM: Li et al. explicitly used **Twin-Strep–tagged EMC5** (with EMC2 3×FLAG) to purify endogenous EMC, enabling near-atomic resolution structure determination. (li2024structuralinsightsinto pages 1-3, li2024structuralinsightsinto media 7677c970)
+
+This establishes a real-world implementation: **EMC5 is a workable affinity handle** for isolating intact EMC, useful for structural biology, interaction mapping, and reconstitution experiments.
+
+#### 3.2 EMC pathway as a mechanistic target to modulate membrane protein biogenesis
+Mechanistic insights into EMC selectivity and topology control suggest potential applications in:
+
+* **improving membrane protein expression/biogenesis** in model systems, and
+* understanding **pathogenic dependence** on ER insertion/assembly pathways (e.g., viral multipass proteins).
+
+These are applications of the **EMC system** rather than EMC5 alone, but EMC5’s “core” role implies it is a required component to manipulate EMC function. (pleiner2023aselectivityfilter pages 1-2, chitwood2019theroleof pages 2-4)
+
+### 4) Expert opinions and analysis from authoritative sources
+
+#### 4.1 Authoritative synthesis: MMGT1/EMC5 is core to an insertase complex
+Chitwood & Hegde (Trends Cell Biol, 2019) provide a high-authority synthesis that:
+
+* places EMC as a multi-subunit ER complex with multiple membrane subunits and a client insertion role, and
+* identifies EMC5/MMGT1 among core subunits whose knockdown disrupts complex integrity.
+
+They also discuss that a reported Mg2+ transport phenotype linked to EMC5 overexpression could be **unrelated** to EMC’s core insertase function, reflecting caution in attributing magnesium transport as the primary function. (chitwood2019theroleof pages 4-6, chitwood2019theroleof pages 2-4)
+
+#### 4.2 Critical evaluation of Mg2+ transporter claims
+Schäffers et al. (Am J Physiol Renal Physiol, 2018) emphasize that many proposed Mg2+ transporters were nominated by indirect evidence and that for **MMgT/MMGT1**, **functional evidence is limited** and additional characterization is needed before strong transporter claims. (schaffers2018theriseand pages 1-2)
+
+### 5) Relevant statistics and data from recent studies
+
+#### 5.1 Structural data (2024)
+* **Cryo-EM resolution**: apo human EMC **3.47 Å**; VDAC-bound EMC **3.32 Å**. (Li et al., published Mar 15 2024) (li2024structuralinsightsinto pages 1-3)
+* **Purification**: endogenous EMC purified from Expi293F cells using **3×FLAG-EMC2** and **Twin-Strep-EMC5**. (li2024structuralinsightsinto pages 1-3)
+
+#### 5.2 Scope estimate of EMC-dependent topology rectification
+* Wu et al. estimate the sequential insertion mechanism may apply to **~250 multipass proteins**. (published online Nov 13 2023; NSMB 2024 issue) (wu2024emcrectifiesthe pages 1-2)
+
+#### 5.3 Host-pathogen data: MMGT1 in macrophage control of *M. tuberculosis* persistence (2023)
+Kalam et al. (Cell Host & Microbe, June 2023; https://doi.org/10.1016/j.chom.2023.05.009) provide quantitative experimental parameters and outcomes tying MMGT1 to infection phenotypes:
+
+* Infection model: THP-1 macrophages infected with TR-Mtb at **MOI 0.5:1** (4 h inoculation) and sorted at **96 h**. (kalam2023identificationofhost pages 25-30)
+* Distribution of phenotypic subsets among infected cells: **~46% AR** and **~4% SNR** (of the RFP+ infected population). (kalam2023identificationofhost pages 25-30)
+* Statistical reporting: validation experiments used **two sgRNAs per gene**, **3 independent experiments**, mean ± SD; volcano plot cutoffs **p<0.05**; unpaired t-tests with significance annotated (★★ p<0.01, ★★★ p<0.001). (kalam2023identificationofhost pages 25-30)
+* Lipid droplet readouts: **Lipidspot 488** staining with confocal imaging and FACS at **96 h post-infection**. (kalam2023identificationofhost pages 25-30, kalam2023identificationofhost pages 30-35)
+* Perturbations: INH condition **1 µg/ml** (2×MIC) for 24 h before plating; nevanimibe (ATR101) **100 nM** and DGAT2 inhibitor **100 nM**. (kalam2023identificationofhost pages 30-35)
+
+These results provide strong evidence that MMGT1 impacts macrophage lipid droplet biology during infection; however, the mechanistic link to EMC insertase function vs Mg2+ transport is not resolved by the excerpts retrieved here. (kalam2023identificationofhost pages 25-30, kalam2023identificationofhost pages 30-35)
 
 ---
 
-## 1. Target verification: correct gene/protein identity
-### 1.1 Identity and nomenclature
-The research target (UniProt Q8N4V1) aligns with the protein described in the human EMC literature as **EMC5**, a subunit of the ER membrane protein complex. Multiple EMC-focused sources describe EMC5 as one of the mammalian EMC subunits and a membrane-spanning/core component required for complex integrity and activity. (whittsette2022theendoplasmicreticulum pages 1-2, pleiner2020structuralbasisfor pages 1-3)
+### Evidence synthesis: primary molecular function and localization of MMGT1 (Q8N4V1)
 
-### 1.2 Ambiguity check: “MMGT1” as a magnesium transporter
-Although UniProt/HGNC annotate Q8N4V1 with the name **membrane magnesium transporter 1 (MMGT1)**, the EMC structural/mechanistic literature assessed here does **not** present EMC5 as a standalone Mg2+ transporter and does not provide Mg2+ transport assays or Mg2+-flux phenotypes attributable specifically to EMC5. Instead, EMC5 is consistently treated as an EMC subunit supporting insertase/chaperone functions. (pleiner2020structuralbasisfor pages 1-3, whittsette2022theendoplasmicreticulum pages 1-2, hegde2022thefunctionstructure pages 13-14)
+#### Primary supported function
+Across authoritative synthesis and recent mechanistic literature, the **primary supported molecular role** of MMGT1 is as **EMC5**, a structural component of **EMC**, which acts as an ER membrane insertase/chaperone for specific membrane proteins (tail-anchored and multipass client TMDs) and supports correct topogenesis. (chitwood2019theroleof pages 4-6, chitwood2019theroleof pages 6-8, pleiner2023aselectivityfilter pages 1-2, wu2024emcrectifiesthe pages 1-2)
 
----
+#### Substrate specificity (what is “transported” or handled)
+The most direct “substrate” concept supported here is **transmembrane helices/domains** of client proteins (including low-hydrophobicity TA proteins; and terminal TMDs of multipass proteins requiring topology completion). (pleiner2023aselectivityfilter pages 1-2, wu2024emcrectifiesthe pages 1-2, chitwood2019theroleof pages 6-8)
 
-## 2. Key concepts and definitions (current understanding)
-### 2.1 The ER membrane protein complex (EMC)
-The EMC is an ER-localized, conserved multiprotein assembly implicated in membrane-protein biogenesis. Current consensus is that EMC has a clear role in **transmembrane domain (TMD) insertion** and additional, less fully resolved roles in later steps of membrane-protein folding/assembly (i.e., “membrane chaperone” functions). (hegde2022thefunctionstructure pages 1-2, hegde2022thefunctionstructure pages 20-22)
+By contrast, **Mg2+** as a transported substrate remains **insufficiently supported** by high-confidence functional assays in the retrieved evidence; multiple expert reviews advise caution. (schaffers2018theriseand pages 1-2, chitwood2019theroleof pages 4-6)
 
-Structural work on yeast and human EMC indicates EMC behaves as a **TMD insertase**, mechanistically analogous in part to Oxa1/YidC-family insertases, featuring membrane-embedded conduits/vestibules that support movement of hydrophobic helices into the bilayer. (bai2020structureofthe pages 1-2, pleiner2020structuralbasisfor pages 1-3)
+#### Cellular compartment and topology
+MMGT1/EMC5 localizes to the **ER membrane** as an integral membrane subunit of EMC. (rother2021signalpeptidasecomplex pages 1-2, chitwood2019theroleof pages 2-4, li2024structuralinsightsinto pages 1-3)
 
-### 2.2 Where EMC5 fits in EMC: topology and role
-EMC5 is an **integral membrane subunit** within the EMC membrane domain. A key structural synthesis places EMC5 on the “back side” of the conserved EMC3–EMC6 membrane core, contributing **two transmembrane domains (TMDs)** that associate with EMC6 and helping shape a hydrophobic groove across the membrane domain. (hegde2022thefunctionstructure pages 13-14)
+Structural work on human EMC indicates a **tripartite organization** (luminal/membrane/cytosolic modules) and transmembrane cavities relevant to insertion, with EMC5 being used in purification and mapped within the membrane module in structural figures. (li2024structuralinsightsinto pages 1-3, li2024structuralinsightsinto media 7677c970)
 
-In the human EMC cryo-EM structure, EMC5 helps anchor the complex, and its **C-terminal tail traverses through EMC2 to the cytosolic face**, indicating a cytosolic C-terminus and extensive cytosolic interface participation. (pleiner2020structuralbasisfor pages 1-3)
+### Disease/pathophysiology and pathway contexts (supported by retrieved sources)
 
-A representative structural overview figure from Pleiner et al. (Science, 2020) shows EMC5 as a labeled subunit in the overall architecture and within the core transmembrane region adjacent to the insertion vestibule. (pleiner2020structuralbasisfor media a3da7fb7)
+* **Viral infection/host factors:** Host-factor studies identify EMC subunits (including MMGT1=EMC5) as relevant to viruses that require ER biogenesis of multipass viral proteins (e.g., Zika/DENV contexts described). (rother2021signalpeptidasecomplex pages 1-2, chitwood2019theroleof pages 2-4)
+* **Host-pathogen lipid droplet axis in TB:** MMGT1 deficiency in macrophages promotes *M. tuberculosis* persistence and lipid droplet accumulation, and pharmacologic targeting of TAG synthesis reduces droplet formation and persistence in this model. (kalam2023identificationofhost pages 1-3, kalam2023identificationofhost pages 25-30, kalam2023identificationofhost pages 30-35)
 
 ---
 
-## 3. Molecular function and mechanism
-### 3.1 Primary function: contribution to an ER insertase/chaperone machine
-The best-supported “molecular function” for EMC5/MMGT1 is not an enzymatic reaction or an independent transport activity; rather, EMC5 functions as a **structural and assembly-critical subunit** of the EMC, enabling the EMC’s insertase/chaperone roles in membrane protein biogenesis. (pleiner2020structuralbasisfor pages 1-3, whittsette2022theendoplasmicreticulum pages 1-2)
+## Summary table of functional annotation
+| Claim/Concept | Current understanding (1-2 sentences) | Key evidence/assay type | Key sources (include year, journal) | URL |
+|---|---|---|---|---|
+| Identity / synonyms | Human **MMGT1** (UniProt **Q8N4V1**) is the same protein widely referred to in the literature as **EMC5** and also as **TMEM32**. Reviews and primary papers explicitly identify EMC5/MMGT1 as a small (~15 kDa) subunit of the ER membrane protein complex (EMC), not a separate unrelated protein. (rother2021signalpeptidasecomplex pages 1-2, chitwood2019theroleof pages 2-4) | Complex annotation, purification/proteomics, review synthesis of EMC subunits | Chitwood & Hegde, **2019**, *Trends in Cell Biology*; Rother & Naumann, **2021**, *Virus Research* | https://doi.org/10.1016/j.tcb.2019.01.007 ; https://doi.org/10.1016/j.virusres.2021.198338 |
+| Localization: ER membrane; EMC complex | MMGT1/EMC5 is an **integral ER membrane** protein and one of the membrane-embedded EMC subunits. Mammalian EMC is an abundant ER-resident multi-subunit complex whose membrane subunits collectively form the transmembrane region involved in client handling. (rother2021signalpeptidasecomplex pages 1-2, binnian2023translationaltuningpreemptively pages 27-31, chitwood2019theroleof pages 2-4) | Subcellular complex purification, topology prediction, cryo-EM structural mapping | Chitwood & Hegde, **2019**, *Trends in Cell Biology*; Li et al., **2024**, *Aging (Albany NY)* | https://doi.org/10.1016/j.tcb.2019.01.007 ; https://doi.org/10.18632/aging.205660 |
+| Role in EMC stability | EMC5 is considered a **core EMC subunit**: individual depletion/knockout of EMC5 strongly disrupts integrity of the remaining complex, and CRISPR knockout can cause near-complete loss of other EMC subunits. This indicates MMGT1/EMC5 is structurally required for stable EMC assembly rather than being a peripheral accessory factor. (chitwood2019theroleof pages 2-4, chitwood2019theroleof pages 4-6) | Knockdown/CRISPR knockout with assessment of other subunits and complex integrity | Chitwood & Hegde, **2019**, *Trends in Cell Biology* | https://doi.org/10.1016/j.tcb.2019.01.007 |
+| Role in membrane protein insertion / topogenesis | The strongest current functional assignment for MMGT1 is **as part of EMC**, a membrane-protein insertase/chaperone system that mediates insertion or topogenesis of low-hydrophobicity tail-anchored proteins and selected transmembrane domains of multipass proteins. EMC loss causes reduced client maturation, ER retention, topology defects, and altered expression of multipass membrane proteins; these phenotypes are attributed to the EMC machinery in which EMC5 is a core membrane subunit. (chitwood2019theroleof pages 4-6, chitwood2019theroleof pages 6-8, pleiner2023aselectivityfilter pages 1-2, wu2024emcrectifiesthe pages 1-2) | In vitro liposome reconstitution, cell-free microsome assays, split-GFP insertion assays, crosslinking, client maturation/localization phenotypes | Chitwood & Hegde, **2019**, *Trends in Cell Biology*; Pleiner et al., **2023**, *Journal of Cell Biology*; Wu et al., **2024**, *Nature Structural & Molecular Biology* | https://doi.org/10.1016/j.tcb.2019.01.007 ; https://doi.org/10.1083/jcb.202212007 ; https://doi.org/10.1038/s41594-023-01120-6 |
+| Structural features: hydrophilic vestibule; relation to EMC3/6 cavity; tagging/purification via EMC5 | Structural studies place EMC5 in the **membrane module** of EMC, contributing with EMC1/3/6 to a membrane cavity or lipid-filled region adjacent to the hydrophilic vestibule used for client insertion/topology control. Human EMC has also been purified through **tagged EMC5** (for example, Twin-Strep/FLAG strategies), showing EMC5 is experimentally tractable as a stable core handle for native EMC purification. (klose2025theemcacts pages 1-2, li2024structuralinsightsinto pages 1-3, li2024structuralinsightsinto media 7677c970) | Cryo-EM, native complex purification, tagged endogenous EMC5 purification schemes | Li et al., **2024**, *Aging (Albany NY)*; Klose et al., **2025**, *Nature Communications* | https://doi.org/10.18632/aging.205660 ; https://doi.org/10.1038/s41467-025-62109-x |
+| Relation to viral infection | MMGT1/EMC5 has been recovered in host-factor studies as part of the **EMC dependency** of flaviviruses and other viruses that require ER biogenesis of viral multi-pass membrane proteins. The evidence supports an **indirect role via EMC-mediated membrane protein biogenesis**, not a virus-specific activity intrinsic to EMC5 alone. (rother2021signalpeptidasecomplex pages 1-2, chitwood2019theroleof pages 2-4) | CRISPR or RNAi host-factor screens; infection phenotypes linked to EMC disruption | Rother & Naumann, **2021**, *Virus Research*; Chitwood & Hegde, **2019**, *Trends in Cell Biology* | https://doi.org/10.1016/j.virusres.2021.198338 ; https://doi.org/10.1016/j.tcb.2019.01.007 |
+| Relation to *Mycobacterium tuberculosis* persistence and lipid droplets | A 2023 CRISPR-screen study prioritized MMGT1 for follow-up and found that **MMGT1-deficient macrophages** promoted an *M. tuberculosis* switch toward persistence, with upregulation of lipid metabolism genes and increased lipid droplets; triacylglycerol synthesis inhibition reduced both droplet formation and persistence. This is a real host-pathogen phenotype linked to MMGT1, but the study does **not** by itself prove whether the underlying mechanism is magnesium transport, EMC function, or another MMGT1-dependent pathway. (kalam2023identificationofhost pages 1-3, kalam2023identificationofhost pages 25-30) | Genome-wide CRISPR screen, CFU time courses, RNA-seq/GSEA, qPCR, confocal imaging, FACS lipid-droplet quantification | Kalam et al., **2023**, *Cell Host & Microbe* | https://doi.org/10.1016/j.chom.2023.05.009 |
+| Magnesium transport evidence and caveats | MMGT1 was originally named a **membrane magnesium transporter**, but current evidence is mixed and weaker than the EMC evidence. Authoritative review literature explicitly states that for **MMgT/MMGT1**, functional evidence for bona fide Mg2+ transport is limited and alternative functions have been suggested; EMC-focused reviews note that reported Mg2+ transport upon overexpression may be unrelated to EMC’s core biogenesis role. (chitwood2019theroleof pages 4-6, schaffers2018theriseand pages 1-2) | Critical review of transporter literature; comparison of direct transport evidence versus alternative cell-biological roles | Schäffers et al., **2018**, *American Journal of Physiology-Renal Physiology*; Chitwood & Hegde, **2019**, *Trends in Cell Biology* | https://doi.org/10.1152/ajprenal.00634.2017 ; https://doi.org/10.1016/j.tcb.2019.01.007 |
 
-A specific mechanistic example is that EMC5 stabilizes a **poorly hydrophobic** transmembrane helix in EMC6: in the human EMC structure, EMC6 TM1 inserts only upon assembly with EMC5, implying EMC5 contributes to EMC’s ability to stabilize challenging membrane-embedded helices at subunit interfaces. (pleiner2020structuralbasisfor pages 1-3)
 
-### 3.2 Insertase mechanism (structural model)
-The human EMC structure supports a model in which substrate insertion requires a **methionine-rich cytosolic loop** and proceeds through an enclosed **hydrophilic vestibule** formed principally by EMC3 and EMC6. The complex may facilitate insertion through **local membrane thinning** and electrostatic features that lower the energetic barrier. EMC5 contributes to the integrity and architecture of the complex around this machinery. (pleiner2020structuralbasisfor pages 1-3, hegde2022thefunctionstructure pages 13-14)
-
-### 3.3 Selectivity / topology control
-In 2023, Pleiner et al. described the EMC as implementing a **charge-based selectivity filter** to limit misinsertion of mitochondrial tail-anchored proteins and to enforce topology (positive-inside rule) for certain substrates. In that work, a distinct hydrophobic cleft/crevice is described as being lined by residues from **EMC3, EMC5, and EMC6**, linking EMC5 directly to the intramembrane architecture relevant to selectivity. (pleiner2023aselectivityfilter pages 10-11, pleiner2023aselectivityfilter pages 19-23)
-
----
-
-## 4. Subcellular localization and functional context
-### 4.1 ER localization and ribosome proximity
-The EMC is an ER membrane complex positioned to act during cotranslational and posttranslational stages of membrane protein biogenesis. Notably, ribosome-proximity profiling used an **EMC5 C-terminal BirA fusion** (indicating cytosolic exposure of the EMC5 C-terminus) to biotinylate nearby translating ribosomes. EMC-proximal ribosomes were enriched for secretory and membrane protein mRNAs, and refined analysis identified localized enrichment in **~53 mRNAs**, often mapping to regions encoding TMD bundles, consistent with transient EMC engagement during multipass biogenesis. (hegde2022thefunctionstructure pages 19-20)
-
-### 4.2 Connections to ER proteostasis networks
-EMC perturbation has been linked to ER homeostasis and quality-control pathways (e.g., UPR/ERAD connections) in multiple studies and is commonly discussed as a factor in membrane-protein folding and complex assembly beyond initial insertion. (hegde2022thefunctionstructure pages 4-6, hegde2022thefunctionstructure pages 20-22)
+*Table: This table summarizes the best-supported functional annotation for human MMGT1/EMC5/TMEM32, emphasizing evidence that it is a core ER membrane subunit of the EMC complex involved in membrane protein biogenesis. It also highlights newer disease/infection-related findings and the important caveat that direct magnesium-transport evidence remains limited.*
 
 ---
 
-## 5. Recent developments (prioritizing 2023–2024)
-### 5.1 2024: Post-translational insertion and topology rectification for multipass proteins
-Wu et al. (Nature Structural & Molecular Biology; publication date Nov 2024; URL https://doi.org/10.1038/s41594-023-01120-6) reported that C-terminal TMDs near the stop codon can be inserted **post-translationally by EMC**, enabling **topology rectification** after partial release from the ribosome–translocon. They propose this sequential co-translational + post-translational mechanism may apply to **~250** multipass proteins, including Cys-loop pentameric ion channel subunits critical for neurotransmission. (wu2024emcrectifiesthe pages 1-2, wu2024emcrectifiesthe pages 7-9)
+## Limitations of this report (evidence gaps)
+1. The retrieved evidence base strongly supports **EMC5/EMC biology**, but contains limited direct MMGT1-specific biochemical evidence distinguishing whether MMGT1 has an independent Mg2+ transport role in vivo. The most authoritative sources explicitly caution that Mg2+ transport evidence for MMgT/MMGT1 is limited. (schaffers2018theriseand pages 1-2, chitwood2019theroleof pages 4-6)
+2. Several mechanistic papers define EMC’s insertase/chaperone mechanism without isolating EMC5’s unique residues or standalone activity; thus, EMC5 is annotated primarily as a **core structural/functional component** rather than a catalytically independent enzyme/transporter based on the current retrieved corpus. (pleiner2023aselectivityfilter pages 1-2, wu2024emcrectifiesthe pages 1-2, li2024structuralinsightsinto pages 1-3)
 
-Quantitative findings in the provided excerpts include: impaired insertion/translocation readouts **>50%** in EMC-deficient systems (e.g., reduced glycosylation proxy in a GABRA1 C-tail reporter, and reduced protected fragment recovery), indicating substantial dependence on EMC for terminal-TMD insertion in tested substrates. (wu2024emcrectifiesthe pages 3-4)
-
-Importantly for MMGT1/EMC5 annotation, functional impairments observed with EMC perturbation were phenocopied by loss of **core subunits including EMC5** (along with EMC2/EMC3/EMC6) in GABAA receptor-related assays, reinforcing EMC5 as a required core component. (wu2024emcrectifiesthe pages 2-3)
-
-### 5.2 2023: EMC selectivity filter that limits misinsertion
-Pleiner et al. (Journal of Cell Biology; May 2023; URL https://doi.org/10.1083/jcb.202212007) used mutagenesis and crosslinking to map a TA-substrate path and define a **charge barrier** at the vestibule entrance (in EMC3) that limits ER misinsertion of mitochondrial tail-anchored proteins and helps enforce topology for some multipass clients. EMC5 is part of a hydrophobic crevice/cleft described as being lined by **EMC3/EMC5/EMC6**, linking EMC5 to the intramembrane landscape that partitions insertion-competent vs non-productive surfaces. (pleiner2023aselectivityfilter pages 10-11, pleiner2023aselectivityfilter pages 19-23)
-
----
-
-## 6. Current applications and real-world implementations
-### 6.1 Proteostasis modulation for ion channel variants (example: GABAA receptors)
-A concrete translationally relevant application of EMC biology is **modulating EMC subunits to improve folding/trafficking/function of disease-associated membrane proteins**. In an iScience 2022 study focused on GABAA receptor proteostasis, overexpression of EMC3 increased surface levels of pathogenic receptor variants to **260%, 285%, and 148%**, while co-expression of **EMC5+EMC6** increased surface levels to **380%, 235%, and 285%** (variant-dependent). Electrophysiological peak currents were also increased substantially (e.g., values reported include 270→550 pA in one condition), supporting functional rescue. (whittsette2022theendoplasmicreticulum pages 14-16)
-
-This type of strategy is best interpreted as **targeting an ER biogenesis factor network** rather than directly targeting MMGT1 as a magnesium transporter. The reported effects are consistent with the EMC functioning as an insertase/chaperone for challenging multipass substrates, including neurotransmitter receptors relevant to neurological disease mechanisms. (whittsette2022theendoplasmicreticulum pages 14-16, wu2024emcrectifiesthe pages 2-3)
-
-### 6.2 Assay and screening use cases
-EMC function is commonly interrogated using (i) TMD insertion reporters (tail-anchored and multipass), (ii) glycosylation/protease-protection insertion readouts in semi-permeabilized cell systems, and (iii) ribosome-proximity profiling (using EMC5 C-terminus fusions) to map which nascent membrane proteins are translated near EMC. These approaches are deployed to define EMC clients and insertion logic, enabling broader client prediction and mechanistic hypotheses about ER quality control. (hegde2022thefunctionstructure pages 19-20, wu2024emcrectifiesthe pages 3-4)
-
----
-
-## 7. Expert opinions and authoritative analysis
-Hegde’s 2022 Annual Review synthesis emphasizes that EMC has an established role in TMD insertion, but also highlights open questions: substrate range is not fully defined, and “membrane chaperone” functions during later folding/assembly are plausible and attractive given the challenges of stabilizing moderately hydrophobic and/or polar TMDs until assembly partners arrive. This aligns with the mechanistic partitioning emerging from structural and crosslinking work (insertase vestibule vs other intramembrane surfaces). (hegde2022thefunctionstructure pages 19-20, hegde2022thefunctionstructure pages 4-6)
-
----
-
-## 8. Disease and phenotype associations
-### 8.1 Ion-channel and neurotransmission-related phenotypes (mechanism-linked)
-Multiple lines of experimental evidence connect EMC integrity (including EMC5 as core subunit) to the biogenesis and surface expression of Cys-loop neurotransmitter receptors (e.g., GABAA receptors), with quantitative reductions in surface expression to **<50%** after EMC perturbation and substantial rescue by EMC subunit overexpression in variant contexts. These findings provide mechanistically grounded links to neurological disease mechanisms where receptor folding/trafficking is limiting. (wu2024emcrectifiesthe pages 2-3, whittsette2022theendoplasmicreticulum pages 14-16)
-
-### 8.2 Curated disease associations (OpenTargets)
-OpenTargets reports MMGT1 (ENSG00000169446) associations including “developmental disorder of mental health,” hypotonia, myocardial ischemia, and others, supported by PubMed-linked evidence (e.g., PMID 33057194 appears in the OpenTargets evidence list). These associations are curated/aggregated and should be interpreted as hypothesis-generating unless supported by direct functional genetics and mechanistic studies. (OpenTargets Search: -MMGT1)
-
----
-
-## 9. Statistics and data highlights (from recent studies)
-* **~250 multipass proteins** potentially requiring EMC-mediated post-translational topology rectification (Wu et al., 2024). (wu2024emcrectifiesthe pages 1-2)
-* EMC perturbation can reduce GABAA receptor surface expression to **<50%** in a reported knockdown experiment (Wu et al., 2024). (wu2024emcrectifiesthe pages 2-3)
-* EMC loss impairs insertion/translocation readouts by **>50%** for tested terminal-TMD insertion events (e.g., GABRA1 C-tail glycosylation proxy) (Wu et al., 2024). (wu2024emcrectifiesthe pages 3-4)
-* EMC5+EMC6 overexpression raised surface levels of disease-associated GABAA receptor α1 variants to **380%, 235%, 285%** (Whittsette et al., 2022). (whittsette2022theendoplasmicreticulum pages 14-16)
-* Ribosome-proximity profiling found **local enrichments in ~53 mRNAs** near EMC, and one proteomics study cited in the review identified **21 proteins** with **≥50% reduction** after EMC1 perturbation in Xenopus (Hegde, 2022 review). (hegde2022thefunctionstructure pages 19-20)
-
----
-
-## 10. Practical functional annotation for MMGT1/Q8N4V1 (recommended)
-**Name/function (best-supported):** ER membrane protein complex subunit 5 (EMC5), a core ER membrane component required for EMC assembly and function in membrane protein biogenesis. (pleiner2020structuralbasisfor pages 1-3, whittsette2022theendoplasmicreticulum pages 1-2)
-
-**Primary molecular role:** Structural/assembly subunit enabling EMC insertase/selectivity/topology-rectification functions; contributes to intramembrane architecture (clefts/grooves) and cytosolic interfaces with EMC2/EMC8. (pleiner2020structuralbasisfor pages 1-3, pleiner2023aselectivityfilter pages 19-23)
-
-**Localization:** Endoplasmic reticulum membrane; C-terminus cytosolic; two-pass membrane topology in EMC context. (hegde2022thefunctionstructure pages 13-14, hegde2022thefunctionstructure pages 19-20)
-
-**Substrate specificity:** EMC5 itself is not a substrate-binding “enzyme”; EMC clients include subsets of tail-anchored proteins and diverse multipass proteins where EMC contributes to insertion, selectivity, and post-translational topology completion. (pleiner2020structuralbasisfor pages 1-3, wu2024emcrectifiesthe pages 1-2)
-
-**Magnesium transport:** No direct evidence for Mg2+ transport by EMC5/MMGT1 was found in the EMC-focused primary and review sources retrieved here; any magnesium-transport annotation should be treated as tentative without independent transport assays. (pleiner2020structuralbasisfor pages 1-3, whittsette2022theendoplasmicreticulum pages 1-2)
 
 
 References
 
-1. (pleiner2020structuralbasisfor pages 1-3): Tino Pleiner, Giovani Pinton Tomaleri, Kurt Januszyk, Alison J. Inglis, Masami Hazu, and Rebecca M. Voorhees. Structural basis for membrane insertion by the human er membrane protein complex. Jul 2020. URL: https://doi.org/10.1126/science.abb5008, doi:10.1126/science.abb5008. This article has 192 citations and is from a highest quality peer-reviewed journal.
+1. (rother2021signalpeptidasecomplex pages 1-2): Marion Rother and Michael Naumann. Signal peptidase complex subunit 1 is an essential zika virus host factor in placental trophoblasts. Apr 2021. URL: https://doi.org/10.1016/j.virusres.2021.198338, doi:10.1016/j.virusres.2021.198338. This article has 4 citations and is from a peer-reviewed journal.
 
-2. (pleiner2023aselectivityfilter pages 19-23): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
+2. (chitwood2019theroleof pages 2-4): Patrick J. Chitwood and Ramanujan S. Hegde. The role of emc during membrane protein biogenesis. Trends in cell biology, 29 5:371-384, May 2019. URL: https://doi.org/10.1016/j.tcb.2019.01.007, doi:10.1016/j.tcb.2019.01.007. This article has 97 citations and is from a domain leading peer-reviewed journal.
 
-3. (wu2024emcrectifiesthe pages 1-2): Haoxi Wu, Luka Smalinskaitė, and Ramanujan S. Hegde. Emc rectifies the topology of multipass membrane proteins. Nature Structural & Molecular Biology, 31:32-41, Nov 2024. URL: https://doi.org/10.1038/s41594-023-01120-6, doi:10.1038/s41594-023-01120-6. This article has 41 citations and is from a highest quality peer-reviewed journal.
+3. (schaffers2018theriseand pages 1-2): Olivier J. M. Schäffers, Joost G. J. Hoenderop, René J. M. Bindels, and Jeroen H. F. de Baaij. The rise and fall of novel renal magnesium transporters. American journal of physiology. Renal physiology, 314 6:F1027-F1033, Jun 2018. URL: https://doi.org/10.1152/ajprenal.00634.2017, doi:10.1152/ajprenal.00634.2017. This article has 66 citations.
 
-4. (whittsette2022theendoplasmicreticulum pages 1-2): Angela L. Whittsette, Ya-Juan Wang, and Ting-Wei Mu. The endoplasmic reticulum membrane complex promotes proteostasis of gabaa receptors. iScience, 25:104754, Aug 2022. URL: https://doi.org/10.1016/j.isci.2022.104754, doi:10.1016/j.isci.2022.104754. This article has 14 citations and is from a peer-reviewed journal.
+4. (chitwood2019theroleof pages 4-6): Patrick J. Chitwood and Ramanujan S. Hegde. The role of emc during membrane protein biogenesis. Trends in cell biology, 29 5:371-384, May 2019. URL: https://doi.org/10.1016/j.tcb.2019.01.007, doi:10.1016/j.tcb.2019.01.007. This article has 97 citations and is from a domain leading peer-reviewed journal.
 
-5. (OpenTargets Search: -MMGT1): Open Targets Query (-MMGT1, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+5. (chitwood2019theroleof pages 1-2): Patrick J. Chitwood and Ramanujan S. Hegde. The role of emc during membrane protein biogenesis. Trends in cell biology, 29 5:371-384, May 2019. URL: https://doi.org/10.1016/j.tcb.2019.01.007, doi:10.1016/j.tcb.2019.01.007. This article has 97 citations and is from a domain leading peer-reviewed journal.
 
-6. (hegde2022thefunctionstructure pages 13-14): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+6. (chitwood2019theroleof pages 6-8): Patrick J. Chitwood and Ramanujan S. Hegde. The role of emc during membrane protein biogenesis. Trends in cell biology, 29 5:371-384, May 2019. URL: https://doi.org/10.1016/j.tcb.2019.01.007, doi:10.1016/j.tcb.2019.01.007. This article has 97 citations and is from a domain leading peer-reviewed journal.
 
-7. (hegde2022thefunctionstructure pages 19-20): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+7. (pleiner2023aselectivityfilter pages 1-2): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
 
-8. (hegde2022thefunctionstructure pages 4-6): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+8. (pleiner2023aselectivityfilter pages 10-11): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
 
-9. (hegde2022thefunctionstructure pages 20-22): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+9. (wu2024emcrectifiesthe pages 1-2): Haoxi Wu, Luka Smalinskaitė, and Ramanujan S. Hegde. Emc rectifies the topology of multipass membrane proteins. Nature Structural & Molecular Biology, 31:32-41, Nov 2024. URL: https://doi.org/10.1038/s41594-023-01120-6, doi:10.1038/s41594-023-01120-6. This article has 41 citations and is from a highest quality peer-reviewed journal.
 
-10. (pleiner2023aselectivityfilter pages 1-2): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
+10. (li2024structuralinsightsinto pages 1-3): Mingyue Li, Chunli Zhang, Yuntao Xu, Shaobai Li, Chenhui Huang, Jian Wu, and Ming Lei. Structural insights into human emc and its interaction with vdac. Aging (Albany NY), 16:5501-5525, Mar 2024. URL: https://doi.org/10.18632/aging.205660, doi:10.18632/aging.205660. This article has 6 citations.
 
-11. (wu2024emcrectifiesthe pages 7-9): Haoxi Wu, Luka Smalinskaitė, and Ramanujan S. Hegde. Emc rectifies the topology of multipass membrane proteins. Nature Structural & Molecular Biology, 31:32-41, Nov 2024. URL: https://doi.org/10.1038/s41594-023-01120-6, doi:10.1038/s41594-023-01120-6. This article has 41 citations and is from a highest quality peer-reviewed journal.
+11. (li2024structuralinsightsinto media 7677c970): Mingyue Li, Chunli Zhang, Yuntao Xu, Shaobai Li, Chenhui Huang, Jian Wu, and Ming Lei. Structural insights into human emc and its interaction with vdac. Aging (Albany NY), 16:5501-5525, Mar 2024. URL: https://doi.org/10.18632/aging.205660, doi:10.18632/aging.205660. This article has 6 citations.
 
-12. (wu2024emcrectifiesthe pages 2-3): Haoxi Wu, Luka Smalinskaitė, and Ramanujan S. Hegde. Emc rectifies the topology of multipass membrane proteins. Nature Structural & Molecular Biology, 31:32-41, Nov 2024. URL: https://doi.org/10.1038/s41594-023-01120-6, doi:10.1038/s41594-023-01120-6. This article has 41 citations and is from a highest quality peer-reviewed journal.
+12. (li2024structuralinsightsinto media 0611078d): Mingyue Li, Chunli Zhang, Yuntao Xu, Shaobai Li, Chenhui Huang, Jian Wu, and Ming Lei. Structural insights into human emc and its interaction with vdac. Aging (Albany NY), 16:5501-5525, Mar 2024. URL: https://doi.org/10.18632/aging.205660, doi:10.18632/aging.205660. This article has 6 citations.
 
-13. (whittsette2022theendoplasmicreticulum pages 14-16): Angela L. Whittsette, Ya-Juan Wang, and Ting-Wei Mu. The endoplasmic reticulum membrane complex promotes proteostasis of gabaa receptors. iScience, 25:104754, Aug 2022. URL: https://doi.org/10.1016/j.isci.2022.104754, doi:10.1016/j.isci.2022.104754. This article has 14 citations and is from a peer-reviewed journal.
+13. (li2024structuralinsightsinto media bf66669f): Mingyue Li, Chunli Zhang, Yuntao Xu, Shaobai Li, Chenhui Huang, Jian Wu, and Ming Lei. Structural insights into human emc and its interaction with vdac. Aging (Albany NY), 16:5501-5525, Mar 2024. URL: https://doi.org/10.18632/aging.205660, doi:10.18632/aging.205660. This article has 6 citations.
 
-14. (whittsette2022theendoplasmicreticuluma pages 35-41): AL Whittsette. The endoplasmic reticulum membrane complex promotes trafficking and function of gabaa receptors. Unknown journal, 2022.
+14. (li2024structuralinsightsinto media 34b7fb19): Mingyue Li, Chunli Zhang, Yuntao Xu, Shaobai Li, Chenhui Huang, Jian Wu, and Ming Lei. Structural insights into human emc and its interaction with vdac. Aging (Albany NY), 16:5501-5525, Mar 2024. URL: https://doi.org/10.18632/aging.205660, doi:10.18632/aging.205660. This article has 6 citations.
 
-15. (wu2024emcrectifiesthe pages 3-4): Haoxi Wu, Luka Smalinskaitė, and Ramanujan S. Hegde. Emc rectifies the topology of multipass membrane proteins. Nature Structural & Molecular Biology, 31:32-41, Nov 2024. URL: https://doi.org/10.1038/s41594-023-01120-6, doi:10.1038/s41594-023-01120-6. This article has 41 citations and is from a highest quality peer-reviewed journal.
+15. (chen2023emcchaperone–cavstructure pages 1-3): Zhou Chen, Abhisek Mondal, Fayal Abderemane-Ali, Seil Jang, Sangeeta Niranjan, José L. Montaño, Balyn W. Zaro, and Daniel L. Minor. Emc chaperone–cav structure reveals an ion channel assembly intermediate. Nature, 619:410-419, May 2023. URL: https://doi.org/10.1038/s41586-023-06175-5, doi:10.1038/s41586-023-06175-5. This article has 77 citations and is from a highest quality peer-reviewed journal.
 
-16. (hegde2022thefunctionstructure pages 1-2): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+16. (klose2025theemcacts pages 1-2): Carolin J Klose, Kevin M Meighen-Berger, M. Kulke, Marina Parr, Barbara Steigenberger, Martin Zacharias, Dmitrij Frishman, and Matthias Feige. The emc acts as a chaperone for membrane proteins. Nature Communications, Aug 2025. URL: https://doi.org/10.1038/s41467-025-62109-x, doi:10.1038/s41467-025-62109-x. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-17. (bai2020structureofthe pages 1-2): Lin Bai, Qinglong You, Xiang Feng, Amanda Kovach, and Huilin Li. Structure of the er membrane complex, a transmembrane-domain insertase. Jun 2020. URL: https://doi.org/10.1038/s41586-020-2389-3, doi:10.1038/s41586-020-2389-3. This article has 164 citations and is from a highest quality peer-reviewed journal.
+17. (kalam2023identificationofhost pages 25-30): Haroon Kalam, Chih-Hung Chou, Motohiko Kadoki, Daniel B. Graham, Jacques Deguine, Deborah T. Hung, and Ramnik J. Xavier. Identification of host regulators of mycobacterium tuberculosis phenotypes uncovers a role for the mmgt1-gpr156 lipid droplet axis in persistence. Cell Host &amp; Microbe, 31:978-992.e5, Jun 2023. URL: https://doi.org/10.1016/j.chom.2023.05.009, doi:10.1016/j.chom.2023.05.009. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-18. (pleiner2020structuralbasisfor media a3da7fb7): Tino Pleiner, Giovani Pinton Tomaleri, Kurt Januszyk, Alison J. Inglis, Masami Hazu, and Rebecca M. Voorhees. Structural basis for membrane insertion by the human er membrane protein complex. Jul 2020. URL: https://doi.org/10.1126/science.abb5008, doi:10.1126/science.abb5008. This article has 192 citations and is from a highest quality peer-reviewed journal.
+18. (kalam2023identificationofhost pages 30-35): Haroon Kalam, Chih-Hung Chou, Motohiko Kadoki, Daniel B. Graham, Jacques Deguine, Deborah T. Hung, and Ramnik J. Xavier. Identification of host regulators of mycobacterium tuberculosis phenotypes uncovers a role for the mmgt1-gpr156 lipid droplet axis in persistence. Cell Host &amp; Microbe, 31:978-992.e5, Jun 2023. URL: https://doi.org/10.1016/j.chom.2023.05.009, doi:10.1016/j.chom.2023.05.009. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-19. (pleiner2023aselectivityfilter pages 10-11): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
+19. (kalam2023identificationofhost pages 1-3): Haroon Kalam, Chih-Hung Chou, Motohiko Kadoki, Daniel B. Graham, Jacques Deguine, Deborah T. Hung, and Ramnik J. Xavier. Identification of host regulators of mycobacterium tuberculosis phenotypes uncovers a role for the mmgt1-gpr156 lipid droplet axis in persistence. Cell Host &amp; Microbe, 31:978-992.e5, Jun 2023. URL: https://doi.org/10.1016/j.chom.2023.05.009, doi:10.1016/j.chom.2023.05.009. This article has 6 citations and is from a highest quality peer-reviewed journal.
+
+20. (binnian2023translationaltuningpreemptively pages 27-31): Translational tuning pre-emptively modulates protein folding and secretory pathway defects This article has 0 citations.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](MMGT1-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000020 Figure 1 shows the architecture of the human ER membrane protein complex (EMC). Subunit EMC5 is labeled in all panels (A-D). Panels](MMGT1-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000016 I have extracted the requested figures and panels: - **Figure 1** (image-008) details the structural study of the VDAC1-bound EMC c](MMGT1-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. hegde2022thefunctionstructure pages 13-14
-2. pleiner2020structuralbasisfor pages 1-3
-3. hegde2022thefunctionstructure pages 19-20
-4. wu2024emcrectifiesthe pages 3-4
-5. wu2024emcrectifiesthe pages 2-3
-6. whittsette2022theendoplasmicreticulum pages 14-16
+1. rother2021signalpeptidasecomplex pages 1-2
+2. chitwood2019theroleof pages 2-4
+3. chitwood2019theroleof pages 6-8
+4. schaffers2018theriseand pages 1-2
+5. chitwood2019theroleof pages 4-6
+6. pleiner2023aselectivityfilter pages 1-2
 7. wu2024emcrectifiesthe pages 1-2
-8. pleiner2023aselectivityfilter pages 19-23
-9. whittsette2022theendoplasmicreticulum pages 1-2
-10. hegde2022thefunctionstructure pages 4-6
-11. hegde2022thefunctionstructure pages 20-22
-12. pleiner2023aselectivityfilter pages 1-2
-13. wu2024emcrectifiesthe pages 7-9
-14. whittsette2022theendoplasmicreticuluma pages 35-41
-15. hegde2022thefunctionstructure pages 1-2
-16. bai2020structureofthe pages 1-2
-17. pleiner2023aselectivityfilter pages 10-11
-18. https://doi.org/10.1126/science.abb5008;
-19. https://doi.org/10.1016/j.isci.2022.104754;
-20. https://platform.opentargets.org
-21. https://doi.org/10.1146/annurev-biochem-032620-104553;
-22. https://doi.org/10.1126/science.abb5008
-23. https://doi.org/10.1146/annurev-biochem-032620-104553
-24. https://doi.org/10.1083/jcb.202212007;
-25. https://doi.org/10.1038/s41594-023-01120-6;
-26. https://doi.org/10.18632/aging.205660
-27. https://doi.org/10.1038/s41594-023-01120-6
-28. https://doi.org/10.1083/jcb.202212007
-29. https://doi.org/10.1126/science.abb5008,
-30. https://doi.org/10.1083/jcb.202212007,
-31. https://doi.org/10.1038/s41594-023-01120-6,
-32. https://doi.org/10.1016/j.isci.2022.104754,
-33. https://doi.org/10.1146/annurev-biochem-032620-104553,
-34. https://doi.org/10.1038/s41586-020-2389-3,
+8. li2024structuralinsightsinto pages 1-3
+9. kalam2023identificationofhost pages 25-30
+10. kalam2023identificationofhost pages 30-35
+11. chitwood2019theroleof pages 1-2
+12. pleiner2023aselectivityfilter pages 10-11
+13. klose2025theemcacts pages 1-2
+14. kalam2023identificationofhost pages 1-3
+15. binnian2023translationaltuningpreemptively pages 27-31
+16. https://doi.org/10.1016/j.tcb.2019.01.007
+17. https://doi.org/10.1152/ajprenal.00634.2017
+18. https://doi.org/10.1083/jcb.202212007
+19. https://doi.org/10.1038/s41594-023-01120-6
+20. https://doi.org/10.18632/aging.205660
+21. https://doi.org/10.1038/s41586-023-06175-5
+22. https://doi.org/10.1016/j.chom.2023.05.009
+23. https://doi.org/10.1016/j.virusres.2021.198338
+24. https://doi.org/10.1038/s41467-025-62109-x
+25. https://doi.org/10.1016/j.virusres.2021.198338,
+26. https://doi.org/10.1016/j.tcb.2019.01.007,
+27. https://doi.org/10.1152/ajprenal.00634.2017,
+28. https://doi.org/10.1083/jcb.202212007,
+29. https://doi.org/10.1038/s41594-023-01120-6,
+30. https://doi.org/10.18632/aging.205660,
+31. https://doi.org/10.1038/s41586-023-06175-5,
+32. https://doi.org/10.1038/s41467-025-62109-x,
+33. https://doi.org/10.1016/j.chom.2023.05.009,
