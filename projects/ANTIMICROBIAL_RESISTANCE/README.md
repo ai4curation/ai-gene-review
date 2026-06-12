@@ -135,15 +135,18 @@ sanity check, the pipeline reproduces exactly the GO terms curators assigned by 
 - **MphB** (`DR CARD` route) → `GO:0050073` macrolide 2'-kinase activity + `GO:0046677` response to antibiotic
 - **MphA** (RGI route) → `GO:0050073` macrolide 2'-kinase activity
 
-## Coverage (20 mappings)
+## Coverage (23 mappings)
 
 - **Mechanism → `GO:0046677` response to antibiotic** (`skos:relatedMatch`): antibiotic inactivation,
   efflux, target alteration, target protection, target replacement, reduced permeability.
 - **AMR gene family → GO MF**: MPH (`GO:0050073`), beta-lactamase (`GO:0008800`), CAT (`GO:0008811`),
-  APH/AAC/ANT (`GO:0034071`/`0034069`/`0034068`), Erm (`GO:0052910`), dfr (`GO:0004146`),
-  sul (`GO:0004156`), **colistin/MCR phosphoethanolamine transferase (`GO:0043838`)** via `enables`;
-  FosA (`GO:0004364`) and **16S rRNA m7G1405 methyltransferase / ArmA-Rmt (`GO:0070043`)** via
-  `relatedMatch` (the ARO family is narrower than a general GO MF, still propagatable).
+  APH/AAC/ANT (`GO:0034071`/`0034069`/`0034068`), Erm (`GO:0008988` — the family-safe N6-methyltransferase
+  parent, not the di-methyltransferase, to avoid over-annotating mono-methylating variants),
+  dfr (`GO:0004146`), sul (`GO:0004156`),
+  **colistin/MCR phosphoethanolamine transferase (`GO:0043838`)** via `enables`;
+  FosA/FosA2/FosA3/fosA5 (`GO:0004364`; the glutathione-specific nodes only, excluding FosB/FosX) and
+  **16S rRNA m7G1405 methyltransferase / ArmA-Rmt (`GO:0070043`)** via `relatedMatch` (the ARO family
+  is narrower than a general GO MF, still propagatable).
 - **Determinant → GO MF** (`enables`): mphA, mphB (`GO:0050073`).
 
 ### Gaps: ARO families with no suitable GO term (recorded in the mapping file)

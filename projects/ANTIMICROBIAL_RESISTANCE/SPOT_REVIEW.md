@@ -71,6 +71,10 @@ caveat.**
 1. **Add a subsumption-aware filter to the gain report**: drop a candidate GO term when the entry
    already has a more specific descendant of it (fixes #4; would cut ~92 redundant rows, 746 → ~654).
 2. **Tighten the fosfomycin mapping** (#6): map FosA, not the FosA+FosB "thiol transferase" parent.
+   *(DONE — re-anchored ARO:3000133 → glutathione-specific FosA/FosA2/FosA3/fosA5, excluding FosB/FosX.
+   Also from PR review: Erm now maps to the family-safe `GO:0008988` (not the di-methyltransferase
+   `GO:0052910`) so mono-methylating variants are not over-annotated; AAC(6')-Ib review gained primary
+   references PMID:18710261 and PMID:16369542 plus a cytoplasm location.)*
 3. **Flag homology over-reach** (#5): family-node candidates for distant/environmental homologs (e.g.
    proteins UniProt names as generic PBP/transpeptidase) warrant curator review before assertion.
 4. Net: 2/6 high-confidence correct, 2/6 correct precision gains, 1/6 redundant, 1/6 questionable —

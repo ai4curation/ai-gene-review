@@ -40,8 +40,9 @@ from pathlib import Path
 
 import yaml
 
-# ARO ids look like ARO:0000000 (7 digits).
-ARO_RE = re.compile(r"ARO:\d{7}")
+# ARO ids look like ARO:0000000. Match one-or-more digits for consistency with the report script
+# (annotation_gain_report.py) and robustness to any non-7-digit accessions.
+ARO_RE = re.compile(r"ARO:\d+")
 
 
 @dataclass
