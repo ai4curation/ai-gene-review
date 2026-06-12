@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T02:19:07.140362'
-end_time: '2026-06-12T02:40:26.171666'
-duration_seconds: 1279.03
+start_time: '2026-06-12T02:35:52.126200'
+end_time: '2026-06-12T02:49:37.403644'
+duration_seconds: 825.28
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -25,11 +25,11 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 28
-artifact_count: 3
+citation_count: 22
+artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
-  edison_message_content: 2
+  edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
   path: SRP68-deep-research-falcon_artifacts/artifact-00.md
@@ -42,17 +42,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000018 The crystal structure of the human SRP68/72
-    complex and its domain architecture are illustrated in the following figures:
-    - Figure '
-- filename: image-2.png
-  path: SRP68-deep-research-falcon_artifacts/image-2.png
-  media_type: image/png
-  source: edison_message_content
-  data_storage_id: null
-  description: '## Context ID: pqac-00000033 The provided figures illustrate the nucleolar
-    localization of various SRP components. Figure 1 shows the presence of endogenous
-    SRP'
+  description: '## Context ID: pqac-00000018 The requested information can be found
+    in several figures throughout the document. - Figure 1A illustrates the architecture
+    of the '
 ---
 
 ## Question
@@ -163,198 +155,188 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Human **SRP68** (UniProt **Q9UHB9**) — functional annotation
+# Research report: Human SRP68 (UniProt Q9UHB9) functional annotation
 
-### 0) Mandatory identity verification (gene/protein correctness)
-The literature retrieved and reviewed here consistently uses **SRP68** to refer to the **human signal recognition particle subunit SRP68**, a core protein of the mammalian signal recognition particle (SRP) complex, and matches the UniProt identity provided (Q9UHB9). Structural work on the human SRP72 complexes explicitly references **UniProtKB Q9UHB9 (human SRP68)** as the binding partner of human SRP72, confirming correct mapping to the UniProt accession and organism (Homo sapiens). (becker2017structuresofhuman pages 1-2)
+## Executive summary
+Signal recognition particle subunit **SRP68** (gene **SRP68**, UniProt **Q9UHB9**) is a core protein component of the **mammalian signal recognition particle (SRP)**, a ribonucleoprotein that mediates **co-translational targeting** of nascent secretory and membrane proteins to the **endoplasmic reticulum (ER)**. SRP68 is not an enzyme or transporter; rather, it is a **structural/coordinating SRP subunit** that forms a stable **heterodimer with SRP72**, binds/remodels **7SL (SRP) RNA**, and contributes substantially to **ribosome binding** during targeting. Multiple recent studies (2023–2024) emphasize SRP68’s participation in a **nucleolar/nuclear phase of SRP biogenesis** and highlight open mechanistic questions about SRP68/72’s precise role in later targeting steps. A strong, direct clinical association exists with **severe congenital neutropenia** caused by **biallelic SRP68 loss-of-function variants**, supported by patient-derived functional assays showing reduced SRP68 protein, impaired granulopoiesis, ER stress signaling, and p53-pathway activation. (wild2019reconstitutionofthe pages 1-2, kellogg2022signalrecognitionparticle pages 1-2, kellogg2023unravelingsrpbiogenesis pages 26-29, issa2024thenucleolarphase pages 1-2, schmaltzpanneau2021identificationofbiallelic pages 6-10)
 
-### 1) Key concepts and definitions (current understanding)
+## 0) Mandatory verification of gene/protein identity
+**Target confirmed:** The literature evidence explicitly connects **human SRP68** to **UniProt accession Q9UHB9** as a subunit of mammalian SRP. In particular, a reconstitution/biophysics study of the human SRP system lists **SRP68 (UniProt Q9UHB9)** as one of the six SRP proteins assembled on 7SL RNA. (wild2019reconstitutionofthe pages 1-2)
 
-#### 1.1 What SRP68 is
-SRP68 is one of the two largest protein subunits of the **mammalian SRP** and is **eukaryote-specific** (no bacterial/archaeal homologs). It forms a stable heterodimer with **SRP72** and binds the **S domain** of SRP RNA (7SL/7S RNA), which is central to SRP-mediated protein targeting. (gao2017humanaposrp72and pages 1-2, faoro2021noncanonicalfunctionsand pages 3-4, becker2017structuresofhuman pages 1-2)
+**Organism confirmed:** The cited SRP68 evidence is for **human/mammalian SRP** (e.g., “human SRP system,” “mammalian SRP,” human cell lines). (wild2019reconstitutionofthe pages 1-2, issa2024thenucleolarphase pages 1-2)
 
-#### 1.2 What SRP does (context)
-The SRP is a ribonucleoprotein complex that mediates **co-translational targeting** of nascent secretory and membrane proteins to the **endoplasmic reticulum (ER)**. Reviews emphasize that SRP failure can also trigger quality-control pathways (e.g., RAPP) and contribute to disease phenotypes. (kellogg2021srpassingcotranslationaltargeting pages 11-13, kellogg2022signalrecognitionparticle pages 2-4)
+**Family/domain consistency:** SRP68 is consistently described as an SRP68/SRP72 heterodimeric subunit of the SRP S-domain, with SRP68 featuring a TPR-like RNA-binding/remodeling role in 7SL RNA positioning, consistent with SRP68-family annotations. (kellogg2023unravelingsrpbiogenesisa pages 26-29, kellogg2023unravelingsrpbiogenesis pages 26-29)
 
-### 2) Molecular function and mechanism (experimental evidence prioritized)
+## 1) Key concepts and definitions (current understanding)
 
-#### 2.1 Binding partners and complex membership
-**Direct binding partners supported by primary biochemical/structural work:**
-- **SRP72:** SRP68 and SRP72 form a stable heterodimer; SRP72 binds an extended linear motif/segment of SRP68 with high affinity. (gao2017humanaposrp72and pages 7-9, becker2017structuresofhuman pages 1-2)
-- **SRP RNA (7SL/7S RNA):** SRP68 binds the central SRP RNA region near the three-way junction (helices 5–8) and contributes to S-domain architecture and remodeling. (gao2017humanaposrp72and pages 1-2, becker2017structuresofhuman pages 1-2)
-- **SRP19:** SRP68 RNA-binding domain has been structurally characterized in complex with SRP RNA and SRP19 and is implicated in SRP RNA remodeling relevant for SRP function. (gao2017humanaposrp72and pages 1-2)
+### 1.1 Signal recognition particle (SRP)
+The **signal recognition particle** is a conserved ribonucleoprotein complex that recognizes hydrophobic **signal sequences** on nascent polypeptides as they emerge from the ribosome and delivers translating ribosomes to the **ER membrane**, enabling co-translational translocation or membrane insertion. In mammals, SRP is composed of **7SL RNA** and **six proteins** (SRP9, SRP14, SRP19, SRP54, SRP68, SRP72). (kellogg2022signalrecognitionparticle pages 1-2, issa2024thenucleolarphase pages 1-2)
 
-#### 2.2 Domain architecture (functional regions)
-A key domain-mapping study in human SRP68 identified:
-- **RNA-binding domain (RBD):** approximately residues **52–252** are sufficient for SRP RNA binding. (iakhiaeva2006proteinsrp68of pages 1-2, iakhiaeva2006proteinsrp68of pages 2-4)
-- **SRP72-binding region:** a **C-terminal ~91–94 amino-acid segment** mediates SRP72 binding. (iakhiaeva2006proteinsrp68of pages 1-2, iakhiaeva2006proteinsrp68of pages 6-8)
+SRP is organized into:
+- an **Alu domain** (SRP9/SRP14) that contacts the ribosomal factor-binding site and contributes to elongation arrest, and
+- an **S domain** (SRP19, SRP54, SRP68, SRP72) that contains the major signal-sequence recognition and receptor-docking machinery. (kellogg2022signalrecognitionparticle pages 1-2, wild2019reconstitutionofthe pages 1-2)
 
-These mapped regions align with later structural work describing SRP72’s **TPR-containing protein-binding domain** engaging an SRP68 peptide/linear motif. (becker2017structuresofhuman pages 1-2, gao2017humanaposrp72and pages 7-9)
+### 1.2 SRP68 definition in the context of the SRP cycle
+SRP68 is an **S-domain SRP subunit** that forms a heterodimer with SRP72 and contributes to SRP assembly and ribosome binding. The **primary signal-sequence recognition** and **GTPase-based docking** with the SRP receptor are attributed to **SRP54** (signal-binding M-domain; NG-domain for receptor interaction), while SRP68/72 are best supported as **structural/coordinating factors** that shape SRP RNA and stabilize SRP–ribosome interactions. (kellogg2022signalrecognitionparticle pages 1-2, kellogg2023unravelingsrpbiogenesisa pages 26-29, kellogg2023unravelingsrpbiogenesis pages 26-29, wild2019reconstitutionofthe pages 1-2)
 
-#### 2.3 Functional role in SRP-mediated co-translational targeting
-Multiple lines of evidence support SRP68/72 as functionally essential:
-- Reconstituted SRP lacking SRP68/72 is defective in core SRP activities including translocation-related steps; SRP68/72 are described as essential for SRP-mediated protein translocation. (gao2017humanaposrp72and pages 1-2, becker2017structuresofhuman pages 1-2)
-- SRP68 binding to SRP RNA promotes/enhances SRP72 binding, consistent with an ordered assembly mechanism on SRP RNA. (politz2000signalrecognitionparticle pages 1-2)
-- Structural modeling/docking into cryo-EM density suggests multiple SRP68/72 contact sites with the ribosome, supporting their role in SRP–ribosome organization during targeting. (becker2017structuresofhuman pages 1-2)
+## 2) SRP68 molecular function, biological processes, and localization
 
-**Interpretive expert view:** Reviews emphasize that while SRP68/72 are clearly essential and contribute to RNA remodeling/ribosome interaction, the precise mechanistic details of how SRP68/72 coordinate steps such as handover to the translocon (and interactions involving SRβ/SRα) remain incompletely resolved. (kellogg2021srpassingcotranslationaltargeting pages 11-13, kellogg2023unravelingsrpbiogenesis pages 26-29)
+### 2.1 Molecular function (what SRP68 “does”)
+Evidence supports SRP68 as an SRP subunit that:
+1. **Heterodimerizes with SRP72** and helps incorporate SRP72 into the SRP complex. (kellogg2023unravelingsrpbiogenesis pages 26-29, kellogg2023unravelingsrpbiogenesis pages 23-26)
+2. **Binds and remodels 7SL RNA**, bending it to enable specific RNA loop positioning that supports ribosome contacts (e.g., facilitating the 7SL RNA “5f loop” contacting the ribosome). (kellogg2023unravelingsrpbiogenesisa pages 26-29, kellogg2023unravelingsrpbiogenesis pages 26-29)
+3. **Promotes ribosome binding** of SRP via multivalent/avidity interactions together with SRP72. Quantitatively, the full-length SRP68/72 heterodimer binds the human 80S ribosome with **~160 ± 20 nM** affinity and apparent **ultrasensitivity** (Hill coefficient **~2.3**), consistent with multiple interaction sites rather than a single-point contact. (wild2019reconstitutionofthe pages 5-5)
 
-### 3) Cellular localization (where SRP68 acts)
+Collectively, SRP68 can be annotated as an **RNA-binding SRP structural subunit** that helps organize the SRP ribonucleoprotein for efficient ribosome engagement and targeting.
 
-#### 3.1 Cytosol/ER association
-SRP68 participates in the cytosolic SRP cycle and shows ER accumulation consistent with SRP’s interaction with the ER-bound SRP receptor and translocation machinery. In cellular imaging, SRP68 showed overlap with an ER-specific dye in addition to nuclear/nucleolar localization. (politz2000signalrecognitionparticle pages 1-2, politz2000signalrecognitionparticle media 5d65c091)
+### 2.2 Biological process: co-translational targeting to the ER
+A widely cited model of the mammalian SRP cycle is:
+- SRP recognizes N-terminal signal sequences on nascent chains and can induce a transient elongation pause.
+- SRP–ribosome complexes engage the **SRP receptor** on the ER membrane.
+- The ribosome is transferred to the **SEC61 translocon**, and translation resumes with co-translational translocation/insertion.
+- GTP hydrolysis resets the SRP/SR receptor cycle.
+SRP68 contributes to this process as part of the SRP S-domain that engages the ribosome and positions SRP RNA/protein components, even though SRP54 is the key signal-sequence and receptor-docking subunit. (kellogg2022signalrecognitionparticle pages 1-2, wild2019reconstitutionofthe pages 1-2, kellogg2023unravelingsrpbiogenesis pages 26-29)
 
-#### 3.2 Nucleus/nucleolus and SRP biogenesis
-Classic imaging/localization studies demonstrated that **SRP68 and SRP72 localize to nucleoli**, and SRP RNA is also present in nucleoli—supporting a nuclear/nucleolar stage of SRP biogenesis/assembly. (politz2000signalrecognitionparticle pages 1-2, politz2000signalrecognitionparticle media 5d65c091)
+### 2.3 Subcellular localization and biogenesis of SRP68-containing complexes
+SRP68 is implicated in a **nuclear/nucleolar** phase of SRP assembly and in export of SRP assembly intermediates:
+- A 2024 study reports that SRP biogenesis occurs “in part in the nucleolus,” with SRP proteins associating with nucleolar proteins involved in ribosome biogenesis and nucleolar structure; and that an intact nucleolus is required for proper SRP protein localization. (issa2024thenucleolarphase pages 1-2)
+- A 2023 synthesis describes an ordered SRP assembly pathway on 7SL RNA in which SRP19 binds first, followed by SRP68/72 and then SRP9/14, creating a “pre-SRP” complex. SRP68/72 are described as required for pre-SRP export in yeast, with a similar role assumed in mammals via Exportin-5; SRP54 joins later in the cytoplasm to yield mature SRP. (kellogg2023unravelingsrpbiogenesis pages 23-26)
+- The 2024 nucleolar biogenesis study also observed SRP proteins (including SRP72 and SRP19 in the reported excerpt) in **Cajal bodies**, suggesting additional (previously underappreciated) assembly/trafficking steps. (issa2024thenucleolarphase pages 10-13)
 
-More recent synthesis emphasizes **pre-SRP assembly in the nucleus/nucleolus** (SRP19 binding 7SL RNA first, followed by SRP68/72) and subsequent export to the cytoplasm. (kellogg2023unravelingsrpbiogenesis pages 35-40)
+## 3) Recent developments and latest research (prioritizing 2023–2024)
 
-### 4) Recent developments and latest research (prioritize 2023–2024)
+### 3.1 2024: nucleolar phase of SRP assembly and proteomics-defined interactomes
+Issa et al. (Life Science Alliance; **June 2024**; https://doi.org/10.26508/lsa.202402614) used quantitative proteomics and localization perturbations to argue that SRP assembly is coordinated with nucleolar organization and ribosome biogenesis. The work reports extensive associations of SRP proteins with nucleolar factors and shows that controlled nucleolar disruption alters SRP protein localization, concluding that an intact nucleolus is required for proper SRP protein localization. This strengthens the “SRP biogenesis is nucleolar” view and provides a modern framework for annotating SRP68 as participating not only in cytosolic targeting but also in upstream assembly and localization control. (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 10-13)
 
-#### 4.1 SRP biogenesis and quality-control framing (2023)
-A 2023 synthesis on SRP biogenesis and quality control highlights SRP68 as part of a disease-relevant SRP integrity network (linking SRP subunit defects to ER targeting failure and cellular stress). It specifically cites SRP68 congenital-neutropenia-associated lesions (splice/exon 1 deletion; frameshift A50Ffs*52) and frames SRP subunit dysfunction within quality-control logic (including RAPP concepts), while also noting gaps in direct mechanistic evidence for SRP68-triggered RAPP. (kellogg2023unravelingsrpbiogenesis pages 46-51, kellogg2023unravelingsrpbiogenesis pages 40-43)
+### 3.2 2023: SRP biogenesis/quality control synthesis emphasizes SRP68/72 as RNA-remodeling and export-linked subunits
+A 2023 synthesis on SRP biogenesis and quality control summarizes mechanistic ideas and open questions. It reiterates that SRP68/72 bind 7SL RNA helices 5/6/8 during pre-SRP formation, that SRP68 promotes SRP72 binding, and that Exportin-5 is implicated in mammalian pre-SRP export. It also emphasizes that SRP68’s role includes remodeling/bending 7SL RNA to support ribosome interactions while noting that “little is currently known” about SRP68/72’s exact roles in later steps like SRβ binding and translocon transfer. This is an important expert-level caution: SRP68 is essential and structurally influential, but many mechanistic details remain unresolved. (kellogg2023unravelingsrpbiogenesis pages 26-29, kellogg2023unravelingsrpbiogenesis pages 23-26)
 
-#### 4.2 Continued structural emphasis on SRP68/72 architecture (2024)
-A 2024 RNA Biology review centered on SRP9/14 and Alu RNA regulation references the positioning of the **SRP68/SRP72 heterodimer** over the SRP RNA helix 5e and cites contemporary SRP68/72 structural work, reflecting continuing interest in SRP architecture and RNA-binding interfaces. (OpenTargets Search: -SRP68)
+## 4) Current applications and real-world implementations
 
-**Important limitation (transparency):** A Feb 2024 Nucleic Acids Research cryo-EM paper specifically about SRP68/72 structure was identified by search but was not obtainable in this run, so the report cannot extract direct textual evidence from it. (tool output: “unobtainable paper” noted in search results)
+### 4.1 Mechanistic cell biology and ribonucleoprotein biogenesis research
+SRP68 is actively used as a handle for studying SRP assembly and localization through:
+- **GFP-tagged SRP component cell lines** and nucleolar perturbations to dissect SRP assembly pathways (e.g., nucleolar disruption by low-dose actinomycin D or ribosomal protein depletion, which re-distributes SRP proteins). (issa2024thenucleolarphase pages 10-13)
+- **Quantitative proteomics interactome mapping** of SRP components to identify nucleolar and quality-control associated proteins linked to SRP biogenesis. (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 10-13)
 
-### 5) Human genetics, disease links, and real-world applications
+### 4.2 Clinical genetics/diagnostics in severe congenital neutropenia
+A direct real-world implementation is in **rare disease diagnosis**: identification of pathogenic **biallelic SRP68 variants** as a cause of **severe congenital neutropenia** with marrow maturation arrest, placing SRP68 among SRP-pathway genes relevant to hematologic diagnostic pipelines. (schmaltzpanneau2021identificationofbiallelic pages 1-6)
 
-#### 5.1 Severe congenital neutropenia due to biallelic SRP68 variants (primary evidence)
-A 2021 Haematologica case report provided direct human genetic and mechanistic cellular evidence linking SRP68 loss-of-function to severe congenital neutropenia:
-- Clinical hematology statistics at presentation: WBC **6.1 × 10^9/L**, neutrophils **0.2 × 10^9/L**, monocytes **1.7 × 10^9/L**, hemoglobin **7.5 g/dL**, platelets **149 × 10^9/L**. Serial counts (n=41) confirmed persistent profound neutropenia (median **0.200 × 10^9/L**, range 0–1.800). (schmaltzpanneau2021identificationofbiallelic pages 1-6)
-- Bone marrow phenotype: maturation arrest at promyelocytic stage with dysgranulopoiesis and abnormal promyelocyte/neutrophil morphology. (schmaltzpanneau2021identificationofbiallelic pages 1-6)
-- Genotype/variant mechanism: compound heterozygosity including **c.184+2T>C** splice-site defect using a cryptic splice donor producing a truncated protein **Ala50Phefs*52**, plus an exon 1 deletion. (schmaltzpanneau2021identificationofbiallelic pages 1-6)
-- Functional consequence: markedly reduced SRP68 protein (western blot), reduced SRP68 expression during granulocytic differentiation, impaired granulocytic proliferation, ER-stress signatures (e.g., XBP1 splicing) and increased expression of p53/apoptosis pathway genes (e.g., P21, BAX, MDM2). (schmaltzpanneau2021identificationofbiallelic pages 10-17, schmaltzpanneau2021identificationofbiallelic pages 6-10)
+## 5) Expert opinions and analysis (authoritative interpretations)
 
-**Real-world implementation:** SRP68 is therefore relevant to **clinical genomics/rare disease diagnostics** (variant interpretation; mechanism-based classification) for congenital neutropenia cases. (schmaltzpanneau2021identificationofbiallelic pages 1-6)
+### 5.1 SRP68 is essential but not the “core catalytic” SRP subunit
+Across reviews and mechanistic studies, SRP54 is framed as the central signal-sequence recognition and SR receptor GTPase docking subunit, while SRP68/72 are described as contributing to SRP architecture, RNA remodeling, and ribosome binding. This division of labor is relevant for functional annotation: SRP68 is best categorized as a **non-enzymatic RNP structural organizer** whose disruption compromises SRP function and triggers downstream stress/quality control. (kellogg2022signalrecognitionparticle pages 1-2, kellogg2023unravelingsrpbiogenesisa pages 26-29, wild2019reconstitutionofthe pages 1-2)
 
-#### 5.2 Cancer-associated variants affecting SRP68–SRP72 interaction (functional/structural evidence)
-Structural work mapping SRP68/72 interfaces found that cancer-associated substitutions can impair heterodimer formation and subcellular distribution:
-- Example: **SRP68 F590L** abolished SRP68–SRP72 binding in vitro, and mutants showed diminished ER co-localization and more diffuse localization compared to wild-type. (gao2017humanaposrp72and pages 7-9)
-These results provide a mechanistic basis for using SRP68/SRP72 interface maps to interpret variants discovered in tumor sequencing. (gao2017humanaposrp72and pages 7-9)
+### 5.2 SRP biogenesis is increasingly viewed as coordinated with nucleolar/ribosome biogenesis
+The 2024 nucleolar assembly study explicitly argues that SRP and ribosomes, which collaborate in the cytoplasm, are assembled in the same condensate (nucleolus), and that nucleolar integrity is required for proper SRP localization. This supports an expert-level interpretation that SRP68 function should be annotated in two coupled processes: **(i) SRP biogenesis/assembly (nuclear/nucleolar)** and **(ii) SRP-mediated co-translational targeting (cytosol/ER interface)**. (issa2024thenucleolarphase pages 1-2)
 
-#### 5.3 Disease-association aggregation resources
-Open Targets aggregates SRP68 disease associations including **“neutropenia, severe congenital, 10, autosomal recessive”** (and other lower-confidence associations), providing a starting point for cross-referencing genetic evidence. (OpenTargets Search: -SRP68)
+## 6) Disease relevance: severe congenital neutropenia due to SRP68 defects
 
-### 6) Visual evidence (figures supporting key claims)
-- **SRP68/72 complex and domain architecture:** Structural images show the SRP68/72 complex and domain schematic highlighting SRP68 and SRP72 RNA-binding and mutual binding regions. (gao2017humanaposrp72and media 9d5056ea, gao2017humanaposrp72and media 6b1840f5)
-- **Nucleolar and ER localization:** Images show nucleolar localization of SRP68 and SRP72 and ER accumulation of SRP68 overlapping an ER dye. (politz2000signalrecognitionparticle media 5d65c091, politz2000signalrecognitionparticle media 4ee44bf1)
+### 6.1 Patient-level clinical data (statistics)
+A 2021 Haematologica report (April 2021; https://doi.org/10.3324/haematol.2020.247825) describes a **single sporadic pediatric case** with **biallelic SRP68 variants** ([c.184+2T>C];[exon 1 deletion]) presenting at **6 weeks** with:
+- WBC **6.1×10^9/L**, neutrophils **0.2×10^9/L**, monocytes **1.7×10^9/L**,
+- hemoglobin **7.5 g/dL**, platelets **149×10^9/L**,
+- serial monitoring (**n=41**) showing persistent profound neutropenia (**0.200×10^9/L**, range 0–1.800). (schmaltzpanneau2021identificationofbiallelic pages 1-6)
 
-### 7) Statistics and data highlights (recent/primary)
-- Severe congenital neutropenia case: neutrophils **0.2 × 10^9/L** at presentation; persistent median **0.200 × 10^9/L** across **41** measurements; hemoglobin **7.5 g/dL**; platelets **149 × 10^9/L**. (schmaltzpanneau2021identificationofbiallelic pages 1-6)
-- Patient-derived granulocytic cells: SRP68 expression reduced to **68%** (immature) and **39%** (more mature) relative to controls; granulocytic proliferation **~6× lower** than control. (schmaltzpanneau2021identificationofbiallelic pages 6-10)
+### 6.2 Functional consequences (granulopoiesis, ER stress, apoptosis)
+In patient-derived granulocytic differentiation cultures, SRP68 protein was decreased to **68%** of control in immature granulocytic cells and **39%** of control in more mature granulocytic cells, with **~6-fold lower granulocytic proliferation**. The study also reports increased **spliced XBP1** (indicative of IRE1 arm activation of the unfolded protein response) and increased expression of p53-pathway target genes (e.g., BAX, NOXA1, P21, MDM2), consistent with increased p53-dependent apoptosis. (schmaltzpanneau2021identificationofbiallelic pages 6-10)
 
-### 8) Consolidated evidence map
-The following table compactly maps SRP68 annotation aspects to the strongest sources.
+These findings provide a mechanistic link between SRP68 loss-of-function and ER proteostasis stress in granulopoiesis, consistent with an SRP-mediated translocation defect model. (schmaltzpanneau2021identificationofbiallelic pages 6-10, kellogg2023unravelingsrpbiogenesis pages 46-51)
 
-| Aspect | Key findings | Strongest sources | Publication year |
-|---|---|---|---|
-| Definition/concept | SRP68 (UniProt Q9UHB9) is the human signal recognition particle 68 kDa subunit, a eukaryote-specific core component of the mammalian SRP S domain. It forms an obligate heterodimer with SRP72 and is required for productive SRP assembly and co-translational targeting of secretory and membrane proteins to the ER. | Becker et al. 2017, Gao et al. 2017, Kellogg et al. 2021 (becker2017structuresofhuman pages 1-2, gao2017humanaposrp72and pages 1-2, kellogg2021srpassingcotranslationaltargeting pages 11-13) | 2017, 2017, 2021 |
-| Domains | Experimental mapping placed the major SRP RNA-binding region of SRP68 at approximately residues 52-252, while a C-terminal segment of about 91-94 aa mediates SRP72 binding. Reviews and structural analyses describe SRP68 as containing an RNA-binding module that remodels 7SL RNA and supports heterodimer assembly with SRP72. | Iakhiaeva et al. 2006, Faoro & Ataide 2021, Gao et al. 2017 (iakhiaeva2006proteinsrp68of pages 1-2, faoro2021noncanonicalfunctionsand pages 3-4, gao2017humanaposrp72and pages 1-2) | 2006, 2021, 2017 |
-| Binding partners | The best-supported direct partners are SRP72, 7SL/SRP RNA, and SRP19 within the assembled S domain; SRP68 also functionally influences SRP54 recruitment and ribosome engagement through RNA remodeling. A minimal ~23-residue SRP68 segment is sufficient for tight binding to the SRP72 TPR-containing protein-binding domain. | Iakhiaeva et al. 2006, Becker et al. 2017, Gao et al. 2017 (iakhiaeva2006proteinsrp68of pages 2-4, becker2017structuresofhuman pages 1-2, gao2017humanaposrp72and pages 1-2) | 2006, 2017, 2017 |
-| Mechanism in SRP cycle | SRP68 binds the central 7SL RNA region near the three-way junction/helices 5-8 and helps remodel the S-domain RNA, which supports ribosome interaction and efficient SRP function. Reconstituted SRP lacking SRP68/72 is defective in translocation, and SRP68/72 assembly is needed for pre-SRP nuclear export and productive ER targeting. | Becker et al. 2017, Gao et al. 2017, Politz et al. 2000 (becker2017structuresofhuman pages 1-2, gao2017humanaposrp72and pages 1-2, politz2000signalrecognitionparticle pages 1-2) | 2017, 2017, 2000 |
-| Localization | SRP68 is detected in the cytosol and at the ER as expected for a co-translational targeting factor, but mammalian studies also localize SRP68 and SRP72 to the nucleolus, supporting nuclear/nucleolar stages of SRP biogenesis. Imaging further showed SRP68 accumulation at ER membranes and nucleolar localization of GFP-tagged SRP68/72 constructs. | Politz et al. 2000, Gao et al. 2017, Kellogg 2023 (politz2000signalrecognitionparticle pages 1-2, gao2017humanaposrp72and pages 7-9, kellogg2023unravelingsrpbiogenesis pages 35-40) | 2000, 2017, 2023 |
-| Disease/variants | Biallelic loss-of-function SRP68 variants were reported in severe congenital neutropenia, with persistent ANC around 0.2 x10^9/L, promyelocytic maturation arrest, dysgranulopoiesis, reduced SRP68 protein, impaired granulocytic proliferation, ER-stress signaling, and p53-dependent apoptosis. Cancer-associated interface variants such as F590L can weaken SRP68-SRP72 binding and reduce ER co-localization. | Schmaltz-Panneau et al. 2021, Gao et al. 2017, Kellogg et al. 2022 (schmaltzpanneau2021identificationofbiallelic pages 1-6, gao2017humanaposrp72and pages 7-9, kellogg2022signalrecognitionparticle pages 2-4) | 2021, 2017, 2022 |
-| Recent developments 2023-2024 | Recent work emphasized SRP-centered quality control and disease mechanisms: 2023 analyses linked SRP integrity to RAPP-related concepts and highlighted SRP68 congenital-neutropenia and cancer variants, while 2024 structural reporting further extended SRP68/72 architecture. The newest accessible evidence here mainly refines SRP biogenesis/quality-control interpretation rather than redefining SRP68’s core biochemical role. | Kellogg 2023, Karamysheva & Karamyshev 2023, Gussakovsky et al. 2024 (kellogg2023unravelingsrpbiogenesis pages 46-51, kellogg2023unravelingsrpbiogenesis pages 40-43, OpenTargets Search: -SRP68) | 2023, 2023, 2024 |
-| Applications | Current real-world use is primarily diagnostic and interpretive rather than therapeutic: SRP68 is relevant in rare-disease genomics, variant interpretation, and mechanistic annotation of congenital neutropenia and cancer-associated mutations. Structural mapping of SRP68-SRP72 interfaces also provides a framework for functional variant assessment and potentially future drug-design efforts around SRP-mediated targeting defects. | Schmaltz-Panneau et al. 2021, Gao et al. 2017, Open Targets association summary (schmaltzpanneau2021identificationofbiallelic pages 1-6, gao2017humanaposrp72and pages 7-9, OpenTargets Search: -SRP68) | 2021, 2017, 2024 |
+## 7) Quantitative mechanistic data: SRP68/72 ribosome binding
+Biochemical reconstitution of the human SRP system provides quantitative evidence that SRP68/72 is a major determinant of SRP–ribosome interaction:
+- SRP68/72 heterodimer binds the 80S ribosome with **KD ~160 ± 20 nM** and apparent **Hill coefficient ~2.3**, supporting multivalent/avidity binding. (wild2019reconstitutionofthe pages 5-5)
+- Visual schematics and tables in the same work summarize SRP architecture (Alu vs S-domain) and the SRP68/72 ribosome contact with KD on the order of **~200 nM**. (wild2019reconstitutionofthe media 8320e838)
+
+### Supporting visual evidence (figures/tables)
+The following cropped figures/tables from Wild et al. visually summarize SRP architecture and SRP68/72 binding contributions. (wild2019reconstitutionofthe media 8320e838, wild2019reconstitutionofthe media b811f4ad, wild2019reconstitutionofthe media eee3cd7f)
+
+## 8) Evidence map summary
+The table below links major annotation claims to their strongest supporting sources.
+
+| Topic | Key points | Best supporting citations (pqac IDs) |
+|---|---|---|
+| Identity/domains | Human **SRP68** corresponds to **UniProt Q9UHB9**; it is an **S-domain** SRP subunit that forms a heterodimer with SRP72 on **7SL RNA**. Reviews describe an SRP68 TPR-containing RNA-binding/remodeling region that bends 7SL RNA to help position the 5f loop for ribosome contact. | (wild2019reconstitutionofthe pages 1-2, kellogg2023unravelingsrpbiogenesis pages 26-29, kellogg2023unravelingsrpbiogenesisa pages 26-29) |
+| Complex membership | Mammalian SRP contains **6 proteins + 7SL RNA**; **SRP68 and SRP72** are the larger **S-domain** proteins, distinct from the Alu-domain pair SRP9/14. SRP68 is therefore a structural/core SRP component rather than a standalone enzyme or transporter. | (kellogg2022signalrecognitionparticle pages 1-2, wild2019reconstitutionofthe pages 1-2, issa2024thenucleolarphase pages 1-2) |
+| Localization/biogenesis | SRP68 participates in a **nuclear/nucleolar phase** of SRP assembly with 7SL RNA and is implicated in **pre-SRP export** to the cytoplasm; intact nucleoli are required for proper localization of SRP proteins, and Cajal bodies may host additional assembly steps. | (kellogg2023unravelingsrpbiogenesis pages 23-26, issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 10-13) |
+| Mechanistic role in SRP targeting | SRP68 is best supported as a **structural/coordinating subunit**: it promotes SRP72 association, remodels 7SL RNA, and contributes to ribosome engagement during **co-translational ER targeting**. Primary signal-sequence recognition and SRP receptor GTPase docking remain centered on **SRP54**, so SRP68 is not the primary signal-binding catalyst. | (kellogg2023unravelingsrpbiogenesisa pages 26-29, kellogg2023unravelingsrpbiogenesis pages 26-29, wild2019reconstitutionofthe pages 1-2, kellogg2022signalrecognitionparticle pages 1-2) |
+| Quantitative binding data | Reconstituted human SRP studies showed the **full-length SRP68/72 heterodimer binds the 80S ribosome with ~160 ± 20 nM affinity** and apparent **ultrasensitivity (Hill coefficient ~2.3)**, consistent with multivalent/avidity-based binding; schematic summaries place SRP68/72 ribosome contact in the **~200 nM** range. | (wild2019reconstitutionofthe pages 5-5, wild2019reconstitutionofthe media 8320e838) |
+| Disease association/variant | The clearest direct human disease link is **severe congenital neutropenia (SCN)** from **biallelic SRP68 variants**: **c.184+2T>C** plus **exon 1 deletion**, causing aberrant splicing and residual but markedly reduced SRP68 protein. Reviews also summarize SRP68 loss as causing ER-stress-related translocation defects. | (schmaltzpanneau2021identificationofbiallelic pages 1-6, schmaltzpanneau2021identificationofbiallelic pages 6-10, kellogg2023unravelingsrpbiogenesis pages 46-51) |
+| Key quantitative clinical/functional data | In the reported SRP68-SCN case: onset at **6 weeks**; initial counts **WBC 6.1×10^9/L**, **neutrophils 0.2×10^9/L**, **monocytes 1.7×10^9/L**, **Hb 7.5 g/dL**, **platelets 149×10^9/L**; serial counts (**n=41**) confirmed profound neutropenia. Patient-derived granulocytic cells showed SRP68 protein reduced to **68%** in immature and **39%** in mature granulocytic cells, with **~6-fold lower granulocytic proliferation** and increased **spliced XBP1** plus p53-pathway targets. | (schmaltzpanneau2021identificationofbiallelic pages 1-6, schmaltzpanneau2021identificationofbiallelic pages 6-10) |
+| Recent 2023-2024 developments | **2024** work strengthened the concept that SRP68 functions within a **nucleolar SRP assembly program** connected to ribosome biogenesis and possibly Cajal bodies. **2023** synthesis emphasized open mechanistic questions: how SRP68/72 regulate export, ribosome transfer, and quality control, even though their structural role in RNA remodeling and ribosome engagement is increasingly clear. | (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 10-13, kellogg2023unravelingsrpbiogenesis pages 23-26, kellogg2023unravelingsrpbiogenesisa pages 23-26) |
 
 
-*Table: This table summarizes the strongest functional annotation evidence for human SRP68 (UniProt Q9UHB9), including its domains, mechanism in the SRP pathway, localization, disease associations, and recent developments. It is useful as a compact evidence map linking each annotation category to the most relevant supporting sources.*
+*Table: This table summarizes the main functional annotations, mechanistic evidence, quantitative data, and disease relevance for human SRP68 (UniProt Q9UHB9). It is useful as a compact evidence map linking SRP68 biology to the strongest available primary and review sources.*
 
-### 9) Key sources (URLs and publication dates)
-- Iakhiaeva et al. **2006-06**. *Protein SRP68 of human signal recognition particle: Identification of the RNA and SRP72 binding domains.* **Protein Science**. https://doi.org/10.1110/ps.051861406 (iakhiaeva2006proteinsrp68of pages 1-2)
-- Gao et al. **2017-04**. *Human apo-SRP72 and SRP68/72 complex structures reveal the molecular basis of protein translocation.* **Journal of Molecular Cell Biology**. https://doi.org/10.1093/jmcb/mjx010 (gao2017humanaposrp72and pages 1-2)
-- Becker et al. **2017-11**. *Structures of human SRP72 complexes provide insights into SRP RNA remodeling and ribosome interaction.* **Nucleic Acids Research**. https://doi.org/10.1093/nar/gkw1124 (becker2017structuresofhuman pages 1-2)
-- Politz et al. **2000-01**. *Signal recognition particle components in the nucleolus.* **PNAS**. https://doi.org/10.1073/pnas.97.1.55 (politz2000signalrecognitionparticle pages 1-2)
-- Schmaltz-Panneau et al. **2021-04**. *Identification of biallelic germline variants of SRP68 in a sporadic case with severe congenital neutropenia.* **Haematologica**. https://doi.org/10.3324/haematol.2020.247825 (schmaltzpanneau2021identificationofbiallelic pages 1-6)
-- Kellogg et al. **2022-06**. *Signal Recognition Particle in Human Diseases.* **Frontiers in Genetics**. https://doi.org/10.3389/fgene.2022.898083 (kellogg2022signalrecognitionparticle pages 2-4)
-- Karamysheva & Karamyshev **2023-06**. *Aberrant protein targeting activates quality control on the ribosome.* **Frontiers in Cell and Developmental Biology**. https://doi.org/10.3389/fcell.2023.1198184 (OpenTargets Search: -SRP68)
-- Gussakovsky et al. **2024-11**. *The role of SRP9/SRP14 in regulating Alu RNA.* **RNA Biology**. https://doi.org/10.1080/15476286.2024.2430817 (OpenTargets Search: -SRP68)
+## 9) Limitations and gaps in the current evidence base
+- While SRP68/72 structural roles in RNA remodeling and ribosome binding are supported, **mechanistic details** of how SRP68/72 contributes to later targeting steps (e.g., SRβ engagement and translocon handover) remain explicitly described as incompletely understood in recent synthesis work. (kellogg2023unravelingsrpbiogenesisa pages 26-29, kellogg2023unravelingsrpbiogenesis pages 26-29)
+- Tool-retrieved 2023–2024 literature did not yield strong, SRP68-specific evidence for mature “biomarker panels” or therapeutic targeting beyond mechanistic proteomics/localization studies and rare-disease genetics; broader proteomics mentions of SRP68 occur but were not supported by extracted evidence snippets.
 
-### 10) Summary (functional annotation statement)
-Human SRP68 (UniProt Q9UHB9) is a eukaryote-specific SRP core subunit whose primary function is structural and regulatory within the SRP S domain: it binds 7SL SRP RNA through an N-terminal RNA-binding region (~52–252), binds SRP72 via a C-terminal segment (~91–94 aa), and together with SRP72 remodels SRP RNA and supports ribosome interaction and ER targeting. SRP68 localizes to the cytosolic SRP pathway and shows ER association, but also localizes to the nucleolus consistent with nuclear/nucleolar SRP assembly. Pathogenic biallelic SRP68 loss-of-function variants cause severe congenital neutropenia with ER stress and p53/apoptosis signatures in granulopoiesis, and cancer-associated interface variants can disrupt SRP68–SRP72 binding and ER co-localization. (iakhiaeva2006proteinsrp68of pages 1-2, becker2017structuresofhuman pages 1-2, politz2000signalrecognitionparticle pages 1-2, schmaltzpanneau2021identificationofbiallelic pages 1-6, gao2017humanaposrp72and pages 7-9)
+## References (URLs and dates where available)
+- Wild K, et al. *Reconstitution of the human SRP system and quantitative and systematic analysis of its ribosome interactions.* **Nucleic Acids Research**. **Jan 2019**. https://doi.org/10.1093/nar/gky1324 (wild2019reconstitutionofthe pages 1-2, wild2019reconstitutionofthe pages 5-5, wild2019reconstitutionofthe media 8320e838)
+- Kellogg MK, Tikhonova EB, Karamyshev AL. *Signal Recognition Particle in Human Diseases.* **Frontiers in Genetics**. **Jun 2022**. https://doi.org/10.3389/fgene.2022.898083 (kellogg2022signalrecognitionparticle pages 1-2)
+- Issa A, et al. *The nucleolar phase of signal recognition particle assembly.* **Life Science Alliance**. **Jun 2024**. https://doi.org/10.26508/lsa.202402614 (issa2024thenucleolarphase pages 1-2, issa2024thenucleolarphase pages 10-13)
+- Schmaltz-Panneau B, et al. *Identification of biallelic germline variants of SRP68 in a sporadic case with severe congenital neutropenia.* **Haematologica**. **Apr 2021**. https://doi.org/10.3324/haematol.2020.247825 (schmaltzpanneau2021identificationofbiallelic pages 1-6, schmaltzpanneau2021identificationofbiallelic pages 6-10)
+- Kellogg MK. *Unraveling SRP biogenesis and quality control: Implications for human disease pathogenesis.* **2023** (journal not captured in tool metadata). (kellogg2023unravelingsrpbiogenesis pages 26-29, kellogg2023unravelingsrpbiogenesis pages 23-26, kellogg2023unravelingsrpbiogenesis pages 46-51)
+
 
 References
 
-1. (becker2017structuresofhuman pages 1-2): Matthias M. M. Becker, Karine Lapouge, Bernd Segnitz, Klemens Wild, and Irmgard Sinning. Structures of human srp72 complexes provide insights into srp rna remodeling and ribosome interaction. Nucleic Acids Research, 45:470-481, Nov 2017. URL: https://doi.org/10.1093/nar/gkw1124, doi:10.1093/nar/gkw1124. This article has 38 citations and is from a highest quality peer-reviewed journal.
+1. (wild2019reconstitutionofthe pages 1-2): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
 
-2. (gao2017humanaposrp72and pages 1-2): Yina Gao, Qi Zhang, Yue Lang, Yang Liu, Xiaofei Dong, Zhenhang Chen, Wenli Tian, Jun Tang, Wei Wu, Yufeng Tong, and Zhongzhou Chen. Human apo-srp72 and srp68/72 complex structures reveal the molecular basis of protein translocation. Journal of Molecular Cell Biology, 9:220-230, Apr 2017. URL: https://doi.org/10.1093/jmcb/mjx010, doi:10.1093/jmcb/mjx010. This article has 20 citations and is from a peer-reviewed journal.
+2. (kellogg2022signalrecognitionparticle pages 1-2): Morgana K. Kellogg, Elena B. Tikhonova, and Andrey L. Karamyshev. Signal recognition particle in human diseases. Frontiers in Genetics, Jun 2022. URL: https://doi.org/10.3389/fgene.2022.898083, doi:10.3389/fgene.2022.898083. This article has 30 citations and is from a peer-reviewed journal.
 
-3. (faoro2021noncanonicalfunctionsand pages 3-4): Camilla Faoro and Sandro F. Ataide. Noncanonical functions and cellular dynamics of the mammalian signal recognition particle components. Frontiers in Molecular Biosciences, May 2021. URL: https://doi.org/10.3389/fmolb.2021.679584, doi:10.3389/fmolb.2021.679584. This article has 32 citations.
+3. (kellogg2023unravelingsrpbiogenesis pages 26-29): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
 
-4. (kellogg2021srpassingcotranslationaltargeting pages 11-13): Morgana K. Kellogg, Sarah C. Miller, Elena B. Tikhonova, and Andrey L. Karamyshev. Srpassing co-translational targeting: the role of the signal recognition particle in protein targeting and mrna protection. International Journal of Molecular Sciences, 22:6284, Jun 2021. URL: https://doi.org/10.3390/ijms22126284, doi:10.3390/ijms22126284. This article has 70 citations.
+4. (issa2024thenucleolarphase pages 1-2): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
 
-5. (kellogg2022signalrecognitionparticle pages 2-4): Morgana K. Kellogg, Elena B. Tikhonova, and Andrey L. Karamyshev. Signal recognition particle in human diseases. Frontiers in Genetics, Jun 2022. URL: https://doi.org/10.3389/fgene.2022.898083, doi:10.3389/fgene.2022.898083. This article has 30 citations and is from a peer-reviewed journal.
+5. (schmaltzpanneau2021identificationofbiallelic pages 6-10): Barbara Schmaltz-Panneau, Anne Pagnier, Séverine Clauin, Julien Buratti, Caroline Marty, Odile Fenneteau, Klaus Dieterich, Blandine Beaupain, Jean Donadieu, Isabelle Plo, and Christine Bellanné-Chantelot. Identification of biallelic germline variants of srp68 in a sporadic case with severe congenital neutropenia. Haematologica, 106:1216-1219, Apr 2021. URL: https://doi.org/10.3324/haematol.2020.247825, doi:10.3324/haematol.2020.247825. This article has 15 citations.
 
-6. (gao2017humanaposrp72and pages 7-9): Yina Gao, Qi Zhang, Yue Lang, Yang Liu, Xiaofei Dong, Zhenhang Chen, Wenli Tian, Jun Tang, Wei Wu, Yufeng Tong, and Zhongzhou Chen. Human apo-srp72 and srp68/72 complex structures reveal the molecular basis of protein translocation. Journal of Molecular Cell Biology, 9:220-230, Apr 2017. URL: https://doi.org/10.1093/jmcb/mjx010, doi:10.1093/jmcb/mjx010. This article has 20 citations and is from a peer-reviewed journal.
+6. (kellogg2023unravelingsrpbiogenesisa pages 26-29): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
 
-7. (iakhiaeva2006proteinsrp68of pages 1-2): Elena Iakhiaeva, Shakhawat Hossain Bhuiyan, Jiaming Yin, and Christian Zwieb. Protein srp68 of human signal recognition particle: identification of the rna and srp72 binding domains. Protein Science, 15:1290-1302, Jun 2006. URL: https://doi.org/10.1110/ps.051861406, doi:10.1110/ps.051861406. This article has 27 citations and is from a peer-reviewed journal.
+7. (kellogg2023unravelingsrpbiogenesis pages 23-26): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
 
-8. (iakhiaeva2006proteinsrp68of pages 2-4): Elena Iakhiaeva, Shakhawat Hossain Bhuiyan, Jiaming Yin, and Christian Zwieb. Protein srp68 of human signal recognition particle: identification of the rna and srp72 binding domains. Protein Science, 15:1290-1302, Jun 2006. URL: https://doi.org/10.1110/ps.051861406, doi:10.1110/ps.051861406. This article has 27 citations and is from a peer-reviewed journal.
+8. (wild2019reconstitutionofthe pages 5-5): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
 
-9. (iakhiaeva2006proteinsrp68of pages 6-8): Elena Iakhiaeva, Shakhawat Hossain Bhuiyan, Jiaming Yin, and Christian Zwieb. Protein srp68 of human signal recognition particle: identification of the rna and srp72 binding domains. Protein Science, 15:1290-1302, Jun 2006. URL: https://doi.org/10.1110/ps.051861406, doi:10.1110/ps.051861406. This article has 27 citations and is from a peer-reviewed journal.
+9. (issa2024thenucleolarphase pages 10-13): Amani Issa, Florence Schlotter, Justine Flayac, Jing Chen, Ludivine Wacheul, Manon Philippe, Lucas Sardini, Lalia Mostefa, Franck Vandermoere, Edouard Bertrand, Céline Verheggen, Denis LJ Lafontaine, and Séverine Massenet. The nucleolar phase of signal recognition particle assembly. Life Science Alliance, 7:e202402614, Jun 2024. URL: https://doi.org/10.26508/lsa.202402614, doi:10.26508/lsa.202402614. This article has 8 citations and is from a peer-reviewed journal.
 
-10. (politz2000signalrecognitionparticle pages 1-2): Joan C. Politz, Serge Yarovoi, Susan M. Kilroy, Krishne Gowda, Christian Zwieb, and Thoru Pederson. Signal recognition particle components in the nucleolus. Proceedings of the National Academy of Sciences of the United States of America, 97 1:55-60, Jan 2000. URL: https://doi.org/10.1073/pnas.97.1.55, doi:10.1073/pnas.97.1.55. This article has 234 citations and is from a highest quality peer-reviewed journal.
+10. (schmaltzpanneau2021identificationofbiallelic pages 1-6): Barbara Schmaltz-Panneau, Anne Pagnier, Séverine Clauin, Julien Buratti, Caroline Marty, Odile Fenneteau, Klaus Dieterich, Blandine Beaupain, Jean Donadieu, Isabelle Plo, and Christine Bellanné-Chantelot. Identification of biallelic germline variants of srp68 in a sporadic case with severe congenital neutropenia. Haematologica, 106:1216-1219, Apr 2021. URL: https://doi.org/10.3324/haematol.2020.247825, doi:10.3324/haematol.2020.247825. This article has 15 citations.
 
-11. (kellogg2023unravelingsrpbiogenesis pages 26-29): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
+11. (kellogg2023unravelingsrpbiogenesis pages 46-51): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
 
-12. (politz2000signalrecognitionparticle media 5d65c091): Joan C. Politz, Serge Yarovoi, Susan M. Kilroy, Krishne Gowda, Christian Zwieb, and Thoru Pederson. Signal recognition particle components in the nucleolus. Proceedings of the National Academy of Sciences of the United States of America, 97 1:55-60, Jan 2000. URL: https://doi.org/10.1073/pnas.97.1.55, doi:10.1073/pnas.97.1.55. This article has 234 citations and is from a highest quality peer-reviewed journal.
+12. (wild2019reconstitutionofthe media 8320e838): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
 
-13. (kellogg2023unravelingsrpbiogenesis pages 35-40): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
+13. (wild2019reconstitutionofthe media b811f4ad): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
 
-14. (kellogg2023unravelingsrpbiogenesis pages 46-51): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
+14. (wild2019reconstitutionofthe media eee3cd7f): Klemens Wild, Keven D Juaire, Komal Soni, Vivekanandan Shanmuganathan, Astrid Hendricks, Bernd Segnitz, Roland Beckmann, and Irmgard Sinning. Reconstitution of the human srp system and quantitative and systematic analysis of its ribosome interactions. Nucleic Acids Research, 47:3184-3196, Jan 2019. URL: https://doi.org/10.1093/nar/gky1324, doi:10.1093/nar/gky1324. This article has 43 citations and is from a highest quality peer-reviewed journal.
 
-15. (kellogg2023unravelingsrpbiogenesis pages 40-43): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
-
-16. (OpenTargets Search: -SRP68): Open Targets Query (-SRP68, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-17. (schmaltzpanneau2021identificationofbiallelic pages 1-6): Barbara Schmaltz-Panneau, Anne Pagnier, Séverine Clauin, Julien Buratti, Caroline Marty, Odile Fenneteau, Klaus Dieterich, Blandine Beaupain, Jean Donadieu, Isabelle Plo, and Christine Bellanné-Chantelot. Identification of biallelic germline variants of srp68 in a sporadic case with severe congenital neutropenia. Haematologica, 106:1216-1219, Apr 2021. URL: https://doi.org/10.3324/haematol.2020.247825, doi:10.3324/haematol.2020.247825. This article has 15 citations.
-
-18. (schmaltzpanneau2021identificationofbiallelic pages 10-17): Barbara Schmaltz-Panneau, Anne Pagnier, Séverine Clauin, Julien Buratti, Caroline Marty, Odile Fenneteau, Klaus Dieterich, Blandine Beaupain, Jean Donadieu, Isabelle Plo, and Christine Bellanné-Chantelot. Identification of biallelic germline variants of srp68 in a sporadic case with severe congenital neutropenia. Haematologica, 106:1216-1219, Apr 2021. URL: https://doi.org/10.3324/haematol.2020.247825, doi:10.3324/haematol.2020.247825. This article has 15 citations.
-
-19. (schmaltzpanneau2021identificationofbiallelic pages 6-10): Barbara Schmaltz-Panneau, Anne Pagnier, Séverine Clauin, Julien Buratti, Caroline Marty, Odile Fenneteau, Klaus Dieterich, Blandine Beaupain, Jean Donadieu, Isabelle Plo, and Christine Bellanné-Chantelot. Identification of biallelic germline variants of srp68 in a sporadic case with severe congenital neutropenia. Haematologica, 106:1216-1219, Apr 2021. URL: https://doi.org/10.3324/haematol.2020.247825, doi:10.3324/haematol.2020.247825. This article has 15 citations.
-
-20. (gao2017humanaposrp72and media 9d5056ea): Yina Gao, Qi Zhang, Yue Lang, Yang Liu, Xiaofei Dong, Zhenhang Chen, Wenli Tian, Jun Tang, Wei Wu, Yufeng Tong, and Zhongzhou Chen. Human apo-srp72 and srp68/72 complex structures reveal the molecular basis of protein translocation. Journal of Molecular Cell Biology, 9:220-230, Apr 2017. URL: https://doi.org/10.1093/jmcb/mjx010, doi:10.1093/jmcb/mjx010. This article has 20 citations and is from a peer-reviewed journal.
-
-21. (gao2017humanaposrp72and media 6b1840f5): Yina Gao, Qi Zhang, Yue Lang, Yang Liu, Xiaofei Dong, Zhenhang Chen, Wenli Tian, Jun Tang, Wei Wu, Yufeng Tong, and Zhongzhou Chen. Human apo-srp72 and srp68/72 complex structures reveal the molecular basis of protein translocation. Journal of Molecular Cell Biology, 9:220-230, Apr 2017. URL: https://doi.org/10.1093/jmcb/mjx010, doi:10.1093/jmcb/mjx010. This article has 20 citations and is from a peer-reviewed journal.
-
-22. (politz2000signalrecognitionparticle media 4ee44bf1): Joan C. Politz, Serge Yarovoi, Susan M. Kilroy, Krishne Gowda, Christian Zwieb, and Thoru Pederson. Signal recognition particle components in the nucleolus. Proceedings of the National Academy of Sciences of the United States of America, 97 1:55-60, Jan 2000. URL: https://doi.org/10.1073/pnas.97.1.55, doi:10.1073/pnas.97.1.55. This article has 234 citations and is from a highest quality peer-reviewed journal.
+15. (kellogg2023unravelingsrpbiogenesisa pages 23-26): MK Kellogg. Unraveling srp biogenesis and quality control: implications for human disease pathogenesis. Unknown journal, 2023.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](SRP68-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000018 The crystal structure of the human SRP68/72 complex and its domain architecture are illustrated in the following figures: - Figure ](SRP68-deep-research-falcon_artifacts/image-1.png)
-![## Context ID: pqac-00000033 The provided figures illustrate the nucleolar localization of various SRP components. Figure 1 shows the presence of endogenous SRP](SRP68-deep-research-falcon_artifacts/image-2.png)
+![## Context ID: pqac-00000018 The requested information can be found in several figures throughout the document. - Figure 1A illustrates the architecture of the ](SRP68-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. becker2017structuresofhuman pages 1-2
-2. politz2000signalrecognitionparticle pages 1-2
-3. kellogg2023unravelingsrpbiogenesis pages 35-40
-4. schmaltzpanneau2021identificationofbiallelic pages 1-6
-5. schmaltzpanneau2021identificationofbiallelic pages 6-10
-6. kellogg2022signalrecognitionparticle pages 2-4
-7. faoro2021noncanonicalfunctionsand pages 3-4
-8. kellogg2021srpassingcotranslationaltargeting pages 11-13
+1. wild2019reconstitutionofthe pages 1-2
+2. wild2019reconstitutionofthe pages 5-5
+3. issa2024thenucleolarphase pages 1-2
+4. kellogg2023unravelingsrpbiogenesis pages 23-26
+5. issa2024thenucleolarphase pages 10-13
+6. schmaltzpanneau2021identificationofbiallelic pages 1-6
+7. schmaltzpanneau2021identificationofbiallelic pages 6-10
+8. kellogg2022signalrecognitionparticle pages 1-2
 9. kellogg2023unravelingsrpbiogenesis pages 26-29
-10. kellogg2023unravelingsrpbiogenesis pages 46-51
-11. kellogg2023unravelingsrpbiogenesis pages 40-43
-12. schmaltzpanneau2021identificationofbiallelic pages 10-17
-13. https://doi.org/10.1110/ps.051861406
-14. https://doi.org/10.1093/jmcb/mjx010
-15. https://doi.org/10.1093/nar/gkw1124
-16. https://doi.org/10.1073/pnas.97.1.55
-17. https://doi.org/10.3324/haematol.2020.247825
+10. kellogg2023unravelingsrpbiogenesisa pages 26-29
+11. kellogg2023unravelingsrpbiogenesis pages 46-51
+12. kellogg2023unravelingsrpbiogenesisa pages 23-26
+13. c.184+2T>C
+14. exon 1 deletion
+15. https://doi.org/10.26508/lsa.202402614
+16. https://doi.org/10.3324/haematol.2020.247825
+17. https://doi.org/10.1093/nar/gky1324
 18. https://doi.org/10.3389/fgene.2022.898083
-19. https://doi.org/10.3389/fcell.2023.1198184
-20. https://doi.org/10.1080/15476286.2024.2430817
-21. https://doi.org/10.1093/nar/gkw1124,
-22. https://doi.org/10.1093/jmcb/mjx010,
-23. https://doi.org/10.3389/fmolb.2021.679584,
-24. https://doi.org/10.3390/ijms22126284,
-25. https://doi.org/10.3389/fgene.2022.898083,
-26. https://doi.org/10.1110/ps.051861406,
-27. https://doi.org/10.1073/pnas.97.1.55,
-28. https://doi.org/10.3324/haematol.2020.247825,
+19. https://doi.org/10.1093/nar/gky1324,
+20. https://doi.org/10.3389/fgene.2022.898083,
+21. https://doi.org/10.26508/lsa.202402614,
+22. https://doi.org/10.3324/haematol.2020.247825,
