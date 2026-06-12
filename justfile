@@ -62,6 +62,11 @@ mypy:
 format:
 	uv run ruff check .
 
+# Validate SSSOM mapping files (e.g. projects/mappings/*.sssom.yaml) against the SSSOM schema.
+# Resolves the installed sssom_schema path dynamically so it is python-version independent.
+validate-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/mappings/*.sssom.yaml
+
 # ============== Hidden internal recipes ==============
 
 _status:
