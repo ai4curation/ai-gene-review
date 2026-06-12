@@ -127,6 +127,8 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/ma
 
 **Propagation is exact-or-narrower**: a GO term mapped at an ARO term applies to any gene whose ARO assignment is that term *or a narrower (is_a descendant)* ARO term. This makes family nodes the high-value targets — the single `beta-lactamase` (`ARO:3000001`) → `GO:0008800` mapping reaches all **5,317** descendant ARO gene terms (CTX-M, KPC, NDM, …). The pipeline walks each gene's ARO is_a ancestors (via OAK) and records `aro_relation` = `exact`/`narrower` in the output. Candidates carry full provenance (gene ARO, mapped ARO, relation, predicate, GO, route) for curator review. See `projects/mappings/README.md`.
 
+**Curator view & impact.** `just render-mappings` builds a browsable HTML page (`projects/mappings/aro2go.html`) of all mappings + gaps with CARD/AmiGO links. `just annotation-gain` applies the mappings to the **4,182** UniProtKB entries carrying a CARD cross-reference and reports the GO terms they would gain but don't yet have: **746** candidate new annotations (`projects/mappings/ANNOTATION_GAIN.md`) — e.g. all 79 colistin/MCR entries lack `GO:0043838`; 448 beta-lactamases lack `GO:0008800`.
+
 ### Recommended convention
 - Record the ARO id in the gene notes (`- CARD/ARO: ARO:NNNNNNN (gene); mechanism = ...`) with provenance, as already done for both MPH genes.
 - Treat CARD as a **HIGH-relevance curated source** but still **verify, don't trust**: confirm each CARD-cited PMID against PubMed and anchor substrate/mechanism claims to a checkable primary reference before marking a `reference_review` as `VERIFIED`.

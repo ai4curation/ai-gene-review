@@ -74,6 +74,14 @@ validate-mappings:
 aro2go-pipeline: validate-mappings
 	uv run python projects/mappings/uniprot2aro2go.py --sssom projects/mappings/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
 
+# Render the ARO->GO mapping set to a curator-facing HTML page.
+render-mappings:
+	uv run python projects/mappings/render_sssom_html.py --sssom projects/mappings/aro2go.sssom.yaml --gain-tsv projects/mappings/data/candidate_new_annotations.tsv -o projects/mappings/aro2go.html
+
+# Report the candidate GO annotations UniProt would gain from the mappings (uses the cached snapshot).
+annotation-gain:
+	uv run python projects/mappings/annotation_gain_report.py --sssom projects/mappings/aro2go.sssom.yaml --uniprot projects/mappings/data/uniprot_card_xrefs.tsv --out-md projects/mappings/ANNOTATION_GAIN.md --out-tsv projects/mappings/data/candidate_new_annotations.tsv
+
 # ============== Hidden internal recipes ==============
 
 _status:
