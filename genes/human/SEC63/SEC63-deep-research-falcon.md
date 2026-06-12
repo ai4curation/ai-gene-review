@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T02:42:01.779079'
-end_time: '2026-06-12T03:04:53.974052'
-duration_seconds: 1372.2
+start_time: '2026-06-12T02:58:46.715410'
+end_time: '2026-06-12T03:14:07.792065'
+duration_seconds: 921.08
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -26,7 +26,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 41
+citation_count: 29
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -43,9 +43,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000016 The requested visual summaries can be
-    found in Figure 2 and Table 1 of the document. - **Figure 2** is a pie chart that
-    displays th'
+  description: "## Context ID: pqac-00000026 The requested model figure is Figure\
+    \ 8 on page 19, which provides a schematic of the proposed IRE1\u03B1\u2013SEC63\u2013\
+    ACLY axis. The diagram il"
 ---
 
 ## Question
@@ -156,242 +156,185 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research Report: Human **SEC63** (UniProt **Q9UGP8**; gene **SEC63**, synonyms **DNAJC23/SEC63L**) — functional annotation and disease relevance
+## Comprehensive Research Report: Human **SEC63** (UniProt **Q9UGP8**; gene **SEC63**; synonyms **DNAJC23/SEC63L**) 
 
-## 0. Target verification (critical identity checks)
-The evidence assembled matches the intended target: **human SEC63** (also referred to as **DNAJC23**), an **endoplasmic reticulum (ER) membrane** J-domain co-chaperone that functions as an accessory factor of the **Sec61 translocon** in conjunction with Sec62 and the luminal Hsp70 **BiP**. Human SEC63 contains a **J-domain** (Hsp40/DnaJ-type), is part of the **Sec61/Sec62/Sec63** machinery, and is repeatedly discussed in the context of **autosomal dominant polycystic liver disease (ADPLD)** in human genetics literature. (lang2022signalpeptidefeatures pages 19-21, schorr2020identificationofsignal pages 13-14, jung2021emergingviewon pages 9-10, yang2023geneticspectrumof pages 1-3)
+### 0) Target verification and scope control (critical disambiguation)
+The literature synthesized here refers to **SEC63 as an endoplasmic reticulum (ER) translocon accessory factor** that functions with **Sec62** at the **Sec61 protein-conducting channel**, and recruits/activates the ER Hsp70 chaperone **BiP** via a **J-domain**. This functional identity matches the UniProt-provided description “Translocation protein SEC63 homolog / DnaJ homolog subfamily C member 23” in **Homo sapiens** (UniProt Q9UGP8). The name “Sec63” is also used for the **yeast** ortholog; yeast structural/biochemical insights are treated as conserved mechanistic context and are not used to redefine the human target (shao2023proteinbiosynthesisat pages 1-2, itskanov2022gatingofsec61 pages 10-13).
 
-## 1. Key concepts and definitions (current understanding)
+### 1) Key concepts and definitions (current understanding)
 
-### 1.1 Sec61 translocon and ER protein entry
-The **Sec61 complex** is the universally conserved protein-conducting channel in the ER membrane responsible for translocating hydrophilic polypeptide segments into the ER lumen and integrating hydrophobic transmembrane segments into the lipid bilayer. It operates with partner complexes to coordinate targeting and translocation of secretory and membrane proteins. (itskanov2023mechanismofprotein pages 1-3)
+#### 1.1 The Sec61 translocon and its accessory factors
+A major fraction of the eukaryotic proteome is synthesized into/through the ER, requiring the conserved **Sec61 translocon** for polypeptide translocation into the ER lumen and membrane integration of transmembrane segments. In addition to Sec61, **partner/accessory complexes** tune substrate engagement, channel gating, and coupling to folding/processing (itskanov2023mechanismofprotein pages 1-3).
 
-A recurring quantitative framing is that **~one-third of mammalian polypeptides/proteome** enter the ER through Sec61-dependent pathways. (okeefe2020membranetranslocationat pages 1-3)
+Within this framework, **SEC63** is best understood as a **regulatory/co-chaperone component of the ER translocation machinery** rather than an enzyme: it helps certain classes of nascent or posttranslational substrates productively enter the ER by controlling Sec61 gating and by coupling translocation to luminal chaperone function (shao2023proteinbiosynthesisat pages 1-2, sun2022signalsequencesencode pages 1-2).
 
-### 1.2 Sec62/Sec63 as translocon accessory factors
-Sec62 and Sec63 form an **accessory complex** that associates with Sec61 and **modulates channel gating** and substrate handling. Classical models emphasized a split between **SRP-dependent co-translational** import and **Sec62/Sec63-dependent post-translational** import; however, mammalian evidence supports roles for Sec62/Sec63 in assisting certain substrates even during **co-translational** translocation when signal peptides are “more demanding” (e.g., less hydrophobic). (jung2021emergingviewon pages 1-3, okeefe2020membranetranslocationat pages 1-3)
+#### 1.2 The Sec62/Sec63 complex
+SEC63 acts as a core functional unit of a **Sec62/Sec63 accessory complex** associated with Sec61. A central concept is that Sec62/Sec63 can act as a “dynamic brace” that **fully opens the Sec61 lateral gate**, which may lower the energetic barrier for “nonoptimal” signal sequences to initiate translocation (shao2023proteinbiosynthesisat pages 1-2). This differentiates Sec62/Sec63 from some other Sec61 partners that more modestly “prime” the channel (shao2023proteinbiosynthesisat pages 1-2).
 
-### 1.3 What SEC63 is (and is not)
-SEC63 is best viewed as a **protein translocation regulator** rather than an enzyme. Its primary molecular function is to help the Sec61 channel open and to coordinate luminal chaperone assistance via its **J-domain**, enabling efficient ER import for substrates with **weak/slowly gating signal peptides**. (lang2022signalpeptidefeatures pages 19-21, schorr2020identificationofsignal pages 13-14, okeefe2020membranetranslocationat pages 1-3)
+#### 1.3 J-domain proteins and BiP recruitment (co-chaperone mechanism)
+SEC63 contains a **J-domain** (a defining feature of DnaJ/Hsp40 co-chaperones) used to recruit and stimulate the ATPase activity of the ER-resident Hsp70 chaperone **BiP**. In mechanistic models, BiP binding to the translocating chain supports forward movement and prevents backsliding (Brownian ratchet concept), thereby helping completion of translocation, particularly for difficult substrates (shao2023proteinbiosynthesisat pages 1-2, itskanov2022gatingofsec61 pages 10-13).
 
-## 2. SEC63 protein features: domains, topology, and localization
+### 2) Molecular function, processes, and localization of SEC63
 
-### 2.1 Domain evidence in human cells
-A human functional study identified an **N-terminal J-domain (aa 23–91)** and a **G/F region (aa 92–127)** in SEC63, consistent with assignment to the DnaJ/Hsp40 co-chaperone family. (schorr2020identificationofsignal pages 13-14)
+#### 2.1 Subcellular localization: ER translocation sites
+SEC63 functions at the **ER membrane** as a **translocon-associated factor** working at Sec61 translocation sites (shao2023proteinbiosynthesisat pages 1-2, sun2022signalsequencesencode pages 1-2, gemmer2020aclearerpicture pages 1-2). In mammalian cells, Sec63 can be recruited to stalled/paused translocation sites driven by substrate features (sun2022signalsequencesencode pages 1-2).
 
-### 2.2 Conserved topology and structural features (ortholog structural context)
-High-resolution cryo-EM studies of the eukaryotic Sec complex (yeast) show Sec63 as an **integral membrane protein** with **three transmembrane segments**, an **ER-luminal J-domain**, and a large cytosolic region containing a fibronectin type III-like (Ig/FN3) architecture that contacts Sec61 loops and contributes to **opening (“priming”) of the Sec61 lateral gate**. Although these structures are yeast, reviews emphasize which elements are conserved and provide the mechanistic framework widely applied to metazoan SEC63 function. (itskanov2019structureofthe pages 1-2, wu2019structureofthe pages 1-2)
+#### 2.2 Primary function: enabling ER import of “difficult” substrates by gating + chaperone coupling
+Multiple lines of evidence support a unified functional model:
 
-### 2.3 Subcellular location
-SEC63 functions at the **ER membrane translocon**. Reviews in the mammalian context describe Sec63 associating with Sec61 and Sec62 in ER membranes, consistent with SEC63’s primary site of action being the ER. (jung2021emergingviewon pages 7-9, okeefe2020membranetranslocationat pages 1-3)
+1) **Sec61 gating/lateral gate regulation:** Sec62/Sec63 can promote strongly opened conformations of Sec61 that facilitate initiation/continuation of translocation for clients that otherwise engage poorly (shao2023proteinbiosynthesisat pages 1-2).
 
-## 3. Primary function and mechanism (SEC63 in ER protein translocation)
+2) **BiP recruitment/activation via J-domain:** Sec63 recruits/activates BiP, linking channel gating with luminal chaperone binding to client chains (shao2023proteinbiosynthesisat pages 1-2, sun2022signalsequencesencode pages 1-2).
 
-### 3.1 Core functional role: Sec61 gating and translocation assistance
-Mechanistically, Sec63 is positioned to **promote/enable Sec61 channel opening** (including lateral gate opening) for substrates whose signal peptides do not efficiently gate Sec61 on their own. Sec63 is also described as mediating translocation of a **broader range of precursors than Sec62**, suggesting a central role in supporting multiple import modes and client classes. (jung2021emergingviewon pages 9-10)
+3) **Substrate selectivity rules:** substrates that depend on Sec62/Sec63/BiP often carry **weak or slowly gating signal peptides**. In a proteomics-driven study in human cells, Sec62/Sec63 clients shared signal peptides with **longer but less hydrophobic H-regions** and **lower C-region polarity**, and dependence could be enhanced by **downstream positively charged clusters** that disrupt translocation (schorr2019proteomicsidentifiessignal pages 14-17). In an independent mechanistic study, marginally hydrophobic signal sequences or transmembrane domains caused **translocation pausing at Sec61** until Sec63-mediated BiP engagement released the pause and also promoted correct folding (sun2022signalsequencesencode pages 1-2).
 
-### 3.2 J-domain/BiP coupling and directional transport
-SEC63’s **J-domain** provides an Hsp40-like co-chaperone function that couples Sec61 gating to luminal chaperone action. In yeast structural and mechanistic models, the luminal J-domain activates the Hsp70 (BiP/Kar2) cycle to promote binding to incoming substrates and reduce backsliding, contributing a luminal “pulling/ratcheting” component to translocation. Human-focused work supports that SEC63 participates in **Sec62/Sec63/BiP-dependent import** and that removing the SEC63 J-domain reduces dependence of at least one substrate (ERj3) on Sec62/Sec63/BiP. (wu2019structureofthe pages 1-2, schorr2020identificationofsignal pages 13-14, lang2022signalpeptidefeatures pages 19-21)
+#### 2.3 High-confidence mechanistic evidence from mutational tests
+In a human-cell–based functional rescue framework, mutating the conserved **HPD motif** in Sec63’s J-domain (H132Q) abolished productive BiP interaction and failed to rescue Sec63 depletion phenotypes for a Sec63-dependent client, providing direct functional evidence that the **J-domain–BiP axis is essential** for Sec63-dependent import (schorr2019proteomicsidentifiessignal pages 10-14).
 
-## 4. Substrate specificity and pathway context
+### 3) Recent developments and latest research (prioritizing 2023–2024)
 
-### 4.1 Signal peptide features that drive Sec62/Sec63 dependence
-Mammalian studies emphasize that Sec62/Sec63 dependence is **substrate-specific** and often linked to signal peptide features:
-- **Longer but less hydrophobic** signal peptide hydrophobic regions
-- Lower polarity properties of the signal peptide C-region
-- In some clients, a **positively charged cluster** downstream of the signal peptide contributes to dependence
-These features align with a model where Sec63 (often with Sec62 and sometimes BiP) helps “weak” signals achieve productive Sec61 gating. (lang2022signalpeptidefeatures pages 19-21, okeefe2020membranetranslocationat pages 1-3)
+#### 3.1 2023: Conceptual synthesis on accessory factor specificity at the ER
+A 2023 Perspective emphasized that assigning specific roles to many Sec61 accessory factors has been challenging, and highlighted Sec63 as a key accessory that (i) **holds the Sec61 lateral gate open** and (ii) **recruits BiP through its J-domain**, preventing backsliding and enabling posttranslational import and certain hard-to-translocate substrates (shao2023proteinbiosynthesisat pages 1-2). This provides an authoritative, up-to-date conceptual framing.
 
-### 4.2 Quantitative proteomics defining SEC63 impact and candidate clients
-Two complementary datasets provide quantitative functional constraints on SEC63’s contribution to the human secretory pathway:
+#### 3.2 2023: SEC63 as a stress-responsive signaling node in cancer (non-canonical roles)
+A notable 2023 study in hepatocellular carcinoma (HCC) reported that SEC63 is not only a translocon component but also participates in ER-stress–driven **metabolic and epigenetic reprogramming**:
+- Under ER stress, the **IRE1α pathway phosphorylates SEC63 at T537**, contributing to SEC63 activation (hu2023activationofacly pages 1-2).
+- SEC63 interacts with and stabilizes **ACLY (ATP-citrate lyase)**; ER stress failed to induce ACLY in SEC63-depleted cells (hu2023activationofacly pages 5-7).
+- The authors propose that SEC63 can enter the nucleus to increase nuclear acetyl-CoA and modulate UPR targets and pro-metastatic gene expression (e.g., Snail1) (hu2023activationofacly pages 1-2).
 
-**(i) Short-term HeLa depletion study (limited immediate proteome impact)**
-- **6,655 proteins quantified** by MS
-- **34 proteins** significantly changed with Sec63 depletion (**21 decreased**, **13 increased**)
-- Decreased proteins were enriched for **signal peptides (2×)**, **N-glycosylation (2.6×)**, and **membrane proteins (2.8×)**, consistent with a focused effect on secretory/membrane precursor biogenesis. (schorr2020identificationofsignal pages 3-7)
+The proposed mechanistic model is summarized visually in their schematic (hu2023activationofacly media c14c9d30).
 
-**(ii) HEK293 gene-disruption context (broader steady-state remodeling)**
-- In HEK293, Sec63 deficiency was reported to affect steady-state levels of **302 proteins** (**199 decreased**, **103 increased**).
-- Overlap with Sec62 effects included **22 precursor polypeptides** negatively affected by both Sec62 and Sec63 perturbation (**11 with cleavable signal peptides, 11 with transmembrane helices**). (lang2022signalpeptidefeatures pages 19-21, schorr2020identificationofsignal pages 7-8)
+#### 3.3 2024: Quantitative cohort genetics of severe polycystic liver disease (PLD)
+A 2024 cohort study from Japan provides recent, directly actionable clinical genetics statistics for severe PLD. The investigators recruited **49** patients with severe PLD (defined as **height-adjusted total liver volume (hTLV) > 1800 mL/m**) and performed whole-exome sequencing; **44/49 (90%)** had pathogenic or suspected pathogenic variants in polycystic disease genes. Within the genetically defined cases (n=44), **SEC63 accounted for 1/44 (2%)** (mizuno2024geneticanalysisof pages 1-2). This study also provides quantitative phenotype comparisons between ADPKD and ADPLD genetic groups (e.g., hTLV ranges and kidney volume differences) (mizuno2024geneticanalysisof pages 1-2).
 
-Interpretation: SEC63 appears to be a **general translocon cofactor** whose acute depletion may show a limited short-term footprint in some cell contexts, while longer-term loss can produce broader remodeling consistent with central involvement in ER protein biogenesis. (lang2022signalpeptidefeatures pages 19-21, schorr2020identificationofsignal pages 3-7)
+### 4) Current applications and real-world implementations
 
-## 5. Pathways and biological processes linked to SEC63 function
+#### 4.1 Clinical genetics: SEC63 in diagnostic evaluation of cystic liver disease
+SEC63 is established as a causative gene for **autosomal dominant polycystic liver disease (ADPLD)** and is used in the **gene list** considered in diagnostic genetic evaluation of PLD/ADPLD. In the 2024 severe-PLD cohort study, whole-exome sequencing was performed with rare-variant filtering (gnomAD MAF threshold), ACMG-based adjudication, and qPCR validation for suspected large deletions, representing a realistic clinical-research diagnostic pipeline in tertiary care settings (mizuno2024geneticanalysisof pages 1-2). 
 
-### 5.1 ER proteostasis and secretory pathway biogenesis
-SEC63 functions within ER protein biogenesis, affecting co- and post-translational import steps by coordinating Sec61 gating with chaperone action. This directly places SEC63 in pathways governing **secretory and membrane protein production**, which includes many glycoproteins that require proper ER entry for folding and maturation. (itskanov2023mechanismofprotein pages 1-3, okeefe2020membranetranslocationat pages 1-3)
+A 2016 study of hepatic cyst tissue genetics states that known ADPLD genes including **SEC63** together with PRKCSH and LRP5 account for roughly **~25%** of ADPLD cases (wills2016chromosomalabnormalitiesin pages 1-2), supporting SEC63’s continued inclusion in testing panels.
 
-### 5.2 Mechanistic link to polycystin biogenesis (PC1/PC2)
-Recent disease-focused reviews frame SEC63 (with other ER quality-control and protein-processing genes such as PRKCSH, GANAB, ALG8/ALG9, SEC61B) as affecting hepatic (and sometimes renal) cystogenesis by impairing the production/function of **polycystin-1 (PC1)** and **polycystin-2 (PC2)** or facilitating their degradation. This proposes a functional bridge from translocon-level defects to organ-level cyst phenotypes. (mahboobipour2024clinicalmanifestationepidemiology pages 1-2, mizuno2024geneticanalysisof pages 1-2)
+#### 4.2 Tumor biology: SEC63 as a candidate biomarker/axis for therapy development in HCC
+In HCC, SEC63 upregulation and its correlation with ACLY are proposed as prognostic features, and the IRE1α–SEC63–ACLY axis is presented as therapeutically relevant (hu2023activationofacly pages 1-2). Although this remains preclinical/observational in the presented evidence, it is a concrete example of SEC63’s potential use beyond rare genetic liver disease.
 
-## 6. Recent developments and latest research (prioritizing 2023–2024)
+### 5) Expert opinions and analysis (authoritative sources)
 
-### 6.1 2024 severe-PLD cohort genetics (Japan; Kidney360)
-A 2024 whole-exome sequencing study of **severe PLD** (hTLV >1800 ml/m) enrolled **49 patients** and found pathogenic/suspected pathogenic variants in **44/49 (90%)**. Among genetically solved cases, SEC63 accounted for **1/44 (2%)**; ADPLD-related genes collectively represented **~20%** of the cohort. The study also provides practical variant-filtering criteria (e.g., **MAF <1e-4 in gnomAD**) and approaches for adjudicating missense variants and identifying heterozygous deletions. (mizuno2024geneticanalysisof pages 1-2)
+Authoritative synthesis emphasizes that:
+- The ER translocon is a **dynamic hub** whose accessory factors are essential to produce a high-fidelity secretory/membrane proteome; however, many accessory factors have historically been hard to assign precise functions to (shao2023proteinbiosynthesisat pages 1-2).
+- Sec62/Sec63 and BiP provide a mechanistic solution for substrates with **nonoptimal signal sequences**, via a combination of **channel gating** and **luminal chaperone-driven directionality** (shao2023proteinbiosynthesisat pages 1-2).
+- A key emerging principle is that substrate features (e.g., signal sequence hydrophobicity and downstream charges) determine which accessory mechanisms are engaged, rather than a one-size-fits-all translocon (schorr2019proteomicsidentifiessignal pages 14-17, sun2022signalsequencesencode pages 1-2).
 
-Visual evidence from the same paper summarizes gene distribution and patient-level clinical/genetic details (Figure 2, Table 1). (mizuno2024geneticanalysisof media 7f91773b, mizuno2024geneticanalysisof media 3666ec3e, mizuno2024geneticanalysisof media 669179d2)
+### 6) Relevant statistics and quantitative findings
 
-### 6.2 2024 PLD review (Orphanet Journal of Rare Diseases)
-A 2024 review reiterates SEC63’s placement among **ER quality-control/protein processing genes** that can cause PLD and summarizes clinical practice: diagnosis is primarily imaging-based, and genetic testing is not mandatory for all patients but can be useful for complex cases and prognosis/stratification. It also summarizes available treatments (somatostatin analogs, interventional/surgical procedures, transplantation) and highlights multiple investigational targets grounded in mechanistic pathways. (mahboobipour2024clinicalmanifestationepidemiology pages 1-2)
+#### 6.1 Severe PLD cohort (2024): SEC63 frequency and phenotype metrics
+In Mizuno et al. (Kidney360, accepted Apr 25 2024; published online May 1 2024), among 49 severe-PLD patients (hTLV > 1800 mL/m), the distribution among genetically solved cases (n=44) included SEC63 in **1/44 (2%)**. ADPLD-related genes collectively represented **20%** of this severe-PLD cohort’s genetically defined cases (mizuno2024geneticanalysisof pages 1-2).
 
-### 6.3 2023–2024 focus on “missing heritability” and two-hit mechanisms
-A 2023 genetics-focused report emphasizes that known ADPLD genes (including SEC63) explain only **~30–45%** of ADPLD cases, motivating gene discovery and careful variant interpretation. It also highlights **loss of heterozygosity (LOH)** in cyst epithelium as a demonstrated mechanism for PRKCSH- and **SEC63-associated** disease, supporting a **two-hit** model for cyst initiation. (boerrigter2023heterozygosityofalg9 pages 8-10)
+#### 6.2 Cyst tissue LOH analysis (2016): SEC63 two-hit evidence appears less frequent
+In Wills et al. (EJHG, Aug 2016), somatic loss of heterozygosity (LOH) in hepatic cyst epithelium appeared much less frequent for SEC63-associated cysts compared with PRKCSH or PKD genes; LOH for SEC63 was reported as **1/14 cysts (7%)** in the excerpted analysis (wills2016chromosomalabnormalitiesin pages 1-2). This suggests that the “second-hit” mechanism may be less commonly observed/detectable for SEC63 than for some other cystic disease genes, with implications for how informative cyst tissue genotyping is.
 
-### 6.4 2023 mechanistic synthesis for Sec61 partner complexes
-A 2023 Cold Spring Harbor Perspectives review summarizes emerging models from cryo-EM and functional studies explaining how the Sec61 channel operates with partner complexes (explicitly including Sec62–Sec63) to activate translocation, provide driving force, and couple translocation to downstream processes. (itskanov2023mechanismofprotein pages 1-3)
+#### 6.3 HCC translational data (2023): clinical cohort size and preclinical intervention
+Hu et al. (J Exp Clin Cancer Res, May 2023) report IHC analysis of **139 HCC samples** and show that ACLY high expression predicts worse survival; mechanistically, SEC63 stabilizes ACLY under ER stress. They also report a mouse metastasis model (tail-vein injection; **n=6 per group**) where treatment with an ACLY inhibitor (ETC1002) reduced metastasis, illustrating a potential intervention point downstream of SEC63 (hu2023activationofacly pages 5-7).
 
-## 7. Current applications and real-world implementations
+### 7) Evidence map (table)
+The following evidence table summarizes SEC63’s core functions, mechanisms, disease associations, and recent 2023–2024 developments with DOIs/URLs and dates.
 
-### 7.1 Diagnostic genetics and testing strategies
-Across recent reviews and cohorts, SEC63 is treated as a **major ADPLD locus** (with PRKCSH). Clinical practice increasingly favors **NGS panels** (PKD + ciliopathy genes) or exome sequencing when phenotype overlaps complicate classification, rather than older linkage approaches. (yang2023geneticspectrumof pages 1-3, boerrigter2023heterozygosityofalg9 pages 8-10)
-
-Practical implementations documented in the 2024 cohort include explicit filtering thresholds (e.g., **MAF <1e-4**), ACMG adjudication of nontruncating variants, and complementary approaches for copy number changes (qPCR confirmation of suspected deletions). (mizuno2024geneticanalysisof pages 1-2)
-
-### 7.2 Imaging-based diagnostic criteria for PLD/ADPLD in practice
-The 2024 Orphanet review states PLD diagnosis is mainly imaging-based and that identification of **>20 hepatic cysts** commonly confirms PLD. (mahboobipour2024clinicalmanifestationepidemiology pages 1-2)
-
-A genetics cohort assembly strategy from 2023 used **>10 hepatic cysts** as an inclusion threshold for PLD (for gene discovery after excluding known gene variants). (boerrigter2023novelα13glucosyltransferasevariants pages 2-3)
-
-### 7.3 Pathway-informed therapeutic directions
-While SEC63 itself is not currently a direct drug target in PLD, 2024 reviews outline treatment and investigational approaches based on downstream mechanisms (e.g., ER quality control, signaling pathways). Standard-of-care options include **somatostatin analogs** and interventional/surgical approaches, with liver transplantation as a definitive option for severe cases. (mahboobipour2024clinicalmanifestationepidemiology pages 1-2)
-
-## 8. Expert opinions and analysis (authoritative synthesis)
-
-### 8.1 Consensus mechanistic model for SEC63 function
-Across mechanistic reviews, the dominant model is that SEC63 (often with Sec62) provides **substrate-selective assistance** to Sec61 gating, especially for weak signal peptides, and couples translocation to luminal chaperone action via its **J-domain** and **BiP**. (okeefe2020membranetranslocationat pages 1-3, lang2022signalpeptidefeatures pages 19-21, wu2019structureofthe pages 1-2)
-
-### 8.2 Disease mechanism consensus for SEC63-associated ADPLD
-Recent PLD genetic reviews converge on SEC63 as a **major ADPLD gene**, where pathogenic variants can act through ER protein biogenesis defects that diminish functional polycystin pathways and promote hepatic cystogenesis. The two-hit/LOH model is viewed as a plausible cellular mechanism for cyst formation in SEC63-linked disease. (yang2023geneticspectrumof pages 1-3, mahboobipour2024clinicalmanifestationepidemiology pages 1-2, boerrigter2023heterozygosityofalg9 pages 8-10)
-
-## 9. Relevant statistics and data (selected highlights)
-- **~1/3 of mammalian polypeptides** enter the ER via Sec61 (context for SEC63 function). (okeefe2020membranetranslocationat pages 1-3)
-- **SEC63 domain evidence:** J-domain aa **23–91**, G/F region aa **92–127** (human study). (schorr2020identificationofsignal pages 13-14)
-- **Proteomics (HeLa, short-term):** 6,655 proteins quantified; **34** significantly changed (**21 down**, **13 up**). (schorr2020identificationofsignal pages 3-7)
-- **Proteomics (HEK293, deficiency):** **302 proteins** altered (**199 down**, **103 up**); **22 shared Sec62/Sec63 clients** (11 SP, 11 TMH). (lang2022signalpeptidefeatures pages 19-21, schorr2020identificationofsignal pages 7-8)
-- **ADPLD explained fraction:** known ADPLD genes account for only **~30–45%** of cases. (boerrigter2023heterozygosityofalg9 pages 8-10)
-- **Severe PLD cohort (Japan 2024):** 49 enrolled; **44/49 (90%)** genetically solved; **SEC63 1/44 (2%)** among solved; ADPLD-related genes collectively **20%**. (mizuno2024geneticanalysisof pages 1-2)
-
-## 10. Evidence summary table
-The following artifact consolidates the evidence for SEC63 functional annotation, including domains, mechanism, substrate specificity, localization, and disease links, plus 2023–2024 clinical updates.
-
-| Aspect | Key points | Representative evidence & quantitative data | Key sources with year, DOI URL, and citeable context IDs |
-|---|---|---|---|
-| identity/domains/topology | Target identity matches **human SEC63 / DNAJC23 / SEC63L**, the mammalian homolog of yeast Sec63 and a component of the **Sec61-associated Sec62/Sec63 translocon**. Evidence supports a **J-domain protein** with additional **G/F region** and conserved Sec63/Brl/FN3-containing architecture inferred from human and ortholog studies. | Human evidence identifies an **N-terminal J-domain (aa 23–91)** and **G/F domain (aa 92–127)** in SEC63. Review/structural evidence from conserved eukaryotic Sec63 describes an **integral ER membrane protein with 3 TMs**, **N-terminus luminal**, **C-terminus cytosolic**, a **luminal J-domain between TM2 and TM3**, and a **large cytosolic C-terminal Brl/FN3-containing region** that contacts Sec61. Human Sec63 is explicitly described as the human homolog of yeast Sec63 and a defined component of the Sec61/Sec62/Sec63 complex. (schorr2020identificationofsignal pages 13-14, jung2021emergingviewon pages 4-7, itskanov2019structureofthe pages 1-2, jung2021emergingviewon pages 7-9) | Schorr et al. 2020, https://doi.org/10.1111/febs.15274 (schorr2020identificationofsignal pages 13-14); Jung & Kim 2021, https://doi.org/10.3390/ijms222312757 (jung2021emergingviewon pages 4-7, jung2021emergingviewon pages 7-9); Itskanov & Park 2019, https://doi.org/10.1126/science.aav6740 (itskanov2019structureofthe pages 1-2) |
-| molecular function | SEC63 is an **ER translocon accessory factor / protein translocation regulator**, not an enzyme. Its primary function is to assist **Sec61 channel gating** and **ER import/insertion** of selected secretory and membrane protein precursors. | Sec63 is reported to sit at the **back-side/cytosolic side of Sec61** and **widen/open the Sec61 pore/lateral gate**. Structural evidence indicates Sec63 interactions with Sec61 “prime” the channel for translocation of **low-hydrophobicity signal sequences**. Functional depletion studies show impaired translocation of specific substrates such as **preproapelin**, and Sec63 is described as mediating translocation of **broader types of precursors than Sec62**. (jung2021emergingviewon pages 9-10, wu2019structureofthe pages 1-2, jung2021emergingviewon pages 7-9) | Wu et al. 2019, https://doi.org/10.1038/s41586-018-0856-x (wu2019structureofthe pages 1-2); Jung & Kim 2021, https://doi.org/10.3390/ijms222312757 (jung2021emergingviewon pages 7-9, jung2021emergingviewon pages 9-10) |
-| mechanism with BiP | SEC63 functions as a **J-domain/Hsp40-type co-chaperone** that cooperates with **BiP (ER Hsp70)** during ER translocation. | Human complementation/functional evidence shows SEC63 contains a **J-domain** required for translocation of ERj3, and depletion of **Sec62, Sec63, or BiP** causes accumulation of pre-ERj3 precursor. Reviews propose that Sec63 supports Sec61 opening **by recruiting BiP to Sec61α loop 7** and/or by direct effects on Sec61 gating. Conserved ortholog structural work shows the **luminal J-domain activates BiP** to bind incoming substrates and prevent backsliding. (schorr2020identificationofsignal pages 13-14, lang2022signalpeptidefeatures pages 19-21, wu2019structureofthe pages 1-2, jung2021emergingviewon pages 4-7) | Schorr et al. 2020, https://doi.org/10.1111/febs.15274 (schorr2020identificationofsignal pages 13-14); Lang et al. 2022, https://doi.org/10.3389/fphys.2022.833540 (lang2022signalpeptidefeatures pages 19-21); Wu et al. 2019, https://doi.org/10.1038/s41586-018-0856-x (wu2019structureofthe pages 1-2); Jung & Kim 2021, https://doi.org/10.3390/ijms222312757 (jung2021emergingviewon pages 4-7) |
-| substrate specificity | SEC63-dependent clients are enriched for precursors with **weak/slowly gating signal peptides** and sometimes **positively charged mature-region clusters** downstream of the signal peptide. | In intact human cells, one study identified **22 novel Sec62/Sec63 substrates** in addition to confirming ERj3. Shared features included **longer but less hydrophobic SP H-regions** and **lower SP C-region polarity**; a weak SP plus a downstream positive cluster can drive dependence. Quantitative proteomics in HEK293 cells showed **302 proteins affected by Sec63 deficiency** (**199 decreased, 103 increased**), with **22 precursor polypeptides negatively affected by both Sec62 and Sec63** (**11 with SP, 11 with TMH**). In a shorter HeLa knockdown experiment, **6,655 proteins** were quantified and only **34 changed significantly** (**21 decreased, 13 increased**), with enrichment among decreased proteins for **SPs (2-fold)**, **N-glycoproteins (2.6-fold)**, and **membrane proteins (2.8-fold)**. (lang2022signalpeptidefeatures pages 19-21, schorr2020identificationofsignal pages 3-7, schorr2020identificationofsignal pages 7-8) | Schorr et al. 2020, https://doi.org/10.1111/febs.15274 (schorr2020identificationofsignal pages 3-7, schorr2020identificationofsignal pages 7-8); Lang et al. 2022, https://doi.org/10.3389/fphys.2022.833540 (lang2022signalpeptidefeatures pages 19-21) |
-| localization | SEC63 is an **endoplasmic reticulum membrane** protein acting at the **ER translocon**; topology places the **J-domain in the ER lumen** and a large **cytosolic C-terminus** on the cytosolic face. | Human and conserved eukaryotic evidence place Sec63 in the **ER membrane** associated with **Sec61 and Sec62**. The C-terminal region mediates **cytosolic interactions** (e.g., with Sec62 and nucleoredoxin), whereas the **J-domain is luminal** and functionally linked to BiP. Co-immunoprecipitation identified lumenal partners such as **calumenin** and **reticulocalbin**, consistent with ER-lumen exposure of part of the protein. (jung2021emergingviewon pages 4-7, jung2021emergingviewon pages 9-10, jung2021emergingviewon pages 7-9) | Jung & Kim 2021, https://doi.org/10.3390/ijms222312757 (jung2021emergingviewon pages 4-7, jung2021emergingviewon pages 7-9, jung2021emergingviewon pages 9-10) |
-| disease association ADPLD | Heterozygous **loss-of-function SEC63 variants** are a well-established cause of **autosomal dominant polycystic liver disease (ADPLD)** / isolated polycystic liver disease. Mechanistically, SEC63 belongs to the ER quality-control/translocation group of PLD genes that affect maturation/abundance of polycystin proteins. | Open Targets lists SEC63 associations with **autosomal dominant polycystic liver disease**, **polycystic liver disease 1**, and **isolated polycystic liver disease**. Reviews state that **PRKCSH and SEC63 are the two major ADPLD genes**. PLD reviews further note that ER quality-control genes including **SEC63** can impair production/function of **PC1/PC2** or facilitate their degradation, promoting hepatic cystogenesis. Clinical overviews report the most prevalent genes in isolated PLD are **PRKCSH and SEC63**, accounting together for about **20%–41%** of cases in cited literature. (OpenTargets Search: -SEC63, daverkausenfischer2024erresidentcochaperonesin pages 112-114) | Open Targets SEC63 associations (OpenTargets Search: -SEC63); Mahboobipour et al. 2024, https://doi.org/10.1186/s13023-024-03187-w (daverkausenfischer2024erresidentcochaperonesin pages 112-114); Jeong & Park 2023, https://doi.org/10.7180/kmj.23.128 (daverkausenfischer2024erresidentcochaperonesin pages 112-114); Yang et al. 2023, https://doi.org/10.1053/j.akdh.2023.04.004 (daverkausenfischer2024erresidentcochaperonesin pages 112-114) |
-| recent research/2023-2024 clinical genetics & cohorts | Recent literature emphasizes **clinical genetics**, **cohort-based etiology**, and broader PLD mechanisms rather than brand-new SEC63 molecular biochemistry. | A 2024 Japanese severe-PLD cohort sequenced **49 patients** and found pathogenic/suspected pathogenic variants in **44/49 (90%)**. Gene distribution among solved cases: **PKD1 20/44 (45%)**, **PKD2 15/44 (34%)**, **PRKCSH 5/44 (11%)**, **GANAB 2/44 (5%)**, **SEC63 1/44 (2%)**, **ALG8 1/44 (2%)**; authors concluded **ADPLD-related genes represented 20%** of severe PLD cases. A 2023 genetics review states **PRKCSH and SEC63 are the two major ADPLD genes**, and recommends **next-generation sequencing panels** for overlapping PKD/PLD phenotypes. A 2023 translational study found a conserved **TGFβ–ECM–integrin axis** across human liver cysts from ADPKD and ADPLD, highlighting downstream pathways shared across causal genes including ER-translocation genes such as SEC63. (daverkausenfischer2024erresidentcochaperonesin pages 112-114) | Mizuno et al. 2024, https://doi.org/10.34067/kid.0000000000000461 (daverkausenfischer2024erresidentcochaperonesin pages 112-114); Yang et al. 2023, https://doi.org/10.1053/j.akdh.2023.04.004 (daverkausenfischer2024erresidentcochaperonesin pages 112-114); Waddell et al. 2023, https://doi.org/10.1126/scitranslmed.abq5930 (daverkausenfischer2024erresidentcochaperonesin pages 112-114) |
+| Aspect | Key points | Evidence type (review/primary) | Key source (authors, year) | DOI/URL | Publication date (month/year) |
+|---|---|---|---|---|---|
+| Target identity / disambiguation | Human **SEC63** corresponds to the ER translocon accessory factor described in the literature as part of the **Sec62/Sec63** complex acting on **Sec61**; this matches the UniProt entry **Q9UGP8** (synonyms **DNAJC23/SEC63L** supplied by user context). Literature should be distinguished from yeast Sec63 mechanistic studies, which are informative but not direct human identity evidence (shao2023proteinbiosynthesisat pages 1-2, itskanov2023mechanismofprotein pages 1-3). | Review + mechanistic context | Shao, 2023; Itskanov & Park, 2023 | https://doi.org/10.1091/mbc.e21-09-0451 ; https://doi.org/10.1101/cshperspect.a041250 | 01/2023; 08/2023 |
+| Subcellular localization | SEC63 functions at the **endoplasmic reticulum (ER) membrane**, associated with the **Sec61 translocon**; mammalian Sec63 is described as a translocon-associated factor recruited at ER translocation sites (sun2022signalsequencesencode pages 1-2, shao2023proteinbiosynthesisat pages 1-2, gemmer2020aclearerpicture pages 1-2). | Review + primary | Sun et al., 2022; Shao, 2023; Gemmer & Förster, 2020 | https://doi.org/10.1083/jcb.202203070 ; https://doi.org/10.1091/mbc.e21-09-0451 ; https://doi.org/10.1242/jcs.231340 | 06/2022; 01/2023; 02/2020 |
+| Core molecular function | SEC63 is a **Sec61 accessory factor** that promotes protein import into the ER as part of the **Sec62/Sec63 complex**. Its role is not enzymatic catalysis but **channel regulation/chaperone coupling** during translocation and early folding (shao2023proteinbiosynthesisat pages 1-2, gemmer2020aclearerpicture pages 1-2). | Review | Shao, 2023; Gemmer & Förster, 2020 | https://doi.org/10.1091/mbc.e21-09-0451 ; https://doi.org/10.1242/jcs.231340 | 01/2023; 02/2020 |
+| Key interacting partners | Main partners are **Sec61**, **Sec62**, and luminal **BiP/HSPA5**. Sec63 forms a Sec62/Sec63 assembly with Sec61 and recruits BiP through its **J-domain**, coupling channel gating to lumenal chaperone action (schorr2019proteomicsidentifiessignal pages 10-14, shao2023proteinbiosynthesisat pages 1-2, zimmermann2025rulesofengagement pages 32-33). | Review + primary | Schorr et al., 2019; Shao, 2023 | https://doi.org/10.1101/867762 ; https://doi.org/10.1091/mbc.e21-09-0451 | 12/2019; 01/2023 |
+| J-domain / BiP mechanism | SEC63 contains a **J-domain** that recruits and activates **BiP ATPase**; mutation of the conserved **HPD motif** abolishes productive BiP interaction and fails to rescue Sec63-dependent import defects. BiP then helps drive forward translocation and prevent backsliding (schorr2019proteomicsidentifiessignal pages 10-14, shao2023proteinbiosynthesisat pages 1-2, sun2022signalsequencesencode pages 1-2, itskanov2022gatingofsec61 pages 10-13). | Primary + review | Schorr et al., 2019; Sun et al., 2022; Shao, 2023 | https://doi.org/10.1101/867762 ; https://doi.org/10.1083/jcb.202203070 ; https://doi.org/10.1091/mbc.e21-09-0451 | 12/2019; 06/2022; 01/2023 |
+| Sec61 gating / lateral gate opening | Structural and mechanistic work supports a model in which **Sec62/Sec63 fully opens or strongly braces open the Sec61 lateral gate**, lowering the energetic barrier for nonoptimal clients to initiate translocation (shao2023proteinbiosynthesisat pages 1-2, schorr2019proteomicsidentifiessignal pages 17-20, zimmermann2025rulesofengagement pages 32-33). | Review + mechanistic synthesis | Shao, 2023; Schorr et al., 2019 | https://doi.org/10.1091/mbc.e21-09-0451 ; https://doi.org/10.1101/867762 | 01/2023; 12/2019 |
+| Substrate selectivity | SEC63-dependent substrates are enriched for **weak/slowly gating signal peptides**, often with **longer but less hydrophobic H-regions**, **lower C-region polarity**, and sometimes **downstream positive charge clusters** that disrupt efficient translocation without Sec62/Sec63/BiP assistance (schorr2019proteomicsidentifiessignal pages 14-17, sun2022signalsequencesencode pages 1-2). | Primary | Schorr et al., 2019; Sun et al., 2022 | https://doi.org/10.1101/867762 ; https://doi.org/10.1083/jcb.202203070 | 12/2019; 06/2022 |
+| Example functional clients / pathway context | In human cells, **ERj3** is a validated Sec63/Sec62/BiP-dependent client; depletion of Sec63 causes **pre-ERj3 accumulation** and impaired mature ERj3 formation, supporting a direct role in selective ER import and folding coordination (schorr2019proteomicsidentifiessignal pages 10-14, schorr2019proteomicsidentifiessignal pages 14-17). | Primary | Schorr et al., 2019 | https://doi.org/10.1101/867762 | 12/2019 |
+| Biological process linkage | SEC63 links **protein translocation** with **protein folding/quality control** by matching weak signal-sequence clients to local BiP availability; stronger signal sequences can bypass Sec63/BiP dependence but may misfold when BiP is limiting (sun2022signalsequencesencode pages 1-2). | Primary | Sun et al., 2022 | https://doi.org/10.1083/jcb.202203070 | 06/2022 |
+| Disease association: ADPLD | Germline **SEC63** variants are a recognized cause of **autosomal dominant polycystic liver disease (ADPLD)**; ADPLD genes encode ER proteins and are thought to reduce functional polycystin-1 dosage in liver/kidney cystogenesis (mizuno2024geneticanalysisof pages 1-2, hu2023activationofacly pages 1-2). | Cohort study + disease background | Mizuno et al., 2024; Hu et al., 2023 | https://doi.org/10.34067/KID.0000000000000461 ; https://doi.org/10.1186/s13046-023-02656-7 | 05/2024; 05/2023 |
+| Quantitative disease statistics | In a **2024 severe PLD cohort from Japan**, **49** patients were enrolled; **44/49 (90%)** had pathogenic/suspected pathogenic variants. Among genetically solved cases, **SEC63 accounted for 1/44 (2%)**; non-PKD1/PKD2 ADPLD genes collectively accounted for **9/44 (20%)**. Severe PLD was defined as **hTLV >1800 mL/m** (mizuno2024geneticanalysisof pages 1-2, mizuno2024geneticanalysisof pages 2-3). | Primary cohort study | Mizuno et al., 2024 | https://doi.org/10.34067/KID.0000000000000461 | 05/2024 |
+| Cohort phenotype details | In the same cohort, median **hTLV** did not differ significantly between genetically defined ADPKD and ADPLD groups: **4431 mL** (range 1817–9148) vs **3437 mL** (range 1860–8211), **P = 0.77**; height-adjusted kidney volume was larger in ADPKD (**607 vs 179 mL/m, P < 0.01**) (mizuno2024geneticanalysisof pages 1-2, mizuno2024geneticanalysisof pages 2-3). | Primary cohort study | Mizuno et al., 2024 | https://doi.org/10.34067/KID.0000000000000461 | 05/2024 |
+| Non-canonical role in cancer stress adaptation | In hepatocellular carcinoma, SEC63 was reported as a regulator of **metabolic reprogramming under ER stress**, extending beyond canonical translocon function. Upon ER stress, SEC63 supports **ACLY** stabilization, increasing **acetyl-CoA** and lipogenesis to improve ER capacity (hu2023activationofacly pages 1-2, hu2023activationofacly pages 5-7). | Primary | Hu et al., 2023 | https://doi.org/10.1186/s13046-023-02656-7 | 05/2023 |
+| IRE1α phosphorylation / T537 | Hu et al. report that the **IRE1α pathway phosphorylates SEC63 at T537** during ER stress, contributing to SEC63 activation; SEC63 protein abundance changed little, implying regulation mainly by post-translational modification (hu2023activationofacly pages 1-2, hu2023activationofacly pages 5-7). | Primary | Hu et al., 2023 | https://doi.org/10.1186/s13046-023-02656-7 | 05/2023 |
+| ACLY interaction details | SEC63 physically interacts with **ACLY**; the interaction increases with ER stress, depends on the **SEC63 C-terminus**, and maps on ACLY to the **CoA-ligase domain**. ER stress failed to induce ACLY in SEC63-depleted cells (hu2023activationofacly pages 5-7). | Primary | Hu et al., 2023 | https://doi.org/10.1186/s13046-023-02656-7 | 05/2023 |
+| Nuclear / epigenetic role | Under ER stress, SEC63 was reported to **enter the nucleus**, where SEC63 and ACLY raise **nuclear acetyl-CoA**, increase UPR target expression, and promote **Snail1** expression through epigenetic regulation, supporting metastasis (hu2023activationofacly pages 1-2, hu2023activationofacly media c14c9d30). | Primary + model figure | Hu et al., 2023 | https://doi.org/10.1186/s13046-023-02656-7 | 05/2023 |
+| Clinical relevance in HCC | SEC63 expression was reported as **upregulated in HCC tissues**, positively correlated with ACLY, and associated with **unfavorable prognosis**; the authors propose the **IRE1α–SEC63–ACLY axis** as a therapeutic concept in HCC (hu2023activationofacly pages 1-2). | Primary | Hu et al., 2023 | https://doi.org/10.1186/s13046-023-02656-7 | 05/2023 |
 
 
-*Table: This table summarizes evidence-based functional annotation for human SEC63 (UniProt Q9UGP8), focusing on its translocon role, BiP-linked mechanism, substrate specificity, localization, and polycystic liver disease relevance. It highlights both mechanistic studies and recent 2023–2024 clinical genetics data.*
+*Table: This table summarizes the validated identity, ER-translocon function, interacting partners, disease associations, and emerging cancer-related roles of human SEC63. It is useful as a compact evidence map linking canonical translocation biology with recent 2023-2024 disease and stress-response findings.*
 
-## 11. Key URLs (publication date prioritized where available)
-- Itskanov & Park. *Mechanism of Protein Translocation by the Sec61 Translocon Complex.* Cold Spring Harbor Perspect Biol. **Aug 2023**. https://doi.org/10.1101/cshperspect.a041250 (itskanov2023mechanismofprotein pages 1-3)
-- Mizuno et al. *Genetic Analysis of Severe Polycystic Liver Disease in Japan.* Kidney360. **May 2024**. https://doi.org/10.34067/kid.0000000000000461 (mizuno2024geneticanalysisof pages 1-2)
-- Mahboobipour et al. *Clinical manifestation, epidemiology, genetic basis, potential molecular targets, and current treatment of polycystic liver disease.* Orphanet J Rare Dis. **Apr 2024**. https://doi.org/10.1186/s13023-024-03187-w (mahboobipour2024clinicalmanifestationepidemiology pages 1-2)
-- Yang et al. *Genetic Spectrum of Polycystic Kidney and Liver Diseases and the Resulting Phenotypes.* Adv Kidney Dis Health. **Sep 2023**. https://doi.org/10.1053/j.akdh.2023.04.004 (yang2023geneticspectrumof pages 1-3)
-- Boerrigter et al. *Heterozygosity of ALG9 in Association with Autosomal Dominant Polycystic Liver Disease.* Genes. **Sep 2023**. https://doi.org/10.3390/genes14091755 (boerrigter2023heterozygosityofalg9 pages 8-10)
-- Schorr et al. *Identification of signal peptide features for substrate specificity in human Sec62/Sec63-dependent ER protein import.* FEBS J. **Mar 2020**. https://doi.org/10.1111/febs.15274 (schorr2020identificationofsignal pages 3-7)
-- O’Keefe & High. *Membrane translocation at the ER: with a little help from my friends.* FEBS J. **Apr 2020**. https://doi.org/10.1111/febs.15309 (okeefe2020membranetranslocationat pages 1-3)
+### 8) Key mechanistic schematic (visual evidence)
+Hu et al. provide a schematic model of the ER-stress–responsive **IRE1α–SEC63–ACLY** pathway, including SEC63 phosphorylation and nuclear effects driving metastasis-related transcriptional regulation (hu2023activationofacly media c14c9d30).
 
-## 12. Limitations and notes on evidence scope
-- Several mechanistic structural statements about Sec63 (e.g., three-TM architecture, pore opening) are derived from **yeast Sec complex cryo-EM** and interpreted as conserved for metazoans; direct high-resolution structures of the full mammalian Sec62/Sec63/Sec61 assembly were not retrieved in the current evidence set. (itskanov2019structureofthe pages 1-2, wu2019structureofthe pages 1-2)
-- SEC63 clinical genetics is well represented in 2023–2024 reviews and cohorts, but primary 2004–2012 discovery papers for SEC63-linked ADPLD were not retrieved as full text here; conclusions are therefore based on recent review synthesis and modern cohorts plus explicit LOH statements from 2023 literature. (boerrigter2023heterozygosityofalg9 pages 8-10, yang2023geneticspectrumof pages 1-3)
+### 9) Limitations and evidence gaps (important for functional annotation)
+- **Direct mention of UniProt accession Q9UGP8 / synonym DNAJC23** is not present in the retrieved full-text excerpts; mapping is therefore based on the strong match between UniProt description and the canonical Sec63 translocon co-chaperone function documented in multiple independent sources (shao2023proteinbiosynthesisat pages 1-2, sun2022signalsequencesencode pages 1-2).
+- Much detailed structural topology and some mechanistic details are derived from conserved/yeast-centric structural work summarized in reviews, though mammalian functional studies strongly support the same core mechanism (shao2023proteinbiosynthesisat pages 1-2, sun2022signalsequencesencode pages 1-2, gemmer2020aclearerpicture pages 1-2).
+- The HCC findings represent a **non-canonical role** and remain largely preclinical/biomarker-level evidence in the provided excerpts; clinical validation and therapeutic translation are not yet established in trials in the retrieved materials (hu2023activationofacly pages 1-2).
 
 
 References
 
-1. (lang2022signalpeptidefeatures pages 19-21): Sven Lang, Duy Nguyen, Pratiti Bhadra, Martin Jung, Volkhard Helms, and Richard Zimmermann. Signal peptide features determining the substrate specificities of targeting and translocation components in human er protein import. Frontiers in Physiology, Jul 2022. URL: https://doi.org/10.3389/fphys.2022.833540, doi:10.3389/fphys.2022.833540. This article has 31 citations.
+1. (shao2023proteinbiosynthesisat pages 1-2): Sichen Shao. Protein biosynthesis at the er: finding the right accessories. Jan 2023. URL: https://doi.org/10.1091/mbc.e21-09-0451, doi:10.1091/mbc.e21-09-0451. This article has 6 citations and is from a domain leading peer-reviewed journal.
 
-2. (schorr2020identificationofsignal pages 13-14): Stefan Schorr, Duy Nguyen, Sarah Haßdenteufel, Nagarjuna Nagaraj, Adolfo Cavalié, Markus Greiner, Petra Weissgerber, Marisa Loi, Adrienne W. Paton, James C. Paton, Maurizio Molinari, Friedrich Förster, Johanna Dudek, Sven Lang, Volkhard Helms, and Richard Zimmermann. Identification of signal peptide features for substrate specificity in human sec62/sec63‐dependent er protein import. The FEBS Journal, 287:4612-4640, Mar 2020. URL: https://doi.org/10.1111/febs.15274, doi:10.1111/febs.15274. This article has 51 citations.
+2. (itskanov2022gatingofsec61 pages 10-13): S Itskanov. Gating of sec61 in posttranslational translocation across the endoplasmic reticulum. Unknown journal, 2022.
 
-3. (jung2021emergingviewon pages 9-10): Sung-jun Jung and Hyun Kim. Emerging view on the molecular functions of sec62 and sec63 in protein translocation. International Journal of Molecular Sciences, 22:12757, Nov 2021. URL: https://doi.org/10.3390/ijms222312757, doi:10.3390/ijms222312757. This article has 38 citations.
+3. (itskanov2023mechanismofprotein pages 1-3): Samuel Itskanov and Eunyong Park. Mechanism of protein translocation by the sec61 translocon complex. Cold Spring Harbor perspectives in biology, 15:a041250, Aug 2023. URL: https://doi.org/10.1101/cshperspect.a041250, doi:10.1101/cshperspect.a041250. This article has 66 citations and is from a peer-reviewed journal.
 
-4. (yang2023geneticspectrumof pages 1-3): Hana Yang, Cynthia J. Sieben, Rachel S. Schauer, and Peter C. Harris. Genetic spectrum of polycystic kidney and liver diseases and the resulting phenotypes. Advances in kidney disease and health, 30 5:397-406, Sep 2023. URL: https://doi.org/10.1053/j.akdh.2023.04.004, doi:10.1053/j.akdh.2023.04.004. This article has 30 citations.
+4. (sun2022signalsequencesencode pages 1-2): Sha Sun, Xia Li, and Malaiyalam Mariappan. Signal sequences encode information for protein folding in the endoplasmic reticulum. The Journal of Cell Biology, Jun 2022. URL: https://doi.org/10.1083/jcb.202203070, doi:10.1083/jcb.202203070. This article has 25 citations.
 
-5. (itskanov2023mechanismofprotein pages 1-3): Samuel Itskanov and Eunyong Park. Mechanism of protein translocation by the sec61 translocon complex. Cold Spring Harbor perspectives in biology, 15:a041250, Aug 2023. URL: https://doi.org/10.1101/cshperspect.a041250, doi:10.1101/cshperspect.a041250. This article has 66 citations and is from a peer-reviewed journal.
+5. (gemmer2020aclearerpicture pages 1-2): Max Gemmer and Friedrich Förster. A clearer picture of the er translocon complex. Journal of Cell Science, Feb 2020. URL: https://doi.org/10.1242/jcs.231340, doi:10.1242/jcs.231340. This article has 144 citations and is from a domain leading peer-reviewed journal.
 
-6. (okeefe2020membranetranslocationat pages 1-3): Sarah O'Keefe and Stephen High. Membrane translocation at the er: with a little help from my friends. The FEBS Journal, 287:4607-4611, Apr 2020. URL: https://doi.org/10.1111/febs.15309, doi:10.1111/febs.15309. This article has 14 citations.
+6. (schorr2019proteomicsidentifiessignal pages 14-17): Stefan Schorr, Duy Nguyen, Sarah Haßdenteufel, Nagarjuna Nagaraj, Adolfo Cavalié, Markus Greiner, Petra Weissgerber, Marisa Loi, Adrienne W. Paton, James C. Paton, Maurizio Molinari, Friedrich Förster, Johanna Dudek, Sven Lang, Volkhard Helms, and Richard Zimmermann. Proteomics identifies signal peptide features determining the substrate specificity in human sec62/sec63-dependent er protein import. bioRxiv, Dec 2019. URL: https://doi.org/10.1101/867762, doi:10.1101/867762. This article has 11 citations.
 
-7. (jung2021emergingviewon pages 1-3): Sung-jun Jung and Hyun Kim. Emerging view on the molecular functions of sec62 and sec63 in protein translocation. International Journal of Molecular Sciences, 22:12757, Nov 2021. URL: https://doi.org/10.3390/ijms222312757, doi:10.3390/ijms222312757. This article has 38 citations.
+7. (schorr2019proteomicsidentifiessignal pages 10-14): Stefan Schorr, Duy Nguyen, Sarah Haßdenteufel, Nagarjuna Nagaraj, Adolfo Cavalié, Markus Greiner, Petra Weissgerber, Marisa Loi, Adrienne W. Paton, James C. Paton, Maurizio Molinari, Friedrich Förster, Johanna Dudek, Sven Lang, Volkhard Helms, and Richard Zimmermann. Proteomics identifies signal peptide features determining the substrate specificity in human sec62/sec63-dependent er protein import. bioRxiv, Dec 2019. URL: https://doi.org/10.1101/867762, doi:10.1101/867762. This article has 11 citations.
 
-8. (itskanov2019structureofthe pages 1-2): Samuel Itskanov and Eunyong Park. Structure of the posttranslational sec protein-translocation channel complex from yeast. Science, 363:84-87, Jan 2019. URL: https://doi.org/10.1126/science.aav6740, doi:10.1126/science.aav6740. This article has 106 citations and is from a highest quality peer-reviewed journal.
+8. (hu2023activationofacly pages 1-2): Chenyu Hu, Zechang Xin, Xiaoyan Sun, Yang Hu, Chunfeng Zhang, Rui Yan, Yuying Wang, Min Lu, Jing Huang, Xiaojuan Du, Baocai Xing, and Xiaofeng Liu. Activation of acly by sec63 deploys metabolic reprogramming to facilitate hepatocellular carcinoma metastasis upon endoplasmic reticulum stress. Journal of Experimental & Clinical Cancer Research : CR, May 2023. URL: https://doi.org/10.1186/s13046-023-02656-7, doi:10.1186/s13046-023-02656-7. This article has 58 citations.
 
-9. (wu2019structureofthe pages 1-2): Xudong Wu, Cerrone Cabanos, and Tom A. Rapoport. Structure of the post-translational protein translocation machinery of the er membrane. Dec 2019. URL: https://doi.org/10.1038/s41586-018-0856-x, doi:10.1038/s41586-018-0856-x. This article has 150 citations and is from a highest quality peer-reviewed journal.
+9. (hu2023activationofacly pages 5-7): Chenyu Hu, Zechang Xin, Xiaoyan Sun, Yang Hu, Chunfeng Zhang, Rui Yan, Yuying Wang, Min Lu, Jing Huang, Xiaojuan Du, Baocai Xing, and Xiaofeng Liu. Activation of acly by sec63 deploys metabolic reprogramming to facilitate hepatocellular carcinoma metastasis upon endoplasmic reticulum stress. Journal of Experimental & Clinical Cancer Research : CR, May 2023. URL: https://doi.org/10.1186/s13046-023-02656-7, doi:10.1186/s13046-023-02656-7. This article has 58 citations.
 
-10. (jung2021emergingviewon pages 7-9): Sung-jun Jung and Hyun Kim. Emerging view on the molecular functions of sec62 and sec63 in protein translocation. International Journal of Molecular Sciences, 22:12757, Nov 2021. URL: https://doi.org/10.3390/ijms222312757, doi:10.3390/ijms222312757. This article has 38 citations.
+10. (hu2023activationofacly media c14c9d30): Chenyu Hu, Zechang Xin, Xiaoyan Sun, Yang Hu, Chunfeng Zhang, Rui Yan, Yuying Wang, Min Lu, Jing Huang, Xiaojuan Du, Baocai Xing, and Xiaofeng Liu. Activation of acly by sec63 deploys metabolic reprogramming to facilitate hepatocellular carcinoma metastasis upon endoplasmic reticulum stress. Journal of Experimental & Clinical Cancer Research : CR, May 2023. URL: https://doi.org/10.1186/s13046-023-02656-7, doi:10.1186/s13046-023-02656-7. This article has 58 citations.
 
-11. (schorr2020identificationofsignal pages 3-7): Stefan Schorr, Duy Nguyen, Sarah Haßdenteufel, Nagarjuna Nagaraj, Adolfo Cavalié, Markus Greiner, Petra Weissgerber, Marisa Loi, Adrienne W. Paton, James C. Paton, Maurizio Molinari, Friedrich Förster, Johanna Dudek, Sven Lang, Volkhard Helms, and Richard Zimmermann. Identification of signal peptide features for substrate specificity in human sec62/sec63‐dependent er protein import. The FEBS Journal, 287:4612-4640, Mar 2020. URL: https://doi.org/10.1111/febs.15274, doi:10.1111/febs.15274. This article has 51 citations.
+11. (mizuno2024geneticanalysisof pages 1-2): Hiroki Mizuno, Whitney Besse, Akinari Sekine, Kelly T. Long, Shigekazu Kurihara, Yuki Oba, Masayuki Yamanouchi, Eiko Hasegawa, Tatsuya Suwabe, Naoki Sawa, Yoshifumi Ubara, Stefan Somlo, and Junichi Hoshino. Genetic analysis of severe polycystic liver disease in japan. Kidney360, 5:1106-1115, May 2024. URL: https://doi.org/10.34067/kid.0000000000000461, doi:10.34067/kid.0000000000000461. This article has 1 citations and is from a peer-reviewed journal.
 
-12. (schorr2020identificationofsignal pages 7-8): Stefan Schorr, Duy Nguyen, Sarah Haßdenteufel, Nagarjuna Nagaraj, Adolfo Cavalié, Markus Greiner, Petra Weissgerber, Marisa Loi, Adrienne W. Paton, James C. Paton, Maurizio Molinari, Friedrich Förster, Johanna Dudek, Sven Lang, Volkhard Helms, and Richard Zimmermann. Identification of signal peptide features for substrate specificity in human sec62/sec63‐dependent er protein import. The FEBS Journal, 287:4612-4640, Mar 2020. URL: https://doi.org/10.1111/febs.15274, doi:10.1111/febs.15274. This article has 51 citations.
+12. (wills2016chromosomalabnormalitiesin pages 1-2): Edgar S Wills, Wybrich R Cnossen, Joris A Veltman, Rob Woestenenk, Marloes Steehouwer, Jody Salomon, René H M te Morsche, Meritxell Huch, Jayne Y Hehir-Kwa, Martijn J Banning, Rolph Pfundt, Ronald Roepman, Alexander Hoischen, and Joost P H Drenth. Chromosomal abnormalities in hepatic cysts point to novel polycystic liver disease genes. European Journal of Human Genetics, 24:1707-1714, Aug 2016. URL: https://doi.org/10.1038/ejhg.2016.97, doi:10.1038/ejhg.2016.97. This article has 22 citations and is from a domain leading peer-reviewed journal.
 
-13. (mahboobipour2024clinicalmanifestationepidemiology pages 1-2): Amir Ali Mahboobipour, Moein Ala, Javad Safdari Lord, and Arash Yaghoobi. Clinical manifestation, epidemiology, genetic basis, potential molecular targets, and current treatment of polycystic liver disease. Orphanet Journal of Rare Diseases, Apr 2024. URL: https://doi.org/10.1186/s13023-024-03187-w, doi:10.1186/s13023-024-03187-w. This article has 20 citations and is from a peer-reviewed journal.
+13. (zimmermann2025rulesofengagement pages 32-33): Richard Zimmermann. Rules of engagement for components of membrane protein biogenesis at the human endoplasmic reticulum. Sep 2025. URL: https://doi.org/10.3390/ijms26188823, doi:10.3390/ijms26188823. This article has 2 citations.
 
-14. (mizuno2024geneticanalysisof pages 1-2): Hiroki Mizuno, Whitney Besse, Akinari Sekine, Kelly T. Long, Shigekazu Kurihara, Yuki Oba, Masayuki Yamanouchi, Eiko Hasegawa, Tatsuya Suwabe, Naoki Sawa, Yoshifumi Ubara, Stefan Somlo, and Junichi Hoshino. Genetic analysis of severe polycystic liver disease in japan. Kidney360, 5:1106-1115, May 2024. URL: https://doi.org/10.34067/kid.0000000000000461, doi:10.34067/kid.0000000000000461. This article has 1 citations and is from a peer-reviewed journal.
+14. (schorr2019proteomicsidentifiessignal pages 17-20): Stefan Schorr, Duy Nguyen, Sarah Haßdenteufel, Nagarjuna Nagaraj, Adolfo Cavalié, Markus Greiner, Petra Weissgerber, Marisa Loi, Adrienne W. Paton, James C. Paton, Maurizio Molinari, Friedrich Förster, Johanna Dudek, Sven Lang, Volkhard Helms, and Richard Zimmermann. Proteomics identifies signal peptide features determining the substrate specificity in human sec62/sec63-dependent er protein import. bioRxiv, Dec 2019. URL: https://doi.org/10.1101/867762, doi:10.1101/867762. This article has 11 citations.
 
-15. (mizuno2024geneticanalysisof media 7f91773b): Hiroki Mizuno, Whitney Besse, Akinari Sekine, Kelly T. Long, Shigekazu Kurihara, Yuki Oba, Masayuki Yamanouchi, Eiko Hasegawa, Tatsuya Suwabe, Naoki Sawa, Yoshifumi Ubara, Stefan Somlo, and Junichi Hoshino. Genetic analysis of severe polycystic liver disease in japan. Kidney360, 5:1106-1115, May 2024. URL: https://doi.org/10.34067/kid.0000000000000461, doi:10.34067/kid.0000000000000461. This article has 1 citations and is from a peer-reviewed journal.
-
-16. (mizuno2024geneticanalysisof media 3666ec3e): Hiroki Mizuno, Whitney Besse, Akinari Sekine, Kelly T. Long, Shigekazu Kurihara, Yuki Oba, Masayuki Yamanouchi, Eiko Hasegawa, Tatsuya Suwabe, Naoki Sawa, Yoshifumi Ubara, Stefan Somlo, and Junichi Hoshino. Genetic analysis of severe polycystic liver disease in japan. Kidney360, 5:1106-1115, May 2024. URL: https://doi.org/10.34067/kid.0000000000000461, doi:10.34067/kid.0000000000000461. This article has 1 citations and is from a peer-reviewed journal.
-
-17. (mizuno2024geneticanalysisof media 669179d2): Hiroki Mizuno, Whitney Besse, Akinari Sekine, Kelly T. Long, Shigekazu Kurihara, Yuki Oba, Masayuki Yamanouchi, Eiko Hasegawa, Tatsuya Suwabe, Naoki Sawa, Yoshifumi Ubara, Stefan Somlo, and Junichi Hoshino. Genetic analysis of severe polycystic liver disease in japan. Kidney360, 5:1106-1115, May 2024. URL: https://doi.org/10.34067/kid.0000000000000461, doi:10.34067/kid.0000000000000461. This article has 1 citations and is from a peer-reviewed journal.
-
-18. (boerrigter2023heterozygosityofalg9 pages 8-10): Melissa M. Boerrigter, Renée Duijzer, René H. M. te Morsche, and Joost P. H. Drenth. Heterozygosity of alg9 in association with autosomal dominant polycystic liver disease. Genes, 14:1755, Sep 2023. URL: https://doi.org/10.3390/genes14091755, doi:10.3390/genes14091755. This article has 4 citations.
-
-19. (boerrigter2023novelα13glucosyltransferasevariants pages 2-3): Melissa M. Boerrigter, René H. M. te Morsche, Hanka Venselaar, Nikki Pastoors, Anja M. Geerts, Anne Hoorens, and Joost P. H. Drenth. Novel α-1,3-glucosyltransferase variants and their broad clinical polycystic liver disease spectrum. Genes, 14:1652, Aug 2023. URL: https://doi.org/10.3390/genes14081652, doi:10.3390/genes14081652. This article has 3 citations.
-
-20. (jung2021emergingviewon pages 4-7): Sung-jun Jung and Hyun Kim. Emerging view on the molecular functions of sec62 and sec63 in protein translocation. International Journal of Molecular Sciences, 22:12757, Nov 2021. URL: https://doi.org/10.3390/ijms222312757, doi:10.3390/ijms222312757. This article has 38 citations.
-
-21. (OpenTargets Search: -SEC63): Open Targets Query (-SEC63, 6 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-22. (daverkausenfischer2024erresidentcochaperonesin pages 112-114): LV Daverkausen-Fischer. Er-resident co-chaperones in mammalian cells a critical analysis of experimental data published on structure, localization, regulation and function. Unknown journal, 2024.
+15. (mizuno2024geneticanalysisof pages 2-3): Hiroki Mizuno, Whitney Besse, Akinari Sekine, Kelly T. Long, Shigekazu Kurihara, Yuki Oba, Masayuki Yamanouchi, Eiko Hasegawa, Tatsuya Suwabe, Naoki Sawa, Yoshifumi Ubara, Stefan Somlo, and Junichi Hoshino. Genetic analysis of severe polycystic liver disease in japan. Kidney360, 5:1106-1115, May 2024. URL: https://doi.org/10.34067/kid.0000000000000461, doi:10.34067/kid.0000000000000461. This article has 1 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](SEC63-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000016 The requested visual summaries can be found in Figure 2 and Table 1 of the document. - **Figure 2** is a pie chart that displays th](SEC63-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000026 The requested model figure is Figure 8 on page 19, which provides a schematic of the proposed IRE1α–SEC63–ACLY axis. The diagram il](SEC63-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
 1. itskanov2023mechanismofprotein pages 1-3
-2. okeefe2020membranetranslocationat pages 1-3
-3. schorr2020identificationofsignal pages 13-14
-4. jung2021emergingviewon pages 9-10
-5. schorr2020identificationofsignal pages 3-7
-6. mizuno2024geneticanalysisof pages 1-2
-7. mahboobipour2024clinicalmanifestationepidemiology pages 1-2
-8. itskanov2019structureofthe pages 1-2
-9. wu2019structureofthe pages 1-2
-10. lang2022signalpeptidefeatures pages 19-21
-11. jung2021emergingviewon pages 4-7
-12. daverkausenfischer2024erresidentcochaperonesin pages 112-114
-13. yang2023geneticspectrumof pages 1-3
-14. jung2021emergingviewon pages 1-3
-15. jung2021emergingviewon pages 7-9
-16. schorr2020identificationofsignal pages 7-8
-17. https://doi.org/10.1111/febs.15274
-18. https://doi.org/10.3390/ijms222312757
-19. https://doi.org/10.1126/science.aav6740
-20. https://doi.org/10.1038/s41586-018-0856-x
-21. https://doi.org/10.3389/fphys.2022.833540
-22. https://doi.org/10.1186/s13023-024-03187-w
-23. https://doi.org/10.7180/kmj.23.128
-24. https://doi.org/10.1053/j.akdh.2023.04.004
-25. https://doi.org/10.34067/kid.0000000000000461
-26. https://doi.org/10.1126/scitranslmed.abq5930
-27. https://doi.org/10.1101/cshperspect.a041250
-28. https://doi.org/10.3390/genes14091755
-29. https://doi.org/10.1111/febs.15309
-30. https://doi.org/10.3389/fphys.2022.833540,
-31. https://doi.org/10.1111/febs.15274,
-32. https://doi.org/10.3390/ijms222312757,
-33. https://doi.org/10.1053/j.akdh.2023.04.004,
-34. https://doi.org/10.1101/cshperspect.a041250,
-35. https://doi.org/10.1111/febs.15309,
-36. https://doi.org/10.1126/science.aav6740,
-37. https://doi.org/10.1038/s41586-018-0856-x,
-38. https://doi.org/10.1186/s13023-024-03187-w,
-39. https://doi.org/10.34067/kid.0000000000000461,
-40. https://doi.org/10.3390/genes14091755,
-41. https://doi.org/10.3390/genes14081652,
+2. shao2023proteinbiosynthesisat pages 1-2
+3. sun2022signalsequencesencode pages 1-2
+4. schorr2019proteomicsidentifiessignal pages 14-17
+5. schorr2019proteomicsidentifiessignal pages 10-14
+6. hu2023activationofacly pages 1-2
+7. hu2023activationofacly pages 5-7
+8. mizuno2024geneticanalysisof pages 1-2
+9. wills2016chromosomalabnormalitiesin pages 1-2
+10. gemmer2020aclearerpicture pages 1-2
+11. zimmermann2025rulesofengagement pages 32-33
+12. schorr2019proteomicsidentifiessignal pages 17-20
+13. mizuno2024geneticanalysisof pages 2-3
+14. https://doi.org/10.1091/mbc.e21-09-0451
+15. https://doi.org/10.1101/cshperspect.a041250
+16. https://doi.org/10.1083/jcb.202203070
+17. https://doi.org/10.1242/jcs.231340
+18. https://doi.org/10.1101/867762
+19. https://doi.org/10.34067/KID.0000000000000461
+20. https://doi.org/10.1186/s13046-023-02656-7
+21. https://doi.org/10.1091/mbc.e21-09-0451,
+22. https://doi.org/10.1101/cshperspect.a041250,
+23. https://doi.org/10.1083/jcb.202203070,
+24. https://doi.org/10.1242/jcs.231340,
+25. https://doi.org/10.1101/867762,
+26. https://doi.org/10.1186/s13046-023-02656-7,
+27. https://doi.org/10.34067/kid.0000000000000461,
+28. https://doi.org/10.1038/ejhg.2016.97,
+29. https://doi.org/10.3390/ijms26188823,
