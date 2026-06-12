@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T02:52:58.299267'
-end_time: '2026-06-12T03:14:18.375814'
-duration_seconds: 1280.08
+start_time: '2026-06-12T03:09:43.454749'
+end_time: '2026-06-12T03:26:03.158529'
+duration_seconds: 979.7
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -24,7 +24,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 37
+citation_count: 34
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -41,9 +41,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000036 The architecture and structure of the
-    human signal peptidase complex (SPC) are best represented in the Graphical Abstract
-    (page 1) '
+  description: '## Context ID: pqac-00000025 The requested information can be found
+    in the Graphical Abstract (page 1) and Figure 2 (page 4). The Graphical Abstract
+    provides a '
 ---
 
 ## Question
@@ -154,212 +154,195 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research report: Human **SPCS1** (UniProt Q9Y6A9) — functional annotation
+## Research Report: Human **SPCS1** (UniProt Q9Y6A9) Functional Annotation
 
-## Executive summary
-Human **SPCS1** (UniProt **Q9Y6A9**; gene **SPCS1**, synonyms **SPC12**, **HSPC033**) encodes a small (~12 kDa), two–transmembrane-domain accessory subunit of the **endoplasmic reticulum (ER) signal peptidase complex (SPC)**. The SPC is best known for **cleaving N-terminal signal peptides** from secretory-pathway proteins, but recent work establishes an additional **quality-control function** in which the SPC cleaves **cryptic sites in misfolded or unassembled membrane proteins**; **SPCS1 is specifically required for this noncanonical cleavage pathway** and acts as a substrate recruitment/exosite factor. (zanotti2022thehumansignal pages 34-38, liaci2021structureofthe pages 1-3)
+### Executive summary
+Signal peptidase complex subunit 1 (**SPCS1**, also called **SPC12**) is a non-catalytic, ER-resident membrane subunit of the human **signal peptidase complex (SPC)** that contributes to SPC architecture and substrate selectivity for signal peptide cleavage. Structural work indicates SPCS1 participates in forming a “transmembrane window” that thins the ER membrane near the catalytic site to discriminate short signal peptides from longer transmembrane helices. Beyond canonical signal peptide removal, recent work supports a SPCS1-dependent **quality-control** role in which SPC performs noncanonical cleavage of misfolded/unassembled membrane proteins and couples this to ER-associated degradation (ERAD). In infection biology, multiple genetic screens and mechanistic studies show SPCS1 is a strong **host dependency factor for Flaviviridae**, acting mainly at post-replication stages by enabling specific, suboptimal SPC cleavage events required for virion assembly.
 
-## 1) Key concepts and definitions (current understanding)
+### 1) Target verification (identity, synonyms, organism)
+The gene symbol **SPCS1** in humans corresponds to the protein commonly referred to as **SPC12** (microsomal signal peptidase 12 kDa subunit), an accessory subunit of the ER signal peptidase complex (SPC). Structural and mechanistic studies of the *human* SPC explicitly list SPC12/SPCS1 among the four subunits of each SPC paralog, consistent with the UniProt identity provided (Q9Y6A9). (liaci2021structureofthe pages 1-3)
 
-### 1.1 Signal peptides and the signal peptidase complex
-Signal peptides (SPs) are N-terminal targeting sequences that direct proteins to the secretory pathway/ER; canonical SPs have **n-, h-, and c-regions**, with the **hydrophobic h-region typically ~7–15 amino acids** and a **c-region ~3–7 amino acids** containing small residues at the −1 and −3 positions important for cleavage. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
+### 2) Key concepts and definitions (current understanding)
+#### 2.1 Signal peptides and cleavage determinants
+Signal peptides (SPs) classically comprise three regions: an N-terminal **basic n-region**, a **hydrophobic h-region** (often ~7–15 residues), and a more **polar c-region** (~3–7 residues) containing the cleavage site. Canonical cleavage typically prefers small, neutral residues at the −1 and −3 positions and disfavors proline near the cleavage site. (chung2024spc2modulatessubstrate pages 1-2, liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
 
-The **signal peptidase complex (SPC)** is an **ER-resident membrane protease** that removes signal peptides from nascent proteins during/after translocation. In humans, the core complex exists as **two paralogous hetero-tetramers**, containing **SPCS1 (SPC12)**, **SPCS2 (SPC25)**, **SPCS3 (SPC22/23)**, and either **SEC11A** or **SEC11C** as the catalytic protease subunit. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
+#### 2.2 The eukaryotic signal peptidase complex (SPC)
+The ER-resident SPC is a membrane-embedded serine protease complex that removes signal peptides from nascent secretory and membrane proteins as they enter the ER. In humans, SPC exists as two functional paralogs that differ in the proteolytic subunit (**SEC11A** vs **SEC11C**) but share the same accessory subunits (**SPCS1/SPC12**, **SPCS2/SPC25**, **SPCS3/SPC22/23**). (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
 
-### 1.2 What SPCS1 is (and is not)
-SPCS1 is **not the catalytic protease** of the SPC; rather, it is a **non-proteolytic accessory subunit** (~12 kDa) with **two transmembrane domains** that contributes to the architecture and substrate selection properties of the complex. (zanotti2022thehumansignal pages 34-38, liaci2021structureofthe pages 3-4)
+Catalysis resides in SEC11A/C, where a **Ser–His–Asp catalytic triad** forms the active site. SPCS1 is not the catalytic subunit; rather, it contributes to the membrane-embedded architecture that positions substrates and shapes specificity. (liaci2021structureofthe pages 1-3, chung2024spc2modulatessubstrate pages 1-2)
 
-## 2) Molecular function and mechanism of SPCS1
+### 3) Molecular function and mechanism of SPCS1
+#### 3.1 Complex membership and ER localization
+SPCS1 is an **ER-resident** membrane subunit of the human SPC and is present in both SPC paralogs: **SPC-A (SEC11A-containing)** and **SPC-C (SEC11C-containing)**. (liaci2021structureofthe pages 1-3, liaci2021structureofthe media 82841cab)
 
-### 2.1 SPC architecture and the structural basis of substrate selectivity
-Cryo-EM/structural proteomics and simulations show the SPC forms a membrane-embedded architecture with a lipid-filled **“transmembrane window” ~15 Å wide** that locally **thins the bilayer**, placing the luminal active site close to the membrane and enabling selectivity based on the **effective length of the hydrophobic segment** (short SP h-regions vs longer transmembrane helices). The complex is ~**84 kDa** and solved to ~**4.9 Å** in the referenced study; one paralog was reported **30–40× less abundant** by top-down MS in their preparations. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
+A key structural depiction of SPC subunit organization (including SPC12/SPCS1) is shown in Liaci et al. (Graphical Abstract and Figure 2). (liaci2021structureofthe media 82841cab, liaci2021structureofthe media ab792889)
 
-A key mechanistic implication is that canonical signal peptides can be accommodated by the membrane-thinning window, whereas longer transmembrane domains (TMDs) are generally excluded unless additional recruitment/positioning occurs. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
+#### 3.2 Structural role in the “transmembrane window” and membrane thinning
+Cryo-EM and supporting simulations indicate that all SPC subunits collectively form a **transmembrane window** that locally **thins the ER membrane** adjacent to the luminal active site. This provides a physical mechanism to preferentially accommodate short SP h-regions while excluding longer transmembrane helices, thereby enforcing selectivity in signal peptide cleavage. SPCS1 contributes transmembrane elements to this architecture, supporting specificity without providing catalytic residues. (liaci2021structureofthe pages 1-3, liaci2021structureofthe media 82841cab)
 
-**Structural evidence image:** architecture and subunit topology of human SPC (including SPC12/SPCS1) and membrane thinning are supported by the retrieved figure crops. (liaci2021structureofthe media b3c6b560, liaci2021structureofthe media 648e62ab)
+#### 3.3 Accessory-subunit control of substrate selection and quality control (recent emphasis)
+Recent mechanistic synthesis suggests that accessory subunits (including SPCS1) help ensure accurate substrate discrimination and cleavage site selection, rather than catalysis itself. In yeast genetics, accessory subunit perturbations compromise substrate discrimination and can increase incorrect transmembrane cleavage, supporting the general concept that SPCS1-like subunits contribute to quality control/fidelity. (chung2024spc2modulatessubstrate pages 1-2)
 
-### 2.2 Noncanonical membrane-protein quality control: SPCS1 as recruitment factor
-A major advance from 2022–2023 work is that the human SPC also acts as a **membrane-protein quality control protease**, cleaving **cryptic SPC-like motifs** within membrane proteins when such sites become exposed by misfolding or failure to assemble into complexes.
+A major recent development is the proposal that the human SPC is not only a signal-peptide peptidase but also a **quality-control enzyme for membrane proteins**, with **SPCS1 acting as a recruitment factor/exosite** for “noncanonical” substrates. Specifically, proteome-scale analysis identified ~**1500** membrane proteins with putative cryptic SPC cleavage sites (reported as ~**18%** of the human membrane proteome; with ~**80%** of predicted sites after internal TMDs). Several substrates were experimentally validated (e.g., Cx32/Cx26/Cx30.3, PMP22, iRhom2, Hrd1). (zanotti2023characterisationofthe pages 49-53, zanotti2023characterisationofthe pages 1-8, zanotti2023characterisationofthe pages 34-38)
 
-**Evidence and substrate examples.** In HEK293T cells, **SPCS1 knockout (KO)** strongly reduces noncanonical cleavage of multiple validated substrates, including **Cx32 (Cx32C201R disease mutant)**, **Cx26**, **Cx30.3**, **iRhom2**, and **PMP22**, with rescue by exogenous SPCS1. (zanotti2022thehumansignal pages 34-38)
+Functionally, SPCS1 knockout does **not** necessarily disrupt canonical signal sequence cleavage for tested substrates, but strongly reduces noncanonical cleavage of multiple membrane proteins; in one assay, prolactin secretion increased ~**4-fold** upon SPCS1 loss/depletion, consistent with SPCS1 acting as a specificity/selection factor rather than being required for general SPC catalysis. (zanotti2023characterisationofthe pages 34-38, zanotti2023characterisationofthe pages 53-57)
 
-**Canonical vs noncanonical cleavage.** In the same system, canonical signal peptide processing of **Calnexin, PDIA6, TCRα, and ERdj3** was **unaffected** by SPCS1 KO, while **prolactin secretion increased ~4-fold**, consistent with SPCS1 being dispensable for basal canonical SP cleavage but influential for substrate selection/partitioning. (zanotti2022thehumansignal pages 34-38)
+#### 3.4 Coupling to ERAD via Hrd1 (mechanistic linkage)
+Evidence supports direct physical and functional coupling between SPC/SPCS1-mediated noncanonical cleavage and **ER-associated degradation (ERAD)**. Hrd1 (ERAD E3 ligase) binds SPC subunits (including SPCS1 and SEC11A) in co-immunoprecipitation experiments, and endogenous SPCS1 co-precipitates Hrd1. Functional turnover assays show that an SPC-derived fragment from a mutant membrane substrate decreases ~**50%** over 4 hours in wild-type cells but is completely stable in **Hrd1 knockout** cells, and inhibition of p97/VCP causes fragment accumulation—supporting a model in which SPC cleavage precedes Hrd1- and p97-dependent dislocation and degradation. (zanotti2023characterisationofthe pages 43-49)
 
-**Physical interaction and key residues.** Co-precipitation supports that SPCS1 interacts with noncanonical substrates (e.g., iRhom2), consistent with an exosite/recruitment role. A hydrophobic patch in **SPCS1 TMD2** is implicated in activity: **L61, L62, W67, and Y70** are important for function; a **W67A/Y70A** mutant fails to rescue iRhom2 processing while still associating with SEC11A, arguing for substrate docking rather than global complex assembly defects. (zanotti2022thehumansignal pages 34-38)
+### 4) Recent developments and latest research (prioritizing 2023–2024)
+#### 4.1 2024: Accessory subunits and fidelity in SPC substrate selection
+A 2024 Journal of Cell Biology study (in yeast, with direct reference to human cryo-EM) emphasizes that while Sec11 is catalytic, accessory subunits (Spc1/SPCS1, Spc2/SPCS2) contribute transmembrane helices and influence substrate selection and cleavage site identification, consistent with a conserved accessory-subunit contribution to fidelity rather than catalysis. (chung2024spc2modulatessubstrate pages 1-2)
 
-**Triggering by misfolding/failed assembly.** For iRhom2, increasing its binding partner **TACE** reduces iRhom2 cleavage, consistent with **protection by complex assembly**. For Cx32, cleavage correlates with folding defects and is reduced by compensatory stabilizing mutations; chemical reduction of disulfides with **DTT accelerates cleavage**, whereas tunicamycin does not, supporting a model of **post-translocational exposure** of cryptic sites rather than generic ER stress/retention as the trigger. (zanotti2022thehumansignal pages 38-43)
+#### 4.2 2023: SPC/SPCS1 as a membrane-protein quality-control enzyme
+A 2023 body of work summarized in Zanotti’s thesis highlights a broadened functional role for SPC: SPCS1-dependent noncanonical cleavage of misfolded/unassembled membrane proteins, with proteome-scale estimates of candidate substrates and mechanistic coupling to ERAD/Hrd1. This “SPC-as-QC” framing is a major conceptual advance beyond the classic view of SPC as solely a cotranslational signal peptide remover. (zanotti2023characterisationofthe pages 49-53, zanotti2023characterisationofthe pages 43-49, zanotti2023characterisationofthe pages 34-38)
 
-**Scale of the pathway.** A computational screen identified about **~1,500** membrane proteins with putative cryptic SPC sites, supporting that the mechanism could be widespread in the human membrane proteome. (zanotti2022thehumansignal pages 53-57)
+#### 4.3 2024: ER-centric host-directed antiviral strategies (contextualizing SPCS1/SPC)
+A 2024 review in **npj Viruses** frames the ER as a central hub in flavivirus protein translocation and processing, and highlights host-directed intervention opportunities, including inhibitors of **signal peptidase cleavage** (e.g., cavinafungin) and ER translocation inhibitors (cotransins, apratoxins). While this review does not focus on SPCS1 specifically in the excerpted pages, it supports the importance of ER processing machinery targeted by viruses and as druggable biology. (verhaegen2024theendoplasmicreticulum pages 6-7, verhaegen2024theendoplasmicreticulum pages 13-14)
 
-### 2.3 Coupling to ERAD
-Noncanonical cleavage products are proposed to feed into **ER-associated degradation (ERAD)**, with evidence and models indicating cooperation with the E3 ligase **Hrd1** for clearance of misfolded/surplus membrane proteins. (zanotti2022thehumansignal pages 57-60, zanotti2023characterisationofthe pages 57-60)
+### 5) Current applications and real-world implementations
+#### 5.1 Host-directed antiviral research targeting ER processing
+**Flaviviridae dependence on SPCS1** is supported by genome-wide CRISPR screening and validation showing that SPCS1 loss results in markedly reduced yield for multiple flaviviruses (e.g., WNV, DENV, ZIKV, YFV, JEV) and HCV, with viral translation/replication often relatively preserved—consistent with a post-replication role (protein processing/assembly). (zhang2016acrisprscreen pages 1-2)
 
-## 3) Cellular localization and pathway context
+**Quantitative example (HCV):** In HCV systems, SPCS1 loss impaired E2–p7 processing and caused major assembly/titer defects, including reported **up to ~3-log reductions** in extracellular titers in one experimental system and abrogation/minimization of defects when E2 and p7 were separated by an EMCV IRES (bypassing the SPC junction processing constraint). (alzahrani2022spcs1dependente2p7processing pages 5-7)
 
-### 3.1 Where SPCS1 acts
-SPCS1 functions **at the ER membrane** as part of the ER-resident SPC, with a luminal catalytic center (SEC11A/C) and cytosolic clamp-like components that include SPC12/SPCS1. (liaci2021structureofthe pages 3-4, liaci2021structureofthe pages 1-3)
+**Mechanistic example (JEV):** SPCS1 regulates JEV propagation primarily at posttranslational processing/assembly and interacts with NS2B transmembrane domains; mutations in NS2B transmembrane regions weaken NS2B–SPCS1 interaction, supporting a direct virus–host interface. (ma2018hostfactorspcs1 pages 1-2, ma2018hostfactorspcs1 pages 2-5)
 
-### 3.2 Biological processes/pathways
-SPCS1 is best placed within:
-- **Protein biogenesis in the ER/secretory pathway** (canonical signal peptide cleavage by SPC) (liaci2021structureofthe pages 1-3)
-- **Membrane protein quality control** via noncanonical SPC cleavage and downstream **ERAD** (zanotti2022thehumansignal pages 57-60, zanotti2022thehumansignal pages 34-38)
+These findings position SPCS1/SPC biology as a foundation for host-directed antiviral strategies, although translation to clinic remains limited and safety constraints are expected because SPC is central to secretory pathway function. (zhang2016acrisprscreen pages 1-2, alzahrani2022spcs1dependente2p7processing pages 2-3)
 
-## 4) Recent developments (2023–2024 prioritized)
+#### 5.2 Proof-of-concept chemical modulation: cavinafungin and related ER-targeting agents
+A 2024 review cites **cavinafungin** as a natural product that selectively interferes with Zika and dengue replication by inhibiting host signal peptidase activity, illustrating practical use of SPC pathway inhibition as an antiviral approach. (verhaegen2024theendoplasmicreticulum pages 13-14)
 
-### 4.1 Host–pathogen biology and ER-centric antiviral thinking
-A 2024 review emphasizing the ER as a hub in flavivirus infection reports that dengue causes an estimated **~96 million symptomatic cases/year** with **~20,000 deaths globally**, and highlights that **no FDA-approved specific antiviral** treatment exists—motivating interest in ER-resident host factors and pathways as intervention points. (Published 2024-06; https://doi.org/10.1038/s44298-024-00031-7) (verhaegen2024theendoplasmicreticulum pages 1-2)
+### 6) Expert opinions and authoritative synthesis
+Across structural biology, cell biology, and virology, a convergent interpretation is that SPCS1 does not catalyze peptide bond cleavage but contributes to **(i)** SPC architecture that couples the catalytic site to the membrane interface and **(ii)** substrate discrimination, including specialized handling of “difficult” or suboptimal cleavage sites. Structural work frames specificity partly as a physical property of membrane thinning and transmembrane architecture, while more recent cell biology emphasizes an exosite-like recruitment role for noncanonical substrates in membrane-protein proteostasis. (liaci2021structureofthe pages 1-3, zanotti2023characterisationofthe pages 53-57, zanotti2023characterisationofthe pages 49-53)
 
-A 2024 review of CRISPR screening frames host-factor identification as a route to reveal viral “Achilles heels” and to inspire antiviral strategies, highlighting the centrality of unbiased functional genomics approaches for discovering host dependencies. (Published 2024-10-18; https://doi.org/10.1128/mbio.03205-23) (see2024areviewof pages 1-2)
+In virology, multiple reviews of CRISPR screens highlight SPCS1 as an ER-localized dependency factor repeatedly rediscovered as essential for flavivirus replication/assembly and note that pharmacological modulation of ER translocation/processing machinery can inhibit DENV and ZIKV replication, supporting host-directed strategy rationale. (kanojia2022flavivirus–hostinteractionlandscape pages 7-9)
 
-### 4.2 HCV assembly context
-A 2024 Frontiers in Virology mini-review explicitly notes an **E2–SPCS1–NS2 interaction** as one example contributing to the assembly of infectious HCV particles. It also provides current public-health context: ~**58 million** people with chronic HCV infection and **90–100%** sustained virologic response rates with appropriate direct-acting antivirals. (Published 2024-03-15; https://doi.org/10.3389/fviro.2024.1383261) (izumida2024therolesof pages 5-6, izumida2024therolesof pages 1-2)
+### 7) Relevant statistics and data highlights
+- **Proteome-scale QC substrate prevalence:** ~**1500** membrane proteins with predicted cryptic SPC cleavage sites; ~**18%** of the human membrane proteome; ~**80%** of predicted sites after internal TMDs. (zanotti2023characterisationofthe pages 49-53)
+- **ERAD coupling kinetics:** An SPC-derived fragment from a mutant membrane substrate decreases ~**50%** over 4 hours in wild-type cells but is **stable** in Hrd1 knockout cells (fragment turnover depends on Hrd1); p97/VCP inhibition increases fragment accumulation. (zanotti2023characterisationofthe pages 43-49)
+- **HCV assembly effect sizes:** SPCS1 loss can produce **up to ~3-log reductions** in extracellular infectious titers in one HCV system, consistent with a strong post-replication assembly/processing phenotype linked to E2–p7 processing. (alzahrani2022spcs1dependente2p7processing pages 5-7)
 
-### 4.3 Emerging HPV co-infection model (preprint)
-A 2024 bioRxiv preprint reports that during **Trichomonas vaginalis**–associated enhancement of HPV infection, siRNA knockdown screening of host interactors identified **SPCS1** as a prominent contributor to HPV infection phenotypes; however, the retrieved excerpt does not include quantitative effect sizes. (Published 2024-09; https://doi.org/10.1101/2024.09.27.615334) (mei2024tvap65intrichomonas pages 1-4)
+### 8) Disease/phenotype associations (cautious interpretation)
+OpenTargets aggregates association evidence linking SPCS1 to **dengue disease** (highest among returned examples), and lower-scoring associations to osteoarthritis, cataract, and bipolar disorder. These are association-level signals and do not by themselves establish causal mechanisms; the dengue link is biologically plausible given strong experimental evidence for SPCS1 as a flavivirus host factor. (OpenTargets Search: -SPCS1)
 
-## 5) Current applications and real-world implementations
+### 9) Visual evidence supporting SPC/SPCS1 structure
+Liaci et al. provide a graphical abstract and a figure illustrating the architecture of human SPC paralogs, labeling SPC12/SPCS1 and showing the clamp-like arrangement and membrane thinning/transmembrane window concept. (liaci2021structureofthe media 82841cab, liaci2021structureofthe media ab792889)
 
-### 5.1 Experimental/biotech applications
-- **Functional genomics**: SPCS1 emerges repeatedly as a host factor in virus-oriented loss-of-function studies (reviewed as a methodological and conceptual framework for identifying host dependency factors). (see2024areviewof pages 1-2)
-- **Protein quality control research**: SPCS1 KO cell lines and engineered membrane substrates (e.g., connexin mutants, iRhom2) provide a tractable system for mapping **cryptic cleavage motifs** and probing how misfolding/assembly status is coupled to ERAD. (zanotti2022thehumansignal pages 34-38, zanotti2022thehumansignal pages 38-43)
+### 10) Practical functional-annotation conclusion
+**Primary function:** SPCS1 is a non-catalytic SPC subunit that enables **accurate and selective ER signal peptide cleavage** by shaping SPC membrane architecture and substrate discrimination, and it extends SPC function into **membrane-protein quality control** by promoting noncanonical cleavage of exposed transmembrane segments of misfolded/unassembled proteins and coupling this to ERAD. (liaci2021structureofthe pages 1-3, zanotti2023characterisationofthe pages 49-53, zanotti2023characterisationofthe pages 43-49)
 
-### 5.2 Therapeutic concept space (host-directed antivirals)
-SPCS1 itself is non-catalytic, but it is part of an essential ER protease complex. Contemporary antiviral thinking emphasizes host-directed approaches targeting ER-resident pathways; however, the retrieved evidence here primarily supports SPCS1 as a **host dependency factor** rather than providing clinical-stage SPC inhibitors directly tied to SPCS1. (verhaegen2024theendoplasmicreticulum pages 1-2, see2024areviewof pages 1-2)
+**Localization:** ER membrane, within the SPC complex at the lumenal membrane interface. (liaci2021structureofthe pages 1-3, liaci2021structureofthe media 82841cab)
 
-## 6) Expert analysis and authoritative interpretation
+**Pathways:** Secretory pathway protein biogenesis (Sec61 translocation → SPC cleavage), proteostasis/ER stress response and ERAD coupling (Hrd1/p97). (chung2024spc2modulatessubstrate pages 1-2, zanotti2023characterisationofthe pages 43-49)
 
-### 6.1 Primary functional interpretation
-The strongest experimentally supported annotation for human SPCS1 is:
-1) **Accessory/architectural SPC subunit** supporting the ER signal peptidase complex’s structural organization and membrane-proximal cleavage environment (liaci2021structureofthe pages 3-4)
-2) **Substrate recruitment/selection factor** for the SPC’s **noncanonical** quality-control cleavage of misfolded/unassembled membrane proteins, with a mechanistically constrained interface located in SPCS1 TMD2 (zanotti2022thehumansignal pages 34-38)
+**High-impact application area:** Host-directed antiviral research for Flaviviridae, where SPCS1 controls processing/assembly steps dependent on suboptimal cleavage sites. (zhang2016acrisprscreen pages 1-2, alzahrani2022spcs1dependente2p7processing pages 5-7)
 
-This combination is consistent with the notion that membrane thinning and active-site geometry alone explain much canonical signal peptide specificity, while **SPCS1 enables “exception handling”** for otherwise excluded, longer TMD-associated cryptic sites—providing a mechanistic bridge between membrane-protein proteostasis and proteolytic triage. (zanotti2022thehumansignal pages 34-38, liaci2021structureofthe pages 3-4)
+---
 
-### 6.2 Relationship to ERAD and proteostasis
-The SPC’s quality-control cleavage is described as synergizing with **ERAD**, implicating SPCS1 indirectly in the decision logic that routes damaged membrane proteins toward degradation rather than maturation. (zanotti2022thehumansignal pages 57-60, zanotti2023characterisationofthe pages 57-60)
-
-## 7) Disease associations and human genetics (current evidence level)
-
-Within the retrieved evidence, SPCS1 has stronger mechanistic support in cell biology and infection biology than in human Mendelian disease.
-
-- **Association resources**: OpenTargets lists disease/trait associations including **dengue disease**, **osteoarthritis**, **bipolar disorder**, and **cataract**, supported by literature links (including a recent PubMed ID 39024449 in the association evidence). These are not necessarily causal nor mechanistically resolved for SPCS1 function. (OpenTargets Search: -SPCS1)
-
-## Summary table
-The following table provides a compact, evidence-constrained functional annotation for human SPCS1 (Q9Y6A9), including quantitative values and the most recent contextual literature.
-
-| Category | Summary | Key references with URLs and publication dates |
-|---|---|---|
-| Identity | **SPCS1** (UniProt **Q9Y6A9**) corresponds to **signal peptidase complex subunit 1**, also called **SPC12**. It is the small, non-catalytic ~**12 kDa** accessory subunit of the human endoplasmic-reticulum (ER) signal peptidase complex, not the protease active site subunit. Human literature consistently matches the UniProt description and distinguishes SPCS1 from unrelated similarly named genes/proteins in other systems. (liaci2021structureofthe pages 1-3, zanotti2022thehumansignal pages 34-38) | Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304; Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672 |
-| Complex/subunits | Human SPC exists as two **hetero-tetrameric paralogs** containing **SPCS1/SPC12**, **SPCS2/SPC25**, **SPCS3/SPC22/23**, and either **SEC11A** or **SEC11C** as the catalytic protease subunit. Structural/biochemical work indicates a catalytic core centered on SEC11A/C with SPCS3, whereas SPCS1 and SPCS2 are accessory/regulatory components. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4) | Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304; Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672 |
-| Localization/topology | SPC is an **ER-resident / microsomal membrane** complex. Its catalytic site faces the **ER lumen** and abuts the membrane surface. **SPCS1** is a **two-transmembrane-domain** membrane protein; together with SPCS2 it forms a cytosolic clamp-like portion that helps orient the complex. (zanotti2022thehumansignal pages 57-60, liaci2021structureofthe pages 3-4, zanotti2022thehumansignal pages 34-38) | Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304; Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672 |
-| Molecular function | Canonical SPC function is cleavage of **signal peptides** from secretory/ER-targeted nascent proteins. For **SPCS1 specifically**, the strongest direct evidence supports a **non-catalytic substrate-selection/recruitment role** rather than catalysis. In human cells, SPCS1 is largely **dispensable for canonical signal peptide cleavage** but is required for a **noncanonical quality-control cleavage** of certain membrane proteins at exposed cryptic sites. (zanotti2022thehumansignal pages 34-38, zanotti2023characterisationofthe pages 34-38, liaci2021structureofthe pages 1-3) | Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672; Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304 |
-| Mechanism/structural basis | Cryo-EM/MD work shows SPC forms a ~**15 Å** lipid-filled **transmembrane window** that locally **thins the bilayer**, helping the enzyme discriminate short signal-peptide hydrophobic segments (**h-region ~7–15 aa; c-region ~3–7 aa**) from longer transmembrane helices. SPCS1 is proposed to act as an **exosite/recruitment factor** for noncanonical substrates whose cryptic cleavage sites become exposed after misfolding or failed assembly. A hydrophobic patch in **SPCS1 TMD2**—notably **L61, L62, W67, Y70**—is important for this function. (zanotti2022thehumansignal pages 53-57, zanotti2023characterisationofthe pages 53-57, zanotti2022thehumansignal pages 34-38, liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4) | Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304; Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672; Zanotti 2023 thesis, Jan 2023, https://doi.org/10.11588/heidok.00033417 |
-| Quality-control substrates | Validated or highlighted **noncanonical SPC/SPCS1-dependent quality-control substrates** include **Cx32/Cx32C201R**, **Cx26**, **Cx30.3**, **iRhom2**, **PMP22**, and truncated **Hrd1**. These substrates are cleaved when **misfolded**, **ER-retained**, or **unable to assemble properly**, exposing cryptic SPC sites; cleavage then cooperates with **ERAD/Hrd1**-linked disposal. A computational screen identified roughly **~1,500** candidate human membrane proteins with putative cryptic SPC sites. (zanotti2023characterisationofthe pages 57-60, zanotti2022thehumansignal pages 53-57, zanotti2023characterisationofthe pages 30-34, zanotti2023characterisationofthe pages 38-43) | Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672; Zanotti 2023 thesis, Jan 2023, https://doi.org/10.11588/heidok.00033417 |
-| Viral host-factor roles | SPCS1 is repeatedly described as a **proviral host factor** for ER-replicating/assembling viruses. For **HCV**, reviews and primary studies place SPCS1 in an **E2–SPCS1–NS2** axis that facilitates infectious-particle assembly via regulation of **E2-p7** processing. In broader flavivirus literature summarized by reviews, SPCS1 supports specific suboptimal SPC cleavages important for assembly. A 2024 bioRxiv preprint further reports that **SPCS1 knockdown lowered HPV infection** in a *Trichomonas vaginalis* co-infection model, where SPCS1 was the most influential among 12 tested host interactors. (alzahrani2022spcs1dependente2p7processing pages 2-3, alzahrani2022spcs1dependente2p7processing pages 18-19, mei2024tvap65intrichomonas pages 1-4, izumida2024therolesof pages 1-2, izumida2024therolesof pages 5-6) | Izumida & Morita 2024, *Frontiers in Virology*, Mar 15 2024, https://doi.org/10.3389/fviro.2024.1383261; Mei et al. 2024, bioRxiv, Sep 2024, https://doi.org/10.1101/2024.09.27.615334; Alzahrani et al. 2022, *PLOS Pathogens*, Feb 2022, https://doi.org/10.1371/journal.ppat.1010310 |
-| Disease/genetics associations | Direct monogenic disease evidence for human SPCS1 is limited in the retrieved corpus, but association resources and omics studies implicate it in disease contexts. **OpenTargets** lists associations with **dengue disease**, **osteoarthritis**, **cataract**, and **bipolar disorder** based on literature-backed evidence. Other retrieved studies note **SPCS1 transcript perturbation in Alzheimer’s disease** meta-analysis and genetic/epigenetic signal near **SPCS1** in osteoarthritis-related loci; these are associative and not yet mechanistically specific for SPCS1 protein function. (OpenTargets Search: -SPCS1) | OpenTargets search context (literature-backed association evidence) (OpenTargets Search: -SPCS1) |
-| Key quantitative stats | **SPCS1 KO** caused a strong blockade of noncanonical cleavage and increased **prolactin secretion ~4-fold** while leaving canonical processing of **Calnexin, PDIA6, TCRα, ERdj3** unaffected. SPC structural stats: complex ~**84 kDa**, cryo-EM ~**4.9 Å**, TM window ~**15 Å**; one SPC paralog was **30–40×** less abundant than the other by top-down MS. Epidemiology from recent reviews: dengue causes ~**96 million symptomatic cases/year** and ~**20,000 deaths globally**; chronic HCV infection affects ~**58 million** people, and DAAs achieve **90–100%** sustained virologic response. (zanotti2022thehumansignal pages 34-38, liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4, izumida2024therolesof pages 1-2, verhaegen2024theendoplasmicreticulum pages 1-2) | Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304; Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672; Verhaegen & Vermeire 2024, *npj Viruses*, Jun 2024, https://doi.org/10.1038/s44298-024-00031-7; Izumida & Morita 2024, *Frontiers in Virology*, Mar 15 2024, https://doi.org/10.3389/fviro.2024.1383261 |
-| Key references with URLs and publication dates | Core functional/structural evidence comes from **Liaci et al. 2021** (structure/mechanism), **Zanotti et al. 2022 Science** (human SPCS1 quality-control function), and **Zanotti 2023 thesis** (expanded methods/analysis). Recent context and applications come from **Verhaegen & Vermeire 2024** (flavivirus/ER antiviral context), **Izumida & Morita 2024** (HCV assembly review mentioning E2–SPCS1–NS2), **Mei et al. 2024** (HPV/T. vaginalis preprint), plus **OpenTargets** disease-target evidence. (OpenTargets Search: -SPCS1, verhaegen2024theendoplasmicreticulum pages 1-2, izumida2024therolesof pages 1-2, mei2024tvap65intrichomonas pages 1-4, liaci2021structureofthe pages 1-3, zanotti2022thehumansignal pages 34-38) | Liaci et al. 2021, SSRN, Jan 2021, https://doi.org/10.2139/ssrn.3778304; Zanotti et al. 2022, *Science*, Dec 2022, https://doi.org/10.1126/science.abo5672; Zanotti 2023 thesis, Jan 2023, https://doi.org/10.11588/heidok.00033417; Verhaegen & Vermeire 2024, *npj Viruses*, Jun 2024, https://doi.org/10.1038/s44298-024-00031-7; Izumida & Morita 2024, *Frontiers in Virology*, Mar 15 2024, https://doi.org/10.3389/fviro.2024.1383261; Mei et al. 2024, bioRxiv, Sep 2024, https://doi.org/10.1101/2024.09.27.615334 |
+### Summary table
+| Aspect | Key points | Evidence type | Representative sources (year and URL) |
+|---|---|---|---|
+| Identity / aliases | **SPCS1** is the human gene matching UniProt **Q9Y6A9**; protein name **signal peptidase complex subunit 1**, also called **SPC12 / microsomal signal peptidase 12 kDa subunit**. It belongs to the **SPCS1 family** and is a **non-catalytic accessory subunit** of the ER signal peptidase complex, not the peptidase active site itself. (liaci2021structureofthe pages 1-3) | Database-supported identity; structural/biochemical complex assignment | Liaci et al., 2021, https://doi.org/10.2139/ssrn.3778304; OpenTargets SPCS1 target entry/context, accessed via tool output (OpenTargets Search: -SPCS1) |
+| Complex membership (SPC-A / SPC-C) | Human SPC exists as two paralogs: **SPC-A = SPCS1 + SPCS2 + SPCS3 + SEC11A** and **SPC-C = SPCS1 + SPCS2 + SPCS3 + SEC11C**. SPCS1 is therefore shared between both paralogs. Cryo-EM figures show SPC12/SPCS1 as one of the membrane subunits contributing to the clamp-like architecture around the catalytic core. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4, liaci2021structureofthe media 82841cab) | Cryo-EM structure; native complex proteomics | Liaci et al., 2021, https://doi.org/10.2139/ssrn.3778304 |
+| Subcellular localization / topology | SPCS1 is **ER-resident** and membrane-embedded within the **endoplasmic reticulum signal peptidase complex** at the **ER membrane/lumenal interface**. It contributes transmembrane helices to the membrane-embedded body of SPC and helps shape the transmembrane window adjacent to the lumenal active site. (liaci2021structureofthe pages 1-3, chung2024spc2modulatessubstrate pages 1-2) | Structural biology; membrane topology inference | Liaci et al., 2021, https://doi.org/10.2139/ssrn.3778304; Gemmer & Förster, 2020, https://doi.org/10.1242/jcs.231340 |
+| Molecular function | SPCS1 functions as an **accessory, non-proteolytic SPC subunit**. The **catalytic Ser-His-Asp triad** resides in **SEC11A/SEC11C**, whereas SPCS1 supports proper complex architecture, activity tuning, and substrate handling rather than catalysis. (liaci2021structureofthe pages 1-3, chung2024spc2modulatessubstrate pages 1-2) | Structure-function analysis; comparative genetics | Liaci et al., 2021, https://doi.org/10.2139/ssrn.3778304; Chung et al., 2024, https://doi.org/10.1083/jcb.202211035 |
+| Mechanistic role: membrane thinning window | The SPC forms a **transmembrane window** that **locally thins the ER membrane**; all subunits, including SPCS1, contribute to this architecture. This membrane deformation helps the complex distinguish **short signal-peptide h-regions** from longer transmembrane helices, a major determinant of cleavage specificity. (liaci2021structureofthe pages 1-3, liaci2021structureofthe media 82841cab) | Cryo-EM; molecular dynamics; mechanistic modeling | Liaci et al., 2021, https://doi.org/10.2139/ssrn.3778304 |
+| Mechanistic role: substrate selection / cleavage determinants | Canonical substrates have signal peptides with **n-, h-, and c-regions**; the c-region usually contains **small neutral residues at -1 and -3** and disfavors proline at +1. Accessory subunits including SPCS1 help enforce correct substrate and cleavage-site selection rather than direct catalysis. (chung2024spc2modulatessubstrate pages 1-2, liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4) | Structural comparison; biochemical rules; genetics | Chung et al., 2024, https://doi.org/10.1083/jcb.202211035; Liaci et al., 2021, https://doi.org/10.2139/ssrn.3778304 |
+| Mechanistic role: noncanonical QC cleavage / exosite model | Beyond canonical signal peptide removal, SPCS1 is implicated in **SPC-dependent quality control of membrane proteins**. Work summarized in 2023 indicates SPCS1 may provide an **exosite/recruitment function** for **noncanonical substrates** with cryptic cleavage sites adjacent to type II-oriented TMDs; this enables cleavage of misfolded/unassembled membrane proteins and promotes their disposal. (zanotti2023characterisationofthe pages 57-60, zanotti2023characterisationofthe pages 53-57, zanotti2023characterisationofthe pages 1-8) | Cell biology; knockout phenotyping; proteomics; mechanistic inference | Zanotti, 2023, https://doi.org/10.11588/heidok.00033417 |
+| Key pathways / partners | SPCS1 acts within the **secretory protein biogenesis pathway** downstream of ER targeting/translocation. SPC accessory subunits make transient/functional links with the **Sec61 translocon**, and SPCS1-dependent noncanonical cleavage is coupled to **ER-associated degradation (ERAD)**, particularly involving **Hrd1**. (chung2024spc2modulatessubstrate pages 1-2, zanotti2023characterisationofthe pages 53-57, zanotti2023characterisationofthe pages 57-60) | Structural cell biology; interaction/functional studies | Gemmer & Förster, 2020, https://doi.org/10.1242/jcs.231340; Chung et al., 2024, https://doi.org/10.1083/jcb.202211035; Zanotti, 2023, https://doi.org/10.11588/heidok.00033417 |
+| Viral relevance | SPCS1 is a validated **host dependency factor for Flaviviridae**, with strong evidence from CRISPR/KO studies showing major defects in production of **WNV, DENV, ZIKV, YFV, JEV, and HCV** when SPCS1 is lost; viral translation/replication is often relatively preserved, indicating a **post-replication protein-processing/assembly role**. (zhang2016acrisprscreen pages 2-3, zhang2016acrisprscreen pages 1-2, rother2021signalpeptidasecomplex pages 1-2) | Genome-wide CRISPR; knockout/complementation; virology | Zhang et al., 2016, https://doi.org/10.1038/nature18625; Rother & Naumann, 2021, https://doi.org/10.1016/j.virusres.2021.198338; Verhaegen & Vermeire, 2024, https://doi.org/10.1038/s44298-024-00031-7 |
+| Viral mechanism details | In **JEV**, SPCS1 interacts with **NS2B** transmembrane domains and supports **posttranslational processing/virion assembly** rather than entry or early RNA replication. In **HCV**, SPCS1 facilitates **E2-p7** processing; SPCS1 loss caused **near 1-log lower intracellular RNA at late times** and **up to ~3-log lower extracellular titers** for one HCV system, while an engineered E2-EMCV-p7 construct bypassed much of the defect. (alzahrani2022spcs1dependente2p7processing pages 5-7, ma2018hostfactorspcs1 pages 2-5, ma2018hostfactorspcs1 pages 1-2) | BiFC/interactome; knockout; rescue; immunoblot; infectivity assays | Ma et al., 2018, https://doi.org/10.1128/jvi.00197-18; Alzahrani et al., 2022, https://doi.org/10.1371/journal.ppat.1010310 |
+| Disease / trait associations (OpenTargets) | OpenTargets reports disease/trait associations for **dengue disease** (strongest among returned examples in this query output), and lower-scoring associations with **osteoarthritis**, **hip osteoarthritis**, **cataract**, and **bipolar disorder**. These should be interpreted cautiously as **association-level evidence**, not necessarily direct mechanism. (OpenTargets Search: -SPCS1) | Target-disease association aggregation | OpenTargets platform result for SPCS1 via tool context (no single paper URL provided in tool output); association evidence includes literature mapped in OpenTargets context (OpenTargets Search: -SPCS1) |
 
 
-*Table: This table summarizes verified identity, structure, localization, mechanism, substrates, host-factor biology, and disease associations for human SPCS1/SPC12 using only the evidence retrieved in the session. It is designed as a compact reference for the final research report.*
+*Table: This table summarizes the verified identity, ER signal peptidase complex role, mechanisms, pathway context, and virology relevance of human SPCS1 (UniProt Q9Y6A9). It is designed as a compact reference for functional annotation with context-linked citations.*
 
-## Key source list (URLs & publication dates where available)
-- Liaci AM et al. **Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage**. SSRN eJournal. **Jan 2021**. https://doi.org/10.2139/ssrn.3778304 (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)
-- Zanotti A et al. **The human signal peptidase complex acts as a quality control enzyme for membrane proteins**. *Science*. **Dec 2022**. https://doi.org/10.1126/science.abo5672 (zanotti2022thehumansignal pages 34-38, zanotti2022thehumansignal pages 38-43)
-- Zanotti A. **Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins**. **Jan 2023**. https://doi.org/10.11588/heidok.00033417 (zanotti2023characterisationofthe pages 57-60, zanotti2023characterisationofthe pages 30-34)
-- Verhaegen M, Vermeire K. **The endoplasmic reticulum (ER): a crucial cellular hub in flavivirus infection and potential target site for antiviral interventions**. *npj Viruses*. **Jun 2024**. https://doi.org/10.1038/s44298-024-00031-7 (verhaegen2024theendoplasmicreticulum pages 1-2)
-- Izumida K, Morita E. **The roles of HCV core protein and its binding host factor in virus assembly and release**. *Frontiers in Virology*. **15 Mar 2024**. https://doi.org/10.3389/fviro.2024.1383261 (izumida2024therolesof pages 1-2, izumida2024therolesof pages 5-6)
-- See WR et al. **A review of virus host factor discovery using CRISPR screening**. *mBio*. **18 Oct 2024**. https://doi.org/10.1128/mbio.03205-23 (see2024areviewof pages 1-2)
-- Mei X et al. **TvAP65 in Trichomonas vaginalis Promotes HPV Infection by Interacting with Host Molecules**. bioRxiv preprint. **Sep 2024**. https://doi.org/10.1101/2024.09.27.615334 (mei2024tvap65intrichomonas pages 1-4)
-
-## Scope/limitations of this report
-This report is constrained to the full-text evidence retrieved in-session. Several potentially relevant 2024 primary papers (e.g., a Molecular Cell paper on iRhom2 cleavage) were listed as unobtainable in the tool outputs, so downstream conclusions are limited to accessible sources and should be updated if those full texts become available.
 
 References
 
-1. (zanotti2022thehumansignal pages 34-38): Andrea Zanotti, João P. L. Coelho, Dinah Kaylani, Gurdeep Singh, Marina Tauber, Manuel Hitzenberger, Dönem Avci, Martin Zacharias, Robert B. Russell, Marius K. Lemberg, and Matthias J. Feige. The human signal peptidase complex acts as a quality control enzyme for membrane proteins. Science, 378:996-1000, Dec 2022. URL: https://doi.org/10.1126/science.abo5672, doi:10.1126/science.abo5672. This article has 41 citations and is from a highest quality peer-reviewed journal.
+1. (liaci2021structureofthe pages 1-3): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
 
-2. (liaci2021structureofthe pages 1-3): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
+2. (chung2024spc2modulatessubstrate pages 1-2): Yeonji Chung, Chewon Yim, Gilberto P. Pereira, Sungjoon Son, Lisbeth R. Kjølbye, Lauren E. Mazurkiewicz, Amy M. Weeks, Friedrich Förster, Gunnar von Heijne, Paulo C.T. Souza, and Hyun Kim. Spc2 modulates substrate- and cleavage site-selection in the yeast signal peptidase complex. Journal of Cell Biology, Nov 2024. URL: https://doi.org/10.1083/jcb.202211035, doi:10.1083/jcb.202211035. This article has 4 citations and is from a highest quality peer-reviewed journal.
 
 3. (liaci2021structureofthe pages 3-4): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
 
-4. (liaci2021structureofthe media b3c6b560): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
+4. (liaci2021structureofthe media 82841cab): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
 
-5. (liaci2021structureofthe media 648e62ab): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
+5. (liaci2021structureofthe media ab792889): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 148 citations.
 
-6. (zanotti2022thehumansignal pages 38-43): Andrea Zanotti, João P. L. Coelho, Dinah Kaylani, Gurdeep Singh, Marina Tauber, Manuel Hitzenberger, Dönem Avci, Martin Zacharias, Robert B. Russell, Marius K. Lemberg, and Matthias J. Feige. The human signal peptidase complex acts as a quality control enzyme for membrane proteins. Science, 378:996-1000, Dec 2022. URL: https://doi.org/10.1126/science.abo5672, doi:10.1126/science.abo5672. This article has 41 citations and is from a highest quality peer-reviewed journal.
+6. (zanotti2023characterisationofthe pages 49-53): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
 
-7. (zanotti2022thehumansignal pages 53-57): Andrea Zanotti, João P. L. Coelho, Dinah Kaylani, Gurdeep Singh, Marina Tauber, Manuel Hitzenberger, Dönem Avci, Martin Zacharias, Robert B. Russell, Marius K. Lemberg, and Matthias J. Feige. The human signal peptidase complex acts as a quality control enzyme for membrane proteins. Science, 378:996-1000, Dec 2022. URL: https://doi.org/10.1126/science.abo5672, doi:10.1126/science.abo5672. This article has 41 citations and is from a highest quality peer-reviewed journal.
+7. (zanotti2023characterisationofthe pages 1-8): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
 
-8. (zanotti2022thehumansignal pages 57-60): Andrea Zanotti, João P. L. Coelho, Dinah Kaylani, Gurdeep Singh, Marina Tauber, Manuel Hitzenberger, Dönem Avci, Martin Zacharias, Robert B. Russell, Marius K. Lemberg, and Matthias J. Feige. The human signal peptidase complex acts as a quality control enzyme for membrane proteins. Science, 378:996-1000, Dec 2022. URL: https://doi.org/10.1126/science.abo5672, doi:10.1126/science.abo5672. This article has 41 citations and is from a highest quality peer-reviewed journal.
+8. (zanotti2023characterisationofthe pages 34-38): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
 
-9. (zanotti2023characterisationofthe pages 57-60): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
+9. (zanotti2023characterisationofthe pages 53-57): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
 
-10. (verhaegen2024theendoplasmicreticulum pages 1-2): Marijke Verhaegen and Kurt Vermeire. The endoplasmic reticulum (er): a crucial cellular hub in flavivirus infection and potential target site for antiviral interventions. npj Viruses, Jun 2024. URL: https://doi.org/10.1038/s44298-024-00031-7, doi:10.1038/s44298-024-00031-7. This article has 37 citations.
+10. (zanotti2023characterisationofthe pages 43-49): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
 
-11. (see2024areviewof pages 1-2): Wayne Ren See, Meisam Yousefi, and Yaw Shin Ooi. A review of virus host factor discovery using crispr screening. Nov 2024. URL: https://doi.org/10.1128/mbio.03205-23, doi:10.1128/mbio.03205-23. This article has 22 citations and is from a domain leading peer-reviewed journal.
+11. (verhaegen2024theendoplasmicreticulum pages 6-7): Marijke Verhaegen and Kurt Vermeire. The endoplasmic reticulum (er): a crucial cellular hub in flavivirus infection and potential target site for antiviral interventions. npj Viruses, Jun 2024. URL: https://doi.org/10.1038/s44298-024-00031-7, doi:10.1038/s44298-024-00031-7. This article has 37 citations.
 
-12. (izumida2024therolesof pages 5-6): Kyo Izumida and Eiji Morita. The roles of hcv core protein and its binding host factor in virus assembly and release. Frontiers in Virology, Mar 2024. URL: https://doi.org/10.3389/fviro.2024.1383261, doi:10.3389/fviro.2024.1383261. This article has 9 citations.
+12. (verhaegen2024theendoplasmicreticulum pages 13-14): Marijke Verhaegen and Kurt Vermeire. The endoplasmic reticulum (er): a crucial cellular hub in flavivirus infection and potential target site for antiviral interventions. npj Viruses, Jun 2024. URL: https://doi.org/10.1038/s44298-024-00031-7, doi:10.1038/s44298-024-00031-7. This article has 37 citations.
 
-13. (izumida2024therolesof pages 1-2): Kyo Izumida and Eiji Morita. The roles of hcv core protein and its binding host factor in virus assembly and release. Frontiers in Virology, Mar 2024. URL: https://doi.org/10.3389/fviro.2024.1383261, doi:10.3389/fviro.2024.1383261. This article has 9 citations.
+13. (zhang2016acrisprscreen pages 1-2): Rong Zhang, Jonathan J. Miner, Matthew J. Gorman, Keiko Rausch, Holly Ramage, James P. White, Adam Zuiani, Ping Zhang, Estefania Fernandez, Qiang Zhang, Kimberly A. Dowd, Theodore C. Pierson, Sara Cherry, and Michael S. Diamond. A crispr screen defines a signal peptide processing pathway required by flaviviruses. Nature, 535:164-168, Jun 2016. URL: https://doi.org/10.1038/nature18625, doi:10.1038/nature18625. This article has 453 citations and is from a highest quality peer-reviewed journal.
 
-14. (mei2024tvap65intrichomonas pages 1-4): Xuefang Mei, Wanxin Sheng, Yani Zhang, Wenjie Tian, Xiaowei Tian, Zhenke Yang, Shuai Wang, and Zhenchao Zhang. Tvap65 in trichomonas vaginalis promotes hpv infection by interacting with host molecules. bioRxiv, Sep 2024. URL: https://doi.org/10.1101/2024.09.27.615334, doi:10.1101/2024.09.27.615334. This article has 0 citations.
+14. (alzahrani2022spcs1dependente2p7processing pages 5-7): Nabeel Alzahrani, Ming-Jhan Wu, Carla F. Sousa, Olga V. Kalinina, Christoph Welsch, and MinKyung Yi. Spcs1-dependent e2-p7 processing determines hcv assembly efficiency. PLOS Pathogens, 18:e1010310, Feb 2022. URL: https://doi.org/10.1371/journal.ppat.1010310, doi:10.1371/journal.ppat.1010310. This article has 8 citations and is from a highest quality peer-reviewed journal.
 
-15. (OpenTargets Search: -SPCS1): Open Targets Query (-SPCS1, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+15. (ma2018hostfactorspcs1 pages 1-2): Le Ma, Fang Li, Jing-Wei Zhang, Wei Li, Dong-Ming Zhao, Han Wang, Rong-Hong Hua, and Zhi-Gao Bu. Host factor spcs1 regulates the replication of japanese encephalitis virus through interactions with transmembrane domains of ns2b. Journal of Virology, Jun 2018. URL: https://doi.org/10.1128/jvi.00197-18, doi:10.1128/jvi.00197-18. This article has 35 citations and is from a domain leading peer-reviewed journal.
 
-16. (zanotti2023characterisationofthe pages 34-38): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
+16. (ma2018hostfactorspcs1 pages 2-5): Le Ma, Fang Li, Jing-Wei Zhang, Wei Li, Dong-Ming Zhao, Han Wang, Rong-Hong Hua, and Zhi-Gao Bu. Host factor spcs1 regulates the replication of japanese encephalitis virus through interactions with transmembrane domains of ns2b. Journal of Virology, Jun 2018. URL: https://doi.org/10.1128/jvi.00197-18, doi:10.1128/jvi.00197-18. This article has 35 citations and is from a domain leading peer-reviewed journal.
 
-17. (zanotti2023characterisationofthe pages 53-57): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
+17. (alzahrani2022spcs1dependente2p7processing pages 2-3): Nabeel Alzahrani, Ming-Jhan Wu, Carla F. Sousa, Olga V. Kalinina, Christoph Welsch, and MinKyung Yi. Spcs1-dependent e2-p7 processing determines hcv assembly efficiency. PLOS Pathogens, 18:e1010310, Feb 2022. URL: https://doi.org/10.1371/journal.ppat.1010310, doi:10.1371/journal.ppat.1010310. This article has 8 citations and is from a highest quality peer-reviewed journal.
 
-18. (zanotti2023characterisationofthe pages 30-34): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
+18. (kanojia2022flavivirus–hostinteractionlandscape pages 7-9): Aditi Kanojia, Mansi Sharma, Rishad Shiraz, and Shashank Tripathi. Flavivirus–host interaction landscape visualized through genome-wide crispr screens. Viruses, 14:2164, Sep 2022. URL: https://doi.org/10.3390/v14102164, doi:10.3390/v14102164. This article has 12 citations.
 
-19. (zanotti2023characterisationofthe pages 38-43): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
+19. (OpenTargets Search: -SPCS1): Open Targets Query (-SPCS1, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-20. (alzahrani2022spcs1dependente2p7processing pages 2-3): Nabeel Alzahrani, Ming-Jhan Wu, Carla F. Sousa, Olga V. Kalinina, Christoph Welsch, and MinKyung Yi. Spcs1-dependent e2-p7 processing determines hcv assembly efficiency. PLOS Pathogens, 18:e1010310, Feb 2022. URL: https://doi.org/10.1371/journal.ppat.1010310, doi:10.1371/journal.ppat.1010310. This article has 8 citations and is from a highest quality peer-reviewed journal.
+20. (zanotti2023characterisationofthe pages 57-60): Andrea Zanotti. Characterisation of the human signal peptidase complex as a quality control enzyme for membrane proteins. Text, Jan 2023. URL: https://doi.org/10.11588/heidok.00033417, doi:10.11588/heidok.00033417. This article has 0 citations and is from a peer-reviewed journal.
 
-21. (alzahrani2022spcs1dependente2p7processing pages 18-19): Nabeel Alzahrani, Ming-Jhan Wu, Carla F. Sousa, Olga V. Kalinina, Christoph Welsch, and MinKyung Yi. Spcs1-dependent e2-p7 processing determines hcv assembly efficiency. PLOS Pathogens, 18:e1010310, Feb 2022. URL: https://doi.org/10.1371/journal.ppat.1010310, doi:10.1371/journal.ppat.1010310. This article has 8 citations and is from a highest quality peer-reviewed journal.
+21. (zhang2016acrisprscreen pages 2-3): Rong Zhang, Jonathan J. Miner, Matthew J. Gorman, Keiko Rausch, Holly Ramage, James P. White, Adam Zuiani, Ping Zhang, Estefania Fernandez, Qiang Zhang, Kimberly A. Dowd, Theodore C. Pierson, Sara Cherry, and Michael S. Diamond. A crispr screen defines a signal peptide processing pathway required by flaviviruses. Nature, 535:164-168, Jun 2016. URL: https://doi.org/10.1038/nature18625, doi:10.1038/nature18625. This article has 453 citations and is from a highest quality peer-reviewed journal.
+
+22. (rother2021signalpeptidasecomplex pages 1-2): Marion Rother and Michael Naumann. Signal peptidase complex subunit 1 is an essential zika virus host factor in placental trophoblasts. Apr 2021. URL: https://doi.org/10.1016/j.virusres.2021.198338, doi:10.1016/j.virusres.2021.198338. This article has 4 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](SPCS1-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000036 The architecture and structure of the human signal peptidase complex (SPC) are best represented in the Graphical Abstract (page 1) ](SPCS1-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000025 The requested information can be found in the Graphical Abstract (page 1) and Figure 2 (page 4). The Graphical Abstract provides a ](SPCS1-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. zanotti2022thehumansignal pages 34-38
-2. zanotti2022thehumansignal pages 38-43
-3. zanotti2022thehumansignal pages 53-57
-4. liaci2021structureofthe pages 1-3
-5. verhaegen2024theendoplasmicreticulum pages 1-2
-6. see2024areviewof pages 1-2
-7. liaci2021structureofthe pages 3-4
-8. zanotti2022thehumansignal pages 57-60
-9. zanotti2023characterisationofthe pages 57-60
-10. izumida2024therolesof pages 5-6
-11. izumida2024therolesof pages 1-2
-12. zanotti2023characterisationofthe pages 34-38
-13. zanotti2023characterisationofthe pages 53-57
-14. zanotti2023characterisationofthe pages 30-34
-15. zanotti2023characterisationofthe pages 38-43
-16. https://doi.org/10.1038/s44298-024-00031-7
-17. https://doi.org/10.1128/mbio.03205-23
-18. https://doi.org/10.3389/fviro.2024.1383261
-19. https://doi.org/10.1101/2024.09.27.615334
-20. https://doi.org/10.2139/ssrn.3778304;
-21. https://doi.org/10.1126/science.abo5672
-22. https://doi.org/10.1126/science.abo5672;
-23. https://doi.org/10.2139/ssrn.3778304
-24. https://doi.org/10.11588/heidok.00033417
-25. https://doi.org/10.3389/fviro.2024.1383261;
-26. https://doi.org/10.1101/2024.09.27.615334;
-27. https://doi.org/10.1371/journal.ppat.1010310
-28. https://doi.org/10.1038/s44298-024-00031-7;
-29. https://doi.org/10.11588/heidok.00033417;
-30. https://doi.org/10.1126/science.abo5672,
-31. https://doi.org/10.2139/ssrn.3778304,
-32. https://doi.org/10.11588/heidok.00033417,
-33. https://doi.org/10.1038/s44298-024-00031-7,
-34. https://doi.org/10.1128/mbio.03205-23,
-35. https://doi.org/10.3389/fviro.2024.1383261,
-36. https://doi.org/10.1101/2024.09.27.615334,
-37. https://doi.org/10.1371/journal.ppat.1010310,
+1. liaci2021structureofthe pages 1-3
+2. zanotti2023characterisationofthe pages 43-49
+3. zhang2016acrisprscreen pages 1-2
+4. verhaegen2024theendoplasmicreticulum pages 13-14
+5. zanotti2023characterisationofthe pages 49-53
+6. liaci2021structureofthe pages 3-4
+7. zanotti2023characterisationofthe pages 1-8
+8. zanotti2023characterisationofthe pages 34-38
+9. zanotti2023characterisationofthe pages 53-57
+10. verhaegen2024theendoplasmicreticulum pages 6-7
+11. zanotti2023characterisationofthe pages 57-60
+12. zhang2016acrisprscreen pages 2-3
+13. rother2021signalpeptidasecomplex pages 1-2
+14. https://doi.org/10.2139/ssrn.3778304;
+15. https://doi.org/10.2139/ssrn.3778304
+16. https://doi.org/10.1242/jcs.231340
+17. https://doi.org/10.1083/jcb.202211035
+18. https://doi.org/10.1083/jcb.202211035;
+19. https://doi.org/10.11588/heidok.00033417
+20. https://doi.org/10.1242/jcs.231340;
+21. https://doi.org/10.1038/nature18625;
+22. https://doi.org/10.1016/j.virusres.2021.198338;
+23. https://doi.org/10.1038/s44298-024-00031-7
+24. https://doi.org/10.1128/jvi.00197-18;
+25. https://doi.org/10.1371/journal.ppat.1010310
+26. https://doi.org/10.2139/ssrn.3778304,
+27. https://doi.org/10.1083/jcb.202211035,
+28. https://doi.org/10.11588/heidok.00033417,
+29. https://doi.org/10.1038/s44298-024-00031-7,
+30. https://doi.org/10.1038/nature18625,
+31. https://doi.org/10.1371/journal.ppat.1010310,
+32. https://doi.org/10.1128/jvi.00197-18,
+33. https://doi.org/10.3390/v14102164,
+34. https://doi.org/10.1016/j.virusres.2021.198338,
