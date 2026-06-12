@@ -35,7 +35,7 @@ Macrolide 2'-phosphotransferases inactivate macrolide antibiotics by transferrin
 | **Organism** | *Escherichia coli* (NCBITaxon:562) |
 | **UniProt** | Q47396 |
 | **CARD/ARO** | [ARO:3000316](https://card.mcmaster.ca/aro/3000316) |
-| **Review** | `genes/ECOLX/Q47396_ECOLX/Q47396_ECOLX-ai-review.yaml` |
+| **Review** | <gene species="ECOLX" symbol="Q47396_ECOLX">Q47396</gene> |
 | **Status** | COMPLETE (DRAFT) |
 
 **Key findings**
@@ -56,7 +56,7 @@ Macrolide 2'-phosphotransferases inactivate macrolide antibiotics by transferrin
 | **Organism** | *Escherichia coli* O83:H1 (strain NRG 857C / AIEC; NCBITaxon:685038) |
 | **UniProt** | A0A0H3EUF3 |
 | **CARD/ARO** | [ARO:3000318](https://card.mcmaster.ca/aro/3000318) (cross-referenced from the UniProt `DR CARD` line) |
-| **Review** | `genes/ECO8N/A0A0H3EUF3_ECO8N/A0A0H3EUF3_ECO8N-ai-review.yaml` |
+| **Review** | <gene species="ECO8N" symbol="A0A0H3EUF3_ECO8N">A0A0H3EUF3</gene> |
 | **Status** | COMPLETE (DRAFT) |
 
 **Key findings**
