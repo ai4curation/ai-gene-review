@@ -45,3 +45,14 @@ UniProt: Q8N4V1 (EMC5_HUMAN). 131 aa, 2-TM (TM 4-22, 44-63), N-cyt/C-cyt topolog
 2. As an EMC subunit, contributes to membrane protein insertion into the ER membrane: tail-anchored protein insertion (GO:0071816) and protein insertion by stop-transfer membrane-anchor sequence (GO:0045050), i.e. the EMC insertase activity (GO:0032977, contributes_to).
 
 Magnesium transport: explicitly NOT a core function (legacy/contested).
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+New EMC5/MMGT1-relevant references verified against PubMed and added to the review (all additive; no action changes). Falcon confirms MMGT1 = EMC5 and that direct Mg2+-transport evidence remains weak/contested, consistent with the existing review.
+
+- 2024 human EMC cryo-EM used a **Twin-Strep tag on EMC5** (plus 3xFLAG-EMC2) to purify endogenous EMC, confirming EMC5/MMGT1 is a stable, tractable core membrane subunit; also reports an **EMC-VDAC interaction at mitochondria-ER contact sites** and a vestibule "gating plug." [PMID:38517390 "cryo-electron microscopy structures of human EMC in apo- and VDAC-bound states"]
+- EMC **post-translationally inserts C-terminal TMDs of multipass proteins to rectify topology**, a sequential co-/post-translational mechanism estimated to apply to **~250 multipass proteins** — expands the EMC client repertoire to which EMC5 contributes as a core subunit. [PMID:37957425 "TMDs near the carboxyl terminus of mammalian multipass proteins are inserted post-translationally by the EMC"]
+- EMC hydrophilic vestibule acts as a **charge-based selectivity filter** (rejects mitochondrial TA proteins; enforces positive-inside rule). [PMID:37199759 "Positively charged residues ... function as a selectivity filter"]
+- EMC functions as a **holdase/chaperone** during assembly of the multipass CaV1.2 channel. [PMID:37196677 "the EMC functions as a channel holdase"]
+- A distinct **EMC chaperone mode** engages TMDs via EMC1 and modulates their bilayer orientation. [PMID:40753078 "we characterize an additional chaperone function of the EMC"]
+- MMGT1-specific host-pathogen finding: **MMGT1-deficient macrophages promote M. tuberculosis persistence** via a GPR156-driven lipid-droplet axis; TAG-synthesis inhibition reduces droplets and persistence. The paper does NOT resolve whether the mechanism is EMC function, Mg2+ transport, or another pathway, so it is recorded as informative context, not a core MF. [PMID:37269834 "MMGT1-GPR156 lipid droplet axis in persistence"]

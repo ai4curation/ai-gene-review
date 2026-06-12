@@ -34,3 +34,13 @@
 - HIGH: PMID:29242231, PMID:30415835, PMID:32439656, PMID:34918864 (insertase mechanism/structure/in vivo), PMID:22119785 (EMC discovery in human, ER loc).
 - MEDIUM: PMID:29809151 (multipass cotranslational role).
 - LOW/contextual: PMID:32296183, PMID:33961781 (HT interactome), PMID:23182941 (autophagy; pre-insertase, indirect).
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+New EMC6-relevant references verified against PubMed and added to the review (all additive; no action changes). These reinforce EMC6's core role in the EMC3/EMC6 insertase vestibule.
+
+- 2023 selectivity-filter study consolidates the **EMC3/EMC6 hydrophilic vestibule** as the central insertion route and a charge-based selectivity filter enforcing the positive-inside rule; EMC6 mutations had milder effects than EMC3 in the tested context but EMC6 remains part of the vestibule-enclosing core. [PMID:37199759 "membrane insertion through a hydrophilic vestibule ... selectivity filter"]
+- EMC acts as a **holdase/chaperone** during assembly of the multipass CaV1.2 channel (TM and Cyto client docks), extending EMC function beyond insertion. [PMID:37196677 "the EMC functions as a channel holdase that facilitates channel assembly"]
+- 2024 human EMC cryo-EM (apo + VDAC-bound) places EMC6 in the **EMC3-EMC6 core**; a vestibule **gating plug** (assigned to EMC3) changes conformation between states, and the EMC engages **VDAC at mitochondria-ER contact sites**. [PMID:38517390 "identified a gating plug located inside the EMC hydrophilic vestibule"]
+- 2025 chaperone study names EMC6 as part of a **lipid-filled cavity (EMC1/EMC3/EMC5/EMC6)** distinct from the canonical insertase site, supporting a broader EMC chaperone/quality-control role; the EMC engages TMDs via EMC1. [PMID:40753078 "we characterize an additional chaperone function of the EMC"]
+- Core EMC6 call is unchanged: EMC complex membership + ER membrane localization + membrane insertase activity (contributes_to, via the EMC3/EMC6 vestibule) + TA and stop-transfer/multipass insertion processes. Autophagy/omegasome annotations remain KEEP_AS_NON_CORE.

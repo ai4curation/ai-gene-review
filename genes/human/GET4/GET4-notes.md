@@ -49,3 +49,12 @@ So the CORE molecular role is a **pre-targeting/bridging scaffold (protein carri
 - The interactome-screen IPIs (PMID:21516116, 24722188, 25416956, 28514442, 32296183, 33961781, 40205054) are high-throughput protein-binding; KEEP_AS_NON_CORE. Among these the GET3 (O43681) and BAG6 (P46379-2) captures are biologically meaningful; FBN1/NUP85/KRTAP9-3/DUSP21/etc. are likely incidental.
 
 No REMOVE warranted: all experimental annotations are consistent with established GET4 biology; the IEA/IBA are also consistent. No MODIFY strictly required, though GO:0045048 is a more general parent — I keep it ACCEPT as a valid (if general) term rather than MODIFY, since 0071816/0006620 already capture the specific function and both are present.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- Proteotoxic stress remodels the GET4-containing complex: polyQ inclusions, proteasome inhibition, and CCCP-induced mitochondrial depolarization stimulate dissociation of UBL4A from BAG6 within the BAG6/UBL4A/GET4(TRC35) complex [PMID:37747814 "Proteotoxic stresses stimulate dissociation of UBL4A from the tail-anchored protein recognition complex"]. Added as a MEDIUM-relevance reference (complex-level stress sensitivity, not a direct GET4-specific assay).
+- Review framing of GET4/TRC35 as ribosome-associated within BAG6 complexes near the ribosomal exit, enhancing recruitment of TA-handling factors and handover to TRC40 [PMID:35409131 "Targeting of Proteins for Translocation at the Endoplasmic Reticulum" (Pool 2022)]. Consistent with the existing ribosome-recruitment picture (PMID:20676083); added as MEDIUM review support.
+- The Falcon cryo-EM "metazoan pretargeting GET complex" source (Keszei et al. 2021, DOI 10.1038/s41594-021-00690-7) is ALREADY in the review as PMID:34887561 (GET4-GET3 composite lid / SGTA->Get3 transfer); not re-added.
+- The Falcon "structural basis ... BAG6 by TRC35" source (Mock et al. 2017 PNAS, DOI 10.1073/pnas.1702940114) is ALREADY in the review as PMID:29042515 (NLS masking, RNF126 stabilization); not re-added.
+- Open Targets disease associations (neurodegenerative disease, atrial fibrillation/flutter, CDG type IIy) reported by Falcon are association-level only; the curated CDG link is already captured by PMID:32395830. No new disease reference added.
+- Kesner 2023 Nature (noncoding-translation surveillance, DOI 10.1038/s41586-023-05946-4) mentions GET4/BAG6-pathway components only in passing per Falcon's OpenTargets snippet; not a GET4-specific assay, so notes-only (not added).
