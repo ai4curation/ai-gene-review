@@ -3,6 +3,7 @@
 from ai_gene_review.render_modules import (
     collect_anchor_map,
     collect_module_stats,
+    evidence_url,
     output_path_for_module,
     render_all_modules,
     render_module,
@@ -92,6 +93,12 @@ def test_collect_anchor_map():
 
     assert anchors["first_step"] == "#node-first_step"
     assert anchors["first_activity"] == "#annoton-first_activity"
+
+
+def test_evidence_url_maps_doi_source_id():
+    assert evidence_url({"source_id": "DOI:10.1016/j.tcb.2023.08.005"}) == (
+        "https://doi.org/10.1016/j.tcb.2023.08.005"
+    )
 
 
 def test_output_path_for_module(tmp_path):

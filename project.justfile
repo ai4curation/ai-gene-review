@@ -433,15 +433,18 @@ validate-deep-research:
 # Validate module YAML files against the ModuleReview schema
 validate-modules:
     #!/usr/bin/env bash
+    set -uo pipefail
     files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
     if [ -z "$files" ]; then
         echo "No module YAML files found"
         exit 0
     fi
+    rc=0
     while IFS= read -r f; do
         echo "Validating $f"
-        uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f"
+        uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
     done <<< "$files"
+    exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)
 [group('QC')]

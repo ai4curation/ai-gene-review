@@ -148,25 +148,13 @@ def evidence_url(evidence: Any) -> Optional[str]:
         return None
     if str(source_id).startswith("PMID:"):
         return f"https://pubmed.ncbi.nlm.nih.gov/{str(source_id).split(':', 1)[1]}/"
+    if str(source_id).startswith("DOI:"):
+        return f"https://doi.org/{str(source_id).split(':', 1)[1]}"
     if str(source_id).startswith("GO:"):
         return f"https://amigo.geneontology.org/amigo/term/{source_id}"
     if str(source_id).startswith("MetaCyc:"):
         return f"https://metacyc.org/META/NEW-IMAGE?type=PATHWAY&object={str(source_id).split(':', 1)[1]}"
     return None
-
-
-def _iter_child_nodes(node: dict[str, Any]) -> list[dict[str, Any]]:
-    children: list[dict[str, Any]] = []
-    for part in as_list(node.get("parts")):
-        if isinstance(part, dict) and isinstance(part.get("node"), dict):
-            children.append(part["node"])
-    for variant_set in as_list(node.get("variant_sets")):
-        if not isinstance(variant_set, dict):
-            continue
-        for variant in as_list(variant_set.get("variants")):
-            if isinstance(variant, dict):
-                children.append(variant)
-    return children
 
 
 def collect_module_stats(data: dict[str, Any]) -> dict[str, int]:

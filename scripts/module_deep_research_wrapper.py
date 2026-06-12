@@ -4,6 +4,9 @@
 The wrapper resolves a module YAML document, summarizes its current structure,
 and sends a biology-oriented outline to a module-specific research template.
 Research output is written beside the module YAML by default.
+
+Some small path/YAML/descriptor helpers intentionally mirror render_modules.py
+so this wrapper can remain usable as a standalone script.
 """
 
 from __future__ import annotations
