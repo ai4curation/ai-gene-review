@@ -98,3 +98,30 @@ MF protein binding (IPI):
 P4HA1 is induced by hypoxia (HIF target) and is implicated in ECM remodeling / tumor progression in
 several cancers. No such BP annotations are present in this GOA; if added they should be non-core.
 (Not in the cached pubs; noted for completeness.)
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- P4HA1 acts as a downstream effector in a fibro-inflammatory remodeling cascade: an
+  IL-10/JAK2/STAT3/HIF1alpha/TMEM45A/P4HA1 signaling axis was elucidated in SLE-associated
+  pleural remodeling; P4HA1 knockdown blocks IL-10-induced increases in collagen-I, fibronectin
+  and alpha-SMA. [PMID:39563376 "the IL-10/JAK2/STAT3/HIF1α/TMEM45A/P4HA1 signaling axis was elucidated to mediate pleural remodeling and thickening"]
+- Metabolic α-ketoglutarate supply (from CAF-derived lactate) increases P4HA1-dependent collagen
+  4-hydroxylation, driving a collagen→DDR1 loop in prostate cancer metastasis (already in review as
+  PMID:38907027 / Ippolito 2024). Falcon corroborates 2-oxoglutarate availability as a functional
+  lever on enzymatic output.
+- P4HA1 is overexpressed in esophageal squamous cell carcinoma (~68.7% of cases by IHC, negative in
+  adjacent tissue) and is an independent prognostic factor (OS/PFS). Cancer biomarker context, non-core.
+  [PMID:38134053 "P4HA1 was highly expressed in esophageal squamous cell carcinoma (68.7%), while it was negatively expressed in paracancerous tissues"]
+- Family-level (all three C-P4HA alpha subunits, P4HA1/2/3) prognostic analysis in HNSCC: higher combined
+  expression of the three is a superior prognostic indicator, and the deleterious effect is antagonized by
+  LLGL2 via occludin. [PMID:39394821 "a higher expression of all three C-P4HAs ... is a superior prognostic indicator"]
+- Yang 2024 is a dedicated P4HA1-focused review mapping its roles across fibrosis-related diseases and
+  cancers, hypoxia/HIF-linked induction, ECM remodeling, and targeting strategies (siRNA, small-molecule
+  P4H inhibitors). [PMID:39568592 "P4HA1 ... the synthesis and secretion of collagen are related to the sustained activation of P4HA1"]
+- Falcon reiterates non-collagen/collagen-like substrates beyond fibrillar procollagen (MBL — already in
+  review as PMID:35368589; plus reported X-Pro-Gly substrates such as AGO2 Pro700, elastins, prion protein,
+  conotoxins per the Mezentsev 2024 lung-cancer biomarker review). The AGO2/elastin/conotoxin claims are
+  secondary (review-level) and not added as primary references here.
+- HIF-PHD inhibitors (roxadustat, vadadustat) can off-target inhibit collagen prolyl 4-hydroxylation of
+  collagen-like domains (MBL) — already captured via PMID:35368589 (Bhute 2020). Clinically relevant
+  isoenzyme-selectivity caveat for the P4HA/PHD field.
