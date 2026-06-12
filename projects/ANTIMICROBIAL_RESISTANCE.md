@@ -78,10 +78,10 @@ Both enzymes share the **same GO MF leaf term** (`GO:0050073`), yet are biologic
 
 | Species | Gene | UniProt | ARO | Family / Mechanism | Status |
 |---------|------|---------|-----|--------------------|--------|
-| ECOLX | mphA | Q47396 | ARO:3000316 | MPH / antibiotic inactivation | COMPLETE |
-| ECO8N | mphB | A0A0H3EUF3 | ARO:3000318 | MPH / antibiotic inactivation | COMPLETE |
-| ECOLX | mcr-1 | A0A0R6L508 | ARO:3003689 | pEtN transferase / colistin target modification | COMPLETE |
-| ENTCL | aac6-Ib | A0A076UB44 | ARO:3002579 | AAC / antibiotic inactivation | COMPLETE |
+| ECOLX | <gene species="ECOLX" symbol="Q47396_ECOLX">mphA</gene> | Q47396 | ARO:3000316 | MPH / antibiotic inactivation | COMPLETE |
+| ECO8N | <gene species="ECO8N" symbol="A0A0H3EUF3_ECO8N">mphB</gene> | A0A0H3EUF3 | ARO:3000318 | MPH / antibiotic inactivation | COMPLETE |
+| ECOLX | <gene species="ECOLX" symbol="A0A0R6L508_ECOLX">mcr-1</gene> | A0A0R6L508 | ARO:3003689 | pEtN transferase / colistin target modification | COMPLETE |
+| ENTCL | <gene species="ENTCL" symbol="A0A076UB44_ENTCL">aac6-Ib</gene> | A0A076UB44 | ARO:3002579 | AAC / antibiotic inactivation | COMPLETE |
 
 ### Reviews validating annotation-gain candidates
 
@@ -126,13 +126,15 @@ This section is the **methodology research deliverable**: how the CARD/ARO resou
 
 3. **Harvest reference PMIDs.** ARO terms cite the primary literature establishing the determinant. Two CARD-cited PMIDs (8900063, 17302923) were added to the MphB review directly from `ARO:3000318`. These can be auto-fetched into `publications/`.
 
-4. **Mechanism → GO mapping (QC).** The ARO resistance-mechanism class is a strong prior for the GO BP/MF:
-   | ARO mechanism | GO BP | typical GO MF pattern |
-   |---|---|---|
-   | antibiotic inactivation | `GO:0046677` response to antibiotic | drug-modifying enzyme MF (kinase/acetyltransferase/hydrolase) |
-   | antibiotic target alteration | `GO:0046677` | methyltransferase / modifying-enzyme MF |
-   | antibiotic efflux | `GO:0046677` (+ transport BP) | transmembrane transporter activity |
-   A small **ARO-mechanism → GO** lookup table would let us (a) seed candidate GO terms and (b) flag reviews whose GO calls disagree with the curated mechanism. **Note: no ARO→GO mapping exists today.** Inspection of `aro.owl` (8,602 classes) shows `hasDbXref` namespaces of only ARO, PMID, PubChem, ChEBI, ChEMBL, CAS, PDB, ISBN, RO, DOID — and zero `GO:` references; GO is not imported into ARO. So any ARO↔GO bridge has to be **built and maintained by us** (e.g. the small table above, or a richer mapping keyed on AMR-gene-family + mechanism), not pulled from CARD. This bridge is provided as a SSSOM mapping set at `projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml` (23 mappings: MPH, beta-lactamase, CAT, APH/AAC/ANT, Erm, dfr, sul, FosA/FosA2/FosA3/fosA5, colistin/MCR phosphoethanolamine transferase, and aminoglycoside 16S rRNA methyltransferase families → GO MF, plus the six ARO mechanism classes → GO BP). `just validate-mappings` runs both `linkml-validate` (structure) and **`linkml-term-validator`** (every ARO/GO CURIE resolves and its label matches the ontology — the curie+label-tuple guarantee), via the sidecar schema `src/ai_gene_review/schema/aro_go_mapping.yaml`. ChEBI xrefs on ARO drug terms *are* present, which is directly useful for the `substrates` field even though the GO side is not.
+4. **Mechanism → GO mapping (QC).** The ARO resistance-mechanism class is a strong prior for the GO BP/MF, per the table below.
+
+| ARO mechanism | GO BP | typical GO MF pattern |
+|---|---|---|
+| antibiotic inactivation | `GO:0046677` response to antibiotic | drug-modifying enzyme MF (kinase/acetyltransferase/hydrolase) |
+| antibiotic target alteration | `GO:0046677` | methyltransferase / modifying-enzyme MF |
+| antibiotic efflux | `GO:0046677` (+ transport BP) | transmembrane transporter activity |
+
+A small **ARO-mechanism → GO** lookup table like this lets us (a) seed candidate GO terms and (b) flag reviews whose GO calls disagree with the curated mechanism. **Note: no ARO→GO mapping exists today.** Inspection of `aro.owl` (8,602 classes) shows `hasDbXref` namespaces of only ARO, PMID, PubChem, ChEBI, ChEMBL, CAS, PDB, ISBN, RO, DOID — and zero `GO:` references; GO is not imported into ARO. So any ARO↔GO bridge has to be **built and maintained by us** (e.g. the small table above, or a richer mapping keyed on AMR-gene-family + mechanism), not pulled from CARD. This bridge is provided as a SSSOM mapping set at `projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml` (23 mappings: MPH, beta-lactamase, CAT, APH/AAC/ANT, Erm, dfr, sul, FosA/FosA2/FosA3/fosA5, colistin/MCR phosphoethanolamine transferase, and aminoglycoside 16S rRNA methyltransferase families → GO MF, plus the six ARO mechanism classes → GO BP). `just validate-mappings` runs both `linkml-validate` (structure) and **`linkml-term-validator`** (every ARO/GO CURIE resolves and its label matches the ontology — the curie+label-tuple guarantee), via the sidecar schema `src/ai_gene_review/schema/aro_go_mapping.yaml`. ChEBI xrefs on ARO drug terms *are* present, which is directly useful for the `substrates` field even though the GO side is not.
 
 5. **Identity anchoring.** The ARO reference sequence + family HMM (here NCBIfam `NF000242` macrolide_MphB) gives an independent check that a TrEMBL accession is the determinant we think it is — valuable when GOA is empty and we are minting `NEW` annotations.
 
@@ -144,7 +146,14 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/AN
 
 **Propagation is exact-or-narrower**: a GO term mapped at an ARO term applies to any gene whose ARO assignment is that term *or a narrower (is_a descendant)* ARO term. This makes family nodes the high-value targets — the single `beta-lactamase` (`ARO:3000001`) → `GO:0008800` mapping reaches all **5,317** descendant ARO gene terms (CTX-M, KPC, NDM, …). The pipeline walks each gene's ARO is_a ancestors (via OAK) and records `aro_relation` = `exact`/`narrower` in the output. Candidates carry full provenance (gene ARO, mapped ARO, relation, predicate, GO, route) for curator review. See `projects/ANTIMICROBIAL_RESISTANCE/README.md`.
 
-**Curator view & impact.** `just render-mappings` builds a browsable HTML page (`projects/ANTIMICROBIAL_RESISTANCE/aro2go.html`) of all mappings + gaps with CARD/AmiGO links. `just annotation-gain` applies the mappings to the **4,182** UniProtKB entries carrying a CARD cross-reference and reports the GO terms they would gain but don't yet have: **746** candidate new annotations (`projects/ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md`) — e.g. all 79 colistin/MCR entries lack `GO:0043838`; 448 beta-lactamases lack `GO:0008800`.
+**Curator view & impact.** `just render-mappings` builds a browsable HTML page of all mappings + gaps with CARD/AmiGO links. `just annotation-gain` applies the mappings to the **4,182** UniProtKB entries carrying a CARD cross-reference and reports the GO terms they would gain but don't yet have: **734** candidate new annotations — e.g. all 79 colistin/MCR entries lack `GO:0043838`; 448 beta-lactamases lack `GO:0008800`.
+
+**Project artifacts** (rendered to `pages/ANTIMICROBIAL_RESISTANCE/` by `just render-ar-pages`):
+
+- [ARO → GO mapping table (HTML)](../ANTIMICROBIAL_RESISTANCE/aro2go.html) — the curator view of all 23 mappings + 9 gaps.
+- [Annotation-gain report](../ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.html) — candidate new UniProt annotations.
+- [Spot review](../ANTIMICROBIAL_RESISTANCE/SPOT_REVIEW.html) — manual QA of sample candidates.
+- [Mappings & pipeline README](../ANTIMICROBIAL_RESISTANCE/README.html) — methods, validation, propagation logic.
 
 ### Recommended convention
 - Record the ARO id in the gene notes (`- CARD/ARO: ARO:NNNNNNN (gene); mechanism = ...`) with provenance, as already done for both MPH genes.
