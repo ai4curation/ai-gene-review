@@ -1,0 +1,4060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNAJC9 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DNAJC9</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8WXX5" target="_blank" class="term-link">
+                        Q8WXX5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DNAJC9";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8WXX5" data-a="DESCRIPTION: DNAJC9 (also called HDJC9 or DnaJ protein SB73) is..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DNAJC9 (also called HDJC9 or DnaJ protein SB73) is a type C DnaJ/Hsp40 (DNAJC) co-chaperone with an N-terminal J domain and a C-terminal histone-binding domain. It has a dual role as a histone H3-H4 chaperone and an HSP70 heat-shock co-chaperone. As a histone chaperone it forms a co-chaperone complex with MCM2 and histone H3-H4 heterodimers, binds H3 variants (H3.1, H3.2, H3.3) and H4, and integrates HSP70-mediated ATP-driven protein folding into the histone supply chain during replication- and transcription-coupled nucleosome assembly, helping to resolve aberrant histone-folding intermediates and assemble histones into nucleosomes. Its J domain recruits and stimulates the ATPase activity of HSP70-type chaperones (HSPA1A, HSPA1B, HSPA8). DNAJC9 is predominantly nuclear under normal conditions and translocates to the cytoplasm and plasma membrane after heat shock via a non-classical, lipid-dependent pathway; its expression is induced by heat shock, LPS, PMA and TNF.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred nuclear localization, consistent with the experimentally established predominantly nuclear localization where DNAJC9 acts as a histone chaperone.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleus is the principal site of DNAJC9&#39;s core histone-chaperone function and is supported by direct experimental evidence (PMID:17182002, PMID:33857403).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:17182002}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytoplasmic localization. For DNAJC9, cytoplasmic localization arises mainly upon heat-shock translocation; the predominant resting compartment is the nucleus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization reflects stress-induced relocalization rather than the predominant nuclear site of the core histone-chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Translocates to the cytoplasm and membrane after heat shock.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031072" target="_blank" class="term-link">
+                                    GO:0031072
+                                </a>
+                            </span>
+                            <span class="term-label">heat shock protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0031072" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9 binds HSP70-family chaperones (HSPA1A, HSPA1B, HSPA8) via its J domain, a core molecular function shared across the DNAJC9 orthologous group.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct binding of HSP70 chaperones via the J domain is experimentally documented and is core to DNAJC9&#39;s co-chaperone activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts (via J domain) with HSPA1A, HSPA1B and HSPA8</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated subcellular-location transfer of nuclear localization, the predominant compartment of DNAJC9.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleus is the experimentally supported principal compartment of DNAJC9&#39;s histone-chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:17182002}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated transfer of cytoplasmic localization, which for DNAJC9 reflects heat-shock-induced translocation rather than the resting nuclear pool.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is a stress-induced, non-core context for this predominantly nuclear histone chaperone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Translocates to the cytoplasm and membrane after heat shock.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated transfer of plasma membrane localization, which for DNAJC9 reflects a heat-shock-induced, non-classical lipid-dependent translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is a specialized stress-induced context, peripheral to the core nuclear histone-chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">it is transported into cytoplasm and plasma membrane upon heat shock stress through a non-classical and lipid-dependent pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19410544" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19410544
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Centromere-specific assembly of CENP-a nucleosomes is mediat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005515" data-r="PMID:19410544" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput interaction (IntAct WITH histone H3, P68431). The bare protein binding term records a real interaction but is uninformative; it reflects histone binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative; the informative function (histone binding) is captured by the dedicated histone binding annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:19410544 UniProtKB:P68431</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25281560" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25281560
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proximity biotinylation and affinity purification are comple...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005515" data-r="PMID:25281560" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput interaction (IntAct WITH histone H3, P68431). Bare protein binding term reflecting histone binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative; the informative histone-binding function is captured separately.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:25281560 UniProtKB:P68431</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29568061" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29568061
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An AP-MS- and BioID-compatible MAC-tag enables comprehensive...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005515" data-r="PMID:29568061" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput interaction (IntAct WITH histone H3, P68431). Bare protein binding term reflecting histone binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative; the informative histone-binding function is captured separately.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:29568061 UniProtKB:P68431</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput interactions (IntAct WITH histone H3 P68431, H3-5 Q6NXT2, and MORN4 Q8NDC4). Bare protein binding term; the histone interactions reflect histone binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative; the histone interactions are captured by the dedicated histone binding annotation, and the MORN4 hit is an isolated high-throughput partner.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:32296183 UniProtKB:P68431</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence showing nucleoplasmic localization, consistent with the predominantly nuclear histone-chaperone function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasm is a precise cellular-component annotation matching DNAJC9&#39;s principal nuclear site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005654 nucleoplasm cellular_component ECO:0000314 IDA GO_REF:0000052</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence showing cytosolic localization, consistent with the cytoplasmic pool of DNAJC9 (enhanced after heat shock).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosolic localization is a genuine but secondary compartment relative to the predominant nuclear site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005829 cytosol cellular_component ECO:0000314 IDA GO_REF:0000052</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence showing plasma membrane localization, consistent with the heat-shock-induced translocation of DNAJC9.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is a stress-induced, non-core context for this predominantly nuclear histone chaperone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005886 plasma membrane cellular_component ECO:0000314 IDA GO_REF:0000052</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33857403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC9 integrates heat shock molecular chaperones into the h...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005515" data-r="PMID:33857403" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Structure-guided proteomics (Hammond et al.) capturing direct DNAJC9 interactions with histones H3.1/H3.2/H3.3 and H4, MCM2 and HSP70 (HSPA8). The bare term is uninformative; the central interaction is direct histone binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding is uninformative. The biologically informative interaction demonstrated here is direct binding of histone H3-H4 substrates, best captured by histone binding (GO:0042393).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042393" target="_blank" class="term-link">
+                                    histone binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                        PMID:33857403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">this dual histone and heat shock co-chaperone binds histone substrates</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006334" target="_blank" class="term-link">
+                                    GO:0006334
+                                </a>
+                            </span>
+                            <span class="term-label">nucleosome assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33857403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC9 integrates heat shock molecular chaperones into the h...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0006334" data-r="PMID:33857403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9 functions in the histone supply chain during replication- and transcription-coupled nucleosome assembly and can assemble histones onto DNA in vitro, supporting this process annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence places DNAJC9 in nucleosome assembly as part of its histone-chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                        PMID:33857403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">during replication- and transcription-coupled nucleosome assembly</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042393" target="_blank" class="term-link">
+                                    GO:0042393
+                                </a>
+                            </span>
+                            <span class="term-label">histone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33857403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC9 integrates heat shock molecular chaperones into the h...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0042393" data-r="PMID:33857403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9 binds histone H3-H4 substrates directly (structurally defined in complex with MCM2 and H3.3-H4). This is a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct, structurally defined binding of histone H3-H4 substrates is a core molecular function of DNAJC9 as a histone chaperone.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                        PMID:33857403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">this dual histone and heat shock co-chaperone binds histone substrates</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051087" target="_blank" class="term-link">
+                                    GO:0051087
+                                </a>
+                            </span>
+                            <span class="term-label">protein-folding chaperone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33857403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC9 integrates heat shock molecular chaperones into the h...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0051087" data-r="PMID:33857403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9 binds chaperone partners (MCM2 and HSP70-type enzymes) within the histone co-chaperone complex, consistent with chaperone-binding function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNAJC9 directly binds the histone chaperone MCM2 and recruits HSP70 enzymes, supporting protein-folding chaperone binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                        PMID:33857403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone H3-H4 substrates</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0101031" target="_blank" class="term-link">
+                                    GO:0101031
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33857403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DNAJC9 integrates heat shock molecular chaperones into the h...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0101031" data-r="PMID:33857403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9 is part of a co-chaperone complex with MCM2 and histone H3-H4, a bona fide protein-folding chaperone complex defined structurally.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNAJC9 is a structurally characterized component of an MCM2-histone co-chaperone complex, supporting this complex annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                        PMID:33857403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in a histone H3-H4 co-chaperone complex with MCM2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17182002
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HDJC9, a novel human type C DnaJ/HSP40 member interacts with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005576" data-r="PMID:17182002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detection at the cell surface/extracellular context following heat-shock-induced translocation. Peripheral to DNAJC9&#39;s nuclear histone-chaperone role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Extracellular/cell-surface localization arises from a stress-induced non-classical translocation and is not part of the core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">it is transported into cytoplasm and plasma membrane upon heat shock stress through a non-classical and lipid-dependent pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17182002
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HDJC9, a novel human type C DnaJ/HSP40 member interacts with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005634" data-r="PMID:17182002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that DNAJC9 is mainly localized in cell nuclei under normal conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleus is the experimentally established predominant compartment of DNAJC9.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">HDJC9 is mainly localized in cell nuclei under normal culture conditions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17182002
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HDJC9, a novel human type C DnaJ/HSP40 member interacts with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005737" data-r="PMID:17182002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for cytoplasmic localization, observed mainly after heat-shock translocation from the nucleus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is a stress-induced relocalization, secondary to the predominant nuclear site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Translocates to the cytoplasm and membrane after heat shock.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17182002
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HDJC9, a novel human type C DnaJ/HSP40 member interacts with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005886" data-r="PMID:17182002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence for plasma membrane localization following heat-shock-induced non-classical translocation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is a specialized stress-induced context, peripheral to the core nuclear histone-chaperone function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">it is transported into cytoplasm and plasma membrane upon heat shock stress through a non-classical and lipid-dependent pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031072" target="_blank" class="term-link">
+                                    GO:0031072
+                                </a>
+                            </span>
+                            <span class="term-label">heat shock protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17182002
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HDJC9, a novel human type C DnaJ/HSP40 member interacts with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0031072" data-r="PMID:17182002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9 directly interacts with HSP70-family proteins (HSPA1A, HSPA1B, HSPA8, HSPA1L) through its J domain, a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct J-domain-dependent binding of HSP70 chaperones is experimentally documented and central to DNAJC9&#39;s co-chaperone activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which are dependent on the J domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032781" target="_blank" class="term-link">
+                                    GO:0032781
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of ATP-dependent activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17182002
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    HDJC9, a novel human type C DnaJ/HSP40 member interacts with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0032781" data-r="PMID:17182002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNAJC9&#39;s J domain activates the ATPase activity of HSP70, the defining activity of J-domain co-chaperones. This is the core molecular activity, captured here as a process-level term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> J-domain-dependent stimulation of HSP70 ATPase activity is directly demonstrated and is central to DNAJC9&#39;s function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which are dependent on the J domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630459
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic characterization of the human sperm nucleus.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8WXX5" data-a="GO:0005634" data-r="PMID:21630459" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomics detection of nuclear localization, consistent with the predominant nuclear localization of DNAJC9.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is corroborated by direct experimental evidence and is the core compartment of DNAJC9.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC9/DNAJC9-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:17182002}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Histone H3-H4 chaperone that directly binds histone H3-H4 substrates within a co-chaperone complex with MCM2, safeguarding the histone fold during the histone supply chain.</h3>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="FUNCTION: Histone H3-H4 chaperone that directly binds histon..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042393" target="_blank" class="term-link">
+                            histone binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                PMID:33857403
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">this dual histone and heat shock co-chaperone binds histone substrates</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>HSP70 co-chaperone whose J domain binds and stimulates the ATPase activity of HSP70-type chaperones, recruiting ATP-driven folding to histone H3-H4 substrates.</h3>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="FUNCTION: HSP70 co-chaperone whose J domain binds and stimul..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031072" target="_blank" class="term-link">
+                            heat shock protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/DNAJC9/DNAJC9-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which are dependent on the J domain</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                PMID:33857403
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone H3-H4 substrates</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Participates in replication- and transcription-coupled nucleosome assembly, integrating HSP70-mediated ATP-driven folding into the histone supply pathway and assembling histones into nucleosomes.</h3>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="FUNCTION: Participates in replication- and transcription-cou..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042393" target="_blank" class="term-link">
+                            histone binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006334" target="_blank" class="term-link">
+                                nucleosome assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                                PMID:33857403
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">during replication- and transcription-coupled nucleosome assembly</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" target="_blank" class="term-link">
+                            PMID:17182002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">HDJC9, a novel human type C DnaJ/HSP40 member interacts with and cochaperones HSP70 through the J domain.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">HDJC9/DNAJC9 interacts with HSP70s and activates their ATPase activity, both dependent on its J domain, identifying it as a novel HSP70 co-chaperone.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DNAJC9 is mainly nuclear under normal conditions and translocates to the cytoplasm and plasma membrane upon heat shock via a non-classical lipid-dependent pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19410544" target="_blank" class="term-link">
+                            PMID:19410544
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Centromere-specific assembly of CENP-a nucleosomes is mediated by HJURP.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                            PMID:21630459
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proteomic characterization of the human sperm nucleus.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25281560" target="_blank" class="term-link">
+                            PMID:25281560
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Proximity biotinylation and affinity purification are complementary approaches for the interactome mapping of chromatin-associated protein complexes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29568061" target="_blank" class="term-link">
+                            PMID:29568061
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An AP-MS- and BioID-compatible MAC-tag enables comprehensive mapping of protein interactions and subcellular localizations.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" target="_blank" class="term-link">
+                            PMID:33857403
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DNAJC9 integrates heat shock molecular chaperones into the histone chaperone network.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DNAJC9 is a dual histone H3-H4 chaperone and heat shock co-chaperone; it binds histone H3-H4 substrates in a co-chaperone complex with MCM2.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone H3-H4 substrates during replication- and transcription-coupled nucleosome assembly, integrating ATP-driven folding into the histone supply pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/DNAJC9/DNAJC9-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q8WXX5 (DNJC9_HUMAN), DnaJ homolog subfamily C member 9 / HDJC9</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Dual histone chaperone and HSP70 heat-shock co-chaperone; forms a co-chaperone complex with MCM2 and histone H3-H4; interacts with H3.1/H3.2/H3.3/H4 and HSPA1A/HSPA1B/HSPA8 via its J domain; predominantly nuclear, translocates to cytoplasm/membrane on heat shock.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the choice between DNAJC9&#39;s nuclear histone-chaperone role and its cytoplasmic/membrane heat-shock-stress role regulated, and is the J-domain ATPase stimulation of HSP70 used in both contexts?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="Q: How is the choice between DNAJC9&#39;s nuclear histone..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DNAJC9 act as a general quality-control &#34;clean-up&#34; factor that resolves aberrant histone-folding intermediates across multiple histone chaperone handover steps?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="Q: Does DNAJC9 act as a general quality-control &#34;clea..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute the DNAJC9-MCM2-H3-H4 complex with HSP70 and measure J-domain-dependent HSP70 ATPase stimulation and refolding of destabilized histone H3-H4, comparing wild-type with the HPD (J-domain) and histone-binding-region mutants.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="EXPERIMENT: Reconstitute the DNAJC9-MCM2-H3-H4 complex with HS..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Acute degron depletion of DNAJC9 followed by genome-wide nucleosome occupancy and nascent-chromatin proteomics to define its requirement in replication- and transcription-coupled nucleosome assembly.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8WXX5" data-a="EXPERIMENT: Acute degron depletion of DNAJC9 followed by genom..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DNAJC9-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8WXX5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dnajc9-hdjc9-dnaj-protein-sb73-research-notes">DNAJC9 (HDJC9 / DnaJ protein SB73) research notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt Q8WXX5 (DNJC9_HUMAN), 260 aa. HGNC:19123. Type C DnaJ/HSP40.</li>
+<li>Domain: N-terminal J domain (15..82, HPD motif at 43-45); C-terminal histone-binding region (171..249,<br />
+  solved by X-ray in complex with MCM2 + H3.3-H4) [file:human/DNAJC9/DNAJC9-uniprot.txt FT DOMAIN J / REGION].</li>
+</ul>
+<h2 id="dual-function-the-key-point">Dual function (the key point)</h2>
+<ul>
+<li>DNAJC9 is a DUAL histone chaperone AND HSP70 heat-shock co-chaperone.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/33857403" title="we identify and characterize a histone chaperone function of DNAJC9, a heat shock   co-chaperone that promotes HSP70-mediated catalysis.">PMID:33857403</a></li>
+<li>It forms a co-chaperone complex with MCM2 and histone H3-H4 heterodimers and recruits HSP70 via its J<br />
+  domain to fold H3-H4. <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" title="We elucidate the structure of DNAJC9, in a histone H3-H4   co-chaperone complex with MCM2, revealing how this dual histone and heat shock co-chaperone binds   histone substrates. We show that DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone   H3-H4 substrates">PMID:33857403</a></li>
+<li>Integrates ATP-resourced folding into the histone supply pathway, during replication- and<br />
+  transcription-coupled nucleosome assembly. <a href="https://pubmed.ncbi.nlm.nih.gov/33857403" title="DNAJC9 integrates ATP-resourced protein   folding into the histone supply pathway to resolve aberrant intermediates throughout the dynamic lives   of histones.">PMID:33857403</a></li>
+<li>UniProt FUNCTION: "Acts as a dual histone chaperone and heat shock co-chaperone... forms a co-chaperone<br />
+  complex with MCM2 and histone H3-H4 heterodimers... may recruit histone chaperones ASF1A, NASP and SPT2<br />
+  to histone H3-H4 heterodimers... Also plays a role as co-chaperone of the HSP70 family... Exhibits<br />
+  activity to assemble histones onto DNA in vitro." [file:human/DNAJC9/DNAJC9-uniprot.txt]</li>
+</ul>
+<h2 id="hsp70-co-chaperone-activity-original-characterization">HSP70 co-chaperone activity (original characterization)</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17182002" title="HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which   are dependent on the J domain. Our data suggest that HDJC9 is a novel cochaperone for HSP70s.">PMID:17182002</a></li>
+<li>J-domain stimulates HSP70 ATPase = ATPase activator activity (GO:0001671). GOA records this as<br />
+  GO:0032781 positive regulation of ATP-dependent activity (IDA PMID:17182002) and GO:0031072 HSP binding.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Predominantly NUCLEAR under normal conditions; translocates to cytoplasm and plasma membrane after heat<br />
+  shock via a non-classical lipid-dependent pathway. <a href="https://pubmed.ncbi.nlm.nih.gov/17182002" title="HDJC9 is mainly localized in cell   nuclei under normal culture conditions while it is transported into cytoplasm and plasma membrane upon   heat shock stress through a non-classical and lipid-dependent pathway.">PMID:17182002</a></li>
+<li>Plasma membrane / extracellular region (IDA PMID:17182002) reflect the heat-shock translocation, a<br />
+  specialized/stress context -&gt; KEEP_AS_NON_CORE.</li>
+</ul>
+<h2 id="goa-with-partner-key">GOA WITH-partner key</h2>
+<ul>
+<li>P68431=H3 (H3C12), Q6NXT2=H3-5, Q8NDC4=MORN4, P49736=MCM2, P62805=H4, P84243=H3.3, Q71DI3=H3.2,<br />
+  P0DMV9=HSPA1B, P0DMV8=HSPA1A, P11142=HSPA8, P34931=HSPA1L.</li>
+</ul>
+<h2 id="review-logic">Review logic</h2>
+<ul>
+<li>histone binding (GO:0042393, IDA): ACCEPT, CORE.</li>
+<li>heat shock protein binding (GO:0031072, IBA + IPI): ACCEPT, CORE (binds HSP70).</li>
+<li>protein-folding chaperone binding (GO:0051087, IDA): ACCEPT (binds MCM2/HSP70 chaperone partners).</li>
+<li>positive regulation of ATP-dependent activity (GO:0032781, IDA): ACCEPT — J domain stimulates HSP70 ATPase.</li>
+<li>nucleosome assembly (GO:0006334, IDA): ACCEPT, CORE BP.</li>
+<li>protein folding chaperone complex (GO:0101031, IDA part_of): ACCEPT.</li>
+<li>nucleus (IBA/IEA/IDA): ACCEPT (predominant). cytoplasm (IBA/IEA/IDA): KEEP_AS_NON_CORE (heat-shock relocalization).</li>
+<li>plasma membrane / extracellular region: KEEP_AS_NON_CORE (stress-induced translocation).</li>
+<li>protein binding (GO:0005515, IPI x several): bare term; histone partners -&gt; some better captured by<br />
+  histone binding, but per guidelines KEEP_AS_NON_CORE for the bare-term rows.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8WXX5
+gene_symbol: DNAJC9
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: DNAJC9 (also called HDJC9 or DnaJ protein SB73) is a type C DnaJ/Hsp40 (DNAJC) co-chaperone with an N-terminal J domain and a C-terminal histone-binding domain. It has a dual role as a histone H3-H4 chaperone and an HSP70 heat-shock co-chaperone. As a histone chaperone it forms a co-chaperone complex with MCM2 and histone H3-H4 heterodimers, binds H3 variants (H3.1, H3.2, H3.3) and H4, and integrates HSP70-mediated ATP-driven protein folding into the histone supply chain during replication- and transcription-coupled nucleosome assembly, helping to resolve aberrant histone-folding intermediates and assemble histones into nucleosomes. Its J domain recruits and stimulates the ATPase activity of HSP70-type chaperones (HSPA1A, HSPA1B, HSPA8). DNAJC9 is predominantly nuclear under normal conditions and translocates to the cytoplasm and plasma membrane after heat shock via a non-classical, lipid-dependent pathway; its expression is induced by heat shock, LPS, PMA and TNF.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically inferred nuclear localization, consistent with the experimentally established predominantly nuclear localization where DNAJC9 acts as a histone chaperone.
+    action: ACCEPT
+    reason: Nucleus is the principal site of DNAJC9&#39;s core histone-chaperone function and is supported by direct experimental evidence (PMID:17182002, PMID:33857403).
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:17182002}.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically inferred cytoplasmic localization. For DNAJC9, cytoplasmic localization arises mainly upon heat-shock translocation; the predominant resting compartment is the nucleus.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasmic localization reflects stress-induced relocalization rather than the predominant nuclear site of the core histone-chaperone function.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: Translocates to the cytoplasm and membrane after heat shock.
+- term:
+    id: GO:0031072
+    label: heat shock protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: DNAJC9 binds HSP70-family chaperones (HSPA1A, HSPA1B, HSPA8) via its J domain, a core molecular function shared across the DNAJC9 orthologous group.
+    action: ACCEPT
+    reason: Direct binding of HSP70 chaperones via the J domain is experimentally documented and is core to DNAJC9&#39;s co-chaperone activity.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: Interacts (via J domain) with HSPA1A, HSPA1B and HSPA8
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated subcellular-location transfer of nuclear localization, the predominant compartment of DNAJC9.
+    action: ACCEPT
+    reason: Nucleus is the experimentally supported principal compartment of DNAJC9&#39;s histone-chaperone function.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:17182002}.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated transfer of cytoplasmic localization, which for DNAJC9 reflects heat-shock-induced translocation rather than the resting nuclear pool.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasmic localization is a stress-induced, non-core context for this predominantly nuclear histone chaperone.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: Translocates to the cytoplasm and membrane after heat shock.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated transfer of plasma membrane localization, which for DNAJC9 reflects a heat-shock-induced, non-classical lipid-dependent translocation.
+    action: KEEP_AS_NON_CORE
+    reason: Plasma membrane localization is a specialized stress-induced context, peripheral to the core nuclear histone-chaperone function.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: it is transported into cytoplasm and plasma membrane upon heat shock stress through a non-classical and lipid-dependent pathway
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19410544
+  qualifier: enables
+  review:
+    summary: High-throughput interaction (IntAct WITH histone H3, P68431). The bare protein binding term records a real interaction but is uninformative; it reflects histone binding.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is uninformative; the informative function (histone binding) is captured by the dedicated histone binding annotation.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:19410544 UniProtKB:P68431
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25281560
+  qualifier: enables
+  review:
+    summary: High-throughput interaction (IntAct WITH histone H3, P68431). Bare protein binding term reflecting histone binding.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is uninformative; the informative histone-binding function is captured separately.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:25281560 UniProtKB:P68431
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29568061
+  qualifier: enables
+  review:
+    summary: High-throughput interaction (IntAct WITH histone H3, P68431). Bare protein binding term reflecting histone binding.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is uninformative; the informative histone-binding function is captured separately.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:29568061 UniProtKB:P68431
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: High-throughput interactions (IntAct WITH histone H3 P68431, H3-5 Q6NXT2, and MORN4 Q8NDC4). Bare protein binding term; the histone interactions reflect histone binding.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding is uninformative; the histone interactions are captured by the dedicated histone binding annotation, and the MORN4 hit is an isolated high-throughput partner.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:32296183 UniProtKB:P68431
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence showing nucleoplasmic localization, consistent with the predominantly nuclear histone-chaperone function.
+    action: ACCEPT
+    reason: Nucleoplasm is a precise cellular-component annotation matching DNAJC9&#39;s principal nuclear site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005654 nucleoplasm cellular_component ECO:0000314 IDA GO_REF:0000052
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence showing cytosolic localization, consistent with the cytoplasmic pool of DNAJC9 (enhanced after heat shock).
+    action: KEEP_AS_NON_CORE
+    reason: Cytosolic localization is a genuine but secondary compartment relative to the predominant nuclear site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005829 cytosol cellular_component ECO:0000314 IDA GO_REF:0000052
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA immunofluorescence showing plasma membrane localization, consistent with the heat-shock-induced translocation of DNAJC9.
+    action: KEEP_AS_NON_CORE
+    reason: Plasma membrane localization is a stress-induced, non-core context for this predominantly nuclear histone chaperone.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-goa.tsv
+      supporting_text: GO:0005886 plasma membrane cellular_component ECO:0000314 IDA GO_REF:0000052
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33857403
+  qualifier: enables
+  review:
+    summary: Structure-guided proteomics (Hammond et al.) capturing direct DNAJC9 interactions with histones H3.1/H3.2/H3.3 and H4, MCM2 and HSP70 (HSPA8). The bare term is uninformative; the central interaction is direct histone binding.
+    action: MODIFY
+    reason: Bare protein binding is uninformative. The biologically informative interaction demonstrated here is direct binding of histone H3-H4 substrates, best captured by histone binding (GO:0042393).
+    proposed_replacement_terms:
+    - id: GO:0042393
+      label: histone binding
+    supported_by:
+    - reference_id: PMID:33857403
+      supporting_text: this dual histone and heat shock co-chaperone binds histone substrates
+- term:
+    id: GO:0006334
+    label: nucleosome assembly
+  evidence_type: IDA
+  original_reference_id: PMID:33857403
+  qualifier: involved_in
+  review:
+    summary: DNAJC9 functions in the histone supply chain during replication- and transcription-coupled nucleosome assembly and can assemble histones onto DNA in vitro, supporting this process annotation.
+    action: ACCEPT
+    reason: Direct experimental evidence places DNAJC9 in nucleosome assembly as part of its histone-chaperone function.
+    supported_by:
+    - reference_id: PMID:33857403
+      supporting_text: during replication- and transcription-coupled nucleosome assembly
+- term:
+    id: GO:0042393
+    label: histone binding
+  evidence_type: IDA
+  original_reference_id: PMID:33857403
+  qualifier: enables
+  review:
+    summary: DNAJC9 binds histone H3-H4 substrates directly (structurally defined in complex with MCM2 and H3.3-H4). This is a core molecular function.
+    action: ACCEPT
+    reason: Direct, structurally defined binding of histone H3-H4 substrates is a core molecular function of DNAJC9 as a histone chaperone.
+    supported_by:
+    - reference_id: PMID:33857403
+      supporting_text: this dual histone and heat shock co-chaperone binds histone substrates
+- term:
+    id: GO:0051087
+    label: protein-folding chaperone binding
+  evidence_type: IDA
+  original_reference_id: PMID:33857403
+  qualifier: enables
+  review:
+    summary: DNAJC9 binds chaperone partners (MCM2 and HSP70-type enzymes) within the histone co-chaperone complex, consistent with chaperone-binding function.
+    action: ACCEPT
+    reason: DNAJC9 directly binds the histone chaperone MCM2 and recruits HSP70 enzymes, supporting protein-folding chaperone binding.
+    supported_by:
+    - reference_id: PMID:33857403
+      supporting_text: DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone H3-H4 substrates
+- term:
+    id: GO:0101031
+    label: protein folding chaperone complex
+  evidence_type: IDA
+  original_reference_id: PMID:33857403
+  qualifier: part_of
+  review:
+    summary: DNAJC9 is part of a co-chaperone complex with MCM2 and histone H3-H4, a bona fide protein-folding chaperone complex defined structurally.
+    action: ACCEPT
+    reason: DNAJC9 is a structurally characterized component of an MCM2-histone co-chaperone complex, supporting this complex annotation.
+    supported_by:
+    - reference_id: PMID:33857403
+      supporting_text: in a histone H3-H4 co-chaperone complex with MCM2
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IDA
+  original_reference_id: PMID:17182002
+  qualifier: located_in
+  review:
+    summary: Detection at the cell surface/extracellular context following heat-shock-induced translocation. Peripheral to DNAJC9&#39;s nuclear histone-chaperone role.
+    action: KEEP_AS_NON_CORE
+    reason: Extracellular/cell-surface localization arises from a stress-induced non-classical translocation and is not part of the core function.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: it is transported into cytoplasm and plasma membrane upon heat shock stress through a non-classical and lipid-dependent pathway
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:17182002
+  qualifier: located_in
+  review:
+    summary: Direct experimental evidence that DNAJC9 is mainly localized in cell nuclei under normal conditions.
+    action: ACCEPT
+    reason: Nucleus is the experimentally established predominant compartment of DNAJC9.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: HDJC9 is mainly localized in cell nuclei under normal culture conditions
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:17182002
+  qualifier: located_in
+  review:
+    summary: Direct evidence for cytoplasmic localization, observed mainly after heat-shock translocation from the nucleus.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasmic localization is a stress-induced relocalization, secondary to the predominant nuclear site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: Translocates to the cytoplasm and membrane after heat shock.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:17182002
+  qualifier: located_in
+  review:
+    summary: Direct evidence for plasma membrane localization following heat-shock-induced non-classical translocation.
+    action: KEEP_AS_NON_CORE
+    reason: Plasma membrane localization is a specialized stress-induced context, peripheral to the core nuclear histone-chaperone function.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: it is transported into cytoplasm and plasma membrane upon heat shock stress through a non-classical and lipid-dependent pathway
+- term:
+    id: GO:0031072
+    label: heat shock protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17182002
+  qualifier: enables
+  review:
+    summary: DNAJC9 directly interacts with HSP70-family proteins (HSPA1A, HSPA1B, HSPA8, HSPA1L) through its J domain, a core molecular function.
+    action: ACCEPT
+    reason: Direct J-domain-dependent binding of HSP70 chaperones is experimentally documented and central to DNAJC9&#39;s co-chaperone activity.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which are dependent on the J domain
+- term:
+    id: GO:0032781
+    label: positive regulation of ATP-dependent activity
+  evidence_type: IDA
+  original_reference_id: PMID:17182002
+  qualifier: involved_in
+  review:
+    summary: DNAJC9&#39;s J domain activates the ATPase activity of HSP70, the defining activity of J-domain co-chaperones. This is the core molecular activity, captured here as a process-level term.
+    action: ACCEPT
+    reason: J-domain-dependent stimulation of HSP70 ATPase activity is directly demonstrated and is central to DNAJC9&#39;s function.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which are dependent on the J domain
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:21630459
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomics detection of nuclear localization, consistent with the predominant nuclear localization of DNAJC9.
+    action: ACCEPT
+    reason: Nuclear localization is corroborated by direct experimental evidence and is the core compartment of DNAJC9.
+    supported_by:
+    - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:17182002}.&#39;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:17182002
+  title: HDJC9, a novel human type C DnaJ/HSP40 member interacts with and cochaperones HSP70 through the J domain.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;Cached publication (publications/PMID_17182002.md) PubMed title matches the YAML title exactly; abstract reports HDJC9/DNAJC9 interacts with HSP70 and activates its ATPase activity in a J-domain-dependent manner, directly supporting the HSP70 co-chaperone core molecular function.&#34;
+  findings:
+  - statement: HDJC9/DNAJC9 interacts with HSP70s and activates their ATPase activity, both dependent on its J domain, identifying it as a novel HSP70 co-chaperone.
+    reference_section_type: ABSTRACT
+  - statement: DNAJC9 is mainly nuclear under normal conditions and translocates to the cytoplasm and plasma membrane upon heat shock via a non-classical lipid-dependent pathway.
+    reference_section_type: ABSTRACT
+- id: PMID:19410544
+  title: Centromere-specific assembly of CENP-a nucleosomes is mediated by HJURP.
+  findings: []
+- id: PMID:21630459
+  title: Proteomic characterization of the human sperm nucleus.
+  findings: []
+- id: PMID:25281560
+  title: Proximity biotinylation and affinity purification are complementary approaches for the interactome mapping of chromatin-associated protein complexes.
+  findings: []
+- id: PMID:29568061
+  title: An AP-MS- and BioID-compatible MAC-tag enables comprehensive mapping of protein interactions and subcellular localizations.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:33857403
+  title: DNAJC9 integrates heat shock molecular chaperones into the histone chaperone network.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;Cached publication (publications/PMID_33857403.md, full text available) PubMed title matches the YAML title exactly; establishes DNAJC9 as a histone H3-H4 chaperone that binds H3-H4 in a complex with MCM2 and recruits HSP70 via its J domain for nucleosome assembly, directly supporting all three core functions (cited as their primary supported_by).&#34;
+  findings:
+  - statement: DNAJC9 is a dual histone H3-H4 chaperone and heat shock co-chaperone; it binds histone H3-H4 substrates in a co-chaperone complex with MCM2.
+    reference_section_type: ABSTRACT
+  - statement: DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone H3-H4 substrates during replication- and transcription-coupled nucleosome assembly, integrating ATP-driven folding into the histone supply pathway.
+    reference_section_type: ABSTRACT
+- id: file:human/DNAJC9/DNAJC9-uniprot.txt
+  title: UniProt entry Q8WXX5 (DNJC9_HUMAN), DnaJ homolog subfamily C member 9 / HDJC9
+  findings:
+  - statement: Dual histone chaperone and HSP70 heat-shock co-chaperone; forms a co-chaperone complex with MCM2 and histone H3-H4; interacts with H3.1/H3.2/H3.3/H4 and HSPA1A/HSPA1B/HSPA8 via its J domain; predominantly nuclear, translocates to cytoplasm/membrane on heat shock.
+    reference_section_type: OTHER
+core_functions:
+- description: Histone H3-H4 chaperone that directly binds histone H3-H4 substrates within a co-chaperone complex with MCM2, safeguarding the histone fold during the histone supply chain.
+  molecular_function:
+    id: GO:0042393
+    label: histone binding
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:33857403
+    supporting_text: this dual histone and heat shock co-chaperone binds histone substrates
+- description: HSP70 co-chaperone whose J domain binds and stimulates the ATPase activity of HSP70-type chaperones, recruiting ATP-driven folding to histone H3-H4 substrates.
+  molecular_function:
+    id: GO:0031072
+    label: heat shock protein binding
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:human/DNAJC9/DNAJC9-uniprot.txt
+    supporting_text: HDJC9 can interact with HSP70s and activate the ATPase activity of HSP70s, both of which are dependent on the J domain
+  - reference_id: PMID:33857403
+    supporting_text: DNAJC9 recruits HSP70-type enzymes via its J domain to fold histone H3-H4 substrates
+- description: Participates in replication- and transcription-coupled nucleosome assembly, integrating HSP70-mediated ATP-driven folding into the histone supply pathway and assembling histones into nucleosomes.
+  molecular_function:
+    id: GO:0042393
+    label: histone binding
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:33857403
+    supporting_text: during replication- and transcription-coupled nucleosome assembly
+  directly_involved_in:
+  - id: GO:0006334
+    label: nucleosome assembly
+proposed_new_terms: []
+suggested_questions:
+- question: How is the choice between DNAJC9&#39;s nuclear histone-chaperone role and its cytoplasmic/membrane heat-shock-stress role regulated, and is the J-domain ATPase stimulation of HSP70 used in both contexts?
+- question: Does DNAJC9 act as a general quality-control &#34;clean-up&#34; factor that resolves aberrant histone-folding intermediates across multiple histone chaperone handover steps?
+suggested_experiments:
+- description: Reconstitute the DNAJC9-MCM2-H3-H4 complex with HSP70 and measure J-domain-dependent HSP70 ATPase stimulation and refolding of destabilized histone H3-H4, comparing wild-type with the HPD (J-domain) and histone-binding-region mutants.
+- description: Acute degron depletion of DNAJC9 followed by genome-wide nucleosome occupancy and nascent-chromatin proteomics to define its requirement in replication- and transcription-coupled nucleosome assembly.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PELO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PELO</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BRX2" target="_blank" class="term-link">
+                        Q9BRX2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PELO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BRX2" data-a="DESCRIPTION: PELO (Protein pelota homolog, the human ortholog o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PELO (Protein pelota homolog, the human ortholog of yeast Dom34) is a cytoplasmic ribosome-rescue factor of the eukaryotic release factor 1 (eRF1) family, Pelota subfamily. Structurally it mimics eRF1 and occupies the ribosomal A site, but it lacks the catalytic GGQ motif and therefore has no peptidyl-tRNA hydrolase (peptide-release) activity. PELO forms the Pelota-HBS1L complex (also called the Dom34-Hbs1 complex) with the translational GTPase HBS1L. This complex recognizes ribosomes that are stalled at the 3&#39; end of an mRNA (truncated, non-stop, or no-go messages), engages the empty mRNA channel, and, after mRNA extraction by the SKI complex, recruits the recycling ATPase ABCE1 to split the stalled 80S ribosome into subunits. PELO thereby initiates the no-go decay (NGD) and non-stop decay (NSD) mRNA surveillance pathways and rescues stalled ribosomes. It is ubiquitously expressed and is also recruited, in a PINK1-regulated manner, to mitochondrially associated ribosomes during mitophagy.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022626" target="_blank" class="term-link">
+                                    GO:0022626
+                                </a>
+                            </span>
+                            <span class="term-label">cytosolic ribosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0022626" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO acts on the cytosolic 80S ribosome, where it occupies the A site of stalled ribosomes. Phylogenetic transfer agrees with direct cryo-EM evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PELO&#39;s site of action is the cytosolic ribosome; supported by direct structural evidence of PELO bound to stalled ribosomes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link">
+                                        PMID:27863242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072344" target="_blank" class="term-link">
+                                    GO:0072344
+                                </a>
+                            </span>
+                            <span class="term-label">rescue of stalled cytosolic ribosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0072344" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rescue of stalled ribosomes is the defining biological role of PELO. The IBA inference is corroborated by multiple direct experimental annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for PELO, supported by conserved function across yeast Dom34, Drosophila pelo and human PELO and by direct mammalian biochemistry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0170011" target="_blank" class="term-link">
+                                    GO:0170011
+                                </a>
+                            </span>
+                            <span class="term-label">stalled ribosome sensor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0170011" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO senses ribosomes stalled at the 3&#39; end of mRNA by probing the (near-)empty mRNA channel/A site, the molecular function underlying rescue. IBA agrees with direct IDA evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is PELO&#39;s core molecular function; phylogenetic inference is consistent with direct structural evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PELO recognizes ribosomes stalled at the 3&#39; end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990533" target="_blank" class="term-link">
+                                    GO:1990533
+                                </a>
+                            </span>
+                            <span class="term-label">Dom34-Hbs1 complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:1990533" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO is one of the two subunits of the Dom34-Hbs1 (Pelota-HBS1L) complex. Phylogenetic assignment matches direct evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PELO is a defining, conserved component of this complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Component of the Pelota-HBS1L complex, also named Dom34-Hbs1 complex, composed of PELO and HBS1L</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic localization to the cytoplasm, consistent with the documented cytoplasmic site of action; less precise than the cytosolic ribosome annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic compartment annotation; the informative localization is the cytosolic ribosome / Dom34-Hbs1 complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070481" target="_blank" class="term-link">
+                                    GO:0070481
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear-transcribed mRNA catabolic process, non-stop decay</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0070481" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO/HBS1L mediate non-stop decay by recognizing ribosomes that have read to the 3&#39; end of an mRNA lacking a stop codon. Supported by direct experiment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NSD is a genuine PELO process; the InterPro IEA is corroborated by direct evidence in mammalian cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23667253" target="_blank" class="term-link">
+                                        PMID:23667253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070966" target="_blank" class="term-link">
+                                    GO:0070966
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear-transcribed mRNA catabolic process, no-go decay</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0070966" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No-go decay is triggered by PELO recognition of stalled ribosomes. The InterPro IEA duplicates better-supported IDA annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NGD is a core PELO process, supported by direct experimental annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071025" target="_blank" class="term-link">
+                                    GO:0071025
+                                </a>
+                            </span>
+                            <span class="term-label">RNA surveillance</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0071025" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General mRNA surveillance term; NGD/NSD are the specific PELO surveillance pathways already captured by more precise terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but a parent of the specific no-go/non-stop decay terms; retained as a less-informative general annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20406461" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20406461
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pelota interacts with HAX1, EIF3G and SRPX and the resulting...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005515" data-r="PMID:20406461" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput IntAct interactions (e.g. EIF3G, HAX1, SRPX). Bare protein binding is uninformative; EIF3G is a plausible translation-related partner but not part of the defined complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records real physical interactions but the generic protein binding term adds nothing to PELO&#39;s defined ribosome-rescue function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">O75821: EIF3G</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25277244" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25277244
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The functional landscape of Hsp27 reveals new cellular proce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005515" data-r="PMID:25277244" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with HSPB1 (P04792). Bare protein binding; isolated chaperone interaction not central to ribosome rescue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a single interaction; uninformative for core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">P04792: HSPB1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005515" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Yeast two-hybrid interactome capturing the PELO-HBS1L interaction, the one biologically meaningful partner here.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The bare term is uninformative, but the HBS1L partner is the defining one; the functional consequence (Dom34-Hbs1 complex) is captured by GO:1990533.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9Y450: HBS1L</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005515" data-r="PMID:31515488" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interactome screen again capturing PELO-HBS1L. Generic term but relevant partner.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Confirms the HBS1L interaction; bare protein binding term is non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9Y450: HBS1L</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binary interactome map including HBS1L plus various non-specific partners (DYNLT1, LMO3/4, MEOX2, etc.). Bare protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mixed interactor set; only HBS1L is functionally relevant and is already captured by the complex annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9Y450: HBS1L</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005515" data-r="PMID:32814053" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Neurodegeneration interactome screen capturing many high-throughput partners (HTT, FLNA, NEFL, BAG3, etc.) unrelated to PELO&#39;s defined function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Large set of isolated high-throughput interactions with no clear link to ribosome rescue; bare protein binding term is uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">P42858: HTT</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9954730
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005829" data-r="Reactome:R-HSA-9954730" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome curated cytosolic localization in ribosome-rescue reactions, consistent with PELO&#39;s site of action.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization but generic; the cytosolic ribosome / complex annotations are more informative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9954919
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005829" data-r="Reactome:R-HSA-9954919" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome curated cytosolic localization (duplicate context).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization, redundant with other cytosol annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9955731
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0005829" data-r="Reactome:R-HSA-9955731" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome curated cytosolic localization (duplicate context).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic localization, redundant with other cytosol annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022626" target="_blank" class="term-link">
+                                    GO:0022626
+                                </a>
+                            </span>
+                            <span class="term-label">cytosolic ribosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27863242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Decoding Mammalian Ribosome-mRNA States by Translational GTP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0022626" data-r="PMID:27863242" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct cryo-EM evidence places PELO on the stalled cytosolic 80S ribosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong direct structural evidence for PELO acting on the cytosolic ribosome.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link">
+                                        PMID:27863242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0170011" target="_blank" class="term-link">
+                                    GO:0170011
+                                </a>
+                            </span>
+                            <span class="term-label">stalled ribosome sensor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27863242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Decoding Mammalian Ribosome-mRNA States by Translational GTP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0170011" data-r="PMID:27863242" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural/biochemical demonstration that PELO senses the stalled-ribosome state via the mRNA channel. Core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Best-supported molecular function for PELO; direct IDA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PELO recognizes ribosomes stalled at the 3&#39; end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032790" target="_blank" class="term-link">
+                                    GO:0032790
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome disassembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21448132" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21448132
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 8...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0032790" data-r="PMID:21448132" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> With HBS1L and ABCE1, PELO drives dissociation of 80S ribosomes into subunits, demonstrated by in vitro reconstitution.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated; ribosome disassembly (subunit splitting) is the mechanistic output of PELO-mediated rescue.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21448132" target="_blank" class="term-link">
+                                        PMID:21448132
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043022" target="_blank" class="term-link">
+                                    GO:0043022
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27543824" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27543824
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conserved functions of human Pelota in mRNA quality control ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0043022" data-r="PMID:27543824" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO binds the ribosome; the K2A and R45A mutants that abolish rescue map to the ribosome/mRNA-channel-engaging surface.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated ribosome binding underlying rescue activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27543824" target="_blank" class="term-link">
+                                        PMID:27543824
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Conserved functions of human Pelota in mRNA quality control of nonstop mRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043022" target="_blank" class="term-link">
+                                    GO:0043022
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27863242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Decoding Mammalian Ribosome-mRNA States by Translational GTP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0043022" data-r="PMID:27863242" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cryo-EM directly shows PELO bound to the stalled ribosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct structural evidence of ribosome binding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link">
+                                        PMID:27863242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070966" target="_blank" class="term-link">
+                                    GO:0070966
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear-transcribed mRNA catabolic process, no-go decay</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23667253" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23667253
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Hbs1-Dom34 protein complex functions in non-stop mRNA de...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0070966" data-r="PMID:23667253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO/HBS1L drive no-go/non-stop decay of aberrant mRNAs in mammalian cells.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated NGD role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23667253" target="_blank" class="term-link">
+                                        PMID:23667253
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070966" target="_blank" class="term-link">
+                                    GO:0070966
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear-transcribed mRNA catabolic process, no-go decay</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27543824" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27543824
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conserved functions of human Pelota in mRNA quality control ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0070966" data-r="PMID:27543824" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human Pelota functions in mRNA quality control of nonstop mRNA; loss-of-function mutants abolish activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct mutagenesis-supported evidence for PELO in no-go/non-stop mRNA decay.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27543824" target="_blank" class="term-link">
+                                        PMID:27543824
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Conserved functions of human Pelota in mRNA quality control of nonstop mRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070966" target="_blank" class="term-link">
+                                    GO:0070966
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear-transcribed mRNA catabolic process, no-go decay</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27863242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Decoding Mammalian Ribosome-mRNA States by Translational GTP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0070966" data-r="PMID:27863242" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Structural study supporting PELO&#39;s role in recognizing stalled ribosomes that triggers no-go decay.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct evidence for the NGD-triggering recognition step.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link">
+                                        PMID:27863242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072344" target="_blank" class="term-link">
+                                    GO:0072344
+                                </a>
+                            </span>
+                            <span class="term-label">rescue of stalled cytosolic ribosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21448132" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21448132
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 8...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0072344" data-r="PMID:21448132" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In vitro reconstitution shows PELO (with HBS1L/ABCE1) rescues stalled elongation complexes. Core process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly demonstrated core biological process of PELO.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21448132" target="_blank" class="term-link">
+                                        PMID:21448132
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072344" target="_blank" class="term-link">
+                                    GO:0072344
+                                </a>
+                            </span>
+                            <span class="term-label">rescue of stalled cytosolic ribosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27863242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Decoding Mammalian Ribosome-mRNA States by Translational GTP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:0072344" data-r="PMID:27863242" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Structural demonstration of PELO engaging stalled ribosomes for rescue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct structural evidence for the core rescue process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link">
+                                        PMID:27863242
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990533" target="_blank" class="term-link">
+                                    GO:1990533
+                                </a>
+                            </span>
+                            <span class="term-label">Dom34-Hbs1 complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27863242
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Decoding Mammalian Ribosome-mRNA States by Translational GTP...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRX2" data-a="GO:1990533" data-r="PMID:27863242" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PELO directly identified as a component of the Pelota-HBS1L (Dom34-Hbs1) complex by cryo-EM.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct evidence for PELO as a complex subunit.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/PELO/PELO-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Component of the Pelota-HBS1L complex, also named Dom34-Hbs1 complex, composed of PELO and HBS1L</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Stalled-ribosome sensor / eRF1-like factor that recognizes ribosomes stalled at the 3&#39; end of an mRNA by probing the empty mRNA channel and A site, the molecular recognition event that initiates ribosome rescue. Unlike eRF1, PELO lacks peptidyl-tRNA hydrolase activity.</h3>
+                <span class="vote-buttons" data-g="Q9BRX2" data-a="FUNCTION: Stalled-ribosome sensor / eRF1-like factor that re..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0170011" target="_blank" class="term-link">
+                            stalled ribosome sensor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022626" target="_blank" class="term-link">
+                                cytosolic ribosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/PELO/PELO-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">PELO recognizes ribosomes stalled at the 3&#39; end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As the eRF1-like subunit of the Pelota-HBS1L (Dom34-Hbs1) complex, with the GTPase HBS1L and recycling ATPase ABCE1, PELO rescues stalled ribosomes by driving their dissociation into subunits, initiating no-go and non-stop mRNA decay.</h3>
+                <span class="vote-buttons" data-g="Q9BRX2" data-a="FUNCTION: As the eRF1-like subunit of the Pelota-HBS1L (Dom3..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043022" target="_blank" class="term-link">
+                            ribosome binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990533" target="_blank" class="term-link">
+                                Dom34-Hbs1 complex
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21448132" target="_blank" class="term-link">
+                                PMID:21448132
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/PELO/PELO-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Component of the Pelota-HBS1L complex, also named Dom34-Hbs1 complex, composed of PELO and HBS1L</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20406461" target="_blank" class="term-link">
+                            PMID:20406461
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pelota interacts with HAX1, EIF3G and SRPX and the resulting protein complexes are associated with the actin cytoskeleton.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21448132" target="_blank" class="term-link">
+                            PMID:21448132
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Pelota, Hbs1 and ABCE1 together dissociate vacant 80S ribosomes and stalled elongation complexes into subunits.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23667253" target="_blank" class="term-link">
+                            PMID:23667253
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The mammalian Hbs1-Dom34 (HBS1L-PELO) complex functions in non-stop mRNA decay.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25277244" target="_blank" class="term-link">
+                            PMID:25277244
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The functional landscape of Hsp27 reveals new cellular processes such as DNA repair and alternative splicing and proposes novel anticancer targets.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27543824" target="_blank" class="term-link">
+                            PMID:27543824
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Conserved functions of human Pelota in mRNA quality control of nonstop mRNA.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human Pelota functions in mRNA quality control of nonstop mRNA; the K2A and R45A mutants abolish its ability to rescue stalled ribosomes.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27863242" target="_blank" class="term-link">
+                            PMID:27863242
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cryo-EM of the PELO-HBS1L complex on stalled ribosomes defines PELO&#39;s stalled-ribosome sensor activity and ribosome binding.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9954730
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reactome ribosome quality control reaction (PELO cytosol)</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9954919
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reactome ribosome quality control reaction (PELO cytosol)</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9955731
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reactome ribosome quality control reaction (PELO cytosol)</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is the choice between productive translation termination (eRF1) and rescue (PELO) made at ribosomes with short or empty mRNA in the channel?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BRX2" data-a="Q: How is the choice between productive translation t..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vivo contribution of the PINK1-regulated PELO recruitment to mitochondrial ribosomes relative to its canonical cytosolic rescue role?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BRX2" data-a="Q: What is the in vivo contribution of the PINK1-regu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Ribosome profiling and 5&#39;P degradome sequencing in PELO-knockout versus wild-type human cells to quantify accumulation of stalled/truncated mRNAs and define the endogenous no-go/non-stop substrate repertoire.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BRX2" data-a="EXPERIMENT: Ribosome profiling and 5&#39;P degradome sequencing in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstituted single-molecule or cryo-EM time-resolved analysis of PELO-HBS1L-ABCE1 splitting kinetics on defined stalled substrates to dissect the mRNA-channel sensing step.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9BRX2" data-a="EXPERIMENT: Reconstituted single-molecule or cryo-EM time-reso..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PELO-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BRX2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pelo-pelota-homolog-dom34-research-notes">PELO (Pelota homolog / Dom34) — research notes</h1>
+<p>UniProt: Q9BRX2. Member of the eukaryotic release factor 1 (eRF1) family, Pelota subfamily. 385 aa, cytoplasmic.</p>
+<h2 id="core-function">Core function</h2>
+<p>PELO is the eRF1-like component of the <strong>Pelota-HBS1L (Dom34-Hbs1) complex</strong>, a ribosome-rescue<br />
+machine. Unlike eRF1, it has no peptidyl-tRNA hydrolase (peptide release) activity; it instead<br />
+recognizes ribosomes stalled at the 3' end of an mRNA (truncated/non-stop, no-go) and, together<br />
+with the GTPase HBS1L and the recycling ATPase ABCE1, drives subunit dissociation (ribosome<br />
+disassembly), initiating No-Go Decay (NGD) and Non-Stop Decay (NSD).</p>
+<ul>
+<li>[file:human/PELO/PELO-uniprot.txt "Component of the Pelota-HBS1L complex, a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway"]</li>
+<li>[file:human/PELO/PELO-uniprot.txt "In the Pelota-HBS1L complex, PELO recognizes ribosomes stalled at the 3' end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel"]</li>
+<li>[file:human/PELO/PELO-uniprot.txt "Belongs to the eukaryotic release factor 1 family. Pelota subfamily."]</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21448132" title="Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes">PMID:21448132</a> — biochemical reconstitution of subunit dissociation (ribosome disassembly).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27863242" title="Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes">PMID:27863242</a> — cryo-EM of the PELO-HBS1L complex on stalled ribosomes; defines stalled-ribosome sensor activity, ribosome binding, Dom34-Hbs1 complex.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23667253" title="The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells">PMID:23667253</a> — NSD/no-go decay role.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27543824" title="Conserved functions of human Pelota in mRNA quality control of nonstop mRNA">PMID:27543824</a> — K2A/R45A mutants abolish rescue of stalled ribosomes (UniProt MUTAGEN).</li>
+</ul>
+<h2 id="other-non-core">Other / non-core</h2>
+<ul>
+<li>PINK1-regulated mitophagy: upon mitochondrial damage PELO is recruited to mito-OM-associated ribosome/mRNP, enabling autophagy receptor recruitment <a href="https://pubmed.ncbi.nlm.nih.gov/29861391">PMID:29861391</a>. Peripheral, context-specific.</li>
+<li>Many IntAct <code>protein binding</code> IPI rows are high-throughput interactors (HSPB1, HTT, FLNA, etc.); HBS1L (Q9Y450) and EIF3G/ABCE1 are the biologically meaningful ones. Bare GO:0005515 is uninformative.</li>
+<li>Ensembl IEA developmental terms (endoderm development, inner cell mass proliferation, BMP signaling, stem cell maintenance) reflect mouse Pelo knockout phenotypes (embryonic lethality) — downstream/pleiotropic, not in GOA TSV here.</li>
+</ul>
+<h2 id="action-plan">Action plan</h2>
+<ul>
+<li>Core MF: GO:0170011 stalled ribosome sensor activity; GO:0043022 ribosome binding. Core BP: GO:0072344 rescue of stalled cytosolic ribosome; GO:0032790 ribosome disassembly. Core CC: GO:1990533 Dom34-Hbs1 complex.</li>
+<li>NGD/NSD BP (GO:0070966, GO:0070481) accept/keep.</li>
+<li>Bare protein binding IPI → KEEP_AS_NON_CORE (HBS1L) or MARK_AS_OVER_ANNOTATED (random HT hits).</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BRX2
+gene_symbol: PELO
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: PELO (Protein pelota homolog, the human ortholog of yeast Dom34) is a cytoplasmic ribosome-rescue factor of the eukaryotic release factor 1 (eRF1) family, Pelota subfamily. Structurally it mimics eRF1 and occupies the ribosomal A site, but it lacks the catalytic GGQ motif and therefore has no peptidyl-tRNA hydrolase (peptide-release) activity. PELO forms the Pelota-HBS1L complex (also called the Dom34-Hbs1 complex) with the translational GTPase HBS1L. This complex recognizes ribosomes that are stalled at the 3&#39; end of an mRNA (truncated, non-stop, or no-go messages), engages the empty mRNA channel, and, after mRNA extraction by the SKI complex, recruits the recycling ATPase ABCE1 to split the stalled 80S ribosome into subunits. PELO thereby initiates the no-go decay (NGD) and non-stop decay (NSD) mRNA surveillance pathways and rescues stalled ribosomes. It is ubiquitously expressed and is also recruited, in a PINK1-regulated manner, to mitochondrially associated ribosomes during mitophagy.
+existing_annotations:
+- term:
+    id: GO:0022626
+    label: cytosolic ribosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: PELO acts on the cytosolic 80S ribosome, where it occupies the A site of stalled ribosomes. Phylogenetic transfer agrees with direct cryo-EM evidence.
+    action: ACCEPT
+    reason: PELO&#39;s site of action is the cytosolic ribosome; supported by direct structural evidence of PELO bound to stalled ribosomes.
+    supported_by:
+    - reference_id: PMID:27863242
+      supporting_text: Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes
+- term:
+    id: GO:0072344
+    label: rescue of stalled cytosolic ribosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Rescue of stalled ribosomes is the defining biological role of PELO. The IBA inference is corroborated by multiple direct experimental annotations.
+    action: ACCEPT
+    reason: Core biological process for PELO, supported by conserved function across yeast Dom34, Drosophila pelo and human PELO and by direct mammalian biochemistry.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway
+- term:
+    id: GO:0170011
+    label: stalled ribosome sensor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: PELO senses ribosomes stalled at the 3&#39; end of mRNA by probing the (near-)empty mRNA channel/A site, the molecular function underlying rescue. IBA agrees with direct IDA evidence.
+    action: ACCEPT
+    reason: This is PELO&#39;s core molecular function; phylogenetic inference is consistent with direct structural evidence.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: PELO recognizes ribosomes stalled at the 3&#39; end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel
+- term:
+    id: GO:1990533
+    label: Dom34-Hbs1 complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: PELO is one of the two subunits of the Dom34-Hbs1 (Pelota-HBS1L) complex. Phylogenetic assignment matches direct evidence.
+    action: ACCEPT
+    reason: PELO is a defining, conserved component of this complex.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: Component of the Pelota-HBS1L complex, also named Dom34-Hbs1 complex, composed of PELO and HBS1L
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic localization to the cytoplasm, consistent with the documented cytoplasmic site of action; less precise than the cytosolic ribosome annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic compartment annotation; the informative localization is the cytosolic ribosome / Dom34-Hbs1 complex.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0070481
+    label: nuclear-transcribed mRNA catabolic process, non-stop decay
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: PELO/HBS1L mediate non-stop decay by recognizing ribosomes that have read to the 3&#39; end of an mRNA lacking a stop codon. Supported by direct experiment.
+    action: ACCEPT
+    reason: NSD is a genuine PELO process; the InterPro IEA is corroborated by direct evidence in mammalian cells.
+    supported_by:
+    - reference_id: PMID:23667253
+      supporting_text: The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells
+- term:
+    id: GO:0070966
+    label: nuclear-transcribed mRNA catabolic process, no-go decay
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: No-go decay is triggered by PELO recognition of stalled ribosomes. The InterPro IEA duplicates better-supported IDA annotations.
+    action: ACCEPT
+    reason: NGD is a core PELO process, supported by direct experimental annotations.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway
+- term:
+    id: GO:0071025
+    label: RNA surveillance
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: General mRNA surveillance term; NGD/NSD are the specific PELO surveillance pathways already captured by more precise terms.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but a parent of the specific no-go/non-stop decay terms; retained as a less-informative general annotation.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: a complex that recognizes stalled ribosomes and triggers the No-Go Decay (NGD) pathway
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20406461
+  qualifier: enables
+  review:
+    summary: High-throughput IntAct interactions (e.g. EIF3G, HAX1, SRPX). Bare protein binding is uninformative; EIF3G is a plausible translation-related partner but not part of the defined complex.
+    action: KEEP_AS_NON_CORE
+    reason: Records real physical interactions but the generic protein binding term adds nothing to PELO&#39;s defined ribosome-rescue function.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;O75821: EIF3G&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25277244
+  qualifier: enables
+  review:
+    summary: IntAct interaction with HSPB1 (P04792). Bare protein binding; isolated chaperone interaction not central to ribosome rescue.
+    action: KEEP_AS_NON_CORE
+    reason: Generic protein binding from a single interaction; uninformative for core function.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;P04792: HSPB1&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Yeast two-hybrid interactome capturing the PELO-HBS1L interaction, the one biologically meaningful partner here.
+    action: KEEP_AS_NON_CORE
+    reason: The bare term is uninformative, but the HBS1L partner is the defining one; the functional consequence (Dom34-Hbs1 complex) is captured by GO:1990533.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;Q9Y450: HBS1L&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: Interactome screen again capturing PELO-HBS1L. Generic term but relevant partner.
+    action: KEEP_AS_NON_CORE
+    reason: Confirms the HBS1L interaction; bare protein binding term is non-core.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;Q9Y450: HBS1L&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Binary interactome map including HBS1L plus various non-specific partners (DYNLT1, LMO3/4, MEOX2, etc.). Bare protein binding.
+    action: KEEP_AS_NON_CORE
+    reason: Mixed interactor set; only HBS1L is functionally relevant and is already captured by the complex annotation.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;Q9Y450: HBS1L&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: Neurodegeneration interactome screen capturing many high-throughput partners (HTT, FLNA, NEFL, BAG3, etc.) unrelated to PELO&#39;s defined function.
+    action: KEEP_AS_NON_CORE
+    reason: Large set of isolated high-throughput interactions with no clear link to ribosome rescue; bare protein binding term is uninformative.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;P42858: HTT&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9954730
+  qualifier: located_in
+  review:
+    summary: Reactome curated cytosolic localization in ribosome-rescue reactions, consistent with PELO&#39;s site of action.
+    action: KEEP_AS_NON_CORE
+    reason: Correct localization but generic; the cytosolic ribosome / complex annotations are more informative.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9954919
+  qualifier: located_in
+  review:
+    summary: Reactome curated cytosolic localization (duplicate context).
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization, redundant with other cytosol annotations.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9955731
+  qualifier: located_in
+  review:
+    summary: Reactome curated cytosolic localization (duplicate context).
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic localization, redundant with other cytosol annotations.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0022626
+    label: cytosolic ribosome
+  evidence_type: IDA
+  original_reference_id: PMID:27863242
+  qualifier: is_active_in
+  review:
+    summary: Direct cryo-EM evidence places PELO on the stalled cytosolic 80S ribosome.
+    action: ACCEPT
+    reason: Strong direct structural evidence for PELO acting on the cytosolic ribosome.
+    supported_by:
+    - reference_id: PMID:27863242
+      supporting_text: Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes
+- term:
+    id: GO:0170011
+    label: stalled ribosome sensor activity
+  evidence_type: IDA
+  original_reference_id: PMID:27863242
+  qualifier: enables
+  review:
+    summary: Direct structural/biochemical demonstration that PELO senses the stalled-ribosome state via the mRNA channel. Core molecular function.
+    action: ACCEPT
+    reason: Best-supported molecular function for PELO; direct IDA evidence.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: PELO recognizes ribosomes stalled at the 3&#39; end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel
+- term:
+    id: GO:0032790
+    label: ribosome disassembly
+  evidence_type: IDA
+  original_reference_id: PMID:21448132
+  qualifier: involved_in
+  review:
+    summary: With HBS1L and ABCE1, PELO drives dissociation of 80S ribosomes into subunits, demonstrated by in vitro reconstitution.
+    action: ACCEPT
+    reason: Directly demonstrated; ribosome disassembly (subunit splitting) is the mechanistic output of PELO-mediated rescue.
+    supported_by:
+    - reference_id: PMID:21448132
+      supporting_text: Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes
+- term:
+    id: GO:0043022
+    label: ribosome binding
+  evidence_type: IDA
+  original_reference_id: PMID:27543824
+  qualifier: enables
+  review:
+    summary: PELO binds the ribosome; the K2A and R45A mutants that abolish rescue map to the ribosome/mRNA-channel-engaging surface.
+    action: ACCEPT
+    reason: Directly demonstrated ribosome binding underlying rescue activity.
+    supported_by:
+    - reference_id: PMID:27543824
+      supporting_text: Conserved functions of human Pelota in mRNA quality control of nonstop mRNA
+- term:
+    id: GO:0043022
+    label: ribosome binding
+  evidence_type: IDA
+  original_reference_id: PMID:27863242
+  qualifier: enables
+  review:
+    summary: Cryo-EM directly shows PELO bound to the stalled ribosome.
+    action: ACCEPT
+    reason: Direct structural evidence of ribosome binding.
+    supported_by:
+    - reference_id: PMID:27863242
+      supporting_text: Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes
+- term:
+    id: GO:0070966
+    label: nuclear-transcribed mRNA catabolic process, no-go decay
+  evidence_type: IDA
+  original_reference_id: PMID:23667253
+  qualifier: involved_in
+  review:
+    summary: PELO/HBS1L drive no-go/non-stop decay of aberrant mRNAs in mammalian cells.
+    action: ACCEPT
+    reason: Directly demonstrated NGD role.
+    supported_by:
+    - reference_id: PMID:23667253
+      supporting_text: The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells
+- term:
+    id: GO:0070966
+    label: nuclear-transcribed mRNA catabolic process, no-go decay
+  evidence_type: IDA
+  original_reference_id: PMID:27543824
+  qualifier: involved_in
+  review:
+    summary: Human Pelota functions in mRNA quality control of nonstop mRNA; loss-of-function mutants abolish activity.
+    action: ACCEPT
+    reason: Direct mutagenesis-supported evidence for PELO in no-go/non-stop mRNA decay.
+    supported_by:
+    - reference_id: PMID:27543824
+      supporting_text: Conserved functions of human Pelota in mRNA quality control of nonstop mRNA
+- term:
+    id: GO:0070966
+    label: nuclear-transcribed mRNA catabolic process, no-go decay
+  evidence_type: IDA
+  original_reference_id: PMID:27863242
+  qualifier: involved_in
+  review:
+    summary: Structural study supporting PELO&#39;s role in recognizing stalled ribosomes that triggers no-go decay.
+    action: ACCEPT
+    reason: Direct evidence for the NGD-triggering recognition step.
+    supported_by:
+    - reference_id: PMID:27863242
+      supporting_text: Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes
+- term:
+    id: GO:0072344
+    label: rescue of stalled cytosolic ribosome
+  evidence_type: IDA
+  original_reference_id: PMID:21448132
+  qualifier: involved_in
+  review:
+    summary: In vitro reconstitution shows PELO (with HBS1L/ABCE1) rescues stalled elongation complexes. Core process.
+    action: ACCEPT
+    reason: Directly demonstrated core biological process of PELO.
+    supported_by:
+    - reference_id: PMID:21448132
+      supporting_text: Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes
+- term:
+    id: GO:0072344
+    label: rescue of stalled cytosolic ribosome
+  evidence_type: IDA
+  original_reference_id: PMID:27863242
+  qualifier: involved_in
+  review:
+    summary: Structural demonstration of PELO engaging stalled ribosomes for rescue.
+    action: ACCEPT
+    reason: Direct structural evidence for the core rescue process.
+    supported_by:
+    - reference_id: PMID:27863242
+      supporting_text: Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes
+- term:
+    id: GO:1990533
+    label: Dom34-Hbs1 complex
+  evidence_type: IDA
+  original_reference_id: PMID:27863242
+  qualifier: part_of
+  review:
+    summary: PELO directly identified as a component of the Pelota-HBS1L (Dom34-Hbs1) complex by cryo-EM.
+    action: ACCEPT
+    reason: Direct evidence for PELO as a complex subunit.
+    supported_by:
+    - reference_id: file:human/PELO/PELO-uniprot.txt
+      supporting_text: Component of the Pelota-HBS1L complex, also named Dom34-Hbs1 complex, composed of PELO and HBS1L
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: PMID:20406461
+  title: Pelota interacts with HAX1, EIF3G and SRPX and the resulting protein complexes are associated with the actin cytoskeleton.
+  findings: []
+- id: PMID:21448132
+  title: Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes.
+  findings:
+  - statement: Pelota, Hbs1 and ABCE1 together dissociate vacant 80S ribosomes and stalled elongation complexes into subunits.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches; establishes the PELO-HBS1L-ABCE1 ribosome dissociation/recycling activity (anchors GO:0043022 ribosome binding IDA in GOA).
+- id: PMID:23667253
+  title: The Hbs1-Dom34 protein complex functions in non-stop mRNA decay in mammalian cells.
+  findings:
+  - statement: The mammalian Hbs1-Dom34 (HBS1L-PELO) complex functions in non-stop mRNA decay.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches; establishes PELO-HBS1L role in non-stop mRNA decay (GO:0070966).
+- id: PMID:25277244
+  title: The functional landscape of Hsp27 reveals new cellular processes such as DNA repair and alternative splicing and proposes novel anticancer targets.
+  findings: []
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+- id: PMID:27543824
+  title: Conserved functions of human Pelota in mRNA quality control of nonstop mRNA.
+  findings:
+  - statement: Human Pelota functions in mRNA quality control of nonstop mRNA; the K2A and R45A mutants abolish its ability to rescue stalled ribosomes.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches; mutational analysis establishes human PELO&#39;s stalled-ribosome rescue function in nonstop mRNA QC.
+- id: PMID:27863242
+  title: Decoding Mammalian Ribosome-mRNA States by Translational GTPase Complexes.
+  findings:
+  - statement: Cryo-EM of the PELO-HBS1L complex on stalled ribosomes defines PELO&#39;s stalled-ribosome sensor activity and ribosome binding.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches; cryo-EM structural evidence supports the stalled-ribosome sensor activity (GO:0170011 IDA in GOA).
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+- id: Reactome:R-HSA-9954730
+  title: Reactome ribosome quality control reaction (PELO cytosol)
+  findings: []
+- id: Reactome:R-HSA-9954919
+  title: Reactome ribosome quality control reaction (PELO cytosol)
+  findings: []
+- id: Reactome:R-HSA-9955731
+  title: Reactome ribosome quality control reaction (PELO cytosol)
+  findings: []
+core_functions:
+- description: Stalled-ribosome sensor / eRF1-like factor that recognizes ribosomes stalled at the 3&#39; end of an mRNA by probing the empty mRNA channel and A site, the molecular recognition event that initiates ribosome rescue. Unlike eRF1, PELO lacks peptidyl-tRNA hydrolase activity.
+  molecular_function:
+    id: GO:0170011
+    label: stalled ribosome sensor activity
+  locations:
+  - id: GO:0022626
+    label: cytosolic ribosome
+  supported_by:
+  - reference_id: file:human/PELO/PELO-uniprot.txt
+    supporting_text: PELO recognizes ribosomes stalled at the 3&#39; end of an mRNA and engages stalled ribosomes by destabilizing mRNA in the mRNA channel
+- description: As the eRF1-like subunit of the Pelota-HBS1L (Dom34-Hbs1) complex, with the GTPase HBS1L and recycling ATPase ABCE1, PELO rescues stalled ribosomes by driving their dissociation into subunits, initiating no-go and non-stop mRNA decay.
+  molecular_function:
+    id: GO:0043022
+    label: ribosome binding
+  locations:
+  - id: GO:1990533
+    label: Dom34-Hbs1 complex
+  supported_by:
+  - reference_id: PMID:21448132
+    supporting_text: Dissociation by Pelota, Hbs1 and ABCE1 of mammalian vacant 80S ribosomes and stalled elongation complexes
+  - reference_id: file:human/PELO/PELO-uniprot.txt
+    supporting_text: Component of the Pelota-HBS1L complex, also named Dom34-Hbs1 complex, composed of PELO and HBS1L
+proposed_new_terms: []
+suggested_questions:
+- question: How is the choice between productive translation termination (eRF1) and rescue (PELO) made at ribosomes with short or empty mRNA in the channel?
+- question: What is the in vivo contribution of the PINK1-regulated PELO recruitment to mitochondrial ribosomes relative to its canonical cytosolic rescue role?
+suggested_experiments:
+- description: Ribosome profiling and 5&#39;P degradome sequencing in PELO-knockout versus wild-type human cells to quantify accumulation of stalled/truncated mRNAs and define the endogenous no-go/non-stop substrate repertoire.
+- description: Reconstituted single-molecule or cryo-EM time-resolved analysis of PELO-HBS1L-ABCE1 splitting kinetics on defined stalled substrates to dissect the mRNA-channel sensing step.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
