@@ -34,9 +34,15 @@ HEADER = (
 
 
 def sssom_to_terms(sssom: dict) -> dict:
-    """Reshape an SSSOM mapping set dict into the nested AROGOMappingSet shape."""
+    """Reshape an SSSOM mapping set dict into the nested AROGOMappingSet shape.
+
+    Gap rows (object_id ``sssom:NoTermFound``) are skipped: they record an ARO family with no
+    suitable GO term and have no GO object to term-validate.
+    """
     mappings = []
     for m in sssom.get("mappings", []):
+        if not str(m.get("object_id", "")).startswith("GO:"):
+            continue  # skip sssom:NoTermFound gap rows (no GO object/label to validate)
         row = {
             "subject": {"id": m["subject_id"], "label": m["subject_label"]},
             "predicate": {"id": m["predicate_id"], "label": m.get("predicate_label", "")},

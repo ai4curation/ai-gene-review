@@ -129,10 +129,16 @@ def parse_rgi_output(path: Path) -> list[AroHit]:
 
 
 def load_aro2go(sssom_path: Path) -> dict[str, list[dict]]:
-    """Index an SSSOM mapping set by subject (ARO) id -> list of mapping rows."""
+    """Index an SSSOM mapping set by subject (ARO) id -> list of mapping rows.
+
+    Gap rows (object_id ``sssom:NoTermFound``) are excluded; they record an ARO family with no
+    GO term and are not GO candidates.
+    """
     doc = yaml.safe_load(sssom_path.read_text())
     index: dict[str, list[dict]] = {}
     for m in doc.get("mappings", []):
+        if not str(m.get("object_id", "")).startswith("GO:"):
+            continue
         index.setdefault(m["subject_id"], []).append(m)
     return index
 

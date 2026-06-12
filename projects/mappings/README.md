@@ -131,19 +131,27 @@ sanity check, the pipeline reproduces exactly the GO terms curators assigned by 
   `relatedMatch` (the ARO family is narrower than a general GO MF, still propagatable).
 - **Determinant → GO MF** (`enables`): mphA, mphB (`GO:0050073`).
 
-### Deliberately NOT mapped (verification record)
+### Gaps: ARO families with no suitable GO term (recorded in the mapping file)
 
-Checked and intentionally left out because GO has no correct specific MF term (mapping to the nearest
-term would assert a paralog or the wrong chemistry):
+GO genuinely lacks a specific MF term for several resistance enzymes. Rather than mapping them to a
+near-but-wrong term (a paralog or the wrong chemistry), these are recorded **in `aro2go.sssom.yaml`
+itself** using the SSSOM no-match convention — `object_id: sssom:NoTermFound`, `object_source:
+obo:go.owl`, `predicate_id: skos:exactMatch` (the relation we *would* use), and a `comment` explaining
+the gap. They are GO new-term-request candidates. The converter and pipeline skip these rows (no GO
+object), so they never produce a candidate annotation; `test_gap_rows_present` keeps them from being
+silently dropped.
 
-| ARO family | Why not mapped |
+| ARO family | Why no mapping (GO gap) |
 |---|---|
-| rifampin ADP-ribosyltransferase (Arr, `ARO:3000390`) | `GO:0003950` is **poly**-ADP-ribosyltransferase; Arr is mono-ADP-ribosyltransferase. No mono term fits. |
-| glycopeptide VanA ligase (`ARO:3000010`) | `GO:0008716` is D-Ala-**D-Ala** ligase; VanA makes D-Ala-**D-Lac**. No D-Ala-D-Lac GO MF term. |
-| Cfr 23S rRNA methyltransferase (`ARO:3000202`) | `GO:0070040` is the **C2** (RlmN housekeeping) activity; Cfr methylates **C8**. No C8 term. |
-| macrolide esterase (Ere, `ARO:3000320`) | No macrolide/erythromycin esterase GO MF term exists. |
-| rifampin monooxygenase (`ARO:3000445`) | No rifampin/rifamycin monooxygenase GO MF term exists. |
-| tetracycline efflux | No single ARO efflux-family node; GO efflux-transporter terms are non-specific. |
+| lincosamide nucleotidyltransferase / Lnu (`ARO:3000221`) | No lincosamide O-nucleotidyltransferase GO MF term. |
+| streptogramin Vat acetyltransferase (`ARO:3000453`) | No streptogramin A O-acetyltransferase GO MF term. |
+| streptogramin Vgb lyase (`ARO:3000376`) | No streptogramin B lyase GO MF term. |
+| macrolide esterase / Ere (`ARO:3000320`) | No macrolide/erythromycin esterase GO MF term. |
+| rifampin ADP-ribosyltransferase / Arr (`ARO:3000390`) | `GO:0003950` is **poly**-ADP-ribosyltransferase; Arr is **mono**. |
+| rifampin monooxygenase (`ARO:3000445`) | Only the general `GO:0004497` monooxygenase activity exists. |
+| tetracycline inactivation / Tet(X) (`ARO:3000036`) | No tetracycline-destructase monooxygenase GO MF term. |
+| Cfr 23S rRNA methyltransferase (`ARO:3000202`) | `GO:0070040` is the **C2** (RlmN) activity; Cfr methylates **C8**. |
+| D-Ala-D-Lac ligase / VanA (`ARO:3002978`) | `GO:0008716` is D-Ala-**D-Ala** ligase; VanA makes D-Ala-**D-Lac**. |
 
 ## Validation & tests
 

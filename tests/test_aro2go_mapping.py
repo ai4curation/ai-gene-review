@@ -25,21 +25,33 @@ def _load(path: Path) -> dict:
 
 
 def test_sssom_structure():
-    """Every mapping is a CURIE+label tuple with the expected prefixes."""
+    """Every mapping is a CURIE+label tuple; gap rows use the SSSOM NoTermFound convention."""
     doc = _load(SSSOM)
     mappings = doc["mappings"]
     assert mappings, "no mappings found"
     for m in mappings:
         assert m["subject_id"].startswith("ARO:"), m
         assert m["subject_label"], m
-        assert m["object_id"].startswith("GO:"), m
-        assert m["object_label"], m
-        assert m["predicate_id"].split(":")[0] in {"RO", "skos"}, m
-        assert m["predicate_label"], m
         assert m["mapping_justification"], m
+        if m["object_id"] == "sssom:NoTermFound":
+            # gap row: records an ARO family with no suitable GO term
+            assert m.get("object_source") == "obo:go.owl", m
+            assert m.get("comment"), m
+        else:
+            assert m["object_id"].startswith("GO:"), m
+            assert m["object_label"], m
+            assert m["predicate_id"].split(":")[0] in {"RO", "skos"}, m
+            assert m["predicate_label"], m
     # subjects are unique (one mapping row per ARO term)
     subjects = [m["subject_id"] for m in mappings]
     assert len(subjects) == len(set(subjects)), "duplicate subject_id"
+
+
+def test_gap_rows_present():
+    """Gap rows (NoTermFound) are recorded in the mapping file, not just in prose."""
+    doc = _load(SSSOM)
+    gaps = [m for m in doc["mappings"] if m["object_id"] == "sssom:NoTermFound"]
+    assert gaps, "expected at least one NoTermFound gap row"
 
 
 def test_terms_file_in_sync():
