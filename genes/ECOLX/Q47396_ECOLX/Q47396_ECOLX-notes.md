@@ -66,3 +66,15 @@ resistance (Noguchi 2000). The Golkar quote was also added to the MphB review to
 The "GTP exclusively" claim (deep research, attributed to Fong 2017 full text) was NOT asserted in the review —
 cached Fong is abstract-only and O'Hara 1989 shows GTP/ITP/ATP all function (GTP listed first), so the review
 states "GTP favored" rather than "exclusive" (verify-don't-trust).
+
+## CARD/ARO provenance (mphA)
+
+CARD entry https://card.mcmaster.ca/aro/3000316 — ARO:3000316, gene symbol mphA, name
+"macrolide 2'-phosphotransferase I". AMR Gene Family: macrolide phosphotransferase (MPH);
+Resistance Mechanism: antibiotic inactivation (ARO:0001004); Drug Class: macrolide antibiotic.
+Curated drug list (= substrate scope): erythromycin, roxithromycin, clarithromycin, dirithromycin,
+oleandomycin (14-membered), azithromycin (15-membered), plus telithromycin listed. Detection model:
+Protein Homolog Model, BLASTP bitscore cutoff 500. Reference seqs: gb|BAA03776.1 / gb|D16251.1 (E. coli).
+Note: unlike the MphB UniProt record, this Q47396 entry's *-uniprot.txt does NOT carry a `DR CARD` line,
+so the ARO id was resolved from CARD by gene symbol (mphA = ARO:3000316). Consistent with the review's
+14-/15-membered (not 16-membered) specificity. Featured in projects/ANTIMICROBIAL_RESISTANCE.md.
