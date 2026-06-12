@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T01:52:53.255765'
-end_time: '2026-06-12T02:11:39.740539'
-duration_seconds: 1126.48
+start_time: '2026-06-12T02:09:38.337993'
+end_time: '2026-06-12T02:18:46.944753'
+duration_seconds: 548.61
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -25,7 +25,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 35
+citation_count: 25
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -42,9 +42,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000029 The architecture and subunit localization
-    of the human EMC (ER membrane protein complex) are detailed in Figure 5. Panel
-    B shows th'
+  description: '## Context ID: pqac-00000014 Figure 3A on page 5 provides an improved
+    cryo-EM model of the human EMC, illustrating the transmembrane topology of its
+    subunits. T'
 ---
 
 ## Question
@@ -155,218 +155,197 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Comprehensive research report: human **EMC10** (UniProt Q5UCC4; gene **EMC10**, synonyms include **C19orf63/HSM1**)
+## Research Report: Human **EMC10** (UniProt **Q5UCC4**) — Functional Annotation and Biological Context
 
 ### Executive summary
-Human **EMC10** is best-supported as (i) an **auxiliary, primarily lumen-facing subunit** of the **endoplasmic reticulum (ER) membrane protein complex (EMC)** that assists **membrane protein biogenesis** (insertion/topogenesis and later chaperoning), and (ii) a source of a **distinct alternatively spliced secreted isoform (scEMC10)** that functions as a **circulating endocrine/paracrine regulator of thermogenesis and metabolic homeostasis** (not an insertase subunit). The strongest recent translational evidence centers on scEMC10 as a **biomarker and drug target** for obesity/insulin resistance, whereas human genetic aggregation links EMC10 most strongly to **recessive neurodevelopmental disorders**. (hegde2022thefunctionstructure pages 11-13, millervedam2020structuralandmechanistic pages 18-21, wang2022secretedemc10is pages 1-2, wat2024novelsecretedregulators pages 2-4, OpenTargets Search: -EMC10)
+Human **EMC10** encodes **ER membrane protein complex subunit 10**, a single-pass, ER-associated protein that forms part of the **endoplasmic reticulum membrane protein complex (EMC)**, a conserved membrane-protein biogenesis machine that facilitates insertion/topogenesis and quality control of select membrane-protein transmembrane domains (TMDs). Structural work places EMC10 in the **ER-lumenal module** of the complex (with EMC1/EMC4/EMC7), with a **flexible single TMD** that is not part of the catalytic insertase core. Separately, multiple studies report **secreted/soluble EMC10-related products** (notably **HSS1/EMC10-2**) with paracrine signaling activities in cancer and cardiac repair contexts. Recent 2023–2024 cryo-EM studies significantly advanced mechanistic understanding of EMC function and conformational states, providing the most current framework for interpreting EMC10’s role. (pleiner2020structuralbasisfor pages 1-3, volkmar2020squaringtheemc pages 10-11, pleiner2023aselectivityfilter pages 1-2, chen2023emcchaperone–cavstructure pages 1-3, li2024structuralinsightsinto pages 1-3)
 
-### 1) Key concepts & definitions (current understanding)
+### 1) Target identity verification (critical disambiguation)
+The literature used here matches the requested target:
 
-#### 1.1 ER membrane protein complex (EMC)
-The **EMC** is an **abundant ER-resident multiprotein complex** implicated in **membrane protein biogenesis**, including (a) **energy-independent insertion** of certain transmembrane domains (TMDs) and (b) broader **chaperone/holdase** functions for difficult multipass clients. A structural/functional synthesis supports a model where EMC contains a **cytosolic vestibule** leading into a **lipid-exposed intramembrane groove** that can accommodate a TMD and facilitate its insertion into the bilayer. (odonnell2020thearchitectureof pages 1-2, odonnell2020thearchitectureof pages 14-15, hegde2022thefunctionstructure pages 11-13)
+* **hHSS1** (human hematopoietic signal peptide-containing secreted 1) has been explicitly identified as **EMC10 (ER membrane protein complex subunit 10)** in a glioma-focused study, and **C19orf63** appears as a keyword/synonym in that same paper, aligning with UniProt synonyms provided in the prompt. Publication date: **2014-12**; URL: http://www.biomedcentral.com/1471-2407/14/920 (junesgill2014humanhematopoieticsignal pages 1-2)
+* High-resolution human EMC structural studies explicitly include **EMC10** as one of the subunits modeled within the **nine-subunit human EMC**. Publication date: **2020-07**; URL: https://doi.org/10.1126/science.abb5008 (pleiner2020structuralbasisfor pages 1-3)
 
-A 2023 mechanistic study further proposed a **selectivity filter** within EMC that limits inappropriate insertion events (e.g., mitochondrial tail-anchored proteins into the ER), using **charge-based discrimination** at the vestibule entrance. (pleiner2023aselectivityfilter pages 1-2)
+No conflicting gene symbol usage was encountered in retrieved materials; all “EMC10” references examined correspond to the human ER membrane protein complex subunit 10 context. (junesgill2014humanhematopoieticsignal pages 1-2, pleiner2020structuralbasisfor pages 1-3)
 
-#### 1.2 What EMC10 is (and is not)
-**EMC10 (ER membrane protein complex subunit 10)** is one of the mammalian EMC subunits; mammalian EMC is described as a **10-protein assembly** with multiple membrane subunits and cytosolic components (EMC2/8/9). (odonnell2020thearchitectureof pages 1-2)
+### 2) Key concepts and definitions (current understanding)
 
-However, multiple authoritative sources describe EMC10 as **peripheral/auxiliary** relative to the core insertase architecture (e.g., EMC3-centered machinery). EMC10 is placed mainly in the **lumenal module** together with EMC1 and EMC7 and is not currently assigned a catalytic “insertase” activity of its own. (hegde2022thefunctionstructure pages 11-13, millervedam2020structuralandmechanistic pages 18-21, odonnell2020thearchitectureof pages 10-11)
+#### The ER membrane protein complex (EMC)
+The **EMC** is an ER-resident multi-subunit assembly that acts as an **insertase and chaperone/holdase** supporting membrane-protein biogenesis, particularly for **low-hydrophobicity TMDs** (e.g., many tail-anchored proteins and certain multipass proteins). (pleiner2023aselectivityfilter pages 1-2, li2024structuralinsightsinto pages 1-3)
 
-Separately, **scEMC10** refers to an **alternatively spliced secreted isoform** of EMC10 that **lacks a transmembrane domain** and circulates as a soluble factor with metabolic effects; this is mechanistically distinct from EMC10’s EMC-subunit role. (wang2022secretedemc10is pages 1-2, wat2024novelsecretedregulators pages 1-2)
+A key mechanistic concept is the **hydrophilic vestibule** within the membrane (primarily formed by core transmembrane subunits such as EMC3/EMC6, and supported by other subunits) that lowers the energetic barrier for integrating challenging TMDs and translocating short polar segments. (pleiner2020structuralbasisfor pages 1-3, pleiner2023aselectivityfilter pages 1-2)
 
-### 2) Verified identity, localization, topology, and complex membership
+#### Where EMC10 fits
+EMC10 is best understood as an **auxiliary/scaffold-like subunit** in the **lumenal module** of the EMC, rather than as the catalytic insertase core.
 
-#### 2.1 Complex membership and ER localization
-Biochemical and structural studies of human EMC consistently include **EMC10** among EMC subunits and place EMC function at the **ER**. Mammalian EMC is described as ten subunits (EMC1–EMC10), with seven integral membrane subunits (including EMC10) associating with cytosolic EMC2/8/9. (odonnell2020thearchitectureof pages 1-2)
+* In a 3.4 Å cryo-EM structure of the **human nine-subunit EMC in lipid nanodiscs**, EMC10 is positioned in the **lumenal, L-shaped region** together with EMC1/EMC4/EMC7; the lumenal domain of EMC10 was built into the density map. Publication date: **2020-07**; URL: https://doi.org/10.1126/science.abb5008 (pleiner2020structuralbasisfor pages 1-3)
+* Weak/flexible density was observed for putative transmembrane helices associated with EMC4/EMC7/EMC10, consistent with a relatively dynamic membrane-proximal architecture for EMC10. (pleiner2020structuralbasisfor pages 1-3)
 
-#### 2.2 Placement of EMC10 within EMC structure (lumenal module)
-Cryo-EM/modeling indicates the **lumenal domain** of human EMC is largely accounted for by **EMC1, EMC7, and EMC10**, with EMC10 modeled as a **small beta-barrel/beta-sandwich-like lumenal domain** docked into lumenal density (the EMC10 TMD was not resolved in that dataset). (odonnell2020thearchitectureof pages 11-12)
+Thus, for functional annotation, EMC10’s “primary function” is most defensibly described as **participation in a membrane protein biogenesis/quality-control complex**, not an enzyme reaction or substrate transporter in its own right. (pleiner2020structuralbasisfor pages 1-3, millervedam2020structuralandmechanistic pages 18-21)
 
-Independent structural work supports that EMC10 forms a **beta-sandwich fold**, is **scaffolded on EMC1**, and **contacts EMC7** across a membrane-proximal EMC1 region; this lumenal module is implicated in polytopic client biogenesis and lumenal chaperone interactions. (millervedam2020structuralandmechanistic pages 18-21)
+### 3) Molecular function, subcellular localization, and topology
 
-A cropped figure from O’Donnell et al. provides a visual map of EMC10 within the lumenal architecture (Figure 5; panel highlighting EMC10 and EMC7). (odonnell2020thearchitectureof media 65b3bb2d, odonnell2020thearchitectureof media 6e794663)
+#### Subcellular localization
+Structural evidence places EMC10 on the **ER-lumenal side** of the EMC (i.e., lumen-facing domain) with a membrane anchor.
 
-#### 2.3 Peripheral/auxiliary nature of EMC10
-Several lines of evidence support EMC10 being **auxiliary/peripheral**:
-* EMC10 is described as one of the EMC subunits with **weaker depletion phenotypes** and less disruption of complex integrity compared with core subunits, consistent with peripheral status. (chitwood2019theroleof pages 2-4)
-* In a cryo-EM assignment context, EMC10 is described as one of three **single-spanning** subunits (with EMC1 and EMC7) and as the **least likely** to be visualized, with the authors noting it could be depleted without clear functional consequences in prior work. (odonnell2020thearchitectureof pages 10-11)
-* Loss of EMC7 can lead to **loss of EMC10** while leaving other EMC components intact, supporting that EMC10 is not required for core complex stability. (millervedam2020structuralandmechanistic pages 18-21)
+* In human EMC cryo-EM, EMC10 is part of the lumenal region adjacent to EMC1 and EMC7. (pleiner2020structuralbasisfor pages 1-3)
+* In a client-bound EMC structure (EMC–CaV complex), the **lumenal domain comprising EMC1, EMC4, EMC7, and EMC10** undergoes a measurable conformational change during client engagement (movement/tilt of lumenal module). Publication date: **2023-07**; URL: https://doi.org/10.1038/s41586-023-06175-5 (chen2023emcchaperone–cavstructure pages 8-9)
 
-### 3) Functional annotation: biological roles, processes, and pathways
+#### Membrane topology
+An improved cryo-EM model explicitly depicts the single-pass topology of EMC10:
 
-#### 3.1 EMC10 as part of the EMC lumenal domain (inferred primary function)
-The most defensible “primary function” assignment for the **membrane/complex-associated EMC10 isoform** is as a **structural/interaction module** on the ER-lumenal face of the EMC that supports EMC’s broader role in **membrane protein biogenesis**, especially for **polytopic/multipass** clients.
+* A cropped panel from **Pleiner et al. (J Cell Biol, 2023-05)** Figure 3A labels the **single TMDs of EMC7 and EMC10** in the human EMC model, providing direct visual support for EMC10’s single-pass membrane topology in the complex. Publication date: **2023-05**; URL: https://doi.org/10.1083/jcb.202212007 (pleiner2023aselectivityfilter media 41b09963)
 
-Mechanistically, EMC as a complex is implicated in:
-* **Insertion/topogenesis** of certain TMDs via a vestibule–groove pathway (energy-independent insertion). (odonnell2020thearchitectureof pages 14-15, odonnell2020thearchitectureof pages 1-2)
-* **Quality control/selectivity** that prevents misinsertion using charge barriers/selectivity filters at key entry points. (pleiner2023aselectivityfilter pages 1-2)
+#### Molecular function (as distinct from complex function)
+No specific enzymatic or transporter activity is attributed to EMC10 itself in the cited primary structural studies. Instead, EMC10 is best classified as a **non-catalytic structural subunit** within a multi-subunit insertase/chaperone system.
 
-EMC10 itself has not been shown to catalyze insertion; rather it is positioned at the **periphery of EMC1’s beta-propeller**, suggesting roles in **lumenal interactions** or stabilization. A major expert synthesis explicitly frames EMC10/EMC7 beta-sandwiches as canonical protein-interaction modules whose lumenal partners remain to be identified, implying EMC10 may mediate **client- or chaperone-facing interactions**. (hegde2022thefunctionstructure pages 11-13)
-
-A 2023 mechanistic study of EMC selectivity describes EMC10 (with EMC4 and EMC7) as providing **dynamic transmembrane elements** that create a protected, membrane-facing environment for nascent TMD sampling—suggesting EMC10 may indirectly influence insertion fidelity/specificity even if it is not “core catalytic.” (pleiner2023aselectivityfilter pages 10-11)
-
-#### 3.2 EMC10-derived secreted isoform (scEMC10): metabolic signaling pathway
-A distinct and well-supported functional axis concerns the **secreted isoform scEMC10**:
-
-**Core mechanism.** scEMC10 can be transported into cells, bind the **PKA catalytic subunit**, inhibit PKA’s stimulatory action on **CREB**, and thereby suppress thermogenesis-associated gene programs (e.g., reducing CREB phosphorylation/activity). (wang2022secretedemc10is pages 1-2, wang2022secretedemc10is pages 6-8)
-
-**Physiological consequence.** Genetic deletion of Emc10 in mice increases energy expenditure and thermogenic capacity; conversely scEMC10 overexpression decreases energy expenditure and promotes obesity. (wang2022secretedemc10is pages 1-2)
-
-**Expert framing (2023–2024).** Reviews describing thermogenesis regulators and emerging secreted metabolic factors highlight scEMC10 as a newly appreciated secreted inhibitor of thermogenesis and a candidate therapeutic target, while also noting translational uncertainties (e.g., isoform specificity and receptor/uptake mechanisms). (nie2023latestadvancesin pages 1-2, wat2024novelsecretedregulators pages 2-4)
+* The 2020 Science structure emphasizes EMC’s insertase mechanism via an enclosed hydrophilic vestibule within the membrane formed mainly by core subunits (not EMC10), while EMC10 contributes to the lumenal module architecture. (pleiner2020structuralbasisfor pages 1-3)
+* Additional structural analysis describes EMC10 as part of the lumenal scaffold-like region together with EMC1/EMC7, consistent with an architectural/support role. (millervedam2020structuralandmechanistic pages 18-21)
 
 ### 4) Recent developments and latest research (prioritizing 2023–2024)
 
-#### 4.1 EMC selectivity and EMC10-linked membrane environment (2023)
-In 2023, mechanistic work on EMC proposed a **selectivity filter** that limits protein misinsertion and described how flexible loops and vestibule charge features enforce correct targeting/topology; EMC10 is implicated as part of the dynamic TMD environment supporting substrate sampling (though EMC10 topology details were not fully specified in the excerpted text). (pleiner2023aselectivityfilter pages 1-2, pleiner2023aselectivityfilter pages 10-11)
+#### 4.1. 2023: EMC selectivity filter and topology enforcement
+A major 2023 mechanistic advance was identification of a **selectivity filter** at the EMC that helps prevent misinsertion and enforces correct topology.
 
-#### 4.2 scEMC10 as a metabolic endocrine factor (2023–2024 consolidation)
-A 2023 review of adipocyte thermogenesis genes summarizes scEMC10 as a secreted protein produced by differential splicing and ties it to human obesity/insulin resistance correlations and mouse causal evidence, including antibody neutralization. (nie2023latestadvancesin pages 1-2)
+* Pleiner et al. (J Cell Biol, **2023-05**) used improved structural modeling plus mutagenesis/crosslinking to map TA-protein engagement and showed that positively charged residues at the hydrophilic vestibule entrance provide charge-based discrimination, limiting misinsertion of mitochondrial TA proteins and enforcing the “positive-inside” rule for some multipass substrates. URL: https://doi.org/10.1083/jcb.202212007 (pleiner2023aselectivityfilter pages 1-2, pleiner2023aselectivityfilter pages 10-11)
 
-A 2024 Diabetologia review on secreted metabolic regulators synthesizes evidence that scEMC10 neutralization improves glucose and lipid metabolic phenotypes in mice and highlights that global knockout studies cannot cleanly separate membrane EMC10 from scEMC10, emphasizing the need for isoform-specific causal experiments. (wat2024novelsecretedregulators pages 2-4)
+Although this paper is not EMC10-specific mechanistically, it is directly relevant to EMC10 annotation because it employs an improved EMC structural model that includes EMC10 topology and emphasizes that certain subunits (including EMC10) have **dynamic TMDs** providing a protected environment during insertion decisions. (pleiner2023aselectivityfilter pages 10-11, pleiner2023aselectivityfilter media 41b09963)
 
-### 5) Current applications and real-world implementations
+#### 4.2. 2023: First structural view of an EMC–client complex (holdase/chaperone mode)
+A landmark 2023 Nature study solved cryo-EM structures of EMC bound to a voltage-gated calcium channel assembly intermediate, providing direct evidence for EMC’s **holdase/chaperone** roles.
 
-#### 5.1 Biomarker applications (human)
-In multiple cohorts, **circulating EMC10/scEMC10** is reported as elevated with obesity and associated with insulin resistance measures.
+* Chen et al. (Nature, **2023-07**) present EMC–client cryo-EM structures and report that binding causes a conformational change in the EMC lumenal domain (EMC1/EMC4/EMC7/EMC10), supporting a model where distinct EMC conformations may correspond to client-loaded states. URL: https://doi.org/10.1038/s41586-023-06175-5 (chen2023emcchaperone–cavstructure pages 1-3, chen2023emcchaperone–cavstructure pages 8-9)
 
-Notable quantitative intervention results (12-month follow-up):
-* **Bariatric surgery**: BMI decreased **30.1%**, serum EMC10 decreased **57.9%**, and HOMA-IR decreased **77.4%** (all P < 0.001). (wang2022secretedemc10is pages 1-2)
-* **Diet + exercise program**: serum EMC10 decreased **32%** (P < 0.01) and HOMA-IR decreased **46%** (P < 0.001) despite only modest BMI change. (wang2022secretedemc10is pages 1-2)
+This strengthens the interpretation that EMC10, as part of the lumenal module, may contribute to **conformational coupling** and/or stabilization during client engagement, even if it is not the catalytic insertase element. (chen2023emcchaperone–cavstructure pages 8-9, millervedam2020structuralandmechanistic pages 18-21)
 
-Cohort sizes reported include (examples) a white cohort with lean/overweight/obese groupings such as **n=27/20/160** and a Chinese Han cohort such as **n=32/115/39** (with alternative group-count reporting in other sections). (wang2022secretedemc10is pages 2-3, wang2022secretedemc10is pages 11-12)
+#### 4.3. 2024: EMC structural states at mitochondria–ER contact sites (VDAC-bound)
+A 2024 paper provided additional EMC structural states relevant to multifunctionality.
 
-#### 5.2 Therapeutic targeting (preclinical)
-A neutralizing monoclonal antibody against circulating scEMC10 reduces weight and improves insulin sensitivity in obese mice; cross-over experiments with antibody withdrawal and reintroduction show reversibility consistent with causality. (wang2022secretedemc10is pages 11-12, wang2022secretedemc10is pages 6-8)
+* Li et al. (Aging (Albany NY), **2024-03-15**) report apo- and VDAC-bound human EMC cryo-EM structures and describe a “gating plug” inside the EMC hydrophilic vestibule. They propose that in the VDAC1-bound state, EMC is unlikely to act as an insertase, suggesting state-dependent functional switching. URL: https://doi.org/10.18632/aging.205660 (li2024structuralinsightsinto pages 1-3)
 
-#### 5.3 Physiological phenotyping implementation (human BAT imaging)
-A 2025 human study provides an example of real-world implementation of scEMC10 measurement alongside **18F-FDG PET–CT** to define BAT positivity and thermoneutrality response. In BAT-positive participants (subset n=7), **2 h thermoneutrality (28°C)** increased median serum scEMC10 from **2.34 → 4.25 ng/mL** (P = 0.0017) coincident with disappearance of active BAT, supporting an inhibitory role of scEMC10 on facultative thermogenesis in humans. (miao2025serumsecretedemc10 pages 7-9)
+While not focused on EMC10 specifically, this contributes to current expert interpretation: EMC10 should be annotated within a complex that is **conformationally and functionally versatile**, with EMC10 embedded in the lumenal module that can move during client interactions. (li2024structuralinsightsinto pages 1-3, chen2023emcchaperone–cavstructure pages 8-9)
 
-### 6) Disease associations and genetics (authoritative aggregation)
+### 5) Secreted/soluble EMC10 forms (“moonlighting” biology) and signaling
+A recurring theme in EMC10 literature is the existence of **secreted or soluble EMC10-related products**, raising an annotation challenge: separating the EMC-bound subunit role from a secreted signaling factor.
 
-Open Targets aggregation indicates the strongest genetic association signal for EMC10 is with **neurodevelopmental disorders** (including “neurodevelopmental disorder with dysmorphic facies and variable seizures”), driven largely by evidence consistent with **biallelic/autosomal recessive loss-of-function** variant classes (frameshift, stop-gained, splice-acceptor; “absent gene product” annotations). (OpenTargets Search: -EMC10)
+#### 5.1. Secreted splice variant (HSS1/EMC10-2)
+A review synthesis reports that EMC10 exists both as a full-length, membrane-bound EMC subunit and as a splice variant **EMC10-2 (HSS1)** lacking a discernible TMD and being secreted. (volkmar2020squaringtheemc pages 10-11)
 
-Open Targets also reports a weaker association with **hypertension** (lower overall association score, mainly GWAS credible-set evidence). (OpenTargets Search: -EMC10)
+#### 5.2. Glioma-related studies (HSS1) and quantitative statistics
+In glioma-derived cell models:
 
-The scEMC10 metabolic axis provides an additional disease-relevant dimension, with strong evidence for involvement in **obesity and insulin resistance** and potential relevance to associated cardiometabolic complications. (wang2022secretedemc10is pages 1-2, wat2024novelsecretedregulators pages 2-4)
+* Junes-Gill et al. (BMC Cancer, **2014-12**) report that U87 cells overexpressing hHSS1 showed reduced G0/G1 and increased S and G2/M phases (**P < 0.05**), reduced migration (**P < 0.001**) and invasion (**P < 0.01**), and that purified hHSS1 inhibited HUVEC tube formation. They also report TCGA correlations (e.g., **BRCA2 r = −0.224, P < 0.0005**). URL: http://www.biomedcentral.com/1471-2407/14/920 (junesgill2014humanhematopoieticsignal pages 1-2)
 
-### 7) Expert opinions, analysis, and open questions
+These results support biological activity of a secreted EMC10-related factor in vitro, but they do not establish the mechanism of action or receptor identity, and they likely relate specifically to the secreted HSS1/EMC10-2 product rather than the EMC-incorporated subunit. (volkmar2020squaringtheemc pages 10-11, junesgill2014humanhematopoieticsignal pages 1-2)
 
-#### 7.1 EMC10 (complex-associated) remains incompletely characterized
-A key expert synthesis emphasizes that while EMC’s core insertase architecture is increasingly clear, the lumenal beta-sandwich/beta-propeller modules (including EMC10) likely mediate interactions whose partners and precise mechanistic contributions remain to be identified; this supports prioritizing EMC10 experiments that test effects on polytopic client maturation, lumenal chaperone recruitment, and EMC conformational coupling. (hegde2022thefunctionstructure pages 11-13, millervedam2020structuralandmechanistic pages 18-21)
+#### 5.3. Myocardial infarction repair: Emc10 as a secreted angiogenic growth factor
+A key in vivo translational study reports secreted Emc10 after MI.
 
-#### 7.2 scEMC10: isoform-specific causality and mechanism
-The 2024 review literature highlights an important limitation: **whole-body EMC10 knockout** cannot definitively attribute phenotypes to scEMC10 versus membrane-associated EMC10, motivating isoform-specific perturbations and mechanistic identification of uptake mediators/receptors. (wat2024novelsecretedregulators pages 2-4)
+* Reboll et al. (Circulation, **2017-11-07**) identify Emc10 as a bone marrow-derived angiogenic growth factor in mice after myocardial infarction. They report that circulating plasma Emc10 increases after MI, that Emc10 is secreted into supernatants of isolated inflammatory cells, and that **85±2%** of Emc10+ cells in infarct region coexpress macrophage marker F4/80. Recombinant Emc10 treatment (osmotic minipumps) enhanced border-zone capillarization and improved remodeling outcomes in a heart-failure-prone mouse strain. URL: https://doi.org/10.1161/CIRCULATIONAHA.117.029980 (reboll2017emc10(endoplasmicreticulum pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10)
 
-### 8) Summary of evidence-based functional annotation for UniProt Q5UCC4
+This study provides one of the strongest “real-world implementation” examples: **recombinant protein delivery** as a therapy concept in an animal model. (reboll2017emc10(endoplasmicreticulum pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10)
 
-1. **Cellular location:** ER, predominantly lumen-facing as part of the EMC lumenal module; forms structural interactions with EMC1 and EMC7. (millervedam2020structuralandmechanistic pages 18-21, odonnell2020thearchitectureof pages 11-12, hegde2022thefunctionstructure pages 11-13, odonnell2020thearchitectureof media 65b3bb2d)
-2. **Molecular role (most supported):** Auxiliary/peripheral EMC subunit contributing to lumenal architecture and likely client/chaperone interaction surfaces in membrane protein biogenesis (especially polytopic clients), rather than being the catalytic insertase core. (hegde2022thefunctionstructure pages 11-13, millervedam2020structuralandmechanistic pages 18-21, chitwood2019theroleof pages 2-4)
-3. **Pathway context:** EMC-mediated membrane protein insertion/topogenesis and selectivity mechanisms (EMC vestibule/groove; selectivity filter); EMC10 may contribute to the dynamic membrane-facing environment for substrate sampling. (odonnell2020thearchitectureof pages 1-2, odonnell2020thearchitectureof pages 14-15, pleiner2023aselectivityfilter pages 10-11)
-4. **Distinct secreted function (isoform):** scEMC10 is a circulating inhibitor of thermogenesis acting via intracellular uptake and inhibition of **PKA–CREB** signaling; robust evidence supports biomarker and antibody-based targeting potential in metabolic disease. (wang2022secretedemc10is pages 1-2, wang2022secretedemc10is pages 6-8, wat2024novelsecretedregulators pages 2-4)
+### 6) Disease associations and human genetics
+Direct, EMC10-specific disease mechanisms are still emerging, but authoritative association resources implicate EMC10 in neurodevelopmental phenotypes.
 
-### Key sources (URLs and publication dates)
-* Pleiner et al. “A selectivity filter in the ER membrane protein complex limits protein misinsertion at the ER.” *J Cell Biol* (May 2023). https://doi.org/10.1083/jcb.202212007 (pleiner2023aselectivityfilter pages 10-11, pleiner2023aselectivityfilter pages 1-2)
-* Wat & Svensson. “Novel secreted regulators of glucose and lipid metabolism in the development of metabolic diseases.” *Diabetologia* (Aug 2024). https://doi.org/10.1007/s00125-024-06253-x (wat2024novelsecretedregulators pages 2-4, wat2024novelsecretedregulators pages 1-2)
-* Wang et al. “Secreted EMC10 is upregulated in human obesity and its neutralizing antibody prevents diet-induced obesity in mice.” *Nature Communications* (Nov 2022). https://doi.org/10.1038/s41467-022-34259-9 (wang2022secretedemc10is pages 1-2, wang2022secretedemc10is pages 2-3, wang2022secretedemc10is pages 11-12, wang2022secretedemc10is pages 6-8)
-* Hegde. “The Function, Structure, and Origins of the ER Membrane Protein Complex.” *Annual Review of Biochemistry* (Jun 2022). https://doi.org/10.1146/annurev-biochem-032620-104553 (hegde2022thefunctionstructure pages 11-13, hegde2022thefunctionstructure pages 10-11)
-* O’Donnell et al. “The architecture of EMC reveals a path for membrane protein insertion.” *eLife* (May 2020). https://doi.org/10.7554/elife.57887 (odonnell2020thearchitectureof pages 1-2, odonnell2020thearchitectureof pages 11-12, odonnell2020thearchitectureof media 65b3bb2d)
-* Open Targets Platform (EMC10 / ENSG00000161671). Accessed via tool output. https://platform.opentargets.org/target/ENSG00000161671 (OpenTargets Search: -EMC10)
+* Open Targets lists EMC10 associations with **Neurodevelopmental disorder** and a more specific phenotype label “**neurodevelopmental disorder with dysmorphic facies and variable seizures**,” along with broader “genetic disorder” and “hypertension” associations. (OpenTargets Search: -EMC10)
 
-| Aspect | Key claim | Evidence summary | Key quantitative data | Primary sources (with year, journal) | URL |
-|---|---|---|---|---|---|
-| identity/localization | Human EMC10 is a bona fide ER membrane protein complex (EMC) subunit localized mainly on the ER lumenal face. | Structural and review evidence place EMC10 with EMC1 and EMC7 in the EMC lumenal domain; EMC10 has a lumenal beta-sandwich/beta-barrel-like domain and is part of the mammalian 10-subunit EMC. It is ER-resident and contributes to the lumenal architecture rather than acting as a free soluble protein. (odonnell2020thearchitectureof pages 1-2, millervedam2020structuralandmechanistic pages 18-21, odonnell2020thearchitectureof pages 11-12, hegde2022thefunctionstructure pages 11-13) | EMC is described as 10 subunits in mammals; EMC10 is one of only three subunits with appreciable lumenal domains. (odonnell2020thearchitectureof pages 1-2, chitwood2019theroleof pages 2-4) | O'Donnell et al. 2020, *eLife*; Miller-Vedam et al. 2020, *eLife*; Hegde 2022, *Annual Review of Biochemistry* | https://doi.org/10.7554/elife.57887; https://doi.org/10.1101/2020.09.02.280008; https://doi.org/10.1146/annurev-biochem-032620-104553 |
-| EMC complex role | EMC10 appears to be an auxiliary/peripheral EMC subunit that supports lumenal architecture and polytopic client biogenesis rather than forming the catalytic insertase core. | EMC10 is scaffolded on EMC1 and contacts EMC7 in the lumenal domain. Loss of EMC7 can cause loss of EMC10 while leaving other core components intact, and EMC10 depletion can have minimal functional consequences in some assays, supporting a peripheral classification. Recent EMC work also implicates EMC10-containing dynamic TMD elements in creating a protected environment for substrate TMD sampling. (millervedam2020structuralandmechanistic pages 18-21, hegde2022thefunctionstructure pages 11-13, odonnell2020thearchitectureof pages 10-11, pleiner2023aselectivityfilter pages 10-11) | Prior studies cited in structural work note EMC10 depletion without overt functional consequence in some settings; no direct catalytic activity assigned. (odonnell2020thearchitectureof pages 10-11, hegde2022thefunctionstructure pages 11-13) | O'Donnell et al. 2020, *eLife*; Miller-Vedam et al. 2020, *eLife*; Pleiner et al. 2023, *Journal of Cell Biology*; Hegde 2022, *Annual Review of Biochemistry* | https://doi.org/10.7554/elife.57887; https://doi.org/10.1101/2020.09.02.280008; https://doi.org/10.1083/jcb.202212007; https://doi.org/10.1146/annurev-biochem-032620-104553 |
-| secreted isoform scEMC10 | EMC10 also has an alternatively spliced secreted isoform, scEMC10, which acts as a circulating inhibitor of adipocyte thermogenesis via PKA-CREB suppression. | Primary and review sources report that scEMC10 lacks the transmembrane domain, is secreted, can be taken up by cells, binds the PKA catalytic subunit, inhibits CREB phosphorylation/activity, and suppresses thermogenic gene programs. This function is mechanistically distinct from EMC10’s role as an EMC subunit. (wang2022secretedemc10is pages 1-2, wat2024novelsecretedregulators pages 2-4, wang2022secretedemc10is pages 11-12, wat2024novelsecretedregulators pages 1-2, wang2022secretedemc10is pages 6-8) | 25 mmol/L glucose caused a ~3-fold increase in scEMC10 mRNA in cultured beta cells/islets; thermoneutrality in BAT-positive humans increased median serum scEMC10 from 2.34 to 4.25 ng/mL. (wat2024novelsecretedregulators pages 1-2, miao2025serumsecretedemc10 pages 7-9) | Wang et al. 2022, *Nature Communications*; Wat & Svensson 2024, *Diabetologia*; Miao et al. 2025, *International Journal of Obesity* | https://doi.org/10.1038/s41467-022-34259-9; https://doi.org/10.1007/s00125-024-06253-x; https://doi.org/10.1038/s41366-025-01744-2 |
-| human cohort statistics | Circulating scEMC10 is elevated with obesity and insulin resistance in multiple human cohorts and decreases after weight-loss interventions. | In white and Chinese Han cohorts, serum EMC10 positively correlated with BMI and with metabolic risk markers; in clamp studies it inversely correlated with glucose infusion rate and positively with fasting insulin. Bariatric surgery and lifestyle intervention lowered circulating EMC10 alongside improved insulin resistance. (wang2022secretedemc10is pages 1-2, wang2022secretedemc10is pages 2-3, wang2022secretedemc10is pages 11-12) | Cohorts included white lean/overweight/obese groups of n=27/20/160 and Chinese Han groups of n=32/115/39; alternate grouping reported as 30/22/188 and 32/115/39. Bariatric surgery: BMI -30.1%, serum EMC10 -57.9%, HOMA-IR -77.4% at 12 months. Diet+exercise: serum EMC10 -32%, HOMA-IR -46% at 12 months. BAT study: 38 BAT+ and 38 BAT- participants; thermoneutrality subset n=7. (wang2022secretedemc10is pages 1-2, miao2025serumsecretedemc10 pages 7-9, wang2022secretedemc10is pages 2-3, wang2022secretedemc10is pages 11-12) | Wang et al. 2022, *Nature Communications*; Miao et al. 2025, *International Journal of Obesity* | https://doi.org/10.1038/s41467-022-34259-9; https://doi.org/10.1038/s41366-025-01744-2 |
-| mouse intervention/therapeutic | Genetic deletion or antibody neutralization of scEMC10 improves metabolic phenotypes in mice, supporting therapeutic targeting. | Whole-body Emc10 knockout mice resist diet-induced obesity through higher energy expenditure and thermogenesis. A neutralizing monoclonal antibody to circulating scEMC10 lowers body weight, improves insulin sensitivity/glucose tolerance, and cross-over experiments support reversibility/causality. AAV-mediated scEMC10 overexpression worsens adiposity and glucose metabolism. (wang2022secretedemc10is pages 1-2, wat2024novelsecretedregulators pages 2-4, wang2022secretedemc10is pages 11-12, wang2022secretedemc10is pages 6-8) | On chow, WT vs KO body weight was similar: 33.68 ± 1.64 vs 33.77 ± 1.78 g, p=0.97. Antibody neutralization improved fasting glucose, glucose tolerance, insulin tolerance, and reduced weight gain in HFD models; mouse groups were often n=6–9 per arm in cited experiments. (wat2024novelsecretedregulators pages 2-4, wang2022secretedemc10is pages 6-8, wang2022secretedemc10is pages 2-3, wang2022secretedemc10is pages 11-12) | Wang et al. 2022, *Nature Communications*; Wat & Svensson 2024, *Diabetologia* | https://doi.org/10.1038/s41467-022-34259-9; https://doi.org/10.1007/s00125-024-06253-x |
-| disease genetics | Human EMC10 is genetically linked most strongly to recessive neurodevelopmental disease; weaker association signals exist for hypertension. | Open Targets aggregates genetic evidence linking EMC10 to neurodevelopmental disorder, complex genetic disorder, and the specific syndrome “neurodevelopmental disorder with dysmorphic facies and variable seizures.” Evidence includes likely loss-of-function variant classes under autosomal recessive/biallelic models. Wang et al. also note prior reports of intellectual disability/global developmental delay and male fertility roles. (OpenTargets Search: -EMC10, wang2022secretedemc10is pages 1-2, wang2022secretedemc10is pages 2-3) | Open Targets association scores: neurodevelopmental disorder 0.7349; genetic disorder 0.7108; specific neurodevelopmental syndrome 0.6956; hypertension 0.3457. Variant consequences include frameshift, stop-gained, splice-acceptor, and absent_gene_product annotations. (OpenTargets Search: -EMC10) | Open Targets Platform (query output citing PMIDs incl. 32869858, 33531666, 35124540, 35684946); Wang et al. 2022, *Nature Communications* | https://platform.opentargets.org/target/ENSG00000161671; https://doi.org/10.1038/s41467-022-34259-9 |
+These associations should be interpreted as **gene–disease evidence links** rather than definitive mechanistic proof; nonetheless, they prioritize EMC10 for deeper human genetics follow-up (variant interpretation, functional assays). (OpenTargets Search: -EMC10)
+
+### 7) Current applications and real-world implementations
+
+1. **Structural biology and mechanistic modeling of membrane-protein biogenesis**: EMC10 is routinely treated as part of the EMC lumenal module in cryo-EM and mechanistic studies, enabling modeling of insertase/chaperone cycles and topology enforcement. (pleiner2020structuralbasisfor pages 1-3, pleiner2023aselectivityfilter pages 1-2, chen2023emcchaperone–cavstructure pages 8-9)
+2. **Therapeutic concept (preclinical)**: recombinant Emc10 delivery improved post-MI angiogenesis/remodeling in mice, representing a direct application of EMC10-related biology. (reboll2017emc10(endoplasmicreticulum pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10)
+3. **Cancer biology exploratory applications**: hHSS1/EMC10-2 was proposed as a potential therapeutic factor for malignant glioblastoma based on in vitro activity and transcriptional/network effects, but remains preclinical and mechanistically unresolved. (junesgill2014humanhematopoieticsignal pages 1-2)
+
+### 8) Expert analysis and interpretive synthesis (authoritative sources)
+
+**Consensus interpretation from structural and mechanistic studies:** EMC10 is best annotated primarily as an **ER membrane complex subunit** contributing to EMC architecture and conformational states during client handling, rather than directly binding substrates as the catalytic insertase element.
+
+* The human EMC structure positions EMC10 in the lumenal module with a flexible TMD, consistent with an accessory role. (pleiner2020structuralbasisfor pages 1-3)
+* The 2023 selectivity-filter study integrates improved structural modeling with functional discrimination at the vestibule entrance and explicitly depicts EMC10 as a single-pass component of a dynamic transmembrane region (supporting a role in creating a protected insertion environment rather than dictating substrate selectivity itself). (pleiner2023aselectivityfilter pages 10-11, pleiner2023aselectivityfilter media 41b09963)
+* The 2023 client-bound structure shows movement of the lumenal module (including EMC10), indicating that the region EMC10 occupies participates in client-induced conformational changes and may help communicate “client-loaded” states. (chen2023emcchaperone–cavstructure pages 8-9)
+
+**Important caveat for annotation:** A substantial portion of the EMC10 literature concerns **secreted EMC10-related factors (HSS1/EMC10-2)**. Functional claims about angiogenesis or tumor suppression likely refer to **soluble products** and should not be conflated with the **EMC-incorporated EMC10 subunit** unless isoform usage is experimentally clarified. (volkmar2020squaringtheemc pages 10-11, junesgill2014humanhematopoieticsignal pages 1-2, reboll2017emc10(endoplasmicreticulum pages 1-2)
+
+### 9) Summary table of key findings
+| Aspect | Key findings | Evidence type | Key sources (date; URL) | Citeable context IDs |
+|---|---|---|---|---|
+| Identity / synonyms | • Verified target is **human EMC10** = **ER membrane protein complex subunit 10** • UniProt Q5UCC4 matches literature aliases **HSM1/HSS1/C19orf63** • Literature distinguishes membrane-bound EMC10 from secreted **HSS1/EMC10-2** splice product | Literature cross-mapping; review synthesis; structural papers | Pleiner et al., *Science* (2020 Jul); https://doi.org/10.1126/science.abb5008 • Volkmar & Christianson, *J Cell Sci* (2020 Apr); https://doi.org/10.1242/jcs.243519 • Junes-Gill et al., *BMC Cancer* (2014 Dec); http://www.biomedcentral.com/1471-2407/14/920 | (pleiner2020structuralbasisfor pages 1-3, volkmar2020squaringtheemc pages 10-11, junesgill2014humanhematopoieticsignal pages 1-2) |
+| Localization / topology | • EMC10 is an **ER-associated EMC subunit** positioned on the **ER-lumenal face** • Human cryo-EM places EMC10 in the **lumenal L-shaped region** with EMC1/EMC7 • EMC10 has a **single, flexible TMD**; improved cryo-EM explicitly visualized/labeled EMC10 TMD topology | Cryo-EM structure; image/figure inspection | Pleiner et al., *Science* (2020 Jul); https://doi.org/10.1126/science.abb5008 • Pleiner et al., *J Cell Biol* (2023 May); https://doi.org/10.1083/jcb.202212007 | (pleiner2020structuralbasisfor pages 1-3, pleiner2023aselectivityfilter media 41b09963) |
+| Role in EMC complex | • EMC10 is a **non-catalytic accessory/scaffold-like lumenal subunit**, not the insertase core • Contacts/positions near EMC1 and EMC7 on the lumenal side • EMC7 loss can lead to loss of EMC10 from assembled complex, supporting an auxiliary stabilizing role | Cryo-EM; mutational/assembly analysis; review synthesis | Miller-Vedam et al., *eLife* (2020 Sep); https://doi.org/10.1101/2020.09.02.280008 • Pleiner et al., *Science* (2020 Jul); https://doi.org/10.1126/science.abb5008 | (millervedam2020structuralandmechanistic pages 18-21, pleiner2020structuralbasisfor pages 1-3) |
+| Primary molecular function | • No enzyme or transporter activity has been established for EMC10 itself • Best-supported primary function is as a **structural/auxiliary EMC subunit** supporting **membrane protein biogenesis** • Functional effect is indirect, through the EMC machinery that inserts or stabilizes select membrane-protein TMDs | Structural inference; complex-level functional studies | Pleiner et al., *Science* (2020 Jul); https://doi.org/10.1126/science.abb5008 • Bai & Li, *FEBS J* (2022 Mar); https://doi.org/10.1111/febs.15786 • Li et al., *Aging (Albany NY)* (2024 Mar 15); https://doi.org/10.18632/aging.205660 | (pleiner2020structuralbasisfor pages 1-3, li2024structuralinsightsinto pages 1-3) |
+| Insertase / chaperone mechanism context | • EMC core insertase activity resides mainly in **EMC3/EMC6** hydrophilic vestibule, with EMC10 peripheral to this core • 2023 work defined a **selectivity filter** at the EMC that rejects misinserted positively charged TA substrates and enforces topology • 2023 client-bound structure supports EMC **holdase/chaperone** function for CaV channel assembly; lumenal module including EMC10 shifts during client engagement | Cryo-EM; mutagenesis; client-bound structural biology | Pleiner et al., *J Cell Biol* (2023 May); https://doi.org/10.1083/jcb.202212007 • Chen et al., *Nature* (2023 Jul); https://doi.org/10.1038/s41586-023-06175-5 • Li et al., *Aging (Albany NY)* (2024 Mar 15); https://doi.org/10.18632/aging.205660 | (pleiner2023aselectivityfilter pages 1-2, pleiner2023aselectivityfilter pages 10-11, chen2023emcchaperone–cavstructure pages 1-3, chen2023emcchaperone–cavstructure pages 8-9, li2024structuralinsightsinto pages 1-3) |
+| Secreted isoform / soluble form | • Alternative splice variant **EMC10-2 / HSS1** lacks a discernible TMD and is **secreted** • Secreted EMC10/HSS1 showed reported anti-glioma/anti-angiogenic effects in glioma assays • A separate cardiovascular study identified **secreted EMC10/Emc10** from bone marrow-derived monocytes/macrophages as a **pro-angiogenic growth factor** after MI, indicating context/isoform-dependent biology | Cell culture functional assays; recombinant protein; mouse MI models | Junes-Gill et al., *BMC Cancer* (2014 Dec); http://www.biomedcentral.com/1471-2407/14/920 • Reboll et al., *Circulation* (2017 Nov); https://doi.org/10.1161/CIRCULATIONAHA.117.029980 • Volkmar & Christianson, *J Cell Sci* (2020 Apr); https://doi.org/10.1242/jcs.243519 | (junesgill2014humanhematopoieticsignal pages 1-2, reboll2017emc10(endoplasmicreticulum pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10, volkmar2020squaringtheemc pages 10-11) |
+| Signaling linked to soluble EMC10 | • In endothelial/cardiac repair studies, Emc10 signaled via **small GTPases, PAK, p38 MAPK, and MK2** to promote actin polymerization and migration • In glioma-related studies, overexpression altered cell-cycle/tumorigenic transcriptional programs and reduced migration/invasion • These signaling findings concern the **soluble/secreted form**, not necessarily the EMC-bound ER subunit | Recombinant protein; cell migration assays; transcriptomics; mouse infarct explants | Reboll et al., *Circulation* (2017 Nov); https://doi.org/10.1161/CIRCULATIONAHA.117.029980 • Junes-Gill et al., *BMC Cancer* (2014 Dec); http://www.biomedcentral.com/1471-2407/14/920 | (reboll2017emc10(endoplasmicreticulum pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10, junesgill2014humanhematopoieticsignal pages 1-2) |
+| Disease / phenotype associations | • Open Targets lists associations with **neurodevelopmental disorder**, including **neurodevelopmental disorder with dysmorphic facies and variable seizures**, plus broader genetic disorder/hypertension links • EMC as a complex is implicated in neurological disease, diabetes, cancer, and membrane-protein proteostasis defects • Evidence is stronger at the **gene-disease association** level than for a fully resolved EMC10-specific molecular mechanism in these disorders | Database association; literature synthesis | Open Targets association context (retrieved current database evidence) • Li et al., *Aging (Albany NY)* (2024 Mar 15); https://doi.org/10.18632/aging.205660 | (OpenTargets Search: -EMC10, li2024structuralinsightsinto pages 1-3) |
+| Quantitative phenotype highlights | • Glioma study: hHSS1 overexpression changed cell-cycle distribution (**G0/G1 down, S and G2/M up; P<0.05**) and reduced migration/invasion (**P<0.001 to P<0.01**) • TCGA correlations reported for **BRCA2 r = -0.224 (P<0.0005)**, **ADAMTS1 r = -0.132 (P<0.01)**, **endostatin r = 0.141 (P<0.005)** • MI study: **85±2%** of Emc10+ cells in infarct region coexpressed **F4/80** macrophage marker | Cell biology assays; TCGA correlation; mouse histology | Junes-Gill et al., *BMC Cancer* (2014 Dec); http://www.biomedcentral.com/1471-2407/14/920 • Reboll et al., *Circulation* (2017 Nov); https://doi.org/10.1161/CIRCULATIONAHA.117.029980 | (junesgill2014humanhematopoieticsignal pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10) |
+| Applications / translation | • EMC biology is relevant to **membrane-protein biogenesis**, affecting ion channels, receptors, transporters, and viral proteins—important because many drug targets are membrane proteins • Secreted Emc10 showed **proof-of-concept therapeutic benefit** in mouse post-MI repair when delivered by osmotic minipump • EMC machinery is being considered in virus-host biology and protein-quality-control research, but there is **no EMC10-targeted approved therapy** | Structural biology; translational mouse model; review | Pleiner et al., *Science* (2020 Jul); https://doi.org/10.1126/science.abb5008 • Reboll et al., *Circulation* (2017 Nov); https://doi.org/10.1161/CIRCULATIONAHA.117.029980 • Woo et al., *J Cell Sci* (2023 Jul); https://doi.org/10.1242/jcs.261121 | (pleiner2020structuralbasisfor pages 1-3, reboll2017emc10(endoplasmicreticulum pages 1-2, reboll2017emc10(endoplasmicreticulum pages 9-10) |
 
 
-*Table: This table summarizes the main evidence-based findings for human EMC10, separating its ER membrane complex role from the distinct biology of the secreted scEMC10 isoform. It also highlights recent quantitative human and mouse data that are useful for functional annotation and translational interpretation.*
+*Table: This table summarizes the best-supported functional annotation for human EMC10/Q5UCC4, separating its likely primary role as an ER-lumenal accessory EMC subunit from reported biology of secreted EMC10/HSS1 isoforms. It also highlights recent 2023–2024 structural advances, disease links, and quantitative findings useful for downstream annotation.*
+
+### 10) Conclusion
+Human EMC10 (UniProt Q5UCC4) is most strongly supported as a **single-pass, ER-associated subunit of the EMC**, residing in the **lumenal module** and contributing structurally to a versatile insertase/holdase machine that controls insertion and topology of select membrane proteins. The most important recent advances (2023–2024) strengthen a model in which EMC10 participates in **client-induced conformational changes** and a **dynamic transmembrane environment**, while core substrate discrimination is mediated by conserved charge features within the EMC’s hydrophilic vestibule. In parallel, secreted EMC10-related isoforms (e.g., HSS1/EMC10-2) have been implicated in signaling and tissue repair, including proof-of-concept recombinant protein therapy in a mouse MI model, but the relationship between these soluble forms and the canonical EMC subunit role remains an active area for clarification. (pleiner2023aselectivityfilter media 41b09963, chen2023emcchaperone–cavstructure pages 8-9, li2024structuralinsightsinto pages 1-3, reboll2017emc10(endoplasmicreticulum pages 1-2)
+
 
 References
 
-1. (hegde2022thefunctionstructure pages 11-13): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+1. (pleiner2020structuralbasisfor pages 1-3): Tino Pleiner, Giovani Pinton Tomaleri, Kurt Januszyk, Alison J. Inglis, Masami Hazu, and Rebecca M. Voorhees. Structural basis for membrane insertion by the human er membrane protein complex. Jul 2020. URL: https://doi.org/10.1126/science.abb5008, doi:10.1126/science.abb5008. This article has 192 citations and is from a highest quality peer-reviewed journal.
 
-2. (millervedam2020structuralandmechanistic pages 18-21): Lakshmi E. Miller-Vedam, Bastian Bräuning, Katerina D. Popova, Nicole T. Schirle Oakdale, Jessica L. Bonnar, Jesuraj Rajan Prabu, Elizabeth A. Boydston, Natalia Sevillano, Matthew J. Shurtleff, Robert M. Stroud, Charles S. Craik, Brenda A. Schulman, Adam Frost, and Jonathan S. Weissman. Structural and mechanistic basis of the emc-dependent biogenesis of distinct transmembrane clients. eLife, Sep 2020. URL: https://doi.org/10.1101/2020.09.02.280008, doi:10.1101/2020.09.02.280008. This article has 102 citations and is from a domain leading peer-reviewed journal.
+2. (volkmar2020squaringtheemc pages 10-11): Norbert Volkmar and John C. Christianson. Squaring the emc – how promoting membrane protein biogenesis impacts cellular functions and organismal homeostasis. Journal of Cell Science, Apr 2020. URL: https://doi.org/10.1242/jcs.243519, doi:10.1242/jcs.243519. This article has 59 citations and is from a domain leading peer-reviewed journal.
 
-3. (wang2022secretedemc10is pages 1-2): Xuanchun Wang, Yanliang Li, Guifen Qiang, Kaihua Wang, Jiarong Dai, Maximilian McCann, Marcos D. Munoz, Victoria Gil, Yifei Yu, Shengxian Li, Zhihong Yang, Shanshan Xu, Jose Cordoba-Chacon, Dario F. De Jesus, Bei Sun, Kuangyang Chen, Yahao Wang, Xiaoxia Liu, Qing Miao, Linuo Zhou, Renming Hu, Qiang Ding, Rohit N. Kulkarni, Daming Gao, Matthias Blüher, and Chong Wee Liew. Secreted emc10 is upregulated in human obesity and its neutralizing antibody prevents diet-induced obesity in mice. Nature Communications, Nov 2022. URL: https://doi.org/10.1038/s41467-022-34259-9, doi:10.1038/s41467-022-34259-9. This article has 20 citations and is from a highest quality peer-reviewed journal.
+3. (pleiner2023aselectivityfilter pages 1-2): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
 
-4. (wat2024novelsecretedregulators pages 2-4): Lianna W. Wat and Katrin J. Svensson. Novel secreted regulators of glucose and lipid metabolism in the development of metabolic diseases. Diabetologia, 67:2626-2636, Aug 2024. URL: https://doi.org/10.1007/s00125-024-06253-x, doi:10.1007/s00125-024-06253-x. This article has 8 citations and is from a highest quality peer-reviewed journal.
+4. (chen2023emcchaperone–cavstructure pages 1-3): Zhou Chen, Abhisek Mondal, Fayal Abderemane-Ali, Seil Jang, Sangeeta Niranjan, José L. Montaño, Balyn W. Zaro, and Daniel L. Minor. Emc chaperone–cav structure reveals an ion channel assembly intermediate. Nature, 619:410-419, May 2023. URL: https://doi.org/10.1038/s41586-023-06175-5, doi:10.1038/s41586-023-06175-5. This article has 77 citations and is from a highest quality peer-reviewed journal.
 
-5. (OpenTargets Search: -EMC10): Open Targets Query (-EMC10, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+5. (li2024structuralinsightsinto pages 1-3): Mingyue Li, Chunli Zhang, Yuntao Xu, Shaobai Li, Chenhui Huang, Jian Wu, and Ming Lei. Structural insights into human emc and its interaction with vdac. Aging (Albany NY), 16:5501-5525, Mar 2024. URL: https://doi.org/10.18632/aging.205660, doi:10.18632/aging.205660. This article has 6 citations.
 
-6. (odonnell2020thearchitectureof pages 1-2): John P O'Donnell, Ben P Phillips, Yuichi Yagita, Szymon Juszkiewicz, Armin Wagner, Duccio Malinverni, Robert J Keenan, Elizabeth A Miller, and Ramanujan S Hegde. The architecture of emc reveals a path for membrane protein insertion. eLife, May 2020. URL: https://doi.org/10.7554/elife.57887, doi:10.7554/elife.57887. This article has 121 citations and is from a domain leading peer-reviewed journal.
+6. (junesgill2014humanhematopoieticsignal pages 1-2): Katiana S Junes-Gill, Chris E Lawrence, Christopher J Wheeler, Ryan Cordner, Tristan G Gill, Vernon Mar, Liron Shiri, and Lena A Basile. Human hematopoietic signal peptide-containing secreted 1 (hhss1) modulates genes and pathways in glioma: implications for the regulation of tumorigenicity and angiogenesis. BMC Cancer, Dec 2014. URL: https://doi.org/10.1186/1471-2407-14-920, doi:10.1186/1471-2407-14-920. This article has 46 citations and is from a peer-reviewed journal.
 
-7. (odonnell2020thearchitectureof pages 14-15): John P O'Donnell, Ben P Phillips, Yuichi Yagita, Szymon Juszkiewicz, Armin Wagner, Duccio Malinverni, Robert J Keenan, Elizabeth A Miller, and Ramanujan S Hegde. The architecture of emc reveals a path for membrane protein insertion. eLife, May 2020. URL: https://doi.org/10.7554/elife.57887, doi:10.7554/elife.57887. This article has 121 citations and is from a domain leading peer-reviewed journal.
+7. (millervedam2020structuralandmechanistic pages 18-21): Lakshmi E. Miller-Vedam, Bastian Bräuning, Katerina D. Popova, Nicole T. Schirle Oakdale, Jessica L. Bonnar, Jesuraj Rajan Prabu, Elizabeth A. Boydston, Natalia Sevillano, Matthew J. Shurtleff, Robert M. Stroud, Charles S. Craik, Brenda A. Schulman, Adam Frost, and Jonathan S. Weissman. Structural and mechanistic basis of the emc-dependent biogenesis of distinct transmembrane clients. eLife, Sep 2020. URL: https://doi.org/10.1101/2020.09.02.280008, doi:10.1101/2020.09.02.280008. This article has 102 citations and is from a domain leading peer-reviewed journal.
 
-8. (pleiner2023aselectivityfilter pages 1-2): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
+8. (chen2023emcchaperone–cavstructure pages 8-9): Zhou Chen, Abhisek Mondal, Fayal Abderemane-Ali, Seil Jang, Sangeeta Niranjan, José L. Montaño, Balyn W. Zaro, and Daniel L. Minor. Emc chaperone–cav structure reveals an ion channel assembly intermediate. Nature, 619:410-419, May 2023. URL: https://doi.org/10.1038/s41586-023-06175-5, doi:10.1038/s41586-023-06175-5. This article has 77 citations and is from a highest quality peer-reviewed journal.
 
-9. (odonnell2020thearchitectureof pages 10-11): John P O'Donnell, Ben P Phillips, Yuichi Yagita, Szymon Juszkiewicz, Armin Wagner, Duccio Malinverni, Robert J Keenan, Elizabeth A Miller, and Ramanujan S Hegde. The architecture of emc reveals a path for membrane protein insertion. eLife, May 2020. URL: https://doi.org/10.7554/elife.57887, doi:10.7554/elife.57887. This article has 121 citations and is from a domain leading peer-reviewed journal.
+9. (pleiner2023aselectivityfilter media 41b09963): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
 
-10. (wat2024novelsecretedregulators pages 1-2): Lianna W. Wat and Katrin J. Svensson. Novel secreted regulators of glucose and lipid metabolism in the development of metabolic diseases. Diabetologia, 67:2626-2636, Aug 2024. URL: https://doi.org/10.1007/s00125-024-06253-x, doi:10.1007/s00125-024-06253-x. This article has 8 citations and is from a highest quality peer-reviewed journal.
+10. (pleiner2023aselectivityfilter pages 10-11): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
 
-11. (odonnell2020thearchitectureof pages 11-12): John P O'Donnell, Ben P Phillips, Yuichi Yagita, Szymon Juszkiewicz, Armin Wagner, Duccio Malinverni, Robert J Keenan, Elizabeth A Miller, and Ramanujan S Hegde. The architecture of emc reveals a path for membrane protein insertion. eLife, May 2020. URL: https://doi.org/10.7554/elife.57887, doi:10.7554/elife.57887. This article has 121 citations and is from a domain leading peer-reviewed journal.
+11. (reboll2017emc10(endoplasmicreticulum pages 1-2): Marc R. Reboll, Mortimer Korf-Klingebiel, Stefanie Klede, Felix Polten, Eva Brinkmann, Ines Reimann, Hans-Joachim Schönfeld, Maria Bobadilla, Jan Faix, George Kensah, Ina Gruh, Michael Klintschar, Matthias Gaestel, Hans W. Niessen, Andreas Pich, Johann Bauersachs, Joseph A. Gogos, Yong Wang, and Kai C. Wollert. Emc10 (endoplasmic reticulum membrane protein complex subunit 10) is a bone marrow–derived angiogenic growth factor promoting tissue repair after myocardial infarction. Circulation, 136:1809–1823, Nov 2017. URL: https://doi.org/10.1161/circulationaha.117.029980, doi:10.1161/circulationaha.117.029980. This article has 55 citations and is from a highest quality peer-reviewed journal.
 
-12. (odonnell2020thearchitectureof media 65b3bb2d): John P O'Donnell, Ben P Phillips, Yuichi Yagita, Szymon Juszkiewicz, Armin Wagner, Duccio Malinverni, Robert J Keenan, Elizabeth A Miller, and Ramanujan S Hegde. The architecture of emc reveals a path for membrane protein insertion. eLife, May 2020. URL: https://doi.org/10.7554/elife.57887, doi:10.7554/elife.57887. This article has 121 citations and is from a domain leading peer-reviewed journal.
+12. (reboll2017emc10(endoplasmicreticulum pages 9-10): Marc R. Reboll, Mortimer Korf-Klingebiel, Stefanie Klede, Felix Polten, Eva Brinkmann, Ines Reimann, Hans-Joachim Schönfeld, Maria Bobadilla, Jan Faix, George Kensah, Ina Gruh, Michael Klintschar, Matthias Gaestel, Hans W. Niessen, Andreas Pich, Johann Bauersachs, Joseph A. Gogos, Yong Wang, and Kai C. Wollert. Emc10 (endoplasmic reticulum membrane protein complex subunit 10) is a bone marrow–derived angiogenic growth factor promoting tissue repair after myocardial infarction. Circulation, 136:1809–1823, Nov 2017. URL: https://doi.org/10.1161/circulationaha.117.029980, doi:10.1161/circulationaha.117.029980. This article has 55 citations and is from a highest quality peer-reviewed journal.
 
-13. (odonnell2020thearchitectureof media 6e794663): John P O'Donnell, Ben P Phillips, Yuichi Yagita, Szymon Juszkiewicz, Armin Wagner, Duccio Malinverni, Robert J Keenan, Elizabeth A Miller, and Ramanujan S Hegde. The architecture of emc reveals a path for membrane protein insertion. eLife, May 2020. URL: https://doi.org/10.7554/elife.57887, doi:10.7554/elife.57887. This article has 121 citations and is from a domain leading peer-reviewed journal.
-
-14. (chitwood2019theroleof pages 2-4): Patrick J. Chitwood and Ramanujan S. Hegde. The role of emc during membrane protein biogenesis. Trends in cell biology, 29 5:371-384, May 2019. URL: https://doi.org/10.1016/j.tcb.2019.01.007, doi:10.1016/j.tcb.2019.01.007. This article has 97 citations and is from a domain leading peer-reviewed journal.
-
-15. (pleiner2023aselectivityfilter pages 10-11): Tino Pleiner, Masami Hazu, Giovani Pinton Tomaleri, Vy N. Nguyen, Kurt Januszyk, and Rebecca M. Voorhees. A selectivity filter in the er membrane protein complex limits protein misinsertion at the er. The Journal of Cell Biology, May 2023. URL: https://doi.org/10.1083/jcb.202212007, doi:10.1083/jcb.202212007. This article has 28 citations.
-
-16. (wang2022secretedemc10is pages 6-8): Xuanchun Wang, Yanliang Li, Guifen Qiang, Kaihua Wang, Jiarong Dai, Maximilian McCann, Marcos D. Munoz, Victoria Gil, Yifei Yu, Shengxian Li, Zhihong Yang, Shanshan Xu, Jose Cordoba-Chacon, Dario F. De Jesus, Bei Sun, Kuangyang Chen, Yahao Wang, Xiaoxia Liu, Qing Miao, Linuo Zhou, Renming Hu, Qiang Ding, Rohit N. Kulkarni, Daming Gao, Matthias Blüher, and Chong Wee Liew. Secreted emc10 is upregulated in human obesity and its neutralizing antibody prevents diet-induced obesity in mice. Nature Communications, Nov 2022. URL: https://doi.org/10.1038/s41467-022-34259-9, doi:10.1038/s41467-022-34259-9. This article has 20 citations and is from a highest quality peer-reviewed journal.
-
-17. (nie2023latestadvancesin pages 1-2): Tao Nie, Jinli Lu, Hua Zhang, and Liufeng Mao. Latest advances in the regulatory genes of adipocyte thermogenesis. Frontiers in Endocrinology, Aug 2023. URL: https://doi.org/10.3389/fendo.2023.1250487, doi:10.3389/fendo.2023.1250487. This article has 3 citations.
-
-18. (wang2022secretedemc10is pages 2-3): Xuanchun Wang, Yanliang Li, Guifen Qiang, Kaihua Wang, Jiarong Dai, Maximilian McCann, Marcos D. Munoz, Victoria Gil, Yifei Yu, Shengxian Li, Zhihong Yang, Shanshan Xu, Jose Cordoba-Chacon, Dario F. De Jesus, Bei Sun, Kuangyang Chen, Yahao Wang, Xiaoxia Liu, Qing Miao, Linuo Zhou, Renming Hu, Qiang Ding, Rohit N. Kulkarni, Daming Gao, Matthias Blüher, and Chong Wee Liew. Secreted emc10 is upregulated in human obesity and its neutralizing antibody prevents diet-induced obesity in mice. Nature Communications, Nov 2022. URL: https://doi.org/10.1038/s41467-022-34259-9, doi:10.1038/s41467-022-34259-9. This article has 20 citations and is from a highest quality peer-reviewed journal.
-
-19. (wang2022secretedemc10is pages 11-12): Xuanchun Wang, Yanliang Li, Guifen Qiang, Kaihua Wang, Jiarong Dai, Maximilian McCann, Marcos D. Munoz, Victoria Gil, Yifei Yu, Shengxian Li, Zhihong Yang, Shanshan Xu, Jose Cordoba-Chacon, Dario F. De Jesus, Bei Sun, Kuangyang Chen, Yahao Wang, Xiaoxia Liu, Qing Miao, Linuo Zhou, Renming Hu, Qiang Ding, Rohit N. Kulkarni, Daming Gao, Matthias Blüher, and Chong Wee Liew. Secreted emc10 is upregulated in human obesity and its neutralizing antibody prevents diet-induced obesity in mice. Nature Communications, Nov 2022. URL: https://doi.org/10.1038/s41467-022-34259-9, doi:10.1038/s41467-022-34259-9. This article has 20 citations and is from a highest quality peer-reviewed journal.
-
-20. (miao2025serumsecretedemc10 pages 7-9): Qing Miao, Yahao Wang, Qiongyue Zhang, Wei Wu, Yifei Yu, Fangfang Zeng, Yehong Yang, Chuantao Zuo, Yihui Guan, Chong Wee Liew, Matthias Blüher, Yiming Li, and Xuanchun Wang. Serum secreted emc10 (scemc10) levels are inversely associated with metabolically active brown adipose tissue in humans. International Journal of Obesity, 49:1264-1271, Mar 2025. URL: https://doi.org/10.1038/s41366-025-01744-2, doi:10.1038/s41366-025-01744-2. This article has 1 citations and is from a highest quality peer-reviewed journal.
-
-21. (hegde2022thefunctionstructure pages 10-11): Ramanujan S. Hegde. The function, structure, and origins of the er membrane protein complex. Annual Review of Biochemistry, 91:651-678, Jun 2022. URL: https://doi.org/10.1146/annurev-biochem-032620-104553, doi:10.1146/annurev-biochem-032620-104553. This article has 65 citations and is from a domain leading peer-reviewed journal.
+13. (OpenTargets Search: -EMC10): Open Targets Query (-EMC10, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](EMC10-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000029 The architecture and subunit localization of the human EMC (ER membrane protein complex) are detailed in Figure 5. Panel B shows th](EMC10-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000014 Figure 3A on page 5 provides an improved cryo-EM model of the human EMC, illustrating the transmembrane topology of its subunits. T](EMC10-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. pleiner2023aselectivityfilter pages 1-2
-2. odonnell2020thearchitectureof pages 1-2
-3. odonnell2020thearchitectureof pages 11-12
-4. millervedam2020structuralandmechanistic pages 18-21
-5. chitwood2019theroleof pages 2-4
-6. odonnell2020thearchitectureof pages 10-11
-7. hegde2022thefunctionstructure pages 11-13
-8. pleiner2023aselectivityfilter pages 10-11
-9. nie2023latestadvancesin pages 1-2
-10. wat2024novelsecretedregulators pages 2-4
-11. odonnell2020thearchitectureof pages 14-15
-12. wat2024novelsecretedregulators pages 1-2
-13. hegde2022thefunctionstructure pages 10-11
-14. https://doi.org/10.1083/jcb.202212007
-15. https://doi.org/10.1007/s00125-024-06253-x
-16. https://doi.org/10.1038/s41467-022-34259-9
-17. https://doi.org/10.1146/annurev-biochem-032620-104553
-18. https://doi.org/10.7554/elife.57887
-19. https://platform.opentargets.org/target/ENSG00000161671
-20. https://doi.org/10.7554/elife.57887;
-21. https://doi.org/10.1101/2020.09.02.280008;
-22. https://doi.org/10.1083/jcb.202212007;
-23. https://doi.org/10.1038/s41467-022-34259-9;
-24. https://doi.org/10.1007/s00125-024-06253-x;
-25. https://doi.org/10.1038/s41366-025-01744-2
-26. https://platform.opentargets.org/target/ENSG00000161671;
-27. https://doi.org/10.1146/annurev-biochem-032620-104553,
-28. https://doi.org/10.1101/2020.09.02.280008,
-29. https://doi.org/10.1038/s41467-022-34259-9,
-30. https://doi.org/10.1007/s00125-024-06253-x,
-31. https://doi.org/10.7554/elife.57887,
-32. https://doi.org/10.1083/jcb.202212007,
-33. https://doi.org/10.1016/j.tcb.2019.01.007,
-34. https://doi.org/10.3389/fendo.2023.1250487,
-35. https://doi.org/10.1038/s41366-025-01744-2,
+1. junesgill2014humanhematopoieticsignal pages 1-2
+2. pleiner2020structuralbasisfor pages 1-3
+3. millervedam2020structuralandmechanistic pages 18-21
+4. li2024structuralinsightsinto pages 1-3
+5. volkmar2020squaringtheemc pages 10-11
+6. pleiner2023aselectivityfilter pages 1-2
+7. pleiner2023aselectivityfilter pages 10-11
+8. http://www.biomedcentral.com/1471-2407/14/920
+9. https://doi.org/10.1126/science.abb5008
+10. https://doi.org/10.1038/s41586-023-06175-5
+11. https://doi.org/10.1083/jcb.202212007
+12. https://doi.org/10.18632/aging.205660
+13. https://doi.org/10.1161/CIRCULATIONAHA.117.029980
+14. https://doi.org/10.1242/jcs.243519
+15. https://doi.org/10.1101/2020.09.02.280008
+16. https://doi.org/10.1111/febs.15786
+17. https://doi.org/10.1242/jcs.261121
+18. https://doi.org/10.1126/science.abb5008,
+19. https://doi.org/10.1242/jcs.243519,
+20. https://doi.org/10.1083/jcb.202212007,
+21. https://doi.org/10.1038/s41586-023-06175-5,
+22. https://doi.org/10.18632/aging.205660,
+23. https://doi.org/10.1186/1471-2407-14-920,
+24. https://doi.org/10.1101/2020.09.02.280008,
+25. https://doi.org/10.1161/circulationaha.117.029980,
