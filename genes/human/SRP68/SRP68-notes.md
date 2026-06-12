@@ -49,3 +49,11 @@ into the conformation required for SRP function and for SRP receptor docking.
 ## Disease
 Biallelic SRP68 variants -> severe congenital neutropenia (SCN10) [PMID:32273475]. Not a GO BP per se.
 </content>
+
+## Falcon deep-research findings (incorporated 2026-06)
+- Reconstituted human SRP shows the SRP68/72 heterodimer binds the 80S ribosome with ultrasensitive, avidity-driven nanomolar affinity dominated by the SRP72 C-terminus [PMID:30649417 "Ultrasensitive binding of SRP68/72 indicates avidity by multiple binding sites that are dominated by the C-terminus of SRP72"]. Added to ribosome binding (GO:0043022) supported_by.
+- SRP54 binds the ribosome via a two-step mechanism while SRP RNA alone does not bind the ribosome [PMID:30649417 "SRP RNA does not bind to the ribosome, while SRP binds with nanomolar affinity involving a two-step mechanism of the key-player SRP54"].
+- A modern nucleolar phase of SRP assembly: SRP proteins (incl. SRP68) associate with scores of nucleolar/ribosome-biogenesis factors and require an intact nucleolus for proper localization; some SRP proteins are in Cajal bodies [PMID:38858088 "an intact organelle is required for their proper localization"]. Added to nucleolus (GO:0005730) supported_by.
+- SRP and ribosomes are assembled in the same condensate (nucleolus), suggesting coordinated biogenesis [PMID:38858088 "the SRP and ribosomes are assembled in the same biomolecular condensate: the nucleolus"].
+- Disease: biallelic germline SRP68 loss-of-function variants cause severe congenital neutropenia, with patient granulopoiesis defects, ER stress (spliced XBP1) and p53-pathway activation [PMID:32273475 (Haematologica 2021; abstract not in PubMed, verified by title/journal/MeSH "Neutropenia"; Congenital Bone Marrow Failure Syndromes)]. Reference added (already cited in description).
+- SRP68 remains best classified as a non-enzymatic RNA-binding S-domain scaffold; SRP54 is the signal-sequence/receptor GTPase subunit (consistent with existing review framing).

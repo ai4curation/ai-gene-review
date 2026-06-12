@@ -54,3 +54,11 @@ SRP72 is the largest subunit of the mammalian signal recognition particle (SRP),
 1. 7S/7SL RNA binding scaffold subunit of SRP (heterodimer with SRP68), enabling SRP assembly and ribosome interaction.
 2. Structural/RNA-binding S-domain component participating in SRP-dependent cotranslational protein targeting to the ER membrane.
 </content>
+
+## Falcon deep-research findings (incorporated 2026-06)
+- GFP-SRP72 co-immunoprecipitates other SRP subunits and localizes to the nucleolus (periphery of the dense fibrillar component, PDFC) and to Cajal bodies; five SRP proteins including SRP72 assemble with 7SL RNA in the nucleolus before SRP54 joins in the cytoplasm [PMID:38858088 "an intact organelle is required for their proper localization"; "two SRP proteins in Cajal bodies"]. New localization/biogenesis evidence (nucleolar/CB phase) for SRP72; reference added (relevance HIGH).
+- Alu-domain/S-domain inter-subunit contacts involving SRP72 are RNase-sensitive, confirming 7SL-RNA-mediated complex architecture [PMID:38858088].
+- SRP72 reinforced as a germline autosomal-dominant predisposition gene for MDS/aplastic anemia/bone-marrow failure (two families) [PMID:30670445 "germline predisposition is increasingly recognized in MDS"]. Corroborates existing BMFS1/PMID:22541560 disease annotation; review reference added.
+- Host-pathogen: Zika virus bypasses the SRP receptor via NS3-SRP54/translocon interactions and engages SRP machinery (incl. SRP72) during ER-translation remodeling [PMID:39621795 "Zika virus appears to maintain ER-localised translation via NS3-SRP54 interaction"]. Peripheral (relevance LOW).
+- Non-canonical SRP role: under acute heat shock, 7SL RNA/SRP arrest transcription and translation independent of signal peptides; SRP binds ribosomes and inhibits new protein synthesis [PMID:39952919 "Translational suppression occurs independently of the signal peptide and is abrogated by depleting SRP"]. SRP72-specific contribution not isolated (relevance LOW).
+- Quality-control framing: SRP-targeting failures couple to RAPP mRNA degradation, situating SRP as a proteostasis gatekeeper [PMID:37346176; PMID:37859801] — context noted, not added as SRP72-specific annotations.
