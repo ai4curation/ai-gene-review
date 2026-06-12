@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T04:30:51.958966'
-end_time: '2026-06-12T04:56:23.670377'
-duration_seconds: 1531.71
+start_time: '2026-06-12T04:47:36.891883'
+end_time: '2026-06-12T05:02:08.223244'
+duration_seconds: 871.33
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -28,7 +28,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 40
+citation_count: 20
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -45,9 +45,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000037 The provided figures demonstrate that
-    RNF5 regulates EphA2 stability and its downstream signaling, which correlates
-    with patient su'
+  description: '## Context ID: pqac-00000017 The document does not contain a schematic
+    labeled as Figure 1 that summarizes the pathway; Figure 1 in this paper focuses
+    on charac'
 ---
 
 ## Question
@@ -158,268 +158,188 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Human **RNF5** (UniProt **Q99942**) — functional annotation, pathways, and translational relevance
+## Research report: Human RNF5 (UniProt Q99942) functional annotation (2023–2024 emphasis)
 
-### 0) Target verification (gene/protein identity)
-The target is **human RNF5** (UniProt **Q99942**), also known as **RMA1**. Primary literature describes RNF5 as an **ER-anchored RING-domain E3 ubiquitin ligase** involved in ER-associated degradation (ERAD), consistent with the UniProt description provided. RNF5 is reported to be anchored to the ER membrane via a **C-terminal transmembrane segment**, positioning its RING domain in the cytosol where it engages E2~ubiquitin conjugates and substrates at the cytosolic face of the ER. (tcherpakov2009regulationofendoplasmic pages 1-1, tcherpakov2009regulationofendoplasmic pages 1-2)
+### 0) Target verification (critical)
+The requested target is **human RNF5** (ring finger protein 5), UniProt **Q99942**, also known as **RMA1**. Recent CFTR/ERAD and innate-immunity literature consistently describes RNF5 as an **ER-anchored/ER-embedded RING E3 ubiquitin ligase** with C-terminal transmembrane segment(s), matching the UniProt-provided identity and domain architecture (RING finger with membrane anchor). (okiyoneda2024targetingubiquitinationmachinery pages 4-7, brusa2023innovativestrategytoward pages 9-11, kamada2024herc3facilitateserad pages 1-2)
 
 ### 1) Key concepts and definitions (current understanding)
 
 #### 1.1 Ubiquitination and E3 ligases
-**Ubiquitination** is a post-translational modification in which ubiquitin is covalently attached to substrate lysines through an E1–E2–E3 enzyme cascade. The **E3 ubiquitin ligase** confers substrate specificity and catalyzes ubiquitin transfer from the E2 enzyme to the substrate. Polyubiquitin chains of distinct linkages can encode different outcomes (e.g., K48-linked chains often promote proteasomal degradation, while other linkages can signal non-proteolytic functions).
+RNF5 functions as an **E3 ubiquitin ligase**, i.e., an enzyme that catalyzes transfer of ubiquitin from an E2 enzyme to substrate proteins, thereby modulating substrate fate (often proteasomal degradation depending on ubiquitin chain topology). In the contexts retrieved here, RNF5 is repeatedly linked to **proteasome-directed ubiquitination**, particularly in ER quality control and innate immune adaptor turnover. (ge2024rnf5inhibitingantiviral pages 4-5, okiyoneda2024targetingubiquitinationmachinery pages 4-7)
 
-RNF5 is a **RING-type E3** (Really Interesting New Gene), which typically serves as a scaffold bringing the E2~Ub and substrate together to facilitate direct ubiquitin transfer. (tcherpakov2009regulationofendoplasmic pages 1-1)
+#### 1.2 ER-associated degradation (ERAD) and ER quality control (ERQC)
+**ERAD** is the principal pathway for disposing of misfolded or unassembled proteins in the endoplasmic reticulum. RNF5 is one of several ER membrane E3 ligases that recognize misfolded membrane proteins and initiate ubiquitination, targeting them for extraction and degradation by the proteasome. In CFTR biology, RNF5 is described as an **ER-anchored E3** that detects folding/assembly defects at early biogenesis stages and contributes to degradation of misfolded CFTR variants such as F508del. (okiyoneda2024targetingubiquitinationmachinery pages 4-7, kamada2024herc3facilitateserad pages 1-2)
 
-#### 1.2 ER-associated degradation (ERAD)
-**ERAD** is a protein quality control pathway that targets misfolded or unassembled proteins in the endoplasmic reticulum for **retrotranslocation/dislocation** to the cytosol and degradation by the **ubiquitin–proteasome system (UPS)**. RNF5 is positioned as an ER-resident E3 that can ubiquitinate substrates during early folding/biogenesis stages and influence the assembly of ERAD machinery. (tcherpakov2009regulationofendoplasmic pages 1-2, tcherpakov2009regulationofendoplasmic pages 1-1)
+#### 1.3 Innate immune adaptor regulation (cGAS–STING and RIG-I/MAVS)
+In antiviral innate immunity, adaptor proteins such as **STING (MITA)** and **MAVS (VISA)** drive type I interferon signaling. RNF5 is described as a **negative regulator** of these pathways by mediating ubiquitination and degradation of key adaptors (e.g., STING, MAVS) and downstream signaling proteins (e.g., IRF3 via recruitment mechanisms). (ge2024rnf5inhibitingantiviral pages 5-7, ge2024rnf5inhibitingantiviral pages 4-5)
 
-#### 1.3 Innate immune adaptor control by ubiquitination
-Innate immune signaling relies on adaptor proteins such as **STING** (cGAS–STING axis; DNA sensing) and **MAVS/VISA** (RIG-I-like receptor axis; RNA sensing). RNF5 can attenuate antiviral responses by promoting ubiquitination-dependent turnover of these adaptors, thereby tuning the amplitude and duration of type I interferon signaling. (ge2024rnf5inhibitingantiviral pages 2-4, yang2022e3ubiquitinligase pages 1-2)
+### 2) RNF5 molecular function, localization, and substrate specificity
 
-### 2) Molecular function of RNF5 (reaction, substrate specificity)
+#### 2.1 Subcellular localization
+Across multiple sources, RNF5 is described as **ER-anchored/ER-embedded** and membrane-associated, consistent with its principal roles in ERQC/ERAD and membrane-proximal innate signaling regulation. (okiyoneda2024targetingubiquitinationmachinery pages 4-7, kamada2024herc3facilitateserad pages 1-2)
 
-#### 2.1 Enzymatic activity
-RNF5 catalyzes the transfer of ubiquitin from an E2 enzyme to substrate proteins (EC 2.3.2.27 in UniProt; mechanistically a RING E3). Experimentally, RNF5 supports both **degradative ubiquitination** (e.g., substrates routed to proteasome) and **non-degradative “noncanonical” ubiquitination** that modulates protein interactions.
+#### 2.2 RNF5 in CFTR ERAD: substrate recognition and pathway placement
+**CFTR-F508del** is a misfolding-prone variant targeted for ERAD. RNF5 is described as recognizing folding/assembly defects in CFTR, including defects sensed at the N-terminus, and operating **sequentially with CHIP** (RNF5 early; CHIP later/post-translational) in monitoring CFTR folding status. (okiyoneda2024targetingubiquitinationmachinery pages 4-7)
 
-A clear example of non-degradative control is RNF5 ubiquitination of **JAMP** (JNK-associated membrane protein): RNF5-mediated ubiquitination does not destabilize JAMP but disrupts JAMP’s ability to recruit proteasomes and the AAA ATPase p97/VCP to ERAD sites, thereby reducing clearance efficiency of misfolded proteins. (tcherpakov2009regulationofendoplasmic pages 1-2, tcherpakov2009regulationofendoplasmic pages 1-1, tcherpakov2009regulationofendoplasmic pages 2-3)
+Mechanistic placement supported by several sources:
+- RNF5 contributes to ubiquitination of **immature/core-glycosylated CFTR (Band B)** rather than the mature plasma-membrane form (Band C), consistent with an early ER quality-control role. (riepe2024smallmoleculecorrectorsdivert pages 3-4)
+- RNF5 was described as recognizing N-terminal regions/MSD1 and initiating ubiquitin chain formation that can be **elongated by gp78/AMFR** to facilitate ERAD. (kamada2024herc3facilitateserad pages 1-2)
+- RNF5 shows **redundancy/compensation** with RNF185 (another ER membrane E3), which helps explain why single-gene perturbations can yield modest stabilization. (riepe2024smallmoleculecorrectorsdivert pages 3-4, okiyoneda2024targetingubiquitinationmachinery pages 11-13)
 
-#### 2.2 E2 partners and linkage logic
-In the JAMP context, RNF5-mediated ubiquitination is described as **Ubc13-dependent**, consistent with noncanonical chain formation and with experimental probing of chain topology (including K63). (tcherpakov2009regulationofendoplasmic pages 1-1, tcherpakov2009regulationofendoplasmic pages 1-2)
+#### 2.3 Innate immunity substrates: STING, MAVS, IRF3
+A 2024 review focused on RNF5 in antiviral signaling summarizes that RNF5 promotes ubiquitination and degradation of **STING** and **MAVS**, thereby inhibiting antiviral innate immunity. (ge2024rnf5inhibitingantiviral pages 5-7, ge2024rnf5inhibitingantiviral pages 4-5)
 
-In CFTR ERAD modules, RNF5/RMA1 functions in a network with ERAD factors and E2 enzymes (and in the broader RNF5/RNF185 module, E2s such as **Ubc6e** and **UbcH5 family members** are implicated). (khouri2013rnf185isa pages 11-13)
+Residue-level details reported (from sources cited within the 2024 MI study’s mechanistic background and consistent with the innate-immunity review):
+- STING/MITA targeted at **K150** (degradative ubiquitination context). (wan2024ringfingerprotein pages 12-13, ge2024rnf5inhibitingantiviral pages 4-5)
+- MAVS/VISA ubiquitination at **K362** and **K461** with proteasome-dependent degradation. (wan2024ringfingerprotein pages 12-13, ge2024rnf5inhibitingantiviral pages 4-5)
+- Activated **IRF3** can be degraded in a complex where JMJD6 recruits RNF5, as summarized in the innate-immunity-focused review. (ge2024rnf5inhibitingantiviral pages 4-5)
 
-### 3) Subcellular localization and where RNF5 acts
-RNF5 is primarily described as **ER membrane anchored** (C-terminal transmembrane segment) and acts at the ER cytosolic interface where ERAD occurs. This localization supports its roles in: 
-- ERAD of nascent or misfolded secretory/membrane proteins (e.g., CFTR)
-- Regulation of ER-associated scaffolds (e.g., JAMP)
-- Control of innate immune signaling platforms that initiate at/near the ER (e.g., STING) (tcherpakov2009regulationofendoplasmic pages 1-1, tcherpakov2009regulationofendoplasmic pages 1-2, ge2024rnf5inhibitingantiviral pages 2-4)
+#### 2.4 Autophagy-related regulation (ATG4B)
+RNF5 has also been connected to autophagy regulation by controlling the stability of autophagy proteins. In the context of RNF5 inhibition strategies in CF, RNF5 inhibition (inh-2 and optimized analogues) is reported to increase **basal autophagy**, consistent with prior descriptions that RNF5 can promote **ATG4B degradation** and that RNF5 inhibitors interfere with this effect. (brusa2023innovativestrategytoward pages 9-11, brusa2023innovativestrategytoward pages 14-15)
 
-### 4) Experimentally supported pathways and substrates
+#### 2.5 Cardiovascular signaling (ASK1)
+A 2024 mouse/cardiomyocyte study proposes a cardioprotective role for RNF5, reporting that RNF5 downregulation occurs in infarcted heart tissue and that RNF5 knockout worsens myocardial infarction phenotypes, while RNF5 overexpression is protective; mechanistically, protection is attributed to inhibition of **ASK1 activation** (phosphorylation), though the directness of RNF5’s E3 action on ASK1 is not fully resolved in the provided excerpt. (wan2024ringfingerprotein pages 12-13)
 
-#### 4.1 CFTR quality control and cystic fibrosis (ERAD)
-A foundational RNF5 function is targeting **CFTR** (including the major disease mutant **F508del**) for ERAD.
+### 3) Recent developments (prioritizing 2023–2024)
 
-**Timing and checkpoints**: RNF5/RMA1 acts early, consistent with **co-translational recognition** of folding defects and early commitment of mutant CFTR to ERAD. (michael2006selectionofmisfolded pages 100-105, khouri2013rnf185isa pages 1-2)
+#### 3.1 Genome-wide CRISPR screens redefine RNF5’s role as important but partially redundant in CFTR-F508del ERAD (2024)
+A 2024 Molecular Biology of the Cell study performed genome-wide CRISPR/Cas9 screens to identify machinery driving CFTR-F508del ERAD.
+- **Scale**: **20,528 genes** screened; **207 high-confidence hits** at **FDR < 1%**. (riepe2024smallmoleculecorrectorsdivert pages 3-4)
+- **Key result**: RNF5 was the **top E3 ligase hit**, but **RNF5 knockout only modestly reduced CFTR-F508del degradation**, supporting robustness and redundancy. (riepe2024smallmoleculecorrectorsdivert pages 3-4, riepe2024smallmoleculecorrectorsdivert pages 1-2)
+- **Redundancy**: secondary screens in an RNF5 knockout background identified **RNF185** as a redundant ligase. (riepe2024smallmoleculecorrectorsdivert pages 3-4, okiyoneda2024targetingubiquitinationmachinery pages 11-13)
+- **Quantitative kinetics**: CFTR-F508del reporter showed a degradation half-life of about **34 minutes** in the reported system. (riepe2024smallmoleculecorrectorsdivert pages 3-4)
 
-**Cooperation and redundancy**: RNF5 and its homolog RNF185 form a functionally redundant module. In RNF185-focused work, RNF5 knockdown increased F508del CFTR steady-state levels by ~**3-fold**, RNF185 knockdown by ~**2-fold**, while **dual depletion** increased levels ~**4.5-fold** and blocked degradation during and after synthesis, highlighting redundancy and robustness in CFTR ERAD. (khouri2013rnf185isa pages 11-13, khouri2013rnf185isa pages 1-2)
+A schematic (Figure 4A) from this work summarizes sequential folding states and proposes that small-molecule correctors stabilize folding states that are not RNF5 substrates. (riepe2024smallmoleculecorrectorsdivert media 192d3a11)
 
-**Systems-level 2024 update**: A 2024 genome-wide CRISPR screen identified **RNF5 as the top E3 hit** for CFTR-F508del ERAD, but also found that RNF5 knockout alone only modestly reduced degradation, and RNF185 emerged as a redundant ligase in sensitized screens. Importantly, clinically used correctors **tezacaftor (VX-661)** and **elexacaftor (VX-445)** stabilized sequential folding states that become **RNF5-resistant**—a mechanistic explanation for how correctors divert mutant CFTR away from RNF5-dependent ubiquitylation. (riepe2024smallmoleculecorrectorsdivert pages 1-2)
+#### 3.2 Medicinal chemistry progress: thiadiazole RNF5 inhibitors that enhance mutant CFTR rescue (2023)
+A 2023 Journal of Medicinal Chemistry study advanced RNF5 inhibition as a CF strategy.
+- **Inhibitor scaffold**: inh-2 (1,2,4-thiadiazol-5-ylidene) described as a first-in-class RNF5 inhibitor, with SAR leading to improved analogues including **compound/analogue 16**. (brusa2023innovativestrategytoward pages 14-15, brusa2023innovativestrategytoward pages 1-3)
+- **On-target validation**: analogue 16 improved CFTR rescue in control (NT siRNA) cells but **not** in **RNF5 siRNA** cells, consistent with RNF5-dependent activity. (brusa2023innovativestrategytoward pages 11-14)
+- **Experimental concentrations** (useful for real-world reproducibility): compounds commonly tested at **5 μM**, with CFTR correctors used at **VX-809 1–3 μM**, **VX-445 3 μM**, and **VX-661 + VX-445 10 μM + 3 μM**; MG-132 used at **10 μM** for ubiquitination assays. (brusa2023innovativestrategytoward pages 11-14)
+- **Autophagy link**: analogue 16 increased basal autophagy, consistent with RNF5 inhibition phenotypes. (brusa2023innovativestrategytoward pages 11-14, brusa2023innovativestrategytoward pages 14-15)
 
-#### 4.2 ERAD regulation via JAMP
-RNF5 binds and ubiquitinates JAMP in the ER membrane, producing **Ubc13-dependent noncanonical ubiquitination** that inhibits JAMP interaction with proteasome subunit Rpt5 and p97/VCP. This acts as a negative regulator of ERAD assembly at the ER, modulating proteasome recruitment rather than JAMP turnover. (tcherpakov2009regulationofendoplasmic pages 1-2, tcherpakov2009regulationofendoplasmic pages 1-1)
+#### 3.3 Updated CF translational assessment: no ubiquitination-pathway drugs in CF clinical trials (2024 review)
+A 2024 review focused on targeting ubiquitination machinery in CF notes that, despite long-standing interest, **no compounds targeting ubiquitination have entered clinical trials for CF** (at least as of June 2024 publication). (okiyoneda2024targetingubiquitinationmachinery pages 4-7)
 
-#### 4.3 Innate immunity: STING and MAVS (VISA)
-RNF5 is described as a negative regulator of antiviral innate immunity.
+The same review summarizes:
+- RNF5 as an ER-anchored E3 that recognizes CFTR folding defects, pairs with E2 enzymes (e.g., UBE2J1), and acts sequentially with CHIP. (okiyoneda2024targetingubiquitinationmachinery pages 4-7)
+- Preclinical results in which **in vivo suppression of RNF5** in F508del-CFTR transgenic mice improved intestinal malabsorption and increased CFTR activity in intestinal epithelial cells. (okiyoneda2024targetingubiquitinationmachinery pages 4-7)
 
-**STING**: Mechanistic synthesis indicates RNF5 promotes **K48-linked polyubiquitination of STING at K150**, causing **proteasomal degradation** and limiting STING-dependent type I interferon responses. (ge2024rnf5inhibitingantiviral pages 2-4)
+#### 3.4 RNF5 as an innate-immunity node and potential host-directed antiviral target (2024 review)
+A 2024 Frontiers in Immunology review describes RNF5 as a key modulator of antiviral signaling and virus life cycle through ubiquitination of host innate-immune proteins (STING, MAVS, IRF3) and also viral proteins (notably in SARS-CoV-2 and KSHV contexts). (ge2024rnf5inhibitingantiviral pages 5-7, ge2024rnf5inhibitingantiviral pages 7-9)
 
-**MAVS/VISA**: RNF5 catalyzes **K48-linked ubiquitination of MAVS** at residues **K362 and K461**, promoting its proteasome-dependent turnover and reducing downstream signaling (TBK1/IRF3). In viral contexts, alternative linkage types and degradation routes (e.g., K27 linkage and NBR1-mediated autophagy of ubiquitinated MAVS) are also described. (ge2024rnf5inhibitingantiviral pages 2-4)
+### 4) Current applications and real-world implementations
 
-**Disease-model evidence**: In HSV-1 keratitis models, RNF5 silencing increased STING and downstream activation markers (p-TBK1, p-IRF3) and IFN-β mRNA, and reduced viral titers and inflammation in vivo, supporting RNF5 as a suppressor of protective STING/IRF3 signaling. (liu2022e3ligasernf5 pages 1-2)
+#### 4.1 Cystic fibrosis: modulating RNF5-mediated ubiquitination to rescue CFTR
+The most concrete application in the retrieved corpus is RNF5 inhibition to stabilize immature F508del-CFTR and improve response to CFTR correctors.
+- **Real-world relevance**: Over **80%** of people with CF carry the F508del mutation, making the pathway broadly relevant to CF therapeutics. (riepe2024smallmoleculecorrectorsdivert pages 1-2)
+- **Implementation status**: RNF5 inhibitors (inh-2, analogue 16) have been tested in airway epithelial models and in combination with clinically used correctors, but **translation remains preclinical**, and reviews emphasize lack of clinical trials targeting ubiquitination in CF. (okiyoneda2024targetingubiquitinationmachinery pages 4-7, brusa2023innovativestrategytoward pages 11-14)
 
-#### 4.4 Viral infection biology
+#### 4.2 Host-directed antiviral strategies
+RNF5 modulation (both inhibition and activation) is discussed as a strategy to shift antiviral signaling and/or viral replication steps, but this is currently largely mechanistic/preclinical in the provided corpus. (ge2024rnf5inhibitingantiviral pages 5-7, ge2024rnf5inhibitingantiviral pages 7-9)
 
-**SARS-CoV-2 envelope (E) protein restriction (2023)**: RNF5 ubiquitinates SARS-CoV-2 E protein at **K63 (viral lysine 63)** and promotes its degradation via the **UPS**, restricting viral replication. Proteasome inhibitor MG132 stabilized E, and a catalytically inactive RNF5 mutant (C42S) failed to promote E degradation. The study reports an RNF5 pharmacologic activator (**Analog-1**) that alleviated disease in a mouse infection model, suggesting a host-directed antiviral strategy. (li2023thee3ligase pages 1-2)
+#### 4.3 Cardiovascular disease models
+RNF5 has been proposed as a cardioprotective regulator in myocardial infarction via the ASK1 pathway, based on genetic manipulation in mice and cardiomyocyte models; translation to therapy is not yet demonstrated in the provided evidence. (wan2024ringfingerprotein pages 12-13)
 
-**Pseudorabies virus immune evasion (2022)**: The viral protein UL13 recruits RNF5 to STING and induces **K27/K29-linked ubiquitination** leading to STING degradation; RNF5 deficiency enhances antiviral responses and UL13-null virus is attenuated in mice, illustrating viral hijacking of RNF5. (kong2022pseudorabiesvirustegument pages 1-2)
+### 5) Expert opinions and analysis (authoritative perspectives)
 
-**KSHV/primary effusion lymphoma (PEL) (2023)**: RNF5 inhibition suppressed KSHV lytic replication in PEL cells and reduced PEL xenograft growth, linking RNF5 activity to viral oncogenesis contexts. (li2023suppressionofkshv pages 1-2)
+#### 5.1 CF field perspective: redundancy and risk-benefit constraints
+The 2024 CF ubiquitination review emphasizes both the appeal and difficulty of targeting ubiquitination: blocking ubiquitination to stabilize mutant CFTR has been considered for a long time, but progress has been slow and clinical translation has not yet occurred. It also highlights that approved corrector combinations (e.g., Trikafta/Kaftrio) demonstrate the effectiveness of pharmacological chaperone approaches that do not broadly interfere with cell signaling. (okiyoneda2024targetingubiquitinationmachinery pages 4-7)
 
-#### 4.5 Cancer signaling via Eph receptors
+#### 5.2 Systems view from CRISPR genetics: RNF5 is a major node but not sufficient alone
+The 2024 CRISPR screen study shows RNF5 is the top E3 hit for CFTR-F508del ERAD, but RNF5 loss produces only modest stabilization, consistent with **redundant E3 ligase networks** (RNF185 and others). This has practical implications: RNF5 inhibitors may need combination approaches or context-dependent use to yield clinically meaningful stabilization. (riepe2024smallmoleculecorrectorsdivert pages 3-4, okiyoneda2024targetingubiquitinationmachinery pages 11-13)
 
-**EphA2 in HER2-negative breast cancer (2023)**: RNF5 directly interacts with **EphA2** (interaction depends on RNF5 membrane anchoring and EphA2 SAM domain), promotes EphA2 ubiquitination and degradation, and reduces EphA2 cell-surface distribution. RNF5 inhibition or depletion increases EphA2 levels and is associated with reduced ERK and Akt phosphorylation and increased p53 expression in HER2-negative breast cancer cells, consistent with restoring EphA2 tumor-suppressive signaling in this molecular context. (li2023downregulationofepha2 pages 2-3, li2023downregulationofepha2 pages 7-9, li2023downregulationofepha2 pages 1-2)
+#### 5.3 Innate immunity perspective: RNF5 as a negative regulator of STING/MAVS
+The 2024 RNF5 antiviral-immunity review frames RNF5 as a “novel means of modulating antiviral immunity,” emphasizing both host control mechanisms and viral exploitation of RNF5. This positions RNF5 as a plausible therapeutic lever, but also highlights pathway complexity and context-dependent outcomes. (ge2024rnf5inhibitingantiviral pages 5-7, ge2024rnf5inhibitingantiviral pages 7-9)
 
-**In vivo and clinical association**: RNF5 depletion reduced tumor growth in MCF7 xenografts, and clinical stratification indicated that (in ER-positive, HER2-negative cases) **high EphA2** was associated with better survival, especially when **RNF5 expression was low**. (li2023downregulationofepha2 pages 7-9)
+### 6) Relevant statistics and data points (recent studies)
+- **CF genetics**: F508del is present in **>80%** of people with CF (reported in 2024 MBoC paper) and affects **~80%** of CF patients worldwide (reported in 2023 J Med Chem paper). (riepe2024smallmoleculecorrectorsdivert pages 1-2, brusa2023innovativestrategytoward pages 1-3)
+- **CRISPR screen scale (2024)**: **20,528 genes** screened; **207 high-confidence hits** at **FDR < 1%**. (riepe2024smallmoleculecorrectorsdivert pages 3-4)
+- **CFTR-F508del ERAD kinetics**: majority of reporter degraded with half-life ~**34 min** in the described system. (riepe2024smallmoleculecorrectorsdivert pages 3-4)
+- **Drug/chemical biology concentrations used (2023)**: RNF5 inhibitors tested typically at **5 μM**; CFTR correctors VX-809 **1–3 μM**, VX-445 **3 μM**, VX-661 + VX-445 **10 μM + 3 μM**; MG-132 **10 μM**. (brusa2023innovativestrategytoward pages 11-14)
+- **Open Targets disease association evidence (database aggregation)**: RNF5 is associated with multiple diseases including cystic fibrosis and neoplasms; example association scores shown in the retrieved Open Targets output include cystic fibrosis **0.4753**, neoplasm **0.1277**, glioblastoma multiforme **0.1098**, acute lymphoblastic leukemia **0.1049**, and experimental autoimmune encephalomyelitis **0.1039** (note: these are Open Targets model scores, not effect sizes from a single experiment). (OpenTargets Search: -RNF5)
 
-**EphA3/EphA4 in KSHV/PEL (2023)**: RNF5 ubiquitinates and degrades **EphA3/EphA4**; inhibition of RNF5 increased EphA3/A4 levels and reduced ERK/Akt activation, suppressing KSHV lytic replication and PEL xenograft growth. (li2023suppressionofkshv pages 1-2)
+### 7) Mechanistic summary figure
+The following image provides a mechanistic synthesis of CFTR-F508del folding states and the proposed point at which RNF5-mediated ubiquitination targets early folding intermediates, while correctors stabilize RNF5-resistant states. (riepe2024smallmoleculecorrectorsdivert media 192d3a11)
 
-### 5) Recent developments (prioritizing 2023–2024)
-
-Key 2023–2024 developments converge on RNF5 as a context-dependent regulator of (i) proteostasis, (ii) innate immunity, and (iii) receptor signaling:
-
-1. **Host-directed SARS-CoV-2 restriction (Feb 2023)**: Identification of SARS-CoV-2 E protein as an RNF5 substrate, with ubiquitination at E(K63) and proteasomal degradation, plus in vivo benefit using an RNF5 agonist (Analog-1). (li2023thee3ligase pages 1-2)
-2. **Viral oncology (Jan 2023)**: Selective RNF5 inhibition suppressing KSHV lytic replication and PEL xenograft growth via Eph receptor regulation. (li2023suppressionofkshv pages 1-2)
-3. **Breast cancer mechanistic and prognostic framework (Oct 2023)**: RNF5-mediated EphA2 degradation shapes ERK/AKT signaling and correlates with improved survival when RNF5 is low and EphA2 is high in ER-positive, HER2-negative disease subsets. (li2023downregulationofepha2 pages 7-9)
-4. **Focused synthesis of RNF5 in antiviral immunity (Jan 2024)**: Consolidation of linkage- and residue-level mechanisms (STING K150; MAVS K362/K461) and explicit framing of RNF5 as druggable but with conflicting roles across viruses (restriction vs facilitation) that require careful context resolution. (ge2024rnf5inhibitingantiviral pages 2-4, ge2024rnf5inhibitingantiviral pages 7-9)
-5. **Systems genetics of CFTR ERAD (Feb 2024)**: CRISPR screens identifying RNF5 as top E3 for CFTR-F508del ERAD, but also demonstrating redundancy (RNF185) and showing that correctors generate folding intermediates resistant to RNF5-dependent ubiquitylation. (riepe2024smallmoleculecorrectorsdivert pages 1-2)
-
-### 6) Current applications and real-world implementations
-
-#### 6.1 Chemical biology tools and drug discovery (RNF5 modulators)
-A major near-term application is **small-molecule modulation of RNF5** to probe ERAD and disease mechanisms.
-
-**FX12 (RNF5 inhibitor + degrader; 2022, used as current tool)**: FX12 directly binds RNF5’s N-terminus (SPR **KD ~594 nM**) and inhibits RNF5 E3 activity in vitro; it also induces RNF5 proteasomal degradation through ERAD pathways. Quantitative cellular metrics include NHK dislocation inhibition (**IC50 ~2.7 μM**) and reduced cytotoxicity vs Stattic in HepG2 (**IC50 ~32.2 μM**). FX12 increases immature and mature ΔF508-CFTR forms and can cooperate with CFTR correctors in some systems (though it did not improve CFTR channel activity in differentiated patient-derived HBE cultures). (ruan2022asmallmoleculeinhibitor pages 3-5, ruan2022asmallmoleculeinhibitor pages 2-3, ruan2022asmallmoleculeinhibitor pages 6-7, ruan2022asmallmoleculeinhibitor pages 8-9)
-
-**Analog-1 (RNF5 agonist; 2023)**: Reported as an RNF5 pharmacological activator that alleviates disease development in a mouse SARS-CoV-2 model, supporting the feasibility of host-directed RNF5 activation in antiviral therapy contexts. (li2023thee3ligase pages 1-2)
-
-#### 6.2 Cystic fibrosis proteostasis targeting
-While CF therapy is currently dominated by correctors/potentiators, RNF5 is a validated node in CFTR ERAD.
-
-- Genetic evidence places RNF5/RNF185 as central and partially redundant E3s for CFTR-F508del ERAD, suggesting that combinatorial targeting of the module (or E2/E3 interfaces) may increase the pool of foldable mutant CFTR. (khouri2013rnf185isa pages 11-13, khouri2013rnf185isa pages 1-2)
-- Systems screening indicates RNF5 knockout alone yields modest stabilization, reinforcing that **single-node inhibition may not be sufficient**, but could serve as an adjunct to folding correctors. (riepe2024smallmoleculecorrectorsdivert pages 1-2)
-
-#### 6.3 Oncology: biomarker stratification and pathway targeting
-RNF5 is positioned as a context-specific determinant of receptor signaling and outcomes in subsets of cancer.
-
-- In HER2-negative breast cancer, RNF5 appears to function as a negative regulator of EphA2 tumor-suppressive signaling; clinical stratification indicates that high EphA2 with low RNF5 corresponds to better survival in ER-positive, HER2-negative cohorts. (li2023downregulationofepha2 pages 7-9)
-- In KSHV-associated PEL, RNF5 inhibition reduces xenograft tumor growth and viral gene expression programs, supporting RNF5 as a target in virally driven malignancy. (li2023suppressionofkshv pages 1-2)
-
-### 7) Expert analysis and interpretation (authoritative synthesis)
-
-1. **RNF5 is best viewed as a compartmentalized “proteostasis–immunity switch” at the ER**: RNF5’s ER anchoring and ERAD roles place it at a central hub that connects protein quality control to innate immune signaling platforms (e.g., STING at the ER). (tcherpakov2009regulationofendoplasmic pages 1-1, ge2024rnf5inhibitingantiviral pages 2-4)
-2. **Outcome depends strongly on substrate class and ubiquitin code**: RNF5 can promote canonical proteasomal degradation (e.g., STING K48-linked chains) or tune pathway assembly via noncanonical ubiquitination (JAMP), emphasizing that “RNF5 activity” is not synonymous with “substrate degradation” and must be interpreted substrate-by-substrate. (tcherpakov2009regulationofendoplasmic pages 1-2, ge2024rnf5inhibitingantiviral pages 2-4)
-3. **Therapeutic direction is context-dependent**: RNF5 activation may be antiviral in SARS-CoV-2 E restriction settings, whereas RNF5 inhibition may be beneficial in KSHV/PEL and in restoring EphA2 tumor-suppressive effects in certain breast cancer contexts. The same enzyme is therefore plausibly a target for both agonism and antagonism depending on disease mechanism and dominant substrate. (li2023thee3ligase pages 1-2, li2023suppressionofkshv pages 1-2, li2023downregulationofepha2 pages 7-9)
-
-### 8) Key statistics and quantitative findings (selected)
-
-- **SARS-CoV-2 E**: RNF5 ubiquitinates E at **K63**, leading to UPS-dependent degradation; MG132 treatment stabilized E, and RNF5 catalytic activity is required (WT vs C42S). (li2023thee3ligase pages 1-2)
-- **CFTR-F508del stabilization**: RNF5 knockdown ~**3×** increase; RNF185 knockdown ~**2×**; dual depletion ~**4.5×** increase and stronger blockade of degradation. (khouri2013rnf185isa pages 11-13)
-- **FX12 binding/potency**: RNF5 binding **KD ~594 nM**; NHK dislocation inhibition **IC50 ~2.7 μM**; HepG2 growth inhibition **IC50 ~32.2 μM**. (ruan2022asmallmoleculeinhibitor pages 3-5, ruan2022asmallmoleculeinhibitor pages 2-3)
-- **Mechanistic residues in innate immunity (review-synthesized)**: STING ubiquitination at **K150** (K48-linked) and MAVS at **K362/K461** (K48-linked). (ge2024rnf5inhibitingantiviral pages 2-4)
-
-### 9) Visual evidence extracted from the literature
-Figure panels from Li et al. (2023) provide visual evidence that RNF5 promotes **EphA2 ubiquitination and destabilization**, alters downstream **ERK/Akt phosphorylation**, and that EphA2/RNF5 expression stratifies **survival outcomes** in ER-positive, HER2-negative breast cancer cohorts. (li2023downregulationofepha2 media 34a12dc0, li2023downregulationofepha2 media 2176bf09, li2023downregulationofepha2 media 4503c17b, li2023downregulationofepha2 media cf4875fd)
-
-### 10) Summary of functional annotation
-RNF5 (Q99942) is an **ER-anchored RING E3 ubiquitin ligase** that:
-- Executes and tunes **ERAD** (notably CFTR/F508del) and modulates ERAD scaffold function (JAMP) (khouri2013rnf185isa pages 11-13, tcherpakov2009regulationofendoplasmic pages 1-2)
-- Tunes **innate antiviral signaling** by promoting ubiquitination-dependent degradation of key adaptor proteins (STING/MAVS/IRF3) with linkage- and residue-specific mechanisms (ge2024rnf5inhibitingantiviral pages 2-4, liu2022e3ligasernf5 pages 1-2)
-- Intersects with **viral life cycles** (SARS-CoV-2 E restriction; PRV UL13-mediated STING degradation; KSHV lytic replication via Eph receptors) (li2023thee3ligase pages 1-2, kong2022pseudorabiesvirustegument pages 1-2, li2023suppressionofkshv pages 1-2)
-- Regulates **receptor tyrosine kinase turnover** (EphA2, EphA3, EphA4) with downstream impacts on ERK/AKT and tumor phenotypes, including survival associations in specific clinical subsets (li2023downregulationofepha2 pages 7-9, li2023suppressionofkshv pages 1-2)
+### 8) Summary and functional annotation statement
+Human RNF5 (UniProt Q99942) is best supported as an **ER-embedded RING E3 ubiquitin ligase** that (i) participates in **ER quality control/ERAD** of misfolded membrane proteins—most prominently **CFTR-F508del**—by acting at early biogenesis stages on immature ER-resident intermediates, in collaboration with specific E2 enzymes and partially redundant ER E3 ligases; and (ii) regulates **innate immunity** by promoting ubiquitination-dependent degradation of signaling adaptors such as **STING** and **MAVS**, thereby dampening antiviral interferon signaling; RNF5 also interfaces with **autophagy regulation** (e.g., ATG4B stability) and has emerging disease-model roles (e.g., **ASK1 signaling** in myocardial infarction). Recent 2023–2024 work positions RNF5 as an attractive but challenging therapeutic target because of **network redundancy** and the current gap between preclinical modulators (e.g., thiadiazole inhibitors) and clinical translation, particularly in cystic fibrosis. (ge2024rnf5inhibitingantiviral pages 5-7, okiyoneda2024targetingubiquitinationmachinery pages 4-7, riepe2024smallmoleculecorrectorsdivert pages 3-4, brusa2023innovativestrategytoward pages 11-14)
 
 ---
 
-| Process/Pathway | Direct substrate(s) (human or viral) | RNF5 action (ubiquitin linkage & acceptor lysine if known) | Subcellular site | Experimental evidence type | Key source (year, journal, DOI/URL) |
+### Appendix: compact evidence map
+| Biological context/pathway | RNF5 molecular action | Key substrates/partners and specific lysines/linkages when available | Subcellular localization context | Recent 2023–2024 findings/applications with quantitative details | Primary supporting source |
 |---|---|---|---|---|---|
-| ER-associated degradation (ERAD) of CFTR/F508del | CFTR, CFTR-F508del (human) | RNF5/RMA1 acts early in CFTR quality control, including co-translational targeting of misfolded CFTR for proteasome-directed ERAD; cooperative/redundant with RNF185. Quantitative data: RNF5 knockdown increased F508del steady-state levels ~3-fold; RNF185 knockdown ~2-fold; dual RNF5+RNF185 depletion ~4.5-fold and blocked degradation during and after synthesis. RMA1 acts upstream of gp78/E4-like chain extension. (khouri2013rnf185isa pages 11-13, khouri2013rnf185isa pages 2-3, khouri2013rnf185isa pages 1-2, michael2006selectionofmisfolded pages 100-105, morito2008gp78cooperateswith pages 1-2) | ER membrane/cotranslational nascent-chain quality control | siRNA/knockdown, cycloheximide chase, pulse labeling, CRISPR screens, in vitro ubiquitination, interaction studies | Khouri et al. 2013, *J Biol Chem*, 10.1074/jbc.M113.470500, https://doi.org/10.1074/jbc.M113.470500; Morito et al. 2008, *Mol Biol Cell*, 10.1091/mbc.e07-06-0601, https://doi.org/10.1091/mbc.e07-06-0601; Riepe et al. 2024, *Mol Biol Cell*, 10.1091/mbc.e23-08-0336, https://doi.org/10.1091/mbc.e23-08-0336 (riepe2024smallmoleculecorrectorsdivert pages 1-2, khouri2013rnf185isa pages 11-13, morito2008gp78cooperateswith pages 1-2) |
-| ERAD regulation/scaffold control | JAMP/JNK-associated membrane protein (human) | RNF5 binds JAMP via ER membrane anchoring and catalyzes Ubc13-dependent noncanonical ubiquitination; does **not** destabilize JAMP, but inhibits JAMP association with Rpt5 and p97, thereby reducing ERAD efficiency for misfolded cargos. K63-type/noncanonical chains were specifically interrogated. (tcherpakov2009regulationofendoplasmic pages 1-2, tcherpakov2009regulationofendoplasmic pages 1-1, tcherpakov2009regulationofendoplasmic pages 2-3) | ER membrane | Co-immunoprecipitation, truncation mutants, colocalization, in vitro ubiquitination, ubiquitin linkage mutant analysis | Tcherpakov et al. 2009, *J Biol Chem*, 10.1074/jbc.M808222200, https://doi.org/10.1074/jbc.M808222200 (tcherpakov2009regulationofendoplasmic pages 1-2, tcherpakov2009regulationofendoplasmic pages 1-1, tcherpakov2009regulationofendoplasmic pages 2-3) |
-| Innate immunity / cGAS-STING axis | STING/TMEM173 (human) | RNF5 promotes degradative ubiquitination of STING. Best-supported mechanism: K48-linked polyubiquitination at STING K150, leading to proteasomal degradation and attenuation of type I IFN signaling; other contexts show K27/K29-linked ubiquitination when recruited by viral factors. (ge2024rnf5inhibitingantiviral pages 2-4, kong2022pseudorabiesvirustegument pages 1-2, yang2022e3ubiquitinligase pages 1-2, ge2024rnf5inhibitingantiviral pages 1-2, liu2022e3ligasernf5 pages 1-2) | ER and ER-to-Golgi innate signaling interface | Overexpression/knockdown, infection models, phospho-signaling assays, mouse disease models, review synthesis of primary studies | Yang et al. 2022, *Cell Death Dis*, 10.1038/s41419-022-05231-8, https://doi.org/10.1038/s41419-022-05231-8; Ge & Zhang 2024, *Front Immunol*, 10.3389/fimmu.2023.1324516, https://doi.org/10.3389/fimmu.2023.1324516 (ge2024rnf5inhibitingantiviral pages 2-4, yang2022e3ubiquitinligase pages 1-2) |
-| Antiviral RLR signaling | MAVS/VISA (human) | RNF5 catalyzes K48-linked ubiquitination of MAVS/VISA, promoting proteasomal degradation; reported acceptor lysines K362 and K461. Consequence: reduced downstream TBK1/IRF3 activation and reduced type I IFN responses. In some viral contexts (e.g., H7N9 PB1), RNF5-dependent K27-linked ubiquitination of MAVS promotes NBR1-mediated autophagic degradation. (ge2024rnf5inhibitingantiviral pages 2-4, yang2022e3ubiquitinligase pages 1-2, ge2024rnf5inhibitingantiviral pages 1-2) | Mitochondria/mitochondria-associated membranes | Review synthesis of primary mechanistic studies; cited infection biology and ubiquitination analyses | Ge & Zhang 2024, *Front Immunol*, 10.3389/fimmu.2023.1324516, https://doi.org/10.3389/fimmu.2023.1324516; Yang et al. 2022, *Cell Death Dis*, 10.1038/s41419-022-05231-8, https://doi.org/10.1038/s41419-022-05231-8 (ge2024rnf5inhibitingantiviral pages 2-4, yang2022e3ubiquitinligase pages 1-2) |
-| Antiviral transcription factor control | IRF3 (human) | RNF5 has been described as promoting degradation of IRF3, thereby suppressing antiviral innate immunity; linkage type and acceptor lysine were not specified in the available evidence here. (li2023thee3ligase pages 1-2, ge2024rnf5inhibitingantiviral pages 1-2, ge2024rnf5inhibitingantiviral pages 2-4) | Cytosolic antiviral signaling pathway downstream of STING/MAVS | Review synthesis of primary studies; signaling/infection studies | Ge & Zhang 2024, *Front Immunol*, 10.3389/fimmu.2023.1324516, https://doi.org/10.3389/fimmu.2023.1324516; Li et al. 2023, *Signal Transduct Target Ther*, 10.1038/s41392-023-01335-5, https://doi.org/10.1038/s41392-023-01335-5 (li2023thee3ligase pages 1-2, ge2024rnf5inhibitingantiviral pages 2-4) |
-| SARS-CoV-2 restriction | SARS-CoV-2 envelope protein E (viral) | RNF5 directly interacts with E and ubiquitinates E at K63 (viral acceptor lysine 63), triggering ubiquitin-proteasome system degradation and restricting viral replication. Pharmacologic RNF5 activator Analog-1 alleviated disease in a mouse infection model. (li2023thee3ligase pages 1-2) | ER/ERGIC-Golgi-associated viral assembly compartments | Co-IP, ubiquitination assays, mutagenesis, infection assays, mouse model | Li et al. 2023, *Signal Transduct Target Ther*, 10.1038/s41392-023-01335-5, https://doi.org/10.1038/s41392-023-01335-5 (li2023thee3ligase pages 1-2) |
-| PRV immune evasion via RNF5 | STING plus PRV UL13 cofactor (viral-host axis) | PRV UL13 binds STING and recruits RNF5 to catalyze K27- and K29-linked ubiquitination of STING, causing STING degradation and suppression of TBK1/IRF3-driven type I IFN. RNF5 deficiency enhances antiviral responses; UL13-null PRV is attenuated in mice. (kong2022pseudorabiesvirustegument pages 1-2) | STING signaling platform at ER | Viral protein interaction mapping, infection experiments, mouse virulence model | Kong et al. 2022, *PLoS Pathog*, 10.1371/journal.ppat.1010544, https://doi.org/10.1371/journal.ppat.1010544 (kong2022pseudorabiesvirustegument pages 1-2) |
-| HER2-negative breast cancer signaling | EphA2 (human) | RNF5 binds EphA2 (interaction involves RNF5 membrane anchor and EphA2 SAM domain), ubiquitinates it, and promotes degradation; RNF5 loss increases total and cell-surface EphA2, decreases pERK and pAkt, shifts phosphorylation from S897 toward Y772, and increases p53 expression. Clinically, high EphA2 + low RNF5 associates with better survival in ER-positive/HER2-negative disease. (li2023downregulationofepha2 pages 7-9, li2023downregulationofepha2 pages 9-11, li2023downregulationofepha2 pages 5-7, li2023downregulationofepha2 pages 1-2, li2023downregulationofepha2 pages 2-3, li2023downregulationofepha2 pages 3-5, li2023downregulationofepha2 media 34a12dc0) | Secretory pathway / plasma membrane receptor turnover | Co-IP, in vitro ubiquitination, CHX chase, membrane fractionation, signaling assays, xenografts, Kaplan-Meier analyses | Li et al. 2023, *Cell Death Dis*, 10.1038/s41419-023-06188-y, https://doi.org/10.1038/s41419-023-06188-y (li2023downregulationofepha2 pages 7-9, li2023downregulationofepha2 pages 2-3, li2023downregulationofepha2 media 34a12dc0) |
-| KSHV lytic replication / PEL tumorigenesis | EphA3, EphA4 (human) | RNF5 interacts with EphA3 and EphA4 and induces their ubiquitination and degradation; RNF5 inhibition increases EphA3/A4 abundance, reduces ERK and Akt activation, suppresses KSHV lytic replication, and decreases PEL xenograft growth. (li2023suppressionofkshv pages 1-2) | ER/secretory pathway and cell-surface receptor turnover | Pharmacologic inhibition, ubiquitination/degradation assays, signaling assays, xenografts | Li et al. 2023, *PLoS Pathog*, 10.1371/journal.ppat.1011103, https://doi.org/10.1371/journal.ppat.1011103 (li2023suppressionofkshv pages 1-2) |
-| Chemical modulation / translational tool compound | RNF5 itself; downstream readouts include ΔF508-CFTR, paxillin | FX12 is a direct small-molecule RNF5 inhibitor/degrader. Quantitative stats: SPR KD ~594 nM for FX12 (FX41 ~666 nM; FX36 no detectable binding); NHK dislocation IC50 ~2.7 μM; FX12 inhibits RNF5 E3 activity, promotes proteasomal/ERAD-dependent RNF5 degradation, stabilizes ΔF508-CFTR, and cooperates with VX809/VX661 in some cell systems, though no functional rescue in differentiated HBE cultures. (ruan2022asmallmoleculeinhibitor pages 6-7, ruan2022asmallmoleculeinhibitor pages 8-9, ruan2022asmallmoleculeinhibitor pages 5-6, ruan2022asmallmoleculeinhibitor pages 3-5, ruan2022asmallmoleculeinhibitor pages 9-10, ruan2022asmallmoleculeinhibitor pages 2-3, ruan2022asmallmoleculeinhibitor pages 1-2) | RNF5 cytosolic N-terminus at ER membrane | SPR, CETSA, in vitro ubiquitination, ERAD assays, CFTR trafficking assays | Ruan et al. 2022, *Mol Biol Cell*, 10.1091/mbc.e22-06-0233, https://doi.org/10.1091/mbc.e22-06-0233 (ruan2022asmallmoleculeinhibitor pages 6-7, ruan2022asmallmoleculeinhibitor pages 5-6, ruan2022asmallmoleculeinhibitor pages 1-2) |
+| ERAD / proteostasis | RING E3 ubiquitin ligase; ubiquitinates immature membrane proteins for proteasomal ERAD | CFTR N-terminus/MSD1 recognized; partners include UBE2J1, UBE2D3, RNF185, gp78/AMFR, HERC3; acts mainly on immature CFTR Band B (okiyoneda2024targetingubiquitinationmachinery pages 4-7, riepe2024smallmoleculecorrectorsdivert pages 3-4, okiyoneda2024targetingubiquitinationmachinery pages 11-13, kamada2024herc3facilitateserad pages 1-2) | ER-anchored / ER-embedded membrane ligase with C-terminal TM region(s) (okiyoneda2024targetingubiquitinationmachinery pages 4-7, brusa2023innovativestrategytoward pages 9-11, kamada2024herc3facilitateserad pages 1-2) | Genome-wide CRISPR screen assayed **20,528 genes** and found **207 high-confidence hits (FDR <1%)**; RNF5 was top E3 hit, UBE2D3 top E2; RNF5 KO had only modest effect, supporting pathway redundancy (riepe2024smallmoleculecorrectorsdivert pages 3-4) | *Small-molecule correctors divert CFTR-F508del from ERAD by stabilizing sequential folding states* (2024), https://doi.org/10.1091/mbc.e23-08-0336 |
+| CFTR-F508del | Promotes ubiquitination and degradation of misfolded F508del-CFTR; early triage E3 in sequential ERQC | F508del-CFTR; sequential action with CHIP; RNF185 can compensate; correctors stabilize RNF5-resistant folding states (okiyoneda2024targetingubiquitinationmachinery pages 4-7, riepe2024smallmoleculecorrectorsdivert pages 3-4, okiyoneda2024targetingubiquitinationmachinery pages 11-13, riepe2024smallmoleculecorrectorsdivert media 192d3a11) | ER membrane / ERQC on nascent or immature CFTR before plasma-membrane maturation (okiyoneda2024targetingubiquitinationmachinery pages 4-7, riepe2024smallmoleculecorrectorsdivert pages 3-4, kamada2024herc3facilitateserad pages 1-2, riepe2024smallmoleculecorrectorsdivert media 192d3a11) | F508del occurs in **>80%** of people with CF / affects **~80%** of CF patients worldwide; RNF5 suppression improved intestinal malabsorption and CFTR activity in F508del-transgenic mice; no RNF5-targeting compounds reported in clinical trials in the provided context (okiyoneda2024targetingubiquitinationmachinery pages 4-7, riepe2024smallmoleculecorrectorsdivert pages 1-2, brusa2023innovativestrategytoward pages 1-3) | *Targeting ubiquitination machinery in cystic fibrosis: Where do we stand?* (2024), https://doi.org/10.1007/s00018-024-05295-z |
+| CFTR-F508del therapeutic targeting | Pharmacologic RNF5 inhibition / degradation to reduce CFTR ubiquitination | inh-2 (first-in-class RNF5 inhibitor), analogue 16, FX12; analogue 16 effect lost with RNF5 siRNA, supporting on-target action (brusa2023innovativestrategytoward pages 11-14, brusa2023innovativestrategytoward pages 14-15, brusa2023innovativestrategytoward pages 1-3) | ER-associated RNF5 targeted indirectly by small molecules in airway epithelial cell models (brusa2023innovativestrategytoward pages 11-14, brusa2023innovativestrategytoward pages 14-15) | Compound testing commonly at **5 μM**; VX-809 **1–3 μM**, VX-445 **3 μM**, VX-661 + VX-445 **10 μM + 3 μM**, MG-132 **10 μM**; analogue 16 was among the most promising compounds (11, 16, 21) and improved rescue with ELX/TEZ/IVA in CFBE41o− cells; FX12 active in BHK cells but not differentiated primary airway epithelia (brusa2023innovativestrategytoward pages 11-14, brusa2023innovativestrategytoward pages 14-15, okiyoneda2024targetingubiquitinationmachinery pages 4-7) | *Innovative Strategy toward Mutant CFTR Rescue in Cystic Fibrosis: Design and Synthesis of Thiadiazole Inhibitors of the E3 Ligase RNF5* (2023), https://doi.org/10.1021/acs.jmedchem.3c00608 |
+| Innate immunity: cGAS-STING / MAVS / IRF3 | E3 ligase that mainly promotes degradative ubiquitination of antiviral signaling adaptors; K48 linked for STING/MAVS in mammalian studies summarized in review | STING/MITA at **K150** (K48-linked); MAVS/VISA at **K362** and **K461**; activated IRF3 degraded after recruitment by JMJD6; viral proteins can hijack RNF5 and alter linkage usage (K27/K29/K63 also discussed in viral contexts) (wan2024ringfingerprotein pages 12-13, ge2024rnf5inhibitingantiviral pages 9-10, ge2024rnf5inhibitingantiviral pages 4-5) | ER-associated; MAVS regulation occurs in mitochondria-associated antiviral signaling context; STING at ER/ERGIC-associated innate immune membranes (ge2024rnf5inhibitingantiviral pages 9-10, ge2024rnf5inhibitingantiviral pages 4-5) | 2024 review emphasizes RNF5 as a negative regulator of antiviral innate immunity and a possible host-directed target; no clinical-stage RNF5 immune modulators reported in the provided context (ge2024rnf5inhibitingantiviral pages 5-7, ge2024rnf5inhibitingantiviral pages 9-10, ge2024rnf5inhibitingantiviral pages 4-5) | *RNF5: inhibiting antiviral immunity and shaping virus life cycle* (2024), https://doi.org/10.3389/fimmu.2023.1324516 |
+| Autophagy | Regulates autophagy by targeting autophagy machinery components for degradation | ATG4B is a reported RNF5 substrate; inh-2 and analogue 16 increase basal autophagy consistent with blocking RNF5-mediated turnover; PTGDR2 can compete with ATG4B for RNF5 binding in gastric CSC context (brusa2023innovativestrategytoward pages 11-14, brusa2023innovativestrategytoward pages 9-11, brusa2023innovativestrategytoward pages 14-15) | ER-associated RNF5 with effects on cytosolic autophagy regulators (brusa2023innovativestrategytoward pages 9-11, brusa2023innovativestrategytoward pages 14-15) | Autophagy vacuoles increased with inh-2 and compounds 11/16/21; torin-1 used at **20 nM**, SAR-405 at **2 μM** in functional autophagy assays (brusa2023innovativestrategytoward pages 11-14) | *Innovative Strategy toward Mutant CFTR Rescue in Cystic Fibrosis: Design and Synthesis of Thiadiazole Inhibitors of the E3 Ligase RNF5* (2023), https://doi.org/10.1021/acs.jmedchem.3c00608 |
+| Cardiovascular | Protective E3-ligase-associated role in stress signaling; inhibits ASK1 pathway in MI model | ASK1 pathway implicated; whether direct ubiquitination of ASK1 is established was unresolved in provided context (wan2024ringfingerprotein pages 12-13) | Cardiac cells/tissue; RNF5 downregulated in infarcted mouse heart and OGD-treated cardiomyocytes (wan2024ringfingerprotein pages 12-13) | 2024 mouse/cell study: RNF5 knockout worsened myocardial infarction-associated dysfunction, inflammation, and apoptosis, while overexpression was protective; quantitative effect sizes not provided in context (wan2024ringfingerprotein pages 12-13) | *RING finger protein 5 protects against acute myocardial infarction by inhibiting ASK1* (2024), https://doi.org/10.1186/s12872-024-04070-z |
+| Oncology / other | Context-dependent E3 ligase affecting tumor signaling, proteostasis, and therapeutic response | EphA2/Eph receptors, paxillin, ATG4B; Open Targets links RNF5 to neoplasm, glioblastoma, ALL, cystic fibrosis, and EAE based on supporting literature (ge2024rnf5inhibitingantiviral pages 7-9, ge2024rnf5inhibitingantiviral pages 9-10, OpenTargets Search: -RNF5) | ER-associated ligase with downstream effects on signaling, migration, and transcriptional programs (ge2024rnf5inhibitingantiviral pages 7-9, ge2024rnf5inhibitingantiviral pages 9-10) | Open Targets evidence scores in provided context: cystic fibrosis association **0.4753**, neoplasm **0.1277**, glioblastoma **0.1098**, ALL **0.1049**, EAE **0.1039**; preclinical therapeutic interest noted in AML, KSHV/PEL, and breast-cancer signaling, but no clinical trials reported here (OpenTargets Search: -RNF5, ge2024rnf5inhibitingantiviral pages 9-10) | Open Targets disease-target associations for RNF5 (accessed via provided context) (OpenTargets Search: -RNF5) |
 
 
-*Table: This table summarizes experimentally supported functions, substrates, mechanisms, and translational tools for human RNF5/Q99942 across ERAD, innate immunity, viral infection, and cancer. It also highlights quantitative details such as ubiquitinated lysines, CFTR stabilization effects, and small-molecule RNF5 modulator potency.*
-
+*Table: This table summarizes evidence-based functional annotation for human RNF5 (UniProt Q99942), organized by pathway context, molecular action, substrates, localization, and recent translational findings. It is useful as a compact reference for RNF5’s validated roles in ERAD, CFTR quality control, innate immunity, autophagy, cardiovascular biology, and disease associations.*
 
 References
 
-1. (tcherpakov2009regulationofendoplasmic pages 1-1): Marianna Tcherpakov, Agnes Delaunay, Julia Toth, Takayuki Kadoya, Matthew D. Petroski, and Ze'ev A. Ronai. Regulation of endoplasmic reticulum-associated degradation by rnf5-dependent ubiquitination of jnk-associated membrane protein (jamp)*. Journal of Biological Chemistry, 284:12099-12109, May 2009. URL: https://doi.org/10.1074/jbc.m808222200, doi:10.1074/jbc.m808222200. This article has 75 citations and is from a domain leading peer-reviewed journal.
+1. (okiyoneda2024targetingubiquitinationmachinery pages 4-7): Tsukasa Okiyoneda, Christian Borgo, Valentina Bosello Travain, Nicoletta Pedemonte, and Mauro Salvi. Targeting ubiquitination machinery in cystic fibrosis: where do we stand? Cellular and Molecular Life Sciences: CMLS, Jun 2024. URL: https://doi.org/10.1007/s00018-024-05295-z, doi:10.1007/s00018-024-05295-z. This article has 6 citations.
 
-2. (tcherpakov2009regulationofendoplasmic pages 1-2): Marianna Tcherpakov, Agnes Delaunay, Julia Toth, Takayuki Kadoya, Matthew D. Petroski, and Ze'ev A. Ronai. Regulation of endoplasmic reticulum-associated degradation by rnf5-dependent ubiquitination of jnk-associated membrane protein (jamp)*. Journal of Biological Chemistry, 284:12099-12109, May 2009. URL: https://doi.org/10.1074/jbc.m808222200, doi:10.1074/jbc.m808222200. This article has 75 citations and is from a domain leading peer-reviewed journal.
+2. (brusa2023innovativestrategytoward pages 9-11): Irene Brusa, Elvira Sondo, Emanuela Pesce, Valeria Tomati, Dario Gioia, Federico Falchi, Beatrice Balboni, Jose Antonio Ortega Martínez, Marina Veronesi, Elisa Romeo, Natasha Margaroli, Maurizio Recanatini, Stefania Girotto, Nicoletta Pedemonte, Marinella Roberti, and Andrea Cavalli. Innovative strategy toward mutant cftr rescue in cystic fibrosis: design and synthesis of thiadiazole inhibitors of the e3 ligase rnf5. Journal of Medicinal Chemistry, 66:9797-9822, Jul 2023. URL: https://doi.org/10.1021/acs.jmedchem.3c00608, doi:10.1021/acs.jmedchem.3c00608. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-3. (ge2024rnf5inhibitingantiviral pages 2-4): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
+3. (kamada2024herc3facilitateserad pages 1-2): Yuka Kamada, Yuko Ohnishi, Chikako Nakashima, Aika Fujii, Mana Terakawa, Ikuto Hamano, Uta Nakayamada, Saori Katoh, Noriaki Hirata, Hazuki Tateishi, Ryosuke Fukuda, Hirotaka Takahashi, Gergely L. Lukacs, and Tsukasa Okiyoneda. Herc3 facilitates erad of select membrane proteins by recognizing membrane-spanning domains. The Journal of Cell Biology, May 2024. URL: https://doi.org/10.1083/jcb.202308003, doi:10.1083/jcb.202308003. This article has 13 citations.
 
-4. (yang2022e3ubiquitinligase pages 1-2): Lu-Lu Yang, Wen-Chang Xiao, Huan Li, Zheng-Yang Hao, Gui-Zhi Liu, Dian-Hong Zhang, Lei-Ming Wu, Zheng Wang, Yan-Qing Zhang, Zhen Huang, and Yan-Zhou Zhang. E3 ubiquitin ligase rnf5 attenuates pathological cardiac hypertrophy through sting. Cell Death &amp; Disease, Oct 2022. URL: https://doi.org/10.1038/s41419-022-05231-8, doi:10.1038/s41419-022-05231-8. This article has 29 citations and is from a peer-reviewed journal.
+4. (ge2024rnf5inhibitingantiviral pages 4-5): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
 
-5. (tcherpakov2009regulationofendoplasmic pages 2-3): Marianna Tcherpakov, Agnes Delaunay, Julia Toth, Takayuki Kadoya, Matthew D. Petroski, and Ze'ev A. Ronai. Regulation of endoplasmic reticulum-associated degradation by rnf5-dependent ubiquitination of jnk-associated membrane protein (jamp)*. Journal of Biological Chemistry, 284:12099-12109, May 2009. URL: https://doi.org/10.1074/jbc.m808222200, doi:10.1074/jbc.m808222200. This article has 75 citations and is from a domain leading peer-reviewed journal.
+5. (ge2024rnf5inhibitingantiviral pages 5-7): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
 
-6. (khouri2013rnf185isa pages 11-13): Elma El Khouri, Gwenaëlle Le Pavec, Michel B. Toledano, and Agnès Delaunay-Moisan. Rnf185 is a novel e3 ligase of endoplasmic reticulum-associated degradation (erad) that targets cystic fibrosis transmembrane conductance regulator (cftr). Journal of Biological Chemistry, 288:31177-31191, Oct 2013. URL: https://doi.org/10.1074/jbc.m113.470500, doi:10.1074/jbc.m113.470500. This article has 124 citations and is from a domain leading peer-reviewed journal.
+6. (riepe2024smallmoleculecorrectorsdivert pages 3-4): Celeste Riepe, Magda Wąchalska, Kirandeep K. Deol, Anais K. Amaya, Matthew H. Porteus, James A. Olzmann, and Ron R. Kopito. Small-molecule correctors divert cftr-f508del from erad by stabilizing sequential folding states. Molecular Biology of the Cell, Feb 2024. URL: https://doi.org/10.1091/mbc.e23-08-0336, doi:10.1091/mbc.e23-08-0336. This article has 10 citations and is from a domain leading peer-reviewed journal.
 
-7. (michael2006selectionofmisfolded pages 100-105): J. Michael Younger. Selection of misfolded cftr for proteasomal degradation by sequential quality control checkpoints. Text, 2006. URL: https://doi.org/10.17615/tw77-nm22, doi:10.17615/tw77-nm22. This article has 0 citations and is from a peer-reviewed journal.
+7. (okiyoneda2024targetingubiquitinationmachinery pages 11-13): Tsukasa Okiyoneda, Christian Borgo, Valentina Bosello Travain, Nicoletta Pedemonte, and Mauro Salvi. Targeting ubiquitination machinery in cystic fibrosis: where do we stand? Cellular and Molecular Life Sciences: CMLS, Jun 2024. URL: https://doi.org/10.1007/s00018-024-05295-z, doi:10.1007/s00018-024-05295-z. This article has 6 citations.
 
-8. (khouri2013rnf185isa pages 1-2): Elma El Khouri, Gwenaëlle Le Pavec, Michel B. Toledano, and Agnès Delaunay-Moisan. Rnf185 is a novel e3 ligase of endoplasmic reticulum-associated degradation (erad) that targets cystic fibrosis transmembrane conductance regulator (cftr). Journal of Biological Chemistry, 288:31177-31191, Oct 2013. URL: https://doi.org/10.1074/jbc.m113.470500, doi:10.1074/jbc.m113.470500. This article has 124 citations and is from a domain leading peer-reviewed journal.
+8. (wan2024ringfingerprotein pages 12-13): Hong Wan, Jianqing Zhang, Zhen Liu, Bizhen Dong, Zhangqian Tao, Guanglin Wang, and Chihua Wang. Ring finger protein 5 protects against acute myocardial infarction by inhibiting ask1. BMC Cardiovascular Disorders, Aug 2024. URL: https://doi.org/10.1186/s12872-024-04070-z, doi:10.1186/s12872-024-04070-z. This article has 4 citations and is from a peer-reviewed journal.
 
-9. (riepe2024smallmoleculecorrectorsdivert pages 1-2): Celeste Riepe, Magda Wąchalska, Kirandeep K. Deol, Anais K. Amaya, Matthew H. Porteus, James A. Olzmann, and Ron R. Kopito. Small-molecule correctors divert cftr-f508del from erad by stabilizing sequential folding states. Molecular Biology of the Cell, Feb 2024. URL: https://doi.org/10.1091/mbc.e23-08-0336, doi:10.1091/mbc.e23-08-0336. This article has 10 citations and is from a domain leading peer-reviewed journal.
+9. (brusa2023innovativestrategytoward pages 14-15): Irene Brusa, Elvira Sondo, Emanuela Pesce, Valeria Tomati, Dario Gioia, Federico Falchi, Beatrice Balboni, Jose Antonio Ortega Martínez, Marina Veronesi, Elisa Romeo, Natasha Margaroli, Maurizio Recanatini, Stefania Girotto, Nicoletta Pedemonte, Marinella Roberti, and Andrea Cavalli. Innovative strategy toward mutant cftr rescue in cystic fibrosis: design and synthesis of thiadiazole inhibitors of the e3 ligase rnf5. Journal of Medicinal Chemistry, 66:9797-9822, Jul 2023. URL: https://doi.org/10.1021/acs.jmedchem.3c00608, doi:10.1021/acs.jmedchem.3c00608. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-10. (liu2022e3ligasernf5 pages 1-2): Zhi Liu and Likun Xia. E3 ligase rnf5 inhibits type i interferon response in herpes simplex virus keratitis through the sting/irf3 signaling pathway. Frontiers in Microbiology, Aug 2022. URL: https://doi.org/10.3389/fmicb.2022.944101, doi:10.3389/fmicb.2022.944101. This article has 17 citations and is from a peer-reviewed journal.
+10. (riepe2024smallmoleculecorrectorsdivert pages 1-2): Celeste Riepe, Magda Wąchalska, Kirandeep K. Deol, Anais K. Amaya, Matthew H. Porteus, James A. Olzmann, and Ron R. Kopito. Small-molecule correctors divert cftr-f508del from erad by stabilizing sequential folding states. Molecular Biology of the Cell, Feb 2024. URL: https://doi.org/10.1091/mbc.e23-08-0336, doi:10.1091/mbc.e23-08-0336. This article has 10 citations and is from a domain leading peer-reviewed journal.
 
-11. (li2023thee3ligase pages 1-2): Zhaolong Li, Pengfei Hao, Zhilei Zhao, Wenying Gao, Chen Huan, Letian Li, Xiang Chen, Hong Wang, Ningyi Jin, Zhao-Qing Luo, Chang Li, and Wenyan Zhang. The e3 ligase rnf5 restricts sars-cov-2 replication by targeting its envelope protein for degradation. Signal Transduction and Targeted Therapy, Feb 2023. URL: https://doi.org/10.1038/s41392-023-01335-5, doi:10.1038/s41392-023-01335-5. This article has 52 citations and is from a peer-reviewed journal.
+11. (riepe2024smallmoleculecorrectorsdivert media 192d3a11): Celeste Riepe, Magda Wąchalska, Kirandeep K. Deol, Anais K. Amaya, Matthew H. Porteus, James A. Olzmann, and Ron R. Kopito. Small-molecule correctors divert cftr-f508del from erad by stabilizing sequential folding states. Molecular Biology of the Cell, Feb 2024. URL: https://doi.org/10.1091/mbc.e23-08-0336, doi:10.1091/mbc.e23-08-0336. This article has 10 citations and is from a domain leading peer-reviewed journal.
 
-12. (kong2022pseudorabiesvirustegument pages 1-2): Zhengjie Kong, Hongyan Yin, Fan Wang, Zhen Liu, Xiaohan Luan, Lei Sun, Wenjun Liu, and Yingli Shang. Pseudorabies virus tegument protein ul13 recruits rnf5 to inhibit sting-mediated antiviral immunity. PLOS Pathogens, 18:e1010544, May 2022. URL: https://doi.org/10.1371/journal.ppat.1010544, doi:10.1371/journal.ppat.1010544. This article has 92 citations and is from a highest quality peer-reviewed journal.
+12. (brusa2023innovativestrategytoward pages 1-3): Irene Brusa, Elvira Sondo, Emanuela Pesce, Valeria Tomati, Dario Gioia, Federico Falchi, Beatrice Balboni, Jose Antonio Ortega Martínez, Marina Veronesi, Elisa Romeo, Natasha Margaroli, Maurizio Recanatini, Stefania Girotto, Nicoletta Pedemonte, Marinella Roberti, and Andrea Cavalli. Innovative strategy toward mutant cftr rescue in cystic fibrosis: design and synthesis of thiadiazole inhibitors of the e3 ligase rnf5. Journal of Medicinal Chemistry, 66:9797-9822, Jul 2023. URL: https://doi.org/10.1021/acs.jmedchem.3c00608, doi:10.1021/acs.jmedchem.3c00608. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-13. (li2023suppressionofkshv pages 1-2): Xiaojuan Li, Fan Wang, Xiaolin Zhang, Qinqin Sun, and Ersheng Kuang. Suppression of kshv lytic replication and primary effusion lymphoma by selective rnf5 inhibition. PLOS Pathogens, 19:e1011103, Jan 2023. URL: https://doi.org/10.1371/journal.ppat.1011103, doi:10.1371/journal.ppat.1011103. This article has 16 citations and is from a highest quality peer-reviewed journal.
+13. (brusa2023innovativestrategytoward pages 11-14): Irene Brusa, Elvira Sondo, Emanuela Pesce, Valeria Tomati, Dario Gioia, Federico Falchi, Beatrice Balboni, Jose Antonio Ortega Martínez, Marina Veronesi, Elisa Romeo, Natasha Margaroli, Maurizio Recanatini, Stefania Girotto, Nicoletta Pedemonte, Marinella Roberti, and Andrea Cavalli. Innovative strategy toward mutant cftr rescue in cystic fibrosis: design and synthesis of thiadiazole inhibitors of the e3 ligase rnf5. Journal of Medicinal Chemistry, 66:9797-9822, Jul 2023. URL: https://doi.org/10.1021/acs.jmedchem.3c00608, doi:10.1021/acs.jmedchem.3c00608. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-14. (li2023downregulationofepha2 pages 2-3): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
+14. (ge2024rnf5inhibitingantiviral pages 7-9): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
 
-15. (li2023downregulationofepha2 pages 7-9): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
+15. (OpenTargets Search: -RNF5): Open Targets Query (-RNF5, 38 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-16. (li2023downregulationofepha2 pages 1-2): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-17. (ge2024rnf5inhibitingantiviral pages 7-9): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
-
-18. (ruan2022asmallmoleculeinhibitor pages 3-5): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
-
-19. (ruan2022asmallmoleculeinhibitor pages 2-3): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
-
-20. (ruan2022asmallmoleculeinhibitor pages 6-7): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
-
-21. (ruan2022asmallmoleculeinhibitor pages 8-9): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
-
-22. (li2023downregulationofepha2 media 34a12dc0): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-23. (li2023downregulationofepha2 media 2176bf09): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-24. (li2023downregulationofepha2 media 4503c17b): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-25. (li2023downregulationofepha2 media cf4875fd): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-26. (khouri2013rnf185isa pages 2-3): Elma El Khouri, Gwenaëlle Le Pavec, Michel B. Toledano, and Agnès Delaunay-Moisan. Rnf185 is a novel e3 ligase of endoplasmic reticulum-associated degradation (erad) that targets cystic fibrosis transmembrane conductance regulator (cftr). Journal of Biological Chemistry, 288:31177-31191, Oct 2013. URL: https://doi.org/10.1074/jbc.m113.470500, doi:10.1074/jbc.m113.470500. This article has 124 citations and is from a domain leading peer-reviewed journal.
-
-27. (morito2008gp78cooperateswith pages 1-2): Daisuke Morito, Kazuyoshi Hirao, Yukako Oda, Nobuko Hosokawa, Fuminori Tokunaga, Douglas M. Cyr, Keiji Tanaka, Kazuhiro Iwai, and Kazuhiro Nagata. Gp78 cooperates with rma1 in endoplasmic reticulum-associated degradation of cftrdeltaf508. Molecular biology of the cell, 19 4:1328-36, Apr 2008. URL: https://doi.org/10.1091/mbc.e07-06-0601, doi:10.1091/mbc.e07-06-0601. This article has 278 citations and is from a domain leading peer-reviewed journal.
-
-28. (ge2024rnf5inhibitingantiviral pages 1-2): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
-
-29. (li2023downregulationofepha2 pages 9-11): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-30. (li2023downregulationofepha2 pages 5-7): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-31. (li2023downregulationofepha2 pages 3-5): Xiaojuan Li, Fan Wang, Lu Huang, Mengtian Yang, and Ersheng Kuang. Downregulation of epha2 stability by rnf5 limits its tumor-suppressive function in her2-negative breast cancers. Cell Death &amp; Disease, Oct 2023. URL: https://doi.org/10.1038/s41419-023-06188-y, doi:10.1038/s41419-023-06188-y. This article has 8 citations and is from a peer-reviewed journal.
-
-32. (ruan2022asmallmoleculeinhibitor pages 5-6): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
-
-33. (ruan2022asmallmoleculeinhibitor pages 9-10): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
-
-34. (ruan2022asmallmoleculeinhibitor pages 1-2): Jingjing Ruan, Dongdong Liang, Wenjing Yan, Yongwang Zhong, Daniel C. Talley, Ganesha Rai, Dingyin Tao, Christopher A. LeClair, Anton Simeonov, Yinghua Zhang, Feihu Chen, Nancy L. Quinney, Susan E. Boyles, Deborah M. Cholon, Martina Gentzsch, Mark J. Henderson, Fengtian Xue, and Shengyun Fang. A small-molecule inhibitor and degrader of the rnf5 ubiquitin ligase. Nov 2022. URL: https://doi.org/10.1091/mbc.e22-06-0233, doi:10.1091/mbc.e22-06-0233. This article has 15 citations and is from a domain leading peer-reviewed journal.
+16. (ge2024rnf5inhibitingantiviral pages 9-10): Junyi Ge and Leiliang Zhang. Rnf5: inhibiting antiviral immunity and shaping virus life cycle. Frontiers in Immunology, Jan 2024. URL: https://doi.org/10.3389/fimmu.2023.1324516, doi:10.3389/fimmu.2023.1324516. This article has 9 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](RNF5-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000037 The provided figures demonstrate that RNF5 regulates EphA2 stability and its downstream signaling, which correlates with patient su](RNF5-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000017 The document does not contain a schematic labeled as Figure 1 that summarizes the pathway; Figure 1 in this paper focuses on charac](RNF5-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. tcherpakov2009regulationofendoplasmic pages 1-1
-2. riepe2024smallmoleculecorrectorsdivert pages 1-2
-3. kong2022pseudorabiesvirustegument pages 1-2
-4. li2023suppressionofkshv pages 1-2
-5. tcherpakov2009regulationofendoplasmic pages 1-2
-6. tcherpakov2009regulationofendoplasmic pages 2-3
-7. michael2006selectionofmisfolded pages 100-105
-8. ruan2022asmallmoleculeinhibitor pages 3-5
-9. ruan2022asmallmoleculeinhibitor pages 2-3
-10. ruan2022asmallmoleculeinhibitor pages 6-7
-11. ruan2022asmallmoleculeinhibitor pages 8-9
-12. ruan2022asmallmoleculeinhibitor pages 5-6
-13. ruan2022asmallmoleculeinhibitor pages 9-10
-14. ruan2022asmallmoleculeinhibitor pages 1-2
-15. https://doi.org/10.1074/jbc.M113.470500;
-16. https://doi.org/10.1091/mbc.e07-06-0601;
-17. https://doi.org/10.1091/mbc.e23-08-0336
-18. https://doi.org/10.1074/jbc.M808222200
-19. https://doi.org/10.1038/s41419-022-05231-8;
-20. https://doi.org/10.3389/fimmu.2023.1324516
-21. https://doi.org/10.3389/fimmu.2023.1324516;
-22. https://doi.org/10.1038/s41419-022-05231-8
-23. https://doi.org/10.1038/s41392-023-01335-5
-24. https://doi.org/10.1371/journal.ppat.1010544
-25. https://doi.org/10.1038/s41419-023-06188-y
-26. https://doi.org/10.1371/journal.ppat.1011103
-27. https://doi.org/10.1091/mbc.e22-06-0233
-28. https://doi.org/10.1074/jbc.m808222200,
-29. https://doi.org/10.3389/fimmu.2023.1324516,
-30. https://doi.org/10.1038/s41419-022-05231-8,
-31. https://doi.org/10.1074/jbc.m113.470500,
-32. https://doi.org/10.17615/tw77-nm22,
-33. https://doi.org/10.1091/mbc.e23-08-0336,
-34. https://doi.org/10.3389/fmicb.2022.944101,
-35. https://doi.org/10.1038/s41392-023-01335-5,
-36. https://doi.org/10.1371/journal.ppat.1010544,
-37. https://doi.org/10.1371/journal.ppat.1011103,
-38. https://doi.org/10.1038/s41419-023-06188-y,
-39. https://doi.org/10.1091/mbc.e22-06-0233,
-40. https://doi.org/10.1091/mbc.e07-06-0601,
+1. okiyoneda2024targetingubiquitinationmachinery pages 4-7
+2. riepe2024smallmoleculecorrectorsdivert pages 3-4
+3. wan2024ringfingerprotein pages 12-13
+4. brusa2023innovativestrategytoward pages 11-14
+5. riepe2024smallmoleculecorrectorsdivert pages 1-2
+6. brusa2023innovativestrategytoward pages 9-11
+7. okiyoneda2024targetingubiquitinationmachinery pages 11-13
+8. brusa2023innovativestrategytoward pages 14-15
+9. brusa2023innovativestrategytoward pages 1-3
+10. https://doi.org/10.1091/mbc.e23-08-0336
+11. https://doi.org/10.1007/s00018-024-05295-z
+12. https://doi.org/10.1021/acs.jmedchem.3c00608
+13. https://doi.org/10.3389/fimmu.2023.1324516
+14. https://doi.org/10.1186/s12872-024-04070-z
+15. https://doi.org/10.1007/s00018-024-05295-z,
+16. https://doi.org/10.1021/acs.jmedchem.3c00608,
+17. https://doi.org/10.1083/jcb.202308003,
+18. https://doi.org/10.3389/fimmu.2023.1324516,
+19. https://doi.org/10.1091/mbc.e23-08-0336,
+20. https://doi.org/10.1186/s12872-024-04070-z,
