@@ -53,3 +53,13 @@ No catalytic (mannosidase) activity should be assigned — LMAN1L is a lectin (c
 ## Core function (cautious)
 
 The only defensible synthesized statement is a homology-based prediction: LMAN1L is predicted to be a mannose-binding L-type lectin / ERGIC-resident type I membrane cargo receptor of the ERGIC-53/LMAN1 family, likely acting in ER-to-Golgi (COPII) cargo transport, but this is entirely inferred from family membership and domain architecture; direct functional evidence is lacking.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+The Falcon (Edison Scientific) deep-research report for LMAN1L returned **no gene-specific experimental literature**; it explicitly states "direct experimental studies on human LMAN1L/Q9HAT1 were not accessible" and that "no primary study directly characterizes LMAN1L's cargo, binding partners, or subcellular localization." All mechanistic content is **paralog-inferred from LMAN1/ERGIC-53**. No new LMAN1L-specific references were added to the review.
+
+- **(Paralog-inferred, NOT LMAN1L-specific)** Family-membership framing: LMAN1L is named as a distinct member of the animal L-type lectin family (LMAN1/ERGIC-53, LMAN1L, LMAN2/VIP36, LMAN2L/VIPL) [Baines & Zhang 2007, DOI:10.1016/j.tibs.2007.06.006 "LMAN1L ... animal L-type lectin family"]. This is consistent with the existing review's family/domain inference; adds nothing new.
+- **(Paralog-inferred)** Recent mechanistic framework for cargo receptors (Ca2+/pH-dependent glycan capture/release across the ER→ERGIC→Golgi gradient) is drawn entirely from LMAN1 [Zhang, Srivastava & Zhang 2023, DOI:10.1042/bst20220713]. Not direct LMAN1L evidence; supports the existing homology-based "predicted mannose-binding cargo receptor" framing only.
+- **(Paralog-inferred)** 2024 cryo-EM structure of full-length ERGIC-53/LMAN1 in complex with MCFD2 (tetramer, clover-like head, coiled-coil stalk) [Watanabe et al. 2024, Nat Commun, DOI:10.1038/s41467-024-46747-1] is offered only as a *structural analog* for LMAN1L; it does not contain LMAN1L data.
+- **(Database-level only, not promoted)** Falcon cites OpenTargets trait associations for LMAN1L (hypertension, alcohol drinking, osteoarthritis, hip OA, pregnancy-induced hypertension). These are aggregated GWAS/association signals, hypothesis-generating only, with no mechanistic link to LMAN1L function; NOT added as references or annotations.
+- **Net effect on review:** none. Falcon reaffirms that LMAN1L remains characterized at the transcript level only (PE 2), with all functional roles homology-inferred. No YAML changes; existing KEEP_AS_NON_CORE / MARK_AS_OVER_ANNOTATED dispositions stand.
