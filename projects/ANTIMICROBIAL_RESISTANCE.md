@@ -80,6 +80,23 @@ Both enzymes share the **same GO MF leaf term** (`GO:0050073`), yet are biologic
 |---------|------|---------|-----|--------------------|--------|
 | ECOLX | mphA | Q47396 | ARO:3000316 | MPH / antibiotic inactivation | COMPLETE |
 | ECO8N | mphB | A0A0H3EUF3 | ARO:3000318 | MPH / antibiotic inactivation | COMPLETE |
+| ECOLX | mcr-1 | A0A0R6L508 | ARO:3003689 | pEtN transferase / colistin target modification | COMPLETE |
+| ENTCL | aac6-Ib | A0A076UB44 | ARO:3002579 | AAC / antibiotic inactivation | COMPLETE |
+
+### Reviews validating annotation-gain candidates
+
+MCR-1 and AAC(6')-Ib8 were reviewed through the full curation process specifically to ground-truth the
+[annotation-gain candidates](ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md), giving two contrasting outcomes:
+
+- **MCR-1 (A0A0R6L508)** — the candidate `GO:0043838` (phosphatidylethanolamine:Kdo2-lipid A pEtN
+  transferase) is a **genuine gain**: the GOA carries only the over-general `GO:0016772`/`GO:0016776`,
+  which are refined (`MODIFY`) to the specific EC 2.7.8.43 activity, structurally/biochemically
+  supported (PMID:27655155, 29079699). The review also flags the mis-propagated
+  `GO:0009244` (LPS core biosynthesis → over-annotated) and adds `GO:0046677` and zinc binding.
+- **AAC(6')-Ib8 (A0A076UB44)** — the candidate `GO:0034069` (aminoglycoside N-acetyltransferase) is
+  **correctly rejected**: the entry already has the more specific child `GO:0047663`
+  (aminoglycoside 6'-N-acetyltransferase, EC 2.3.1.82), so the family-level term would be a redundant
+  over-annotation. This is the subsumption case from the [spot review](ANTIMICROBIAL_RESISTANCE/SPOT_REVIEW.md).
 
 ### Candidate next genes
 - **mph(C), mph(E), mph(G)** — other macrolide phosphotransferase family members (ARO macrolide phosphotransferase family).
