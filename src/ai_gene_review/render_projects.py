@@ -213,8 +213,15 @@ def replace_gene_symbols(
         return link
 
     # Build regex pattern for all known symbols
-    # Sort by length (longest first) to avoid partial matches
-    symbols = sorted(symbol_index.keys(), key=len, reverse=True)
+    # Sort by length (longest first) to avoid partial matches.
+    # Exclude purely-numeric symbols (e.g. BPT4 phage genes named "2", "10"): bare numbers occur
+    # constantly in prose/tables and would produce a flood of false links. Such symbols must be
+    # linked via explicit <gene> tags (handled by replace_gene_tags) instead.
+    symbols = sorted(
+        (s for s in symbol_index.keys() if not s.isdigit()),
+        key=len,
+        reverse=True,
+    )
 
     if not symbols:
         return content, warnings

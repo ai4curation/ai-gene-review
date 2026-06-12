@@ -82,10 +82,11 @@ render-mappings:
 annotation-gain:
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/annotation_gain_report.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --uniprot projects/ANTIMICROBIAL_RESISTANCE/data/uniprot_card_xrefs.tsv --out-md projects/ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md --out-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv
 
-# Publish the AR project's sub-products (markdown -> HTML via the project template + the SSSOM HTML) under pages/.
+# Publish the AR project's sub-products (markdown -> HTML via the project template + the SSSOM HTML)
+# under pages/projects/ANTIMICROBIAL_RESISTANCE/ (next to the rendered project page).
 render-ar-pages:
-	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; [render_project(Path('projects/ANTIMICROBIAL_RESISTANCE')/f, output_dir=Path('pages/ANTIMICROBIAL_RESISTANCE')) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md']]"
-	cp projects/ANTIMICROBIAL_RESISTANCE/aro2go.html pages/ANTIMICROBIAL_RESISTANCE/aro2go.html
+	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; [render_project(Path('projects/ANTIMICROBIAL_RESISTANCE')/f, output_dir=Path('pages/projects/ANTIMICROBIAL_RESISTANCE')) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md']]"
+	cp projects/ANTIMICROBIAL_RESISTANCE/aro2go.html pages/projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
 
 # ============== Hidden internal recipes ==============
 

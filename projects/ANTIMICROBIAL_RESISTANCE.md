@@ -148,12 +148,12 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/AN
 
 **Curator view & impact.** `just render-mappings` builds a browsable HTML page of all mappings + gaps with CARD/AmiGO links. `just annotation-gain` applies the mappings to the **4,182** UniProtKB entries carrying a CARD cross-reference and reports the GO terms they would gain but don't yet have: **630** candidate new annotations (subsumption-aware — a further 104 over-general parents are suppressed where the entry already has a more specific child term) — e.g. all 79 colistin/MCR entries lack `GO:0043838`; 448 beta-lactamases lack `GO:0008800`.
 
-**Project artifacts** (rendered to `pages/ANTIMICROBIAL_RESISTANCE/` by `just render-ar-pages`):
+**Project artifacts** (rendered to `pages/projects/ANTIMICROBIAL_RESISTANCE/` by `just render-ar-pages`):
 
-- [ARO → GO mapping table (HTML)](../ANTIMICROBIAL_RESISTANCE/aro2go.html) — the curator view of all 23 mappings + 9 gaps.
-- [Annotation-gain report](../ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.html) — candidate new UniProt annotations.
-- [Spot review](../ANTIMICROBIAL_RESISTANCE/SPOT_REVIEW.html) — manual QA of sample candidates.
-- [Mappings & pipeline README](../ANTIMICROBIAL_RESISTANCE/README.html) — methods, validation, propagation logic.
+- [ARO → GO mapping table (HTML)](ANTIMICROBIAL_RESISTANCE/aro2go.html) — the curator view of all 23 mappings + 9 gaps.
+- [Annotation-gain report](ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.html) — candidate new UniProt annotations.
+- [Spot review](ANTIMICROBIAL_RESISTANCE/SPOT_REVIEW.html) — manual QA of sample candidates.
+- [Mappings & pipeline README](ANTIMICROBIAL_RESISTANCE/README.html) — methods, validation, propagation logic.
 
 ### Recommended convention
 - Record the ARO id in the gene notes (`- CARD/ARO: ARO:NNNNNNN (gene); mechanism = ...`) with provenance, as already done for both MPH genes.
