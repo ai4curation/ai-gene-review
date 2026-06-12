@@ -41,3 +41,29 @@ Highly expressed in placenta, liver, and fetal skin; weakly in fetal epiphyseal 
 - PMID:14500733 — HIGH relevance, VERIFIED (founding biochemical characterization; abstract-only cache but anchored by EC/Rhea reaction and EXP GOA evidence).
 - PMID:25416956 / 26871637 / 31515488 / 32296183 — LOW relevance (bare protein binding from HT interactome screens), VERIFIED as correctly-cited interactome papers.
 </content>
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- P4HA3 is overexpressed in clear cell renal cell carcinoma (ccRCC); knockdown inhibits proliferation,
+  migration and invasion, and GSEA/Western blot implicate EMT and PI3K/AKT/GSK3beta signaling. This is
+  the most P4HA3-specific functional-perturbation evidence in a tumor context.
+  [PMID:36588128 "P4HA3 may induce ccRCC progression via the PI3K-AKT-GSK3β signaling pathway and could represent a potential therapeutic target"]
+- Pan-cancer (33 tumor types) analysis with experimental validation: P4HA3 expression tracks tumor-
+  microenvironment infiltration, proliferation and EMT markers; P4HA3 depletion inhibits proliferation/
+  migration/invasion and promotes anti-tumor PD-1/PD-L1 immunotherapy response (incl. TNBC PDX models).
+  [PMID:39504328 "P4HA3 deficiency inhibited the proliferation, migration and invasion abilities of tumor cells, and promoted anti-tumor immunotherapy of PD-1/PD-L1 inhibitor"]
+- Gastric cancer: elevated P4HA3 associates with adverse prognosis and immune-microenvironment features
+  (immune infiltration, TMB, MSI, immune checkpoints); proposed as an immunotherapy-response biomarker.
+  Correlative/bioinformatic. [PMID:39362976 "P4HA3 may function as an immune-related biomarker in the pathogenesis and treatment of GC"]
+- HNSCC family-level study (all three C-P4HA alpha subunits, including P4HA3): combined higher expression
+  is prognostically adverse and antagonized by LLGL2 via occludin; C-P4HA knockdown reduces migration/
+  invasion. [PMID:39394821 "a higher expression of all three C-P4HAs ... is a superior prognostic indicator"]
+- Shi et al. 2021 review consolidates the three-isoenzyme C-P4H framework (P4HA1/2/3, single P4HB beta),
+  regulation by cytokines/TFs/miRNAs, tumor overexpression, and C-P4H inhibitors as anti-tumor strategy.
+  [PMID:34009234 "Vertebrate C-P4H is an α2β2 tetramer with three isoenzymes differing in the catalytic α-subunits, which are encoded by P4HA1, P4HA2, and P4HA3 genes"]
+- Falcon reiterates (review-level) that P4HA3-specific substrate preferences/kinetics remain less defined
+  than P4HA1/2 and P4HA3 mRNA is low-abundance, consistent with the existing review's framing and
+  suggested_questions. No new primary biochemical-substrate data for P4HA3 in the report.
+- All added cancer references are non-core ECM-remodeling/EMT/tumor-context findings; they do not change
+  the core catalytic annotation (procollagen-proline 4-dioxygenase activity, EXP PMID:14500733) and were
+  not added as supporting_text to core_functions (papers not in publications/ cache).

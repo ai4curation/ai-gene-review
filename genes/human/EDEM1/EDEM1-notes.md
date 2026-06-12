@@ -33,3 +33,9 @@
 - calcium ion binding (GO:0005509, IEA): GH47 fold cofactor; KEEP_AS_NON_CORE.
 - carbohydrate metabolic process / membrane (generic IEA): MARK_AS_OVER_ANNOTATED in favor of ER N-glycan trimming / ER membrane.
 - ER, ER membrane, ERQC localizations: accept.
+
+## Falcon deep-research findings (incorporated 2026-06)
+- The EDEM1 review already incorporated the main recent Falcon-cited papers: Chiritoiu 2020 (PMID:32423001), Katsuki 2024 turnover (PMID:38682256), Fasana 2024 ERLAD (PMID:38773321), and Christianson 2023 review (PMID:37528230). No action needed for these.
+- NEW reference added: Shenkman et al. 2018 (Commun Biol, PMID:30374462) - this provides the first direct in vitro mannosidase assays for EDEM1, showing bona fide alpha-mannosidase activity that is folding-state dependent: modest on free glycans/native glycoproteins but significantly higher on a denatured glycoprotein, explaining selectivity for misfolded substrates [PMID:30374462 "activity of the EDEMs is modest on free oligosaccharides and on glycoproteins. However, mannosidase activity of ERManI and the EDEMs is significantly higher on a denatured glycoprotein"]. The EDEMs associate with oxidoreductases (PDI, TXNDC11). This complements the endogenous-KO mannosidase evidence (PMID:25092655) and was the main EDEM1-relevant primary paper missing from the review.
+- Falcon's other EDEM1 content (E488Q catalytic residue, OS-9 association ~80% reduction on EDEM1 knockdown, ~3h half-life, both soluble and type II TM forms, FAM134B-dependent ERLAD rerouting) is sourced from papers already cited in the review (Shenkman 2018, Katsuki 2024, Fasana 2024); no further citation changes needed.
+- PMID:30374462 added (id only, uncached) to the EDEM1 mannosidase core_function supported_by.
