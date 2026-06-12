@@ -204,7 +204,7 @@ def main() -> int:
             print(f"  STAGED {prompt_path}")
         out_md = out_dir / f"{GEN.normalize_provider(args.provider)}.md"
         print("    submit (human runs this to spend a job):")
-        print(f"      uv run deep-research-client research \\")
+        print("      uv run deep-research-client research \\")
         print(f"        --input-file {prompt_path} --provider {args.provider} \\")
         print(f"        --output {out_md} \\")
         print(f"        --separate-citations {out_md}.citations.md\n")
