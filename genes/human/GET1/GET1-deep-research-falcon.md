@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T01:59:36.607564'
-end_time: '2026-06-12T02:20:15.955086'
-duration_seconds: 1239.35
+start_time: '2026-06-12T02:16:20.753604'
+end_time: '2026-06-12T02:31:41.358782'
+duration_seconds: 920.61
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -27,7 +27,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 49
+citation_count: 36
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -44,9 +44,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000017 Table 2 provides the binding affinities
-    (KD) of TRC40 and the TRC40-RAMP4 (TRC40-R4) complex to the WRB coiled-coil domain
-    (WRBcc) '
+  description: '## Context ID: pqac-00000020 The requested information is presented
+    in Figures 1 and 5 of the document. - **Figure 1 (panels B, C, D)** illustrates
+    the conforma'
 ---
 
 ## Question
@@ -157,287 +157,192 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research Report: Human GET1 / WRB (UniProt O00258) — Functional Annotation and Current Understanding
+## Research Report: Human GET1 / WRB (UniProt O00258)
 
-## 0) Target verification (critical disambiguation)
-The target in this report is **human GET1** as defined by UniProt accession **O00258**, which corresponds to **WRB (tryptophan-rich basic protein)**, historically also called **congenital heart disease 5 protein (CHD5)**, and is the mammalian functional homolog of yeast **Get1** in the **GET/TRC pathway** for tail-anchored (TA) protein insertion into the endoplasmic reticulum (ER). This identity is explicitly stated in the original WRB receptor-identification work, including the UniProt accession mapping and Get1 homology. (vilardi2011wrbisthe pages 1-2, vilardi2011wrbisthe pages 5-6)
+### 0) Target verification (gene/protein identity)
+The UniProt accession **O00258** corresponds to the human protein commonly called **WRB (tryptophan-rich basic protein)** and annotated as **Guided entry of tail-anchored proteins factor 1 (GET1)**, also historically referred to as **congenital heart disease 5 protein (CHD5)**. Primary literature identifies WRB as the **metazoan homolog of yeast Get1** and an **ER-membrane receptor/insertase component** for the **TRC40/ASNA1** tail-anchored protein targeting pathway, aligning with the provided UniProt identity and family context (WRB/GET1 family). (vilardi2011wrbisthe pages 2-3, farkas2021captureanddelivery pages 5-7)
 
-## 1) Key concepts and definitions (current understanding)
+### 1) Key concepts and definitions (current understanding)
 
-### 1.1 Tail-anchored (TA) proteins
-TA proteins are **single-pass membrane proteins** with a **C-terminal transmembrane domain (TMD)** that necessitates **post-translational** targeting/insertion (the TMD emerges only at translation termination). This is the client class handled by the GET/TRC pathway. (farkas2021captureanddelivery pages 1-3)
+#### 1.1 Tail-anchored (TA) proteins
+Tail-anchored proteins are a class of **single-pass membrane proteins** in which a **single hydrophobic transmembrane domain (TMD)** lies near the **extreme C-terminus**; they are inserted into target membranes **post-translationally** because the TMD emerges only after translation is nearly complete. Reviews emphasize that organelle-specific insertion pathways exist for TA proteins and that quality-control pathways clear mis-targeted TA proteins. (najdrova2022conservedmechanismfor pages 55-59)
 
-### 1.2 The mammalian GET/TRC pathway (overview)
-A widely used model for mammals is:
-1) Nascent TA proteins are initially captured by **SGTA** and the **BAG6 complex** (BAG6–TRC35–UBL4A). (farkas2021captureanddelivery pages 1-3)
-2) TA substrates are transferred to the ATPase **TRC40** (also called **ASNA1**), which shields the hydrophobic TA TMD. (farkas2021captureanddelivery pages 1-3)
-3) TRC40 delivers the substrate to the **ER-resident receptor/insertase** comprised of **WRB (GET1)** and **CAML**; receptor engagement drives conformational changes enabling insertion and TRC40 recycling. (farkas2021captureanddelivery pages 1-3, riveramonroy2016micelackingwrb pages 1-2)
+#### 1.2 GET/TRC pathway (ER TA-protein targeting/insertion)
+The eukaryotic **guided entry of tail-anchored proteins (GET)** pathway (and its metazoan counterpart often termed the **TRC pathway**) comprises: (i) cytosolic capture/shielding of TA TMDs by chaperones and a targeting ATPase (**Get3 in yeast; TRC40/ASNA1 in mammals**), (ii) delivery of the TA substrate to an ER membrane receptor/insertase (yeast **Get1/Get2**; mammalian **WRB/CAML**), and (iii) TA insertion into the ER membrane coupled to ATPase cycling. (farkas2021captureanddelivery pages 1-3, farkas2021captureanddelivery pages 5-7, mateja2018astructuralperspective pages 9-11)
 
-### 1.3 What “GET1/WRB” is (functional definition)
-WRB/GET1 is best described as an **ER membrane insertase receptor subunit**: it binds TRC40 and (together with CAML) forms the minimal machinery needed to accept TA substrates and catalyze their insertion into the ER bilayer. (vilardi2014wrbandcaml pages 1-2, mcdowell2020structuralbasisof pages 1-3)
+#### 1.3 What GET1/WRB is (molecular function definition)
+**GET1/WRB** is best defined as an **ER membrane insertase/receptor subunit** that binds the cytosolic targeting factor **TRC40/ASNA1** and cooperates with **CAML** (the Get2 analog) to mediate **insertion of TA-protein TMDs into the ER membrane**. In early biochemical work, WRB was identified as the **ER membrane receptor** for TRC40/ASNA1-mediated TA insertion, with a key **cytosolic coiled-coil docking domain**. (vilardi2011wrbisthe pages 2-3, farkas2021captureanddelivery pages 1-3, farkas2021captureanddelivery pages 5-7)
 
-## 2) GET1/WRB: protein properties, localization, and topology
+### 2) Molecular function, mechanism, and pathway placement
 
-### 2.1 ER localization
-WRB is experimentally described as an **ER-resident membrane protein**; tagged WRB exhibits a reticular ER-like distribution and colocalizes with ER luminal markers (e.g., calreticulin). (vilardi2011wrbisthe pages 1-2)
+#### 2.1 Subcellular localization
+WRB is described as an **ER-resident integral membrane protein**. Its **cytosolic coiled-coil domain** provides a binding site for TRC40/ASNA1 and helps recruit TRC40 to ER membranes. (vilardi2011wrbisthe pages 2-3, najdrova2022conservedmechanismfor pages 55-59)
 
-### 2.2 Predicted topology and domains relevant to function
-WRB is a small (~**19 kDa**) integral membrane protein with **three predicted transmembrane helices**, and a **cytosol-exposed coiled-coil domain** positioned between the first two TMDs (predicted by topology analysis; tested functionally). (vilardi2011wrbisthe pages 2-3, vilardi2011wrbisthe pages 3-5)
+#### 2.2 Core interaction partners
+Key partners supported by mechanistic literature include:
+- **TRC40/ASNA1** (cytosolic ATPase/chaperone that delivers TA substrates to the ER) (farkas2021captureanddelivery pages 1-3, vilardi2011wrbisthe pages 2-3)
+- **CAML** (ER receptor partner; functional analog of Get2; together with WRB forms an obligate ER receptor complex) (farkas2021captureanddelivery pages 5-7, farkas2021captureanddelivery pages 1-3)
 
-This coiled-coil region is the key TRC40-binding interface and is conserved with yeast Get1. (vilardi2011wrbisthe pages 3-5, vilardi2011wrbisthe pages 1-2)
+Vilardi et al. showed direct interaction between TRC40 and the WRB coiled-coil domain and that soluble coiled-coil fragments can inhibit TRC40-dependent insertion, consistent with a receptor docking role. (vilardi2011wrbisthe pages 2-3)
 
-## 3) Molecular function and mechanism (with evidence)
+#### 2.3 Stepwise mechanism (functional annotation narrative)
+A synthesis consistent across reviews and primary data is:
+1. A TA substrate is captured in the cytosol and delivered by **TRC40/ASNA1**, which shields the hydrophobic TMD in a protected pocket. (farkas2021captureanddelivery pages 1-3)
+2. TRC40 docks at the ER via the receptor/insertase formed by **WRB (GET1)** and **CAML**, with WRB’s cytosolic coiled-coil contributing to TRC40 binding. (vilardi2011wrbisthe pages 2-3, farkas2021captureanddelivery pages 5-7)
+3. Docking facilitates conformational changes and **handoff/release of the TA TMD** to the membrane-embedded insertase groove/channel for insertion into the bilayer, followed by TRC40 recycling. (farkas2021captureanddelivery pages 5-7, mcdowell2020structuralbasisof pages 1-3, heo2023theget12insertase pages 1-3)
 
-### 3.1 WRB is the TRC40 receptor; the coiled-coil is a TRC40 binding site
-The foundational evidence for WRB’s receptor role is:
-- **Physical interaction** between WRB and TRC40 (co-immunoprecipitation and recruitment assays). (vilardi2011wrbisthe pages 2-3, vilardi2011wrbisthe pages 1-2)
-- A soluble WRB **coiled-coil fragment** binds TRC40 and **inhibits TRC40-dependent TA insertion**, demonstrating functional competition for receptor binding. (vilardi2011wrbisthe pages 2-3, vilardi2011wrbisthe pages 3-5)
+Structural perspective reviews additionally place WRB/Get1 within an **Oxa1/Alb3/YidC-like insertase superfamily**, supporting a conserved principle in which a membrane-embedded hydrophilic environment assists TMD insertion. (mateja2018astructuralperspective pages 9-11, farkas2021captureanddelivery pages 5-7)
 
-Quantitatively, adding WRB coiled-coil at **10 µM** (reported as ~**100-fold molar excess**) reduced insertion of a TRC40-dependent TA substrate by **up to 92%**, while not affecting TRC40-independent insertion controls. (vilardi2011wrbisthe pages 3-5)
+### 3) Recent developments (prioritizing 2023–2024)
 
-### 3.2 WRB and CAML form the functional mammalian GET receptor
-In yeast complementation experiments lacking the endogenous GET receptor (get1/get2 deletion), co-expression of **human WRB + CAML**:
-- Rescues growth phenotypes,
-- Recruits Get3 (TRC40 homolog) to the ER,
-- Restores TA targeting/insertion.
+#### 3.1 2023 structural mechanism: hydrophilic groove and membrane remodeling
+A major advance is the 2023 **Nature Communications** study that reports structures/simulations of **human Get1/Get2/Get3** and concludes that the GET insertase is **conformationally plastic** and induces **local membrane thinning** near a **hydrophilic groove** to lower the energetic barrier for insertion. Quantitatively, the paper reports thinning near the insertase from approximately **~4.35 nm to ~2.25 nm** in the vicinity of the groove. (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase media b0739839)
 
-This supports the conclusion that **WRB and CAML are necessary and sufficient** to form a functional receptor complex for TRC40-mediated TA insertion. (vilardi2014wrbandcaml pages 1-2)
+This provides direct, modern structural support for annotating WRB/GET1 as a **membrane insertase** (not merely a static receptor) that actively reshapes the membrane environment during TA insertion. (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase media b0739839)
 
-### 3.3 Quantitative binding and kinetic parameters (recently curated experimental data)
-Vilardi et al. determined quantitative binding affinities for TRC40 interactions with receptor components:
-- TRC40 binding to rough microsomes: **KD ~251 ± 65 nM**
-- TRC40 binding to WRB coiled-coil domain: **KD ~392 ± 30 nM**
-- TRC40 binding to CAML cytosolic domain: **KD ~85 ± 29 nM**
-- TRC40–RAMP4 complex binding to CAML cytosolic domain: **KD ~34 ± 6 nM**
+#### 3.2 2023 channel model for the insertase (mechanistic support)
+A 2023 **Cell Reports** study of the yeast Get1/2 insertase provides complementary mechanistic evidence for a **dynamic aqueous channel** (reported ~2.5 nm diameter in reconstituted systems) that can be sealed by Get3 and supports substrate release/insertion and translocation of C-terminal hydrophilic tails. While yeast-focused, the mechanistic logic is frequently used to interpret conserved features of the pathway in metazoans. (heo2023theget12insertase pages 1-3)
 
-These values support a model in which the receptor’s cytosolic domains provide measurable, specific binding sites for TRC40 and TRC40–substrate complexes. (vilardi2014wrbandcaml pages 6-7, vilardi2014wrbandcaml media 82f0f8c3)
+#### 3.3 2023 proteomics: broader client spectra and pathway “rules of engagement”
+A 2023 label-free quantitative proteomics synthesis that compared perturbations across ER targeting/insertase components in human cells reported client-spectrum trends: TRC/GET clients are enriched for proteins with more central or C-terminal TMHs and unexpectedly included many multi-pass membrane proteins. Importantly, the authors reported an “insertase preference” ordering for TA insertion: **Wrb >> TRAM1 >> Sec61 > EMC > TRAP > Sec63**. (jung2023quantitativemassspectrometry pages 19-22)
 
-### 3.4 Structural mechanism: WRB/CAML as an Oxa1/YidC/EMC-like insertase
-High-resolution structural biology has clarified how WRB/GET1 participates in insertion:
+#### 3.4 2023 quality control/proteostasis link: BAG6–UBL4A disruption
+A 2023 **Biochemical Journal** study linked proteotoxic stress (including polyglutamine aggregates and other stresses) to dissociation of **UBL4A** from **BAG6**, an upstream module required for TA protein biogenesis. This work explicitly situates WRB (Get1)/CAML downstream as the ER-resident receptor and emphasizes that the TA biogenesis machinery interfaces with protein quality control routes that can promote insertion or degradation. (hagiwara2023proteotoxicstressesstimulate pages 1-3)
 
-**2020 Molecular Cell (McDowell et al.)**
-- Demonstrates that the membrane insertase is a **lipid-stabilized heterotetramer** (2:2 stoichiometry) formed upon Get3/TRC40 binding. (mcdowell2020structuralbasisof pages 3-4)
-- Identifies a conserved **membrane-embedded hydrophilic groove** in the insertase, related to other insertases (YidC/EMC), consistent with a conserved insertion principle. (mcdowell2020structuralbasisof pages 1-3)
-- Highlights a **Get2/CAML cytoplasmic helix** acting as a gate that interacts with Get3/TRC40 and contributes to insertion. (mcdowell2020structuralbasisof pages 1-3)
+### 4) Current applications and real-world implementations
 
-**2023 Nature Communications (McDowell et al.)**
-- Provides structures/simulations including **human Get1/Get2/Get3**, showing the **hydrophilic groove** contacts TA substrates and that the **Get1/Get2 heterodimer** is sufficient for in vitro insertion. (mcdowell2023thegetinsertase pages 1-2)
-- Reports **local membrane thinning** near the hydrophilic groove, interpreted as lowering the energetic barrier for insertion, i.e., the insertase actively remodels the bilayer. (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase pages 9-10)
-- Reveals **conformational plasticity** of the heterotetramer and gating interactions that likely coordinate substrate handoff and membrane integration. (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase pages 9-10)
+1. **Membrane protein biogenesis research tool / pathway dissection**: WRB/GET1 is routinely used as an essential node in experimental perturbations (knockdown/knockout, dominant-negative fragments) to probe the biogenesis of TA proteins and ER membrane protein targeting logic. Its coiled-coil domain can be used experimentally to competitively interfere with TRC40-dependent insertion in vitro. (vilardi2011wrbisthe pages 2-3)
 
-### 3.5 WRB’s additional mechanistic role: ensuring CAML topogenesis
-Beyond client insertion, WRB is required for correct membrane integration/topology of its partner **CAML**:
-- Without sufficient WRB, CAML forms aberrant topoforms, accumulates in ER clusters, and undergoes proteasome-mediated degradation.
-- This supports a model where WRB acts in an **insertase/chaperone-like catalytic role** in membrane biogenesis. (carvalho2019thewrbsubunit pages 1-2)
+2. **Understanding tissue-selective vulnerability in proteostasis and trafficking**: In vivo vertebrate studies indicate that WRB loss yields selective impacts on certain TA substrates (e.g., synaptic or trafficking proteins), which is used as a model to link TA insertion deficits to sensory phenotypes and to selective proteostasis collapse in specific cell types. (riveramonroy2016micelackingwrb pages 1-2, vogl2016tryptophan‐richbasicprotein pages 2-3)
 
-This is consistent with quantitative observations that **CAML is often 4–7× more abundant than WRB**, and that WRB may not need to be stoichiometric with CAML to influence CAML’s productive membrane insertion. (carvalho2019thewrbsubunit pages 8-9)
+3. **Framework for redundancy among ER insertases**: Human proteomics emphasizes overlap and division of labor among TRC/GET, EMC, Sec61-related factors, enabling systems-level modeling of membrane-protein insertion “rules of engagement,” relevant to interpreting phenotypes of membrane biogenesis defects. (jung2023quantitativemassspectrometry pages 19-22)
 
-## 4) Recent developments (prioritizing 2023–2024)
+### 5) Phenotypes, disease relevance, and expert interpretation
 
-### 4.1 2023: Conformational plasticity and membrane thinning as a core mechanism
-The 2023 structural/simulation work suggests a mechanistic framework where the insertase is not merely a static docking site, but dynamically remodels both protein conformation and the lipid environment (membrane thinning) to facilitate TA integration. (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase pages 9-10)
+#### 5.1 Congenital heart disease context
+Early work noted that the **human WRB gene maps to a Down syndrome region on chromosome 21 (21q22.3) within a congenital heart disease region** and that WRB shows relatively higher expression in tissues including **heart** (as well as brain, liver, skeletal muscle, pancreas) in the reported expression surveys. These observations support plausibility for developmental phenotypes but do not by themselves establish monogenic causality. (vilardi2011wrbisthe pages 5-6)
 
-### 4.2 2023: “Channel” concept in GET insertase function
-A 2023 Cell Reports study reconstituted yeast Get1/2 and reported a **dynamic aqueous channel (~2.5 nm diameter)** that opens/closes and can be sealed by Get3 binding, supporting mechanistic ideas for how a GET receptor can insert a TMD while managing the C-terminal tail. Although performed in yeast, the study informs mechanistic hypotheses for the mammalian WRB/CAML system. (heo2023theget12insertase pages 1-3)
+#### 5.2 Strong functional links to sensory synapse biology (hearing/vision) via TA clients
+Multiple vertebrate model systems provide mechanistic evidence that WRB-dependent TA insertion is essential in specialized sensory synapses:
+- Zebrafish wrb mutants show severe visual behavior defects and synaptic abnormalities; rescue experiments demonstrate that WRB–TRC40 interaction is required (a WRB mutant that cannot bind TRC40 fails to rescue). (daniele2016mutationofwrba pages 1-2)
+- Zebrafish wrb mutants also show auditory/vestibular phenotypes with cellular synaptic defects; quantitatively, they exhibit **~50% fewer synaptic ribbons**, and certain synaptic TA proteins (e.g., synaptobrevin/VAMP) are reduced to **~40% of wild type** while syntaxin 3 is reduced to **~72–84%**, consistent with compromised TA processing. (lin2016thezebrafishpinball pages 15-17)
+- In hair cells, WRB mediates insertion of the TA protein **otoferlin**; WRB disruption reduces otoferlin abundance and impairs hair-cell exocytosis and hearing, and manipulations of WRB or otoferlin partially rescue phenotypes—supporting a substrate-level causal mechanism. (vogl2016tryptophan‐richbasicprotein pages 2-3, vogl2016tryptophan‐richbasicprotein pages 1-2, vogl2016tryptophan‐richbasicprotein pages 11-12)
 
-### 4.3 2023: Expert synthesis — TA targeting fidelity and surveillance
-Recent review synthesis emphasizes that TA targeting includes not only delivery to ER receptors (WRB/CAML) but also surveillance mechanisms to resolve mis-targeting and enforce organelle specificity. This positions WRB/GET1 within a broader proteostasis network rather than an isolated insertion machine. (farkas2021captureanddelivery pages 5-7)
+#### 5.3 Proteostasis and selective TA-client dependence in vivo
+A mouse study using tissue-specific WRB knockout models concluded that in vitro TRC40-client classification does not always predict in vivo outcomes; some TA proteins (notably the SNARE **syntaxin 5**) are extremely sensitive to TRC-pathway disruption and can become autophagy targets, underscoring interplay between TA insertion and proteostasis. (riveramonroy2016micelackingwrb pages 1-2)
 
-### 4.4 2024: Insertases as potential lipid scramblases (conceptual expansion)
-A 2024 PNAS study argues that lipid scrambling may be a general feature of protein insertases, expanding the conceptual scope of insertase biology relevant to complexes such as GET/WRB-CAML. (mcdowell2023thegetinsertase pages 9-10)
+#### 5.4 Database-level disease association signals (Open Targets)
+Open Targets lists low-to-moderate scoring associations between **GET1** (ENSG00000182093) and several phenotype/disease terms with PubMed evidence linkage (e.g., “Phenotypic abnormality,” “Esotropia,” “Non-accomodative esotropia,” among others). These should be interpreted as **hypothesis-supporting associations** rather than definitive causality and should be corroborated with primary genetic/functional studies. (OpenTargets Search: -WRB)
 
-## 5) Current applications and real-world implementations
+### 6) Summary evidence map
+The following table consolidates key functional-annotation claims, recency highlights, and evidence pointers.
 
-### 5.1 Using WRB/CAML as a functional module to study ER membrane insertion
-A practical, widely used real-world implementation is **reconstitution/complementation**:
-- WRB + CAML can replace yeast Get1/Get2 to restore TA targeting/insertion in vivo, enabling genetic dissection of receptor features and domain swaps. (vilardi2014wrbandcaml pages 1-2)
-
-### 5.2 Interpreting organ phenotypes via TA-client specificity
-Tissue-specific WRB knockout in mice demonstrates a real-world implication: disruption of WRB does not uniformly collapse all TA proteins; instead, specific clients are highly vulnerable. For example, the SNARE **syntaxin 5 (Stx5)** is repeatedly identified as exceptionally sensitive to TRC40/WRB pathway disruption and is poorly rescued by alternative insertion pathways. (riveramonroy2016micelackingwrb pages 1-2, riveramonroy2016micelackingwrb pages 8-9)
-
-### 5.3 Quantitative metrics for receptor interactions
-The availability of **KD values** for TRC40 binding to WRB and CAML domains provides experimentally grounded parameters usable in mechanistic modeling and in vitro reconstitution design. (vilardi2014wrbandcaml media 82f0f8c3)
-
-## 6) Expert opinions and authoritative analysis (evidence-based)
-
-### 6.1 “Membrane insertase” framing
-Recent authoritative reviews categorize WRB/GET1 (with CAML) as part of ER **membrane insertase systems**, related to Oxa1/YidC-type insertase families, integrating WRB into a unifying framework of membrane protein biogenesis. (farkas2021captureanddelivery pages 5-7, mcdowell2020structuralbasisof pages 3-4)
-
-### 6.2 Proteostasis linkage
-In vivo WRB loss studies emphasize that the TRC/GET pathway is not solely a targeting route; it is tightly linked to **proteostasis and quality control**, where stalled/misinserted clients can be routed to degradation pathways (including autophagy for certain clients like Stx5). (riveramonroy2016micelackingwrb pages 7-8)
-
-## 7) Disease relevance: what is known, what remains uncertain
-
-### 7.1 Why WRB is called “congenital heart disease 5 (CHD5)”
-The designation reflects **positional mapping**, not a confirmed monogenic disease mechanism. WRB was historically called “congenital heart disease 5 protein” because the gene maps to **chromosome 21q22.3** within a Down syndrome (DS) region proposed to harbor gene(s) contributing to DS-associated congenital heart defects. (vilardi2011wrbisthe pages 5-6)
-
-A key human-genetic statistic supporting a DS-CHD candidate region is the partial trisomy mapping study:
-- Duplications including the candidate region: **8/14 (57%)** with CHD
-- Duplications outside the region: **0/5 (0%)** with CHD
-
-This supports a locus effect within the region but does not isolate WRB as the causal gene, and penetrance is incomplete. (barlow2001downsyndromecongenital pages 6-8, barlow2001downsyndromecongenital pages 5-6)
-
-### 7.2 Down syndrome expression dosage
-In Down syndrome fibroblasts, WRB is reported to be upregulated by the expected **~1.5×**, consistent with gene dosage from trisomy 21; CAML levels were not similarly increased, implying variable CAML:WRB ratios in human cells. (carvalho2019thewrbsubunit pages 8-9)
-
-### 7.3 Functional evidence from model organisms and mice
-Model organism perturbations reported in the WRB literature include cardiac and ocular phenotypes (medaka, Xenopus), supporting developmental sensitivity to WRB perturbation, while mouse tissue-specific WRB knockouts demonstrate severe, client-specific membrane biogenesis defects and organ pathology (e.g., liver injury with fibrosis and elevated transaminases; emerin mislocalization in ~50% cardiomyocytes). (riveramonroy2016micelackingwrb pages 1-2, riveramonroy2016micelackingwrb pages 3-4)
-
-### 7.4 Current state of direct human disease association
-Current evidence directly tying **human WRB variants** to congenital heart disease as a single-gene cause appears limited in the retrieved corpus. Consistent with this, Open Targets shows only a **low association score** for GET1/WRB with congenital heart disease and **no supporting evidence rows** in the retrieved context. (OpenTargets Search: congenital heart disease,cardiomyopathy,heart disease-WRB,GET1,CAML,TRC40)
-
-## 8) Evidence-focused summary table
-The following table consolidates the key functional-annotation claims with supporting citations, publication dates, and URLs.
-
-| Category | Finding | Supporting citations | Key references |
-|---|---|---|---|
-| Identity | Human **GET1** in this context is **WRB** (tryptophan-rich basic protein; also called **CHD5**), corresponding to **UniProt O00258**, and is the mammalian homolog of yeast **Get1** in the GET/TRC tail-anchored protein targeting pathway. | (vilardi2011wrbisthe pages 1-2, vilardi2011wrbisthe pages 5-6) | Vilardi F et al. **2011-04**. *WRB is the receptor for TRC40/Asna1-mediated insertion of tail-anchored proteins into the ER membrane*. J Cell Sci. https://doi.org/10.1242/jcs.084277 |
-| Localization/Topology | WRB is an **ER-resident integral membrane protein** with **three predicted transmembrane domains** and a **cytosol-exposed coiled-coil domain** between TMD1 and TMD2; tagged WRB shows an ER-like reticular pattern and colocalizes with calreticulin. | (vilardi2011wrbisthe pages 2-3, vilardi2011wrbisthe pages 3-5, vilardi2011wrbisthe pages 1-2) | Vilardi F et al. **2011-04**. J Cell Sci. https://doi.org/10.1242/jcs.084277 |
-| Complex/Partners | WRB forms the **ER receptor/insertase complex with CAML** (functional mammalian counterpart of yeast Get1/Get2) and receives substrates from **TRC40/ASNA1**; upstream cytosolic handoff involves **BAG6, TRC35, and UBL4A**. | (farkas2021captureanddelivery pages 1-3, riveramonroy2016micelackingwrb pages 1-2, carvalho2019thewrbsubunit pages 1-2, vilardi2014wrbandcaml pages 1-2) | Farkas Á, Bohnsack KE. **2021-07**. *Capture and delivery of tail-anchored proteins to the endoplasmic reticulum*. J Cell Biol. https://doi.org/10.1083/jcb.202105004; Vilardi F et al. **2014-01**. PLoS One. https://doi.org/10.1371/journal.pone.0085033 |
-| Molecular function | WRB is the **membrane receptor/insertase subunit** that enables **post-translational insertion of tail-anchored (TA) proteins** into the ER membrane after TRC40 delivery; together with CAML it is **necessary and sufficient** for functional receptor activity. | (vilardi2014wrbandcaml pages 1-2, vilardi2014wrbandcaml pages 2-3) | Vilardi F et al. **2014-01**. *WRB and CAML Are Necessary and Sufficient to Mediate Tail-Anchored Protein Targeting to the ER Membrane*. PLoS One. https://doi.org/10.1371/journal.pone.0085033 |
-| Mechanism | The **WRB coiled-coil** binds TRC40 directly, competing with TA insertion when supplied as a soluble fragment; mechanistically, CAML first tethers TRC40/Get3 and WRB then contributes to substrate release and insertion through the membrane complex. | (vilardi2011wrbisthe pages 2-3, vilardi2011wrbisthe pages 3-5, vilardi2014wrbandcaml pages 1-2) | Vilardi F et al. **2011-04**. J Cell Sci. https://doi.org/10.1242/jcs.084277; Vilardi F et al. **2014-01**. PLoS One. https://doi.org/10.1371/journal.pone.0085033 |
-| Mechanism | Structural work supports a **Get1/WRB–Get2/CAML hydrophilic groove** related to **YidC/EMC/Oxa1-type insertases**; Get3/TRC40 binding promotes formation of a **heterotetrameric insertase**, and lipid interactions help stabilize the active state. | (mcdowell2020structuralbasisof pages 1-3, farkas2021captureanddelivery pages 5-7, mcdowell2020structuralbasisof pages 3-4) | McDowell MA et al. **2020-10**. *Structural Basis of Tail-Anchored Membrane Protein Biogenesis by the GET Insertase Complex*. Mol Cell. https://doi.org/10.1016/j.molcel.2020.08.012 |
-| Localization/Topology | WRB not only inserts TA clients but also helps **topogenesis of CAML itself**: without sufficient WRB, CAML adopts **aberrant topoforms**, clusters in the ER, and is degraded by the proteasome. | (carvalho2019thewrbsubunit pages 8-9, carvalho2019thewrbsubunit pages 1-2) | Carvalho HJF et al. **2019-08**. *The WRB Subunit of the Get3 Receptor is Required for the Correct Integration of its Partner CAML into the ER*. Sci Rep. https://doi.org/10.1038/s41598-019-48363-2 |
-| Recent 2023-2024 developments | **2023 cryo-EM/simulation studies** showed that the GET insertase is **conformationally plastic** and causes **local membrane thinning** near the hydrophilic groove, likely lowering the energetic barrier for TA insertion. | (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase pages 9-10) | McDowell MA et al. **2023-11**. *The GET insertase exhibits conformational plasticity and induces membrane thinning*. Nat Commun. https://doi.org/10.1038/s41467-023-42867-2 |
-| Recent 2023-2024 developments | A **2023 Cell Reports** study on yeast Get1/2 found the insertase can form a **dynamic aqueous channel (~2.5 nm diameter)**, supporting a model in which GET receptors can insert the TMD and translocate short C-terminal tails; this is mechanistically informative for the mammalian WRB/CAML system. | (heo2023theget12insertase pages 1-3) | Heo P et al. **2023-01**. *The Get1/2 insertase forms a channel to mediate the insertion of tail-anchored proteins into the ER*. Cell Rep. https://doi.org/10.1016/j.celrep.2022.111921 |
-| Recent 2023-2024 developments | Recent reviews place WRB/CAML among **ER membrane insertases** and emphasize TA-protein targeting fidelity plus surveillance/quality-control cross-talk with mitochondrial proofreading and ER quality-control pathways. | (mcdowell2023thegetinsertase pages 1-2, heo2023theget12insertase pages 1-3, farkas2021captureanddelivery pages 5-7) | Qin Q et al. **2023-01**. *Targeting and surveillance mechanisms for tail-anchored proteins*. The Innovation Life. https://doi.org/10.59717/j.xinn-life.2023.100013; Kizmaz B, Herrmann JM. **2023-07**. *Membrane insertases at a glance*. J Cell Sci. https://doi.org/10.1242/jcs.261219 |
-| Recent 2023-2024 developments | A **2024 PNAS** analysis generalized the idea that **protein insertases can scramble lipids**, extending mechanistic thinking about insertases such as **WRB-CAML/GET** beyond peptide insertion alone. | (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase pages 9-10) | Li D et al. **2024-04**. *Lipid scrambling is a general feature of protein insertases*. PNAS. https://doi.org/10.1073/pnas.2319476121 |
-| Quantitative data | Biophysical binding data for the mammalian receptor show: **TRC40–rough microsomes KD ~251 ± 65 nM**; **TRC40–WRB coiled-coil KD ~392 ± 30 nM**; **TRC40–CAML cytosolic domain KD ~85 ± 29 nM**; **TRC40-RAMP4 complex–CAML cytosolic domain KD ~34 ± 6 nM**. | (vilardi2014wrbandcaml pages 6-7, vilardi2014wrbandcaml media 82f0f8c3) | Vilardi F et al. **2014-01**. PLoS One. https://doi.org/10.1371/journal.pone.0085033 |
-| Quantitative data | Soluble WRB coiled-coil inhibits TRC40-dependent TA insertion in vitro; at **10 µM WRBcc** (a **100-fold molar excess**), glycosylated inserted substrate was reduced by **up to 92%**. | (vilardi2011wrbisthe pages 3-5) | Vilardi F et al. **2011-04**. J Cell Sci. https://doi.org/10.1242/jcs.084277 |
-| Quantitative data | WRB and CAML are not present at equal abundance in cells: **CAML is ~4–7-fold more abundant than WRB**, and WRB was reported to be **~1.5× upregulated in Down syndrome fibroblasts** without changing CAML levels. | (carvalho2019thewrbsubunit pages 8-9) | Carvalho HJF et al. **2019-08**. Sci Rep. https://doi.org/10.1038/s41598-019-48363-2 |
-| In vivo phenotypes/applications | Tissue-specific **WRB knockout mice** revealed that TA-protein dependence on the pathway is **client-specific**: **syntaxin 5 (Stx5)** is especially sensitive, while **Sec61β** and **Stx8** can be relatively unaffected. | (riveramonroy2016micelackingwrb pages 1-2, riveramonroy2016micelackingwrb pages 2-3, riveramonroy2016micelackingwrb pages 4-5, riveramonroy2016micelackingwrb pages 3-4) | Rivera-Monroy J et al. **2016-12**. *Mice lacking WRB reveal differential biogenesis requirements of tail-anchored proteins in vivo*. Sci Rep. https://doi.org/10.1038/srep39464 |
-| In vivo phenotypes/applications | In cardiomyocyte-specific WRB knockout, **TRC40 and CAML protein levels fell significantly** and some TA clients were reduced; in hepatocytes, only animals with **70–90% WRB mRNA loss** showed significantly reduced WRB/CAML protein, indicating a **threshold effect**. | (riveramonroy2016micelackingwrb pages 2-3, riveramonroy2016micelackingwrb pages 3-4) | Rivera-Monroy J et al. **2016-12**. Sci Rep. https://doi.org/10.1038/srep39464 |
-| In vivo phenotypes/applications | Approximately **50% of cardiomyocytes** showed reduced/mislocalized **emerin** after WRB loss, and Cre-positive hepatocytes developed severe liver injury with fibrosis and elevated ALT/AST, underscoring the pathway’s physiological relevance for organ proteostasis. | (riveramonroy2016micelackingwrb pages 4-5, riveramonroy2016micelackingwrb pages 3-4) | Rivera-Monroy J et al. **2016-12**. Sci Rep. https://doi.org/10.1038/srep39464 |
-| In vivo phenotypes/applications | WRB-dependent TA insertion is physiologically important in the auditory system: WRB is required for proper insertion of **otoferlin**, and WRB deficiency disrupts **hair-cell exocytosis and hearing**. | (riveramonroy2016micelackingwrb pages 8-9) | Vogl C et al. **2016-12**. *Tryptophan-rich basic protein (WRB) mediates insertion of the tail-anchored protein otoferlin and is required for hair cell exocytosis and hearing*. EMBO J. https://doi.org/10.15252/embj.201593565 |
-| Disease/clinical relevance | The alternative name **“congenital heart disease 5” (CHD5)** reflects historical positional/candidate-gene annotation: WRB maps to **chromosome 21q22.3 / Down syndrome region-2**, a region implicated in congenital heart disease, but current literature more strongly supports a **membrane protein biogenesis** role than a directly established monogenic CHD mechanism. | (vilardi2011wrbisthe pages 5-6, riveramonroy2016micelackingwrb pages 1-2) | Barlow GM et al. **2001-03**. *Down syndrome congenital heart disease: A narrowed region and a candidate gene*. Genet Med. https://doi.org/10.1097/00125817-200103000-00002; Vilardi F et al. **2011-04**. J Cell Sci. https://doi.org/10.1242/jcs.084277 |
-| Disease/clinical relevance | Open Targets shows only a **weak congenital heart disease association score (0.0138)** for GET1/WRB and **no supporting evidence rows**, indicating that direct clinical evidence remains limited at present. | (OpenTargets Search: congenital heart disease,cardiomyopathy,heart disease-WRB,GET1,CAML,TRC40) | Open Targets platform context for GET1 and congenital heart disease (context retrieval) |
-| Disease/clinical relevance | The broader **TRC/GET pathway** has clear disease relevance even when direct WRB human genetics are sparse: **ASNA1/TRC40** biallelic variants cause rapidly progressive pediatric cardiomyopathy, reinforcing the importance of this pathway in human tissue function. | (farkas2021captureanddelivery pages 1-3) | Verhagen JMA et al. **2019-09**. *Biallelic Variants in ASNA1... Cause Rapidly Progressive Pediatric Cardiomyopathy*. Circ Genom Precis Med. https://doi.org/10.1161/CIRCGEN.119.002507 |
-| Key references | Most authoritative primary sources for functional annotation are the **2011 receptor-identification paper**, the **2014 WRB/CAML sufficiency paper**, the **2020 structural paper**, and the **2023 conformational plasticity paper**. | (mcdowell2020structuralbasisof pages 1-3, vilardi2014wrbandcaml pages 1-2, mcdowell2023thegetinsertase pages 1-2, mcdowell2020structuralbasisof pages 3-4) | Vilardi F et al. **2011-04**. https://doi.org/10.1242/jcs.084277; Vilardi F et al. **2014-01**. https://doi.org/10.1371/journal.pone.0085033; McDowell MA et al. **2020-10**. https://doi.org/10.1016/j.molcel.2020.08.012; McDowell MA et al. **2023-11**. https://doi.org/10.1038/s41467-023-42867-2 |
+| Category | Key points | Key sources (author year journal) | URL | Publication date | Evidence ID(s) |
+|---|---|---|---|---|---|
+| Identity | Human GET1 corresponds to WRB (tryptophan-rich basic protein; also called congenital heart disease 5 protein), the metazoan homolog of yeast Get1, matching UniProt O00258. It is a core component of the ER receptor/insertase for tail-anchored (TA) proteins. | Vilardi 2011 *Journal of Cell Science*; Farkas & Bohnsack 2021 *J Cell Biol* | https://doi.org/10.1242/jcs.084277; https://doi.org/10.1083/jcb.202105004 | 2011-04; 2021-07 | (vilardi2011wrbisthe pages 2-3, farkas2021captureanddelivery pages 5-7) |
+| Localization | WRB is an ER-resident integral membrane protein with a cytosol-exposed coiled-coil domain that docks TRC40/ASNA1. Reviews and primary studies consistently place the functional WRB/CAML receptor in the ER membrane. | Vilardi 2011 *Journal of Cell Science*; Pool 2022 *Int J Mol Sci* | https://doi.org/10.1242/jcs.084277; https://doi.org/10.3390/ijms23073773 | 2011-04; 2022-03 | (vilardi2011wrbisthe pages 2-3, najdrova2022conservedmechanismfor pages 55-59) |
+| Mechanism | WRB functions as the Get1-like insertase/receptor that receives TA substrates from TRC40/ASNA1 and helps release the substrate TMD for insertion into the ER bilayer. Structural work supports a membrane-embedded hydrophilic groove/channel mechanism analogous to other Oxa1/YidC-family insertases. | McDowell et al. 2020 *Molecular Cell*; Heo et al. 2023 *Cell Reports* | https://doi.org/10.1016/j.molcel.2020.08.012; https://doi.org/10.1016/j.celrep.2022.111921 | 2020-10; 2023-01 | (mcdowell2020structuralbasisof pages 1-3, heo2023theget12insertase pages 1-3, mateja2018astructuralperspective pages 9-11) |
+| Partners | The core mammalian receptor is the WRB/CAML complex; WRB directly engages TRC40/ASNA1 through its coiled-coil domain, while CAML acts as the Get2 analog and cooperates in substrate delivery/insertion. WRB and CAML are mutually stabilizing and function as an obligate receptor complex. | Vilardi 2011 *Journal of Cell Science*; Farkas & Bohnsack 2021 *J Cell Biol* | https://doi.org/10.1242/jcs.084277; https://doi.org/10.1083/jcb.202105004 | 2011-04; 2021-07 | (vilardi2011wrbisthe pages 2-3, farkas2021captureanddelivery pages 5-7, farkas2021captureanddelivery pages 1-3) |
+| Recent structural findings 2023 | 2023 work on human GET insertase showed conformational plasticity, a hydrophilic groove in hsGet1/WRB, and membrane thinning near the insertion site. Reported values include local thinning from ~4.35 nm to ~2.25 nm and a ~15° coiled-coil rotation/tilt associated with gating changes. | McDowell et al. 2023 *Nature Communications* | https://doi.org/10.1038/s41467-023-42867-2 | 2023-11 | (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase media b0739839) |
+| Proteomics client spectra 2023 | Quantitative proteomics in human cells found TRC/GET clients enriched for proteins with central or C-terminal TMHs and unexpectedly many multispanning membrane proteins. For insertase preference in TA insertion, the ranking reported was Wrb >> TRAM1 >> Sec61 > EMC > TRAP > Sec63. | Jung & Zimmermann 2023 *Int J Mol Sci* | https://doi.org/10.3390/ijms241814166 | 2023-09 | (jung2023quantitativemassspectrometry pages 19-22) |
+| Quality control link 2023 | Proteotoxic stress and polyQ inclusions disrupt the BAG6–UBL4A pretargeting complex upstream of WRB/CAML, linking TA-protein biogenesis to proteostasis and aggregate-associated pathology. BAG6/UBL4A normally helps shield hydrophobic TMDs and route clients either to WRB/CAML-mediated insertion or degradation. | Hagiwara et al. 2023 *Biochemical Journal* | https://doi.org/10.1042/bcj20230267 | 2023-10 | (hagiwara2023proteotoxicstressesstimulate pages 1-3) |
+| Phenotypes-Disease | WRB has been linked mechanistically to sensory phenotypes in vertebrate models: defective WRB impairs insertion of TA clients such as otoferlin and disrupts photoreceptor/hair-cell synaptic function, hearing, and vision. The WRB locus also lies in a chromosome 21 congenital heart disease region, but direct human WRB disease causality remains less established than for other TRC-pathway genes. | Rivera-Monroy et al. 2016 *Scientific Reports*; Vogl et al. 2016 *EMBO Journal*; Vilardi 2011 *Journal of Cell Science* | https://doi.org/10.1038/srep39464; https://doi.org/10.15252/embj.201593565; https://doi.org/10.1242/jcs.084277 | 2016-12; 2016-12; 2011-04 | (riveramonroy2016micelackingwrb pages 1-2, vogl2016tryptophan‐richbasicprotein pages 2-3, vogl2016tryptophan‐richbasicprotein pages 1-2, vilardi2011wrbisthe pages 5-6, vogl2016tryptophan‐richbasicprotein pages 11-12) |
 
 
-*Table: This table summarizes the current functional annotation of human GET1/WRB (UniProt O00258), including identity, localization, molecular mechanism, recent structural advances, quantitative data, physiological phenotypes, and clinical relevance. It is designed as a compact evidence map with direct citation IDs and key source metadata.*
+*Table: This table summarizes the main functional annotation evidence for human GET1/WRB (UniProt O00258), including identity, localization, molecular mechanism, partners, and recent 2023 developments. It is useful as a compact evidence map linking core biological claims to specific sources and context IDs.*
 
-## 9) Key quantitative/statistical highlights (from cited evidence)
-- TRC40 binding affinities (KD) to receptor components are in the **tens-to-hundreds of nM** range, including **TRC40–WRB coiled-coil KD ~392 ± 30 nM** and **TRC40–CAMLcyt KD ~85 ± 29 nM**. (vilardi2014wrbandcaml media 82f0f8c3)
-- Soluble WRB coiled-coil inhibits TRC40-dependent insertion with **up to 92% inhibition** at **10 µM** WRBcc (~100-fold molar excess). (vilardi2011wrbisthe pages 3-5)
-- Down syndrome partial trisomy mapping indicates a DS-CHD candidate region with **57% (8/14)** CHD penetrance when duplicated versus **0% (0/5)** when duplications fall outside the region. (barlow2001downsyndromecongenital pages 6-8)
-- In WRB tissue-specific knockout, **emerin** mislocalization/reduction is observed in **~50% of cardiomyocytes** (reported proportion). (riveramonroy2016micelackingwrb pages 4-5)
+### 7) Conclusions (functional annotation)
+**GET1/WRB (UniProt O00258)** is best annotated as an **endoplasmic reticulum membrane insertase/receptor** that functions with **CAML** to receive TA protein substrates delivered by **TRC40/ASNA1** and to catalyze/enable their insertion into the ER bilayer through a **membrane-embedded hydrophilic groove/channel mechanism**. 2023 structures directly support WRB/GET1 as an active insertase that can remodel the membrane (thinning) and undergo conformational changes during insertion, and 2023 proteomics indicates broader client spectra and overlap with other ER insertion systems. (vilardi2011wrbisthe pages 2-3, farkas2021captureanddelivery pages 5-7, mcdowell2023thegetinsertase pages 1-2, jung2023quantitativemassspectrometry pages 19-22)
 
-## 10) Conclusions (functional annotation)
-Human **GET1/WRB (UniProt O00258)** is best annotated as an **ER membrane insertase receptor subunit** of the **GET/TRC pathway**. Its primary molecular function is to cooperate with **CAML** to accept **TRC40/ASNA1-bound tail-anchored proteins**, promote their release from TRC40, and enable **C-terminal TMD insertion** into the ER membrane via a conserved **hydrophilic groove** architecture related to Oxa1/YidC/EMC insertases. (vilardi2014wrbandcaml pages 1-2, mcdowell2023thegetinsertase pages 1-2, mcdowell2020structuralbasisof pages 3-4)
+### URLs and publication dates (key sources cited)
+- Vilardi et al. “WRB is the receptor for TRC40/Asna1-mediated insertion…” *Journal of Cell Science* (2011-04). https://doi.org/10.1242/jcs.084277 (vilardi2011wrbisthe pages 2-3, vilardi2011wrbisthe pages 5-6)
+- McDowell et al. “The GET insertase exhibits conformational plasticity and induces membrane thinning” *Nature Communications* (2023-11). https://doi.org/10.1038/s41467-023-42867-2 (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase media b0739839)
+- Jung & Zimmermann “Quantitative Mass Spectrometry Characterizes Client Spectra…” *Int J Mol Sci* (2023-09). https://doi.org/10.3390/ijms241814166 (jung2023quantitativemassspectrometry pages 19-22)
+- Hagiwara et al. “Proteotoxic stresses stimulate dissociation of UBL4A…” *Biochemical Journal* (2023-10). https://doi.org/10.1042/bcj20230267 (hagiwara2023proteotoxicstressesstimulate pages 1-3)
+- Heo et al. “The Get1/2 insertase forms a channel…” *Cell Reports* (2023-01). https://doi.org/10.1016/j.celrep.2022.111921 (heo2023theget12insertase pages 1-3)
 
-Recent 2023–2024 developments strengthen a dynamic mechanistic picture: the insertase is conformationally flexible and can remodel the bilayer (membrane thinning), reinforcing the view that WRB-containing complexes are active catalysts of membrane protein integration rather than passive receptors. (mcdowell2023thegetinsertase pages 1-2, mcdowell2023thegetinsertase pages 9-10)
-
-The “CHD5” naming reflects genomic mapping within a Down syndrome CHD candidate region; while regional genotype–phenotype statistics support a locus effect, direct causality of WRB in human congenital heart disease remains uncertain in the currently retrieved evidence, and current curated resources indicate weak direct association. (barlow2001downsyndromecongenital pages 6-8, riveramonroy2016micelackingwrb pages 1-2, OpenTargets Search: congenital heart disease,cardiomyopathy,heart disease-WRB,GET1,CAML,TRC40)
 
 
 References
 
-1. (vilardi2011wrbisthe pages 1-2): Fabio Vilardi, Holger Lorenz, and Bernhard Dobberstein. Wrb is the receptor for trc40/asna1-mediated insertion of tail-anchored proteins into the er membrane. Journal of Cell Science, 124:1301-1307, Apr 2011. URL: https://doi.org/10.1242/jcs.084277, doi:10.1242/jcs.084277. This article has 154 citations and is from a domain leading peer-reviewed journal.
+1. (vilardi2011wrbisthe pages 2-3): Fabio Vilardi, Holger Lorenz, and Bernhard Dobberstein. Wrb is the receptor for trc40/asna1-mediated insertion of tail-anchored proteins into the er membrane. Journal of Cell Science, 124:1301-1307, Apr 2011. URL: https://doi.org/10.1242/jcs.084277, doi:10.1242/jcs.084277. This article has 154 citations and is from a domain leading peer-reviewed journal.
 
-2. (vilardi2011wrbisthe pages 5-6): Fabio Vilardi, Holger Lorenz, and Bernhard Dobberstein. Wrb is the receptor for trc40/asna1-mediated insertion of tail-anchored proteins into the er membrane. Journal of Cell Science, 124:1301-1307, Apr 2011. URL: https://doi.org/10.1242/jcs.084277, doi:10.1242/jcs.084277. This article has 154 citations and is from a domain leading peer-reviewed journal.
+2. (farkas2021captureanddelivery pages 5-7): Ákos Farkas and Katherine E. Bohnsack. Capture and delivery of tail-anchored proteins to the endoplasmic reticulum. The Journal of Cell Biology, Jul 2021. URL: https://doi.org/10.1083/jcb.202105004, doi:10.1083/jcb.202105004. This article has 49 citations.
 
-3. (farkas2021captureanddelivery pages 1-3): Ákos Farkas and Katherine E. Bohnsack. Capture and delivery of tail-anchored proteins to the endoplasmic reticulum. The Journal of Cell Biology, Jul 2021. URL: https://doi.org/10.1083/jcb.202105004, doi:10.1083/jcb.202105004. This article has 49 citations.
+3. (najdrova2022conservedmechanismfor pages 55-59): V Najdrová. Conserved mechanism for targeting of tail-anchored proteins in eukaryotes. Unknown journal, 2022.
 
-4. (riveramonroy2016micelackingwrb pages 1-2): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
+4. (farkas2021captureanddelivery pages 1-3): Ákos Farkas and Katherine E. Bohnsack. Capture and delivery of tail-anchored proteins to the endoplasmic reticulum. The Journal of Cell Biology, Jul 2021. URL: https://doi.org/10.1083/jcb.202105004, doi:10.1083/jcb.202105004. This article has 49 citations.
 
-5. (vilardi2014wrbandcaml pages 1-2): Fabio Vilardi, Milena Stephan, Anne Clancy, Andreas Janshoff, and Blanche Schwappach. Wrb and caml are necessary and sufficient to mediate tail-anchored protein targeting to the er membrane. PLoS ONE, 9:e85033, Jan 2014. URL: https://doi.org/10.1371/journal.pone.0085033, doi:10.1371/journal.pone.0085033. This article has 87 citations and is from a peer-reviewed journal.
+5. (mateja2018astructuralperspective pages 9-11): Agnieszka Mateja and Robert J Keenan. A structural perspective on tail-anchored protein biogenesis by the get pathway. Current opinion in structural biology, 51:195-202, Aug 2018. URL: https://doi.org/10.1016/j.sbi.2018.07.009, doi:10.1016/j.sbi.2018.07.009. This article has 56 citations and is from a peer-reviewed journal.
 
 6. (mcdowell2020structuralbasisof pages 1-3): Melanie A. McDowell, Michael Heimes, Francesco Fiorentino, Shahid Mehmood, Ákos Farkas, Javier Coy-Vergara, Di Wu, Jani Reddy Bolla, Volker Schmid, Roger Heinze, Klemens Wild, Dirk Flemming, Stefan Pfeffer, Blanche Schwappach, Carol V. Robinson, and Irmgard Sinning. Structural basis of tail-anchored membrane protein biogenesis by the get insertase complex. Molecular Cell, 80:72-86.e7, Oct 2020. URL: https://doi.org/10.1016/j.molcel.2020.08.012, doi:10.1016/j.molcel.2020.08.012. This article has 115 citations and is from a highest quality peer-reviewed journal.
 
-7. (vilardi2011wrbisthe pages 2-3): Fabio Vilardi, Holger Lorenz, and Bernhard Dobberstein. Wrb is the receptor for trc40/asna1-mediated insertion of tail-anchored proteins into the er membrane. Journal of Cell Science, 124:1301-1307, Apr 2011. URL: https://doi.org/10.1242/jcs.084277, doi:10.1242/jcs.084277. This article has 154 citations and is from a domain leading peer-reviewed journal.
+7. (heo2023theget12insertase pages 1-3): Paul Heo, Jacob A. Culver, Jennifer Miao, Frederic Pincet, and Malaiyalam Mariappan. The get1/2 insertase forms a channel to mediate the insertion of tail-anchored proteins into the er. Cell Reports, 42:111921, Jan 2023. URL: https://doi.org/10.1016/j.celrep.2022.111921, doi:10.1016/j.celrep.2022.111921. This article has 8 citations and is from a highest quality peer-reviewed journal.
 
-8. (vilardi2011wrbisthe pages 3-5): Fabio Vilardi, Holger Lorenz, and Bernhard Dobberstein. Wrb is the receptor for trc40/asna1-mediated insertion of tail-anchored proteins into the er membrane. Journal of Cell Science, 124:1301-1307, Apr 2011. URL: https://doi.org/10.1242/jcs.084277, doi:10.1242/jcs.084277. This article has 154 citations and is from a domain leading peer-reviewed journal.
+8. (mcdowell2023thegetinsertase pages 1-2): Melanie A. McDowell, Michael Heimes, Giray Enkavi, Ákos Farkas, Daniel Saar, Klemens Wild, Blanche Schwappach, Ilpo Vattulainen, and Irmgard Sinning. The get insertase exhibits conformational plasticity and induces membrane thinning. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-42867-2, doi:10.1038/s41467-023-42867-2. This article has 16 citations and is from a highest quality peer-reviewed journal.
 
-9. (vilardi2014wrbandcaml pages 6-7): Fabio Vilardi, Milena Stephan, Anne Clancy, Andreas Janshoff, and Blanche Schwappach. Wrb and caml are necessary and sufficient to mediate tail-anchored protein targeting to the er membrane. PLoS ONE, 9:e85033, Jan 2014. URL: https://doi.org/10.1371/journal.pone.0085033, doi:10.1371/journal.pone.0085033. This article has 87 citations and is from a peer-reviewed journal.
+9. (mcdowell2023thegetinsertase media b0739839): Melanie A. McDowell, Michael Heimes, Giray Enkavi, Ákos Farkas, Daniel Saar, Klemens Wild, Blanche Schwappach, Ilpo Vattulainen, and Irmgard Sinning. The get insertase exhibits conformational plasticity and induces membrane thinning. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-42867-2, doi:10.1038/s41467-023-42867-2. This article has 16 citations and is from a highest quality peer-reviewed journal.
 
-10. (vilardi2014wrbandcaml media 82f0f8c3): Fabio Vilardi, Milena Stephan, Anne Clancy, Andreas Janshoff, and Blanche Schwappach. Wrb and caml are necessary and sufficient to mediate tail-anchored protein targeting to the er membrane. PLoS ONE, 9:e85033, Jan 2014. URL: https://doi.org/10.1371/journal.pone.0085033, doi:10.1371/journal.pone.0085033. This article has 87 citations and is from a peer-reviewed journal.
+10. (jung2023quantitativemassspectrometry pages 19-22): Martin Jung and Richard Zimmermann. Quantitative mass spectrometry characterizes client spectra of components for targeting of membrane proteins to and their insertion into the membrane of the human er. International Journal of Molecular Sciences, 24:14166, Sep 2023. URL: https://doi.org/10.3390/ijms241814166, doi:10.3390/ijms241814166. This article has 10 citations.
 
-11. (mcdowell2020structuralbasisof pages 3-4): Melanie A. McDowell, Michael Heimes, Francesco Fiorentino, Shahid Mehmood, Ákos Farkas, Javier Coy-Vergara, Di Wu, Jani Reddy Bolla, Volker Schmid, Roger Heinze, Klemens Wild, Dirk Flemming, Stefan Pfeffer, Blanche Schwappach, Carol V. Robinson, and Irmgard Sinning. Structural basis of tail-anchored membrane protein biogenesis by the get insertase complex. Molecular Cell, 80:72-86.e7, Oct 2020. URL: https://doi.org/10.1016/j.molcel.2020.08.012, doi:10.1016/j.molcel.2020.08.012. This article has 115 citations and is from a highest quality peer-reviewed journal.
+11. (hagiwara2023proteotoxicstressesstimulate pages 1-3): Takumi Hagiwara, Ryosuke Minami, Chizuru Ushio, Naoto Yokota, and Hiroyuki Kawahara. Proteotoxic stresses stimulate dissociation of ubl4a from the tail-anchored protein recognition complex. Biochemical Journal, 480:1583-1598, Oct 2023. URL: https://doi.org/10.1042/bcj20230267, doi:10.1042/bcj20230267. This article has 0 citations and is from a domain leading peer-reviewed journal.
 
-12. (mcdowell2023thegetinsertase pages 1-2): Melanie A. McDowell, Michael Heimes, Giray Enkavi, Ákos Farkas, Daniel Saar, Klemens Wild, Blanche Schwappach, Ilpo Vattulainen, and Irmgard Sinning. The get insertase exhibits conformational plasticity and induces membrane thinning. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-42867-2, doi:10.1038/s41467-023-42867-2. This article has 16 citations and is from a highest quality peer-reviewed journal.
+12. (riveramonroy2016micelackingwrb pages 1-2): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
 
-13. (mcdowell2023thegetinsertase pages 9-10): Melanie A. McDowell, Michael Heimes, Giray Enkavi, Ákos Farkas, Daniel Saar, Klemens Wild, Blanche Schwappach, Ilpo Vattulainen, and Irmgard Sinning. The get insertase exhibits conformational plasticity and induces membrane thinning. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-42867-2, doi:10.1038/s41467-023-42867-2. This article has 16 citations and is from a highest quality peer-reviewed journal.
+13. (vogl2016tryptophan‐richbasicprotein pages 2-3): Christian Vogl, Iliana Panou, Gulnara Yamanbaeva, Carolin Wichmann, Sara J Mangosing, Fabio Vilardi, Artur A Indzhykulian, Tina Pangršič, Rosamaria Santarelli, Montserrat Rodriguez‐Ballesteros, Thomas Weber, Sangyong Jung, Elena Cardenas, Xudong Wu, Sonja M Wojcik, Kelvin Y Kwan, Ignacio del Castillo, Blanche Schwappach, Nicola Strenzke, David P Corey, Shuh‐Yow Lin, and Tobias Moser. Tryptophan‐rich basic protein (wrb) mediates insertion of the tail‐anchored protein otoferlin and is required for hair cell exocytosis and hearing. The EMBO Journal, 35:2536-2552, Dec 2016. URL: https://doi.org/10.15252/embj.201593565, doi:10.15252/embj.201593565. This article has 82 citations.
 
-14. (carvalho2019thewrbsubunit pages 1-2): Hugo J. F. Carvalho, Andrea Del Bondio, Francesca Maltecca, Sara F. Colombo, and Nica Borgese. The wrb subunit of the get3 receptor is required for the correct integration of its partner caml into the er. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48363-2, doi:10.1038/s41598-019-48363-2. This article has 24 citations and is from a peer-reviewed journal.
+14. (vilardi2011wrbisthe pages 5-6): Fabio Vilardi, Holger Lorenz, and Bernhard Dobberstein. Wrb is the receptor for trc40/asna1-mediated insertion of tail-anchored proteins into the er membrane. Journal of Cell Science, 124:1301-1307, Apr 2011. URL: https://doi.org/10.1242/jcs.084277, doi:10.1242/jcs.084277. This article has 154 citations and is from a domain leading peer-reviewed journal.
 
-15. (carvalho2019thewrbsubunit pages 8-9): Hugo J. F. Carvalho, Andrea Del Bondio, Francesca Maltecca, Sara F. Colombo, and Nica Borgese. The wrb subunit of the get3 receptor is required for the correct integration of its partner caml into the er. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48363-2, doi:10.1038/s41598-019-48363-2. This article has 24 citations and is from a peer-reviewed journal.
+15. (daniele2016mutationofwrba pages 1-2): Lauren L. Daniele, Farida Emran, Glenn P. Lobo, Robert J. Gaivin, and Brian D. Perkins. Mutation of<i>wrb</i>, a component of the guided entry of tail-anchored protein pathway, disrupts photoreceptor synapse structure and function. Investigative Opthalmology &amp; Visual Science, 57:2942, Jun 2016. URL: https://doi.org/10.1167/iovs.15-18996, doi:10.1167/iovs.15-18996. This article has 35 citations.
 
-16. (heo2023theget12insertase pages 1-3): Paul Heo, Jacob A. Culver, Jennifer Miao, Frederic Pincet, and Malaiyalam Mariappan. The get1/2 insertase forms a channel to mediate the insertion of tail-anchored proteins into the er. Cell Reports, 42:111921, Jan 2023. URL: https://doi.org/10.1016/j.celrep.2022.111921, doi:10.1016/j.celrep.2022.111921. This article has 8 citations and is from a highest quality peer-reviewed journal.
+16. (lin2016thezebrafishpinball pages 15-17): Shuh‐Yow Lin, Melissa A. Vollrath, Sara Mangosing, Jun Shen, Elena Cardenas, and David P. Corey. The zebrafish pinball wizard gene encodes wrb, a tail‐anchored‐protein receptor essential for inner‐ear hair cells and retinal photoreceptors. The Journal of Physiology, 594:895-914, Feb 2016. URL: https://doi.org/10.1113/jp271437, doi:10.1113/jp271437. This article has 34 citations.
 
-17. (farkas2021captureanddelivery pages 5-7): Ákos Farkas and Katherine E. Bohnsack. Capture and delivery of tail-anchored proteins to the endoplasmic reticulum. The Journal of Cell Biology, Jul 2021. URL: https://doi.org/10.1083/jcb.202105004, doi:10.1083/jcb.202105004. This article has 49 citations.
+17. (vogl2016tryptophan‐richbasicprotein pages 1-2): Christian Vogl, Iliana Panou, Gulnara Yamanbaeva, Carolin Wichmann, Sara J Mangosing, Fabio Vilardi, Artur A Indzhykulian, Tina Pangršič, Rosamaria Santarelli, Montserrat Rodriguez‐Ballesteros, Thomas Weber, Sangyong Jung, Elena Cardenas, Xudong Wu, Sonja M Wojcik, Kelvin Y Kwan, Ignacio del Castillo, Blanche Schwappach, Nicola Strenzke, David P Corey, Shuh‐Yow Lin, and Tobias Moser. Tryptophan‐rich basic protein (wrb) mediates insertion of the tail‐anchored protein otoferlin and is required for hair cell exocytosis and hearing. The EMBO Journal, 35:2536-2552, Dec 2016. URL: https://doi.org/10.15252/embj.201593565, doi:10.15252/embj.201593565. This article has 82 citations.
 
-18. (riveramonroy2016micelackingwrb pages 8-9): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
+18. (vogl2016tryptophan‐richbasicprotein pages 11-12): Christian Vogl, Iliana Panou, Gulnara Yamanbaeva, Carolin Wichmann, Sara J Mangosing, Fabio Vilardi, Artur A Indzhykulian, Tina Pangršič, Rosamaria Santarelli, Montserrat Rodriguez‐Ballesteros, Thomas Weber, Sangyong Jung, Elena Cardenas, Xudong Wu, Sonja M Wojcik, Kelvin Y Kwan, Ignacio del Castillo, Blanche Schwappach, Nicola Strenzke, David P Corey, Shuh‐Yow Lin, and Tobias Moser. Tryptophan‐rich basic protein (wrb) mediates insertion of the tail‐anchored protein otoferlin and is required for hair cell exocytosis and hearing. The EMBO Journal, 35:2536-2552, Dec 2016. URL: https://doi.org/10.15252/embj.201593565, doi:10.15252/embj.201593565. This article has 82 citations.
 
-19. (riveramonroy2016micelackingwrb pages 7-8): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
-
-20. (barlow2001downsyndromecongenital pages 6-8): Gillian M Barlow, Xiao-Ning Chen, Zheng Y Shi, Gary E Lyons, David M Kurnit, Livija Celle, Nancy B Spinner, Elaine Zackai, Mark J Pettenati, Alexander J Van Riper, Michael J Vekemans, Corey H Mjaatvedt, and Julie R Korenberg. Down syndrome congenital heart disease: a narrowed region and a candidate gene. Genetics in Medicine, 3:91-101, Mar 2001. URL: https://doi.org/10.1097/00125817-200103000-00002, doi:10.1097/00125817-200103000-00002. This article has 283 citations and is from a highest quality peer-reviewed journal.
-
-21. (barlow2001downsyndromecongenital pages 5-6): Gillian M Barlow, Xiao-Ning Chen, Zheng Y Shi, Gary E Lyons, David M Kurnit, Livija Celle, Nancy B Spinner, Elaine Zackai, Mark J Pettenati, Alexander J Van Riper, Michael J Vekemans, Corey H Mjaatvedt, and Julie R Korenberg. Down syndrome congenital heart disease: a narrowed region and a candidate gene. Genetics in Medicine, 3:91-101, Mar 2001. URL: https://doi.org/10.1097/00125817-200103000-00002, doi:10.1097/00125817-200103000-00002. This article has 283 citations and is from a highest quality peer-reviewed journal.
-
-22. (riveramonroy2016micelackingwrb pages 3-4): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
-
-23. (OpenTargets Search: congenital heart disease,cardiomyopathy,heart disease-WRB,GET1,CAML,TRC40): Open Targets Query (congenital heart disease,cardiomyopathy,heart disease-WRB,GET1,CAML,TRC40, 3 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-24. (vilardi2014wrbandcaml pages 2-3): Fabio Vilardi, Milena Stephan, Anne Clancy, Andreas Janshoff, and Blanche Schwappach. Wrb and caml are necessary and sufficient to mediate tail-anchored protein targeting to the er membrane. PLoS ONE, 9:e85033, Jan 2014. URL: https://doi.org/10.1371/journal.pone.0085033, doi:10.1371/journal.pone.0085033. This article has 87 citations and is from a peer-reviewed journal.
-
-25. (riveramonroy2016micelackingwrb pages 2-3): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
-
-26. (riveramonroy2016micelackingwrb pages 4-5): Jhon Rivera-Monroy, Lena Musiol, Kirsten Unthan-Fechner, Ákos Farkas, Anne Clancy, Javier Coy-Vergara, Uri Weill, Sarah Gockel, Shuh-Yow Lin, David P. Corey, Tobias Kohl, Philipp Ströbel, Maya Schuldiner, Blanche Schwappach, and Fabio Vilardi. Mice lacking wrb reveal differential biogenesis requirements of tail-anchored proteins in vivo. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep39464, doi:10.1038/srep39464. This article has 50 citations and is from a peer-reviewed journal.
+19. (OpenTargets Search: -WRB): Open Targets Query (-WRB, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](GET1-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000017 Table 2 provides the binding affinities (KD) of TRC40 and the TRC40-RAMP4 (TRC40-R4) complex to the WRB coiled-coil domain (WRBcc) ](GET1-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000020 The requested information is presented in Figures 1 and 5 of the document. - **Figure 1 (panels B, C, D)** illustrates the conforma](GET1-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. farkas2021captureanddelivery pages 1-3
-2. vilardi2011wrbisthe pages 1-2
-3. vilardi2011wrbisthe pages 3-5
-4. vilardi2014wrbandcaml pages 1-2
-5. mcdowell2020structuralbasisof pages 3-4
-6. mcdowell2020structuralbasisof pages 1-3
-7. mcdowell2023thegetinsertase pages 1-2
-8. carvalho2019thewrbsubunit pages 1-2
-9. carvalho2019thewrbsubunit pages 8-9
+1. najdrova2022conservedmechanismfor pages 55-59
+2. vilardi2011wrbisthe pages 2-3
+3. farkas2021captureanddelivery pages 1-3
+4. jung2023quantitativemassspectrometry pages 19-22
+5. hagiwara2023proteotoxicstressesstimulate pages 1-3
+6. vilardi2011wrbisthe pages 5-6
+7. daniele2016mutationofwrba pages 1-2
+8. lin2016thezebrafishpinball pages 15-17
+9. riveramonroy2016micelackingwrb pages 1-2
 10. farkas2021captureanddelivery pages 5-7
-11. mcdowell2023thegetinsertase pages 9-10
-12. riveramonroy2016micelackingwrb pages 7-8
-13. vilardi2011wrbisthe pages 5-6
-14. riveramonroy2016micelackingwrb pages 8-9
-15. barlow2001downsyndromecongenital pages 6-8
-16. riveramonroy2016micelackingwrb pages 4-5
-17. riveramonroy2016micelackingwrb pages 1-2
-18. vilardi2011wrbisthe pages 2-3
-19. vilardi2014wrbandcaml pages 6-7
-20. barlow2001downsyndromecongenital pages 5-6
-21. riveramonroy2016micelackingwrb pages 3-4
-22. vilardi2014wrbandcaml pages 2-3
-23. riveramonroy2016micelackingwrb pages 2-3
+11. mateja2018astructuralperspective pages 9-11
+12. mcdowell2020structuralbasisof pages 1-3
+13. mcdowell2023thegetinsertase pages 1-2
+14. https://doi.org/10.1242/jcs.084277;
+15. https://doi.org/10.1083/jcb.202105004
+16. https://doi.org/10.3390/ijms23073773
+17. https://doi.org/10.1016/j.molcel.2020.08.012;
+18. https://doi.org/10.1016/j.celrep.2022.111921
+19. https://doi.org/10.1038/s41467-023-42867-2
+20. https://doi.org/10.3390/ijms241814166
+21. https://doi.org/10.1042/bcj20230267
+22. https://doi.org/10.1038/srep39464;
+23. https://doi.org/10.15252/embj.201593565;
 24. https://doi.org/10.1242/jcs.084277
-25. https://doi.org/10.1083/jcb.202105004;
-26. https://doi.org/10.1371/journal.pone.0085033
-27. https://doi.org/10.1242/jcs.084277;
-28. https://doi.org/10.1016/j.molcel.2020.08.012
-29. https://doi.org/10.1038/s41598-019-48363-2
-30. https://doi.org/10.1038/s41467-023-42867-2
-31. https://doi.org/10.1016/j.celrep.2022.111921
-32. https://doi.org/10.59717/j.xinn-life.2023.100013;
-33. https://doi.org/10.1242/jcs.261219
-34. https://doi.org/10.1073/pnas.2319476121
-35. https://doi.org/10.1038/srep39464
-36. https://doi.org/10.15252/embj.201593565
-37. https://doi.org/10.1097/00125817-200103000-00002;
-38. https://doi.org/10.1161/CIRCGEN.119.002507
-39. https://doi.org/10.1371/journal.pone.0085033;
-40. https://doi.org/10.1016/j.molcel.2020.08.012;
-41. https://doi.org/10.1242/jcs.084277,
-42. https://doi.org/10.1083/jcb.202105004,
-43. https://doi.org/10.1038/srep39464,
-44. https://doi.org/10.1371/journal.pone.0085033,
-45. https://doi.org/10.1016/j.molcel.2020.08.012,
-46. https://doi.org/10.1038/s41467-023-42867-2,
-47. https://doi.org/10.1038/s41598-019-48363-2,
-48. https://doi.org/10.1016/j.celrep.2022.111921,
-49. https://doi.org/10.1097/00125817-200103000-00002,
+25. https://doi.org/10.1242/jcs.084277,
+26. https://doi.org/10.1083/jcb.202105004,
+27. https://doi.org/10.1016/j.sbi.2018.07.009,
+28. https://doi.org/10.1016/j.molcel.2020.08.012,
+29. https://doi.org/10.1016/j.celrep.2022.111921,
+30. https://doi.org/10.1038/s41467-023-42867-2,
+31. https://doi.org/10.3390/ijms241814166,
+32. https://doi.org/10.1042/bcj20230267,
+33. https://doi.org/10.1038/srep39464,
+34. https://doi.org/10.15252/embj.201593565,
+35. https://doi.org/10.1167/iovs.15-18996,
+36. https://doi.org/10.1113/jp271437,
