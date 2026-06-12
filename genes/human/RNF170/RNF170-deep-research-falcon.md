@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-06-12T04:38:16.297526'
-end_time: '2026-06-12T04:59:30.277115'
-duration_seconds: 1273.98
+start_time: '2026-06-12T04:55:02.446279'
+end_time: '2026-06-12T05:07:06.548239'
+duration_seconds: 724.1
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -27,7 +27,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 24
+citation_count: 21
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -44,9 +44,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000018 The schematic figure showing ERLIN1/2
-    scaffolds bridging TMUB1-L and RNF170 on the ER membrane is Figure 3A. This panel
-    depicts the'
+  description: '## Context ID: pqac-00000027 Figure 5, panels A and B, quantifies
+    the effect of RNF170 knockdown (depletion) on IP3R1 processing. As described in
+    the text (page'
 ---
 
 ## Question
@@ -157,197 +157,216 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Functional annotation of human RNF170 (UniProt Q96K19)
+## Research report: Human RNF170 (UniProt Q96K19) — functional annotation and current understanding
 
-### 0) Target verification (critical disambiguation)
-The retrieved primary and review literature consistently describes **RNF170 (ring finger protein 170)** as an **endoplasmic reticulum (ER) membrane-embedded RING-type E3 ubiquitin ligase** that partners with **ERLIN1/2** to ubiquitinate **activated inositol 1,4,5-trisphosphate receptors (IP3Rs/ITPRs)** and promote their **ubiquitin–proteasome-dependent ER-associated degradation (ERAD)**. A 2024 mechanistic study explicitly references **RNF170 as sp|Q96K19|RN170_HUMAN**, matching the user-specified UniProt accession, supporting that the report is about the correct human protein (veronese2024erlin12scaffoldsbridge pages 1-2).
+### 0) Target verification (critical identity check)
+The literature reviewed here matches the UniProt entry **Q96K19** for **Homo sapiens RNF170**, described experimentally as an **ER membrane, RING-type E3 ubiquitin ligase** that regulates **ER-associated degradation (ERAD)** of activated **inositol 1,4,5-trisphosphate receptors (IP3Rs)** and is genetically linked to **hereditary spastic paraplegia (HSP)**. (lu2011rnf170proteinan pages 4-5, wagner2019biallelicvariantsin pages 6-7)
 
 ### 1) Key concepts and definitions (current understanding)
 
-#### 1.1 RNF170 as an ER-resident RING E3 ligase
-**RNF170** is a “small” ER ubiquitin ligase characterized by an **amino-terminal RING domain** and **three transmembrane domains (TMDs)**, positioning it as a **membrane-embedded E3** capable of catalyzing substrate ubiquitination at the ER membrane (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15). In ERAD, an E3 ligase catalyzes transfer of ubiquitin (via an E2 enzyme) to substrates, creating ubiquitin signals that facilitate extraction and proteasomal degradation.
+#### 1.1 RNF170 as a RING-type E3 ubiquitin ligase
+RNF170 is a **RING-HC E3 ubiquitin ligase**: it promotes transfer of ubiquitin from an E2 enzyme to a substrate protein, typically creating polyubiquitin chains that control substrate fate (often proteasomal degradation). In vitro, immunopurified RNF170 catalyzes ubiquitin conjugation in the presence of **E1 (UBE1), E2 (UbcH5b), and ubiquitin**, producing a high-molecular-weight ubiquitin “smear,” consistent with intrinsic ligase activity. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)
 
-#### 1.2 ERAD of *native/activated* proteins vs misfolded-protein quality control
-RNF170 is notable because its best-defined role is not general misfolded-protein ERAD, but rather the **regulated downregulation of a native signaling receptor**—the **activated IP3 receptor (IP3R)**—linking ERAD to stimulus-dependent control of calcium signaling (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15, gao2022bindingofthe pages 1-2).
+A key mechanistic validation is that mutating zinc-coordinating residues in the RING domain (**Cys101/His103**) abolishes ligase activity, establishing the catalytic dependence on the RING motif. (lu2011rnf170proteinan pages 3-4)
 
-#### 1.3 IP3 receptors and calcium signaling
-**IP3 receptors (ITPR1–3)** are large tetrameric ER Ca2+ release channels. Their regulated turnover modulates intracellular Ca2+ signaling, which is central to neuronal function and many other processes. Cell-type IP3R isoform expression matters experimentally (e.g., **IP3R3 predominates in fibroblasts**, while **IP3R1 is the main neuronal isoform**) (gehweiler2024rnf170anoveldiseaseb pages 15-20).
+#### 1.2 ERAD and stimulus-coupled degradation of activated IP3 receptors
+Activated IP3Rs undergo rapid down-regulation via the **ubiquitin–proteasome pathway**, a form of ERAD-like quality control applied to an activated signaling channel. RNF170 has been described as (at the time of foundational studies) the only E3 ligase directly demonstrated to mediate IP3R ubiquitination in this context, with recruitment to activated IP3Rs preceding robust polyubiquitination and downstream processing. (lu2011rnf170proteinan pages 5-6, lu2011rnf170proteinan pages 3-4)
 
-### 2) Molecular function, substrates, and pathways
+#### 1.3 ERLIN scaffolds as organizing platforms for RNF170
+ERLIN1/2 are ER membrane SPFH-family proteins that assemble into large oligomeric scaffolds in cholesterol-enriched ER nanodomains. These scaffolds act as platforms to recruit factors including RNF170, and (per 2024 work) can bridge RNF170 to other clients such as TMUB1-L, connecting ubiquitin machinery to ER lipid organization and secretory function. (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 12-12)
 
-#### 2.1 Enzymatic reaction and substrate specificity
-RNF170’s **primary established biochemical function** is E3 ubiquitin ligase activity leading to **ubiquitination of activated IP3Rs**, marking them for **proteasomal degradation**. Authoritative ERAD synthesis explicitly states that **the only firmly identified substrate for the RNF170/ERLIN complex is IP3R**, and that this pathway preferentially targets **activated** IP3Rs (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15).
+### 2) Molecular function: enzymatic reaction, substrate specificity, and mechanism
 
-**Substrate specificity (current state):** While proteomic interaction mapping detects broader networks and co-associations with other ER E3s, the **highest-confidence, mechanistically validated substrate relationship is RNF170 → IP3R** (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15, fenech2020interactionmappingof pages 8-9).
+#### 2.1 Subcellular localization and topology
+RNF170 is an **integral ER membrane protein**, with topology predictions and biochemical fractionation placing the **N-terminus in the ER lumen** and the **RING domain/C-terminus in the cytosol**, consistent with ubiquitination of cytosolic lysines on substrates such as IP3Rs. (lu2011rnf170proteinan pages 3-4, lu2011rnf170proteinan pages 4-5)
 
-#### 2.2 Core mechanistic module: ERLIN1/2 → RNF170 → IP3R turnover
-A consistent model from mechanistic studies and reviews is:
-1) **IP3R activation/opening** triggers recruitment of an ER-resident recognition module.
-2) The **ERLIN1/2 complex** binds activated IP3Rs and **recruits RNF170**.
-3) RNF170 mediates **IP3R ubiquitination**, enabling downstream steps culminating in proteasomal degradation.
+#### 2.2 Core substrate: IP3 receptors (human cellular evidence)
+Foundational mechanistic work demonstrated that RNF170 rapidly associates with **activated IP3R1**, and depletion of RNF170 reduces stimulus-induced IP3R1 polyubiquitination and slows receptor down-regulation. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)
 
-Evidence for ordering of events comes from experiments showing that inhibiting ubiquitin activation (UBE1) with **TAK-243** blocks **agonist-induced IP3R1 ubiquitination and down-regulation** but does **not** block ERLIN1/2 association with activated IP3R1—supporting that **ERLIN binding precedes ubiquitination** (gao2022bindingofthe pages 9-11). Complementary evidence shows that deleting ERLIN1/2 prevents RNF170 association with activated IP3Rs and abolishes ubiquitination/ERAD (gao2022bindingofthe pages 1-2).
+Quantitatively, RNF170 knockdown reduced agonist-induced **IP3R1 polyubiquitination to 57 ± 7%** of control and inhibited **IP3R1 down-regulation by ~50%**, while also increasing basal IP3R1 levels. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan media b065ce9e)
 
-#### 2.3 RNF170 interaction networks and caution about substrate assignment
-Proteomic interaction mapping supports RNF170 enrichment of **ERLIN1/2** and unique enrichment of **IP3R** among its interactors, consistent with a cognate substrate relationship, but also indicates RNF170 can appear in overlapping ER-E3 networks (e.g., as an interactor of **RNF185** and **AMFR/gp78**), implying that **complex composition may be context-dependent** and substrate attribution should rely on direct mechanistic validation rather than co-purification alone (fenech2020interactionmappingof pages 8-9).
+Mechanistically, RNF170 recruitment to activated IP3Rs occurs via constitutive association with ERLIN1/2, which are required for efficient RNF170–IP3R coupling. (lu2011rnf170proteinan pages 8-9, lu2011rnf170proteinan pages 5-6)
 
-### 3) Subcellular localization and where RNF170 acts
-RNF170 acts at the **ER membrane**, in association with **ERLIN1/2** scaffolds (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15, veronese2024erlin12scaffoldsbridge pages 1-2). Recent work indicates ERLIN1/2 form **cholesterol-rich ER nanodomains** and that RNF170 can be integrated into these scaffolded domains, supporting spatial organization of RNF170 activity at specialized ER membrane regions (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4).
+#### 2.3 Additional substrate evidence: TLR3 (murine innate immunity; mechanistic details)
+A separate, well-developed mechanistic line of evidence (in murine systems) identifies RNF170 as a negative regulator of innate immunity through direct targeting of **TLR3**. RNF170 binds the TLR3 TIR domain and catalyzes **K48-linked polyubiquitination** at **TLR3 Lys766**, promoting **proteasomal degradation**; this requires intact RNF170 RING residues (C101/H103) and is blocked by proteasome inhibition (MG132), supported by CHX chase assays and in vivo phenotyping in Rnf170−/− mice. (song2020e3ubiquitinligase pages 6-7, song2020e3ubiquitinligase pages 7-9)
 
-### 4) Recent developments and latest research (prioritizing 2023–2024)
+Because this primary study is performed in **murine cells and mice**, extension to human physiology should be made cautiously, although the TLR3 K766 site is noted as conserved between mouse and human in the primary study. (song2020e3ubiquitinligase pages 7-9)
 
-#### 4.1 2024: ERLIN scaffolds bridge TMUB1 and RNF170; link to cholesterol esterification and secretory pathway
-A key 2024 advance is the demonstration that **ERLIN1/2 scaffolds mediate a specific interaction between RNF170 and TMUB1-L (long isoform)**, via a **luminal N-terminal conserved region in RNF170** and TMUB1 that binds ERLIN subunits. This work expands the RNF170-centered module from a Ca2+/IP3R turnover focus to broader ER functions including **restricting cholesterol esterification**, promoting **ER-to-Golgi cholesterol transport**, regulating **Golgi morphology**, and altering the **secretory pathway** (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4). The schematic interaction model is summarized in the extracted figure (veronese2024erlin12scaffoldsbridge media 43ccfba1).
+### 3) Protein–protein interactions and complexes
 
-#### 4.2 2023: updated ERAD mechanistic framing
-A 2023 Nature Reviews Molecular Cell Biology synthesis situates ERAD as a coordinated process of substrate selection, ubiquitination, and processing; in this framework, RNF170-associated machinery is discussed as part of ER-resident ligase pathways that process specific substrates such as IP3Rs (gao2020theemerginglink pages 1-2). (The RNF170-specific mechanistic detail in the retrieved excerpt is limited; the core RNF170 mechanistic details in this report rely on direct RNF170/IP3R papers and the ERAD-focused review that specifies RNF170 topology and substrate specificity.) (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15)
+#### 3.1 ERLIN1/2–RNF170–IP3R module
+RNF170 is reported to be constitutively associated with the **ERLIN1/2 complex**, which recruits RNF170 to activated IP3Rs to drive ubiquitination and proteasomal processing. (lu2011rnf170proteinan pages 8-9, lu2011rnf170proteinan pages 5-6)
 
-#### 4.3 2024: RNF170 in broader neurological disease mechanism taxonomies
-A 2024 Trends in Neurosciences review highlights **ubiquitin–proteasome system (UPS)** and ER quality-control pathways as recurring pathomechanisms across inherited neuropathies, spastic paraplegias, and ataxias, listing **RNF170** among disease-associated E3 ligases and placing it in this overarching mechanistic theme (vondel2024overarchingpathomechanismsin pages 5-8).
+Proteomics of ER-resident E3 ligase complexes has independently recovered RNF170 with high-confidence interactors including **ERLIN1, ERLIN2, and ITPR3**, supporting the recurring architecture of this module in ERAD/proteostasis networks. (lari2016resolutionofproteotoxic pages 111-115)
 
-### 5) Disease associations, genetics, and quantitative evidence
+#### 3.2 2024 expansion: ERLIN scaffolds bridging RNF170 and TMUB1-L (cholesterol/secretory pathway link)
+A major 2024 development is the proposal that ERLIN1/2 scaffolds bind a conserved luminal N-terminal motif present in RNF170 and the long isoform of **TMUB1 (TMUB1-L)**, bridging these proteins in cholesterol-rich ER nanodomains. AlphaFold-Multimer modeling supports interaction interfaces between the conserved motifs and adjacent ERLIN subunits. (veronese2024erlin12scaffoldsbridge pages 4-6, veronese2024erlin12scaffoldsbridge pages 12-12)
 
-#### 5.1 Autosomal recessive hereditary spastic paraplegia due to RNF170 loss-of-function
-A foundational 2019 Nature Communications study identified **biallelic RNF170 variants in four unrelated families** (total **9 affected individuals**) with early-onset hereditary spastic paraplegia. Reported clinical features included onset **before age 5 years (median 2 years)** and **optic atrophy in 7** examined cases (wagner2019biallelicvariantsin pages 4-5, wagner2019biallelicvariantsin pages 3-4). Variants include:
-- **c.396+3A>G** splice-region variant causing **exon 5 skipping** and frameshift **p.Ala109Asnfs*9**.
-- **p.Cys102Arg** (RING domain).
-- A deletion removing **exons 4–7** (removing the RING domain and 2/3 TMDs).
-- **c.518_519delAG** frameshift **p.Arg173Asnfs*49** (wagner2019biallelicvariantsin pages 2-3, wagner2019biallelicvariantsin pages 3-4).
+Functionally, ERLIN loss (DKO) leads to increased cholesterol esterification and lipid droplet accumulation, ER tubule collapse, Golgi fragmentation, and impaired secretory trafficking, with rescue by ERLIN re-expression or pharmacologic inhibition of cholesterol esterification (SOAT1 inhibitor **avasimibe**). (veronese2024erlin12scaffoldsbridge pages 10-12, veronese2024erlin12scaffoldsbridge pages 12-12)
 
-Molecular/functional impacts in this study included:
-- Aberrant transcript persistence at **~36% of normal RNF170 mRNA in fibroblasts** and **~50% in peripheral blood**, but **no truncated RNF170 protein detected** by western blot (wagner2019biallelicvariantsin pages 1-2).
-- **Increased basal IP3R3 protein** in patient fibroblasts (**~2.2–3.8×**) (wagner2019biallelicvariantsin pages 4-5).
-- **Complete abolition of agonist-induced IP3R3 degradation** in patient fibroblasts, while controls decreased IP3R3 to **~51%** of baseline by 60 min after stimulation (wagner2019biallelicvariantsin pages 4-5).
+### 4) Pathways and biological roles
 
-#### 5.2 Cell-model quantitative evidence for IP3R turnover defects
-In SH-SY5Y neuronal-like cells, RNF170 knockout led to accumulation of **IP3R1 (~1.8×)** and loss of agonist-induced receptor degradation: after carbachol stimulation, wildtype cells decreased IP3R1 to **~79%** by 2 h, whereas knockout cells remained at **~107%** of baseline (wagner2019biallelicvariantsin pages 4-5).
+#### 4.1 ER calcium signaling homeostasis via IP3R turnover
+By controlling stimulus-dependent degradation of activated IP3Rs, RNF170 is positioned as a regulator of **ER Ca2+ release signaling dynamics**, linking receptor activation state to ERAD engagement. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 5-6)
 
-#### 5.3 Autosomal dominant sensory ataxia linked to RNF170 p.Arg199Cys
-A recurrent missense variant **p.Arg199Cys** in RNF170 (located in a transmembrane segment) is linked to **autosomal dominant sensory ataxia**; the 2020 review and later summaries emphasize that this and other RNF170 variants can destabilize RNF170 and impair IP3R processing, implicating RNF170 dosage/function in neurodegeneration-relevant Ca2+ signaling (gao2020theemerginglink pages 1-2).
+In patient-derived or engineered RNF170-deficient models, increased basal IP3R levels (cell-type-specific isoforms) and failure of stimulus-dependent IP3R reduction support the concept that RNF170 constrains IP3R abundance and signaling. (wagner2019biallelicvariantsin pages 6-7)
 
-#### 5.4 Database-curated disease associations
-Open Targets curates RNF170 associations with **spastic paraplegia (including “spastic paraplegia 85, autosomal recessive”)**, **autosomal dominant sensory ataxia 1**, and broader neurodevelopmental/neurodegenerative disease categories, supporting clinical relevance and ongoing curation of genotype–phenotype evidence (OpenTargets Search: -RNF170).
+#### 4.2 Innate immune modulation through TLR3 control (murine evidence)
+RNF170-mediated proteasomal removal of TLR3 reduces downstream IRF3/NF-κB/STAT1-linked transcriptional activity and cytokine production in TLR3 pathways, positioning RNF170 as a negative regulator of TLR3-dependent antiviral inflammation in murine models. (song2020e3ubiquitinligase pages 6-7, song2020e3ubiquitinligase pages 7-9)
 
-### 6) Current applications and real-world implementations
+2024 reviews summarize RNF170 in this role primarily by citing the 2020 primary study, without adding additional mechanistic detail in the excerpted sections. (wang2024hostfactorsmodulate pages 13-14, li2024thernabindingproteins pages 12-13)
 
-#### 6.1 Clinical genetics: diagnostic panels and interpretation
-Given its established role in Mendelian neurogenetic disorders, RNF170 is directly relevant to **molecular diagnosis** and **gene-panel** interpretation for hereditary spastic paraplegia and ataxia. The core evidence base (four families; clear molecular/cellular mechanism through IP3R turnover) supports inclusion when investigating early-onset AR spastic paraplegia, particularly when phenotypes overlap with ERLIN/IP3R pathway disorders (wagner2019biallelicvariantsin pages 1-2, vondel2024overarchingpathomechanismsin pages 5-8).
+### 5) Human disease associations and genetics (with recent emphasis)
 
-#### 6.2 Mechanism-based translational directions
-Expert interpretation suggests therapeutic exploration could focus on:
-- **IP3R-dependent Ca2+ signaling modulation** (e.g., dampening excessive signaling due to elevated IP3R levels), and/or
-- **proteostasis/ERAD pathway modulation** to restore regulated IP3R turnover.
+#### 5.1 Autosomal recessive hereditary spastic paraplegia from biallelic RNF170 variants
+A key primary genetics study provides evidence that **biallelic RNF170 variants** are a cause of **autosomal recessive HSP**, supported by functional validation across patient fibroblasts, neuronal cells, and zebrafish assays. (wagner2019biallelicvariantsin pages 6-7)
 
-This translational rationale is explicit in the IP3R turnover/HSP review literature (gao2020theemerginglink pages 2-4, wagner2019biallelicvariantsin pages 1-2). The 2024 ERLIN–TMUB1–RNF170 work broadens potential phenotypic readouts (cholesterol esterification, Golgi/secretory pathway phenotypes) that might be leveraged in cellular models for mechanism-driven screening (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4).
+Mechanistically, patient-derived fibroblasts fail to show physiological stimulus-dependent degradation of IP3R-3, and RNF170 knockout neuronal SH-SY5Y cells show elevated basal IP3R-1 with rescue by re-expression of wild-type RNF170. (wagner2019biallelicvariantsin pages 6-7)
 
-### 7) Expert analysis: what is well-established vs open questions
+Quantitatively, this study reports zebrafish developmental phenotypes and statistical testing (e.g., embryo length and eye size differences with adjusted P < 0.0001) supporting functional impairment of tested patient variants relative to RNF170wt. (wagner2019biallelicvariantsin pages 6-7)
 
-**Well-established (high confidence):**
-- RNF170 is an **ER-resident, multi-pass (3 TMD) RING E3 ligase** (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15).
-- Its **best-validated physiological substrate is activated IP3R**, mediated via the **ERLIN1/2 complex** (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15, gao2022bindingofthe pages 1-2).
-- Loss-of-function RNF170 variants cause **autosomal recessive HSP** with demonstrable **IP3R accumulation and impaired agonist-induced IP3R degradation** in patient cells (wagner2019biallelicvariantsin pages 4-5).
+#### 5.2 Database-level disease-target support (Open Targets)
+Open Targets disease–target evidence links **RNF170** to **hereditary spastic paraplegia** and **complex hereditary spastic paraplegia**, with literature evidence pointing to PubMed ID 31636353 / PMC6803694. (OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170)
 
-**Active frontiers / uncertainties:**
-- **Substrate repertoire**: authoritative ERAD review states IP3R is the only firmly identified substrate of the RNF170/ERLIN complex, implying other substrates remain uncertain or context-dependent (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15).
-- **Broader cellular roles**: 2024 evidence links the RNF170-centered ERLIN scaffold to lipid handling and the secretory pathway, raising questions about whether additional regulated substrates exist in these contexts and how these phenotypes intersect with neurodegeneration (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4).
+#### 5.3 Expert synthesis (2024): ER homeostasis and ubiquitin-mediated quality control as convergent neurogenetic mechanisms
+A 2024 Trends in Neurosciences review emphasizes ER structure and protein quality-control pathways as central mechanisms in inherited neuropathies, HSP, and ataxias, and explicitly notes RNF170 as an E3 ligase associated with recessive HSP and inherited peripheral neuropathy. (vondel2024overarchingpathomechanismsin pages 5-8)
 
-### 8) Visual evidence
-The following extracted schematic supports the current mechanistic model for ERLIN scaffold-mediated assembly bridging **TMUB1-L and RNF170** at the ER membrane:
-- Figure panel showing ERLIN1/2 scaffolds bridging TMUB1-L and RNF170 (veronese2024erlin12scaffoldsbridge media 43ccfba1).
+Consistent pathway-context evidence from 2024 human genetics (ERLIN1 series) supports the broader ERLIN1/2–RNF170–IP3R ERAD module as disease-relevant: in a cohort of **13 individuals** with biallelic ERLIN1 variants (SPG62), the authors describe ERLIN1/2 as recruiting RNF170 to degrade activated IP3R1 and provide cohort-level statistics (e.g., mean onset 1.8 years; corpus callosum anomalies 5/13; founder splice variant in 6 individuals). Although ERLIN1 is not RNF170, these data reinforce the clinical relevance of the RNF170-centered module. (cogan2024biallelicvariantsin pages 1-6, cogan2024biallelicvariantsin pages 12-16)
 
-### 9) Summary table
-The table below consolidates RNF170’s functional annotation, pathways, disease links, and key quantitative findings.
+### 6) Recent developments (prioritizing 2023–2024)
 
-| Aspect | Summary for human RNF170 (UniProt Q96K19) | Key sources (with year) |
-|---|---|---|
-| Protein type / domains / topology / localization | RNF170 is an endoplasmic-reticulum ER membrane E3 ubiquitin ligase with an N-terminal RING domain and 3 transmembrane domains; it is embedded in the ER membrane and functions in ER-associated degradation ERAD. A 2024 mechanistic study explicitly maps human RNF170 as UniProt Q96K19 RN170_HUMAN and places it in ERLIN-defined ER nanodomains. (veronese2024erlin12scaffoldsbridge pages 1-2, krshnan2022endoplasmicreticulumassociatedprotein pages 14-15) | Krshnan 2022; Veronese 2024 (veronese2024erlin12scaffoldsbridge pages 1-2, krshnan2022endoplasmicreticulumassociatedprotein pages 14-15) |
-| Core molecular function E3 ligase reaction | RNF170 catalyzes ubiquitin transfer to selected ER membrane substrates, most firmly activated IP3 receptors, marking them for ubiquitin-proteasome degradation. Current evidence supports stimulus-coupled ubiquitination after IP3R activation; RNF170 loss raises basal IP3R abundance and blocks agonist-induced receptor turnover. (gao2020theemerginglink pages 1-2, gao2020theemerginglink pages 2-4) | Gao and Wojcikiewicz 2020; Wagner 2019 (gao2020theemerginglink pages 1-2, gao2020theemerginglink pages 2-4) |
-| Primary validated substrates and evidence | The only firmly established RNF170 substrate in authoritative ERAD reviews is the IP3 receptor family ITPR1 to ITPR3, especially activated IP3Rs. Evidence includes ERLIN-dependent recruitment of RNF170 to activated IP3R, abolished IP3R ubiquitination and degradation when the pathway is perturbed, and increased basal IP3R levels in RNF170-deficient patient fibroblasts and knockout cells. Other suggested targets exist in nonhuman or broader interactome studies, but substrate certainty is much weaker than for IP3Rs. (gao2022bindingofthe pages 1-2, krshnan2022endoplasmicreticulumassociatedprotein pages 14-15, wagner2019biallelicvariantsin pages 4-5, gao2022bindingofthe pages 9-11) | Gao 2022; Krshnan 2022; Wagner 2019 (gao2022bindingofthe pages 1-2, krshnan2022endoplasmicreticulumassociatedprotein pages 14-15, wagner2019biallelicvariantsin pages 4-5, gao2022bindingofthe pages 9-11) |
-| Key cofactors complex and mechanistic notes | RNF170 acts with ERLIN1 and ERLIN2, which recognize activated IP3Rs and recruit RNF170 for ERAD. ERLIN1 and ERLIN2 form large oligomeric, cholesterol-binding ER scaffolds. A 2024 study showed ERLIN scaffolds bridge RNF170 and TMUB1-L through a conserved luminal N-terminal region in RNF170, linking this complex to membrane-protein handling, cholesterol esterification control, and secretory-pathway regulation. RNF170 also appears in proteomic association networks with ER E3 ligases such as RNF185 and AMFR, so direct substrate assignment should rely on validated experiments. (fenech2020interactionmappingof pages 8-9, veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4) | Fenech 2020; Veronese 2024 (fenech2020interactionmappingof pages 8-9, veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4) |
-| Pathways | Best-supported pathways are ERAD of activated IP3Rs, IP3R turnover controlling ER calcium release signaling, ER calcium homeostasis and proteostasis, and from 2024 work ERLIN-RNF170-TMUB1 regulation of cholesterol esterification, ER-to-Golgi cholesterol transport, Golgi morphology, and secretory-pathway function. (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4, fenech2020interactionmappingof pages 8-9, gao2020theemerginglink pages 1-2) | Veronese 2024; Gao and Wojcikiewicz 2020; Fenech 2020 (veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 2-4, fenech2020interactionmappingof pages 8-9, gao2020theemerginglink pages 1-2) |
-| Disease associations | Biallelic loss-of-function RNF170 variants cause autosomal recessive hereditary spastic paraplegia, often referred to as SPG85 or RNF170-related HSP in curated resources, whereas a recurrent heterozygous p.Arg199Cys variant is associated with autosomal dominant sensory ataxia. Open Targets independently curates associations with spastic paraplegia 85, autosomal dominant sensory ataxia 1, and neurodegenerative disease. (OpenTargets Search: -RNF170, wagner2019biallelicvariantsin pages 1-2, gao2020theemerginglink pages 1-2) | Wagner 2019; Open Targets; Van de Vondel 2024 (OpenTargets Search: -RNF170, wagner2019biallelicvariantsin pages 1-2, gao2020theemerginglink pages 1-2, vondel2024overarchingpathomechanismsin pages 5-8) |
-| Key variants and phenotype statistics | In the foundational HSP study, 4 unrelated families and 9 affected individuals carried biallelic RNF170 variants; onset was before age 5 years with median onset 2 years, and optic atrophy was reported in 7 examined cases. Reported pathogenic lesions include c.396+3A>G causing exon 5 skipping and p.Ala109Asnfs*9, p.Cys102Arg in the RING domain, a deletion removing exons 4 to 7, and c.518_519delAG p.Arg173Asnfs*49. Dominant sensory ataxia is linked to p.Arg199Cys in a transmembrane segment. (wagner2019biallelicvariantsin pages 1-2, wagner2019biallelicvariantsin pages 2-3, wagner2019biallelicvariantsin pages 3-4, gehweiler2024rnf170anoveldiseasec pages 65-68) | Wagner 2019; Van Daele 2022 context via review thesis (wagner2019biallelicvariantsin pages 1-2, wagner2019biallelicvariantsin pages 2-3, wagner2019biallelicvariantsin pages 3-4, gehweiler2024rnf170anoveldiseasec pages 65-68) |
-| Experimental quantitative findings | Patient fibroblasts showed basal IP3R3 increased about 2.2-fold to 3.8-fold, and about 4-fold in follow-up summaries, versus controls, with complete loss of bradykinin-induced IP3R3 degradation; control fibroblasts fell to about 51 percent of baseline at 60 min. In RNF170-knockout SH-SY5Y cells, IP3R1 accumulated about 1.8-fold; after carbachol, wild type cells fell to about 79 percent at 2 h, whereas knockout cells remained at about 107 percent of baseline. For c.396+3A>G, aberrant RNF170 transcript persisted at about 36 percent of normal in fibroblasts and about 50 percent in blood, but truncated protein was undetectable. TAK-243 blocks IP3R ubiquitination and downregulation without blocking ERLIN association, supporting the order receptor activation to ERLIN binding to RNF170-dependent ubiquitination to proteasomal degradation. (wagner2019biallelicvariantsin pages 1-2, wagner2019biallelicvariantsin pages 4-5, gehweiler2024rnf170anoveldiseasea pages 57-62, gao2022bindingofthe pages 9-11) | Wagner 2019; Gao 2022 (wagner2019biallelicvariantsin pages 1-2, wagner2019biallelicvariantsin pages 4-5, gehweiler2024rnf170anoveldiseasea pages 57-62, gao2022bindingofthe pages 9-11) |
-| Translational and clinical applications | RNF170 is clinically relevant for gene-panel interpretation and molecular diagnosis in hereditary spastic paraplegia, ataxia, and related neurodegenerative disorders, especially when ERLIN, IP3R, and ER quality-control genes are under consideration. Expert reviews prioritize the IP3R-turnover and calcium-signaling axis for therapeutic investigation, though no RNF170-targeted therapy is established. The 2024 ERLIN-TMUB1-RNF170 study suggests broader phenotyping opportunities around lipid-droplet accumulation, cholesterol esterification, and secretory-pathway defects in disease models. (gehweiler2024rnf170anoveldiseasec pages 65-68, gao2020theemerginglink pages 2-4, wagner2019biallelicvariantsin pages 1-2, vondel2024overarchingpathomechanismsin pages 5-8) | Gao and Wojcikiewicz 2020; Wagner 2019; Van de Vondel 2024; Veronese 2024 (gehweiler2024rnf170anoveldiseasec pages 65-68, gao2020theemerginglink pages 2-4, wagner2019biallelicvariantsin pages 1-2, vondel2024overarchingpathomechanismsin pages 5-8) |
+#### 6.1 2024: Linking the ERLIN–RNF170 axis to cholesterol esterification and secretory pathway control
+Veronese et al. (Life Science Alliance; **May 2024**) propose that ERLIN scaffolds directly bind cholesterol and restrain cholesterol esterification, thereby maintaining ER cholesterol accessibility for ER→Golgi transport; the ERLIN scaffolds concurrently organize RNF170 and TMUB1-L via conserved luminal motifs. Loss of ERLINs increases cholesterol esterification (including CE 18:1), enlarges lipid droplets, fragments Golgi, and disrupts secretory trafficking and migration phenotypes; SOAT1 inhibition by **avasimibe** rescues multiple phenotypes. (veronese2024erlin12scaffoldsbridge pages 10-12, veronese2024erlin12scaffoldsbridge pages 12-12)
+
+Quantitative details reported include proteomics showing a trend toward increased SOAT1 abundance (log2FC 0.40; q=0.07) and phenotyping with N=3 biological replicates and large cell counts (≥130 cells for lipid droplet size; ≥340 for Golgi fragmentation) analyzed by ANOVA with Tukey post hoc tests. (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 10-12)
+
+#### 6.2 2024: Updated clinical genetics context for the ERLIN–RNF170–IP3R module
+Cogan et al. (Human Genetics; **Oct 2024**) frame ERLIN1/2 as ERAD organizers that associate with RNF170 to target activated IP3Rs, and expand genotype–phenotype characterization in ERLIN-related HSP. This strengthens the view (also consistent with RNF170 HSP genetics) that motor neurons are unusually sensitive to disruption of this ERAD-linked calcium signaling module. (cogan2024biallelicvariantsin pages 1-6, cogan2024biallelicvariantsin pages 12-16)
+
+### 7) Current applications and real-world implementations
+
+#### 7.1 Genetic diagnostics and variant interpretation
+RNF170 is now a disease gene supported by primary genetics and functional validation for HSP, supporting its inclusion in **neurogenetic diagnostic panels** for spastic paraplegia/ataxia phenotypes and for variant interpretation workflows. (wagner2019biallelicvariantsin pages 6-7, vondel2024overarchingpathomechanismsin pages 5-8)
+
+#### 7.2 Therapeutic implications: pathway prioritization and mechanism-informed interventions
+The RNF170-centered mechanism suggests two translationally relevant intervention layers:
+1) **IP3R signaling / ER Ca2+ homeostasis**: human genetics and functional data prioritize the IP3R degradation/signaling axis as a candidate therapeutic pathway in HSP. (wagner2019biallelicvariantsin pages 6-7)
+2) **ER cholesterol esterification / secretory pathway**: 2024 mechanistic work identifies cholesterol esterification control as a modifiable node in ERLIN-module dysfunction, with **SOAT1 inhibition (avasimibe)** rescuing cell phenotypes (lipid droplet size, Golgi morphology, and gene-expression readouts). This is not a direct RNF170-targeting therapy, but it provides a mechanism-based proof-of-concept for pharmacologic modulation of ERLIN–RNF170-associated ER nanodomain functions. (veronese2024erlin12scaffoldsbridge pages 10-12, veronese2024erlin12scaffoldsbridge pages 12-12)
+
+### 8) Expert opinions and analysis (authoritative sources)
+A 2024 expert review in Trends in Neurosciences highlights ER structure and protein quality-control pathways (UPS/autophagy) as overarching mechanisms in inherited neuropathies, HSP, and ataxias, and includes RNF170 among implicated E3 ligases, supporting a convergent “ER homeostasis / QC” framing for RNF170-related disease mechanisms. (vondel2024overarchingpathomechanismsin pages 5-8)
+
+Genetics-focused 2024 work on ERLIN1 (SPG62) similarly emphasizes that the ERLIN1/2–RNF170 module is expected to impair IP3R1 turnover and Ca2+ signaling, providing additional disease-mechanism coherence at the pathway level. (cogan2024biallelicvariantsin pages 12-16)
+
+### 9) Recent statistics and quantitative data highlights
+- **RNF170 knockdown in human cell models**: stimulus-induced IP3R1 polyubiquitination reduced to **57 ± 7%** of control and IP3R1 down-regulation inhibited by **~50%**. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan media b065ce9e)
+- **RNF170 loss-of-function cellular phenotypes in HSP genetics study**: increased basal IP3R-1 in RNF170 KO SH-SY5Y cells with rescue; zebrafish phenotypes with adjusted P values including **P < 0.0001** in quantitative measures. (wagner2019biallelicvariantsin pages 6-7)
+- **2024 ERLIN scaffold phenotyping/omics**: SOAT1 proteomics trend (log2FC **0.40**, q=**0.07**) and high-powered imaging quantification with **≥130** and **≥340** cells across readouts (N=3 biological replicates). (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 10-12)
+
+### 10) Quick reference summary table
+The following table consolidates the most evidence-supported statements for functional annotation.
+
+| Category | Summary |
+|---|---|
+| Identity/domains | - Human **RNF170** corresponds to UniProt **Q96K19**, a **RING-type E3 ubiquitin ligase** studied as an ER-membrane regulator of protein turnover and signaling.<br>- Foundational work defines RNF170 as a **257 aa RING-HC protein** with catalytic dependence on **Cys101/His103**; this matches the UniProt RING-domain annotation and ER-associated function. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4) |
+| Localization/topology | - RNF170 is an **integral endoplasmic reticulum (ER) membrane** protein.<br>- Topology predictions and biochemical fractionation place its **N-terminus in the ER lumen** and its **RING domain/C-terminus in the cytosol**, positioning the catalytic machinery to ubiquitinate cytosolic receptor lysines.<br>- RNF170 localizes in **ERLIN-positive cholesterol-rich ER nanodomains**. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4, veronese2024erlin12scaffoldsbridge pages 1-2) |
+| Core enzymatic activity | - RNF170 catalyzes **E3 ubiquitin transfer** in vitro using **UBE1 + UbcH5b** and ubiquitin, generating a high-molecular-weight ubiquitin smear typical of ligase activity.<br>- Catalysis is lost with **RING mutant C101S/H103A**, confirming dependence on the RING domain.<br>- Functionally, RNF170 promotes **proteasome-directed ER-associated degradation (ERAD)** of selected membrane/signaling proteins. (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4, song2020e3ubiquitinligase pages 6-7) |
+| Key substrates | - Best-supported human substrate class: **activated IP3 receptors (IP3Rs)**, especially **IP3R1/IP3R3**, which undergo RNF170-dependent ubiquitination and degradation after stimulation.<br>- In murine innate immunity studies, RNF170 also targets **TLR3**, catalyzing **K48-linked polyubiquitination** at **K766** to drive proteasomal degradation.<br>- TLR3 regulation is strongly supported experimentally, but species context should be noted because the primary paper is in **murine cells/mice**. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 4-5, song2020e3ubiquitinligase pages 6-7, song2020e3ubiquitinligase pages 1-2, song2020e3ubiquitinligase pages 7-9) |
+| Key interactors/complex | - RNF170 is constitutively associated with the **ERLIN1/2 complex**, which recruits it to activated IP3Rs.<br>- It is also found in complexes containing **p97/VCP-associated ERAD machinery** and, in 2024 work, **TMUB1-L** bridged by ERLIN scaffolds.<br>- Proteomics and co-IP studies repeatedly enrich **ERLIN1, ERLIN2, ITPR3, TMUB1, TMEM259** with RNF170-centered complexes. (lu2011rnf170proteinan pages 8-9, lari2016resolutionofproteotoxic pages 111-115, veronese2024erlin12scaffoldsbridge pages 1-2, veronese2024erlin12scaffoldsbridge pages 12-12) |
+| Pathways | - RNF170 acts in **ERAD/proteostasis**, especially stimulus-coupled degradation of activated **IP3Rs**.<br>- Through IP3R turnover, RNF170 regulates **ER Ca2+ release signaling** and is therefore connected to neurodegeneration-relevant calcium homeostasis pathways.<br>- Separate immune work places RNF170 in **TLR3 innate immune signaling** as a negative regulator limiting IRF3/NF-kB/STAT1 outputs by degrading TLR3. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 5-6, song2020e3ubiquitinligase pages 6-7, vondel2024overarchingpathomechanismsin pages 5-8) |
+| Disease associations | - **Biallelic loss-of-function RNF170 variants** cause **autosomal recessive hereditary spastic paraplegia (HSP)**, with Open Targets evidence mapped to hereditary/complex HSP.<br>- Earlier literature also linked a **dominant sensory ataxia** phenotype to RNF170 mutation, and mouse knockout models show age-dependent gait abnormalities.<br>- Expert 2024 synthesis places RNF170 within an **ER homeostasis/quality-control disease module** shared across HSP, ataxia, and related neurodegenerative disorders. (wagner2019biallelicvariantsin pages 6-7, lu2011rnf170proteinan pages 8-9, OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170, vondel2024overarchingpathomechanismsin pages 5-8) |
+| Recent 2024 developments | - **Veronese et al. 2024** propose that **ERLIN1/2 ring-like scaffolds** bind a conserved luminal motif in **RNF170 and TMUB1-L**, organizing them in cholesterol-rich ER nanodomains.<br>- This work expands RNF170 biology beyond IP3R degradation by linking the ERLIN–RNF170 module to **cholesterol esterification control, Golgi morphology, and secretory pathway regulation**.<br>- 2024 disease reviews and genetics papers further emphasize the **ERLIN1/2–RNF170–IP3R** axis as a recurrent neurogenetic mechanism in spastic paraplegia/ataxia. (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 4-6, veronese2024erlin12scaffoldsbridge pages 10-12, cogan2024biallelicvariantsin pages 1-6, vondel2024overarchingpathomechanismsin pages 5-8) |
+| Quantitative data points | - **RNF170 knockdown** reduced agonist-induced **IP3R1 polyubiquitination to 57 ± 7% of control**, inhibited IP3R1 down-regulation by roughly **~50%**, and increased basal IP3R1 by **~27 ± 11%**. (lu2011rnf170proteinan pages 4-5)<br>- In RNF170-deficient models, **IP3R3** rose by about **~4-fold** in patient fibroblasts and **IP3R1** by **~1.8-fold** in RNF170-knockout SH-SY5Y cells. (gehweiler2024rnf170anoveldisease pages 68-72)<br>- 2024 ERLIN-loss proteomics/lipidomics reported **SOAT1 log2FC = 0.40, q = 0.07** and phenotyping with **N = 3** biological replicates, including **≥130 cells** for lipid-droplet size and **≥340 cells** for Golgi fragmentation. (veronese2024erlin12scaffoldsbridge pages 12-12, veronese2024erlin12scaffoldsbridge pages 10-12) |
 
 
-*Table: This table summarizes the core functional annotation, pathways, disease links, and quantitative experimental findings for human RNF170 UniProt Q96K19. It is designed as a compact reference for integrating molecular function with current clinical and mechanistic evidence.*
+*Table: This table condenses the key verified facts about human RNF170 (UniProt Q96K19), including its identity, ER localization, E3 ligase function, substrates, complexes, disease relevance, and notable 2024 advances. It is useful as a quick-reference annotation scaffold anchored to specific evidence contexts.*
 
-### 10) Key references (publication date and URL)
-- Veronese M. et al. **May 2024**. *ERLIN1/2 scaffolds bridge TMUB1 and RNF170 and restrict cholesterol esterification to regulate the secretory pathway.* Life Science Alliance. https://doi.org/10.26508/lsa.202402620 (veronese2024erlin12scaffoldsbridge pages 1-2)
-- Van de Vondel L.V. et al. **Mar 2024**. *Overarching pathomechanisms in inherited peripheral neuropathies, spastic paraplegias, and cerebellar ataxias.* Trends in Neurosciences. https://doi.org/10.1016/j.tins.2024.01.004 (vondel2024overarchingpathomechanismsin pages 5-8)
-- Krshnan L. et al. **Aug 2022**. *Endoplasmic Reticulum-Associated Protein Degradation.* Cold Spring Harbor Perspectives in Biology. https://doi.org/10.1101/cshperspect.a041247 (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15)
-- Gao X. et al. **Jun 2022**. *Binding of the erlin1/2 complex to the third intralumenal loop of IP3R1 triggers its ubiquitin-proteasomal degradation.* Journal of Biological Chemistry. https://doi.org/10.1016/j.jbc.2022.102026 (gao2022bindingofthe pages 9-11)
-- Gao X., Wojcikiewicz R.J.H. **Mar 2020**. *The emerging link between IP3 receptor turnover and Hereditary Spastic Paraplegia.* Cell Calcium. https://doi.org/10.1016/j.ceca.2019.102142 (gao2020theemerginglink pages 1-2)
-- Wagner M. et al. **Oct 2019**. *Bi-allelic variants in RNF170 are associated with hereditary spastic paraplegia.* Nature Communications. https://doi.org/10.1038/s41467-019-12620-9 (wagner2019biallelicvariantsin pages 4-5)
+### 11) Key figure evidence
+A figure supporting RNF170’s quantitative effect on IP3R1 ubiquitination and down-regulation is available from Lu et al. 2011 (Figure 5A-B). (lu2011rnf170proteinan media b065ce9e)
+
+### 12) Limitations and open questions
+- **Human vs murine innate-immunity substrate**: the strongest mechanistic TLR3 evidence is murine; human relevance is plausible (conserved K766) but not established here as a human-cell mechanism within the retrieved excerpts. (song2020e3ubiquitinligase pages 7-9)
+- **Direct RNF170 catalytic specificity determinants** (e.g., how RNF170 selects IP3Rs vs other ER membrane clients, and how ERLIN nanodomains tune substrate choice) remain incompletely resolved; 2024 work suggests a broader organizational role for ERLIN scaffolds that may impact RNF170 client selection. (veronese2024erlin12scaffoldsbridge pages 12-12)
+
+### 13) Core references (URLs and publication dates)
+- Lu JP et al. **“RNF170 Protein, an Endoplasmic Reticulum Membrane Ubiquitin Ligase, Mediates Inositol 1,4,5-Trisphosphate Receptor Ubiquitination and Degradation”**. *Journal of Biological Chemistry*. **Jul 2011**. https://doi.org/10.1074/jbc.m111.251983 (lu2011rnf170proteinan pages 4-5, lu2011rnf170proteinan pages 3-4)
+- Wagner M et al. **“Bi-allelic variants in RNF170 are associated with hereditary spastic paraplegia”**. *Nature Communications*. **Oct 2019**. https://doi.org/10.1038/s41467-019-12620-9 (wagner2019biallelicvariantsin pages 6-7)
+- Song X et al. **“E3 ubiquitin ligase RNF170 inhibits innate immune responses by targeting and degrading TLR3 in murine cells”**. *Cellular & Molecular Immunology*. **May 2020**. https://doi.org/10.1038/s41423-019-0236-y (song2020e3ubiquitinligase pages 6-7)
+- Veronese M et al. **“ERLIN1/2 scaffolds bridge TMUB1 and RNF170 and restrict cholesterol esterification to regulate the secretory pathway”**. *Life Science Alliance*. **May 2024**. https://doi.org/10.26508/lsa.202402620 (veronese2024erlin12scaffoldsbridge pages 10-12)
+- Van de Vondel L et al. **“Overarching pathomechanisms in inherited peripheral neuropathies, spastic paraplegias, and cerebellar ataxias”**. *Trends in Neurosciences*. **Mar 2024**. https://doi.org/10.1016/j.tins.2024.01.004 (vondel2024overarchingpathomechanismsin pages 5-8)
+- Cogan G et al. **“Biallelic variants in ERLIN1: a series of 13 individuals with spastic paraparesis.”** *Human Genetics*. **Oct 2024**. https://doi.org/10.1007/s00439-024-02702-0 (cogan2024biallelicvariantsin pages 1-6, cogan2024biallelicvariantsin pages 12-16)
+- Open Targets Platform (RNF170–HSP association evidence; literature includes PMID 31636353). Accessed via tool output. (OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170)
 
 
 References
 
-1. (veronese2024erlin12scaffoldsbridge pages 1-2): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
+1. (lu2011rnf170proteinan pages 4-5): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.
 
-2. (krshnan2022endoplasmicreticulumassociatedprotein pages 14-15): Logesvaran Krshnan, Michael L. van de Weijer, and Pedro Carvalho. Endoplasmic reticulum-associated protein degradation. Cold Spring Harbor perspectives in biology, pages a041247, Aug 2022. URL: https://doi.org/10.1101/cshperspect.a041247, doi:10.1101/cshperspect.a041247. This article has 223 citations and is from a peer-reviewed journal.
+2. (wagner2019biallelicvariantsin pages 6-7): Matias Wagner, Daniel P. S. Osborn, Ina Gehweiler, Maike Nagel, Ulrike Ulmer, Somayeh Bakhtiari, Rim Amouri, Reza Boostani, Faycal Hentati, Maryam M. Hockley, Benedikt Hölbling, Thomas Schwarzmayr, Ehsan Ghayoor Karimiani, Christoph Kernstock, Reza Maroofian, Wolfgang Müller-Felber, Ege Ozkan, Sergio Padilla-Lopez, Selina Reich, Jennifer Reichbauer, Hossein Darvish, Neda Shahmohammadibeni, Abbas Tafakhori, Katharina Vill, Stephan Zuchner, Michael C. Kruer, Juliane Winkelmann, Yalda Jamshidi, and Rebecca Schüle. Bi-allelic variants in rnf170 are associated with hereditary spastic paraplegia. Nature Communications, Oct 2019. URL: https://doi.org/10.1038/s41467-019-12620-9, doi:10.1038/s41467-019-12620-9. This article has 62 citations and is from a highest quality peer-reviewed journal.
 
-3. (gao2022bindingofthe pages 1-2): Xiaokong Gao, Caden G. Bonzerato, and Richard J.H. Wojcikiewicz. Binding of the erlin1/2 complex to the third intralumenal loop of ip3r1 triggers its ubiquitin-proteasomal degradation. Journal of Biological Chemistry, 298:102026, Jun 2022. URL: https://doi.org/10.1016/j.jbc.2022.102026, doi:10.1016/j.jbc.2022.102026. This article has 15 citations and is from a domain leading peer-reviewed journal.
+3. (lu2011rnf170proteinan pages 3-4): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.
 
-4. (gehweiler2024rnf170anoveldiseaseb pages 15-20): I Gehweiler. Rnf170-a novel disease gene causing hereditary spastic paraplegia. Unknown journal, 2024.
+4. (lu2011rnf170proteinan pages 5-6): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.
 
-5. (fenech2020interactionmappingof pages 8-9): Emma J Fenech, Federica Lari, Philip D Charles, Roman Fischer, Marie Laétitia-Thézénas, Katrin Bagola, Adrienne W Paton, James C Paton, Mads Gyrd-Hansen, Benedikt M Kessler, and John C Christianson. Interaction mapping of endoplasmic reticulum ubiquitin ligases identifies modulators of innate immune signalling. eLife, Jul 2020. URL: https://doi.org/10.7554/elife.57306, doi:10.7554/elife.57306. This article has 107 citations and is from a domain leading peer-reviewed journal.
+5. (veronese2024erlin12scaffoldsbridge pages 1-2): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
 
-6. (gao2022bindingofthe pages 9-11): Xiaokong Gao, Caden G. Bonzerato, and Richard J.H. Wojcikiewicz. Binding of the erlin1/2 complex to the third intralumenal loop of ip3r1 triggers its ubiquitin-proteasomal degradation. Journal of Biological Chemistry, 298:102026, Jun 2022. URL: https://doi.org/10.1016/j.jbc.2022.102026, doi:10.1016/j.jbc.2022.102026. This article has 15 citations and is from a domain leading peer-reviewed journal.
+6. (veronese2024erlin12scaffoldsbridge pages 12-12): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
 
-7. (veronese2024erlin12scaffoldsbridge pages 2-4): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
+7. (lu2011rnf170proteinan media b065ce9e): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.
 
-8. (veronese2024erlin12scaffoldsbridge media 43ccfba1): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
+8. (lu2011rnf170proteinan pages 8-9): Justine P. Lu, Yuan Wang, Danielle A. Sliter, Margaret M.P. Pearce, and Richard J.H. Wojcikiewicz. Rnf170 protein, an endoplasmic reticulum membrane ubiquitin ligase, mediates inositol 1,4,5-trisphosphate receptor ubiquitination and degradation. Journal of Biological Chemistry, 286:24426-24433, Jul 2011. URL: https://doi.org/10.1074/jbc.m111.251983, doi:10.1074/jbc.m111.251983. This article has 134 citations and is from a domain leading peer-reviewed journal.
 
-9. (gao2020theemerginglink pages 1-2): Xiaokong Gao and Richard J.H. Wojcikiewicz. The emerging link between ip3 receptor turnover and hereditary spastic paraplegia. Mar 2020. URL: https://doi.org/10.1016/j.ceca.2019.102142, doi:10.1016/j.ceca.2019.102142. This article has 10 citations and is from a peer-reviewed journal.
+9. (song2020e3ubiquitinligase pages 6-7): Xiaoqi Song, Shuo Liu, Wen-die Wang, Zhong-fei Ma, Xuetao Cao, and Minghong Jiang. E3 ubiquitin ligase rnf170 inhibits innate immune responses by targeting and degrading tlr3 in murine cells. Cellular & Molecular Immunology, 17:865-874, May 2020. URL: https://doi.org/10.1038/s41423-019-0236-y, doi:10.1038/s41423-019-0236-y. This article has 28 citations and is from a peer-reviewed journal.
 
-10. (vondel2024overarchingpathomechanismsin pages 5-8): Liedewei Van de Vondel, Jonathan De Winter, Vincent Timmerman, and Jonathan Baets. Overarching pathomechanisms in inherited peripheral neuropathies, spastic paraplegias, and cerebellar ataxias. Mar 2024. URL: https://doi.org/10.1016/j.tins.2024.01.004, doi:10.1016/j.tins.2024.01.004. This article has 11 citations and is from a highest quality peer-reviewed journal.
+10. (song2020e3ubiquitinligase pages 7-9): Xiaoqi Song, Shuo Liu, Wen-die Wang, Zhong-fei Ma, Xuetao Cao, and Minghong Jiang. E3 ubiquitin ligase rnf170 inhibits innate immune responses by targeting and degrading tlr3 in murine cells. Cellular & Molecular Immunology, 17:865-874, May 2020. URL: https://doi.org/10.1038/s41423-019-0236-y, doi:10.1038/s41423-019-0236-y. This article has 28 citations and is from a peer-reviewed journal.
 
-11. (wagner2019biallelicvariantsin pages 4-5): Matias Wagner, Daniel P. S. Osborn, Ina Gehweiler, Maike Nagel, Ulrike Ulmer, Somayeh Bakhtiari, Rim Amouri, Reza Boostani, Faycal Hentati, Maryam M. Hockley, Benedikt Hölbling, Thomas Schwarzmayr, Ehsan Ghayoor Karimiani, Christoph Kernstock, Reza Maroofian, Wolfgang Müller-Felber, Ege Ozkan, Sergio Padilla-Lopez, Selina Reich, Jennifer Reichbauer, Hossein Darvish, Neda Shahmohammadibeni, Abbas Tafakhori, Katharina Vill, Stephan Zuchner, Michael C. Kruer, Juliane Winkelmann, Yalda Jamshidi, and Rebecca Schüle. Bi-allelic variants in rnf170 are associated with hereditary spastic paraplegia. Nature Communications, Oct 2019. URL: https://doi.org/10.1038/s41467-019-12620-9, doi:10.1038/s41467-019-12620-9. This article has 62 citations and is from a highest quality peer-reviewed journal.
+11. (lari2016resolutionofproteotoxic pages 111-115): F Lari. Resolution of proteotoxic stress in the endoplasmic reticulum by ubiquitin ligase complexes. Unknown journal, 2016.
 
-12. (wagner2019biallelicvariantsin pages 3-4): Matias Wagner, Daniel P. S. Osborn, Ina Gehweiler, Maike Nagel, Ulrike Ulmer, Somayeh Bakhtiari, Rim Amouri, Reza Boostani, Faycal Hentati, Maryam M. Hockley, Benedikt Hölbling, Thomas Schwarzmayr, Ehsan Ghayoor Karimiani, Christoph Kernstock, Reza Maroofian, Wolfgang Müller-Felber, Ege Ozkan, Sergio Padilla-Lopez, Selina Reich, Jennifer Reichbauer, Hossein Darvish, Neda Shahmohammadibeni, Abbas Tafakhori, Katharina Vill, Stephan Zuchner, Michael C. Kruer, Juliane Winkelmann, Yalda Jamshidi, and Rebecca Schüle. Bi-allelic variants in rnf170 are associated with hereditary spastic paraplegia. Nature Communications, Oct 2019. URL: https://doi.org/10.1038/s41467-019-12620-9, doi:10.1038/s41467-019-12620-9. This article has 62 citations and is from a highest quality peer-reviewed journal.
+12. (veronese2024erlin12scaffoldsbridge pages 4-6): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
 
-13. (wagner2019biallelicvariantsin pages 2-3): Matias Wagner, Daniel P. S. Osborn, Ina Gehweiler, Maike Nagel, Ulrike Ulmer, Somayeh Bakhtiari, Rim Amouri, Reza Boostani, Faycal Hentati, Maryam M. Hockley, Benedikt Hölbling, Thomas Schwarzmayr, Ehsan Ghayoor Karimiani, Christoph Kernstock, Reza Maroofian, Wolfgang Müller-Felber, Ege Ozkan, Sergio Padilla-Lopez, Selina Reich, Jennifer Reichbauer, Hossein Darvish, Neda Shahmohammadibeni, Abbas Tafakhori, Katharina Vill, Stephan Zuchner, Michael C. Kruer, Juliane Winkelmann, Yalda Jamshidi, and Rebecca Schüle. Bi-allelic variants in rnf170 are associated with hereditary spastic paraplegia. Nature Communications, Oct 2019. URL: https://doi.org/10.1038/s41467-019-12620-9, doi:10.1038/s41467-019-12620-9. This article has 62 citations and is from a highest quality peer-reviewed journal.
+13. (veronese2024erlin12scaffoldsbridge pages 10-12): Matteo Veronese, Sebastian Kallabis, Alexander Tobias Kaczmarek, Anushka Das, Lennart Robers, Simon Schumacher, Alessia Lofrano, Susanne Brodesser, Stefan Müller, Kay Hofmann, Marcus Krüger, and Elena I Rugarli. Erlin1/2 scaffolds bridge tmub1 and rnf170 and restrict cholesterol esterification to regulate the secretory pathway. Life Science Alliance, 7:e202402620, May 2024. URL: https://doi.org/10.26508/lsa.202402620, doi:10.26508/lsa.202402620. This article has 8 citations and is from a peer-reviewed journal.
 
-14. (wagner2019biallelicvariantsin pages 1-2): Matias Wagner, Daniel P. S. Osborn, Ina Gehweiler, Maike Nagel, Ulrike Ulmer, Somayeh Bakhtiari, Rim Amouri, Reza Boostani, Faycal Hentati, Maryam M. Hockley, Benedikt Hölbling, Thomas Schwarzmayr, Ehsan Ghayoor Karimiani, Christoph Kernstock, Reza Maroofian, Wolfgang Müller-Felber, Ege Ozkan, Sergio Padilla-Lopez, Selina Reich, Jennifer Reichbauer, Hossein Darvish, Neda Shahmohammadibeni, Abbas Tafakhori, Katharina Vill, Stephan Zuchner, Michael C. Kruer, Juliane Winkelmann, Yalda Jamshidi, and Rebecca Schüle. Bi-allelic variants in rnf170 are associated with hereditary spastic paraplegia. Nature Communications, Oct 2019. URL: https://doi.org/10.1038/s41467-019-12620-9, doi:10.1038/s41467-019-12620-9. This article has 62 citations and is from a highest quality peer-reviewed journal.
+14. (wang2024hostfactorsmodulate pages 13-14): Jingjing Wang, Yirui Dong, Xuewei Zheng, Haodi Ma, Mengjiao Huang, Dongliao Fu, Jiangbo Liu, and Qinan Yin. Host factors modulate virus-induced ifn production via pattern recognition receptors. Journal of Inflammation Research, 17:3737-3752, Jun 2024. URL: https://doi.org/10.2147/jir.s455035, doi:10.2147/jir.s455035. This article has 6 citations and is from a peer-reviewed journal.
 
-15. (OpenTargets Search: -RNF170): Open Targets Query (-RNF170, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+15. (li2024thernabindingproteins pages 12-13): Jianguo Li, Jingge Yu, Ao Shen, Suwen Lai, Zhiping Liu, and Tian-Sheng He. The rna-binding proteins regulate innate antiviral immune signaling by modulating pattern recognition receptors. Virology Journal, Sep 2024. URL: https://doi.org/10.1186/s12985-024-02503-x, doi:10.1186/s12985-024-02503-x. This article has 13 citations and is from a peer-reviewed journal.
 
-16. (gao2020theemerginglink pages 2-4): Xiaokong Gao and Richard J.H. Wojcikiewicz. The emerging link between ip3 receptor turnover and hereditary spastic paraplegia. Mar 2020. URL: https://doi.org/10.1016/j.ceca.2019.102142, doi:10.1016/j.ceca.2019.102142. This article has 10 citations and is from a peer-reviewed journal.
+16. (OpenTargets Search: hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170): Open Targets Query (hereditary spastic paraplegia,spastic paraplegia,sensory ataxia,spinocerebellar ataxia,neuroaxonal dystrophy-RNF170, 2 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-17. (gehweiler2024rnf170anoveldiseasec pages 65-68): I Gehweiler. Rnf170-a novel disease gene causing hereditary spastic paraplegia. Unknown journal, 2024.
+17. (vondel2024overarchingpathomechanismsin pages 5-8): Liedewei Van de Vondel, Jonathan De Winter, Vincent Timmerman, and Jonathan Baets. Overarching pathomechanisms in inherited peripheral neuropathies, spastic paraplegias, and cerebellar ataxias. Mar 2024. URL: https://doi.org/10.1016/j.tins.2024.01.004, doi:10.1016/j.tins.2024.01.004. This article has 11 citations and is from a highest quality peer-reviewed journal.
 
-18. (gehweiler2024rnf170anoveldiseasea pages 57-62): I Gehweiler. Rnf170-a novel disease gene causing hereditary spastic paraplegia. Unknown journal, 2024.
+18. (cogan2024biallelicvariantsin pages 1-6): Guillaume Cogan, Maha S. Zaki, Mahmoud Issa, Boris Keren, Marine Guillaud-Bataille, Florence Renaldo, Arnaud Isapof, Pauline Lallemant, Giovanni Stevanin, Lena Guillot-Noel, Thomas Courtin, Julien Buratti, Cécile Freihuber, Joseph G. Gleeson, Robyn Howarth, Alexandra Durr, Jean-Madeleine de Sainte Agathe, and Cyril Mignot. Biallelic variants in erlin1: a series of 13 individuals with spastic paraparesis. Human genetics, 143:1353-1362, Oct 2024. URL: https://doi.org/10.1007/s00439-024-02702-0, doi:10.1007/s00439-024-02702-0. This article has 3 citations and is from a peer-reviewed journal.
+
+19. (cogan2024biallelicvariantsin pages 12-16): Guillaume Cogan, Maha S. Zaki, Mahmoud Issa, Boris Keren, Marine Guillaud-Bataille, Florence Renaldo, Arnaud Isapof, Pauline Lallemant, Giovanni Stevanin, Lena Guillot-Noel, Thomas Courtin, Julien Buratti, Cécile Freihuber, Joseph G. Gleeson, Robyn Howarth, Alexandra Durr, Jean-Madeleine de Sainte Agathe, and Cyril Mignot. Biallelic variants in erlin1: a series of 13 individuals with spastic paraparesis. Human genetics, 143:1353-1362, Oct 2024. URL: https://doi.org/10.1007/s00439-024-02702-0, doi:10.1007/s00439-024-02702-0. This article has 3 citations and is from a peer-reviewed journal.
+
+20. (song2020e3ubiquitinligase pages 1-2): Xiaoqi Song, Shuo Liu, Wen-die Wang, Zhong-fei Ma, Xuetao Cao, and Minghong Jiang. E3 ubiquitin ligase rnf170 inhibits innate immune responses by targeting and degrading tlr3 in murine cells. Cellular & Molecular Immunology, 17:865-874, May 2020. URL: https://doi.org/10.1038/s41423-019-0236-y, doi:10.1038/s41423-019-0236-y. This article has 28 citations and is from a peer-reviewed journal.
+
+21. (gehweiler2024rnf170anoveldisease pages 68-72): I Gehweiler. Rnf170-a novel disease gene causing hereditary spastic paraplegia. Unknown journal, 2024.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](RNF170-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000018 The schematic figure showing ERLIN1/2 scaffolds bridging TMUB1-L and RNF170 on the ER membrane is Figure 3A. This panel depicts the](RNF170-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000027 Figure 5, panels A and B, quantifies the effect of RNF170 knockdown (depletion) on IP3R1 processing. As described in the text (page](RNF170-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. krshnan2022endoplasmicreticulumassociatedprotein pages 14-15
-2. gao2022bindingofthe pages 9-11
-3. gao2022bindingofthe pages 1-2
-4. fenech2020interactionmappingof pages 8-9
-5. gao2020theemerginglink pages 1-2
-6. vondel2024overarchingpathomechanismsin pages 5-8
-7. wagner2019biallelicvariantsin pages 1-2
-8. wagner2019biallelicvariantsin pages 4-5
-9. wagner2019biallelicvariantsin pages 3-4
-10. wagner2019biallelicvariantsin pages 2-3
-11. gao2020theemerginglink pages 2-4
-12. https://doi.org/10.26508/lsa.202402620
-13. https://doi.org/10.1016/j.tins.2024.01.004
-14. https://doi.org/10.1101/cshperspect.a041247
-15. https://doi.org/10.1016/j.jbc.2022.102026
-16. https://doi.org/10.1016/j.ceca.2019.102142
-17. https://doi.org/10.1038/s41467-019-12620-9
-18. https://doi.org/10.26508/lsa.202402620,
-19. https://doi.org/10.1101/cshperspect.a041247,
-20. https://doi.org/10.1016/j.jbc.2022.102026,
-21. https://doi.org/10.7554/elife.57306,
-22. https://doi.org/10.1016/j.ceca.2019.102142,
-23. https://doi.org/10.1016/j.tins.2024.01.004,
-24. https://doi.org/10.1038/s41467-019-12620-9,
+1. lari2016resolutionofproteotoxic pages 111-115
+2. wagner2019biallelicvariantsin pages 6-7
+3. vondel2024overarchingpathomechanismsin pages 5-8
+4. cogan2024biallelicvariantsin pages 12-16
+5. wang2024hostfactorsmodulate pages 13-14
+6. li2024thernabindingproteins pages 12-13
+7. cogan2024biallelicvariantsin pages 1-6
+8. https://doi.org/10.1074/jbc.m111.251983
+9. https://doi.org/10.1038/s41467-019-12620-9
+10. https://doi.org/10.1038/s41423-019-0236-y
+11. https://doi.org/10.26508/lsa.202402620
+12. https://doi.org/10.1016/j.tins.2024.01.004
+13. https://doi.org/10.1007/s00439-024-02702-0
+14. https://doi.org/10.1074/jbc.m111.251983,
+15. https://doi.org/10.1038/s41467-019-12620-9,
+16. https://doi.org/10.26508/lsa.202402620,
+17. https://doi.org/10.1038/s41423-019-0236-y,
+18. https://doi.org/10.2147/jir.s455035,
+19. https://doi.org/10.1186/s12985-024-02503-x,
+20. https://doi.org/10.1016/j.tins.2024.01.004,
+21. https://doi.org/10.1007/s00439-024-02702-0,
