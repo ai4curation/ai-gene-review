@@ -70,6 +70,24 @@ def test_terms_file_in_sync():
     )
 
 
+def test_subsumption_classifier():
+    """The gain report suppresses a candidate when a more specific child term is already present."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "annotation_gain_report", REPO / "projects/ANTIMICROBIAL_RESISTANCE/annotation_gain_report.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    # GO:0034069 (aminoglycoside N-acetyltransferase) has child GO:0047663 (6'-N-acetyltransferase)
+    desc = {"GO:0034069": {"GO:0047663"}}
+    assert mod.classify_candidate("GO:0034069", {"GO:0047663", "GO:0046677"}, desc) == "redundant"
+    assert mod.classify_candidate("GO:0034069", {"GO:0046677"}, desc) == "new"
+    assert mod.classify_candidate("GO:0034069", {"GO:0034069"}, desc) == "already"
+    # without a descendant index, only exact-match suppression applies
+    assert mod.classify_candidate("GO:0034069", {"GO:0047663"}, None) == "new"
+
+
 @pytest.mark.integration
 def test_term_validator_passes():
     """linkml-term-validator confirms all ARO+GO ids resolve with matching labels."""

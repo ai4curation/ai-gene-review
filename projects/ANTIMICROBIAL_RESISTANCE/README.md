@@ -23,10 +23,13 @@ Part of the [Antimicrobial Resistance project](../ANTIMICROBIAL_RESISTANCE.md).
   link out to CARD and AmiGO) and the recorded GO gaps, with the per-mapping UniProt gain count.
 - **`just annotation-gain`** → `ANNOTATION_GAIN.md` + `data/candidate_new_annotations.tsv`: applies the
   mappings (exact-or-narrower) to all **4,182** UniProtKB entries that carry a CARD cross-reference and
-  reports the GO terms they would gain that are **not already annotated**. Current snapshot: **746**
-  candidate new annotations across **746** entries — e.g. all 79 colistin/MCR entries lack
-  `GO:0043838`, and 448 beta-lactamases lack `GO:0008800`. (The mechanism→`GO:0046677` mappings add
-  nothing new — every CARD entry already has "response to antibiotic" — a good sanity check.)
+  reports the GO terms they would gain that are **not already annotated**. The filter is
+  **subsumption-aware**: a candidate is suppressed when the entry already has a more specific (is_a
+  descendant) GO term, so over-general parents are not proposed. Current snapshot: **630** candidate new
+  annotations (a further **104** suppressed as redundant — almost all aminoglycoside families, where GO
+  has specific child terms) — e.g. all 79 colistin/MCR entries lack `GO:0043838`, and 448
+  beta-lactamases lack `GO:0008800`. (The mechanism→`GO:0046677` mappings add nothing new — every CARD
+  entry already has "response to antibiotic" — a good sanity check.)
 
 ## Validation: `just validate-mappings`
 

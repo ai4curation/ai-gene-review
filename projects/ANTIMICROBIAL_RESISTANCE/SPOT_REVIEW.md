@@ -69,7 +69,9 @@ caveat.**
 ## Takeaways / actions
 
 1. **Add a subsumption-aware filter to the gain report**: drop a candidate GO term when the entry
-   already has a more specific descendant of it (fixes #4; would cut ~92 redundant rows, 746 → ~654).
+   already has a more specific descendant of it (fixes #4). *(DONE — implemented in
+   `annotation_gain_report.py`; suppressed 104 redundant candidates, 734 → 630, almost all in the
+   aminoglycoside AAC/ANT/APH families.)*
 2. **Tighten the fosfomycin mapping** (#6): map FosA, not the FosA+FosB "thiol transferase" parent.
    *(DONE — re-anchored ARO:3000133 → glutathione-specific FosA/FosA2/FosA3/fosA5, excluding FosB/FosX.
    Also from PR review: Erm now maps to the family-safe `GO:0008988` (not the di-methyltransferase
