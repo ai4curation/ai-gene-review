@@ -121,6 +121,10 @@ This section is the **methodology research deliverable**: how the CARD/ARO resou
 
 6. **Tooling.** `argNorm` (Bioinformatics 2025) normalizes ARG-annotation output (from RGI, AMRFinderPlus, etc.) to ARO accessions, and **RGI** assigns ARO ids to protein/contig sequences. Either could be wrapped in a `*-bioinformatics/` analysis to confirm a sequence's ARO identity reproducibly before annotation.
 
+### Pipeline: UniProt → ARO → GO
+
+A working pipeline applies the ARO→GO mapping to UniProt records: `projects/mappings/uniprot2aro2go.py` (run with `just aro2go-pipeline`). It gets **UniProt→ARO** from `DR CARD` lines where present (deterministic, but sparse — 1/2334 cached records here), falls back to parsing **RGI** output for entries without one (e.g. MphA), then chains **ARO→GO** via `aro2go.sssom.yaml`. As a check it reproduces the hand-curated GO calls — MphB (`DR CARD`) → `GO:0050073` + `GO:0046677`; MphA (RGI) → `GO:0050073`. Output is candidate annotations with full provenance (`uniprot_acc, aro_id, predicate, go_id, route`), to be reviewed by a curator. See `projects/mappings/README.md`.
+
 ### Recommended convention
 - Record the ARO id in the gene notes (`- CARD/ARO: ARO:NNNNNNN (gene); mechanism = ...`) with provenance, as already done for both MPH genes.
 - Treat CARD as a **HIGH-relevance curated source** but still **verify, don't trust**: confirm each CARD-cited PMID against PubMed and anchor substrate/mechanism claims to a checkable primary reference before marking a `reference_review` as `VERIFIED`.

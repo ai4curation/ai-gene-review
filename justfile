@@ -67,6 +67,10 @@ format:
 validate-mappings:
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/mappings/*.sssom.yaml
 
+# Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
+aro2go-pipeline: validate-mappings
+	uv run python projects/mappings/uniprot2aro2go.py --sssom projects/mappings/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
+
 # ============== Hidden internal recipes ==============
 
 _status:
