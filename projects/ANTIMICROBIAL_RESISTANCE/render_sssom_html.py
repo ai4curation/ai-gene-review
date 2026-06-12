@@ -7,10 +7,10 @@ gaining" count is shown per mapping.
 
 Usage::
 
-    uv run python projects/mappings/render_sssom_html.py \
-        --sssom projects/mappings/aro2go.sssom.yaml \
-        --gain-tsv projects/mappings/data/candidate_new_annotations.tsv \
-        -o projects/mappings/aro2go.html
+    uv run python projects/ANTIMICROBIAL_RESISTANCE/render_sssom_html.py \
+        --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
+        --gain-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv \
+        -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
 """
 from __future__ import annotations
 

@@ -13,10 +13,10 @@ import pytest
 import yaml
 
 REPO = Path(__file__).resolve().parents[1]
-SSSOM = REPO / "projects/mappings/aro2go.sssom.yaml"
-TERMS = REPO / "projects/mappings/aro2go.terms.yaml"
+SSSOM = REPO / "projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml"
+TERMS = REPO / "projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml"
 SCHEMA = REPO / "src/ai_gene_review/schema/aro_go_mapping.yaml"
-CONVERTER = REPO / "projects/mappings/sssom_to_terms.py"
+CONVERTER = REPO / "projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py"
 OAK_CONFIG = REPO / "conf/oak_config.yaml"
 
 
@@ -65,8 +65,8 @@ def test_terms_file_in_sync():
     committed = TERMS.read_text()
     assert regenerated == committed, (
         "aro2go.terms.yaml is out of sync with aro2go.sssom.yaml; "
-        "regenerate with: uv run python projects/mappings/sssom_to_terms.py "
-        "projects/mappings/aro2go.sssom.yaml -o projects/mappings/aro2go.terms.yaml"
+        "regenerate with: uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py "
+        "projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml"
     )
 
 

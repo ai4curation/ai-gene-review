@@ -24,8 +24,8 @@ ids present in the mapping produce output, so the result is bounded by curation 
 
 Example::
 
-    uv run python projects/mappings/uniprot2aro2go.py \
-        --sssom projects/mappings/aro2go.sssom.yaml \
+    uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py \
+        --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
         genes/ECO8N/A0A0H3EUF3_ECO8N/A0A0H3EUF3_ECO8N-uniprot.txt
 """
 from __future__ import annotations

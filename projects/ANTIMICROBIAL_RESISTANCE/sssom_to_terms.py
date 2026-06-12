@@ -10,7 +10,7 @@ predicate_id/predicate_label, object_id/object_label). linkml-term-validator val
 
 The output (``aro2go.terms.yaml``, class ``AROGOMappingSet``) is then checked with::
 
-    uv run linkml-term-validator validate-data projects/mappings/aro2go.terms.yaml \
+    uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml \
         -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet \
         --labels -c conf/oak_config.yaml
 
@@ -25,10 +25,10 @@ import yaml
 
 HEADER = (
     "# GENERATED FILE - do not edit by hand.\n"
-    "# Source of truth: projects/mappings/aro2go.sssom.yaml\n"
-    "# Regenerate: uv run python projects/mappings/sssom_to_terms.py "
-    "projects/mappings/aro2go.sssom.yaml -o projects/mappings/aro2go.terms.yaml\n"
-    "# Validate:   uv run linkml-term-validator validate-data projects/mappings/aro2go.terms.yaml "
+    "# Source of truth: projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml\n"
+    "# Regenerate: uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py "
+    "projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml\n"
+    "# Validate:   uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml "
     "-s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml\n"
 )
 

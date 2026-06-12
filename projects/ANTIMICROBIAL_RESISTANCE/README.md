@@ -97,19 +97,19 @@ Or directly:
 
 ```bash
 # Route 1 — DR CARD line(s) from cached UniProt record(s):
-uv run python projects/mappings/uniprot2aro2go.py \
-    --sssom projects/mappings/aro2go.sssom.yaml \
+uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py \
+    --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
     genes/ECO8N/A0A0H3EUF3_ECO8N/A0A0H3EUF3_ECO8N-uniprot.txt
 
 # Sweep every cached UniProt record (recursive glob; quote it):
-uv run python projects/mappings/uniprot2aro2go.py \
-    --sssom projects/mappings/aro2go.sssom.yaml \
+uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py \
+    --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
     'genes/**/*-uniprot.txt' -o /tmp/aro2go_all.tsv
 
 # Route 2 — parse RGI output (for entries without a DR CARD line, e.g. MphA):
-uv run python projects/mappings/uniprot2aro2go.py \
-    --sssom projects/mappings/aro2go.sssom.yaml \
-    --rgi-output projects/mappings/examples/rgi_example_mphA.txt
+uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py \
+    --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
+    --rgi-output projects/ANTIMICROBIAL_RESISTANCE/examples/rgi_example_mphA.txt
 ```
 
 To generate real RGI output for the sequence-based route:
@@ -173,4 +173,4 @@ silently dropped.
 - `just validate-mappings` — structural (`linkml-validate`) **and** ontology-term
   (`linkml-term-validator`, checks every ARO/GO id resolves + label matches).
 - `tests/test_aro2go_mapping.py` — SSSOM structure, terms-file sync, and (integration) term-validator.
-- Pipeline parser: doctest — `uv run python -m doctest projects/mappings/uniprot2aro2go.py`.
+- Pipeline parser: doctest — `uv run python -m doctest projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py`.

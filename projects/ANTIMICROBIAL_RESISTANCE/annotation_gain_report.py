@@ -16,11 +16,11 @@ Outputs:
 
 Usage::
 
-    uv run python projects/mappings/annotation_gain_report.py \
-        --sssom projects/mappings/aro2go.sssom.yaml \
-        --uniprot projects/mappings/data/uniprot_card_xrefs.tsv \
-        --out-md projects/mappings/ANNOTATION_GAIN.md \
-        --out-tsv projects/mappings/data/candidate_new_annotations.tsv
+    uv run python projects/ANTIMICROBIAL_RESISTANCE/annotation_gain_report.py \
+        --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
+        --uniprot projects/ANTIMICROBIAL_RESISTANCE/data/uniprot_card_xrefs.tsv \
+        --out-md projects/ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md \
+        --out-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv
 """
 from __future__ import annotations
 
