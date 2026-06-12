@@ -123,7 +123,9 @@ This section is the **methodology research deliverable**: how the CARD/ARO resou
 
 ### Pipeline: UniProt → ARO → GO
 
-A working pipeline applies the ARO→GO mapping to UniProt records: `projects/mappings/uniprot2aro2go.py` (run with `just aro2go-pipeline`). It gets **UniProt→ARO** from `DR CARD` lines where present (deterministic, but sparse — 1/2334 cached records here), falls back to parsing **RGI** output for entries without one (e.g. MphA), then chains **ARO→GO** via `aro2go.sssom.yaml`. As a check it reproduces the hand-curated GO calls — MphB (`DR CARD`) → `GO:0050073` + `GO:0046677`; MphA (RGI) → `GO:0050073`. Output is candidate annotations with full provenance (`uniprot_acc, aro_id, predicate, go_id, route`), to be reviewed by a curator. See `projects/mappings/README.md`.
+A working pipeline applies the ARO→GO mapping to UniProt records: `projects/mappings/uniprot2aro2go.py` (run with `just aro2go-pipeline`). It gets **UniProt→ARO** from `DR CARD` lines where present (deterministic, but sparse — 1/2334 cached records here), falls back to parsing **RGI** output for entries without one (e.g. MphA), then chains **ARO→GO** via `aro2go.sssom.yaml`. As a check it reproduces the hand-curated GO calls — MphB (`DR CARD`) → `GO:0050073` + `GO:0046677`; MphA (RGI) → `GO:0050073`.
+
+**Propagation is exact-or-narrower**: a GO term mapped at an ARO term applies to any gene whose ARO assignment is that term *or a narrower (is_a descendant)* ARO term. This makes family nodes the high-value targets — the single `beta-lactamase` (`ARO:3000001`) → `GO:0008800` mapping reaches all **5,317** descendant ARO gene terms (CTX-M, KPC, NDM, …). The pipeline walks each gene's ARO is_a ancestors (via OAK) and records `aro_relation` = `exact`/`narrower` in the output. Candidates carry full provenance (gene ARO, mapped ARO, relation, predicate, GO, route) for curator review. See `projects/mappings/README.md`.
 
 ### Recommended convention
 - Record the ARO id in the gene notes (`- CARD/ARO: ARO:NNNNNNN (gene); mechanism = ...`) with provenance, as already done for both MPH genes.

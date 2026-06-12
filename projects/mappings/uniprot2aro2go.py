@@ -137,24 +137,72 @@ def load_aro2go(sssom_path: Path) -> dict[str, list[dict]]:
     return index
 
 
-def chain(hits: list[AroHit], aro2go: dict[str, list[dict]]) -> list[dict]:
-    """Join ARO hits to GO terms via the ARO->GO index. Returns annotation rows."""
+def build_aro_ancestor_fn(adapter_string: str):
+    """Return ``ancestors_or_self(aro_id) -> set`` using OAK's ARO is_a hierarchy.
+
+    Propagation rule: a GO term mapped at an ARO term applies to a gene whose ARO assignment
+    is that term OR any narrower (descendant) ARO term. We implement this by walking the gene's
+    is_a ancestors (cheap) and matching mapped subjects among them, rather than expanding the
+    (potentially thousands of) descendants of each family node.
+
+    Returns ``None`` if the adapter cannot be loaded (e.g. offline), so the caller can fall back
+    to exact-match-only propagation.
+    """
+    try:
+        from functools import lru_cache
+
+        from oaklib import get_adapter
+        from oaklib.datamodels.vocabulary import IS_A
+
+        adapter = get_adapter(adapter_string)
+
+        @lru_cache(maxsize=None)
+        def ancestors_or_self(aro_id: str) -> frozenset[str]:
+            try:
+                return frozenset(adapter.ancestors(aro_id, predicates=[IS_A])) | {aro_id}
+            except Exception:
+                return frozenset({aro_id})
+
+        return ancestors_or_self
+    except Exception as e:  # pragma: no cover - depends on environment
+        print(f"# WARN: ARO hierarchy unavailable ({e}); exact-match propagation only.", file=sys.stderr)
+        return None
+
+
+def chain(hits: list[AroHit], aro2go: dict[str, list[dict]], ancestors_or_self=None) -> list[dict]:
+    """Join ARO hits to GO terms via the ARO->GO index, with exact-or-narrower propagation.
+
+    A mapping applies to a hit when the mapping's subject ARO term equals the hit's ARO term
+    (``aro_relation = exact``) or is an is_a ancestor of it (``aro_relation = narrower``: the
+    gene's ARO term is narrower than the mapped family/mechanism node). Without ``ancestors_or_self``
+    only exact matches fire.
+    """
     rows: list[dict] = []
+    seen: set[tuple] = set()
     for hit in hits:
-        for m in aro2go.get(hit.aro_id, []):
-            rows.append(
-                {
-                    "uniprot_acc": hit.uniprot_acc,
-                    "aro_id": hit.aro_id,
-                    "aro_label": hit.aro_label or m.get("subject_label", ""),
-                    "predicate_id": m["predicate_id"],
-                    "predicate_label": m.get("predicate_label", ""),
-                    "go_id": m["object_id"],
-                    "go_label": m.get("object_label", ""),
-                    "mapping_justification": m.get("mapping_justification", ""),
-                    "route": hit.route,
-                }
-            )
+        applicable = ancestors_or_self(hit.aro_id) if ancestors_or_self else {hit.aro_id}
+        for subj in applicable:
+            for m in aro2go.get(subj, []):
+                key = (hit.uniprot_acc, m["object_id"], m["predicate_id"], subj, hit.route)
+                if key in seen:
+                    continue
+                seen.add(key)
+                rows.append(
+                    {
+                        "uniprot_acc": hit.uniprot_acc,
+                        "gene_aro_id": hit.aro_id,
+                        "gene_aro_label": hit.aro_label,
+                        "mapped_aro_id": subj,
+                        "mapped_aro_label": m.get("subject_label", ""),
+                        "aro_relation": "exact" if subj == hit.aro_id else "narrower",
+                        "predicate_id": m["predicate_id"],
+                        "predicate_label": m.get("predicate_label", ""),
+                        "go_id": m["object_id"],
+                        "go_label": m.get("object_label", ""),
+                        "mapping_justification": m.get("mapping_justification", ""),
+                        "route": hit.route,
+                    }
+                )
     return rows
 
 
@@ -174,6 +222,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--sssom", required=True, type=Path, help="ARO->GO SSSOM mapping file")
     ap.add_argument("--rgi-output", type=Path, default=None, help="Optional RGI tab-delimited results to parse for ARO ids")
     ap.add_argument("-o", "--output", type=Path, default=None, help="Output TSV (default: stdout)")
+    ap.add_argument(
+        "--propagate/--no-propagate", dest="propagate", default=True,
+        action=argparse.BooleanOptionalAction,
+        help="Propagate mappings to genes whose ARO term is narrower (is_a descendant) of a mapped term",
+    )
+    ap.add_argument("--aro-adapter", default="sqlite:obo:aro", help="OAK adapter for the ARO hierarchy")
     args = ap.parse_args(argv)
 
     uniprot_paths: list[Path] = []
@@ -183,11 +237,13 @@ def main(argv: list[str] | None = None) -> int:
 
     aro2go = load_aro2go(args.sssom)
     hits = collect_hits(uniprot_paths, args.rgi_output)
-    rows = chain(hits, aro2go)
+    ancestors_fn = build_aro_ancestor_fn(args.aro_adapter) if args.propagate else None
+    rows = chain(hits, aro2go, ancestors_fn)
 
     cols = [
-        "uniprot_acc", "aro_id", "aro_label", "predicate_id", "predicate_label",
-        "go_id", "go_label", "mapping_justification", "route",
+        "uniprot_acc", "gene_aro_id", "gene_aro_label", "mapped_aro_id", "mapped_aro_label",
+        "aro_relation", "predicate_id", "predicate_label", "go_id", "go_label",
+        "mapping_justification", "route",
     ]
     out = args.output.open("w", newline="") if args.output else sys.stdout
     try:

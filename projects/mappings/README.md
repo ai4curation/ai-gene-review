@@ -11,6 +11,7 @@ Part of the [Antimicrobial Resistance project](../ANTIMICROBIAL_RESISTANCE.md).
 | `sssom_to_terms.py` | Converter: reshapes the flat SSSOM rows into the nested `{id,label}` form the term-validator checks. |
 | `uniprot2aro2go.py` | Pipeline that chains **UniProt → ARO → GO** by applying the SSSOM mapping. |
 | `examples/rgi_example_mphA.txt` | Tiny example of CARD RGI tab-delimited output, used to demonstrate the sequence-based route. |
+| `examples/rgi_example_betalactamases.txt` | RGI example (CTX-M-15/KPC-2/NDM-1) demonstrating exact-or-narrower propagation from the beta-lactamase family node. |
 
 ## Validation: `just validate-mappings`
 
@@ -46,6 +47,28 @@ protein entries. There are two routes:
    in this script (it needs RGI + the local CARD database installed); instead we parse its
    output if you run it. Related: [`argNorm`](https://github.com/BigDataBiology/argNorm)
    normalises the output of RGI/AMRFinderPlus/ABRicate/etc. to ARO accessions.
+
+## Propagation: exact or narrower (the high-value logic)
+
+A GO term mapped at an ARO term applies to a gene whose ARO assignment is **that term or any
+narrower (is_a descendant) ARO term** — i.e. propagate down the ARO hierarchy, never up. This is
+why **family-level ARO nodes are the high-value mapping targets**: one mapping covers an entire
+subtree. For example the single `beta-lactamase` (`ARO:3000001`) → `GO:0008800` mapping reaches
+its **5,317** descendant ARO gene terms (CTX-M, KPC, NDM, …), none of which need their own row.
+
+The pipeline implements this by walking each gene's ARO **is_a ancestors** (via OAK
+`sqlite:obo:aro`) and firing any mapping whose subject is an ancestor-or-self. The output
+`aro_relation` column records `exact` (mapping is on the gene's own ARO term) vs `narrower` (the
+gene's ARO term is narrower than the mapped family/mechanism node). Use `--no-propagate` for
+exact-only. Demonstration:
+
+```text
+$ uv run python uniprot2aro2go.py --sssom aro2go.sssom.yaml --rgi-output examples/rgi_example_betalactamases.txt
+gene_aro_id   gene_aro_label   mapped_aro_id   mapped_aro_label   aro_relation   go_id        go_label
+ARO:3001878   CTX-M-15         ARO:3000001     beta-lactamase     narrower       GO:0008800   beta-lactamase activity
+ARO:3002312   KPC-2            ARO:3000001     beta-lactamase     narrower       GO:0008800   beta-lactamase activity
+ARO:3000589   NDM-1           ARO:3000001     beta-lactamase     narrower       GO:0008800   beta-lactamase activity
+```
 
 ## Usage
 
@@ -84,9 +107,11 @@ rgi main --input_sequence protein.faa --input_type protein --output_file rgi_out
 
 ## Output
 
-A TSV of **candidate** GO annotations with full provenance — `uniprot_acc`, `aro_id`,
-`aro_label`, `predicate_id`/`predicate_label`, `go_id`/`go_label`, `mapping_justification`,
-and `route` (`DR_CARD` or `RGI`).
+A TSV of **candidate** GO annotations with full provenance — `uniprot_acc`,
+`gene_aro_id`/`gene_aro_label` (the gene's ARO assignment), `mapped_aro_id`/`mapped_aro_label`
+(the ARO term the mapping is on), `aro_relation` (`exact` or `narrower`),
+`predicate_id`/`predicate_label`, `go_id`/`go_label`, `mapping_justification`, and `route`
+(`DR_CARD` or `RGI`).
 
 These are **leads for a curator, not final annotations**: the `enables`/`relatedMatch` predicates
 indicate the relationship type, and a family-level mapping is only a prior for its members. As a
