@@ -62,3 +62,29 @@ Connective-tissue/collagen role in scleral ECM is the likely mechanistic link.
   here is an over-interpretation of the redox chemistry. MARK_AS_OVER_ANNOTATED.
 - protein binding (GO:0005515) x4 IPI: KEEP_AS_NON_CORE (bare term; P4HB interaction is real
   and meaningful but captured only as uninformative protein binding here).
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- The two non-canonical (non-collagen) substrate mechanisms are already captured in the review:
+  P4HA2 binds mTOR and hydroxylates conserved Pro2341 to activate mTOR kinase (PMID:38654109, Jin
+  2024, Oncogene; DOI 10.1038/s41388-024-03032-1), and P4HA2 hydroxylates SUFU at the ciliary tip in
+  complex with KIF7 to amplify Hedgehog signaling (PMID:38909089, Li 2024, Leukemia;
+  DOI 10.1038/s41375-024-02313-8). Falcon corroborates both; PMIDs re-verified against PubMed.
+- NEW: SP1 transcriptionally activates P4HA2 in colorectal cancer — SP1 binds the P4HA2 promoter (ChIP
+  + luciferase), and P4HA2 drives proliferation/EMT with AGO1 as a probable downstream target.
+  [PMID:38857058 "the transcription factor SP1 binds to the promoter sequence of P4HA2, activating its expression in CRC"]
+- NEW (review): Hironaka & Xiong 2025 (PMID:41096640) provides an up-to-date C-P4H review covering the
+  alpha2-beta2/PDI tetramer, ER localization, Fe(II)/2-OG/O2/ascorbate chemistry, and both canonical
+  collagen-deposition and non-canonical (stemness, hypoxia, glucose metabolism, angiogenesis, TIL
+  modulation) cancer roles. [PMID:41096640 "not only in the canonical collagen deposition role, but also in non-canonical functions, such as cell stemness, hypoxic response, glucose metabolism, angiogenesis"]
+- Falcon reiterates the isoform substrate-bias concept: P4HA1 vs P4HA2 differ in sequence preference
+  across X-Pro-Gly triplets (isoenzyme-biased substrate selection rather than strict collagen-type
+  specificity), consistent with the existing review's suggested_questions on isoenzyme substrate
+  preference. (Review-level claim; not added as a primary reference.)
+- Several additional 2024 P4HA2 cancer papers (HNSCC PI3K/AKT — DOI 10.1007/s12032-024-02358-w; OSCC
+  PI3K/AKT — DOI 10.1038/s41598-024-64264-5; pan-P4H HNC biomarker — DOI 10.1038/s41598-024-62678-9;
+  osteosarcoma biomarker — DOI 10.1016/j.heliyon.2024.e27191) are correlative TCGA/cell-line biomarker
+  studies. They reinforce the (non-core) "overexpressed/poor-prognosis in solid tumors via PI3K/AKT or
+  EMT" theme but add little mechanistic novelty beyond Dang/Jin/Li; not added as primary references.
+- Salo & Myllyharju 2021 (already in review as PMID:32969070) is reiterated by Falcon for the field
+  status that no collagen-hydroxylase inhibitor is yet in clinical use, in contrast to HIF-PHD inhibitors.

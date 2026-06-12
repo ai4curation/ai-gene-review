@@ -122,5 +122,29 @@ present in the GOA TSV stub, so no annotation is reviewed for it.)
   macrophage role); IEA ortholog one MARK_AS_OVER_ANNOTATED.
 - extracellular region/plasma membrane/cell surface (22016386 IDA) — KEEP_AS_NON_CORE (shedding).
 - extracellular exosome (HDA), membrane (IEA) — MARK_AS_OVER_ANNOTATED.
+
+## Falcon deep-research findings (incorporated 2026-06)
+
+- Specific ectodomain-shedding cleavage site (mechanism for the existing cell-surface/shedding role):
+  quantitative protein terminomics maps VIP36/LMAN2 as a metalloprotease-regulated shedding substrate
+  cleaved at **F298 down-arrow L299 (SVNF/LKSP)**, reproducible across multiple cell lines and
+  suppressed by the broad-spectrum metalloprotease inhibitor BB-94 [PMID:33796845 (Tsumagari et al.,
+  iScience 2021) "Exploring the landscape of ectodomain shedding by quantitative protein terminomics";
+  DOI 10.1016/j.isci.2021.102476]. This refines the mechanistic basis of the previously curated
+  cell-surface/plasma-membrane/extracellular-region IDA and the shedding-dependent phagocytosis role
+  (PMID:22016386). Added as MEDIUM-relevance reference; no annotation change (shedding already
+  KEEP_AS_NON_CORE).
+- Glycan-binding specificity detail (Falcon synthesis of prior reviews; consistent with existing
+  D-mannose/carbohydrate binding annotations): VIP36 prefers high-mannose Man7-9GlcNAc2 with strongest
+  recognition of the D1/A-arm Man-alpha-1,2-Man-alpha-1,2-Man motif; binding is pH-sensitive (optimum
+  ~pH 6.0-6.5, matching early-Golgi/ERGIC lumen) and structurally Ca2+-assisted (residues Asp131,
+  Asn166, His190 contact ligand). Reinforces the existing core MF; reviews (Gupta 2012, Yamamoto 2014,
+  Reiterer 2010 thesis) are not PubMed-cached primary sources — notes-only, not added to YAML.
+- Disease/association context (Falcon; non-causal, not gene function): 2024 plasma-proteome PWAS
+  (Xiong et al., Heliyon) associates LMAN2 with CKD-related traits (BUN/eGFR), but colocalization
+  PP4 < 0.01 does NOT support a shared causal cis-variant, so LMAN2 is at best an associated marker;
+  2023 granulosa-cell proteomics (Eubler et al.) reports LMAN2 as differentially abundant under
+  cannabidiol. Both are association/proteomics only and do not inform VIP36 molecular function;
+  notes-only, not added to YAML.
 </content>
 </invoke>
