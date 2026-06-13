@@ -77,6 +77,14 @@ review_batches:
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch7_selection_notes.md
+  - id: proteostasis-batch-2026-06-13
+    title: "Proteostasis PN candidate additions batch 8 (UPS branch: Cullin-RING ligase substrate-recognition & assembly modules — F-box SCF/CRL1 substrate receptors FBXL/FBXW/FBXO incl. lectin F-box ERAD subfamily and APC/C-inhibitor F-box members, plus CRL4 core DDB1/DDB2/DDA1/DTL and CRL assembly regulators CAND2/GLMN)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch8_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
