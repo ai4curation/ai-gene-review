@@ -82,12 +82,12 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| eryBVI | A4F7N4 | 4.2.1.- | NDP-4-keto-6-deoxyglucose 2,3-dehydratase | not reviewed |
-| eryBII | A4F7P4 | 1.1.1.91 | TDP-4-keto-6-deoxyhexose 2,3-reductase | not reviewed |
-| eryBIII | A4F7P8 | 2.1.1.- | NDP-4-keto-2,6-dideoxyhexose 3-C-methyltransferase | not reviewed |
-| eryBIV | A4F7N7 | 1.1.1.- | dTDP-4-keto-6-deoxy-L-hexose 4-reductase | not reviewed |
-| eryBVII | A4F7N1 | 5.1.3.13 | dTDP-4-deoxyglucose 3,5-epimerase (shared by both sugar pathways) | not reviewed |
-| eryBI | A4F7P9 | 3.2.1.21 | beta-D-glucosidase (role debated; possible resistance/recycling) | not reviewed |
+| **eryBVI** | A4F7N4 | 4.2.1.- | NDP-4-keto-6-deoxyglucose 2,3-dehydratase | **reviewed** (`genes/SACEN/eryBVI/`) |
+| **eryBII** | A4F7P4 | 1.1.1.91 | TDP-4-keto-6-deoxyhexose 2,3-reductase | **reviewed** (`genes/SACEN/eryBII/`) |
+| **eryBIII** | A4F7P8 | 2.1.1.- | NDP-4-keto-2,6-dideoxyhexose 3-C-methyltransferase | **reviewed** (`genes/SACEN/eryBIII/`) |
+| **eryBIV** | A4F7N7 | 1.1.1.- | dTDP-4-keto-6-deoxy-L-hexose 4-reductase | **reviewed** (`genes/SACEN/eryBIV/`) |
+| **eryBVII** | A4F7N1 | 5.1.3.13 | dTDP-4-deoxyglucose 3,5-epimerase (shared by both sugar pathways) | **reviewed** (`genes/SACEN/eryBVII/`) |
+| **eryBI** | A4F7P9 | 3.2.1.21 | beta-D-glucosidase (role debated; possible resistance/recycling) | **reviewed** (`genes/SACEN/eryBI/`) |
 
 ### F. Tailoring O-methylation
 
@@ -99,7 +99,7 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| ermE | P07287 | 2.1.1.184 | 23S rRNA N6-adenine MTase; macrolide self-resistance | not reviewed |
+| **ermE** | P07287 | 2.1.1.184 | 23S rRNA N6-adenine MTase; macrolide self-resistance | **reviewed** (`genes/SACEN/ermE/`) |
 | (esterase) | A4F7M9 | — | putative erythromycin esterase | not reviewed |
 | (transposase) | A4F7N9 | — | transposase — not biosynthetic | excluded |
 
@@ -153,13 +153,15 @@ members). For curation, *S. erythraea* is the canonical representative.
 
 ## 7. Curation status
 
-- **Reviewed (10/23):** the full **desosaminylation + desosamine-pathway arm** (eryCII, eryCIII,
-  eryCI, eryCIV, eryCV, eryCVI); the two catalytic P450s eryF + eryK (contrast the EryCII
-  pseudo-P450); the mycarosyltransferase eryBV; the final O-methyltransferase eryG.
-  EryCIV/EryCV catalytic specifics left UNDECIDED (electronic annotations conflict) (`projects/BGC.md`).
+- **Reviewed (17/23):** both deoxysugar arms complete — desosamine (eryCI, eryCII, eryCIII,
+  eryCIV, eryCV, eryCVI) and mycarose (eryBI, eryBII, eryBIII, eryBIV, eryBVI, eryBVII); both
+  glycosyltransferases (eryBV, eryCIII) and the EryCII activator; both P450s (eryF, eryK); the
+  final O-methyltransferase eryG; and the self-resistance methylase ermE. Several TrEMBL sugar
+  enzymes carry UNDECIDED catalytic specifics where electronic annotations conflict (`projects/BGC.md`).
 - **Candidate follow-up (tractable, non-megasynthase):** the remaining EryB* mycarose enzymes
   (eryBII/III/IV/VI/VII, eryBI); ermE (resistance); the type II thioesterase/esterase.
-- **Largest effort:** eryAI/AII/AIII (DEBS megasynthases; module-level review).
+- **Remaining (DEBS megasynthases + accessory):** eryAI/AII/AIII (the three DEBS modular PKS
+  megasynthases; module-level review) and the type II thioesterase / esterase accessory genes.
 
 ## 8. References
 
