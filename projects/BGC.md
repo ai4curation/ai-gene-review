@@ -102,6 +102,8 @@ For each protein in a selected complex:
 |---|---|---|
 | PqsB (PSEAE, Q9I4X2) | PqsBC condensing heterodimer (non-catalytic subunit) | **Review complete** |
 | PqsC (PSEAE, Q9I4X1) | PqsBC condensing heterodimer (catalytic subunit) | **Review complete** |
+| actI-ORF1 / KSα (STRCO, Q02059) | actinorhodin KS-CLF (catalytic ketosynthase) | **Review complete** |
+| actI-ORF2 / KSβ-CLF (STRCO, Q02062) | actinorhodin KS-CLF (non-catalytic chain-length factor) | **Review complete** |
 | ActVA region pair (STRCO) | actinorhodin tailoring | Queued |
 | Erythromycin DEBS pair (SACEN) | modular PKS | Queued |
 | Nosiheptide pair (STRAT) | thiopeptide RiPP | Queued |
@@ -128,6 +130,29 @@ The PqsB/PqsC pair validates the project premise. Reviewing both subunits
 The predicted complex (ipTM 0.95, matching PDB 5DWZ) agreed with the experimentally
 established obligate heterodimer — a positive-control case where the structural
 prediction corroborated, rather than drove, the curation.
+
+### Second worked example: actinorhodin KS-CLF (BGC0000194)
+
+The *S. coelicolor* actinorhodin minimal-PKS KSα/KSβ pair (`genes/STRCO/actI-ORF1`,
+`genes/STRCO/actI-ORF2`; predicted at ipTM 0.96, matching PDB 1TQY) is the **same
+catalytic + non-catalytic heterodimer pattern** as PqsBC, and reproduces the same
+annotation failure mode from a different protein family:
+
+- **Catalytic KSα (actI-ORF1)** inherited fatty-acid-synthase terms from the KAS
+  domain signature — `3-oxoacyl-ACP synthase activity`, `fatty acid biosynthetic
+  process`, `fatty acid elongation`. These were MODIFY'd / REMOVE'd to the accurate
+  **polyketide** terms (GO:0016218 polyketide synthase activity, GO:1901112
+  actinorhodin biosynthetic process) — here GO already has the right terms, so no new
+  term was needed (unlike PqsBC's EC 2.3.1.230).
+- **Non-catalytic KSβ/CLF (actI-ORF2)** "does not have an active site" (PMID:15286722)
+  yet was IEA-annotated `enables acyltransferase activity` → MARK_AS_OVER_ANNOTATED,
+  with GO:0034082 (type II PKS complex) and GO:1901112 added as the accurate roles,
+  plus a proposed "polyketide chain length factor activity" MF term.
+
+**Emerging pattern for the project:** type II PKS / FabH-like condensing systems are
+systematically over-annotated with fatty-acid MF/BP terms and mis-assign the complex's
+catalytic activity to the non-catalytic subunit. This is a reusable curation signature
+for the remaining BGC exemplars.
 
 ## Caveats when using the predictions as evidence
 
