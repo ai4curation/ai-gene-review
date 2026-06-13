@@ -104,6 +104,8 @@ For each protein in a selected complex:
 | PqsC (PSEAE, Q9I4X1) | PqsBC condensing heterodimer (catalytic subunit) | **Review complete** |
 | actI-ORF1 / KSα (STRCO, Q02059) | actinorhodin KS-CLF (catalytic ketosynthase) | **Review complete** |
 | actI-ORF2 / KSβ-CLF (STRCO, Q02062) | actinorhodin KS-CLF (non-catalytic chain-length factor) | **Review complete** |
+| eryCII (SACEN, A4F7P2) | EryCII-EryCIII (P450-homologue GT activator; pseudoenzyme) | **Review complete** |
+| eryCIII (SACEN, A4F7P3) | EryCII-EryCIII (desosaminyl glycosyltransferase) | **Review complete** |
 | ActVA region pair (STRCO) | actinorhodin tailoring | Queued |
 | Erythromycin DEBS pair (SACEN) | modular PKS | Queued |
 | Nosiheptide pair (STRAT) | thiopeptide RiPP | Queued |
@@ -153,6 +155,29 @@ annotation failure mode from a different protein family:
 systematically over-annotated with fatty-acid MF/BP terms and mis-assign the complex's
 catalytic activity to the non-catalytic subunit. This is a reusable curation signature
 for the remaining BGC exemplars.
+
+### Third worked example: erythromycin EryCII-EryCIII (BGC0000055)
+
+The *S. erythraea* desosaminylation pair (`genes/SACEN/eryCII`, `genes/SACEN/eryCIII`;
+predicted ipTM 0.92, matching PDB 2YJN) generalises the pattern beyond
+catalytic/non-catalytic *condensing* enzymes to a **catalytic enzyme + pseudoenzyme
+activator** pair:
+
+- **EryCIII (catalytic GT)** is the desosaminyl transferase (EC 2.4.1.278); cleanly
+  annotated (IDA, PMID:15303858). Minor fixes: MODIFY `UDP-glycosyltransferase
+  activity` → hexosyltransferase (donor is **TDP**-D-desosamine, not UDP), and add the
+  specific erythromycin-biosynthesis BP; propose an EC 2.4.1.278 MF term.
+- **EryCII is a P450 PSEUDOENZYME.** UniProt states it "lacks the heme-binding sites";
+  it functions as an allosteric activator/stabiliser of EryCIII (PMID:22056329). All
+  four of its IEA P450 terms (monooxygenase, heme binding, iron ion binding,
+  oxidoreductase) were **REMOVE'd** as domain-propagation over-annotations, and
+  replaced with the accurate **GO:0008047 enzyme activator activity** + complex + BP.
+  Cross-links to `projects/PSEUDOENZYMES.md`.
+
+This adds a second over-annotation signature to the project: **sequence-similarity to a
+catalytic family (here cytochrome P450) propagates a full catalytic/cofactor annotation
+set onto a pseudoenzyme that has demonstrably lost the active site** — flagged whenever
+UniProt carries a "lacks the ... binding sites" CAUTION.
 
 ## Caveats when using the predictions as evidence
 
