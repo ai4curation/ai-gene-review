@@ -205,4 +205,6 @@ UniProt carries a "lacks the ... binding sites" CAUTION.
   `projects/PROTEIN_COMPLEX_FUNCTIONS.md` (catalytic-member attribution),
   `projects/PSEUDOENZYMES.md` (EryCII, PqsB, CLF), `projects/OVER_ANNOTATION_PATTERNS.md`
   (patterns 7-8), `projects/CONTESTED_FUNCTION.md` (EryCII + finding-level disputes),
-  `projects/ENZYME_SPECIFICITY.md` (EryCIII TDP-vs-UDP donor).
+  `projects/ENZYME_SPECIFICITY.md` (EryCIII TDP-vs-UDP donor),
+  `projects/STRUCTURE_FUNCTION.md` (catalytic-residue presence/absence calls),
+  `projects/TOP_NOTS.md` (NOT candidates: heme-less P450, active-site-less condensing folds).

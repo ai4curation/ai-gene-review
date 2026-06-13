@@ -32,6 +32,16 @@ The new quaternary structure predictions can:
 - Provide structural evidence for signaling pathway annotations — do the predicted interaction surfaces make biological sense?
 - Identify which interaction partners are biologically plausible vs. artifacts of sequence-based transfer rules.
 
+**Worked example — the BGC project (`BGC.md`):** Moriwaki et al. (bioRxiv 2025.10.26.684697)
+ran a genome-scale AF3/MMseqs2 complex screen over 2,437 MIBiG BGCs and used predicted
+heteromeric interfaces (ipTM ≥ 0.6; ipSAE to disambiguate paralog look-alikes) to assign
+function to "uncharacterized" cluster proteins. We use it as one line of evidence in the BGC
+exemplar reviews (PqsBC ipTM 0.95 / PDB 5DWZ; act KS-CLF 0.96 / 1TQY; EryCII-CIII 0.92 / 2YJN),
+treating high-ipTM hits as hypotheses that **corroborated** experimentally established complexes
+rather than driving the call. Caveat reinforced by their own validation set: real PDB-confirmed
+complexes can score low (false negatives), so absence of a high-ipTM prediction is not evidence
+against a complex.
+
 ### 4. Disorder / Intrinsically Disordered Region Context
 
 AFDB per-residue confidence scores (pLDDT) mark disordered regions:
@@ -84,6 +94,7 @@ AFDB-derived evidence would be classified as:
 
 ## Relationship to Other Projects
 
+- **BGC** (`BGC.md`): genome-scale AF3/MMseqs2 predicted BGC complexes used as PPI/complex-membership evidence in biosynthetic-gene-cluster enzyme reviews; see also `PROTEIN_COMPLEX_FUNCTIONS.md`.
 - **dismech**: AFDB structures could enrich disease mechanism entries — e.g., showing how a mutation disrupts a predicted protein interface (relevant to the STRUCTURAL_BIOLOGY project)
 - **NAM (New Approach Methodologies)**: AFDB is a computational NAM — predicted structures as alternatives to experimental structure determination
 - **linkml-term-validator**: Could potentially validate that GO MF terms are structurally plausible for the annotated protein
