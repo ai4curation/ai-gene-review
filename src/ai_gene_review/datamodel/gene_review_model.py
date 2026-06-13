@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-06-13T14:55:54
+# Generation date: 2026-06-13T18:47:40
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -99,6 +99,14 @@ class TermId(extended_str):
 
 
 class ReferenceId(extended_str):
+    pass
+
+
+class ModuleReviewId(extended_str):
+    pass
+
+
+class ModuleNodeId(extended_str):
     pass
 
 
@@ -543,6 +551,894 @@ class SupportingTextInReference(YAMLRoot):
 
         if self.reference_section_type is not None and not isinstance(self.reference_section_type, ManuscriptSection):
             self.reference_section_type = ManuscriptSection(self.reference_section_type)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class EvidenceItem(YAMLRoot):
+    """
+    A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local
+    file, pathway record, issue, or any other citable artifact. This is deliberately less strict than the publication
+    quote validation used in gene reviews.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["EvidenceItem"]
+    class_class_curie: ClassVar[str] = "gene_review:EvidenceItem"
+    class_name: ClassVar[str] = "EvidenceItem"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.EvidenceItem
+
+    source_id: str = None
+    title: Optional[str] = None
+    statement: Optional[str] = None
+    supporting_text: Optional[str] = None
+    url: Optional[str] = None
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.source_id):
+            self.MissingRequiredField("source_id")
+        if not isinstance(self.source_id, str):
+            self.source_id = str(self.source_id)
+
+        if self.title is not None and not isinstance(self.title, str):
+            self.title = str(self.title)
+
+        if self.statement is not None and not isinstance(self.statement, str):
+            self.statement = str(self.statement)
+
+        if self.supporting_text is not None and not isinstance(self.supporting_text, str):
+            self.supporting_text = str(self.supporting_text)
+
+        if self.url is not None and not isinstance(self.url, str):
+            self.url = str(self.url)
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class Descriptor(YAMLRoot):
+    """
+    A human-friendly descriptor with optional ontology/database grounding. The preferred_term may be more nuanced than
+    the term label, and the term may be absent when no good identifier exists yet.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["Descriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:Descriptor"
+    class_name: ClassVar[str] = "Descriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.Descriptor
+
+    preferred_term: str = None
+    description: Optional[str] = None
+    term: Optional[Union[dict, Term]] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.preferred_term):
+            self.MissingRequiredField("preferred_term")
+        if not isinstance(self.preferred_term, str):
+            self.preferred_term = str(self.preferred_term)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        if self.term is not None and not isinstance(self.term, Term):
+            self.term = Term(**as_dict(self.term))
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ChemicalEntityDescriptor(Descriptor):
+    """
+    A descriptor for a chemical entity, metabolite, cofactor, ion, or small molecule.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ChemicalEntityDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:ChemicalEntityDescriptor"
+    class_name: ClassVar[str] = "ChemicalEntityDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ChemicalEntityDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class GeneDescriptor(Descriptor):
+    """
+    A descriptor for a gene or locus.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["GeneDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:GeneDescriptor"
+    class_name: ClassVar[str] = "GeneDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.GeneDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class GeneProductDescriptor(Descriptor):
+    """
+    A descriptor for a gene product, protein, isoform, or gene-product form.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["GeneProductDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:GeneProductDescriptor"
+    class_name: ClassVar[str] = "GeneProductDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.GeneProductDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class FamilyDescriptor(Descriptor):
+    """
+    A descriptor for a protein family, orthogroup, or other evolutionary grouping.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["FamilyDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:FamilyDescriptor"
+    class_name: ClassVar[str] = "FamilyDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.FamilyDescriptor
+
+    preferred_term: str = None
+    representative_members: Optional[Union[Union[dict, GeneProductDescriptor], list[Union[dict, GeneProductDescriptor]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if not isinstance(self.representative_members, list):
+            self.representative_members = [self.representative_members] if self.representative_members is not None else []
+        self.representative_members = [v if isinstance(v, GeneProductDescriptor) else GeneProductDescriptor(**as_dict(v)) for v in self.representative_members]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class DomainDescriptor(Descriptor):
+    """
+    A descriptor for a protein domain, motif, site, or architectural feature.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["DomainDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:DomainDescriptor"
+    class_name: ClassVar[str] = "DomainDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.DomainDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class CellularComponentDescriptor(Descriptor):
+    """
+    A descriptor for a cellular component, organelle, compartment, or complex location.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["CellularComponentDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:CellularComponentDescriptor"
+    class_name: ClassVar[str] = "CellularComponentDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.CellularComponentDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class ProteinComplexDescriptor(CellularComponentDescriptor):
+    """
+    A descriptor for a protein-containing complex or subcomplex.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ProteinComplexDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:ProteinComplexDescriptor"
+    class_name: ClassVar[str] = "ProteinComplexDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ProteinComplexDescriptor
+
+    preferred_term: str = None
+    active_units: Optional[Union[Union[dict, "ComplexUnit"], list[Union[dict, "ComplexUnit"]]]] = empty_list()
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if not isinstance(self.active_units, list):
+            self.active_units = [self.active_units] if self.active_units is not None else []
+        self.active_units = [v if isinstance(v, ComplexUnit) else ComplexUnit(**as_dict(v)) for v in self.active_units]
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ComplexUnit(YAMLRoot):
+    """
+    A role-bearing unit within a protein complex descriptor.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ComplexUnit"]
+    class_class_curie: ClassVar[str] = "gene_review:ComplexUnit"
+    class_name: ClassVar[str] = "ComplexUnit"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ComplexUnit
+
+    id: Optional[str] = None
+    label: Optional[str] = None
+    participant: Optional[Union[dict, "ParticipantSelector"]] = None
+    role: Optional[str] = None
+    stoichiometry: Optional[str] = None
+    function: Optional[Union[dict, "MolecularFunctionDescriptor"]] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.id is not None and not isinstance(self.id, str):
+            self.id = str(self.id)
+
+        if self.label is not None and not isinstance(self.label, str):
+            self.label = str(self.label)
+
+        if self.participant is not None and not isinstance(self.participant, ParticipantSelector):
+            self.participant = ParticipantSelector(**as_dict(self.participant))
+
+        if self.role is not None and not isinstance(self.role, str):
+            self.role = str(self.role)
+
+        if self.stoichiometry is not None and not isinstance(self.stoichiometry, str):
+            self.stoichiometry = str(self.stoichiometry)
+
+        if self.function is not None and not isinstance(self.function, MolecularFunctionDescriptor):
+            self.function = MolecularFunctionDescriptor(**as_dict(self.function))
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class CellTypeDescriptor(Descriptor):
+    """
+    A descriptor for a cell type or cell state.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["CellTypeDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:CellTypeDescriptor"
+    class_name: ClassVar[str] = "CellTypeDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.CellTypeDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class AnatomicalEntityDescriptor(Descriptor):
+    """
+    A descriptor for an anatomical entity, tissue, organismal region, or structure.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["AnatomicalEntityDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:AnatomicalEntityDescriptor"
+    class_name: ClassVar[str] = "AnatomicalEntityDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.AnatomicalEntityDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class DevelopmentalStageDescriptor(Descriptor):
+    """
+    A descriptor for a developmental stage, life-cycle stage, or temporal window.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["DevelopmentalStageDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:DevelopmentalStageDescriptor"
+    class_name: ClassVar[str] = "DevelopmentalStageDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.DevelopmentalStageDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class TaxonDescriptor(Descriptor):
+    """
+    A descriptor for a taxon or taxonomic scope.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["TaxonDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:TaxonDescriptor"
+    class_name: ClassVar[str] = "TaxonDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.TaxonDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class MolecularFunctionDescriptor(Descriptor):
+    """
+    A descriptor for a molecular function. Extra slots capture common functional nuance without requiring formal
+    post-composition.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["MolecularFunctionDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:MolecularFunctionDescriptor"
+    class_name: ClassVar[str] = "MolecularFunctionDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.MolecularFunctionDescriptor
+
+    preferred_term: str = None
+    substrates: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    products: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    cofactors: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    targets: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    cargo: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    source_location: Optional[Union[dict, CellularComponentDescriptor]] = None
+    destination_location: Optional[Union[dict, CellularComponentDescriptor]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if not isinstance(self.substrates, list):
+            self.substrates = [self.substrates] if self.substrates is not None else []
+        self.substrates = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.substrates]
+
+        if not isinstance(self.products, list):
+            self.products = [self.products] if self.products is not None else []
+        self.products = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.products]
+
+        if not isinstance(self.cofactors, list):
+            self.cofactors = [self.cofactors] if self.cofactors is not None else []
+        self.cofactors = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.cofactors]
+
+        if not isinstance(self.targets, list):
+            self.targets = [self.targets] if self.targets is not None else []
+        self.targets = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.targets]
+
+        if not isinstance(self.cargo, list):
+            self.cargo = [self.cargo] if self.cargo is not None else []
+        self.cargo = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.cargo]
+
+        if self.source_location is not None and not isinstance(self.source_location, CellularComponentDescriptor):
+            self.source_location = CellularComponentDescriptor(**as_dict(self.source_location))
+
+        if self.destination_location is not None and not isinstance(self.destination_location, CellularComponentDescriptor):
+            self.destination_location = CellularComponentDescriptor(**as_dict(self.destination_location))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class BiologicalProcessDescriptor(Descriptor):
+    """
+    A descriptor for a biological process, pathway, reaction, or process-like module grounding.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["BiologicalProcessDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:BiologicalProcessDescriptor"
+    class_name: ClassVar[str] = "BiologicalProcessDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.BiologicalProcessDescriptor
+
+    preferred_term: str = None
+    inputs: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    outputs: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    occurs_in: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    starts_with: Optional[Union[dict, Descriptor]] = None
+    ends_with: Optional[Union[dict, Descriptor]] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if not isinstance(self.inputs, list):
+            self.inputs = [self.inputs] if self.inputs is not None else []
+        self.inputs = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.inputs]
+
+        if not isinstance(self.outputs, list):
+            self.outputs = [self.outputs] if self.outputs is not None else []
+        self.outputs = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.outputs]
+
+        if not isinstance(self.occurs_in, list):
+            self.occurs_in = [self.occurs_in] if self.occurs_in is not None else []
+        self.occurs_in = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.occurs_in]
+
+        if self.starts_with is not None and not isinstance(self.starts_with, Descriptor):
+            self.starts_with = Descriptor(**as_dict(self.starts_with))
+
+        if self.ends_with is not None and not isinstance(self.ends_with, Descriptor):
+            self.ends_with = Descriptor(**as_dict(self.ends_with))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class RelationDescriptor(Descriptor):
+    """
+    A descriptor for a relation or connection predicate.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["RelationDescriptor"]
+    class_class_curie: ClassVar[str] = "gene_review:RelationDescriptor"
+    class_name: ClassVar[str] = "RelationDescriptor"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.RelationDescriptor
+
+    preferred_term: str = None
+
+@dataclass(repr=False)
+class ModuleReview(YAMLRoot):
+    """
+    Review or curation record for a recursively decomposable biological module. This can describe a pathway, organelle
+    lifecycle, protein complex, molecular function, developmental process, or abstract/evolutionary functional plan.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModuleReview"]
+    class_class_curie: ClassVar[str] = "gene_review:ModuleReview"
+    class_name: ClassVar[str] = "ModuleReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModuleReview
+
+    id: Union[str, ModuleReviewId] = None
+    title: str = None
+    module: Union[dict, "ModuleNode"] = None
+    description: Optional[str] = None
+    references: Optional[Union[dict[Union[str, ReferenceId], Union[dict, Reference]], list[Union[dict, Reference]]]] = empty_dict()
+    status: Optional[str] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, ModuleReviewId):
+            self.id = ModuleReviewId(self.id)
+
+        if self._is_empty(self.title):
+            self.MissingRequiredField("title")
+        if not isinstance(self.title, str):
+            self.title = str(self.title)
+
+        if self._is_empty(self.module):
+            self.MissingRequiredField("module")
+        if not isinstance(self.module, ModuleNode):
+            self.module = ModuleNode(**as_dict(self.module))
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        self._normalize_inlined_as_list(slot_name="references", slot_type=Reference, key_name="id", keyed=True)
+
+        if self.status is not None and not isinstance(self.status, str):
+            self.status = str(self.status)
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ModuleNode(YAMLRoot):
+    """
+    A node in a module. Nodes can be recursively decomposed using parts and variant_sets, and may also carry leaf
+    annotons and connections.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModuleNode"]
+    class_class_curie: ClassVar[str] = "gene_review:ModuleNode"
+    class_name: ClassVar[str] = "ModuleNode"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModuleNode
+
+    id: Union[str, ModuleNodeId] = None
+    label: str = None
+    module_type: Optional[Union[str, "ModuleTypeEnum"]] = None
+    description: Optional[str] = None
+    concepts: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    context: Optional[Union[dict, "ModuleContext"]] = None
+    annotons: Optional[Union[Union[dict, "ModuleAnnoton"], list[Union[dict, "ModuleAnnoton"]]]] = empty_list()
+    parts: Optional[Union[Union[dict, "ModulePart"], list[Union[dict, "ModulePart"]]]] = empty_list()
+    variant_sets: Optional[Union[Union[dict, "ModuleVariantSet"], list[Union[dict, "ModuleVariantSet"]]]] = empty_list()
+    connections: Optional[Union[Union[dict, "ModuleConnection"], list[Union[dict, "ModuleConnection"]]]] = empty_list()
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, ModuleNodeId):
+            self.id = ModuleNodeId(self.id)
+
+        if self._is_empty(self.label):
+            self.MissingRequiredField("label")
+        if not isinstance(self.label, str):
+            self.label = str(self.label)
+
+        if self.module_type is not None and not isinstance(self.module_type, ModuleTypeEnum):
+            self.module_type = ModuleTypeEnum(self.module_type)
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        if not isinstance(self.concepts, list):
+            self.concepts = [self.concepts] if self.concepts is not None else []
+        self.concepts = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.concepts]
+
+        if self.context is not None and not isinstance(self.context, ModuleContext):
+            self.context = ModuleContext(**as_dict(self.context))
+
+        if not isinstance(self.annotons, list):
+            self.annotons = [self.annotons] if self.annotons is not None else []
+        self.annotons = [v if isinstance(v, ModuleAnnoton) else ModuleAnnoton(**as_dict(v)) for v in self.annotons]
+
+        if not isinstance(self.parts, list):
+            self.parts = [self.parts] if self.parts is not None else []
+        self.parts = [v if isinstance(v, ModulePart) else ModulePart(**as_dict(v)) for v in self.parts]
+
+        if not isinstance(self.variant_sets, list):
+            self.variant_sets = [self.variant_sets] if self.variant_sets is not None else []
+        self.variant_sets = [v if isinstance(v, ModuleVariantSet) else ModuleVariantSet(**as_dict(v)) for v in self.variant_sets]
+
+        if not isinstance(self.connections, list):
+            self.connections = [self.connections] if self.connections is not None else []
+        self.connections = [v if isinstance(v, ModuleConnection) else ModuleConnection(**as_dict(v)) for v in self.connections]
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ModulePart(YAMLRoot):
+    """
+    A conjunctive part or step of a module node.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModulePart"]
+    class_class_curie: ClassVar[str] = "gene_review:ModulePart"
+    class_name: ClassVar[str] = "ModulePart"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModulePart
+
+    node: Union[dict, ModuleNode] = None
+    order: Optional[int] = None
+    role: Optional[str] = None
+    optional: Optional[Union[bool, Bool]] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.node):
+            self.MissingRequiredField("node")
+        if not isinstance(self.node, ModuleNode):
+            self.node = ModuleNode(**as_dict(self.node))
+
+        if self.order is not None and not isinstance(self.order, int):
+            self.order = int(self.order)
+
+        if self.role is not None and not isinstance(self.role, str):
+            self.role = str(self.role)
+
+        if self.optional is not None and not isinstance(self.optional, Bool):
+            self.optional = Bool(self.optional)
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ModuleVariantSet(YAMLRoot):
+    """
+    A set of alternative implementations for a module node or part. Variants may themselves contain parts, annotons,
+    connections, and nested variant sets.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModuleVariantSet"]
+    class_class_curie: ClassVar[str] = "gene_review:ModuleVariantSet"
+    class_name: ClassVar[str] = "ModuleVariantSet"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModuleVariantSet
+
+    id: str = None
+    variants: Union[dict[Union[str, ModuleNodeId], Union[dict, ModuleNode]], list[Union[dict, ModuleNode]]] = empty_dict()
+    label: Optional[str] = None
+    axis: Optional[str] = None
+    selection: Optional[Union[str, "VariantSelectionEnum"]] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, str):
+            self.id = str(self.id)
+
+        if self._is_empty(self.variants):
+            self.MissingRequiredField("variants")
+        self._normalize_inlined_as_list(slot_name="variants", slot_type=ModuleNode, key_name="id", keyed=True)
+
+        if self.label is not None and not isinstance(self.label, str):
+            self.label = str(self.label)
+
+        if self.axis is not None and not isinstance(self.axis, str):
+            self.axis = str(self.axis)
+
+        if self.selection is not None and not isinstance(self.selection, VariantSelectionEnum):
+            self.selection = VariantSelectionEnum(self.selection)
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ModuleAnnoton(YAMLRoot):
+    """
+    A leaf role assertion in a module. The participant may be a concrete gene or an abstract selector, and the
+    function/process/location fields are descriptor holders rather than direct GO annotation exports.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModuleAnnoton"]
+    class_class_curie: ClassVar[str] = "gene_review:ModuleAnnoton"
+    class_name: ClassVar[str] = "ModuleAnnoton"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModuleAnnoton
+
+    id: str = None
+    label: Optional[str] = None
+    participant: Optional[Union[dict, "ParticipantSelector"]] = None
+    function: Optional[Union[dict, MolecularFunctionDescriptor]] = None
+    processes: Optional[Union[Union[dict, BiologicalProcessDescriptor], list[Union[dict, BiologicalProcessDescriptor]]]] = empty_list()
+    locations: Optional[Union[Union[dict, CellularComponentDescriptor], list[Union[dict, CellularComponentDescriptor]]]] = empty_list()
+    role_description: Optional[str] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.id):
+            self.MissingRequiredField("id")
+        if not isinstance(self.id, str):
+            self.id = str(self.id)
+
+        if self.label is not None and not isinstance(self.label, str):
+            self.label = str(self.label)
+
+        if self.participant is not None and not isinstance(self.participant, ParticipantSelector):
+            self.participant = ParticipantSelector(**as_dict(self.participant))
+
+        if self.function is not None and not isinstance(self.function, MolecularFunctionDescriptor):
+            self.function = MolecularFunctionDescriptor(**as_dict(self.function))
+
+        if not isinstance(self.processes, list):
+            self.processes = [self.processes] if self.processes is not None else []
+        self.processes = [v if isinstance(v, BiologicalProcessDescriptor) else BiologicalProcessDescriptor(**as_dict(v)) for v in self.processes]
+
+        if not isinstance(self.locations, list):
+            self.locations = [self.locations] if self.locations is not None else []
+        self.locations = [v if isinstance(v, CellularComponentDescriptor) else CellularComponentDescriptor(**as_dict(v)) for v in self.locations]
+
+        if self.role_description is not None and not isinstance(self.role_description, str):
+            self.role_description = str(self.role_description)
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ParticipantSelector(YAMLRoot):
+    """
+    A selector for a concrete or abstract participant in a module annoton. This can ground to a gene, gene product,
+    complex, family, domain, ortholog, homolog, or any entity satisfying a functional/domain constraint.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ParticipantSelector"]
+    class_class_curie: ClassVar[str] = "gene_review:ParticipantSelector"
+    class_name: ClassVar[str] = "ParticipantSelector"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ParticipantSelector
+
+    selector_type: Union[str, "ParticipantSelectorTypeEnum"] = None
+    gene: Optional[Union[dict, GeneDescriptor]] = None
+    gene_product: Optional[Union[dict, GeneProductDescriptor]] = None
+    protein_complex: Optional[Union[dict, ProteinComplexDescriptor]] = None
+    family: Optional[Union[dict, FamilyDescriptor]] = None
+    domain: Optional[Union[dict, DomainDescriptor]] = None
+    homolog_of: Optional[Union[dict, GeneDescriptor]] = None
+    ortholog_of: Optional[Union[dict, GeneDescriptor]] = None
+    required_function: Optional[Union[dict, MolecularFunctionDescriptor]] = None
+    required_domain: Optional[Union[dict, DomainDescriptor]] = None
+    taxon: Optional[Union[dict, TaxonDescriptor]] = None
+    description: Optional[str] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.selector_type):
+            self.MissingRequiredField("selector_type")
+        if not isinstance(self.selector_type, ParticipantSelectorTypeEnum):
+            self.selector_type = ParticipantSelectorTypeEnum(self.selector_type)
+
+        if self.gene is not None and not isinstance(self.gene, GeneDescriptor):
+            self.gene = GeneDescriptor(**as_dict(self.gene))
+
+        if self.gene_product is not None and not isinstance(self.gene_product, GeneProductDescriptor):
+            self.gene_product = GeneProductDescriptor(**as_dict(self.gene_product))
+
+        if self.protein_complex is not None and not isinstance(self.protein_complex, ProteinComplexDescriptor):
+            self.protein_complex = ProteinComplexDescriptor(**as_dict(self.protein_complex))
+
+        if self.family is not None and not isinstance(self.family, FamilyDescriptor):
+            self.family = FamilyDescriptor(**as_dict(self.family))
+
+        if self.domain is not None and not isinstance(self.domain, DomainDescriptor):
+            self.domain = DomainDescriptor(**as_dict(self.domain))
+
+        if self.homolog_of is not None and not isinstance(self.homolog_of, GeneDescriptor):
+            self.homolog_of = GeneDescriptor(**as_dict(self.homolog_of))
+
+        if self.ortholog_of is not None and not isinstance(self.ortholog_of, GeneDescriptor):
+            self.ortholog_of = GeneDescriptor(**as_dict(self.ortholog_of))
+
+        if self.required_function is not None and not isinstance(self.required_function, MolecularFunctionDescriptor):
+            self.required_function = MolecularFunctionDescriptor(**as_dict(self.required_function))
+
+        if self.required_domain is not None and not isinstance(self.required_domain, DomainDescriptor):
+            self.required_domain = DomainDescriptor(**as_dict(self.required_domain))
+
+        if self.taxon is not None and not isinstance(self.taxon, TaxonDescriptor):
+            self.taxon = TaxonDescriptor(**as_dict(self.taxon))
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ModuleContext(YAMLRoot):
+    """
+    Context that applies to a module node, variant, annoton, or connection.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModuleContext"]
+    class_class_curie: ClassVar[str] = "gene_review:ModuleContext"
+    class_name: ClassVar[str] = "ModuleContext"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModuleContext
+
+    taxa: Optional[Union[Union[dict, TaxonDescriptor], list[Union[dict, TaxonDescriptor]]]] = empty_list()
+    cell_types: Optional[Union[Union[dict, CellTypeDescriptor], list[Union[dict, CellTypeDescriptor]]]] = empty_list()
+    anatomical_locations: Optional[Union[Union[dict, AnatomicalEntityDescriptor], list[Union[dict, AnatomicalEntityDescriptor]]]] = empty_list()
+    developmental_stages: Optional[Union[Union[dict, DevelopmentalStageDescriptor], list[Union[dict, DevelopmentalStageDescriptor]]]] = empty_list()
+    cellular_components: Optional[Union[Union[dict, CellularComponentDescriptor], list[Union[dict, CellularComponentDescriptor]]]] = empty_list()
+    conditions: Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]] = empty_list()
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if not isinstance(self.taxa, list):
+            self.taxa = [self.taxa] if self.taxa is not None else []
+        self.taxa = [v if isinstance(v, TaxonDescriptor) else TaxonDescriptor(**as_dict(v)) for v in self.taxa]
+
+        if not isinstance(self.cell_types, list):
+            self.cell_types = [self.cell_types] if self.cell_types is not None else []
+        self.cell_types = [v if isinstance(v, CellTypeDescriptor) else CellTypeDescriptor(**as_dict(v)) for v in self.cell_types]
+
+        if not isinstance(self.anatomical_locations, list):
+            self.anatomical_locations = [self.anatomical_locations] if self.anatomical_locations is not None else []
+        self.anatomical_locations = [v if isinstance(v, AnatomicalEntityDescriptor) else AnatomicalEntityDescriptor(**as_dict(v)) for v in self.anatomical_locations]
+
+        if not isinstance(self.developmental_stages, list):
+            self.developmental_stages = [self.developmental_stages] if self.developmental_stages is not None else []
+        self.developmental_stages = [v if isinstance(v, DevelopmentalStageDescriptor) else DevelopmentalStageDescriptor(**as_dict(v)) for v in self.developmental_stages]
+
+        if not isinstance(self.cellular_components, list):
+            self.cellular_components = [self.cellular_components] if self.cellular_components is not None else []
+        self.cellular_components = [v if isinstance(v, CellularComponentDescriptor) else CellularComponentDescriptor(**as_dict(v)) for v in self.cellular_components]
+
+        if not isinstance(self.conditions, list):
+            self.conditions = [self.conditions] if self.conditions is not None else []
+        self.conditions = [v if isinstance(v, Descriptor) else Descriptor(**as_dict(v)) for v in self.conditions]
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class ModuleConnection(YAMLRoot):
+    """
+    A connection between module nodes, annotons, or other named elements. Source and target are IDs scoped to the
+    module document.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["ModuleConnection"]
+    class_class_curie: ClassVar[str] = "gene_review:ModuleConnection"
+    class_name: ClassVar[str] = "ModuleConnection"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.ModuleConnection
+
+    source: str = None
+    target: str = None
+    connection_type: Optional[Union[str, "ModuleConnectionTypeEnum"]] = None
+    predicate: Optional[Union[dict, RelationDescriptor]] = None
+    description: Optional[str] = None
+    context: Optional[Union[dict, ModuleContext]] = None
+    evidence: Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]] = empty_list()
+    notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self._is_empty(self.source):
+            self.MissingRequiredField("source")
+        if not isinstance(self.source, str):
+            self.source = str(self.source)
+
+        if self._is_empty(self.target):
+            self.MissingRequiredField("target")
+        if not isinstance(self.target, str):
+            self.target = str(self.target)
+
+        if self.connection_type is not None and not isinstance(self.connection_type, ModuleConnectionTypeEnum):
+            self.connection_type = ModuleConnectionTypeEnum(self.connection_type)
+
+        if self.predicate is not None and not isinstance(self.predicate, RelationDescriptor):
+            self.predicate = RelationDescriptor(**as_dict(self.predicate))
+
+        if self.description is not None and not isinstance(self.description, str):
+            self.description = str(self.description)
+
+        if self.context is not None and not isinstance(self.context, ModuleContext):
+            self.context = ModuleContext(**as_dict(self.context))
+
+        if not isinstance(self.evidence, list):
+            self.evidence = [self.evidence] if self.evidence is not None else []
+        self.evidence = [v if isinstance(v, EvidenceItem) else EvidenceItem(**as_dict(v)) for v in self.evidence]
+
+        if self.notes is not None and not isinstance(self.notes, str):
+            self.notes = str(self.notes)
 
         super().__post_init__(**kwargs)
 
@@ -1728,6 +2624,145 @@ class PredictionAssessment(YAMLRoot):
 
 
 # Enumerations
+class ModuleTypeEnum(EnumDefinitionImpl):
+    """
+    Broad type of biological module node.
+    """
+    MODULE = PermissibleValue(
+        text="MODULE",
+        description="Generic or unspecified module.")
+    BIOLOGICAL_PROCESS = PermissibleValue(
+        text="BIOLOGICAL_PROCESS",
+        description="Biological-process-like module.")
+    MOLECULAR_FUNCTION = PermissibleValue(
+        text="MOLECULAR_FUNCTION",
+        description="Molecular-function-like module.")
+    METABOLIC_PATHWAY = PermissibleValue(
+        text="METABOLIC_PATHWAY",
+        description="Metabolic pathway or pathway segment.")
+    SIGNALING_PATHWAY = PermissibleValue(
+        text="SIGNALING_PATHWAY",
+        description="Signaling pathway or pathway segment.")
+    DEVELOPMENTAL_PROCESS = PermissibleValue(
+        text="DEVELOPMENTAL_PROCESS",
+        description="Developmental process, stage, or program.")
+    CELLULAR_COMPONENT = PermissibleValue(
+        text="CELLULAR_COMPONENT",
+        description="Cellular component or structure viewed as a module.")
+    ORGANELLE_LIFECYCLE = PermissibleValue(
+        text="ORGANELLE_LIFECYCLE",
+        description="Assembly, maintenance, operation, and turnover of an organelle.")
+    PROTEIN_COMPLEX = PermissibleValue(
+        text="PROTEIN_COMPLEX",
+        description="Protein complex or complex lifecycle.")
+    REACTION = PermissibleValue(
+        text="REACTION",
+        description="Reaction-like module step.")
+    TRANSPORT_STEP = PermissibleValue(
+        text="TRANSPORT_STEP",
+        description="Transport or translocation step.")
+    REGULATORY_STEP = PermissibleValue(
+        text="REGULATORY_STEP",
+        description="Regulatory or control step.")
+
+    _defn = EnumDefinition(
+        name="ModuleTypeEnum",
+        description="Broad type of biological module node.",
+    )
+
+class VariantSelectionEnum(EnumDefinitionImpl):
+    """
+    How variants in a variant set may be selected in a realization.
+    """
+    EXACTLY_ONE = PermissibleValue(
+        text="EXACTLY_ONE",
+        description="Exactly one variant applies.")
+    ONE_OR_MORE = PermissibleValue(
+        text="ONE_OR_MORE",
+        description="One or more variants may apply.")
+    ZERO_OR_MORE = PermissibleValue(
+        text="ZERO_OR_MORE",
+        description="Variants are optional and any number may apply.")
+
+    _defn = EnumDefinition(
+        name="VariantSelectionEnum",
+        description="How variants in a variant set may be selected in a realization.",
+    )
+
+class ParticipantSelectorTypeEnum(EnumDefinitionImpl):
+    """
+    How a module annoton participant is selected.
+    """
+    GENE = PermissibleValue(
+        text="GENE",
+        description="A concrete gene.")
+    GENE_PRODUCT = PermissibleValue(
+        text="GENE_PRODUCT",
+        description="A concrete gene product, protein, isoform, or form.")
+    PROTEIN_COMPLEX = PermissibleValue(
+        text="PROTEIN_COMPLEX",
+        description="A concrete protein-containing complex or subcomplex.")
+    FAMILY = PermissibleValue(
+        text="FAMILY",
+        description="Any member of a specified family or orthogroup.")
+    DOMAIN = PermissibleValue(
+        text="DOMAIN",
+        description="Any entity with a specified domain, motif, or site.")
+    ORTHOLOG_OF = PermissibleValue(
+        text="ORTHOLOG_OF",
+        description="Any ortholog of a specified gene.")
+    HOMOLOG_OF = PermissibleValue(
+        text="HOMOLOG_OF",
+        description="Any homolog of a specified gene.")
+    ANY_WITH_FUNCTION = PermissibleValue(
+        text="ANY_WITH_FUNCTION",
+        description="Any participant satisfying the specified molecular function descriptor.")
+    ANY_WITH_DOMAIN = PermissibleValue(
+        text="ANY_WITH_DOMAIN",
+        description="Any participant satisfying the specified domain descriptor.")
+    ANY_PARTICIPANT = PermissibleValue(
+        text="ANY_PARTICIPANT",
+        description="An unspecified participant.")
+
+    _defn = EnumDefinition(
+        name="ParticipantSelectorTypeEnum",
+        description="How a module annoton participant is selected.",
+    )
+
+class ModuleConnectionTypeEnum(EnumDefinitionImpl):
+    """
+    Common connection types between module elements.
+    """
+    PRECEDES = PermissibleValue(
+        text="PRECEDES",
+        description="The source occurs before the target.")
+    CAUSES = PermissibleValue(
+        text="CAUSES",
+        description="The source causally promotes or produces the target.")
+    POSITIVELY_REGULATES = PermissibleValue(
+        text="POSITIVELY_REGULATES",
+        description="The source positively regulates the target.")
+    NEGATIVELY_REGULATES = PermissibleValue(
+        text="NEGATIVELY_REGULATES",
+        description="The source negatively regulates the target.")
+    PROVIDES_INPUT_FOR = PermissibleValue(
+        text="PROVIDES_INPUT_FOR",
+        description="The source provides material, signal, or context used by the target.")
+    HAS_INPUT = PermissibleValue(
+        text="HAS_INPUT",
+        description="The target has the source as input.")
+    HAS_OUTPUT = PermissibleValue(
+        text="HAS_OUTPUT",
+        description="The source has the target as output.")
+    PART_OF = PermissibleValue(
+        text="PART_OF",
+        description="The source is part of the target.")
+
+    _defn = EnumDefinition(
+        name="ModuleConnectionTypeEnum",
+        description="Common connection types between module elements.",
+    )
+
 class EvidenceType(EnumDefinitionImpl):
     """
     Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
@@ -2852,6 +3887,309 @@ slots.functionalIsoformMapping__ids = Slot(uri=GENE_REVIEW.ids, name="functional
 slots.functionalIsoformMapping__residues = Slot(uri=GENE_REVIEW.residues, name="functionalIsoformMapping__residues", curie=GENE_REVIEW.curie('residues'),
                    model_uri=GENE_REVIEW.functionalIsoformMapping__residues, domain=None, range=Optional[str])
 
+slots.evidenceItem__source_id = Slot(uri=GENE_REVIEW.source_id, name="evidenceItem__source_id", curie=GENE_REVIEW.curie('source_id'),
+                   model_uri=GENE_REVIEW.evidenceItem__source_id, domain=None, range=str)
+
+slots.evidenceItem__title = Slot(uri=GENE_REVIEW.title, name="evidenceItem__title", curie=GENE_REVIEW.curie('title'),
+                   model_uri=GENE_REVIEW.evidenceItem__title, domain=None, range=Optional[str])
+
+slots.evidenceItem__statement = Slot(uri=GENE_REVIEW.statement, name="evidenceItem__statement", curie=GENE_REVIEW.curie('statement'),
+                   model_uri=GENE_REVIEW.evidenceItem__statement, domain=None, range=Optional[str])
+
+slots.evidenceItem__supporting_text = Slot(uri=GENE_REVIEW.supporting_text, name="evidenceItem__supporting_text", curie=GENE_REVIEW.curie('supporting_text'),
+                   model_uri=GENE_REVIEW.evidenceItem__supporting_text, domain=None, range=Optional[str])
+
+slots.evidenceItem__url = Slot(uri=GENE_REVIEW.url, name="evidenceItem__url", curie=GENE_REVIEW.curie('url'),
+                   model_uri=GENE_REVIEW.evidenceItem__url, domain=None, range=Optional[str])
+
+slots.evidenceItem__notes = Slot(uri=GENE_REVIEW.notes, name="evidenceItem__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.evidenceItem__notes, domain=None, range=Optional[str])
+
+slots.descriptor__preferred_term = Slot(uri=GENE_REVIEW.preferred_term, name="descriptor__preferred_term", curie=GENE_REVIEW.curie('preferred_term'),
+                   model_uri=GENE_REVIEW.descriptor__preferred_term, domain=None, range=str)
+
+slots.descriptor__description = Slot(uri=GENE_REVIEW.description, name="descriptor__description", curie=GENE_REVIEW.curie('description'),
+                   model_uri=GENE_REVIEW.descriptor__description, domain=None, range=Optional[str])
+
+slots.descriptor__term = Slot(uri=GENE_REVIEW.term, name="descriptor__term", curie=GENE_REVIEW.curie('term'),
+                   model_uri=GENE_REVIEW.descriptor__term, domain=None, range=Optional[Union[dict, Term]])
+
+slots.descriptor__evidence = Slot(uri=GENE_REVIEW.evidence, name="descriptor__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.descriptor__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.descriptor__notes = Slot(uri=GENE_REVIEW.notes, name="descriptor__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.descriptor__notes, domain=None, range=Optional[str])
+
+slots.familyDescriptor__representative_members = Slot(uri=GENE_REVIEW.representative_members, name="familyDescriptor__representative_members", curie=GENE_REVIEW.curie('representative_members'),
+                   model_uri=GENE_REVIEW.familyDescriptor__representative_members, domain=None, range=Optional[Union[Union[dict, GeneProductDescriptor], list[Union[dict, GeneProductDescriptor]]]])
+
+slots.proteinComplexDescriptor__active_units = Slot(uri=GENE_REVIEW.active_units, name="proteinComplexDescriptor__active_units", curie=GENE_REVIEW.curie('active_units'),
+                   model_uri=GENE_REVIEW.proteinComplexDescriptor__active_units, domain=None, range=Optional[Union[Union[dict, ComplexUnit], list[Union[dict, ComplexUnit]]]])
+
+slots.complexUnit__id = Slot(uri=GENE_REVIEW.id, name="complexUnit__id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.complexUnit__id, domain=None, range=Optional[str])
+
+slots.complexUnit__label = Slot(uri=GENE_REVIEW.label, name="complexUnit__label", curie=GENE_REVIEW.curie('label'),
+                   model_uri=GENE_REVIEW.complexUnit__label, domain=None, range=Optional[str])
+
+slots.complexUnit__participant = Slot(uri=GENE_REVIEW.participant, name="complexUnit__participant", curie=GENE_REVIEW.curie('participant'),
+                   model_uri=GENE_REVIEW.complexUnit__participant, domain=None, range=Optional[Union[dict, ParticipantSelector]])
+
+slots.complexUnit__role = Slot(uri=GENE_REVIEW.role, name="complexUnit__role", curie=GENE_REVIEW.curie('role'),
+                   model_uri=GENE_REVIEW.complexUnit__role, domain=None, range=Optional[str])
+
+slots.complexUnit__stoichiometry = Slot(uri=GENE_REVIEW.stoichiometry, name="complexUnit__stoichiometry", curie=GENE_REVIEW.curie('stoichiometry'),
+                   model_uri=GENE_REVIEW.complexUnit__stoichiometry, domain=None, range=Optional[str])
+
+slots.complexUnit__function = Slot(uri=GENE_REVIEW.function, name="complexUnit__function", curie=GENE_REVIEW.curie('function'),
+                   model_uri=GENE_REVIEW.complexUnit__function, domain=None, range=Optional[Union[dict, MolecularFunctionDescriptor]])
+
+slots.complexUnit__evidence = Slot(uri=GENE_REVIEW.evidence, name="complexUnit__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.complexUnit__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.complexUnit__notes = Slot(uri=GENE_REVIEW.notes, name="complexUnit__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.complexUnit__notes, domain=None, range=Optional[str])
+
+slots.molecularFunctionDescriptor__substrates = Slot(uri=GENE_REVIEW.substrates, name="molecularFunctionDescriptor__substrates", curie=GENE_REVIEW.curie('substrates'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__substrates, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.molecularFunctionDescriptor__products = Slot(uri=GENE_REVIEW.products, name="molecularFunctionDescriptor__products", curie=GENE_REVIEW.curie('products'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__products, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.molecularFunctionDescriptor__cofactors = Slot(uri=GENE_REVIEW.cofactors, name="molecularFunctionDescriptor__cofactors", curie=GENE_REVIEW.curie('cofactors'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__cofactors, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.molecularFunctionDescriptor__targets = Slot(uri=GENE_REVIEW.targets, name="molecularFunctionDescriptor__targets", curie=GENE_REVIEW.curie('targets'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__targets, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.molecularFunctionDescriptor__cargo = Slot(uri=GENE_REVIEW.cargo, name="molecularFunctionDescriptor__cargo", curie=GENE_REVIEW.curie('cargo'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__cargo, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.molecularFunctionDescriptor__source_location = Slot(uri=GENE_REVIEW.source_location, name="molecularFunctionDescriptor__source_location", curie=GENE_REVIEW.curie('source_location'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__source_location, domain=None, range=Optional[Union[dict, CellularComponentDescriptor]])
+
+slots.molecularFunctionDescriptor__destination_location = Slot(uri=GENE_REVIEW.destination_location, name="molecularFunctionDescriptor__destination_location", curie=GENE_REVIEW.curie('destination_location'),
+                   model_uri=GENE_REVIEW.molecularFunctionDescriptor__destination_location, domain=None, range=Optional[Union[dict, CellularComponentDescriptor]])
+
+slots.biologicalProcessDescriptor__inputs = Slot(uri=GENE_REVIEW.inputs, name="biologicalProcessDescriptor__inputs", curie=GENE_REVIEW.curie('inputs'),
+                   model_uri=GENE_REVIEW.biologicalProcessDescriptor__inputs, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.biologicalProcessDescriptor__outputs = Slot(uri=GENE_REVIEW.outputs, name="biologicalProcessDescriptor__outputs", curie=GENE_REVIEW.curie('outputs'),
+                   model_uri=GENE_REVIEW.biologicalProcessDescriptor__outputs, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.biologicalProcessDescriptor__occurs_in = Slot(uri=GENE_REVIEW.occurs_in, name="biologicalProcessDescriptor__occurs_in", curie=GENE_REVIEW.curie('occurs_in'),
+                   model_uri=GENE_REVIEW.biologicalProcessDescriptor__occurs_in, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.biologicalProcessDescriptor__starts_with = Slot(uri=GENE_REVIEW.starts_with, name="biologicalProcessDescriptor__starts_with", curie=GENE_REVIEW.curie('starts_with'),
+                   model_uri=GENE_REVIEW.biologicalProcessDescriptor__starts_with, domain=None, range=Optional[Union[dict, Descriptor]])
+
+slots.biologicalProcessDescriptor__ends_with = Slot(uri=GENE_REVIEW.ends_with, name="biologicalProcessDescriptor__ends_with", curie=GENE_REVIEW.curie('ends_with'),
+                   model_uri=GENE_REVIEW.biologicalProcessDescriptor__ends_with, domain=None, range=Optional[Union[dict, Descriptor]])
+
+slots.moduleReview__status = Slot(uri=GENE_REVIEW.status, name="moduleReview__status", curie=GENE_REVIEW.curie('status'),
+                   model_uri=GENE_REVIEW.moduleReview__status, domain=None, range=Optional[str])
+
+slots.moduleReview__module = Slot(uri=GENE_REVIEW.module, name="moduleReview__module", curie=GENE_REVIEW.curie('module'),
+                   model_uri=GENE_REVIEW.moduleReview__module, domain=None, range=Union[dict, ModuleNode])
+
+slots.moduleReview__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleReview__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.moduleReview__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.moduleReview__notes = Slot(uri=GENE_REVIEW.notes, name="moduleReview__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.moduleReview__notes, domain=None, range=Optional[str])
+
+slots.moduleNode__id = Slot(uri=GENE_REVIEW.id, name="moduleNode__id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.moduleNode__id, domain=None, range=URIRef)
+
+slots.moduleNode__label = Slot(uri=GENE_REVIEW.label, name="moduleNode__label", curie=GENE_REVIEW.curie('label'),
+                   model_uri=GENE_REVIEW.moduleNode__label, domain=None, range=str)
+
+slots.moduleNode__module_type = Slot(uri=GENE_REVIEW.module_type, name="moduleNode__module_type", curie=GENE_REVIEW.curie('module_type'),
+                   model_uri=GENE_REVIEW.moduleNode__module_type, domain=None, range=Optional[Union[str, "ModuleTypeEnum"]])
+
+slots.moduleNode__description = Slot(uri=GENE_REVIEW.description, name="moduleNode__description", curie=GENE_REVIEW.curie('description'),
+                   model_uri=GENE_REVIEW.moduleNode__description, domain=None, range=Optional[str])
+
+slots.moduleNode__concepts = Slot(uri=GENE_REVIEW.concepts, name="moduleNode__concepts", curie=GENE_REVIEW.curie('concepts'),
+                   model_uri=GENE_REVIEW.moduleNode__concepts, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.moduleNode__context = Slot(uri=GENE_REVIEW.context, name="moduleNode__context", curie=GENE_REVIEW.curie('context'),
+                   model_uri=GENE_REVIEW.moduleNode__context, domain=None, range=Optional[Union[dict, ModuleContext]])
+
+slots.moduleNode__annotons = Slot(uri=GENE_REVIEW.annotons, name="moduleNode__annotons", curie=GENE_REVIEW.curie('annotons'),
+                   model_uri=GENE_REVIEW.moduleNode__annotons, domain=None, range=Optional[Union[Union[dict, ModuleAnnoton], list[Union[dict, ModuleAnnoton]]]])
+
+slots.moduleNode__parts = Slot(uri=GENE_REVIEW.parts, name="moduleNode__parts", curie=GENE_REVIEW.curie('parts'),
+                   model_uri=GENE_REVIEW.moduleNode__parts, domain=None, range=Optional[Union[Union[dict, ModulePart], list[Union[dict, ModulePart]]]])
+
+slots.moduleNode__variant_sets = Slot(uri=GENE_REVIEW.variant_sets, name="moduleNode__variant_sets", curie=GENE_REVIEW.curie('variant_sets'),
+                   model_uri=GENE_REVIEW.moduleNode__variant_sets, domain=None, range=Optional[Union[Union[dict, ModuleVariantSet], list[Union[dict, ModuleVariantSet]]]])
+
+slots.moduleNode__connections = Slot(uri=GENE_REVIEW.connections, name="moduleNode__connections", curie=GENE_REVIEW.curie('connections'),
+                   model_uri=GENE_REVIEW.moduleNode__connections, domain=None, range=Optional[Union[Union[dict, ModuleConnection], list[Union[dict, ModuleConnection]]]])
+
+slots.moduleNode__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleNode__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.moduleNode__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.moduleNode__notes = Slot(uri=GENE_REVIEW.notes, name="moduleNode__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.moduleNode__notes, domain=None, range=Optional[str])
+
+slots.modulePart__order = Slot(uri=GENE_REVIEW.order, name="modulePart__order", curie=GENE_REVIEW.curie('order'),
+                   model_uri=GENE_REVIEW.modulePart__order, domain=None, range=Optional[int])
+
+slots.modulePart__role = Slot(uri=GENE_REVIEW.role, name="modulePart__role", curie=GENE_REVIEW.curie('role'),
+                   model_uri=GENE_REVIEW.modulePart__role, domain=None, range=Optional[str])
+
+slots.modulePart__optional = Slot(uri=GENE_REVIEW.optional, name="modulePart__optional", curie=GENE_REVIEW.curie('optional'),
+                   model_uri=GENE_REVIEW.modulePart__optional, domain=None, range=Optional[Union[bool, Bool]])
+
+slots.modulePart__node = Slot(uri=GENE_REVIEW.node, name="modulePart__node", curie=GENE_REVIEW.curie('node'),
+                   model_uri=GENE_REVIEW.modulePart__node, domain=None, range=Union[dict, ModuleNode])
+
+slots.modulePart__evidence = Slot(uri=GENE_REVIEW.evidence, name="modulePart__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.modulePart__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.modulePart__notes = Slot(uri=GENE_REVIEW.notes, name="modulePart__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.modulePart__notes, domain=None, range=Optional[str])
+
+slots.moduleVariantSet__id = Slot(uri=GENE_REVIEW.id, name="moduleVariantSet__id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__id, domain=None, range=str)
+
+slots.moduleVariantSet__label = Slot(uri=GENE_REVIEW.label, name="moduleVariantSet__label", curie=GENE_REVIEW.curie('label'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__label, domain=None, range=Optional[str])
+
+slots.moduleVariantSet__axis = Slot(uri=GENE_REVIEW.axis, name="moduleVariantSet__axis", curie=GENE_REVIEW.curie('axis'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__axis, domain=None, range=Optional[str])
+
+slots.moduleVariantSet__selection = Slot(uri=GENE_REVIEW.selection, name="moduleVariantSet__selection", curie=GENE_REVIEW.curie('selection'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__selection, domain=None, range=Optional[Union[str, "VariantSelectionEnum"]])
+
+slots.moduleVariantSet__variants = Slot(uri=GENE_REVIEW.variants, name="moduleVariantSet__variants", curie=GENE_REVIEW.curie('variants'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__variants, domain=None, range=Union[dict[Union[str, ModuleNodeId], Union[dict, ModuleNode]], list[Union[dict, ModuleNode]]])
+
+slots.moduleVariantSet__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleVariantSet__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.moduleVariantSet__notes = Slot(uri=GENE_REVIEW.notes, name="moduleVariantSet__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.moduleVariantSet__notes, domain=None, range=Optional[str])
+
+slots.moduleAnnoton__id = Slot(uri=GENE_REVIEW.id, name="moduleAnnoton__id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__id, domain=None, range=str)
+
+slots.moduleAnnoton__label = Slot(uri=GENE_REVIEW.label, name="moduleAnnoton__label", curie=GENE_REVIEW.curie('label'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__label, domain=None, range=Optional[str])
+
+slots.moduleAnnoton__participant = Slot(uri=GENE_REVIEW.participant, name="moduleAnnoton__participant", curie=GENE_REVIEW.curie('participant'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__participant, domain=None, range=Optional[Union[dict, ParticipantSelector]])
+
+slots.moduleAnnoton__function = Slot(uri=GENE_REVIEW.function, name="moduleAnnoton__function", curie=GENE_REVIEW.curie('function'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__function, domain=None, range=Optional[Union[dict, MolecularFunctionDescriptor]])
+
+slots.moduleAnnoton__processes = Slot(uri=GENE_REVIEW.processes, name="moduleAnnoton__processes", curie=GENE_REVIEW.curie('processes'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__processes, domain=None, range=Optional[Union[Union[dict, BiologicalProcessDescriptor], list[Union[dict, BiologicalProcessDescriptor]]]])
+
+slots.moduleAnnoton__locations = Slot(uri=GENE_REVIEW.locations, name="moduleAnnoton__locations", curie=GENE_REVIEW.curie('locations'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__locations, domain=None, range=Optional[Union[Union[dict, CellularComponentDescriptor], list[Union[dict, CellularComponentDescriptor]]]])
+
+slots.moduleAnnoton__role_description = Slot(uri=GENE_REVIEW.role_description, name="moduleAnnoton__role_description", curie=GENE_REVIEW.curie('role_description'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__role_description, domain=None, range=Optional[str])
+
+slots.moduleAnnoton__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleAnnoton__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.moduleAnnoton__notes = Slot(uri=GENE_REVIEW.notes, name="moduleAnnoton__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.moduleAnnoton__notes, domain=None, range=Optional[str])
+
+slots.participantSelector__selector_type = Slot(uri=GENE_REVIEW.selector_type, name="participantSelector__selector_type", curie=GENE_REVIEW.curie('selector_type'),
+                   model_uri=GENE_REVIEW.participantSelector__selector_type, domain=None, range=Union[str, "ParticipantSelectorTypeEnum"])
+
+slots.participantSelector__gene = Slot(uri=GENE_REVIEW.gene, name="participantSelector__gene", curie=GENE_REVIEW.curie('gene'),
+                   model_uri=GENE_REVIEW.participantSelector__gene, domain=None, range=Optional[Union[dict, GeneDescriptor]])
+
+slots.participantSelector__gene_product = Slot(uri=GENE_REVIEW.gene_product, name="participantSelector__gene_product", curie=GENE_REVIEW.curie('gene_product'),
+                   model_uri=GENE_REVIEW.participantSelector__gene_product, domain=None, range=Optional[Union[dict, GeneProductDescriptor]])
+
+slots.participantSelector__protein_complex = Slot(uri=GENE_REVIEW.protein_complex, name="participantSelector__protein_complex", curie=GENE_REVIEW.curie('protein_complex'),
+                   model_uri=GENE_REVIEW.participantSelector__protein_complex, domain=None, range=Optional[Union[dict, ProteinComplexDescriptor]])
+
+slots.participantSelector__family = Slot(uri=GENE_REVIEW.family, name="participantSelector__family", curie=GENE_REVIEW.curie('family'),
+                   model_uri=GENE_REVIEW.participantSelector__family, domain=None, range=Optional[Union[dict, FamilyDescriptor]])
+
+slots.participantSelector__domain = Slot(uri=GENE_REVIEW.domain, name="participantSelector__domain", curie=GENE_REVIEW.curie('domain'),
+                   model_uri=GENE_REVIEW.participantSelector__domain, domain=None, range=Optional[Union[dict, DomainDescriptor]])
+
+slots.participantSelector__homolog_of = Slot(uri=GENE_REVIEW.homolog_of, name="participantSelector__homolog_of", curie=GENE_REVIEW.curie('homolog_of'),
+                   model_uri=GENE_REVIEW.participantSelector__homolog_of, domain=None, range=Optional[Union[dict, GeneDescriptor]])
+
+slots.participantSelector__ortholog_of = Slot(uri=GENE_REVIEW.ortholog_of, name="participantSelector__ortholog_of", curie=GENE_REVIEW.curie('ortholog_of'),
+                   model_uri=GENE_REVIEW.participantSelector__ortholog_of, domain=None, range=Optional[Union[dict, GeneDescriptor]])
+
+slots.participantSelector__required_function = Slot(uri=GENE_REVIEW.required_function, name="participantSelector__required_function", curie=GENE_REVIEW.curie('required_function'),
+                   model_uri=GENE_REVIEW.participantSelector__required_function, domain=None, range=Optional[Union[dict, MolecularFunctionDescriptor]])
+
+slots.participantSelector__required_domain = Slot(uri=GENE_REVIEW.required_domain, name="participantSelector__required_domain", curie=GENE_REVIEW.curie('required_domain'),
+                   model_uri=GENE_REVIEW.participantSelector__required_domain, domain=None, range=Optional[Union[dict, DomainDescriptor]])
+
+slots.participantSelector__taxon = Slot(uri=GENE_REVIEW.taxon, name="participantSelector__taxon", curie=GENE_REVIEW.curie('taxon'),
+                   model_uri=GENE_REVIEW.participantSelector__taxon, domain=None, range=Optional[Union[dict, TaxonDescriptor]])
+
+slots.participantSelector__description = Slot(uri=GENE_REVIEW.description, name="participantSelector__description", curie=GENE_REVIEW.curie('description'),
+                   model_uri=GENE_REVIEW.participantSelector__description, domain=None, range=Optional[str])
+
+slots.participantSelector__evidence = Slot(uri=GENE_REVIEW.evidence, name="participantSelector__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.participantSelector__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.participantSelector__notes = Slot(uri=GENE_REVIEW.notes, name="participantSelector__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.participantSelector__notes, domain=None, range=Optional[str])
+
+slots.moduleContext__taxa = Slot(uri=GENE_REVIEW.taxa, name="moduleContext__taxa", curie=GENE_REVIEW.curie('taxa'),
+                   model_uri=GENE_REVIEW.moduleContext__taxa, domain=None, range=Optional[Union[Union[dict, TaxonDescriptor], list[Union[dict, TaxonDescriptor]]]])
+
+slots.moduleContext__cell_types = Slot(uri=GENE_REVIEW.cell_types, name="moduleContext__cell_types", curie=GENE_REVIEW.curie('cell_types'),
+                   model_uri=GENE_REVIEW.moduleContext__cell_types, domain=None, range=Optional[Union[Union[dict, CellTypeDescriptor], list[Union[dict, CellTypeDescriptor]]]])
+
+slots.moduleContext__anatomical_locations = Slot(uri=GENE_REVIEW.anatomical_locations, name="moduleContext__anatomical_locations", curie=GENE_REVIEW.curie('anatomical_locations'),
+                   model_uri=GENE_REVIEW.moduleContext__anatomical_locations, domain=None, range=Optional[Union[Union[dict, AnatomicalEntityDescriptor], list[Union[dict, AnatomicalEntityDescriptor]]]])
+
+slots.moduleContext__developmental_stages = Slot(uri=GENE_REVIEW.developmental_stages, name="moduleContext__developmental_stages", curie=GENE_REVIEW.curie('developmental_stages'),
+                   model_uri=GENE_REVIEW.moduleContext__developmental_stages, domain=None, range=Optional[Union[Union[dict, DevelopmentalStageDescriptor], list[Union[dict, DevelopmentalStageDescriptor]]]])
+
+slots.moduleContext__cellular_components = Slot(uri=GENE_REVIEW.cellular_components, name="moduleContext__cellular_components", curie=GENE_REVIEW.curie('cellular_components'),
+                   model_uri=GENE_REVIEW.moduleContext__cellular_components, domain=None, range=Optional[Union[Union[dict, CellularComponentDescriptor], list[Union[dict, CellularComponentDescriptor]]]])
+
+slots.moduleContext__conditions = Slot(uri=GENE_REVIEW.conditions, name="moduleContext__conditions", curie=GENE_REVIEW.curie('conditions'),
+                   model_uri=GENE_REVIEW.moduleContext__conditions, domain=None, range=Optional[Union[Union[dict, Descriptor], list[Union[dict, Descriptor]]]])
+
+slots.moduleContext__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleContext__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.moduleContext__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.moduleContext__notes = Slot(uri=GENE_REVIEW.notes, name="moduleContext__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.moduleContext__notes, domain=None, range=Optional[str])
+
+slots.moduleConnection__source = Slot(uri=GENE_REVIEW.source, name="moduleConnection__source", curie=GENE_REVIEW.curie('source'),
+                   model_uri=GENE_REVIEW.moduleConnection__source, domain=None, range=str)
+
+slots.moduleConnection__target = Slot(uri=GENE_REVIEW.target, name="moduleConnection__target", curie=GENE_REVIEW.curie('target'),
+                   model_uri=GENE_REVIEW.moduleConnection__target, domain=None, range=str)
+
+slots.moduleConnection__connection_type = Slot(uri=GENE_REVIEW.connection_type, name="moduleConnection__connection_type", curie=GENE_REVIEW.curie('connection_type'),
+                   model_uri=GENE_REVIEW.moduleConnection__connection_type, domain=None, range=Optional[Union[str, "ModuleConnectionTypeEnum"]])
+
+slots.moduleConnection__predicate = Slot(uri=GENE_REVIEW.predicate, name="moduleConnection__predicate", curie=GENE_REVIEW.curie('predicate'),
+                   model_uri=GENE_REVIEW.moduleConnection__predicate, domain=None, range=Optional[Union[dict, RelationDescriptor]])
+
+slots.moduleConnection__description = Slot(uri=GENE_REVIEW.description, name="moduleConnection__description", curie=GENE_REVIEW.curie('description'),
+                   model_uri=GENE_REVIEW.moduleConnection__description, domain=None, range=Optional[str])
+
+slots.moduleConnection__context = Slot(uri=GENE_REVIEW.context, name="moduleConnection__context", curie=GENE_REVIEW.curie('context'),
+                   model_uri=GENE_REVIEW.moduleConnection__context, domain=None, range=Optional[Union[dict, ModuleContext]])
+
+slots.moduleConnection__evidence = Slot(uri=GENE_REVIEW.evidence, name="moduleConnection__evidence", curie=GENE_REVIEW.curie('evidence'),
+                   model_uri=GENE_REVIEW.moduleConnection__evidence, domain=None, range=Optional[Union[Union[dict, EvidenceItem], list[Union[dict, EvidenceItem]]]])
+
+slots.moduleConnection__notes = Slot(uri=GENE_REVIEW.notes, name="moduleConnection__notes", curie=GENE_REVIEW.curie('notes'),
+                   model_uri=GENE_REVIEW.moduleConnection__notes, domain=None, range=Optional[str])
+
 slots.coreFunction__description = Slot(uri=GENE_REVIEW.description, name="coreFunction__description", curie=GENE_REVIEW.curie('description'),
                    model_uri=GENE_REVIEW.coreFunction__description, domain=None, range=Optional[str])
 
@@ -3256,6 +4594,9 @@ slots.Term_id = Slot(uri=GENE_REVIEW.id, name="Term_id", curie=GENE_REVIEW.curie
 
 slots.Term_label = Slot(uri=RDFS.label, name="Term_label", curie=RDFS.curie('label'),
                    model_uri=GENE_REVIEW.Term_label, domain=Term, range=str)
+
+slots.Reference_id = Slot(uri=GENE_REVIEW.id, name="Reference_id", curie=GENE_REVIEW.curie('id'),
+                   model_uri=GENE_REVIEW.Reference_id, domain=Reference, range=Union[str, ReferenceId])
 
 slots.CoreFunction_description = Slot(uri=DCTERMS.description, name="CoreFunction_description", curie=DCTERMS.curie('description'),
                    model_uri=GENE_REVIEW.CoreFunction_description, domain=CoreFunction, range=Optional[str])

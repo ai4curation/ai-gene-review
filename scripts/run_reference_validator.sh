@@ -12,6 +12,29 @@
 
 set -euo pipefail
 
+run_lrv() {
+    set +e
+    output="$(uv run linkml-reference-validator "$@" 2>&1)"
+    exit_code=$?
+    set -e
+
+    printf '%s\n' "$output"
+
+    if [[ $exit_code -eq 0 ]]; then
+        return 0
+    fi
+
+    # linkml-reference-validator currently exits nonzero when it emits warning
+    # results. Keep warning-only results advisory so unknown/unfetchable
+    # references do not block validation.
+    if grep -Eq '^[[:space:]]*\[WARN(ING)?\]' <<<"$output" \
+        && ! grep -Eq '^[[:space:]]*\[ERROR\]|Traceback|^Error:' <<<"$output"; then
+        return 0
+    fi
+
+    return "$exit_code"
+}
+
 # If the first two args are "validate data", pre-process the data file
 if [[ $# -ge 3 && "$1" == "validate" && "$2" == "data" ]]; then
     data_file="$3"
@@ -45,7 +68,7 @@ with open(sys.argv[2], 'w') as f:
     yaml.dump(data, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 " "$data_file" "$tmp_file"
 
-    exec uv run linkml-reference-validator validate data "$tmp_file" "$@"
+    run_lrv validate data "$tmp_file" "$@"
 else
-    exec uv run linkml-reference-validator "$@"
+    run_lrv "$@"
 fi

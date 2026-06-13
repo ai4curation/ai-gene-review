@@ -170,7 +170,7 @@ def main() -> None:
     print(f"  with UniProt seeds mappable to family subfamilies: "
           f"{sum(1 for r in rows if r['n_seed_in_fam'])}")
     print(f"  CROSS_SUBFAMILY (seeds only from other subfamilies): {len(cross)}")
-    print(f"\nCROSS_SUBFAMILY propagations (the review targets):")
+    print("\nCROSS_SUBFAMILY propagations (the review targets):")
     for r in sorted(cross, key=lambda r: (r["gene"], r["go_id"])):
         print(f"  {r['gene']:7s} {r['go_id']} {r['go_label'][:42]:42s} "
               f"[{r['aspect'][:4]}] our={r['our_action']:22s} "

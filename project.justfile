@@ -296,6 +296,29 @@ term-deep-research-cyberian concept *args="":
 term-deep-research-codex concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
 
+# Module deep research (targets module YAMLs and writes beside the YAML by default)
+# Examples:
+#   just module-deep-research-perplexity peroxisome-lifecycle
+#   just module-deep-research-openai modules/gluconeogenesis.yaml
+#   just module-deep-research-perplexity-lite peroxisome-lifecycle --dry-run
+module-deep-research-openai module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" openai {{args}}
+
+module-deep-research-perplexity module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity {{args}}
+
+module-deep-research-perplexity-lite module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity-lite {{args}}
+
+module-deep-research-falcon module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" falcon {{args}}
+
+module-deep-research-cyberian module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" cyberian {{args}}
+
+module-deep-research-codex module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
@@ -407,20 +430,29 @@ validate-files files:
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
 
+# Validate module YAML files against the ModuleReview schema
+validate-modules:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No module YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Validating $f"
+        uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
+    done <<< "$files"
+    exit "$rc"
+
 # Full validation of a single gene file (schema + terms + references + best practices)
 [group('QC')]
 validate organism gene:
     #!/usr/bin/env bash
     set -e
     file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
-    echo "Schema validation..."
-    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$file"
-    echo "Term validation..."
-    {{term_validator}} validate-data "$file" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
-    echo "Reference validation..."
-    {{ref_validator}} validate data "$file" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
-    echo "Best practices validation..."
-    uv run ai-gene-review validate --verbose "$file"
+    uv run ai-gene-review validate --verbose --terms "$file"
     echo ""
     echo "Checking PMID references in markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
@@ -519,10 +551,9 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
-# Validate all gene review files (schema + terms + best practices)
-# Uses batch mode for schema and term validation (single process, fast).
-# Reference validation is per-file and slow (~10s each); use
-# validate-references-all or single-file `just validate` for that.
+# Validate all gene review files (schema + references + best practices).
+# Uses batch mode for schema and advisory term validation, then the CLI for
+# per-file reference and best-practices checks.
 [group('QC')]
 validate-all:
     #!/usr/bin/env bash
@@ -535,9 +566,9 @@ validate-all:
     # for now (pre-existing issues on main). Use just validate-terms for strict checks.
     uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
     echo ""
-    echo "Best practices validation..."
+    echo "Reference and best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --no-schema --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
@@ -857,6 +888,14 @@ render-projects:
 # Render a specific project markdown to HTML
 render-project project:
     uv run ai-gene-review render-projects projects/{{project}}.md
+
+# Render module YAML files to HTML with an inline tree browser
+render-modules:
+    uv run ai-gene-review render-modules --all
+
+# Render a specific module YAML to HTML
+render-module module:
+    uv run ai-gene-review render-modules {{module}}
 
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
 # DEPENDENCIES:
