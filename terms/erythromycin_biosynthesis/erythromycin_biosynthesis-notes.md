@@ -29,6 +29,11 @@ pathways and post-PKS tailoring:
 
 Self-resistance is provided by **ErmE** (23S rRNA N6-adenine methyltransferase).
 
+> **Structured module:** a machine-readable, schema-validated decomposition of this pathway
+> (genes grounded to UniProt, ordered reaction steps with substrates/products, sugar-pathway
+> submodules, and connections) is in **`modules/erythromycin_biosynthesis.yaml`** (validated with
+> `linkml-validate -C ModuleReview`). These prose notes are the human-readable companion.
+
 ## 2. How erythromycin biosynthesis is represented in GO (and MIBiG)
 
 - **GO biological process:** `GO:1901115` *erythromycin biosynthetic process* (child of
