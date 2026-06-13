@@ -81,7 +81,7 @@ def cua_report(structure: Structure, label: str) -> None:
     cua = []  # coppers with at least one cysteine-SG ligand
     for cu in coppers:
         ligs = copper_ligands(cu, ns)
-        if any(l["res"] == "CYS" and l["atom"] == "SG" for l in ligs):
+        if any(ligand["res"] == "CYS" and ligand["atom"] == "SG" for ligand in ligs):
             cua.append((cu, ligs))
 
     print(f"\n=== {label} ===")
@@ -99,30 +99,43 @@ def cua_report(structure: Structure, label: str) -> None:
 
     for cu, ligs in cua:
         ch = cu.parent.parent.id
-        cys = [l for l in ligs if l["res"] == "CYS" and l["atom"] == "SG"]
-        his = [l for l in ligs if l["res"] == "HIS"]
-        met = [l for l in ligs if l["res"] == "MET"]
+        cys = [
+            ligand
+            for ligand in ligs
+            if ligand["res"] == "CYS" and ligand["atom"] == "SG"
+        ]
+        his = [ligand for ligand in ligs if ligand["res"] == "HIS"]
+        met = [ligand for ligand in ligs if ligand["res"] == "MET"]
         print(f"  Cu (chain {ch}):")
-        print(f"    Cys-SG: {[(l['chain']+str(l['resnum']), l['d']) for l in cys]}")
+        print(
+            f"    Cys-SG: "
+            f"{[(ligand['chain'] + str(ligand['resnum']), ligand['d']) for ligand in cys]}"
+        )
         if his:
-            print(f"    His-N : {[(l['chain']+str(l['resnum'])+'/'+l['atom'], l['d']) for l in his]}")
+            print(
+                f"    His-N : "
+                f"{[(ligand['chain'] + str(ligand['resnum']) + '/' + ligand['atom'], ligand['d']) for ligand in his]}"
+            )
         if met:
-            print(f"    Met-S : {[(l['chain']+str(l['resnum']), l['d']) for l in met]}")
+            print(
+                f"    Met-S : "
+                f"{[(ligand['chain'] + str(ligand['resnum']), ligand['d']) for ligand in met]}"
+            )
 
     # bridging cysteines: SG-SG distance between the two cysteines shared by CuA
     sgs = []
     seen = set()
     for cu, ligs in cua:
-        for l in ligs:
-            if l["res"] == "CYS" and l["atom"] == "SG":
-                key = (l["chain"], l["resnum"])
+        for ligand in ligs:
+            if ligand["res"] == "CYS" and ligand["atom"] == "SG":
+                key = (ligand["chain"], ligand["resnum"])
                 if key not in seen:
                     seen.add(key)
                     # find the actual atom object
                     for n in ns.search(cu.coord, LIG_RADIUS):
                         if (n.parent.resname == "CYS" and n.name == "SG"
-                                and n.parent.parent.id == l["chain"]
-                                and n.parent.id[1] == l["resnum"]):
+                                and n.parent.parent.id == ligand["chain"]
+                                and n.parent.id[1] == ligand["resnum"]):
                             sgs.append(n)
                             break
     if len(sgs) >= 2:

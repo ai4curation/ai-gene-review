@@ -62,6 +62,32 @@ mypy:
 format:
 	uv run ruff check .
 
+# Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
+# (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
+# linkml-term-validator on the regenerated nested term-tuple file.
+validate-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/ANTIMICROBIAL_RESISTANCE/*.sssom.yaml
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
+	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
+
+# Apply the ARO->GO mapping: chain UniProt -> ARO (via DR CARD lines) -> GO across all genes.
+aro2go-pipeline: validate-mappings
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
+
+# Render the ARO->GO mapping set to a curator-facing HTML page.
+render-mappings:
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/render_sssom_html.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --gain-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
+
+# Report the candidate GO annotations UniProt would gain from the mappings (uses the cached snapshot).
+annotation-gain:
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/annotation_gain_report.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --uniprot projects/ANTIMICROBIAL_RESISTANCE/data/uniprot_card_xrefs.tsv --out-md projects/ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md --out-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv
+
+# Publish the AR project's sub-products (markdown -> HTML via the project template + the SSSOM HTML)
+# under pages/projects/ANTIMICROBIAL_RESISTANCE/ (next to the rendered project page).
+render-ar-pages:
+	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; [render_project(Path('projects/ANTIMICROBIAL_RESISTANCE')/f, output_dir=Path('pages/projects/ANTIMICROBIAL_RESISTANCE')) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md']]"
+	cp projects/ANTIMICROBIAL_RESISTANCE/aro2go.html pages/projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
+
 # ============== Hidden internal recipes ==============
 
 _status:

@@ -1,0 +1,3806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DENR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DENR</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O43583" target="_blank" class="term-link">
+                        O43583
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DENR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O43583" data-a="DESCRIPTION: DENR (Density-regulated protein, DRP) is a small c..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DENR (Density-regulated protein, DRP) is a small cytoplasmic protein containing a C-terminal SUI1 (eIF1-like) domain. Together with its obligate partner MCTS1 it forms the MCTS1-DENR heterodimer, a non-canonical translation factor that is the functional equivalent of eIF2D (Ligatin) split into two polypeptides (MCTS1 corresponds to the N-terminal half, DENR to the C-terminal SUI1 half of Ligatin). The complex acts at the post-termination 40S ribosome to promote translation reinitiation, particularly after translation of short upstream ORFs (uORFs), enabling the small subunit to resume scanning and initiate at a downstream main ORF. Mechanistically the complex (i) promotes dissociation of deacylated tRNA and mRNA from recycled 40S subunits following ABCE1-mediated splitting of post-termination complexes, and (ii) recruits aminoacylated initiator tRNA into the ribosomal P-site in an eIF2-independent manner when the start codon is already positioned in the P-site (as on certain HCV-like IRESs and reinitiation events). This activity governs the translation of a defined set of mRNAs (including JAK2), and MCTS1-DENR-dependent reinitiation is required for IFN-gamma immunity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001731" target="_blank" class="term-link">
+                                    GO:0001731
+                                </a>
+                            </span>
+                            <span class="term-label">formation of translation preinitiation complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0001731" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic transfer of preinitiation-complex formation, consistent with the experimentally documented role of the MCTS1-DENR complex in assembling tRNA onto 40S/mRNA complexes for (re)initiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IBA is corroborated by direct experimental evidence that MCTS1/DENR promotes recruitment of initiator tRNA to 40S/mRNA complexes when the start codon is in the P-site.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002188" target="_blank" class="term-link">
+                                    GO:0002188
+                                </a>
+                            </span>
+                            <span class="term-label">translation reinitiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0002188" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Translation reinitiation is the central, defining biological process of DENR, acting in the MCTS1-DENR complex after short uORFs to allow reinitiation at a downstream ORF.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by both phylogenetic inference and direct experimental evidence (UniProt FUNCTION; ComplexPortal IDA), and is core to DENR function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Translation regulator forming a complex with MCTS1 to promote translation reinitiation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002183" target="_blank" class="term-link">
+                                    GO:0002183
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic translational initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0002183" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA) assignment of cytoplasmic translational initiation. DENR does participate in cytoplasmic (re)initiation, but its specific role is non-canonical reinitiation/recycling rather than canonical initiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Broadly correct compartment and process, but more general than DENR&#39;s specific reinitiation/recycling role; retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003743" target="_blank" class="term-link">
+                                    GO:0003743
+                                </a>
+                            </span>
+                            <span class="term-label">translation initiation factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0003743" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro/SUI1-domain-based assignment of translation initiation factor activity. DENR contributes the SUI1 module of the MCTS1-DENR complex that delivers tRNA to the 40S P-site, so this molecular function is appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The eIF2D-like (re)initiation-factor activity is experimentally established for the MCTS1-DENR complex; DENR is an essential subunit. This is a core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated cytoplasmic localization, consistent with the experimentally determined cytoplasmic site of action.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Agrees with IDA cytoplasm evidence (PMID:16982740); DENR acts on cytoplasmic ribosomes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006413" target="_blank" class="term-link">
+                                    GO:0006413
+                                </a>
+                            </span>
+                            <span class="term-label">translational initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0006413" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General translational initiation, assigned from the SUI1 domain. DENR&#39;s specific role is non-canonical reinitiation and recycling rather than canonical cap-dependent initiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct parent process but less informative than the specific reinitiation role; retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Translation regulator forming a complex with MCTS1 to promote translation reinitiation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16169070" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16169070
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A human protein-protein interaction network: a resource for ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:16169070" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with MCTS1 (Q9ULC4), DENR&#39;s obligate functional partner. The bare protein binding term is uninformative, but the interaction itself is central to DENR function as part of the MCTS1-DENR heterodimer.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records a real and functionally pivotal MCTS1 interaction; per curation guidelines bare protein binding is not elevated to core, but the heterodimerization is captured in core_functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:16169070 UniProtKB:Q9ULC4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16874301" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16874301
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel mitochondrial ubiquitin ligase plays a critical role...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:16874301" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interactions with UBC (P0CG48) and MARCHF5 (Q9NX47) from a high-throughput screen, unrelated to DENR&#39;s reinitiation function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from high-throughput screens with partners not connected to the MCTS1-DENR reinitiation/recycling function; uninformative and non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:16874301 UniProtKB:Q9NX47</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16936636" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16936636
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MARCH-V is a novel mitofusin 2- and Drp1-binding protein abl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:16936636" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interactions with UBC (P0CG48) and MARCHF5 (Q9NX47); high-throughput, not connected to DENR&#39;s translation function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from high-throughput screens with partners unrelated to reinitiation; uninformative and non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:16936636 UniProtKB:Q9NX47</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20195357
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A comprehensive resource of interacting protein regions for ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:20195357" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with NELFB (Q8WX92) from a high-throughput screen; not related to DENR&#39;s reinitiation/recycling function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from a high-throughput screen with a partner unrelated to DENR&#39;s core function; uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:20195357 UniProtKB:Q8WX92</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21516116
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Next-generation sequencing to generate interactome datasets.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:21516116" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with MCTS1 (Q9ULC4), the obligate DENR partner.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but the heterodimer is captured in core_functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:21516116 UniProtKB:Q9ULC4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with MCTS1 (Q9ULC4), the obligate DENR partner.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but the heterodimer is captured in core_functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:32296183 UniProtKB:Q9ULC4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:33961781" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BioPlex interactions including MCTS1 (Q9ULC4) and MAPT/tau (P10636). The MCTS1 interaction is functionally central; the tau interaction is a high-throughput observation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Captures the functionally central MCTS1 interaction (alongside a peripheral tau hit); bare protein binding is not elevated to core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:33961781 UniProtKB:Q9ULC4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34757590" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34757590
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Targeting Tau Mitigates Mitochondrial Fragmentation and Oxid...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:34757590" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with MAPT/tau (P10636) from a high-throughput study; not connected to DENR&#39;s reinitiation function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from a high-throughput screen with tau, unrelated to DENR&#39;s core function; uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:34757590 UniProtKB:P10636</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:40205054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell-maps interactome interaction with MCTS1 (Q9ULC4), the obligate DENR partner.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but is captured in core_functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:40205054 UniProtKB:Q9ULC4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002188" target="_blank" class="term-link">
+                                    GO:0002188
+                                </a>
+                            </span>
+                            <span class="term-label">translation reinitiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37875108" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37875108
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human MCTS1-dependent translation of JAK2 is essential for I...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0002188" data-r="PMID:37875108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (ComplexPortal/IDA) that the MCTS1-DENR complex mediates translation reinitiation, demonstrated for JAK2 and other targets.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core reinitiation function of DENR within the MCTS1-DENR complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Translation regulator forming a complex with MCTS1 to promote translation reinitiation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070992" target="_blank" class="term-link">
+                                    GO:0070992
+                                </a>
+                            </span>
+                            <span class="term-label">translation initiation complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29889857" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29889857
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DENR-MCTS1 heterodimerization and tRNA recruitment are requi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0070992" data-r="PMID:29889857" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DENR is part of the MCTS1-DENR (re)initiation complex; heterodimerization with MCTS1 and tRNA recruitment are required for reinitiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by structural/biochemical demonstration that DENR-MCTS1 heterodimerize to form the functional reinitiation complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29889857" target="_blank" class="term-link">
+                                        PMID:29889857
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16982740" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16982740
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MCT-1 protein interacts with the cap complex and modulates m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005515" data-r="PMID:16982740" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt-curated interaction with MCTS1 (Q9ULC4); this is the foundational report that DENR/DRP is recruited by MCTS1 via the PUA/SUI1 interface.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but the heterodimer is captured in core_functions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16982740" target="_blank" class="term-link">
+                                        PMID:16982740
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">recruits the density-regulated protein (DENR/DRP), containing the SUI1 translation initiation domain</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16982740" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16982740
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MCT-1 protein interacts with the cap complex and modulates m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0005737" data-r="PMID:16982740" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that DENR is active in the cytoplasm, where it associates with the cap complex/translation machinery via MCTS1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> IDA-supported cytoplasmic site of action, consistent with DENR&#39;s role on cytoplasmic ribosomes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DENR/DENR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0075522" target="_blank" class="term-link">
+                                    GO:0075522
+                                </a>
+                            </span>
+                            <span class="term-label">IRES-dependent viral translational initiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20713520
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activities of Ligatin and MCT-1/DENR in eukaryotic translati...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0075522" data-r="PMID:20713520" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCT-1/DENR promotes eIF2-independent recruitment of initiator tRNA on HCV-like IRESs and SV 26S mRNA, where the start codon is placed directly in the P-site.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A genuine but specialized application of DENR&#39;s P-site tRNA delivery activity (viral IRES context); retained as non-core relative to cellular reinitiation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link">
+                                        PMID:20713520
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">promote efficient eIF2-independent recruitment of Met-tRNA(Met)(i) to 40S/mRNA complexes, if attachment of 40S subunits to the mRNA places the initiation codon directly in the P site, as on HCV-like IRESs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001731" target="_blank" class="term-link">
+                                    GO:0001731
+                                </a>
+                            </span>
+                            <span class="term-label">formation of translation preinitiation complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20713520
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activities of Ligatin and MCT-1/DENR in eukaryotic translati...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0001731" data-r="PMID:20713520" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that MCT-1/DENR assembles initiator tRNA onto 40S/mRNA complexes, forming a preinitiation-type complex for reinitiation/recycling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for DENR&#39;s role in assembling the tRNA-loaded 40S complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link">
+                                        PMID:20713520
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">promote efficient eIF2-independent recruitment of Met-tRNA(Met)(i) to 40S/mRNA complexes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032790" target="_blank" class="term-link">
+                                    GO:0032790
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome disassembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20713520
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activities of Ligatin and MCT-1/DENR in eukaryotic translati...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O43583" data-a="GO:0032790" data-r="PMID:20713520" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MCT-1/DENR promotes release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated splitting of post-termination ribosomes, i.e. the recycling/recovery step.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for DENR&#39;s role in 40S recycling (clearing deacylated tRNA/mRNA), a core part of its function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link">
+                                        PMID:20713520
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ligatin and MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As an essential subunit of the MCTS1-DENR heterodimer (an eIF2D-like non-canonical factor), provides the SUI1 module that delivers aminoacylated tRNA into the 40S ribosomal P-site in an eIF2-independent manner to drive translation reinitiation after short uORFs.</h3>
+                <span class="vote-buttons" data-g="O43583" data-a="FUNCTION: As an essential subunit of the MCTS1-DENR heterodi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003743" target="_blank" class="term-link">
+                            translation initiation factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/DENR/DENR-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29889857" target="_blank" class="term-link">
+                                PMID:29889857
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Within the MCTS1-DENR complex, promotes recycling/recovery of post-termination 40S subunits by promoting dissociation of deacylated tRNA and mRNA after ABCE1-mediated ribosome splitting.</h3>
+                <span class="vote-buttons" data-g="O43583" data-a="FUNCTION: Within the MCTS1-DENR complex, promotes recycling/..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003743" target="_blank" class="term-link">
+                            translation initiation factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link">
+                                PMID:20713520
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Ligatin and MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16169070" target="_blank" class="term-link">
+                            PMID:16169070
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A human protein-protein interaction network: a resource for annotating the proteome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16874301" target="_blank" class="term-link">
+                            PMID:16874301
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel mitochondrial ubiquitin ligase plays a critical role in mitochondrial dynamics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16936636" target="_blank" class="term-link">
+                            PMID:16936636
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MARCH-V is a novel mitofusin 2- and Drp1-binding protein able to change mitochondrial morphology.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16982740" target="_blank" class="term-link">
+                            PMID:16982740
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MCT-1 protein interacts with the cap complex and modulates messenger RNA translational profiles.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MCT-1 (MCTS1) interacts with the cap complex through its PUA domain and recruits DENR/DRP, which contains the SUI1 translation initiation domain.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20195357" target="_blank" class="term-link">
+                            PMID:20195357
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A comprehensive resource of interacting protein regions for refining human transcription factor networks.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20713520" target="_blank" class="term-link">
+                            PMID:20713520
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Activities of Ligatin and MCT-1/DENR in eukaryotic translation initiation and ribosomal recycling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MCT-1 and DENR (homologous to N- and C-terminal regions of Ligatin) together promote eIF2-independent recruitment of initiator tRNA to 40S/mRNA complexes when the initiation codon is placed directly in the P-site.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                            PMID:21516116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Next-generation sequencing to generate interactome datasets.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29889857" target="_blank" class="term-link">
+                            PMID:29889857
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DENR and MCTS1 heterodimerize and this, together with tRNA recruitment, is required for translation reinitiation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34757590" target="_blank" class="term-link">
+                            PMID:34757590
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Targeting Tau Mitigates Mitochondrial Fragmentation and Oxidative Stress in Amyotrophic Lateral Sclerosis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37875108" target="_blank" class="term-link">
+                            PMID:37875108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human MCTS1-dependent translation of JAK2 is essential for IFN-γ immunity to mycobacteria.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MCTS1-DENR-dependent translation reinitiation is required for translation of JAK2 and for IFN-gamma immunity to mycobacteria.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the subset of &gt;150 mRNAs whose reinitiation depends on MCTS1-DENR, and do uORF features (length, Kozak context, terminator distance) predict dependence?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43583" data-a="Q: What determines the subset of &gt;150 mRNAs whose rei..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does phosphorylation of DENR (Ser-73 and other mitotic sites) regulate MCTS1-DENR complex assembly or reinitiation activity?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43583" data-a="Q: Does phosphorylation of DENR (Ser-73 and other mit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Ribosome profiling in DENR-knockout versus wild-type cells to map reinitiation-dependent mORFs genome-wide and define uORF determinants of MCTS1-DENR dependence.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43583" data-a="EXPERIMENT: Ribosome profiling in DENR-knockout versus wild-ty..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstituted 40S recycling assays with purified DENR/MCTS1, ABCE1 and post-termination complexes to quantify the kinetics of deacylated tRNA/mRNA release contributed by DENR.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O43583" data-a="EXPERIMENT: Reconstituted 40S recycling assays with purified D..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DENR-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O43583" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="denr-density-regulated-protein-drp-research-notes">DENR (Density-regulated protein, DRP) — research notes</h1>
+<p>UniProt O43583. 198 aa. Contains a C-terminal SUI1 domain (eIF1-like). Member of the DENR family; homologous to the C-terminal region of Ligatin/eIF2D, while MCTS1 is homologous to the N-terminal region.</p>
+<h2 id="core-function">Core function</h2>
+<p>DENR forms a heterodimer with MCTS1; the MCTS1–DENR complex is a non-canonical translation (re)initiation and 40S recycling factor. It is the functional equivalent of eIF2D split into two polypeptides.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/20713520" title="the oncogene MCT-1 and DENR, which are homologous to N-terminal and C-terminal regions of Ligatin, respectively) promote efficient eIF2-independent recruitment of Met-tRNA(Met)(i) to 40S/mRNA complexes, if attachment of 40S subunits to the mRNA places the initiation codon directly in the P site">PMID:20713520</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/20713520" title="Ligatin and MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes">PMID:20713520</a></li>
+<li>UniProt FUNCTION: "Translation regulator forming a complex with MCTS1 to promote translation reinitiation ... Firstly, the dissociation of deacylated tRNAs from post-termination 40S ribosomal complexes during ribosome recycling. Secondly, the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation."</li>
+<li>DENR–MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation [PMID:29889857 title]. DENR contributes the SUI1 (PUA-interacting) module; MCTS1 PUA domain binds DENR.</li>
+<li>MCTS1-dependent reinitiation translates specific mRNAs incl. JAK2; essential for IFN-γ immunity [PMID:37875108 title].</li>
+</ul>
+<h2 id="interactions-ipi">Interactions (IPI)</h2>
+<ul>
+<li>MCTS1 (Q9ULC4): the physiological obligate partner — many entries (16169070, 21516116, 32296183, 33961781, 40205054, 16982740). Best captured as MCTS1 binding / heterodimerization, not bare protein binding.</li>
+<li>MAPT (P10636, tau), MARCHF5 (Q9NX47), NELFB/UBC: high-throughput, peripheral.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<p>Cytoplasm (IDA, PMID:16982740). Also reported in stress granules / nucleolus (CD-CODE) but cytoplasmic ribosome-associated is the functional site.</p>
+<h2 id="decisions">Decisions</h2>
+<ul>
+<li>Reinitiation, preinitiation complex formation, ribosome disassembly (recycling), eIF2-independent tRNA delivery = core.</li>
+<li>MF: translation initiation factor activity (GO:0003743) is supported (eIF2D-like). Core MF.</li>
+<li>protein binding IPI with MCTS1 → MODIFY to protein heterodimerization/MCTS1 binding context; non-MCTS1 ones KEEP_AS_NON_CORE or over-annotated.</li>
+<li>IRES-dependent viral translational initiation (GO:0075522) — supported by 20713520 (HCV-like IRES P-site delivery). KEEP_AS_NON_CORE.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O43583
+gene_symbol: DENR
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: DENR (Density-regulated protein, DRP) is a small cytoplasmic protein containing a C-terminal SUI1 (eIF1-like) domain. Together with its obligate partner MCTS1 it forms the MCTS1-DENR heterodimer, a non-canonical translation factor that is the functional equivalent of eIF2D (Ligatin) split into two polypeptides (MCTS1 corresponds to the N-terminal half, DENR to the C-terminal SUI1 half of Ligatin). The complex acts at the post-termination 40S ribosome to promote translation reinitiation, particularly after translation of short upstream ORFs (uORFs), enabling the small subunit to resume scanning and initiate at a downstream main ORF. Mechanistically the complex (i) promotes dissociation of deacylated tRNA and mRNA from recycled 40S subunits following ABCE1-mediated splitting of post-termination complexes, and (ii) recruits aminoacylated initiator tRNA into the ribosomal P-site in an eIF2-independent manner when the start codon is already positioned in the P-site (as on certain HCV-like IRESs and reinitiation events). This activity governs the translation of a defined set of mRNAs (including JAK2), and MCTS1-DENR-dependent reinitiation is required for IFN-gamma immunity.
+existing_annotations:
+- term:
+    id: GO:0001731
+    label: formation of translation preinitiation complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic transfer of preinitiation-complex formation, consistent with the experimentally documented role of the MCTS1-DENR complex in assembling tRNA onto 40S/mRNA complexes for (re)initiation.
+    action: ACCEPT
+    reason: The IBA is corroborated by direct experimental evidence that MCTS1/DENR promotes recruitment of initiator tRNA to 40S/mRNA complexes when the start codon is in the P-site.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation
+- term:
+    id: GO:0002188
+    label: translation reinitiation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Translation reinitiation is the central, defining biological process of DENR, acting in the MCTS1-DENR complex after short uORFs to allow reinitiation at a downstream ORF.
+    action: ACCEPT
+    reason: Strongly supported by both phylogenetic inference and direct experimental evidence (UniProt FUNCTION; ComplexPortal IDA), and is core to DENR function.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: Translation regulator forming a complex with MCTS1 to promote translation reinitiation.
+- term:
+    id: GO:0002183
+    label: cytoplasmic translational initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Automated (ARBA) assignment of cytoplasmic translational initiation. DENR does participate in cytoplasmic (re)initiation, but its specific role is non-canonical reinitiation/recycling rather than canonical initiation.
+    action: KEEP_AS_NON_CORE
+    reason: Broadly correct compartment and process, but more general than DENR&#39;s specific reinitiation/recycling role; retained as non-core.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation
+- term:
+    id: GO:0003743
+    label: translation initiation factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro/SUI1-domain-based assignment of translation initiation factor activity. DENR contributes the SUI1 module of the MCTS1-DENR complex that delivers tRNA to the 40S P-site, so this molecular function is appropriate.
+    action: ACCEPT
+    reason: The eIF2D-like (re)initiation-factor activity is experimentally established for the MCTS1-DENR complex; DENR is an essential subunit. This is a core molecular function.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated cytoplasmic localization, consistent with the experimentally determined cytoplasmic site of action.
+    action: ACCEPT
+    reason: Agrees with IDA cytoplasm evidence (PMID:16982740); DENR acts on cytoplasmic ribosomes.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006413
+    label: translational initiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: General translational initiation, assigned from the SUI1 domain. DENR&#39;s specific role is non-canonical reinitiation and recycling rather than canonical cap-dependent initiation.
+    action: KEEP_AS_NON_CORE
+    reason: Correct parent process but less informative than the specific reinitiation role; retained as non-core.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: Translation regulator forming a complex with MCTS1 to promote translation reinitiation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16169070
+  qualifier: enables
+  review:
+    summary: IntAct interaction with MCTS1 (Q9ULC4), DENR&#39;s obligate functional partner. The bare protein binding term is uninformative, but the interaction itself is central to DENR function as part of the MCTS1-DENR heterodimer.
+    action: KEEP_AS_NON_CORE
+    reason: Records a real and functionally pivotal MCTS1 interaction; per curation guidelines bare protein binding is not elevated to core, but the heterodimerization is captured in core_functions.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:16169070 UniProtKB:Q9ULC4
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16874301
+  qualifier: enables
+  review:
+    summary: IntAct interactions with UBC (P0CG48) and MARCHF5 (Q9NX47) from a high-throughput screen, unrelated to DENR&#39;s reinitiation function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding from high-throughput screens with partners not connected to the MCTS1-DENR reinitiation/recycling function; uninformative and non-core.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:16874301 UniProtKB:Q9NX47
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16936636
+  qualifier: enables
+  review:
+    summary: IntAct interactions with UBC (P0CG48) and MARCHF5 (Q9NX47); high-throughput, not connected to DENR&#39;s translation function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding from high-throughput screens with partners unrelated to reinitiation; uninformative and non-core.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:16936636 UniProtKB:Q9NX47
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20195357
+  qualifier: enables
+  review:
+    summary: IntAct interaction with NELFB (Q8WX92) from a high-throughput screen; not related to DENR&#39;s reinitiation/recycling function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding from a high-throughput screen with a partner unrelated to DENR&#39;s core function; uninformative.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:20195357 UniProtKB:Q8WX92
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21516116
+  qualifier: enables
+  review:
+    summary: IntAct interaction with MCTS1 (Q9ULC4), the obligate DENR partner.
+    action: KEEP_AS_NON_CORE
+    reason: Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but the heterodimer is captured in core_functions.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:21516116 UniProtKB:Q9ULC4
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: IntAct interaction with MCTS1 (Q9ULC4), the obligate DENR partner.
+    action: KEEP_AS_NON_CORE
+    reason: Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but the heterodimer is captured in core_functions.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:32296183 UniProtKB:Q9ULC4
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: BioPlex interactions including MCTS1 (Q9ULC4) and MAPT/tau (P10636). The MCTS1 interaction is functionally central; the tau interaction is a high-throughput observation.
+    action: KEEP_AS_NON_CORE
+    reason: Captures the functionally central MCTS1 interaction (alongside a peripheral tau hit); bare protein binding is not elevated to core.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:33961781 UniProtKB:Q9ULC4
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:34757590
+  qualifier: enables
+  review:
+    summary: IntAct interaction with MAPT/tau (P10636) from a high-throughput study; not connected to DENR&#39;s reinitiation function.
+    action: KEEP_AS_NON_CORE
+    reason: Bare protein binding from a high-throughput screen with tau, unrelated to DENR&#39;s core function; uninformative.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:34757590 UniProtKB:P10636
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: Cell-maps interactome interaction with MCTS1 (Q9ULC4), the obligate DENR partner.
+    action: KEEP_AS_NON_CORE
+    reason: Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but is captured in core_functions.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:40205054 UniProtKB:Q9ULC4
+- term:
+    id: GO:0002188
+    label: translation reinitiation
+  evidence_type: IDA
+  original_reference_id: PMID:37875108
+  qualifier: involved_in
+  review:
+    summary: Direct evidence (ComplexPortal/IDA) that the MCTS1-DENR complex mediates translation reinitiation, demonstrated for JAK2 and other targets.
+    action: ACCEPT
+    reason: Direct experimental support for the core reinitiation function of DENR within the MCTS1-DENR complex.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: Translation regulator forming a complex with MCTS1 to promote translation reinitiation.
+- term:
+    id: GO:0070992
+    label: translation initiation complex
+  evidence_type: IPI
+  original_reference_id: PMID:29889857
+  qualifier: part_of
+  review:
+    summary: DENR is part of the MCTS1-DENR (re)initiation complex; heterodimerization with MCTS1 and tRNA recruitment are required for reinitiation.
+    action: ACCEPT
+    reason: Supported by structural/biochemical demonstration that DENR-MCTS1 heterodimerize to form the functional reinitiation complex.
+    supported_by:
+    - reference_id: PMID:29889857
+      supporting_text: DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16982740
+  qualifier: enables
+  review:
+    summary: UniProt-curated interaction with MCTS1 (Q9ULC4); this is the foundational report that DENR/DRP is recruited by MCTS1 via the PUA/SUI1 interface.
+    action: KEEP_AS_NON_CORE
+    reason: Records the functionally central MCTS1 interaction; bare protein binding is not elevated to core but the heterodimer is captured in core_functions.
+    supported_by:
+    - reference_id: PMID:16982740
+      supporting_text: recruits the density-regulated protein (DENR/DRP), containing the SUI1 translation initiation domain
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:16982740
+  qualifier: is_active_in
+  review:
+    summary: Direct evidence that DENR is active in the cytoplasm, where it associates with the cap complex/translation machinery via MCTS1.
+    action: ACCEPT
+    reason: IDA-supported cytoplasmic site of action, consistent with DENR&#39;s role on cytoplasmic ribosomes.
+    supported_by:
+    - reference_id: file:human/DENR/DENR-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0075522
+    label: IRES-dependent viral translational initiation
+  evidence_type: IDA
+  original_reference_id: PMID:20713520
+  qualifier: involved_in
+  review:
+    summary: MCT-1/DENR promotes eIF2-independent recruitment of initiator tRNA on HCV-like IRESs and SV 26S mRNA, where the start codon is placed directly in the P-site.
+    action: KEEP_AS_NON_CORE
+    reason: A genuine but specialized application of DENR&#39;s P-site tRNA delivery activity (viral IRES context); retained as non-core relative to cellular reinitiation.
+    supported_by:
+    - reference_id: PMID:20713520
+      supporting_text: promote efficient eIF2-independent recruitment of Met-tRNA(Met)(i) to 40S/mRNA complexes, if attachment of 40S subunits to the mRNA places the initiation codon directly in the P site, as on HCV-like IRESs
+- term:
+    id: GO:0001731
+    label: formation of translation preinitiation complex
+  evidence_type: IDA
+  original_reference_id: PMID:20713520
+  qualifier: involved_in
+  review:
+    summary: Direct evidence that MCT-1/DENR assembles initiator tRNA onto 40S/mRNA complexes, forming a preinitiation-type complex for reinitiation/recycling.
+    action: ACCEPT
+    reason: Direct experimental support for DENR&#39;s role in assembling the tRNA-loaded 40S complex.
+    supported_by:
+    - reference_id: PMID:20713520
+      supporting_text: promote efficient eIF2-independent recruitment of Met-tRNA(Met)(i) to 40S/mRNA complexes
+- term:
+    id: GO:0032790
+    label: ribosome disassembly
+  evidence_type: IDA
+  original_reference_id: PMID:20713520
+  qualifier: involved_in
+  review:
+    summary: MCT-1/DENR promotes release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated splitting of post-termination ribosomes, i.e. the recycling/recovery step.
+    action: ACCEPT
+    reason: Direct experimental support for DENR&#39;s role in 40S recycling (clearing deacylated tRNA/mRNA), a core part of its function.
+    supported_by:
+    - reference_id: PMID:20713520
+      supporting_text: Ligatin and MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:16169070
+  title: &#39;A human protein-protein interaction network: a resource for annotating the proteome.&#39;
+  findings: []
+- id: PMID:16874301
+  title: A novel mitochondrial ubiquitin ligase plays a critical role in mitochondrial dynamics.
+  findings: []
+- id: PMID:16936636
+  title: MARCH-V is a novel mitofusin 2- and Drp1-binding protein able to change mitochondrial morphology.
+  findings: []
+- id: PMID:16982740
+  title: MCT-1 protein interacts with the cap complex and modulates messenger RNA translational profiles.
+  findings:
+  - statement: MCT-1 (MCTS1) interacts with the cap complex through its PUA domain and recruits DENR/DRP, which contains the SUI1 translation initiation domain.
+    reference_section_type: ABSTRACT
+- id: PMID:20195357
+  title: A comprehensive resource of interacting protein regions for refining human transcription factor networks.
+  findings: []
+- id: PMID:20713520
+  title: Activities of Ligatin and MCT-1/DENR in eukaryotic translation initiation and ribosomal recycling.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches; abstract establishes the eIF2-independent initiator-tRNA recruitment and 40S recycling activities of MCT-1/DENR, directly supporting DENR&#39;s core reinitiation/recycling function.
+  findings:
+  - statement: MCT-1 and DENR (homologous to N- and C-terminal regions of Ligatin) together promote eIF2-independent recruitment of initiator tRNA to 40S/mRNA complexes when the initiation codon is placed directly in the P-site.
+    reference_section_type: ABSTRACT
+  - statement: MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes.
+    reference_section_type: ABSTRACT
+- id: PMID:21516116
+  title: Next-generation sequencing to generate interactome datasets.
+  findings: []
+- id: PMID:29889857
+  title: DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cached publication title matches; establishes that DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation, directly supporting DENR&#39;s core function.
+  findings:
+  - statement: DENR and MCTS1 heterodimerize and this, together with tRNA recruitment, is required for translation reinitiation.
+    reference_section_type: TITLE
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.
+  findings: []
+- id: PMID:34757590
+  title: Targeting Tau Mitigates Mitochondrial Fragmentation and Oxidative Stress in Amyotrophic Lateral Sclerosis.
+  findings: []
+- id: PMID:37875108
+  title: Human MCTS1-dependent translation of JAK2 is essential for IFN-γ immunity to mycobacteria.
+  findings:
+  - statement: MCTS1-DENR-dependent translation reinitiation is required for translation of JAK2 and for IFN-gamma immunity to mycobacteria.
+    reference_section_type: ABSTRACT
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+core_functions:
+- description: As an essential subunit of the MCTS1-DENR heterodimer (an eIF2D-like non-canonical factor), provides the SUI1 module that delivers aminoacylated tRNA into the 40S ribosomal P-site in an eIF2-independent manner to drive translation reinitiation after short uORFs.
+  molecular_function:
+    id: GO:0003743
+    label: translation initiation factor activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:human/DENR/DENR-uniprot.txt
+    supporting_text: the recruitment in an EIF2-independent manner of aminoacylated initiator tRNA to P site of 40S ribosomes for a new round of translation
+  - reference_id: PMID:29889857
+    supporting_text: DENR-MCTS1 heterodimerization and tRNA recruitment are required for translation reinitiation
+- description: Within the MCTS1-DENR complex, promotes recycling/recovery of post-termination 40S subunits by promoting dissociation of deacylated tRNA and mRNA after ABCE1-mediated ribosome splitting.
+  molecular_function:
+    id: GO:0003743
+    label: translation initiation factor activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:20713520
+    supporting_text: Ligatin and MCT-1/DENR can promote release of deacylated tRNA and mRNA from recycled 40S subunits after ABCE1-mediated dissociation of post-termination ribosomes
+proposed_new_terms: []
+suggested_questions:
+- question: What determines the subset of &gt;150 mRNAs whose reinitiation depends on MCTS1-DENR, and do uORF features (length, Kozak context, terminator distance) predict dependence?
+- question: Does phosphorylation of DENR (Ser-73 and other mitotic sites) regulate MCTS1-DENR complex assembly or reinitiation activity?
+suggested_experiments:
+- description: Ribosome profiling in DENR-knockout versus wild-type cells to map reinitiation-dependent mORFs genome-wide and define uORF determinants of MCTS1-DENR dependence.
+- description: Reconstituted 40S recycling assays with purified DENR/MCTS1, ABCE1 and post-termination complexes to quantify the kinetics of deacylated tRNA/mRNA release contributed by DENR.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

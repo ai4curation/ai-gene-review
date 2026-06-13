@@ -2549,6 +2549,84 @@ def render_projects(
 
 
 @app.command()
+def render_modules(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to render"),
+    ] = None,
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for module HTML files"),
+    ] = Path("pages/modules"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Render all module YAML files in modules/"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show detailed output including warnings"),
+    ] = False,
+):
+    """Render module YAML files to HTML pages with an inline tree browser.
+
+    Examples:
+        # Render all modules and an index page
+        ai-gene-review render-modules --all
+
+        # Render a specific module
+        ai-gene-review render-modules modules/gluconeogenesis.yaml
+    """
+    from ai_gene_review.render_modules import render_all_modules, render_module
+
+    if all_modules:
+        typer.echo("Rendering all module YAML files...")
+        output_paths, warnings = render_all_modules(
+            modules_dir=modules_dir,
+            output_dir=output_dir,
+        )
+
+        if verbose and warnings:
+            typer.echo("\nAll warnings:")
+            for warning in warnings:
+                typer.echo(f"  - {warning}")
+
+        typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
+    elif files:
+        total_warnings = []
+        for module_file in files:
+            if not module_file.exists():
+                typer.echo(f"Error: File not found: {module_file}", err=True)
+                continue
+
+            try:
+                output_path, warnings = render_module(
+                    module_file,
+                    output_dir=output_dir,
+                    modules_dir=modules_dir,
+                )
+                total_warnings.extend(warnings)
+                if warnings:
+                    typer.echo(f"Rendered {module_file} -> {output_path} ({len(warnings)} warnings)")
+                    if verbose:
+                        for warning in warnings:
+                            typer.echo(f"    - {warning}")
+                else:
+                    typer.echo(f"Rendered {module_file} -> {output_path}")
+            except Exception as error:
+                typer.echo(f"Error rendering {module_file}: {error}", err=True)
+
+        if total_warnings and not verbose:
+            typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+    else:
+        typer.echo("Please specify file(s) or use --all to render all modules", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
 def fetch_descriptions(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., human, yeast)")

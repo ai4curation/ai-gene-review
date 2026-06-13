@@ -9,10 +9,12 @@ on:
       - 'src/ai_gene_review/schema/**'
       - 'src/ai_gene_review/templates/**'
       - 'src/ai_gene_review/render.py'
+      - 'src/ai_gene_review/render_modules.py'
       - 'src/ai_gene_review/export/**'
       - 'src/ai_gene_review/browser/**'
       - 'src/ai_gene_review/tools/minify_linkml_browser_data.py'
       - 'projects/*.md'
+      - 'modules/**/*.yaml'
       - 'project.justfile'
       - '.github/workflows/generate-pages.yaml'
   workflow_dispatch:
@@ -118,6 +120,12 @@ jobs:
       - name: Render project pages
         run: just render-projects
 
+      - name: Validate module YAML files
+        run: just validate-modules
+
+      - name: Render module pages
+        run: just render-modules
+
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
 
@@ -152,12 +160,14 @@ jobs:
           GENE_COUNT=$(find genes -name '*-ai-review.yaml' | wc -l | tr -d ' ')
           HTML_COUNT=$(find genes -name '*-ai-review.html' | wc -l | tr -d ' ')
           PROJECT_COUNT=$(find pages/projects -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
+          MODULE_COUNT=$(find pages/modules -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
 
           {
             echo "branch=auto/generate-pages"
             echo "gene_count=$GENE_COUNT"
             echo "html_count=$HTML_COUNT"
             echo "project_count=$PROJECT_COUNT"
+            echo "module_count=$MODULE_COUNT"
           } >> "$GITHUB_OUTPUT"
 
       - name: Create or update regeneration PR
@@ -186,6 +196,7 @@ jobs:
 
             - ${{ steps.pr-metadata.outputs.html_count }} gene review HTML pages (from ${{ steps.pr-metadata.outputs.gene_count }} YAML reviews)
             - ${{ steps.pr-metadata.outputs.project_count }} project pages
+            - ${{ steps.pr-metadata.outputs.module_count }} module pages
             - Browser app data.js
             - Validation report
 
@@ -208,6 +219,7 @@ jobs:
             echo "| Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |"
             echo "| Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |"
             echo "| Project pages | ${{ steps.pr-metadata.outputs.project_count }} |"
+            echo "| Module pages | ${{ steps.pr-metadata.outputs.module_count }} |"
             echo "| Browser app (data.js) | Updated |"
             echo "| Validation report | Updated |"
             echo
@@ -218,16 +230,19 @@ jobs:
             echo "- src/ai_gene_review/schema/** - LinkML schema files"
             echo "- src/ai_gene_review/templates/** - Jinja2 templates"
             echo "- src/ai_gene_review/render.py - rendering code"
+            echo "- src/ai_gene_review/render_modules.py - module rendering code"
             echo "- src/ai_gene_review/export/** - export code"
             echo "- src/ai_gene_review/browser/** - browser app assets"
             echo "- src/ai_gene_review/tools/minify_linkml_browser_data.py - browser data compaction"
             echo "- projects/*.md - project definitions"
+            echo "- modules/**/*.yaml - module definitions"
             echo "- project.justfile - just recipes used by CI"
             echo "- .github/workflows/generate-pages.yaml - workflow definition"
             echo
             echo "## Review"
             echo
             echo "- [ ] Spot-check a few gene review HTML pages render correctly"
+            echo "- [ ] Spot-check module tree browser pages render correctly"
             echo "- [ ] Verify browser app loads and filters work"
             echo "- [ ] Check validation report for new issues"
           } > "$PR_BODY"

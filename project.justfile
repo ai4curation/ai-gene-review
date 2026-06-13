@@ -296,6 +296,29 @@ term-deep-research-cyberian concept *args="":
 term-deep-research-codex concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
 
+# Module deep research (targets module YAMLs and writes beside the YAML by default)
+# Examples:
+#   just module-deep-research-perplexity peroxisome-lifecycle
+#   just module-deep-research-openai modules/gluconeogenesis.yaml
+#   just module-deep-research-perplexity-lite peroxisome-lifecycle --dry-run
+module-deep-research-openai module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" openai {{args}}
+
+module-deep-research-perplexity module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity {{args}}
+
+module-deep-research-perplexity-lite module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity-lite {{args}}
+
+module-deep-research-falcon module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" falcon {{args}}
+
+module-deep-research-cyberian module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" cyberian {{args}}
+
+module-deep-research-codex module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
+
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
     uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
@@ -406,6 +429,22 @@ validate-files files:
 
 validate-deep-research:
     uv run python scripts/validate_deep_research.py
+
+# Validate module YAML files against the ModuleReview schema
+validate-modules:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No module YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Validating $f"
+        uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
+    done <<< "$files"
+    exit "$rc"
 
 # Full validation of a single gene file (schema + terms + references + best practices)
 [group('QC')]
@@ -857,6 +896,14 @@ render-projects:
 # Render a specific project markdown to HTML
 render-project project:
     uv run ai-gene-review render-projects projects/{{project}}.md
+
+# Render module YAML files to HTML with an inline tree browser
+render-modules:
+    uv run ai-gene-review render-modules --all
+
+# Render a specific module YAML to HTML
+render-module module:
+    uv run ai-gene-review render-modules {{module}}
 
 # Render a single rule review YAML as HTML (automatically runs analysis first if needed)
 # DEPENDENCIES:

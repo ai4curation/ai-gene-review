@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARO ↔ GO mappings &amp; the UniProt→ARO→GO pipeline - AI Gene Review Projects</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-primary: #3498db;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Gene symbol links */
+        .content a[href*="/genes/"] {
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .content a[href*="/genes/"]:hover {
+            background-color: #bfdbfe;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875em;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--color-primary);
+            margin-left: 0;
+            padding-left: 1.5rem;
+            color: #4b5563;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Mermaid diagrams */
+        .mermaid {
+            text-align: center;
+            margin: 2rem 0;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Warnings section */
+        .warnings {
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .warnings h3 {
+            color: #92400e;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .warnings ul {
+            margin-bottom: 0;
+            color: #78350f;
+        }
+
+        /* Task lists (checkboxes) */
+        li input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Content wrapper */
+        .content {
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        footer small {
+            display: block;
+        }
+    </style>
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#2c3e50',
+                lineColor: '#333',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#f39c12'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="breadcrumb">
+        <a href="../index.html">Home</a> &raquo;
+        <a href="index.html">Projects</a> &raquo;
+        ARO ↔ GO mappings &amp; the UniProt→ARO→GO pipeline
+    </nav>
+
+    <header class="header">
+        <h1>ARO ↔ GO mappings &amp; the UniProt→ARO→GO pipeline</h1>
+        
+    </header>
+
+    
+
+    <div class="content">
+        <h1 id="aro-go-mappings-the-uniprotarogo-pipeline">ARO ↔ GO mappings &amp; the UniProt→ARO→GO pipeline</h1>
+<p>Part of the <a href="../ANTIMICROBIAL_RESISTANCE.html">Antimicrobial Resistance project</a>.</p>
+<h2 id="files">Files</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aro2go.sssom.yaml</code></td>
+<td>Curated <strong>ARO → GO</strong> mapping set in <a href="https://mapping-commons.github.io/sssom/">SSSOM</a> format (source of truth). CURIE+label tuples throughout; validates with <code>linkml-validate</code>.</td>
+</tr>
+<tr>
+<td><code>aro2go.terms.yaml</code></td>
+<td><strong>Generated</strong> nested term-tuple form of the mapping, validated by <code>linkml-term-validator</code> (do not edit by hand).</td>
+</tr>
+<tr>
+<td><code>sssom_to_terms.py</code></td>
+<td>Converter: reshapes the flat SSSOM rows into the nested <code>{id,label}</code> form the term-validator checks.</td>
+</tr>
+<tr>
+<td><code>uniprot2aro2go.py</code></td>
+<td>Pipeline that chains <strong>UniProt → ARO → GO</strong> by applying the SSSOM mapping.</td>
+</tr>
+<tr>
+<td><code>aro2go.html</code></td>
+<td><strong>Curator-facing HTML</strong> view of the mappings + gaps (CARD/AmiGO links). Generated by <code>render_sssom_html.py</code> (<code>just render-mappings</code>).</td>
+</tr>
+<tr>
+<td><code>ANNOTATION_GAIN.md</code></td>
+<td>Report of candidate GO annotations UniProt would gain. Generated by <code>annotation_gain_report.py</code> (<code>just annotation-gain</code>).</td>
+</tr>
+<tr>
+<td><code>data/uniprot_card_xrefs.tsv</code></td>
+<td>Snapshot of UniProtKB entries with a CARD cross-reference (ARO id + existing GO), from the UniProt REST API.</td>
+</tr>
+<tr>
+<td><code>data/candidate_new_annotations.tsv</code></td>
+<td>One row per (entry, candidate new GO term) produced by the gain report.</td>
+</tr>
+<tr>
+<td><code>examples/rgi_example_mphA.txt</code></td>
+<td>Tiny example of CARD RGI tab-delimited output, used to demonstrate the sequence-based route.</td>
+</tr>
+<tr>
+<td><code>examples/rgi_example_betalactamases.txt</code></td>
+<td>RGI example (CTX-M-15/KPC-2/NDM-1) demonstrating exact-or-narrower propagation from the beta-lactamase family node.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="curator-view-annotation-gain-report">Curator view &amp; annotation-gain report</h2>
+<ul>
+<li><strong><code>just render-mappings</code></strong> → <code>aro2go.html</code>: open in a browser to review every mapping (ARO and GO ids<br />
+  link out to CARD and AmiGO) and the recorded GO gaps, with the per-mapping UniProt gain count.</li>
+<li><strong><code>just annotation-gain</code></strong> → <code>ANNOTATION_GAIN.md</code> + <code>data/candidate_new_annotations.tsv</code>: applies the<br />
+  mappings (exact-or-narrower) to all <strong>4,182</strong> UniProtKB entries that carry a CARD cross-reference and<br />
+  reports the GO terms they would gain that are <strong>not already annotated</strong>. The filter is<br />
+<strong>subsumption-aware</strong>: a candidate is suppressed when the entry already has a more specific (is_a<br />
+  descendant) GO term, so over-general parents are not proposed. Current snapshot: <strong>630</strong> candidate new<br />
+  annotations (a further <strong>104</strong> suppressed as redundant — almost all aminoglycoside families, where GO<br />
+  has specific child terms) — e.g. all 79 colistin/MCR entries lack <code>GO:0043838</code>, and 448<br />
+  beta-lactamases lack <code>GO:0008800</code>. (The mechanism→<code>GO:0046677</code> mappings add nothing new — every CARD<br />
+  entry already has "response to antibiotic" — a good sanity check.)</li>
+</ul>
+<h2 id="validation-just-validate-mappings">Validation: <code>just validate-mappings</code></h2>
+<p>Two layers, both run by the recipe (and by <code>tests/test_aro2go_mapping.py</code>):</p>
+<ol>
+<li><strong>Structural</strong> — <code>linkml-validate</code> against the SSSOM LinkML schema (required slots, shape).</li>
+<li><strong>Ontology terms</strong> — <code>linkml-term-validator</code> checks every <strong>ARO</strong> and <strong>GO</strong> CURIE in the mapping<br />
+   both <em>resolves</em> (ARO via <code>sqlite:obo:aro</code>, GO via <code>sqlite:obo:go</code>) and that the supplied <strong>label<br />
+   matches the ontology label</strong> — the "curie+label tuple" guarantee. This uses the sidecar schema<br />
+<code>src/ai_gene_review/schema/aro_go_mapping.yaml</code>, whose <code>subject</code>/<code>object</code> are <code>{id,label}</code> tuples<br />
+   with <code>bindings</code> to dynamic enums (<code>AROTermEnum</code> reachable from <code>ARO:1000001</code>; <code>GOTermEnum</code> from the<br />
+   three GO roots). Prefix→adapter resolution is configured in <code>conf/oak_config.yaml</code>.</li>
+</ol>
+<p>A label typo or a wrong id fails the build, e.g.:<br />
+<code>Label mismatch for 'GO:0050073': expected 'macrolide 2'-kinase activity', got '...'</code>.</p>
+<h2 id="why-a-pipeline">Why a pipeline?</h2>
+<p>CARD/ARO has <strong>no native ARO→GO mapping</strong> (verified against <code>aro.owl</code>). We supply the<br />
+ARO→GO bridge as curated SSSOM, then need a <strong>UniProt→ARO</strong> step to apply it to real<br />
+protein entries. There are two routes:</p>
+<ol>
+<li>
+<p><strong><code>DR CARD</code> cross-reference (deterministic, sparse).</strong> UniProt flat-files sometimes carry<br />
+   a CARD cross-reference, e.g.<br />
+<code>DR   CARD; ARO:3000318; mphB; ARO:0001004; antibiotic inactivation.</code><br />
+   This single line gives <strong>both</strong> the determinant ARO id <em>and</em> the resistance-mechanism ARO<br />
+   id for free. But UniProt only populates it for a minority of entries — in this repo,<br />
+<strong>1 of 2334</strong> cached UniProt records (MphB). MphA (Q47396) has none.</p>
+</li>
+<li>
+<p><strong>Sequence-based assignment with RGI (scalable).</strong> CARD's<br />
+<a href="https://github.com/arpcard/rgi">Resistance Gene Identifier</a> assigns ARO ids to protein<br />
+   sequences. This is the route for entries lacking a <code>DR CARD</code> line. We do <strong>not</strong> run RGI<br />
+   in this script (it needs RGI + the local CARD database installed); instead we parse its<br />
+   output if you run it. Related: <a href="https://github.com/BigDataBiology/argNorm"><code>argNorm</code></a><br />
+   normalises the output of RGI/AMRFinderPlus/ABRicate/etc. to ARO accessions.</p>
+</li>
+</ol>
+<h2 id="propagation-exact-or-narrower-the-high-value-logic">Propagation: exact or narrower (the high-value logic)</h2>
+<p>A GO term mapped at an ARO term applies to a gene whose ARO assignment is <strong>that term or any<br />
+narrower (is_a descendant) ARO term</strong> — i.e. propagate down the ARO hierarchy, never up. This is<br />
+why <strong>family-level ARO nodes are the high-value mapping targets</strong>: one mapping covers an entire<br />
+subtree. For example the single <code>beta-lactamase</code> (<code>ARO:3000001</code>) → <code>GO:0008800</code> mapping reaches<br />
+its <strong>5,317</strong> descendant ARO gene terms (CTX-M, KPC, NDM, …), none of which need their own row.</p>
+<p>The pipeline implements this by walking each gene's ARO <strong>is_a ancestors</strong> (via OAK<br />
+<code>sqlite:obo:aro</code>) and firing any mapping whose subject is an ancestor-or-self. The output<br />
+<code>aro_relation</code> column records <code>exact</code> (mapping is on the gene's own ARO term) vs <code>narrower</code> (the<br />
+gene's ARO term is narrower than the mapped family/mechanism node). Use <code>--no-propagate</code> for<br />
+exact-only. Demonstration:</p>
+<div class="codehilite"><pre><span></span><code>$ uv run python uniprot2aro2go.py --sssom aro2go.sssom.yaml --rgi-output examples/rgi_example_betalactamases.txt
+gene_aro_id   gene_aro_label   mapped_aro_id   mapped_aro_label   aro_relation   go_id        go_label
+ARO:3001878   CTX-M-15         ARO:3000001     beta-lactamase     narrower       GO:0008800   beta-lactamase activity
+ARO:3002312   KPC-2            ARO:3000001     beta-lactamase     narrower       GO:0008800   beta-lactamase activity
+ARO:3000589   NDM-1           ARO:3000001     beta-lactamase     narrower       GO:0008800   beta-lactamase activity
+</code></pre></div>
+
+<h2 id="usage">Usage</h2>
+<p>Run via the just recipe (validates the SSSOM first, then runs the chain on the AMR genes):</p>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>aro2go-pipeline
+</code></pre></div>
+
+<p>Or directly:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Route 1 — DR CARD line(s) from cached UniProt record(s):</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--sssom<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>genes/ECO8N/A0A0H3EUF3_ECO8N/A0A0H3EUF3_ECO8N-uniprot.txt
+
+<span class="c1"># Sweep every cached UniProt record (recursive glob; quote it):</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--sssom<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="s1">&#39;genes/**/*-uniprot.txt&#39;</span><span class="w"> </span>-o<span class="w"> </span>/tmp/aro2go_all.tsv
+
+<span class="c1"># Route 2 — parse RGI output (for entries without a DR CARD line, e.g. MphA):</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--sssom<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--rgi-output<span class="w"> </span>projects/ANTIMICROBIAL_RESISTANCE/examples/rgi_example_mphA.txt
+</code></pre></div>
+
+<p>To generate real RGI output for the sequence-based route:</p>
+<div class="codehilite"><pre><span></span><code>rgi<span class="w"> </span>load<span class="w"> </span>--card_json<span class="w"> </span>card.json<span class="w">            </span><span class="c1"># one-time, from https://card.mcmaster.ca/download</span>
+rgi<span class="w"> </span>main<span class="w"> </span>--input_sequence<span class="w"> </span>protein.faa<span class="w"> </span>--input_type<span class="w"> </span>protein<span class="w"> </span>--output_file<span class="w"> </span>rgi_out
+<span class="c1"># then pass rgi_out.txt to --rgi-output</span>
+</code></pre></div>
+
+<h2 id="output">Output</h2>
+<p>A TSV of <strong>candidate</strong> GO annotations with full provenance — <code>uniprot_acc</code>,<br />
+<code>gene_aro_id</code>/<code>gene_aro_label</code> (the gene's ARO assignment), <code>mapped_aro_id</code>/<code>mapped_aro_label</code><br />
+(the ARO term the mapping is on), <code>aro_relation</code> (<code>exact</code> or <code>narrower</code>),<br />
+<code>predicate_id</code>/<code>predicate_label</code>, <code>go_id</code>/<code>go_label</code>, <code>mapping_justification</code>, and <code>route</code><br />
+(<code>DR_CARD</code> or <code>RGI</code>).</p>
+<p>These are <strong>leads for a curator, not final annotations</strong>: the <code>enables</code>/<code>relatedMatch</code> predicates<br />
+indicate the relationship type, and a family-level mapping is only a prior for its members. As a<br />
+sanity check, the pipeline reproduces exactly the GO terms curators assigned by hand:</p>
+<ul>
+<li><strong>MphB</strong> (<code>DR CARD</code> route) → <code>GO:0050073</code> macrolide 2'-kinase activity + <code>GO:0046677</code> response to antibiotic</li>
+<li><strong>MphA</strong> (RGI route) → <code>GO:0050073</code> macrolide 2'-kinase activity</li>
+</ul>
+<h2 id="coverage-23-mappings">Coverage (23 mappings)</h2>
+<ul>
+<li><strong>Mechanism → <code>GO:0046677</code> response to antibiotic</strong> (<code>skos:relatedMatch</code>): antibiotic inactivation,<br />
+  efflux, target alteration, target protection, target replacement, reduced permeability.</li>
+<li><strong>AMR gene family → GO MF</strong>: MPH (<code>GO:0050073</code>), beta-lactamase (<code>GO:0008800</code>), CAT (<code>GO:0008811</code>),<br />
+  APH/AAC/ANT (<code>GO:0034071</code>/<a href="https://www.uniprot.org/uniprotkb/0034069/entry">0034069</a>/<a href="https://www.uniprot.org/uniprotkb/0034068/entry">0034068</a>), Erm (<code>GO:0008988</code> — the family-safe N6-methyltransferase<br />
+  parent, not the di-methyltransferase, to avoid over-annotating mono-methylating variants),<br />
+  dfr (<code>GO:0004146</code>), sul (<code>GO:0004156</code>),<br />
+<strong>colistin/MCR phosphoethanolamine transferase (<code>GO:0043838</code>)</strong> via <code>enables</code>;<br />
+  FosA/FosA2/FosA3/fosA5 (<code>GO:0004364</code>; the glutathione-specific nodes only, excluding FosB/FosX) and<br />
+<strong>16S rRNA m7G1405 methyltransferase / ArmA-Rmt (<code>GO:0070043</code>)</strong> via <code>relatedMatch</code> (the ARO family<br />
+  is narrower than a general GO MF, still propagatable).</li>
+<li><strong>Determinant → GO MF</strong> (<code>enables</code>): mphA, mphB (<code>GO:0050073</code>).</li>
+</ul>
+<h3 id="gaps-aro-families-with-no-suitable-go-term-recorded-in-the-mapping-file">Gaps: ARO families with no suitable GO term (recorded in the mapping file)</h3>
+<p>GO genuinely lacks a specific MF term for several resistance enzymes. Rather than mapping them to a<br />
+near-but-wrong term (a paralog or the wrong chemistry), these are recorded <strong>in <code>aro2go.sssom.yaml</code><br />
+itself</strong> using the SSSOM no-match convention — <code>object_id: sssom:NoTermFound</code>, <code>object_source:
+obo:go.owl</code>, <code>predicate_id: skos:exactMatch</code> (the relation we <em>would</em> use), and a <code>comment</code> explaining<br />
+the gap. They are GO new-term-request candidates. The converter and pipeline skip these rows (no GO<br />
+object), so they never produce a candidate annotation; <code>test_gap_rows_present</code> keeps them from being<br />
+silently dropped.</p>
+<table>
+<thead>
+<tr>
+<th>ARO family</th>
+<th>Why no mapping (GO gap)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lincosamide nucleotidyltransferase / Lnu (<code>ARO:3000221</code>)</td>
+<td>No lincosamide O-nucleotidyltransferase GO MF term.</td>
+</tr>
+<tr>
+<td>streptogramin Vat acetyltransferase (<code>ARO:3000453</code>)</td>
+<td>No streptogramin A O-acetyltransferase GO MF term.</td>
+</tr>
+<tr>
+<td>streptogramin Vgb lyase (<code>ARO:3000376</code>)</td>
+<td>No streptogramin B lyase GO MF term.</td>
+</tr>
+<tr>
+<td>macrolide esterase / Ere (<code>ARO:3000320</code>)</td>
+<td>No macrolide/erythromycin esterase GO MF term.</td>
+</tr>
+<tr>
+<td>rifampin ADP-ribosyltransferase / Arr (<code>ARO:3000390</code>)</td>
+<td><code>GO:0003950</code> is <strong>poly</strong>-ADP-ribosyltransferase; Arr is <strong>mono</strong>.</td>
+</tr>
+<tr>
+<td>rifampin monooxygenase (<code>ARO:3000445</code>)</td>
+<td>Only the general <code>GO:0004497</code> monooxygenase activity exists.</td>
+</tr>
+<tr>
+<td>tetracycline inactivation / Tet(X) (<code>ARO:3000036</code>)</td>
+<td>No tetracycline-destructase monooxygenase GO MF term.</td>
+</tr>
+<tr>
+<td>Cfr 23S rRNA methyltransferase (<code>ARO:3000202</code>)</td>
+<td><code>GO:0070040</code> is the <strong>C2</strong> (RlmN) activity; Cfr methylates <strong>C8</strong>.</td>
+</tr>
+<tr>
+<td>D-Ala-D-Lac ligase / VanA (<code>ARO:3002978</code>)</td>
+<td><code>GO:0008716</code> is D-Ala-<strong>D-Ala</strong> ligase; VanA makes D-Ala-<strong>D-Lac</strong>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="validation-tests">Validation &amp; tests</h2>
+<ul>
+<li><code>just validate-mappings</code> — structural (<code>linkml-validate</code>) <strong>and</strong> ontology-term<br />
+  (<code>linkml-term-validator</code>, checks every ARO/GO id resolves + label matches).</li>
+<li><code>tests/test_aro2go_mapping.py</code> — SSSOM structure, terms-file sync, and (integration) term-validator.</li>
+<li>Pipeline parser: doctest — <code>uv run python -m doctest projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py</code>.</li>
+</ul>
+    </div>
+
+    <footer>
+        <small>Generated from README.md</small>
+        <small>AI Gene Review Project</small>
+    </footer>
+</body>
+</html>

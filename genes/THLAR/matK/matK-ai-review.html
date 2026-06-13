@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>matK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>matK</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9GF35" target="_blank" class="term-link">
+                        Q9GF35
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Thlaspi arvense</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "matK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9GF35" data-a="DESCRIPTION: Maturase K (MatK) is the chloroplast-encoded intro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Maturase K (MatK) is the chloroplast-encoded intron maturase of field pennycress, typically encoded within the intron of the plastid trnK-UUU (lysine tRNA) gene. It is the only maturase retained in the plastid genome and acts as a trans-acting splicing factor that binds intron RNA and promotes excision of a conserved set of chloroplast group IIA introns (including its own trnK host intron and introns in trnA, trnI, trnV, atpF, rpl2 and rps12). It functions in the chloroplast stroma. MatK retains the maturase &#34;domain X&#34; and a degenerate reverse-transcriptase-like region but lacks the endonuclease/mobility domains of canonical bacterial intron-encoded proteins. The gene is also widely used as a plastid DNA barcode and phylogenetic marker.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9GF35" data-a="GO:0005737" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-general and redundant. MatK is a plastid genome-encoded protein that localizes to the chloroplast stroma (soluble fraction in transplastomic tobacco); the generic cytoplasm term should be specialized to the chloroplast stroma, consistent with the separate chloroplast annotation.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                    chloroplast stroma
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/matK/matK-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MatK is a chloroplast protein enriched in the soluble fraction (stroma) rather than membranes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006397" target="_blank" class="term-link">
+                                    GO:0006397
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9GF35" data-a="GO:0006397" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acceptable. Several MatK splicing targets are group IIA introns within protein-coding (mRNA) transcripts, including atpF, rpl2 and rps12, so MatK does contribute to mRNA processing. The more precise activity is captured by the group II intron splicing annotation below.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/matK/matK-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MatK-dependent group IIA introns include atpF, rpl2 and rps12 intron 2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008380" target="_blank" class="term-link">
+                                    GO:0008380
+                                </a>
+                            </span>
+                            <span class="term-label">RNA splicing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9GF35" data-a="GO:0008380" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but can be made precise. MatK is specifically a group II intron maturase / splicing factor acting on chloroplast group IIA introns. The dedicated group II intron splicing term is more informative than the generic RNA splicing parent.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000373" target="_blank" class="term-link">
+                                    Group II intron splicing
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/matK/matK-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MatK facilitates splicing (excision) of chloroplast group IIA introns as a trans-acting maturase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9GF35" data-a="GO:0009507" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. MatK is plastid genome-encoded and functions in the chloroplast. Consistent with the UniProt subcellular location (Plastid, chloroplast).
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/matK/matK-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">chloroplast-encoded intron maturase localized to the chloroplast stroma</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9GF35" data-a="GO:0003723" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new molecular-function annotation. GOA currently lists no molecular function for MatK, but the protein is an RNA-binding intron maturase that binds its target group IIA introns to promote splicing; the conserved maturase domain X is an RNA-binding region. This is the core molecular function and should be added.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/matK/matK-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Maturases act as cofactors by binding intron RNA to stabilize the correct folded state and promote catalytic steps; MatK associates with multiple intron-containing transcripts in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MatK is a chloroplast-encoded, RNA-binding group II intron maturase that acts as a trans-acting splicing factor, promoting excision of a conserved set of chloroplast group IIA introns in the stroma.</h3>
+                <span class="vote-buttons" data-g="Q9GF35" data-a="FUNCTION: MatK is a chloroplast-encoded, RNA-binding group I..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000373" target="_blank" class="term-link">
+                                Group II intron splicing
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009570" target="_blank" class="term-link">
+                                chloroplast stroma
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:THLAR/matK/matK-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">trans-acting splicing cofactor for chloroplast group IIA introns (trnK, trnA, trnI, trnV, atpF, rpl2, rps12 intron 2), stroma-localized</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:THLAR/matK/matK-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon/Edison deep research report for matK, Thlaspi arvense</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MatK is the chloroplast-encoded group II intron maturase, a stroma-localized trans-acting splicing factor for a conserved set of chloroplast group IIA introns; the pennycress protein itself has not been directly assayed, so function is inferred from conserved land-plant MatK biology.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which chloroplast group IIA introns does Thlaspi arvense MatK splice in vivo, and is MatK essential for plastid gene expression in pennycress as it is in tobacco?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9GF35" data-a="Q: Which chloroplast group IIA introns does Thlaspi a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(matK-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9GF35" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">33 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T16:38:13.272112</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="matK-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-chloroplast-matk-uniprot-q9gf35-from-thlaspi-arvense-field-penny-cress">Research Report: chloroplast <strong>matK</strong> (UniProt Q9GF35) from <em>Thlaspi arvense</em> (field penny-cress)</h2>
+<h3 id="0-target-verification-and-scope">0) Target verification and scope</h3>
+<p>The UniProt target Q9GF35 corresponds to <strong>MatK (maturase K)</strong>, a <strong>chloroplast-encoded intron maturase</strong> in the <strong>intron maturase 2 family (MatK subfamily)</strong>, annotated for <em>Thlaspi arvense</em> (field penny-cress). The retrieved authoritative plant literature consistently uses <strong>matK</strong> to denote the <strong>plastid gene embedded in the trnK-UUU intron</strong> that encodes a <strong>group II intron maturase/splicing factor</strong>; no alternative protein with the same symbol was identified in the retrieved sources. Therefore, functional inference for the <em>T. arvense</em> MatK protein is best grounded in conserved land-plant MatK biology established in tobacco and other angiosperms (homology-based functional annotation) (zoschke2010anorganellarmaturase pages 1-1).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-is-matk">1.1 What is MatK?</h4>
+<p>MatK is an <strong>organellar maturase</strong>: a protein derived from bacterial group II intron-encoded proteins (IEPs) that <strong>facilitates splicing (excision) of group II introns</strong> from precursor RNAs. In land plants, MatK is widely described as the <strong>sole chloroplast-encoded maturase/splicing factor</strong> retained in the plastid genome and is typically <strong>encoded within the intron of the chloroplast lysine tRNA gene trnK-UUU</strong> (zoschke2010anorganellarmaturase pages 1-1, mizrahi2022groupiiintronencoded pages 6-7).</p>
+<h4 id="12-group-ii-introns-and-maturase-function">1.2 Group II introns and “maturase” function</h4>
+<p>Group II introns are catalytic RNAs that can self-splice under permissive conditions, but in plant organelles their introns are often structurally degenerate and <strong>require protein cofactors</strong> for efficient splicing in vivo. Maturases act as such cofactors, typically by binding intron RNA to stabilize the correct folded state and promote catalytic steps (barthet2020unravelingtherole pages 1-2, mizrahi2022groupiiintronencoded pages 6-7).</p>
+<h4 id="13-domain-architecture-why-matk-is-considered-a-splicing-factor">1.3 Domain architecture (why MatK is considered a splicing factor)</h4>
+<p>Plant MatK is <strong>degenerate relative to canonical bacterial IEPs</strong>: it retains the maturase <strong>“domain X”</strong> (a conserved RNA-binding/splicing-related region) and <strong>only part of the reverse transcriptase-like region</strong>, while lacking mobility-associated domains (e.g., DNA endonuclease). This domain pattern supports a specialized role in RNA splicing rather than intron mobility (barthet2020unravelingtherole pages 1-2, qu2015analysisoftargets pages 18-21).</p>
+<h3 id="2-molecular-function-biological-processes-and-localization">2) Molecular function, biological processes, and localization</h3>
+<h4 id="21-cellular-and-sub-organellar-localization">2.1 Cellular and sub-organellar localization</h4>
+<p>Direct biochemical localization in transplastomic tobacco shows MatK is a <strong>chloroplast protein enriched in the soluble fraction (stroma)</strong> rather than membranes, placing its activity in the chloroplast compartment where RNA processing/splicing occurs (zoschke2010anorganellarmaturase pages 1-1, zoschke2010anorganellarmaturase pages 3-3).</p>
+<h4 id="22-primary-function-splicing-of-chloroplast-group-iia-introns">2.2 Primary function: splicing of chloroplast group IIA introns</h4>
+<p>Multiple lines of evidence support MatK as a <strong>trans-acting splicing cofactor</strong> for a specific set of chloroplast <strong>group IIA introns</strong>:</p>
+<ul>
+<li><strong>RNA association evidence (RIP-chip/RIP approaches):</strong> In vivo RNA immunoprecipitation experiments demonstrate MatK <strong>associates with multiple intron-containing transcripts</strong>, not only its host trnK intron (zoschke2010anorganellarmaturase pages 1-1, zoschke2010anorganellarmaturase pages 3-3).</li>
+<li><strong>Biochemical activity evidence (in vitro):</strong> An in vitro splicing assay showed chloroplast group IIA introns (rps12 intron 2 and rpl2 intron) can self-excise, and <strong>adding heterologously expressed MatK increases splicing efficiency for rps12 intron 2</strong> (but not for rpl2 under the tested conditions). This was presented as the <strong>first direct evidence</strong> of MatK maturase activity (barthet2020unravelingtherole pages 1-2).</li>
+</ul>
+<h4 id="23-best-supported-rna-targets-substrates">2.3 Best-supported RNA targets (substrates)</h4>
+<p>Across mechanistic studies, the most consistently supported MatK targets are <strong>seven chloroplast group IIA introns</strong>:<br />
+- <strong>trnK-UUU</strong> (the intron that encodes matK)<br />
+- <strong>trnA</strong>, <strong>trnI</strong>, <strong>trnV</strong> (tRNA introns)<br />
+- <strong>atpF</strong> (ATP synthase-related transcript intron)<br />
+- <strong>rpl2</strong> (ribosomal protein transcript intron)<br />
+- <strong>rps12 intron 2</strong> (second intron of rps12)</p>
+<p>These targets are explicitly listed as MatK-associated and/or MatK-dependent in land-plant studies and reviews, and were reiterated in the Plant Direct biochemical study (barthet2020unravelingtherole pages 1-2, zoschke2010anorganellarmaturase pages 1-1, qu2015analysisoftargets pages 18-21).</p>
+<h4 id="24-essentiality-and-functional-constraints">2.4 Essentiality and functional constraints</h4>
+<p>Attempts to generate matK knockouts in tobacco plastids did <strong>not</strong> yield homoplastomic mutants, which has been interpreted as evidence that <strong>matK is essential for viability</strong> (or at least for stable plastid gene expression necessary for survival) (zoschke2010anorganellarmaturase pages 1-1, qu2015analysisoftargets pages 18-21).</p>
+<h4 id="25-developmental-regulation-and-regulatory-checkpoints">2.5 Developmental regulation and regulatory checkpoints</h4>
+<p>MatK expression is developmentally regulated and can show strong <strong>mRNA–protein discordance</strong>:<br />
+- MatK protein abundance peaks early in development (notably around <strong>7 days</strong>) while matK mRNA can be low at the same stage, suggesting translational regulation and/or altered protein stability (hertel2013multiplecheckpointsfor pages 8-9, zoschke2010anorganellarmaturase pages 1-1).<br />
+- RIP/qPCR-based analyses report <strong>developmentally changing MatK–RNA associations</strong>, e.g., MatK association with <strong>atpF increases ~3-fold</strong> in older (25-day) vs young (7-day) tobacco tissue, whereas association with <strong>trnV decreases ~2-fold</strong> (qu2015analysisoftargets pages 60-63).<br />
+- A quantitative modeling framework proposed negative autoregulation through pre-trnK/MatK complexes and competition among tRNA targets, consistent with multiple “checkpoints” controlling MatK abundance and interaction with intron substrates (hertel2013multiplecheckpointsfor pages 8-9).</p>
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-mechanistic-matk-research-20232024-availability">3.1 Mechanistic MatK research (2023–2024 availability)</h4>
+<p>Within the retrieved 2023–2024 corpus, there was <strong>limited accessible new mechanistic primary evidence</strong> that substantially changes the established MatK model (stroma-localized maturase acting on a conserved set of group IIA introns). The strongest mechanistic evidence in the retrieved set remains earlier high-impact work (2010–2020), including in vivo RNA association mapping and direct in vitro activity demonstration (zoschke2010anorganellarmaturase pages 1-1, barthet2020unravelingtherole pages 1-2).</p>
+<h4 id="32-2024-evidence-of-ongoing-matk-evolutionvariation-studies">3.2 2024 evidence of ongoing matK evolution/variation studies</h4>
+<p>Recent work continues to document matK sequence variation and rapid evolution in applied genomics contexts. For example, a 2024 study amplified a <strong>730-bp partial matK region</strong> and reported <strong>eight variable sites</strong> across aligned Ficus species sequences, emphasizing matK’s relatively higher evolutionary rate compared with rbcL and its utility as a discriminatory plastid locus (primandiri2024thematurasek pages 1-5).</p>
+<h3 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h3>
+<p>MatK’s real-world use is dominated by its role as a <strong>chloroplast DNA barcode</strong> and phylogenetic marker, distinct from its protein function as a maturase.</p>
+<h4 id="41-dna-barcoding-in-field-surveillance-and-biodiversity-monitoring-2024">4.1 DNA barcoding in field surveillance and biodiversity monitoring (2024)</h4>
+<p>A 2024 field-oriented barcoding study of <strong>91 terrestrial plant species</strong> (mostly invasive) evaluated four loci (ITS, rbcL, matK, trnH-psbA) and reported an overall PCR-and-sequencing success rate of <strong>87.9%</strong> across loci. In that study, combining <strong>rbcL + matK</strong> yielded <strong>68.6%</strong> species discrimination, whereas <strong>ITS + trnH-psbA</strong> achieved <strong>97.1%</strong>, motivating a practical recommendation for dual-locus strategies emphasizing ITS + trnH-psbA over rbcL+matK in that context (nath2024dnabarcodingof pages 2-3, nath2024dnabarcodingof pages 9-10).</p>
+<h4 id="42-taxon-specific-primer-challenges-and-performance-cactaceae-2024">4.2 Taxon-specific primer challenges and performance (Cactaceae, 2024)</h4>
+<p>A 2024 Cactaceae study illustrates a common implementation issue: <strong>universal matK primers can fail</strong> in some lineages. The authors report universal matK primers had <strong>&lt;10% amplification success</strong>, while designing lineage-specific primers increased amplification to <strong>91.95%</strong>; nevertheless, good-quality matK sequence recovery was <strong>54.16%</strong> (lower than rbcL 81.25% in that study). Using BLAST-based identification, matK achieved <strong>83.33% genus-level</strong> and <strong>50% species-level</strong> identification in their dataset (wei2024effectivenessofdna pages 3-4, wei2024effectivenessofdna pages 1-2).</p>
+<h4 id="43-forensic-botany-and-expert-synthesis-2024-review">4.3 Forensic botany and expert synthesis (2024 review)</h4>
+<p>A 2024 review focusing on forensic botany concluded that matK can have high recovery in some contexts (e.g., <strong>91.8% recovery</strong> cited for one wood-forensics dataset) but can show only moderate species-level identification in others (e.g., <strong>62.5%</strong> in a cited Paphiopedilum dataset). The review emphasizes that <strong>multi-locus combinations</strong> can substantially improve identification performance (e.g., cited 3-marker combinations averaging <strong>91.4%</strong>, and a cited psbA-trnH + trnK combination reaching <strong>100%</strong> in one dataset), supporting real-world practice of combining markers rather than relying on matK alone (behura2024differentdnabarcoding pages 7-9).</p>
+<h3 id="5-expert-opinion-and-analysis-authoritative-interpretations">5) Expert opinion and analysis (authoritative interpretations)</h3>
+<ul>
+<li><strong>MatK as a trans-acting splicing factor:</strong> High-impact mechanistic work concludes MatK is not limited to splicing its host trnK intron; rather, it <strong>associates with multiple group IIA introns</strong>, supporting a model where the single plastid maturase contributes broadly to chloroplast intron splicing (zoschke2010anorganellarmaturase pages 1-1, barthet2020unravelingtherole pages 1-2).</li>
+<li><strong>Regulated expression and potential toxicity of misregulation:</strong> Quantitative developmental profiling and modeling suggest MatK is controlled at multiple levels, and that inappropriate MatK abundance may perturb chloroplast development—supporting a view of MatK as integrated into plastid gene-expression homeostasis, not just a constitutive “housekeeping” splicing enzyme (hertel2013multiplecheckpointsfor pages 8-9).</li>
+<li><strong>Applied consensus for barcoding:</strong> Recent applied studies and reviews converge on the practical conclusion that matK is useful but <strong>not universally robust</strong> due to primer universality issues and variable discriminatory power; <strong>multi-locus strategies</strong> often outperform single-locus matK barcoding (wei2024effectivenessofdna pages 3-4, behura2024differentdnabarcoding pages 7-9, nath2024dnabarcodingof pages 9-10).</li>
+</ul>
+<h3 id="6-summary-for-functional-annotation-of-t-arvense-matk-uniprot-q9gf35">6) Summary for functional annotation of <em>T. arvense</em> MatK (UniProt Q9GF35)</h3>
+<p><strong>Recommended functional statement (protein-level):</strong> MatK is a <strong>chloroplast stromal group II intron maturase</strong> that <strong>binds and promotes splicing/excision of multiple chloroplast group IIA introns</strong>, including <strong>trnK-UUU, trnA, trnI, trnV, atpF, rpl2, and rps12 intron 2</strong>. It is likely essential for proper chloroplast RNA maturation and plastid gene expression. Evidence includes in vivo RNA association mapping and direct in vitro demonstration of maturase activity (enhanced rps12 intron 2 self-splicing) (zoschke2010anorganellarmaturase pages 1-1, barthet2020unravelingtherole pages 1-2).</p>
+<h3 id="consolidated-evidence-table">Consolidated evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Details</th>
+<th>Evidence type</th>
+<th>Key quantitative findings</th>
+<th>Key citations with year and DOI/URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / genome context</td>
+<td>MatK is the plastid-encoded maturase K relevant to UniProt Q9GF35 from <em>Thlaspi arvense</em>; in land plants it is typically encoded within the chloroplast <strong>trnK-UUU intron</strong> and is the only chloroplast-encoded maturase/splicing factor retained in most autotrophic lineages. This matches the UniProt annotation for a MatK-family intron maturase.</td>
+<td>Comparative plastid genomics; functional studies in land-plant homologs</td>
+<td>Conserved across autotrophic land plants with chloroplast group II introns; knockout attempts in tobacco did not yield homoplastomic mutants, consistent with essentiality.</td>
+<td>Zoschke et al. 2010, PNAS, doi:10.1073/pnas.0909400107, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 1-1); Hertel et al. 2013, <em>Plant Physiology</em>, doi:10.1104/pp.113.227579, https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9); Mizrahi et al. 2022, <em>Genes</em>, doi:10.3390/genes13071137, https://doi.org/10.3390/genes13071137 (mizrahi2022groupiiintronencoded pages 6-7)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>MatK is a <strong>degenerated group II intron maturase/IEP</strong> that retains the maturase <strong>domain X</strong> and only part of the reverse-transcriptase region, while lacking the DNA endonuclease/mobility modules seen in canonical bacterial group II intron proteins. This supports a specialization for RNA splicing rather than intron mobility.</td>
+<td>Domain/evolutionary inference integrated with biochemical data</td>
+<td>Structural degeneration is consistent with loss of mobility and retention of splicing activity; direct biochemical support for maturase activity was demonstrated in vitro.</td>
+<td>Barthet et al. 2020, <em>Plant Direct</em>, doi:10.1002/pld3.208, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2); Zoschke et al. 2010, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 1-1); Qu 2015 dissertation, doi:10.18452/17256, https://doi.org/10.18452/17256 (qu2015analysisoftargets pages 18-21, qu2015analysisoftargets pages 15-18)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>MatK is a <strong>chloroplast stromal/soluble protein</strong> rather than a membrane protein. Its activity is therefore placed in the chloroplast stroma, where plastid pre-RNAs are processed and group II introns are spliced.</td>
+<td>Chloroplast transformation, organelle fractionation, immunoblotting</td>
+<td>In tobacco, MatK accumulation was highest in very young tissue, peaking at <strong>day 7 post-imbibition</strong>, then declining strongly in older tissue.</td>
+<td>Zoschke et al. 2010, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 1-1, zoschke2010anorganellarmaturase pages 3-3); Hertel et al. 2013, https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9)</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>Primary function: <strong>facilitation of chloroplast group IIA intron excision/splicing</strong> in precursor RNAs. MatK acts in trans on multiple introns, not just its host intron, and likely promotes correct RNA folding/assembly of catalytically competent intron structures.</td>
+<td>RIP-Chip/RIP-seq, developmental expression analysis, in vitro splicing assay, genetic inference from plastid translation-deficient mutants</td>
+<td>Barthet et al. showed the first direct biochemical evidence: addition of recombinant MatK increased <strong>rps12 intron 2</strong> self-splicing efficiency in vitro, but not <strong>rpl2</strong> under the tested conditions.</td>
+<td>Zoschke et al. 2010, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 3-3, zoschke2010anorganellarmaturase pages 1-1); Barthet et al. 2020, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2); Hertel et al. 2013, https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9)</td>
+</tr>
+<tr>
+<td>Validated intron targets</td>
+<td>Seven canonical chloroplast <strong>group IIA</strong> intron targets repeatedly associated with MatK are: <strong>trnK, trnA, trnI, trnV, atpF, rpl2, and rps12 intron 2</strong>. These are the best-supported conserved targets relevant for annotation of <em>T. arvense</em> MatK by homology.</td>
+<td>RNA immunoprecipitation/chip or sequencing; comparative functional inference</td>
+<td>RIP-based studies recovered association with <strong>7</strong> canonical group IIA introns; all known strong targets fall in subgroup IIA.</td>
+<td>Zoschke et al. 2010, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 1-1); Barthet et al. 2020, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2); Qu 2015, https://doi.org/10.18452/17256 (qu2015analysisoftargets pages 18-21, qu2015analysisoftargets pages 56-60)</td>
+</tr>
+<tr>
+<td>trnK target summary</td>
+<td>MatK is encoded in the <strong>trnK</strong> intron and binds intronic regions flanking rather than the matK ORF itself; this supports action on its home intron while also acting on other introns in trans.</td>
+<td>RIP-Chip mapping of binding regions</td>
+<td>Strong enrichment mapped to intron regions upstream/downstream of the matK ORF; authors did <strong>not</strong> observe strongest enrichment over the matK coding region itself.</td>
+<td>Zoschke et al. 2010, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 3-3, zoschke2010anorganellarmaturase pages 1-1)</td>
+</tr>
+<tr>
+<td>trnA target summary</td>
+<td><strong>trnA</strong> is one of the canonical group IIA introns associated with MatK and is consistently included among inferred/observed MatK targets in land plants.</td>
+<td>RIP-chip / RIP-seq association; review synthesis</td>
+<td>Included among the 7 principal MatK-associated introns in chloroplasts.</td>
+<td>Barthet et al. 2020, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2); Qu 2015, https://doi.org/10.18452/17256 (qu2015analysisoftargets pages 18-21, qu2015analysisoftargets pages 56-60)</td>
+</tr>
+<tr>
+<td>trnI target summary</td>
+<td><strong>trnI</strong> is a canonical MatK-associated chloroplast group IIA intron target.</td>
+<td>RIP-chip / RIP-seq association; review synthesis</td>
+<td>Included among the 7 principal MatK-associated introns in chloroplasts.</td>
+<td>Barthet et al. 2020, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2); Qu 2015, https://doi.org/10.18452/17256 (qu2015analysisoftargets pages 18-21, qu2015analysisoftargets pages 56-60)</td>
+</tr>
+<tr>
+<td>trnV target summary</td>
+<td><strong>trnV</strong> is a canonical MatK target; developmental RIP-qPCR suggested changing association over development.</td>
+<td>RIP-based developmental interaction profiling</td>
+<td>MatK association with <strong>trnV decreased ~2-fold</strong> in older (25-day) vs young (7-day) tobacco tissue.</td>
+<td>Hertel et al. 2013, https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9); Qu 2015, https://doi.org/10.18452/17256 (qu2015analysisoftargets pages 60-63)</td>
+</tr>
+<tr>
+<td>atpF target summary</td>
+<td><strong>atpF</strong> is a canonical MatK target and a well-supported example of developmentally regulated MatK-RNA association.</td>
+<td>RIP-qPCR / RIP-seq</td>
+<td>MatK association with <strong>atpF increased ~3-fold</strong> in 25-day vs 7-day tobacco tissue.</td>
+<td>Hertel et al. 2013, https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9); Qu 2015, https://doi.org/10.18452/17256 (qu2015analysisoftargets pages 60-63)</td>
+</tr>
+<tr>
+<td>rpl2 target summary</td>
+<td><strong>rpl2</strong> is a canonical MatK target; in vitro, its intron can self-excise, but MatK addition did not increase splicing efficiency under the assay conditions tested.</td>
+<td>In vitro self-splicing assay with recombinant MatK</td>
+<td>Direct assay showed no enhancement for <strong>rpl2</strong> in the reported experimental setup, unlike <strong>rps12 intron 2</strong>.</td>
+<td>Barthet et al. 2020, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2)</td>
+</tr>
+<tr>
+<td>rps12 intron 2 target summary</td>
+<td><strong>rps12 intron 2</strong> is a canonical MatK target and currently has the clearest direct biochemical support for MatK-mediated stimulation of splicing.</td>
+<td>In vitro splicing assay with recombinant MatK</td>
+<td>Recombinant MatK increased self-splicing efficiency of <strong>rps12 intron 2</strong>; this was presented as the <strong>first direct evidence</strong> of MatK maturase activity.</td>
+<td>Barthet et al. 2020, https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2)</td>
+</tr>
+<tr>
+<td>Expression / regulation</td>
+<td>MatK expression is developmentally regulated at multiple checkpoints; protein abundance does not track mRNA abundance, implying post-transcriptional regulation and/or altered protein stability. An autoregulatory model involving pre-trnK/MatK complexes has been proposed.</td>
+<td>Quantitative expression profiling; mathematical modeling</td>
+<td>Protein maximum at <strong>7 dpi</strong>, pre-trnK-matK maximum around <strong>25 dpi</strong>, mature trnK maximum around <strong>59 dpi</strong>; pre-trnK/MatK complex ratio <strong>RR25d/7d = 1.24</strong> in the model.</td>
+<td>Hertel et al. 2013, https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9); Zoschke et al. 2010, https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 1-1)</td>
+</tr>
+<tr>
+<td>Current applications: plant DNA barcoding</td>
+<td>Outside functional biology, <strong>matK DNA sequence</strong> is widely used as a plant barcode and phylogenetic marker. Its practical performance varies by taxon and primer design; it is often used with additional loci rather than alone.</td>
+<td>Applied barcoding studies and review synthesis</td>
+<td>In invasive plants (91 species), overall PCR+sequencing success across four loci was <strong>87.9%</strong>; <strong>rbcL+matK</strong> gave <strong>68.6%</strong> discrimination, while <strong>ITS+trnH-psbA</strong> reached <strong>97.1%</strong>. In Cactaceae, BLAST-based <strong>matK</strong> identification reached <strong>83.33% genus</strong> and <strong>50% species</strong>; universal matK primers amplified <strong>&lt;10%</strong>, but lineage-specific primers raised amplification to <strong>91.95%</strong> and sequence recovery to <strong>54.16%</strong>.</td>
+<td>Nath et al. 2024, <em>Plant Direct</em>, doi:10.1002/pld3.615, https://doi.org/10.1002/pld3.615 (nath2024dnabarcodingof pages 9-10, nath2024dnabarcodingof pages 2-3); Wei et al. 2024, <em>Pakistan Journal of Botany</em>, doi:10.30848/pjb2024-5(11), https://doi.org/10.30848/pjb2024-5(11) (wei2024effectivenessofdna pages 3-4, wei2024effectivenessofdna pages 1-2, wei2024effectivenessofdna pages 11-15)</td>
+</tr>
+<tr>
+<td>Current applications: forensic / multi-locus barcoding interpretation</td>
+<td>Recent reviews conclude matK remains useful, but single-locus performance is inconsistent; multi-marker or super-barcode approaches usually improve species discrimination.</td>
+<td>Review of applied barcoding datasets</td>
+<td>Review-cited examples reported <strong>matK 91.8%</strong> recovery in one wood-forensics context, but only <strong>62.5%</strong> species-identification success in a <em>Paphiopedilum</em> dataset; 3-marker combinations averaged <strong>91.4%</strong>, and <strong>psbA-trnH + trnK</strong> reached <strong>100%</strong> in one study.</td>
+<td>Behura et al. 2024, <em>Biosciences Biotechnology Research Asia</em>, doi:10.13005/bbra/3275, https://doi.org/10.13005/bbra/3275 (behura2024differentdnabarcoding pages 7-9)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the conserved functional annotation of chloroplast MatK relevant to UniProt Q9GF35 from Thlaspi arvense, integrating core mechanistic evidence, validated intron targets, localization, regulation, and recent applied barcoding data. It is useful for distinguishing MatK’s primary biological role as a plastid intron maturase from its widespread use as a DNA barcode marker.</em></p>
+<h3 id="urls-and-publication-dates-key-sources">URLs and publication dates (key sources)</h3>
+<ul>
+<li>Zoschke et al. <strong>2010-01</strong>. <em>PNAS</em> “An organellar maturase associates with multiple group II introns.” https://doi.org/10.1073/pnas.0909400107 (zoschke2010anorganellarmaturase pages 1-1)</li>
+<li>Hertel et al. <strong>2013-10</strong>. <em>Plant Physiology</em> “Multiple Checkpoints for the Expression of the Chloroplast-Encoded Splicing Factor MatK.” https://doi.org/10.1104/pp.113.227579 (hertel2013multiplecheckpointsfor pages 8-9)</li>
+<li>Barthet et al. <strong>2020-03</strong>. <em>Plant Direct</em> “Unraveling the role of the enigmatic MatK maturase in chloroplast group IIA intron excision.” https://doi.org/10.1002/pld3.208 (barthet2020unravelingtherole pages 1-2)</li>
+<li>Nath et al. <strong>2024-06</strong>. <em>Plant Direct</em> “DNA barcoding of terrestrial invasive plant species in Southwest Michigan.” https://doi.org/10.1002/pld3.615 (nath2024dnabarcodingof pages 2-3)</li>
+<li>Wei et al. <strong>2024-03</strong>. <em>Pakistan Journal of Botany</em> “Effectiveness of DNA barcodes (rbcL, matK, ITS2) in identifying genera and species in Cactaceae.” https://doi.org/10.30848/pjb2024-5(11) (wei2024effectivenessofdna pages 1-2)</li>
+<li>Behura et al. <strong>2024-09</strong>. <em>Biosciences Biotechnology Research Asia</em> “Different DNA Barcoding Techniques in Forensic Botany: A Review.” https://doi.org/10.13005/bbra/3275 (behura2024differentdnabarcoding pages 7-9)</li>
+<li>Primandiri et al. <strong>2024-01</strong>. “The Maturase K Region of Kebak, A Javanese Cultural Flora.” https://doi.org/10.2991/978-2-38476-283-5_38 (primandiri2024thematurasek pages 1-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(zoschke2010anorganellarmaturase pages 1-1): Reimo Zoschke, Masayuki Nakamura, Karsten Liere, Masahiro Sugiura, Thomas Börner, and Christian Schmitz-Linneweber. An organellar maturase associates with multiple group ii introns. Proceedings of the National Academy of Sciences, 107:3245-3250, Jan 2010. URL: https://doi.org/10.1073/pnas.0909400107, doi:10.1073/pnas.0909400107. This article has 200 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mizrahi2022groupiiintronencoded pages 6-7): Ron Mizrahi, Sofia Shevtsov-Tal, and Oren Ostersetzer-Biran. Group ii intron-encoded proteins (ieps/maturases) as key regulators of nad1 expression and complex i biogenesis in land plant mitochondria. Genes, 13:1137, Jun 2022. URL: https://doi.org/10.3390/genes13071137, doi:10.3390/genes13071137. This article has 10 citations.</p>
+</li>
+<li>
+<p>(barthet2020unravelingtherole pages 1-2): Michelle M. Barthet, Christopher L. Pierpont, and Emilie‐Katherine Tavernier. Unraveling the role of the enigmatic matk maturase in chloroplast group iia intron excision. Plant Direct, Mar 2020. URL: https://doi.org/10.1002/pld3.208, doi:10.1002/pld3.208. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qu2015analysisoftargets pages 18-21): Yujiao Qu. Analysis of targets and functions of the chloroplast intron maturase matk. ArXiv, Jun 2015. URL: https://doi.org/10.18452/17256, doi:10.18452/17256. This article has 0 citations.</p>
+</li>
+<li>
+<p>(zoschke2010anorganellarmaturase pages 3-3): Reimo Zoschke, Masayuki Nakamura, Karsten Liere, Masahiro Sugiura, Thomas Börner, and Christian Schmitz-Linneweber. An organellar maturase associates with multiple group ii introns. Proceedings of the National Academy of Sciences, 107:3245-3250, Jan 2010. URL: https://doi.org/10.1073/pnas.0909400107, doi:10.1073/pnas.0909400107. This article has 200 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hertel2013multiplecheckpointsfor pages 8-9): Stefanie Hertel, Reimo Zoschke, Laura Neumann, Yujiao Qu, Ilka M. Axmann, and Christian Schmitz-Linneweber. Multiple checkpoints for the expression of the chloroplast-encoded splicing factor matk. Plant Physiology, 163(4):1686-1698, Oct 2013. URL: https://doi.org/10.1104/pp.113.227579, doi:10.1104/pp.113.227579. This article has 23 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qu2015analysisoftargets pages 60-63): Yujiao Qu. Analysis of targets and functions of the chloroplast intron maturase matk. ArXiv, Jun 2015. URL: https://doi.org/10.18452/17256, doi:10.18452/17256. This article has 0 citations.</p>
+</li>
+<li>
+<p>(primandiri2024thematurasek pages 1-5): Poppy Rahmatika Primandiri, Muhammad Rifqi Hariri, Tutut Indah Sulistiyowati, and Agus Muji Santoso. The maturase k region of kebak, a javanese cultural flora. Advances in Social Science, Education and Humanities Research, pages 408-414, Jan 2024. URL: https://doi.org/10.2991/978-2-38476-283-5_38, doi:10.2991/978-2-38476-283-5_38. This article has 0 citations.</p>
+</li>
+<li>
+<p>(nath2024dnabarcodingof pages 2-3): Sneha Nath, Joshua T. VanSlambrouck, Janelle W. Yao, Ashika Gullapalli, Fayyaz Razi, and Yan Lu. Dna barcoding of terrestrial invasive plant species in southwest michigan. Plant Direct, Jun 2024. URL: https://doi.org/10.1002/pld3.615, doi:10.1002/pld3.615. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nath2024dnabarcodingof pages 9-10): Sneha Nath, Joshua T. VanSlambrouck, Janelle W. Yao, Ashika Gullapalli, Fayyaz Razi, and Yan Lu. Dna barcoding of terrestrial invasive plant species in southwest michigan. Plant Direct, Jun 2024. URL: https://doi.org/10.1002/pld3.615, doi:10.1002/pld3.615. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2024effectivenessofdna pages 3-4): Lihua Wei, Flor Cristina Pacheco-Reyes, José Ángel Villarreal-Quintanilla, Valentín Robledo-Torres, Juan Antonio Encina-Domínguez, Edgar Eduardo Lara-Ramírez, and Miguel Ángel Pérez-Rodríguez. Effectiveness of dna barcodes (rbcl, matk, its2) in identifying genera and species in cactaceae. Pakistan Journal of Botany, Mar 2024. URL: https://doi.org/10.30848/pjb2024-5(11), doi:10.30848/pjb2024-5(11). This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2024effectivenessofdna pages 1-2): Lihua Wei, Flor Cristina Pacheco-Reyes, José Ángel Villarreal-Quintanilla, Valentín Robledo-Torres, Juan Antonio Encina-Domínguez, Edgar Eduardo Lara-Ramírez, and Miguel Ángel Pérez-Rodríguez. Effectiveness of dna barcodes (rbcl, matk, its2) in identifying genera and species in cactaceae. Pakistan Journal of Botany, Mar 2024. URL: https://doi.org/10.30848/pjb2024-5(11), doi:10.30848/pjb2024-5(11). This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(behura2024differentdnabarcoding pages 7-9): Nisruti Anuja Behura, Naga Jogayya Kothakota, Sheerin Bashar, and Pravallika Vataparthi. Different dna barcoding techniques in forensic botany: a review. Biosciences Biotechnology Research Asia, 21:935-945, Sep 2024. URL: https://doi.org/10.13005/bbra/3275, doi:10.13005/bbra/3275. This article has 3 citations.</p>
+</li>
+<li>
+<p>(qu2015analysisoftargets pages 15-18): Yujiao Qu. Analysis of targets and functions of the chloroplast intron maturase matk. ArXiv, Jun 2015. URL: https://doi.org/10.18452/17256, doi:10.18452/17256. This article has 0 citations.</p>
+</li>
+<li>
+<p>(qu2015analysisoftargets pages 56-60): Yujiao Qu. Analysis of targets and functions of the chloroplast intron maturase matk. ArXiv, Jun 2015. URL: https://doi.org/10.18452/17256, doi:10.18452/17256. This article has 0 citations.</p>
+</li>
+<li>
+<p>(wei2024effectivenessofdna pages 11-15): Lihua Wei, Flor Cristina Pacheco-Reyes, José Ángel Villarreal-Quintanilla, Valentín Robledo-Torres, Juan Antonio Encina-Domínguez, Edgar Eduardo Lara-Ramírez, and Miguel Ángel Pérez-Rodríguez. Effectiveness of dna barcodes (rbcl, matk, its2) in identifying genera and species in cactaceae. Pakistan Journal of Botany, Mar 2024. URL: https://doi.org/10.30848/pjb2024-5(11), doi:10.30848/pjb2024-5(11). This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="matK-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>zoschke2010anorganellarmaturase pages 1-1</li>
+<li>barthet2020unravelingtherole pages 1-2</li>
+<li>qu2015analysisoftargets pages 60-63</li>
+<li>hertel2013multiplecheckpointsfor pages 8-9</li>
+<li>primandiri2024thematurasek pages 1-5</li>
+<li>behura2024differentdnabarcoding pages 7-9</li>
+<li>mizrahi2022groupiiintronencoded pages 6-7</li>
+<li>nath2024dnabarcodingof pages 2-3</li>
+<li>wei2024effectivenessofdna pages 1-2</li>
+<li>qu2015analysisoftargets pages 18-21</li>
+<li>zoschke2010anorganellarmaturase pages 3-3</li>
+<li>nath2024dnabarcodingof pages 9-10</li>
+<li>wei2024effectivenessofdna pages 3-4</li>
+<li>qu2015analysisoftargets pages 15-18</li>
+<li>qu2015analysisoftargets pages 56-60</li>
+<li>wei2024effectivenessofdna pages 11-15</li>
+<li>https://doi.org/10.1073/pnas.0909400107</li>
+<li>https://doi.org/10.1104/pp.113.227579</li>
+<li>https://doi.org/10.3390/genes13071137</li>
+<li>https://doi.org/10.1002/pld3.208</li>
+<li>https://doi.org/10.18452/17256</li>
+<li>https://doi.org/10.1002/pld3.615</li>
+<li>https://doi.org/10.30848/pjb2024-5(11</li>
+<li>https://doi.org/10.13005/bbra/3275</li>
+<li>https://doi.org/10.2991/978-2-38476-283-5_38</li>
+<li>https://doi.org/10.1073/pnas.0909400107,</li>
+<li>https://doi.org/10.3390/genes13071137,</li>
+<li>https://doi.org/10.1002/pld3.208,</li>
+<li>https://doi.org/10.18452/17256,</li>
+<li>https://doi.org/10.1104/pp.113.227579,</li>
+<li>https://doi.org/10.2991/978-2-38476-283-5_38,</li>
+<li>https://doi.org/10.1002/pld3.615,</li>
+<li>https://doi.org/10.13005/bbra/3275,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(matK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9GF35" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="matk-maturase-k-thlaspi-arvense-review-notes">matK (Maturase K) — Thlaspi arvense — review notes</h1>
+<p>UniProt: Q9GF35 · Plastid (chloroplast) genome-encoded · Taxon 13288 (<em>Thlaspi arvense</em>)<br />
+Family: intron maturase 2 family, MatK subfamily (HAMAP MF_01390)</p>
+<h2 id="function-homology-grounded-pennycress-protein-itself-not-assayed">Function (homology-grounded; pennycress protein itself not assayed)</h2>
+<ul>
+<li>MatK is the <strong>only chloroplast-encoded intron maturase</strong> retained in the plastid genome,<br />
+  typically encoded <strong>within the intron of the trnK-UUU (lysine tRNA) gene</strong>. It is a<br />
+<strong>trans-acting group II intron splicing factor</strong>: it binds intron RNA and promotes<br />
+  excision of a conserved set of chloroplast <strong>group IIA introns</strong>.<br />
+  [file:THLAR/matK/matK-deep-research-falcon.md; UniProt Q9GF35 FUNCTION]</li>
+<li>Best-supported RNA targets (~7 group IIA introns): trnK-UUU (its own host intron),<br />
+  trnA, trnI, trnV, atpF, rpl2, and rps12 intron 2. In vitro, adding MatK increases<br />
+  splicing efficiency of rps12 intron 2; in vivo RIP shows association with multiple<br />
+  intron-containing transcripts. [file:THLAR/matK/matK-deep-research-falcon.md]</li>
+<li>Domain architecture: retains maturase "domain X" (RNA-binding/splicing) and a partial<br />
+  reverse-transcriptase-like region; lacks the endonuclease/mobility domains of canonical<br />
+  bacterial intron-encoded proteins — consistent with a dedicated splicing role.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Chloroplast <strong>stroma</strong> (soluble fraction in transplastomic tobacco), not membranes.<br />
+  [file:THLAR/matK/matK-deep-research-falcon.md]</li>
+</ul>
+<h2 id="essentiality-regulation">Essentiality / regulation</h2>
+<ul>
+<li>matK knockouts could not be driven to homoplasmy in tobacco plastids → interpreted as<br />
+  essential. Developmentally regulated with mRNA-protein discordance.</li>
+</ul>
+<h2 id="applied-note-doeber-adjacent">Applied note (DOE/BER-adjacent)</h2>
+<ul>
+<li>matK is one of the most widely used <strong>chloroplast DNA barcode / phylogenetic markers</strong><br />
+  (a distinct use from its protein maturase function). Relevant for germplasm /<br />
+  species identification in breeding programs, not for the bioenergy oil/biomass traits.</li>
+</ul>
+<h2 id="annotation-review-decisions">Annotation review decisions</h2>
+<ul>
+<li>GO:0005737 cytoplasm (IEA/ARBA) → <strong>MODIFY → GO:0009570 chloroplast stroma</strong>: matK is<br />
+  plastid-encoded and stroma-localized; generic "cytoplasm" is over-general and redundant<br />
+  with the chloroplast annotation.</li>
+<li>GO:0006397 mRNA processing (IEA/InterPro) → <strong>ACCEPT</strong>: several MatK targets are introns<br />
+  in protein-coding (mRNA) transcripts (atpF, rpl2, rps12).</li>
+<li>GO:0008380 RNA splicing (IEA/UniRule) → <strong>MODIFY → GO:0000373 Group II intron splicing</strong>:<br />
+  the precise, well-supported activity.</li>
+<li>GO:0009507 chloroplast (IEA) → <strong>ACCEPT</strong>: correct compartment.</li>
+<li>No MF annotation in GOA; the protein is an RNA-binding splicing factor → core MF<br />
+  GO:0003723 RNA binding.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9GF35
+gene_symbol: matK
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:13288
+  label: Thlaspi arvense
+description: Maturase K (MatK) is the chloroplast-encoded intron maturase of field
+  pennycress, typically encoded within the intron of the plastid trnK-UUU (lysine tRNA)
+  gene. It is the only maturase retained in the plastid genome and acts as a trans-acting
+  splicing factor that binds intron RNA and promotes excision of a conserved set of
+  chloroplast group IIA introns (including its own trnK host intron and introns in trnA,
+  trnI, trnV, atpF, rpl2 and rps12). It functions in the chloroplast stroma. MatK retains
+  the maturase &#34;domain X&#34; and a degenerate reverse-transcriptase-like region but lacks
+  the endonuclease/mobility domains of canonical bacterial intron-encoded proteins. The
+  gene is also widely used as a plastid DNA barcode and phylogenetic marker.
+existing_annotations:
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: located_in
+    review:
+      summary: Over-general and redundant. MatK is a plastid genome-encoded protein
+        that localizes to the chloroplast stroma (soluble fraction in transplastomic
+        tobacco); the generic cytoplasm term should be specialized to the chloroplast
+        stroma, consistent with the separate chloroplast annotation.
+      action: MODIFY
+      proposed_replacement_terms:
+        - id: GO:0009570
+          label: chloroplast stroma
+      supported_by:
+        - reference_id: file:THLAR/matK/matK-deep-research-falcon.md
+          supporting_text: MatK is a chloroplast protein enriched in the soluble
+            fraction (stroma) rather than membranes
+  - term:
+      id: GO:0006397
+      label: mRNA processing
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Acceptable. Several MatK splicing targets are group IIA introns within
+        protein-coding (mRNA) transcripts, including atpF, rpl2 and rps12, so MatK does
+        contribute to mRNA processing. The more precise activity is captured by the
+        group II intron splicing annotation below.
+      action: ACCEPT
+      supported_by:
+        - reference_id: file:THLAR/matK/matK-deep-research-falcon.md
+          supporting_text: MatK-dependent group IIA introns include atpF, rpl2 and
+            rps12 intron 2
+  - term:
+      id: GO:0008380
+      label: RNA splicing
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: Correct but can be made precise. MatK is specifically a group II intron
+        maturase / splicing factor acting on chloroplast group IIA introns. The
+        dedicated group II intron splicing term is more informative than the generic
+        RNA splicing parent.
+      action: MODIFY
+      proposed_replacement_terms:
+        - id: GO:0000373
+          label: Group II intron splicing
+      supported_by:
+        - reference_id: file:THLAR/matK/matK-deep-research-falcon.md
+          supporting_text: MatK facilitates splicing (excision) of chloroplast group
+            IIA introns as a trans-acting maturase
+  - term:
+      id: GO:0009507
+      label: chloroplast
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Correct. MatK is plastid genome-encoded and functions in the chloroplast.
+        Consistent with the UniProt subcellular location (Plastid, chloroplast).
+      action: ACCEPT
+      supported_by:
+        - reference_id: file:THLAR/matK/matK-deep-research-falcon.md
+          supporting_text: chloroplast-encoded intron maturase localized to the
+            chloroplast stroma
+  - term:
+      id: GO:0003723
+      label: RNA binding
+    evidence_type: IEA
+    review:
+      summary: Proposed new molecular-function annotation. GOA currently lists no
+        molecular function for MatK, but the protein is an RNA-binding intron maturase
+        that binds its target group IIA introns to promote splicing; the conserved
+        maturase domain X is an RNA-binding region. This is the core molecular function
+        and should be added.
+      action: NEW
+      supported_by:
+        - reference_id: file:THLAR/matK/matK-deep-research-falcon.md
+          supporting_text: Maturases act as cofactors by binding intron RNA to
+            stabilize the correct folded state and promote catalytic steps; MatK
+            associates with multiple intron-containing transcripts in vivo
+core_functions:
+  - description: MatK is a chloroplast-encoded, RNA-binding group II intron maturase
+      that acts as a trans-acting splicing factor, promoting excision of a conserved set
+      of chloroplast group IIA introns in the stroma.
+    molecular_function:
+      id: GO:0003723
+      label: RNA binding
+    directly_involved_in:
+      - id: GO:0000373
+        label: Group II intron splicing
+    locations:
+      - id: GO:0009570
+        label: chloroplast stroma
+    supported_by:
+      - reference_id: file:THLAR/matK/matK-deep-research-falcon.md
+        supporting_text: trans-acting splicing cofactor for chloroplast group IIA
+          introns (trnK, trnA, trnI, trnV, atpF, rpl2, rps12 intron 2), stroma-localized
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO
+      terms
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO
+      annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: file:THLAR/matK/matK-deep-research-falcon.md
+    title: Falcon/Edison deep research report for matK, Thlaspi arvense
+    findings:
+      - statement: MatK is the chloroplast-encoded group II intron maturase, a
+          stroma-localized trans-acting splicing factor for a conserved set of
+          chloroplast group IIA introns; the pennycress protein itself has not been
+          directly assayed, so function is inferred from conserved land-plant MatK
+          biology.
+        reference_section_type: OTHER
+suggested_questions:
+  - question: Which chloroplast group IIA introns does Thlaspi arvense MatK splice in
+      vivo, and is MatK essential for plastid gene expression in pennycress as it is in
+      tobacco?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

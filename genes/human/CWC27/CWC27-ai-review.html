@@ -1,0 +1,3371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CWC27 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CWC27</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6UX04" target="_blank" class="term-link">
+                        Q6UX04
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CWC27";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6UX04" data-a="DESCRIPTION: CWC27 (also known as NY-CO-10 and SDCCAG10) is a n..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CWC27 (also known as NY-CO-10 and SDCCAG10) is a nuclear, spliceosome-associated protein of the cyclophilin-type peptidyl-prolyl isomerase (PPIase) family. It has an N-terminal cyclophilin-like domain followed by a long disordered, partly coiled-coil C-terminal region. Although it belongs to the cyclophilin family, the CWC27 cyclophilin domain is a degenerate (catalytically inactive) pseudo-enzyme: it carries a glutamate in place of a conserved active-site residue and shows no detectable peptidyl-prolyl cis-trans isomerase activity and no cyclosporin binding. Functionally, CWC27 is a structural/scaffold component of the spliceosome. It is recruited during spliceosome activation as part of the activated Bact complex of the major (U2-type) spliceosome and is among the first factors released during the Bact-to-B* transition; it is also a component of the activated minor (U12-type) spliceosome, contributing to splicing of U12-type introns. In the major spliceosome the endonuclease-like domain of PRP8 contacts CWC27, and CWC27 works with its partner CWC22 in pre-mRNA splicing and exon junction complex deposition. Biallelic loss-of-function variants in CWC27 cause autosomal-recessive retinitis pigmentosa with or without skeletal and other developmental anomalies (RPSKA), underscoring its essential role in pre-mRNA splicing.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071013" target="_blank" class="term-link">
+                                    GO:0071013
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic step 2 spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0071013" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that CWC27 is part of the catalytic step 2 spliceosome, transferred across the Cwc27 ortholog tree. CWC27 is genuinely a spliceosome component, but cryo-EM evidence places it specifically in the activated Bact (U2-type precatalytic-to-activated) stage, from which it is released before the step 2 (C*) reaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CWC27 is correctly a spliceosomal component, so the broad family-level placement in a catalytic spliceosome is not wrong. However, structural studies show CWC27/NY-CO-10 is recruited to the activated Bact complex and released during the Bact-to-B* transition, so it is not specifically a step 2 catalytic spliceosome factor. Retained as a non-core membership term; the more precise activated-spliceosome terms (GO:0071005, GO:0005681) better capture its role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                                        PMID:29360106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (IEA) annotation of nuclear localization, consistent with CWC27&#39;s role as a spliceosomal protein and with UniProt&#39;s curated subcellular location (Nucleus).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is well supported. UniProt records the subcellular location as Nucleus, and CWC27 is a component of nuclear spliceosomal complexes. More specific nucleoplasm annotations (GO:0005654) are also present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CWC27/CWC27-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0006457" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IEA) transfer of protein folding based solely on the cyclophilin-type PPIase InterPro signature (IPR020892). This is a family-level inference that assumes foldase/chaperone activity from domain membership.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CWC27 is a demonstrated catalytically inactive pseudo-PPIase: it shows no peptidyl-prolyl cis-trans isomerase activity and no cyclosporin binding, and UniProt curates it as a &#34;Probable inactive peptidyl-prolyl cis-trans isomerase&#34; with a CAUTION. The InterPro2GO &#34;protein folding&#34; transfer ignores the loss of catalytic residues and therefore over-annotates a foldase/chaperone function that CWC27 does not possess. There is no evidence CWC27 catalyzes or assists protein folding.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20676357" target="_blank" class="term-link">
+                                        PMID:20676357
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">No binding was detected for PPIL2, PPIL6, or SDCCAG-10, making these, to our knowledge, the first set of human cyclophilins that have been found incompetent to ligate cyclosporin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CWC27/CWC27-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Despite the fact that it belongs to the cyclophilin-type PPIase family, a report has shown that it has probably no peptidyl-prolyl cis-trans isomerase activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                    GO:0000398
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA splicing, via spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29360106
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the human activated spliceosome in three confor...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0000398" data-r="PMID:29360106" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation (ComplexPortal) that CWC27 functions in pre-mRNA splicing via the spliceosome, based on its presence in the activated major spliceosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> mRNA splicing via the spliceosome is the core biological process of CWC27. CWC27/NY-CO-10 is a component of the activated (Bact) major spliceosome resolved by cryo-EM, and biallelic loss of function causes a Mendelian disease consistent with impaired splicing.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                                        PMID:29360106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                    GO:0000398
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA splicing, via spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33509932
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the activated human minor spliceosome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0000398" data-r="PMID:33509932" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAS annotation (ComplexPortal) that CWC27 functions in pre-mRNA splicing, based on its presence in the activated human minor (U12-type) spliceosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CWC27 is a component of the activated minor spliceosome that splices U12-type introns, directly supporting its involvement in mRNA splicing via the spliceosome.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" target="_blank" class="term-link">
+                                        PMID:33509932
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The minor spliceosome mediates splicing of the rare but essential U12-type introns</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005681" target="_blank" class="term-link">
+                                    GO:0005681
+                                </a>
+                            </span>
+                            <span class="term-label">spliceosomal complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39068178" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:39068178
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular basis for the activation of human spliceosome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0005681" data-r="PMID:39068178" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation (ComplexPortal) placing CWC27 as part of the spliceosomal complex, based on identification within activation-stage spliceosome structures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Spliceosome membership is directly and unambiguously supported by cryo-EM structures of the human spliceosome capturing the activation pathway (pre-Bact through post-Bact). This is a core cellular-component annotation for CWC27.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/39068178" target="_blank" class="term-link">
+                                        PMID:39068178
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">intermediate states between the B and B* complexes: pre-Bact, Bact-I, Bact-II, Bact-III, Bact-IV, and post-Bact</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071018" target="_blank" class="term-link">
+                                    GO:0071018
+                                </a>
+                            </span>
+                            <span class="term-label">U12-type catalytic step 2 spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33509932
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the activated human minor spliceosome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0071018" data-r="PMID:33509932" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation placing CWC27 as part of the U12-type (minor) catalytic step 2 spliceosome, based on the cryo-EM structure of the activated human minor spliceosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CWC27 is a genuine component of the activated minor spliceosome, so minor (U12-type) spliceosome membership is correct. Retained as non-core: as in the major spliceosome, CWC27 associates with the activated complex and the precise catalytic-step-2 placement is a curated mapping of the resolved minor spliceosome state rather than evidence of a step 2 catalytic role for CWC27.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" target="_blank" class="term-link">
+                                        PMID:33509932
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We report the cryo-electron microscopy structure of the activated human minor spliceosome</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation (HPA immunofluorescence) localizing CWC27 to the nucleoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasmic localization is consistent with CWC27&#39;s role as a spliceosomal protein and with the curated UniProt nuclear localization. Direct immunofluorescence evidence supports this subcellular component.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CWC27/CWC27-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                    GO:0000398
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA splicing, via spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29360106
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the human activated spliceosome in three confor...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0000398" data-r="PMID:29360106" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC annotation inferring involvement in mRNA splicing from membership in the U2-type precatalytic/activated spliceosome (GO:0071005).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A sound curator inference: CWC27 is a structural component of the activated major spliceosome, so it is reasonably inferred to be involved in mRNA splicing via the spliceosome, the core process for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                                        PMID:29360106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071005" target="_blank" class="term-link">
+                                    GO:0071005
+                                </a>
+                            </span>
+                            <span class="term-label">U2-type precatalytic spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29360106
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the human activated spliceosome in three confor...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0071005" data-r="PMID:29360106" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation placing CWC27 in the U2-type (major) precatalytic/activated spliceosome, based on the cryo-EM structure of the human activated spliceosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most precisely evidenced cellular-component annotation for CWC27. Cryo-EM directly visualizes NY-CO-10 (CWC27) in the activated major (Bact) spliceosome, with the PRP8 endonuclease-like domain contacting it, and shows it is released during the Bact-to-B* transition.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                                        PMID:29360106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003755" target="_blank" class="term-link">
+                                    GO:0003755
+                                </a>
+                            </span>
+                            <span class="term-label">peptidyl-prolyl cis-trans isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20676357" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20676357
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural and biochemical characterization of the human cyc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0003755" data-r="PMID:20676357" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Negated (NOT) IDA annotation recording that CWC27 (SDCCAG-10) does NOT have peptidyl-prolyl cis-trans isomerase activity, based on direct biochemical assay showing no tetrapeptide isomerase activity and no cyclosporin binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This negated annotation correctly captures the experimental finding that CWC27 is a catalytically inactive pseudo-PPIase. Davis et al. found SDCCAG-10 (CWC27) incompetent for both cyclosporin binding and tetrapeptide isomerase activity, attributable to a glutamate substitution at a conserved active-site position. The NOT annotation should be retained as it documents the absence of the family-expected catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20676357" target="_blank" class="term-link">
+                                        PMID:20676357
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">No binding was detected for PPIL2, PPIL6, or SDCCAG-10, making these, to our knowledge, the first set of human cyclophilins that have been found incompetent to ligate cyclosporin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9770131
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0005654" data-r="Reactome:R-HSA-9770131" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome, Formation of the Spliceosomal B* complex) localizing CWC27 to the nucleoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasmic localization is consistent with CWC27&#39;s spliceosomal function and with the curated UniProt nuclear localization and HPA immunofluorescence evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CWC27/CWC27-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9770145
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0005654" data-r="Reactome:R-HSA-9770145" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome, Formation of the Spliceosomal Bact complex) localizing CWC27 to the nucleoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with CWC27&#39;s recruitment into the activated Bact spliceosome in the nucleoplasm; supported by curated nuclear localization and immunofluorescence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CWC27/CWC27-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9921507
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0005654" data-r="Reactome:R-HSA-9921507" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome, NS5 interacts with Spliceosome) localizing CWC27 to the nucleoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleoplasmic localization is well supported for this spliceosomal protein. The annotation derives from a Reactome pathway in which the spliceosome (with CWC27) resides in the nucleoplasm.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CWC27/CWC27-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                    GO:0000398
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA splicing, via spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11991638" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11991638
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of native spliceosomes sui...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0000398" data-r="PMID:11991638" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC annotation inferring involvement in mRNA splicing from CWC27&#39;s presence in native purified spliceosomes (catalytic step 2 / C-complex-enriched).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CWC27 is detected in native purified spliceosomes, supporting the inference that it participates in mRNA splicing via the spliceosome, its core process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11991638" target="_blank" class="term-link">
+                                        PMID:11991638
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These spliceosomes consist largely of C complex containing splicing</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071013" target="_blank" class="term-link">
+                                    GO:0071013
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic step 2 spliceosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11991638" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11991638
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and characterization of native spliceosomes sui...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6UX04" data-a="GO:0071013" data-r="PMID:11991638" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation placing CWC27 in the catalytic step 2 spliceosome, based on its identification in native purified C-complex-enriched spliceosomes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> CWC27 was detected in native purified spliceosome preparations enriched for C complex, supporting spliceosome membership. However, higher-resolution cryo-EM work later localized CWC27/NY-CO-10 specifically to the activated Bact stage, from which it is released before step 2 catalysis. The catalytic step 2 placement reflects the bulk composition of the purified preparation rather than a specific step 2 role, so it is retained as a non-core membership term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11991638" target="_blank" class="term-link">
+                                        PMID:11991638
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These spliceosomes consist largely of C complex containing splicing</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                                        PMID:29360106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Structural/scaffold component of the activated spliceosome required for pre-mRNA splicing; CWC27 is recruited to the activated Bact complex of the major (U2-type) spliceosome and is released during the Bact-to-B* transition, and is likewise a component of the activated minor (U12-type) spliceosome.</h3>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="FUNCTION: Structural/scaffold component of the activated spl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000398" target="_blank" class="term-link">
+                                mRNA splicing, via spliceosome
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005681" target="_blank" class="term-link">
+                                spliceosomal complex
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                nucleoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                                PMID:29360106
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" target="_blank" class="term-link">
+                                PMID:33509932
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The minor spliceosome mediates splicing of the rare but essential U12-type introns</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11991638" target="_blank" class="term-link">
+                            PMID:11991638
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Purification and characterization of native spliceosomes suitable for three-dimensional structural analysis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CWC27 is present in native affinity-purified spliceosomes consisting largely of C complex, the basis for its catalytic step 2 spliceosome annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20676357" target="_blank" class="term-link">
+                            PMID:20676357
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural and biochemical characterization of the human cyclophilin family of peptidyl-prolyl isomerases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CWC27 (SDCCAG-10) is a catalytically inactive cyclophilin with no detectable cyclosporin binding and no tetrapeptide isomerase activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29360106" target="_blank" class="term-link">
+                            PMID:29360106
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the human activated spliceosome in three conformational states.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CWC27/NY-CO-10 is a component of the activated major (Bact) spliceosome and is released during the Bact-to-B* transition.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" target="_blank" class="term-link">
+                            PMID:33509932
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the activated human minor spliceosome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CWC27 is a component of the activated human minor spliceosome that splices U12-type introns.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39068178" target="_blank" class="term-link">
+                            PMID:39068178
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular basis for the activation of human spliceosome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CWC27 is identified within spliceosome activation intermediates spanning the pre-Bact to post-Bact states.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28285769" target="_blank" class="term-link">
+                            PMID:28285769
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mutations in the spliceosome component CWC27 cause retinal degeneration with or without additional developmental anomalies.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic loss-of-function variants in CWC27 cause autosomal-recessive retinitis pigmentosa with or without skeletal/developmental anomalies (RPSKA).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9770131
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Formation of the Spliceosomal B* complex</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9770145
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Formation of the Spliceosomal Bact complex</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9921507
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NS5 interacts with Spliceosome</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the catalytically dead cyclophilin domain of CWC27 retain a substrate-binding or proline-recognition function within the spliceosome that contributes to splice site fidelity, even in the absence of isomerase catalysis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="Q: Does the catalytically dead cyclophilin domain of ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does the CWC27-CWC22 module mechanistically couple spliceosome activation to positioning of eIF4A3/the exon junction complex, and which step of EJC deposition requires CWC27?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="Q: How does the CWC27-CWC22 module mechanistically co..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why do CWC27 loss-of-function variants produce a retina-predominant phenotype (RPSKA) despite ubiquitous expression and an essential splicing role?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="Q: Why do CWC27 loss-of-function variants produce a r..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of the degenerate active-site residue(s) (e.g., the Glu at the position equivalent to PPIA Trp121) combined with rescue assays in CWC27-null cells to test whether restoring a canonical cyclophilin active site confers PPIase activity and/or alters splicing.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="EXPERIMENT: Structure-guided mutagenesis of the degenerate act..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Transcriptome-wide splicing analysis (RNA-seq/junction analysis) in CWC27-depleted cells, with emphasis on U12-type minor introns and retina-expressed transcripts, to define the set of introns dependent on CWC27.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="EXPERIMENT: Transcriptome-wide splicing analysis (RNA-seq/junc..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Cross-linking/proteomics and cryo-EM of the CWC27-CWC22 sub-complex bound to eIF4A3 to map the interface and test the model that CWC27 positions the EJC core for deposition during splicing.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6UX04" data-a="EXPERIMENT: Cross-linking/proteomics and cryo-EM of the CWC27-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CWC27-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6UX04" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cwc27-q6ux04-review-notes">CWC27 (Q6UX04) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Gene: CWC27, HGNC:10664. UniProt Q6UX04, "Spliceosome-associated protein CWC27 homolog".</li>
+<li>Synonyms: NY-CO-10 (Antigen NY-CO-10), SDCCAG10 (Serologically defined colon cancer antigen 10).</li>
+<li>472 aa. Domain architecture: N-terminal cyclophilin-type PPIase domain (~res 11-166) followed by a long disordered/coiled-coil C-terminal region (res ~206-472) [file:human/CWC27/CWC27-uniprot.txt].</li>
+</ul>
+<h2 id="core-biology">Core biology</h2>
+<p>CWC27 is the human ortholog of yeast Cwc27 and is a spliceosome-associated protein. As part of the spliceosome it functions in pre-mRNA splicing. It is recruited during activation as a component of the activated (Bact) spliceosome and is one of the first proteins released as the spliceosome matures toward the catalytic C complex.</p>
+<ul>
+<li>[PMID:29360106 "Structure of the human activated spliceosome in three conformational states", "two peptidyl prolyl isomerases (PPIs, NY-CO-10, and CypE)" ... "the late Bact complex no longer contains the splicing factors RNF113A (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast) ... these two proteins only transiently associate with the spliceosome and are released during the Bact-to-B* transition"]. CWC27/NY-CO-10 is therefore a U2-type activated (Bact) spliceosome component; in the mature Bact complex the endonuclease-like domain of Prp8 directly binds NY-CO-10.</li>
+<li>CWC27 is also a component of the activated human minor (U12-dependent) spliceosome <a href="https://pubmed.ncbi.nlm.nih.gov/33509932" title="Structure of the activated human minor spliceosome">PMID:33509932</a>, supporting U12-type spliceosome membership and a role in splicing of U12-type introns.</li>
+<li>CWC27 is present in native purified spliceosomes (C-complex–enriched) used for 3D structural analysis <a href="https://pubmed.ncbi.nlm.nih.gov/11991638">PMID:11991638</a>. This is the basis for the older catalytic step 2 spliceosome IDA/IC annotations, although the more detailed cryo-EM work (PMID:29360106) places CWC27 specifically in the activated B (Bact)/U2-type precatalytic-to-activated stage rather than acting in step 2 catalysis per se.</li>
+<li>CWC27 is part of the spliceosome activation machinery (Bact intermediates) <a href="https://pubmed.ncbi.nlm.nih.gov/39068178" title="Molecular basis for the activation of human spliceosome">PMID:39068178</a>.</li>
+</ul>
+<h2 id="catalytic-ppiase-status-pseudo-enzyme">Catalytic (PPIase) status — pseudo-enzyme</h2>
+<p>The PPIase/cyclophilin domain of CWC27 is almost certainly catalytically inactive (a degenerate cyclophilin / pseudo-enzyme):<br />
+- [PMID:20676357 "Structural and biochemical characterization of the human cyclophilin family of peptidyl-prolyl isomerases", "No binding was detected for PPIL2, PPIL6, or SDCCAG-10, making these ... the first set of human cyclophilins that have been found incompetent to ligate cyclosporin"]. SDCCAG-10 = CWC27.<br />
+- [PMID:20676357 Table 1: "SDCCAG-10 ... no/no" for cyclosporin binding and tetrapeptide activity]. CWC27 showed neither cyclosporin binding nor isomerase activity against tetrapeptide substrates.<br />
+- Structural basis: CWC27 has a glutamic acid (Glu122) at the position equivalent to the catalytic Trp121 of PPIA; "glutamic acid in SDCCAG10" abrogates activity, and "Glutamic acid at this position seems to be incompatible with isomerase activity" <a href="https://pubmed.ncbi.nlm.nih.gov/20676357">PMID:20676357</a>. The crystal structure (PDB 2HQ6, res 8-173) underlies this conclusion.<br />
+- UniProt curates CWC27 as "Probable inactive peptidyl-prolyl cis-trans isomerase" with a CAUTION: "Despite the fact that it belongs to the cyclophilin-type PPIase family, a report has shown that it has probably no peptidyl-prolyl cis-trans isomerase activity" [file:human/CWC27/CWC27-uniprot.txt].<br />
+- Consequently the GOA carries an explicit <strong>NOT enables peptidyl-prolyl cis-trans isomerase activity</strong> (GO:0003755, IDA, PMID:20676357). This negated annotation should be ACCEPTed; it correctly records the experimental finding of absent catalysis.</p>
+<p>Implication for annotations:<br />
+- The InterPro2GO IEA transfer of <strong>protein folding</strong> (GO:0006457, GO_REF:0000002) is a family-level inference based on the cyclophilin/PPIase InterPro signature. Given that CWC27 is a demonstrated pseudo-PPIase with no isomerase/chaperone catalytic activity, this is an over-annotation (paralog/family transfer that ignores the loss of catalytic residues). MARK_AS_OVER_ANNOTATED.</p>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Biallelic loss-of-function variants in CWC27 cause autosomal-recessive retinitis pigmentosa with or without skeletal/developmental anomalies (RPSKA; MIM:250410), including retinal degeneration, brachydactyly, short stature, craniofacial dysmorphism and neurologic defects [PMID:28285769 "Mutations in the spliceosome component CWC27 cause retinal degeneration with or without additional developmental anomalies"; summarized in UniProt DISEASE]. Truncating variants (e.g. p.7-472del, p.143-472del, p.206-472del, p.315-472del) underlie the phenotype. This supports an essential role in pre-mRNA splicing; no PMID_28285769 cached full text, so used UniProt as source.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Nuclear protein [file:human/CWC27/CWC27-uniprot.txt SUBCELLULAR LOCATION: Nucleus]. HPA IDA places it in the nucleoplasm (GO:0005654, GO_REF:0000052). Reactome TAS annotations also place it in nucleoplasm. Nuclear/nucleoplasm localization is consistent with a spliceosomal protein. ACCEPT nucleus/nucleoplasm.</li>
+</ul>
+<h2 id="annotation-decisions-summary">Annotation decisions summary</h2>
+<ul>
+<li>Spliceosomal complex membership (GO:0005681, GO:0071013 catalytic step 2 spliceosome, GO:0071005 U2-type precatalytic spliceosome, GO:0071018 U12-type catalytic step 2 spliceosome): cellular_component annotations directly supported by structural/IPI evidence. The most strongly evidenced state from cryo-EM is the activated B (Bact)/U2-type precatalytic-to-activated spliceosome (PMID:29360106). KEEP. The IBA "catalytic step 2 spliceosome" transfer and older "catalytic step 2" IDA are broadly consistent with spliceosome membership; retained as non-core or accepted as appropriate.</li>
+<li>mRNA splicing, via spliceosome (GO:0000398): core biological process. ACCEPT.</li>
+<li>peptidyl-prolyl cis-trans isomerase activity (GO:0003755), NOT/negated: ACCEPT (correctly negated).</li>
+<li>protein folding (GO:0006457), IEA InterPro2GO: MARK_AS_OVER_ANNOTATED (pseudo-enzyme; catalytic chaperone/foldase activity not supported).</li>
+<li>nucleus (GO:0005634) IEA / nucleoplasm (GO:0005654) IDA &amp; TAS: ACCEPT (nucleus) / KEEP.</li>
+</ul>
+<h2 id="possible-better-mf-term">Possible better MF term</h2>
+<p>CWC27 acts as a cyclophilin-fold scaffold within the spliceosome rather than as an enzyme. There is no well-fitting catalytic MF. A non-catalytic structural/scaffolding role within the spliceosome is best captured by the CC (spliceosome complex) and BP (mRNA splicing) annotations; no confident replacement MF term is proposed. Note CWC27 pairs with CWC22 to position the EJC core factor eIF4A3 for deposition (from the broader literature / biological hint); this is a scaffolding/adaptor role but not directly evidenced in the cached publications, so no new MF term is asserted.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6UX04
+gene_symbol: CWC27
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CWC27 (also known as NY-CO-10 and SDCCAG10) is a nuclear, spliceosome-associated
+  protein of the cyclophilin-type peptidyl-prolyl isomerase (PPIase) family. It has
+  an N-terminal cyclophilin-like domain followed by a long disordered, partly
+  coiled-coil C-terminal region. Although it belongs to the cyclophilin family, the
+  CWC27 cyclophilin domain is a degenerate (catalytically inactive) pseudo-enzyme:
+  it carries a glutamate in place of a conserved active-site residue and shows no
+  detectable peptidyl-prolyl cis-trans isomerase activity and no cyclosporin binding.
+  Functionally, CWC27 is a structural/scaffold component of the spliceosome. It is
+  recruited during spliceosome activation as part of the activated Bact complex of
+  the major (U2-type) spliceosome and is among the first factors released during the
+  Bact-to-B* transition; it is also a component of the activated minor (U12-type)
+  spliceosome, contributing to splicing of U12-type introns. In the major
+  spliceosome the endonuclease-like domain of PRP8 contacts CWC27, and CWC27 works
+  with its partner CWC22 in pre-mRNA splicing and exon junction complex deposition.
+  Biallelic loss-of-function variants in CWC27 cause autosomal-recessive retinitis
+  pigmentosa with or without skeletal and other developmental anomalies (RPSKA),
+  underscoring its essential role in pre-mRNA splicing.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q6UX04-1
+- name: &#39;2&#39;
+  id: Q6UX04-2
+  sequence_note: VSP_030082, VSP_030083
+existing_annotations:
+- term:
+    id: GO:0071013
+    label: catalytic step 2 spliceosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that CWC27 is part of the catalytic step 2
+      spliceosome, transferred across the Cwc27 ortholog tree. CWC27 is genuinely a
+      spliceosome component, but cryo-EM evidence places it specifically in the
+      activated Bact (U2-type precatalytic-to-activated) stage, from which it is
+      released before the step 2 (C*) reaction.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CWC27 is correctly a spliceosomal component, so the broad family-level
+      placement in a catalytic spliceosome is not wrong. However, structural studies
+      show CWC27/NY-CO-10 is recruited to the activated Bact complex and released
+      during the Bact-to-B* transition, so it is not specifically a step 2 catalytic
+      spliceosome factor. Retained as a non-core membership term; the more precise
+      activated-spliceosome terms (GO:0071005, GO:0005681) better capture its role.
+    supported_by:
+      - reference_id: PMID:29360106
+        supporting_text: &gt;-
+          the late Bact complex no longer contains the splicing factors RNF113A
+          (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated (IEA) annotation of nuclear localization, consistent with CWC27&#39;s
+      role as a spliceosomal protein and with UniProt&#39;s curated subcellular location
+      (Nucleus).
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is well supported. UniProt records the subcellular
+      location as Nucleus, and CWC27 is a component of nuclear spliceosomal
+      complexes. More specific nucleoplasm annotations (GO:0005654) are also present.
+    supported_by:
+      - reference_id: file:human/CWC27/CWC27-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.&#34;
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IEA) transfer of protein folding based solely on the
+      cyclophilin-type PPIase InterPro signature (IPR020892). This is a family-level
+      inference that assumes foldase/chaperone activity from domain membership.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      CWC27 is a demonstrated catalytically inactive pseudo-PPIase: it shows no
+      peptidyl-prolyl cis-trans isomerase activity and no cyclosporin binding, and
+      UniProt curates it as a &#34;Probable inactive peptidyl-prolyl cis-trans isomerase&#34;
+      with a CAUTION. The InterPro2GO &#34;protein folding&#34; transfer ignores the loss of
+      catalytic residues and therefore over-annotates a foldase/chaperone function
+      that CWC27 does not possess. There is no evidence CWC27 catalyzes or assists
+      protein folding.
+    supported_by:
+      - reference_id: PMID:20676357
+        supporting_text: &gt;-
+          No binding was detected for PPIL2, PPIL6, or SDCCAG-10, making these, to
+          our knowledge, the first set of human cyclophilins that have been found
+          incompetent to ligate cyclosporin
+      - reference_id: file:human/CWC27/CWC27-uniprot.txt
+        supporting_text: &gt;-
+          Despite the fact that it belongs to the cyclophilin-type PPIase family, a
+          report has shown that it has probably no peptidyl-prolyl cis-trans
+          isomerase activity.
+- term:
+    id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  evidence_type: NAS
+  original_reference_id: PMID:29360106
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS annotation (ComplexPortal) that CWC27 functions in pre-mRNA splicing via
+      the spliceosome, based on its presence in the activated major spliceosome.
+    action: ACCEPT
+    reason: &gt;-
+      mRNA splicing via the spliceosome is the core biological process of CWC27.
+      CWC27/NY-CO-10 is a component of the activated (Bact) major spliceosome
+      resolved by cryo-EM, and biallelic loss of function causes a Mendelian disease
+      consistent with impaired splicing.
+    supported_by:
+      - reference_id: PMID:29360106
+        supporting_text: &gt;-
+          the late Bact complex no longer contains the splicing factors RNF113A
+          (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)
+- term:
+    id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  evidence_type: NAS
+  original_reference_id: PMID:33509932
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      NAS annotation (ComplexPortal) that CWC27 functions in pre-mRNA splicing,
+      based on its presence in the activated human minor (U12-type) spliceosome.
+    action: ACCEPT
+    reason: &gt;-
+      CWC27 is a component of the activated minor spliceosome that splices U12-type
+      introns, directly supporting its involvement in mRNA splicing via the
+      spliceosome.
+    supported_by:
+      - reference_id: PMID:33509932
+        supporting_text: &gt;-
+          The minor spliceosome mediates splicing of the rare but essential U12-type
+          introns
+- term:
+    id: GO:0005681
+    label: spliceosomal complex
+  evidence_type: IPI
+  original_reference_id: PMID:39068178
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IPI annotation (ComplexPortal) placing CWC27 as part of the spliceosomal
+      complex, based on identification within activation-stage spliceosome
+      structures.
+    action: ACCEPT
+    reason: &gt;-
+      Spliceosome membership is directly and unambiguously supported by cryo-EM
+      structures of the human spliceosome capturing the activation pathway (pre-Bact
+      through post-Bact). This is a core cellular-component annotation for CWC27.
+    supported_by:
+      - reference_id: PMID:39068178
+        supporting_text: &gt;-
+          intermediate states between the B and B* complexes: pre-Bact, Bact-I,
+          Bact-II, Bact-III, Bact-IV, and post-Bact
+- term:
+    id: GO:0071018
+    label: U12-type catalytic step 2 spliceosome
+  evidence_type: IPI
+  original_reference_id: PMID:33509932
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IPI annotation placing CWC27 as part of the U12-type (minor) catalytic step 2
+      spliceosome, based on the cryo-EM structure of the activated human minor
+      spliceosome.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CWC27 is a genuine component of the activated minor spliceosome, so minor
+      (U12-type) spliceosome membership is correct. Retained as non-core: as in the
+      major spliceosome, CWC27 associates with the activated complex and the precise
+      catalytic-step-2 placement is a curated mapping of the resolved minor
+      spliceosome state rather than evidence of a step 2 catalytic role for CWC27.
+    supported_by:
+      - reference_id: PMID:33509932
+        supporting_text: &gt;-
+          We report the cryo-electron microscopy structure of the activated human
+          minor spliceosome
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation (HPA immunofluorescence) localizing CWC27 to the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleoplasmic localization is consistent with CWC27&#39;s role as a spliceosomal
+      protein and with the curated UniProt nuclear localization. Direct
+      immunofluorescence evidence supports this subcellular component.
+    supported_by:
+      - reference_id: file:human/CWC27/CWC27-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.&#34;
+- term:
+    id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  evidence_type: IC
+  original_reference_id: PMID:29360106
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IC annotation inferring involvement in mRNA splicing from membership in the
+      U2-type precatalytic/activated spliceosome (GO:0071005).
+    action: ACCEPT
+    reason: &gt;-
+      A sound curator inference: CWC27 is a structural component of the activated
+      major spliceosome, so it is reasonably inferred to be involved in mRNA
+      splicing via the spliceosome, the core process for this protein.
+    supported_by:
+      - reference_id: PMID:29360106
+        supporting_text: &gt;-
+          the late Bact complex no longer contains the splicing factors RNF113A
+          (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)
+- term:
+    id: GO:0071005
+    label: U2-type precatalytic spliceosome
+  evidence_type: IDA
+  original_reference_id: PMID:29360106
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA annotation placing CWC27 in the U2-type (major) precatalytic/activated
+      spliceosome, based on the cryo-EM structure of the human activated spliceosome.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most precisely evidenced cellular-component annotation for CWC27.
+      Cryo-EM directly visualizes NY-CO-10 (CWC27) in the activated major (Bact)
+      spliceosome, with the PRP8 endonuclease-like domain contacting it, and shows it
+      is released during the Bact-to-B* transition.
+    supported_by:
+      - reference_id: PMID:29360106
+        supporting_text: &gt;-
+          the late Bact complex no longer contains the splicing factors RNF113A
+          (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)
+- term:
+    id: GO:0003755
+    label: peptidyl-prolyl cis-trans isomerase activity
+  evidence_type: IDA
+  original_reference_id: PMID:20676357
+  qualifier: enables
+  negated: true
+  review:
+    summary: &gt;-
+      Negated (NOT) IDA annotation recording that CWC27 (SDCCAG-10) does NOT have
+      peptidyl-prolyl cis-trans isomerase activity, based on direct biochemical
+      assay showing no tetrapeptide isomerase activity and no cyclosporin binding.
+    action: ACCEPT
+    reason: &gt;-
+      This negated annotation correctly captures the experimental finding that CWC27
+      is a catalytically inactive pseudo-PPIase. Davis et al. found SDCCAG-10
+      (CWC27) incompetent for both cyclosporin binding and tetrapeptide isomerase
+      activity, attributable to a glutamate substitution at a conserved active-site
+      position. The NOT annotation should be retained as it documents the absence of
+      the family-expected catalytic activity.
+    supported_by:
+      - reference_id: PMID:20676357
+        supporting_text: &gt;-
+          No binding was detected for PPIL2, PPIL6, or SDCCAG-10, making these, to
+          our knowledge, the first set of human cyclophilins that have been found
+          incompetent to ligate cyclosporin
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9770131
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome, Formation of the Spliceosomal B* complex) localizing
+      CWC27 to the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleoplasmic localization is consistent with CWC27&#39;s spliceosomal function
+      and with the curated UniProt nuclear localization and HPA immunofluorescence
+      evidence.
+    supported_by:
+      - reference_id: file:human/CWC27/CWC27-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.&#34;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9770145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome, Formation of the Spliceosomal Bact complex)
+      localizing CWC27 to the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with CWC27&#39;s recruitment into the activated Bact spliceosome in the
+      nucleoplasm; supported by curated nuclear localization and immunofluorescence.
+    supported_by:
+      - reference_id: file:human/CWC27/CWC27-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.&#34;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9921507
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome, NS5 interacts with Spliceosome) localizing CWC27 to
+      the nucleoplasm.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleoplasmic localization is well supported for this spliceosomal protein.
+      The annotation derives from a Reactome pathway in which the spliceosome (with
+      CWC27) resides in the nucleoplasm.
+    supported_by:
+      - reference_id: file:human/CWC27/CWC27-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus {ECO:0000305|PubMed:29360106}.&#34;
+- term:
+    id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  evidence_type: IC
+  original_reference_id: PMID:11991638
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IC annotation inferring involvement in mRNA splicing from CWC27&#39;s presence in
+      native purified spliceosomes (catalytic step 2 / C-complex-enriched).
+    action: ACCEPT
+    reason: &gt;-
+      CWC27 is detected in native purified spliceosomes, supporting the inference
+      that it participates in mRNA splicing via the spliceosome, its core process.
+    supported_by:
+      - reference_id: PMID:11991638
+        supporting_text: &gt;-
+          These spliceosomes consist largely of C complex containing splicing
+- term:
+    id: GO:0071013
+    label: catalytic step 2 spliceosome
+  evidence_type: IDA
+  original_reference_id: PMID:11991638
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA annotation placing CWC27 in the catalytic step 2 spliceosome, based on its
+      identification in native purified C-complex-enriched spliceosomes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      CWC27 was detected in native purified spliceosome preparations enriched for C
+      complex, supporting spliceosome membership. However, higher-resolution cryo-EM
+      work later localized CWC27/NY-CO-10 specifically to the activated Bact stage,
+      from which it is released before step 2 catalysis. The catalytic step 2
+      placement reflects the bulk composition of the purified preparation rather than
+      a specific step 2 role, so it is retained as a non-core membership term.
+    supported_by:
+      - reference_id: PMID:11991638
+        supporting_text: &gt;-
+          These spliceosomes consist largely of C complex containing splicing
+      - reference_id: PMID:29360106
+        supporting_text: &gt;-
+          the late Bact complex no longer contains the splicing factors RNF113A
+          (Cwc24 in yeast) and NY-CO-10 (Cwc27 in yeast)
+core_functions:
+- description: &gt;-
+    Structural/scaffold component of the activated spliceosome required for pre-mRNA
+    splicing; CWC27 is recruited to the activated Bact complex of the major (U2-type)
+    spliceosome and is released during the Bact-to-B* transition, and is likewise a
+    component of the activated minor (U12-type) spliceosome.
+  supported_by:
+    - reference_id: PMID:29360106
+      supporting_text: &gt;-
+        the late Bact complex no longer contains the splicing factors RNF113A (Cwc24
+        in yeast) and NY-CO-10 (Cwc27 in yeast)
+    - reference_id: PMID:33509932
+      supporting_text: &gt;-
+        The minor spliceosome mediates splicing of the rare but essential U12-type
+        introns
+  directly_involved_in:
+  - id: GO:0000398
+    label: mRNA splicing, via spliceosome
+  locations:
+    - id: GO:0005681
+      label: spliceosomal complex
+    - id: GO:0005654
+      label: nucleoplasm
+proposed_new_terms: []
+suggested_questions:
+- question: Does the catalytically dead cyclophilin domain of CWC27 retain a substrate-binding or proline-recognition function within the spliceosome that contributes to splice site fidelity, even in the absence of isomerase catalysis?
+- question: How does the CWC27-CWC22 module mechanistically couple spliceosome activation to positioning of eIF4A3/the exon junction complex, and which step of EJC deposition requires CWC27?
+- question: Why do CWC27 loss-of-function variants produce a retina-predominant phenotype (RPSKA) despite ubiquitous expression and an essential splicing role?
+suggested_experiments:
+- description: Structure-guided mutagenesis of the degenerate active-site residue(s) (e.g., the Glu at the position equivalent to PPIA Trp121) combined with rescue assays in CWC27-null cells to test whether restoring a canonical cyclophilin active site confers PPIase activity and/or alters splicing.
+- description: Transcriptome-wide splicing analysis (RNA-seq/junction analysis) in CWC27-depleted cells, with emphasis on U12-type minor introns and retina-expressed transcripts, to define the set of introns dependent on CWC27.
+- description: Cross-linking/proteomics and cryo-EM of the CWC27-CWC22 sub-complex bound to eIF4A3 to map the interface and test the model that CWC27 positions the EJC core for deposition during splicing.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11991638
+  title: Purification and characterization of native spliceosomes suitable for three-dimensional
+    structural analysis.
+  findings:
+    - statement: &gt;-
+        CWC27 is present in native affinity-purified spliceosomes consisting largely
+        of C complex, the basis for its catalytic step 2 spliceosome annotation.
+- id: PMID:20676357
+  title: Structural and biochemical characterization of the human cyclophilin family
+    of peptidyl-prolyl isomerases.
+  findings:
+    - statement: &gt;-
+        CWC27 (SDCCAG-10) is a catalytically inactive cyclophilin with no detectable
+        cyclosporin binding and no tetrapeptide isomerase activity.
+- id: PMID:29360106
+  title: Structure of the human activated spliceosome in three conformational states.
+  findings:
+    - statement: &gt;-
+        CWC27/NY-CO-10 is a component of the activated major (Bact) spliceosome and
+        is released during the Bact-to-B* transition.
+- id: PMID:33509932
+  title: Structure of the activated human minor spliceosome.
+  findings:
+    - statement: &gt;-
+        CWC27 is a component of the activated human minor spliceosome that splices
+        U12-type introns.
+- id: PMID:39068178
+  title: Molecular basis for the activation of human spliceosome.
+  findings:
+    - statement: &gt;-
+        CWC27 is identified within spliceosome activation intermediates spanning the
+        pre-Bact to post-Bact states.
+- id: PMID:28285769
+  title: Mutations in the spliceosome component CWC27 cause retinal degeneration with
+    or without additional developmental anomalies.
+  findings:
+    - statement: &gt;-
+        Biallelic loss-of-function variants in CWC27 cause autosomal-recessive
+        retinitis pigmentosa with or without skeletal/developmental anomalies (RPSKA).
+- id: Reactome:R-HSA-9770131
+  title: Formation of the Spliceosomal B* complex
+  findings: []
+- id: Reactome:R-HSA-9770145
+  title: Formation of the Spliceosomal Bact complex
+  findings: []
+- id: Reactome:R-HSA-9921507
+  title: NS5 interacts with Spliceosome
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

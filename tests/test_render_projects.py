@@ -230,8 +230,21 @@ class TestReplaceGeneSymbols:
         index = {"GPX4": ["human"]}
         content = "[GPX4](https://example.org) is already linked."
         result, warnings = replace_gene_symbols(content, index)
-
         assert result == content
+        assert warnings == []
+
+    def test_purely_numeric_symbols_not_auto_linked(self):
+        """Bare numbers must not auto-link to numeric gene folders (e.g. BPT4 phage genes '2','10').
+
+        Such symbols flood number-heavy prose/tables with false links; they should only be linked
+        via explicit <gene> tags.
+        """
+        index = {"2": ["BPT4"], "10": ["BPT4"], "GPX4": ["human"]}
+        content = "There are 2 mappings and 10 gaps; GPX4 is a gene."
+        result, warnings = replace_gene_symbols(content, index)
+        assert "genes/BPT4/2/" not in result
+        assert "genes/BPT4/10/" not in result
+        assert "[GPX4]" in result  # real (non-numeric) symbol still links
         assert warnings == []
 
     def test_symbol_after_slash_not_linked(self):
