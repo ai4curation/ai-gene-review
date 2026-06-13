@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-06-07T13:35:43
+# Generation date: 2026-06-13T14:55:54
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -454,6 +454,7 @@ class Finding(YAMLRoot):
     supporting_text: Optional[str] = None
     full_text_unavailable: Optional[Union[bool, Bool]] = None
     reference_section_type: Optional[Union[str, "ManuscriptSection"]] = None
+    finding_review: Optional[Union[dict, "FindingReview"]] = None
 
     def __post_init__(self, *_: str, **kwargs: Any):
         if self.statement is not None and not isinstance(self.statement, str):
@@ -467,6 +468,42 @@ class Finding(YAMLRoot):
 
         if self.reference_section_type is not None and not isinstance(self.reference_section_type, ManuscriptSection):
             self.reference_section_type = ManuscriptSection(self.reference_section_type)
+
+        if self.finding_review is not None and not isinstance(self.finding_review, FindingReview):
+            self.finding_review = FindingReview(**as_dict(self.finding_review))
+
+        super().__post_init__(**kwargs)
+
+
+@dataclass(repr=False)
+class FindingReview(YAMLRoot):
+    """
+    Manual reviewer assessment of a specific finding within a reference - in particular whether it remains current, is
+    disputed, or has been overturned/superseded by later evidence. This is finer-grained than reference_review (which
+    assesses the whole reference); a paper may contain some findings that stand and others that are overturned. All
+    fields optional and reviewer-supplied.
+    """
+    _inherited_slots: ClassVar[list[str]] = []
+
+    class_class_uri: ClassVar[URIRef] = GENE_REVIEW["FindingReview"]
+    class_class_curie: ClassVar[str] = "gene_review:FindingReview"
+    class_name: ClassVar[str] = "FindingReview"
+    class_model_uri: ClassVar[URIRef] = GENE_REVIEW.FindingReview
+
+    finding_status: Optional[Union[str, "FindingReviewStatusEnum"]] = None
+    superseded_by: Optional[Union[Union[str, ReferenceId], list[Union[str, ReferenceId]]]] = empty_list()
+    review_notes: Optional[str] = None
+
+    def __post_init__(self, *_: str, **kwargs: Any):
+        if self.finding_status is not None and not isinstance(self.finding_status, FindingReviewStatusEnum):
+            self.finding_status = FindingReviewStatusEnum(self.finding_status)
+
+        if not isinstance(self.superseded_by, list):
+            self.superseded_by = [self.superseded_by] if self.superseded_by is not None else []
+        self.superseded_by = [v if isinstance(v, ReferenceId) else ReferenceId(v) for v in self.superseded_by]
+
+        if self.review_notes is not None and not isinstance(self.review_notes, str):
+            self.review_notes = str(self.review_notes)
 
         super().__post_init__(**kwargs)
 
@@ -2597,6 +2634,34 @@ class ReferenceCorrectnessEnum(EnumDefinitionImpl):
         description="""Reviewer's overall manual assessment of a reference's trustworthiness, spanning both citation correctness (does the identifier point to the intended paper that supports its use) and scientific soundness (is that paper's claim reliable). Single-valued: record the most salient issue and elaborate in review_notes. Complements is_invalid (retracted/replaced) and full_text_unavailable.""",
     )
 
+class FindingReviewStatusEnum(EnumDefinitionImpl):
+    """
+    Reviewer's assessment of the empirical standing of a specific finding (a statement extracted from a reference) in
+    light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a whole reference, this applies per
+    finding: a paper may have some findings that stand and others that have been overturned. Use superseded_by to
+    point to the reference(s) responsible.
+    """
+    CURRENT = PermissibleValue(
+        text="CURRENT",
+        description="The finding is consistent with the body of evidence and can be curated from")
+    CORROBORATED = PermissibleValue(
+        text="CORROBORATED",
+        description="The finding is independently supported by additional evidence")
+    DISPUTED = PermissibleValue(
+        text="DISPUTED",
+        description="""The finding is contested or contradicted by other evidence, but not definitively refuted; curate with caution""")
+    OVERTURNED = PermissibleValue(
+        text="OVERTURNED",
+        description="""The finding has been refuted or superseded by later, stronger evidence and should NOT be curated from; record the overturning reference(s) in superseded_by""")
+    UNVERIFIED = PermissibleValue(
+        text="UNVERIFIED",
+        description="The finding has not yet been manually assessed (default)")
+
+    _defn = EnumDefinition(
+        name="FindingReviewStatusEnum",
+        description="""Reviewer's assessment of the empirical standing of a specific finding (a statement extracted from a reference) in light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a whole reference, this applies per finding: a paper may have some findings that stand and others that have been overturned. Use superseded_by to point to the reference(s) responsible.""",
+    )
+
 # Slots
 class slots:
     pass
@@ -2723,6 +2788,15 @@ slots.correctness = Slot(uri=GENE_REVIEW.correctness, name="correctness", curie=
 
 slots.review_notes = Slot(uri=GENE_REVIEW.review_notes, name="review_notes", curie=GENE_REVIEW.curie('review_notes'),
                    model_uri=GENE_REVIEW.review_notes, domain=None, range=Optional[str])
+
+slots.finding_review = Slot(uri=GENE_REVIEW.finding_review, name="finding_review", curie=GENE_REVIEW.curie('finding_review'),
+                   model_uri=GENE_REVIEW.finding_review, domain=None, range=Optional[Union[dict, FindingReview]])
+
+slots.finding_status = Slot(uri=GENE_REVIEW.finding_status, name="finding_status", curie=GENE_REVIEW.curie('finding_status'),
+                   model_uri=GENE_REVIEW.finding_status, domain=None, range=Optional[Union[str, "FindingReviewStatusEnum"]])
+
+slots.superseded_by = Slot(uri=GENE_REVIEW.superseded_by, name="superseded_by", curie=GENE_REVIEW.curie('superseded_by'),
+                   model_uri=GENE_REVIEW.superseded_by, domain=None, range=Optional[Union[Union[str, ReferenceId], list[Union[str, ReferenceId]]]])
 
 slots.ontology = Slot(uri=GENE_REVIEW.ontology, name="ontology", curie=GENE_REVIEW.curie('ontology'),
                    model_uri=GENE_REVIEW.ontology, domain=None, range=Optional[str])
