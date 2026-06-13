@@ -58,8 +58,8 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| eryF | Q00441 | 1.14.15.35 | P450eryF / CYP107A1; 6-dEB C-6 hydroxylase (→ EB) | not reviewed |
-| eryK | P48635 | 1.14.13.154 | CYP113A1; erythromycin C-12 hydroxylase | not reviewed |
+| **eryF** | Q00441 | 1.14.15.35 | P450eryF / CYP107A1; 6-dEB C-6 hydroxylase (→ EB) | **reviewed** (`genes/SACEN/eryF/`) |
+| **eryK** | P48635 | 1.14.13.154 | CYP113A1; erythromycin C-12 hydroxylase | **reviewed** (`genes/SACEN/eryK/`) |
 
 ### C. Glycosyltransferases (+ activator)
 
@@ -148,8 +148,9 @@ members). For curation, *S. erythraea* is the canonical representative.
 
 ## 7. Curation status
 
-- **Reviewed (2/23):** eryCIII (desosaminyl GT) + eryCII (its activator) — the desosaminylation
-  node, curated as the catalytic + pseudoenzyme-activator exemplar (`projects/BGC.md`).
+- **Reviewed (4/23):** eryCIII (desosaminyl GT) + eryCII (its activator); eryF (6-dEB C-6
+  hydroxylase) + eryK (erythromycin C-12 hydroxylase) — two genuine catalytic P450s that
+  contrast with the EryCII pseudo-P450 (`projects/BGC.md`).
 - **Candidate follow-up (tractable, non-megasynthase):** eryF, eryK (P450s); eryBV (2nd GT);
   eryG (O-MTase); the EryB*/EryC* deoxysugar enzymes; ermE.
 - **Largest effort:** eryAI/AII/AIII (DEBS megasynthases; module-level review).
