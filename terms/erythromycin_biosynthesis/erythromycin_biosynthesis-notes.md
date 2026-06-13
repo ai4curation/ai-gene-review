@@ -159,6 +159,12 @@ members). For curation, *S. erythraea* is the canonical representative.
 
 ## 7. Curation status
 
+> **Evidence gaps (registered):** the catalytic identities of **EryCIV** (PLP enzyme:
+> 3,4-dehydratase *vs* transaminase) and **EryCV** (radical-SAM: 3,4-enoyl reductase *vs*
+> ammonia-lyase) are left `UNDECIDED` — conflicting electronic annotations, no experimental
+> evidence. Captured as per-gene `suggested_questions` and as a worked gap entry in
+> `projects/FUNCTION_KNOWLEDGE_GAPS.md`.
+
 - **Reviewed (23/23 — complete):** the three DEBS megasynthases (eryAI/AII/AIII); both P450s
   (eryF, eryK); both glycosyltransferases (eryBV, eryCIII) + the EryCII activator; the final
   O-methyltransferase eryG; both deoxysugar arms — desosamine (eryCI–VI) and mycarose (eryBI–VII);
