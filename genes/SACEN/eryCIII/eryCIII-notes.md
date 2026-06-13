@@ -32,6 +32,15 @@ biosynthesis; it is the catalytic partner of the activator EryCII.
 
 No GO MF term exists for EC 2.4.1.278 specifically → candidate proposed_new_term.
 
+## Literature nuance (from PMID:22056329 full text)
+
+The 2012 structure study found **purified EryCIII inactive on its own**, with activity
+restored only by EryCII ("EryCII is required by EryCIII"), whereas the 2004 IDA paper
+(PMID:15303858) reported high standalone activity (kcat > 100 min⁻¹). Reconciliation:
+EryCIII is the catalytic (hexosyltransferase) subunit, but reliable activity is realized
+in the α2β2 EryCIII·EryCII complex — supporting annotating the catalysis to the complex
+with EryCII contributing GO:0008047 enzyme activator activity.
+
 ## Predicted-complex evidence (BGC project)
 
 Moriwaki et al. (bioRxiv 2025.10.26.684697) predict the EryCII-EryCIII interaction

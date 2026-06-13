@@ -34,6 +34,11 @@ EryCIII** in erythromycin biosynthesis.
   nucleotide-activated sugar to the macrolide scaffold... a heterotetramer...
   EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT."
   [PMID:22056329]
+- **EryCII is required for EryCIII catalysis** (not merely an enhancer): purified
+  EryCIII "was inactive under all conditions tried"; combining EryCIII + EryCII
+  extracts "restored" GT activity [PMID:22056329 full text]. Stoichiometry is
+  α2β2 (dimer of heterodimers, ~188 kDa); activation is allosteric via EryCII's
+  N-terminal A″ helix, which contacts EryCIII's acceptor domain.
 
 ## Annotation issues — domain-based over-annotation of a pseudoenzyme
 
