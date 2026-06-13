@@ -4,7 +4,8 @@
 > provenance recorded inline as `[PMID:xxxx "supporting text"]`. Gene→UniProt mappings
 > verified against UniProt (organism *Saccharopolyspora erythraea* NRRL 2338,
 > NCBITaxon:405948); cluster membership and product names aligned to **MIBiG BGC0000055**.
-> Genes with a full review under `genes/SACEN/` are marked **reviewed**.
+> Genes with a full review under `genes/SACEN/` are marked **reviewed**. **All 23 cluster genes
+> have now been reviewed.**
 
 ## 1. Definition and scope
 
@@ -49,10 +50,10 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| eryAI | A4F7N8 | 2.3.1.94 | DEBS, loading + modules 1-2 | not reviewed |
-| eryAII | A4F7P0 | 2.3.1.94 | DEBS, modules 3-4 | not reviewed |
-| eryAIII | A4F7P1 | 2.3.1.94 | DEBS, modules 5-6 + thioesterase (releases 6-dEB) | not reviewed |
-| (TEII) | A4F7P6 | 3.1.2.14 | type II thioesterase (PKS proofreading) | not reviewed |
+| **eryAI** | A4F7N8 | 2.3.1.94 | DEBS, loading + modules 1-2 | **reviewed** (`genes/SACEN/eryAI/`) |
+| **eryAII** | A4F7P0 | 2.3.1.94 | DEBS, modules 3-4 | **reviewed** (`genes/SACEN/eryAII/`) |
+| **eryAIII** | A4F7P1 | 2.3.1.94 | DEBS, modules 5-6 + thioesterase (releases 6-dEB) | **reviewed** (`genes/SACEN/eryAIII/`) |
+| **TEII** | A4F7P6 | 3.1.2.14 | type II thioesterase (PKS proofreading) | **reviewed** (`genes/SACEN/A4F7P6/`) |
 
 ### B. Post-PKS P450 oxidations
 
@@ -100,8 +101,8 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
 | **ermE** | P07287 | 2.1.1.184 | 23S rRNA N6-adenine MTase; macrolide self-resistance | **reviewed** (`genes/SACEN/ermE/`) |
-| (esterase) | A4F7M9 | — | putative erythromycin esterase | not reviewed |
-| (transposase) | A4F7N9 | — | transposase — not biosynthetic | excluded |
+| **esterase** | A4F7M9 | — | putative erythromycin esterase | **reviewed** (`genes/SACEN/A4F7M9/`) |
+| **transposase** | A4F7N9 | — | transposase — not biosynthetic | **reviewed** (`genes/SACEN/A4F7N9/`; excluded from pathway) |
 
 ## 4. Pathway
 
@@ -153,15 +154,17 @@ members). For curation, *S. erythraea* is the canonical representative.
 
 ## 7. Curation status
 
-- **Reviewed (17/23):** both deoxysugar arms complete — desosamine (eryCI, eryCII, eryCIII,
-  eryCIV, eryCV, eryCVI) and mycarose (eryBI, eryBII, eryBIII, eryBIV, eryBVI, eryBVII); both
-  glycosyltransferases (eryBV, eryCIII) and the EryCII activator; both P450s (eryF, eryK); the
-  final O-methyltransferase eryG; and the self-resistance methylase ermE. Several TrEMBL sugar
-  enzymes carry UNDECIDED catalytic specifics where electronic annotations conflict (`projects/BGC.md`).
+- **Reviewed (23/23 — complete):** the three DEBS megasynthases (eryAI/AII/AIII); both P450s
+  (eryF, eryK); both glycosyltransferases (eryBV, eryCIII) + the EryCII activator; the final
+  O-methyltransferase eryG; both deoxysugar arms — desosamine (eryCI–VI) and mycarose (eryBI–VII);
+  the type II thioesterase, the putative esterase, the self-resistance methylase ermE; and the
+  (non-biosynthetic) transposase. Several TrEMBL sugar enzymes carry UNDECIDED catalytic specifics
+  where electronic annotations conflict (`projects/BGC.md`).
 - **Candidate follow-up (tractable, non-megasynthase):** the remaining EryB* mycarose enzymes
   (eryBII/III/IV/VI/VII, eryBI); ermE (resistance); the type II thioesterase/esterase.
-- **Remaining (DEBS megasynthases + accessory):** eryAI/AII/AIII (the three DEBS modular PKS
-  megasynthases; module-level review) and the type II thioesterase / esterase accessory genes.
+- **Remaining:** none — the full cluster has been reviewed. Open items are GO term requests
+  (e.g. EC 2.4.1.278 desosaminyltransferase, EryCIV/EryCV catalytic specifics) and two MIBiG/UniProt
+  upstream corrections (§6).
 
 ## 8. References
 
