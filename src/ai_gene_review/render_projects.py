@@ -214,11 +214,12 @@ def replace_gene_symbols(
 
     # Build regex pattern for all known symbols
     # Sort by length (longest first) to avoid partial matches.
-    # Exclude purely-numeric symbols (e.g. BPT4 phage genes named "2", "10"): bare numbers occur
-    # constantly in prose/tables and would produce a flood of false links. Such symbols must be
-    # linked via explicit <gene> tags (handled by replace_gene_tags) instead.
+    # Exclude very short symbols from prose auto-linking. One- and two-character gene
+    # names are common enough in this repository to be valid review folders, but they
+    # also collide with ordinary text such as "don't", author initials, and allele
+    # suffixes. Link those through explicit <gene> tags instead.
     symbols = sorted(
-        (s for s in symbol_index.keys() if not s.isdigit()),
+        (s for s in symbol_index.keys() if len(s) >= 3 and not s.isdigit()),
         key=len,
         reverse=True,
     )
@@ -333,9 +334,13 @@ def link_uniprot_code_spans(
     where there is no local AIGR gene-review page. Linking them makes the
     sampled evidence inspectable without confusing them with local reviews.
     """
+    accession = (
+        r"(?:[OPQ][0-9][A-Z0-9]{3}[0-9]"
+        r"|[A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9](?:[A-Z][A-Z0-9]{2}[0-9])?)"
+    )
     pattern = re.compile(
-        r"`(?:(?P<label>[^`/\s]+/(?P<accession>[A-Za-z0-9]{6,10}))"
-        r"|(?P<bare_accession>[A-Z0-9]{6,10}))`"
+        rf"`(?:(?P<label>[^`/\s]+/(?P<accession>{accession}))"
+        rf"|(?P<bare_accession>{accession}))`"
     )
 
     def replace_match(match: re.Match) -> str:

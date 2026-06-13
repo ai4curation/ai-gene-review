@@ -102,7 +102,7 @@ Or directly:
 # Route 1 — DR CARD line(s) from cached UniProt record(s):
 uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py \
     --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml \
-    genes/ECO8N/A0A0H3EUF3_ECO8N/A0A0H3EUF3_ECO8N-uniprot.txt
+    genes/ECO8N/mphB/mphB-uniprot.txt
 
 # Sweep every cached UniProt record (recursive glob; quote it):
 uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py \
