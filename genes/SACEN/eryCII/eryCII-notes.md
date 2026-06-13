@@ -12,8 +12,21 @@ and instead serves as the **activating partner of the desosaminyl transferase
 EryCIII** in erythromycin biosynthesis.
 
 - UniProt A4F7P2 CAUTION: "Although related to the cytochrome P450 family, lacks the
-  heme-binding sites." (ECO:0000305) — i.e. it cannot bind heme and cannot perform
-  P450 monooxygenase chemistry.
+  heme-binding sites." (ECO:0000305) — note this is a *curator inference*, so it needs
+  corroboration (below).
+- **Beyond the assertion — primary structural evidence (PMID:22056329 full text):**
+  - "...lacks the essential cysteine residue that coordinates the heme iron."
+  - "the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not
+    active P450 enzymes." (structure-based alignment vs P450 Cyp125)
+  - "Having lost the heme group in the central core, the protein may be more
+    conformationally dynamic..."
+  - **PDB 2YJN is apo:** the RCSB entry has zero non-polymer entities (no heme ligand).
+  - Activation mechanism: EryCIII activity "is almost completely rescued by the
+    addition of soluble EryCII... able to induce a catalytically active structure in
+    EryCIII."
+
+  So the no-heme / no-catalysis conclusion rests on (1) the absent conserved Cys in a
+  structure-based alignment, and (2) an apo crystal structure — not merely UniProt.
 - UniProt FUNCTION: "Involved in the erythromycin biosynthesis pathway. Acts by
   forming a complex and stabilizing the desosaminyl transferase EryCIII."
   (ECO:0000269|PubMed:22056329); SUBUNIT: "Heterotetramer composed of EryCII and EryCIII."
