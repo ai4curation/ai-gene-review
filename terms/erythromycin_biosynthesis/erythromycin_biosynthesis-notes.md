@@ -65,7 +65,7 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| eryBV | A4F7N6 | 2.4.1.- | mycarosyltransferase: TDP-L-mycarose → EB (→ MEB); paralog of EryCIII | not reviewed |
+| **eryBV** | A4F7N6 | 2.4.1.- | mycarosyltransferase: TDP-L-mycarose → EB (→ MEB); paralog of EryCIII | **reviewed** (`genes/SACEN/eryBV/`) |
 | **eryCIII** | A4F7P3 | 2.4.1.278 | desosaminyltransferase: TDP-D-desosamine → MEB (→ erythromycin D) | **reviewed** (`genes/SACEN/eryCIII/`) |
 | **eryCII** | A4F7P2 | — | allosteric **activator** of EryCIII (heme-less P450 pseudoenzyme; see §6) | **reviewed** (`genes/SACEN/eryCII/`) |
 
@@ -93,7 +93,7 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| eryG | A4F7P5 | 2.1.1.254 | erythromycin 3''-O-methyltransferase (mycarose → cladinose; C/D → A/B) | not reviewed |
+| **eryG** | A4F7P5 | 2.1.1.254 | erythromycin 3''-O-methyltransferase (mycarose → cladinose; C/D → A/B) | **reviewed** (`genes/SACEN/eryG/`) |
 
 ### G. Self-resistance & accessory
 
@@ -148,11 +148,11 @@ members). For curation, *S. erythraea* is the canonical representative.
 
 ## 7. Curation status
 
-- **Reviewed (4/23):** eryCIII (desosaminyl GT) + eryCII (its activator); eryF (6-dEB C-6
-  hydroxylase) + eryK (erythromycin C-12 hydroxylase) — two genuine catalytic P450s that
-  contrast with the EryCII pseudo-P450 (`projects/BGC.md`).
-- **Candidate follow-up (tractable, non-megasynthase):** eryF, eryK (P450s); eryBV (2nd GT);
-  eryG (O-MTase); the EryB*/EryC* deoxysugar enzymes; ermE.
+- **Reviewed (6/23):** eryCIII + eryCII (desosaminylation node); eryF + eryK (the two catalytic
+  P450s; contrast the EryCII pseudo-P450); eryBV (mycarosyltransferase) + eryG (final
+  O-methyltransferase) (`projects/BGC.md`).
+- **Candidate follow-up (tractable, non-megasynthase):** the EryB*/EryC* deoxysugar-biosynthesis
+  enzymes; eryCI (transaminase); ermE (resistance).
 - **Largest effort:** eryAI/AII/AIII (DEBS megasynthases; module-level review).
 
 ## 8. References
