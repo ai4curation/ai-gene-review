@@ -160,3 +160,14 @@ members). For curation, *S. erythraea* is the canonical representative.
 - [PMID:22056329 "EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT"] — Moncrieffe et al. 2012, *J Mol Biol* (PDB 2YJN).
 - [PMID:15303858 "EryCIII converts alpha-mycarosyl erythronolide B into erythromycin D using TDP-d-desosamine as the glycosyl donor"] — Lee et al. 2004, *JACS*.
 - Per-gene primary references are recorded in the individual `genes/SACEN/*/` reviews.
+
+### Deep research companion
+
+`erythromycin_biosynthesis-deep-research-falcon.md` (Edison/falcon; 27 citations) is a
+machine-generated companion. It is **complementary** to these notes:
+- *It adds* a yield-engineering / precursor-supply layer absent here — methylmalonyl-CoA
+  supply, the TetR regulator SACE_5754 and its targets (SACE_0388, SACE_6149), and the
+  `mmsOp1`/`ilvB1`/`bkd` precursor operons — plus recent (2023–24) literature.
+- *It does not* cover the EryCII isomerase-vs-activator discrepancy or the per-gene
+  deoxysugar (EryB*/EryC*) roster (its own "Uncertainty" section flags the latter gap), so
+  §3 and §6 above remain the authoritative MIBiG-aligned curation.
