@@ -188,3 +188,9 @@ machine-generated companion. It is **complementary** to these notes:
 - *It does not* cover the EryCII isomerase-vs-activator discrepancy or the per-gene
   deoxysugar (EryB*/EryC*) roster (its own "Uncertainty" section flags the latter gap), so
   §3 and §6 above remain the authoritative MIBiG-aligned curation.
+
+A second, **module-grounded** deep-research report —
+`modules/erythromycin_biosynthesis-deep-research-falcon.md` (Edison/falcon; 53 citations) —
+was generated from the structured module (`modules/erythromycin_biosynthesis.yaml`) and follows
+the per-step gene/activity outline; it adds recent mechanistic context (DEBS module-1 cryo-EM,
+c-di-AMP/DasR regulation, titer engineering).
