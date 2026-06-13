@@ -73,10 +73,10 @@ Representative species *S. erythraea* NRRL 2338. UniProt accessions and EC numbe
 
 | Gene | UniProt | EC | Role | Status |
 |---|---|---|---|---|
-| eryCIV | A4F7N3 | — | NDP-6-deoxyhexose 3,4-dehydratase | not reviewed |
-| eryCV | A4F7N2 | — | NDP-4,6-dideoxyhexose 3,4-enoyl reductase | not reviewed |
-| eryCI | P14290 | (2.6.1.-) | PLP-dependent transaminase (see §6 naming discrepancy) | not reviewed |
-| eryCVI | A4F7N5 | 2.1.1.- | TDP-desosamine N,N-dimethyltransferase | not reviewed |
+| **eryCIV** | A4F7N3 | — | NDP-6-deoxyhexose 3,4-dehydratase (PLP; activity UNDECIDED) | **reviewed** (`genes/SACEN/eryCIV/`) |
+| **eryCV** | A4F7N2 | — | NDP-4,6-dideoxyhexose 3,4-enoyl reductase (radical-SAM, 4Fe-4S) | **reviewed** (`genes/SACEN/eryCV/`) |
+| **eryCI** | P14290 | (2.6.1.-) | PLP-dependent sugar aminotransferase (DegT/DnrJ/EryC1; see §6) | **reviewed** (`genes/SACEN/eryCI/`) |
+| **eryCVI** | A4F7N5 | 2.1.1.- | TDP-desosamine N,N-dimethyltransferase (SAM) | **reviewed** (`genes/SACEN/eryCVI/`) |
 
 ### E. TDP-L-mycarose biosynthesis (EryB*)
 
@@ -142,17 +142,23 @@ members). For curation, *S. erythraea* is the canonical representative.
    [PMID:22056329 "thus, they are not active P450 enzymes"]. UniProt (A4F7P2) agrees: a P450-family
    protein that "lacks the heme-binding sites" — not a sugar isomerase. → MIBiG's catalytic
    assignment appears wrong. Captured in `genes/SACEN/eryCII/`; cross-ref `projects/PSEUDOENZYMES.md`.
-2. **eryCI — UniProt legacy name "sensory transduction protein" vs transaminase.** EryCI is the
-   desosamine PLP-dependent transaminase in MIBiG/literature; UniProt P14290 carries the legacy
-   name "Erythromycin biosynthesis sensory transduction protein EryC1". Flag when eryCI is curated.
+2. **eryCI — UniProt legacy name "sensory transduction protein" vs transaminase. RESOLVED.**
+   EryC1 is the eponymous member of the **DegT/DnrJ/EryC1 family of PLP-dependent sugar
+   aminotransferases**; the GOA transaminase + PLP terms are correct. UniProt P14290's
+   FUNCTION/name ("Erythromycin biosynthesis sensory transduction protein", two-component /
+   DNA-binding / cell-membrane keywords) is a pre-characterization legacy misannotation,
+   contradicted by the protein's own family assignment and cofactor. The review
+   (`genes/SACEN/eryCI/`) ACCEPTs transaminase/PLP, MODIFYs the wrong "polysaccharide biosynthetic
+   process", REMOVEs the spurious plasma-membrane location, and flags P14290 for upstream re-curation.
 
 ## 7. Curation status
 
-- **Reviewed (6/23):** eryCIII + eryCII (desosaminylation node); eryF + eryK (the two catalytic
-  P450s; contrast the EryCII pseudo-P450); eryBV (mycarosyltransferase) + eryG (final
-  O-methyltransferase) (`projects/BGC.md`).
-- **Candidate follow-up (tractable, non-megasynthase):** the EryB*/EryC* deoxysugar-biosynthesis
-  enzymes; eryCI (transaminase); ermE (resistance).
+- **Reviewed (10/23):** the full **desosaminylation + desosamine-pathway arm** (eryCII, eryCIII,
+  eryCI, eryCIV, eryCV, eryCVI); the two catalytic P450s eryF + eryK (contrast the EryCII
+  pseudo-P450); the mycarosyltransferase eryBV; the final O-methyltransferase eryG.
+  EryCIV/EryCV catalytic specifics left UNDECIDED (electronic annotations conflict) (`projects/BGC.md`).
+- **Candidate follow-up (tractable, non-megasynthase):** the remaining EryB* mycarose enzymes
+  (eryBII/III/IV/VI/VII, eryBI); ermE (resistance); the type II thioesterase/esterase.
 - **Largest effort:** eryAI/AII/AIII (DEBS megasynthases; module-level review).
 
 ## 8. References
