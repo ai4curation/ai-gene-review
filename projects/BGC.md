@@ -201,5 +201,8 @@ UniProt carries a "lacks the ... binding sites" CAUTION.
   bioRxiv 2025.10.26.684697 (v2, 2026). doi:10.1101/2025.10.26.684697.
 - Data deposit: Zenodo doi:10.5281/zenodo.17451667.
 - MIBiG: Minimum Information about a Biosynthetic Gene cluster database, v4.0.
-- Related internal projects: `projects/ALPHAFOLD.md`,
-  `projects/PROTEIN_COMPLEX_FUNCTIONS.md`.
+- Related internal projects (findings cross-registered): `projects/ALPHAFOLD.md`,
+  `projects/PROTEIN_COMPLEX_FUNCTIONS.md` (catalytic-member attribution),
+  `projects/PSEUDOENZYMES.md` (EryCII, PqsB, CLF), `projects/OVER_ANNOTATION_PATTERNS.md`
+  (patterns 7-8), `projects/CONTESTED_FUNCTION.md` (EryCII + finding-level disputes),
+  `projects/ENZYME_SPECIFICITY.md` (EryCIII TDP-vs-UDP donor).

@@ -253,6 +253,35 @@ Its JmjC domain retains substrate recognition capability (binds H3K9me) but
 cannot catalyze demethylation. This creates a common annotation error where
 JmjC domain presence alone leads to multiple incorrect MF/BP annotations.
 
+### Cytochrome-P450-homologue glycosyltransferase activator (S. erythraea EryCII)
+
+From the BGC project (`BGC.md`); review at `genes/SACEN/eryCII/`.
+
+| Feature | Details |
+|---------|---------|
+| **Family** | Cytochrome P450 by sequence (DesVIII/EryCII family of GT auxiliary activators; ≥12 members) |
+| **Defect** | Lacks the conserved heme-ligating cysteine and the heme group; the P450 heme pocket is empty/disordered. PDB **2YJN is apo** (no heme ligand) |
+| **Evidence (beyond assertion)** | Structure-based alignment vs P450 CYP125 shows the conserved Cys absent → *"thus, they are not active P450 enzymes"*; "lost the heme group in the central core" (PMID:22056329). UniProt CAUTION (ECO:0000305): "lacks the heme-binding sites" |
+| **Actual function** | Allosteric activator + stabilizer of the desosaminyl glycosyltransferase EryCIII; forms an α2β2 EryCII-EryCIII heterotetramer; **EryCIII is inactive without it** |
+| **Type** | Type 1 (allosteric activator) — with a twist: it activates a **non-homologous** partner (a GT-B glycosyltransferase), unlike the classic pseudokinase-activates-kinase case |
+| **Annotations removed** | GO:0004497 monooxygenase, GO:0016705 oxidoreductase (paired donors, O2), GO:0005506 iron ion binding, GO:0020037 heme binding |
+| **Annotations added** | GO:0008047 enzyme activator activity, GO:0050821 protein stabilization, GO:0032991 protein-containing complex, GO:1901115 erythromycin biosynthetic process |
+| **References** | Moncrieffe et al. 2012 (PMID:22056329) |
+
+### "Pseudo-ketosynthase" structural subunits (condensing-enzyme fold without the catalytic Cys)
+
+Also from the BGC project — two cases where a β-ketoacyl-synthase/thiolase fold has lost
+the catalytic cysteine and serves as a required non-catalytic subunit:
+
+- **PqsB** (*P. aeruginosa*, `genes/PSEAE/pqsB/`): FabH/KAS-III-fold partner of the catalytic
+  PqsC in the PqsBC condensing enzyme; the active-site Cys-129/His-269 reside in PqsC. Required
+  but non-catalytic (Type 1/structural). IEA `acyltransferase activity` → MARK_AS_OVER_ANNOTATED
+  (contributes_to). (PMID:24239007, PMID:26811339)
+- **ActI-ORF2 / KSβ-CLF** (*S. coelicolor*, `genes/STRCO/actI-ORF2/`): the actinorhodin type II
+  PKS **chain-length factor** — a ketosynthase descendant that "does not have an active site"
+  yet sets polyketide chain length (PMID:15286722). IEA acyltransferase MFs →
+  MARK_AS_OVER_ANNOTATED; proposed new MF "polyketide chain length factor activity".
+
 ### Other enzymes that exist but aren't pseudoenzymes (clarification)
 
 Some genes in the review set are described as "catalytically inactive" but
