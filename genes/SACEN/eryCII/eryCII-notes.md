@@ -51,8 +51,28 @@ All four GOA molecular-function terms are IEA from the P450 sequence signature a
 - GO:0020037 heme binding → REMOVE (UniProt: "lacks the heme-binding sites")
 
 Accurate roles to assert instead: **GO:0008047 enzyme activator activity** (allosteric
-activator of EryCIII), **GO:1901115 erythromycin biosynthetic process** (BP),
-**GO:0032991 protein-containing complex** (EryCII-EryCIII heterotetramer).
+activator of EryCIII; added as a NEW annotation), **GO:0050821 protein stabilization**
+(stabilizes EryCIII's fold/quaternary structure), **GO:1901115 erythromycin
+biosynthetic process** (BP), **GO:0032991 protein-containing complex** (EryCII-EryCIII
+heterotetramer).
+
+### "Conformational chaperone"?
+
+Mechanistically EryCII templates/stabilizes the catalytically competent conformation of
+EryCIII, which is chaperone-like. But it is **not** annotated as a `protein folding
+chaperone` (GO:0044183): a chaperone acts transiently and is released, and its client
+stays active afterwards; EryCII is a **stably bound stoichiometric subunit** and EryCIII
+is **inactive without it** (PMID:22056329). So the stabilizing aspect is captured by
+`protein stabilization` (GO:0050821) and the activating aspect by `enzyme activator
+activity` (GO:0008047) - not a chaperone MF. (The older fold-and-release / "does not
+bind tightly" model, ref 13, was superseded by the stable-complex structure.)
+
+### Capturing absence of function (NOT annotations)
+
+A "NEW NOT" (negated: true + action: NEW) can only be used for a term NOT already in
+GOA. Here the erroneous P450 functions (monooxygenase, heme binding, iron binding,
+oxidoreductase) are already present in GOA, so they are handled by REMOVE; there is no
+review action to convert an existing positive annotation into a NOT.
 
 ## Predicted-complex evidence (BGC project)
 
