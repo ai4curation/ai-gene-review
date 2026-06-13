@@ -194,3 +194,21 @@ A second, **module-grounded** deep-research report —
 was generated from the structured module (`modules/erythromycin_biosynthesis.yaml`) and follows
 the per-step gene/activity outline; it adds recent mechanistic context (DEBS module-1 cryo-EM,
 c-di-AMP/DasR regulation, titer engineering).
+
+### Further literature from the deep research (PubMed-verified)
+
+Citations surfaced by the deep-research runs were resolved (DOI→PMID) and verified against
+PubMed before use (the LLM assertion alone is not sufficient).
+
+- **Incorporated into the gene reviews:** [PMID:38501175] Bagde & Kim 2024, *Nat Prod Rep* —
+  authoritative review of full-length modular type I PKS architecture (X-ray/cryo-EM/AlphaFold2,
+  incl. DEBS module 1). Added to `eryAI/eryAII/eryAIII` as a structural/expert-synthesis line of
+  evidence for the modular erythronolide synthase mechanism.
+- **Background (concept-level, not per-gene evidence):**
+  [PMID:17369815] Oliynyk et al. 2007 — complete *S. erythraea* NRRL2338 genome (cluster source);
+  [PMID:11994157] Gaisser et al. 2002 — parallel oxidation pathways for 14-membered macrolactones;
+  [PMID:38714645] You et al. 2024 — c-di-AMP/GlcNAc/DasR regulation of antibiotic production;
+  Adamantidi et al. 2024 (doi:10.3390/pr12071533, MDPI Processes — not PubMed-indexed) — industrial
+  production review. These inform context/regulation/yield but, per the wild-type curation scope,
+  add little to the molecular-function/process calls, so they are recorded here rather than in the
+  per-gene reviews.
