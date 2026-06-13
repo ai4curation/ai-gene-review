@@ -442,10 +442,21 @@ def _run_validation_command(
 
     warnings = _warning_lines(output)
 
-    if completed.returncode != 0 and (_has_error_output(output) or not warnings):
+    has_error_output = _has_error_output(output)
+
+    if completed.returncode != 0 and (has_error_output or not warnings):
         report.add_issue(
             ValidationSeverity.ERROR,
             f"{phase} failed: {_summarize_validator_output(output)}",
+            path=str(report.file_path) if report.file_path else None,
+            details=details,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+    elif has_error_output:
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            f"{phase} reported error-like output despite exit code 0: {_summarize_validator_output(output)}",
             path=str(report.file_path) if report.file_path else None,
             details=details,
             validation_category=validation_category,

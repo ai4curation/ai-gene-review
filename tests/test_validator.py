@@ -187,6 +187,24 @@ def test_cli_subprocess_error_result_is_blocking():
     assert report.error_count == 1
 
 
+def test_cli_subprocess_error_output_with_zero_exit_is_reported():
+    """Error-like output should be surfaced even if the subprocess exits successfully."""
+    report = ValidationReport(file_path=Path("test.yaml"), is_valid=True)
+
+    _run_validation_command(
+        report,
+        "Reference validation",
+        ["bash", "-c", "printf '  [ERROR] Title mismatch\\n'; exit 0"],
+        "ReferenceValidator",
+        "linkml_reference_validator",
+        Path.cwd(),
+    )
+
+    assert report.is_valid
+    assert report.warning_count == 1
+    assert "error-like output" in report.issues[0].message
+
+
 # ---------------------------------------------------------------------------
 # Best-practices validation (Python API)
 # ---------------------------------------------------------------------------
