@@ -174,6 +174,13 @@ activator** pair:
   replaced with the accurate **GO:0008047 enzyme activator activity** + complex + BP.
   Cross-links to `projects/PSEUDOENZYMES.md`.
 
+The full erythromycin cluster (23 MIBiG genes) is captured as a representative-species
+pathway concept in **`concepts/erythromycin_biosynthesis.md`** (S. erythraea; aligned to
+MIBiG BGC0000055, all genes mapped to UniProt). Only the desosaminylation node (eryCIII +
+eryCII) is fully reviewed so far; the concept doc also records two MIBiG/UniProt annotation
+discrepancies flagged for upstream correction (eryCII "3,4-isomerase" → activator pseudoenzyme;
+eryCI "sensory transduction protein" → transaminase).
+
 This adds a second over-annotation signature to the project: **sequence-similarity to a
 catalytic family (here cytochrome P450) propagates a full catalytic/cofactor annotation
 set onto a pseudoenzyme that has demonstrably lost the active site** — flagged whenever
