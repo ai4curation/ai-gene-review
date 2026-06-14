@@ -8,7 +8,13 @@ This project tracks the annotation review of **antimicrobial resistance (AMR) de
 2. **A purpose-built reference ontology already exists** — the [Comprehensive Antibiotic Resistance Database (CARD)](https://card.mcmaster.ca/) and its **Antibiotic Resistance Ontology (ARO)** provide expert-curated drug-class, mechanism, gene-family, substrate, and literature data per determinant. This is a high-value, structured source we can mine to seed and quality-check reviews (see [Using CARD/ARO](#using-cardaro) below).
 3. **Clinically important and mobile** — most clinical determinants are plasmid/transposon-borne, so the same gene recurs across many UniProt accessions, organisms, and strains. Consistent, mechanism-grounded annotation has direct surveillance value.
 
-**Scope:** modification/inactivation enzymes (phosphotransferases, esterases, acetyltransferases, β-lactamases), target-protection and target-modification proteins (e.g. rRNA methyltransferases), and efflux systems. The first batch focuses on the **macrolide phosphotransferase (MPH) family**.
+**Scope:** modification/inactivation enzymes (phosphotransferases, esterases, acetyltransferases, β-lactamases), target-protection and target-modification proteins (e.g. rRNA methyltransferases), and efflux systems. The initial featured examples focus on the **macrolide phosphotransferase (MPH) family**.
+
+## Primary Mapping Page
+
+> **Open the curator-facing mapping page:** [ARO → GO mapping table](ANTIMICROBIAL_RESISTANCE/aro2go.html)
+>
+> This is the central reusable artifact for the AMR project. It shows the curated ARO→GO mappings, mapping gaps, CARD/AmiGO links, propagation scope, and candidate annotation impact in one place. Start here when reviewing or extending the AMR mapping set.
 
 ## Key Concepts
 
@@ -35,7 +41,7 @@ Macrolide 2'-phosphotransferases inactivate macrolide antibiotics by transferrin
 | **Organism** | *Escherichia coli* (NCBITaxon:562) |
 | **UniProt** | Q47396 |
 | **CARD/ARO** | [ARO:3000316](https://card.mcmaster.ca/aro/3000316) |
-| **Review** | <gene species="ECOLX" symbol="Q47396_ECOLX">Q47396</gene> |
+| **Review** | <gene species="ECOLX" symbol="mphA">mphA</gene> |
 | **Status** | COMPLETE (DRAFT) |
 
 **Key findings**
@@ -56,7 +62,7 @@ Macrolide 2'-phosphotransferases inactivate macrolide antibiotics by transferrin
 | **Organism** | *Escherichia coli* O83:H1 (strain NRG 857C / AIEC; NCBITaxon:685038) |
 | **UniProt** | A0A0H3EUF3 |
 | **CARD/ARO** | [ARO:3000318](https://card.mcmaster.ca/aro/3000318) (cross-referenced from the UniProt `DR CARD` line) |
-| **Review** | <gene species="ECO8N" symbol="A0A0H3EUF3_ECO8N">A0A0H3EUF3</gene> |
+| **Review** | <gene species="ECO8N" symbol="mphB">mphB</gene> |
 | **Status** | COMPLETE (DRAFT) |
 
 **Key findings**
@@ -78,25 +84,162 @@ Both enzymes share the **same GO MF leaf term** (`GO:0050073`), yet are biologic
 
 | Species | Gene | UniProt | ARO | Family / Mechanism | Status |
 |---------|------|---------|-----|--------------------|--------|
-| ECOLX | <gene species="ECOLX" symbol="Q47396_ECOLX">mphA</gene> | Q47396 | ARO:3000316 | MPH / antibiotic inactivation | COMPLETE |
-| ECO8N | <gene species="ECO8N" symbol="A0A0H3EUF3_ECO8N">mphB</gene> | A0A0H3EUF3 | ARO:3000318 | MPH / antibiotic inactivation | COMPLETE |
-| ECOLX | <gene species="ECOLX" symbol="A0A0R6L508_ECOLX">mcr-1</gene> | A0A0R6L508 | ARO:3003689 | pEtN transferase / colistin target modification | COMPLETE |
-| ENTCL | <gene species="ENTCL" symbol="A0A076UB44_ENTCL">aac6-Ib</gene> | A0A076UB44 | ARO:3002579 | AAC / antibiotic inactivation | COMPLETE |
+| ECOLX | <gene species="ECOLX" symbol="mphA">mphA</gene> | Q47396 | ARO:3000316 | MPH / antibiotic inactivation | COMPLETE |
+| ECO8N | <gene species="ECO8N" symbol="mphB">mphB</gene> | A0A0H3EUF3 | ARO:3000318 | MPH / antibiotic inactivation | COMPLETE |
+| ECOLX | <gene species="ECOLX" symbol="mcr-1">mcr-1</gene> | A0A0R6L508 | ARO:3003689 | pEtN transferase / colistin target modification | COMPLETE |
+| ENTCL | <gene species="ENTCL" symbol="aac6-Ib">aac6-Ib</gene> | A0A076UB44 | ARO:3002579 | AAC / antibiotic inactivation | COMPLETE |
+
+### Focused AMR candidate review batch
+
+The following 20 draft reviews were selected from the ARO→GO annotation-gain candidates to cover multiple AMR mechanisms and mapping classes. These are focused AMR reviews anchored on UniProt/CARD identity and the curated ARO→GO mapping artifacts; they are intended as curator leads rather than full gene-specific literature syntheses.
+
+| Species | Gene | UniProt | Primary AMR call | Status |
+|---------|------|---------|------------------|--------|
+| ECOLX | <gene species="ECOLX" symbol="mcr2">mcr2</gene> | A0A1C3NEV1 | MCR pEtN transferase + antibiotic response | DRAFT |
+| SALSP | <gene species="SALSP" symbol="mcr-4">mcr-4</gene> | A0A222YQC1 | MCR pEtN transferase + antibiotic response | DRAFT |
+| AERME | <gene species="AERME" symbol="mcr-3">mcr-3</gene> | A0A223HCL9 | MCR pEtN transferase + antibiotic response | DRAFT |
+| ECOLX | <gene species="ECOLX" symbol="rmtE">rmtE</gene> | A0A0M5JP06 | 16S rRNA guanine-N7 methyltransferase | DRAFT |
+| KLEPN | <gene species="KLEPN" symbol="rmtD">rmtD</gene> | B0F9V0 | 16S rRNA guanine-N7 methyltransferase | DRAFT |
+| KLEPN | <gene species="KLEPN" symbol="rmtF">rmtF</gene> | I1YZZ5 | 16S rRNA guanine-N7 methyltransferase | DRAFT |
+| AERER | <gene species="AERER" symbol="ermA">ermA</gene> | P09891 | rRNA adenine-N6 methyltransferase + antibiotic response | DRAFT |
+| BACFG | <gene species="BACFG" symbol="ermF">ermF</gene> | P10337 | rRNA adenine-N6 methyltransferase + antibiotic response | DRAFT |
+| BACAN | <gene species="BACAN" symbol="ermJ">ermJ</gene> | Q04720 | rRNA adenine-N6 methyltransferase + antibiotic response | DRAFT |
+| BACSP | <gene species="BACSP" symbol="knt">knt</gene> | P05058 | aminoglycoside nucleotidyltransferase + antibiotic response | DRAFT |
+| STAAU | <gene species="STAAU" symbol="ant">ant</gene> | P0A0D2 | aminoglycoside nucleotidyltransferase + antibiotic response | DRAFT |
+| BACSU | <gene species="BACSU" symbol="aadK">aadK</gene> | P17585 | aminoglycoside nucleotidyltransferase + antibiotic response | DRAFT |
+| ECOLX | <gene species="ECOLX" symbol="hph">hph</gene> | P00557 | aminoglycoside phosphotransferase + antibiotic response | DRAFT |
+| PSEAI | <gene species="PSEAI" symbol="strB">strB</gene> | O84956 | aminoglycoside phosphotransferase + antibiotic response | DRAFT |
+| STAAU | <gene species="STAAU" symbol="apmA">apmA</gene> | A0A1D0AST6 | aminoglycoside acetyltransferase + antibiotic response | DRAFT |
+| ENTCL | <gene species="ENTCL" symbol="fosA5">fosA5</gene> | A0A346FWD3 | glutathione transferase + antibiotic response | DRAFT |
+| PRORE | <gene species="PRORE" symbol="fosA3">fosA3</gene> | A0AB35LIB0 | glutathione transferase + antibiotic response | DRAFT |
+| ACIBZ | <gene species="ACIBZ" symbol="blaOXA-418">blaOXA-418</gene> | A0A088NUF2 | beta-lactamase + antibiotic response | DRAFT |
+| ACIBA | <gene species="ACIBA" symbol="blaOXA-400">blaOXA-400</gene> | A0A097A0C1 | beta-lactamase + antibiotic response | DRAFT |
+| ACIBA | <gene species="ACIBA" symbol="blaOXA-480">blaOXA-480</gene> | A0A0S1NF91 | beta-lactamase + antibiotic response | DRAFT |
+
+### Full reviews of high-value GO term gaps
+
+After triaging the unmapped ARO terms, the most valuable misses were not broad
+CARD mechanism classes but concrete enzyme chemistries where GO has no suitable
+leaf molecular-function term. The following reviews are full curation drafts:
+all fetched GOA annotations are adjudicated, zero-GOA cases have explicit `NEW`
+candidate annotations, and each proposed term is backed by UniProt plus cached
+primary literature where available.
+
+| Species | Gene | UniProt | ARO gap | Review outcome |
+|---------|------|---------|---------|----------------|
+| SPHSM | <gene species="SPHSM" symbol="tetX">tetX</gene> | Q06DK7 | `ARO:3000036` tetracycline inactivation enzyme | Accept broad `GO:0004497`; propose **tetracycline 11a-monooxygenase activity** |
+| STAAT | <gene species="STAAT" symbol="fosB">fosB</gene> | A8Z522 | FosB excluded from FosA/GST mapping | Accept broad `GO:0016765`; propose **fosfomycin bacillithiol-S-transferase activity** |
+| MYCSM | <gene species="MYCSM" symbol="arr">arr</gene> | O67972 | `ARO:3000390` rifampin ADP-ribosyltransferase | Add interim broad transferase; propose **rifampin mono-ADP-ribosyltransferase activity** |
+| ECOLX | <gene species="ECOLX" symbol="ereB">ereB</gene> | P05789 | `ARO:3000320` macrolide esterase | Add broad hydrolase parent; propose **erythromycin esterase activity** |
+| STAHA | <gene species="STAHA" symbol="lnuA">lnuA</gene> | P06107 | `ARO:3000221` lincosamide nucleotidyltransferase | Add broad transferase/antibiotic response; propose **lincosamide O-nucleotidyltransferase activity** |
+| STAWA | <gene species="STAWA" symbol="cfr">cfr</gene> | A2AXI2 | `ARO:3000202` Cfr 23S rRNA methyltransferase | Remove tRNA carryover; propose **23S rRNA A2503 C8 methyltransferase activity** |
+
+Two practical lessons from this batch:
+
+- The high-level `GO:0046677` response-to-antibiotic annotation is usually true,
+  but it is not the real curation win; the win is the missing enzyme chemistry.
+- UniProt flat files and GOA TSVs can diverge for these accessions. Several
+  entries had useful `DR GO` lines in UniProt that did not appear in fetched GOA,
+  so full review should inspect both rather than trusting only the GOA seed.
 
 ### Reviews validating annotation-gain candidates
 
-MCR-1 and AAC(6')-Ib8 were reviewed through the full curation process specifically to ground-truth the
+<gene species="ECOLX" symbol="mcr-1">MCR-1</gene> and <gene species="ENTCL" symbol="aac6-Ib">AAC(6')-Ib8</gene> were reviewed through the full curation process specifically to ground-truth the
 [annotation-gain candidates](ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md), giving two contrasting outcomes:
 
-- **MCR-1 (A0A0R6L508)** — the candidate `GO:0043838` (phosphatidylethanolamine:Kdo2-lipid A pEtN
+- **<gene species="ECOLX" symbol="mcr-1">MCR-1</gene> (A0A0R6L508)** — the candidate `GO:0043838` (phosphatidylethanolamine:Kdo2-lipid A pEtN
   transferase) is a **genuine gain**: the GOA carries only the over-general `GO:0016772`/`GO:0016776`,
   which are refined (`MODIFY`) to the specific EC 2.7.8.43 activity, structurally/biochemically
   supported (PMID:27655155, 29079699). The review also flags the mis-propagated
   `GO:0009244` (LPS core biosynthesis → over-annotated) and adds `GO:0046677` and zinc binding.
-- **AAC(6')-Ib8 (A0A076UB44)** — the candidate `GO:0034069` (aminoglycoside N-acetyltransferase) is
+- **<gene species="ENTCL" symbol="aac6-Ib">AAC(6')-Ib8</gene> (A0A076UB44)** — the candidate `GO:0034069` (aminoglycoside N-acetyltransferase) is
   **correctly rejected**: the entry already has the more specific child `GO:0047663`
   (aminoglycoside 6'-N-acetyltransferase, EC 2.3.1.82), so the family-level term would be a redundant
-  over-annotation. This is the subsumption case from the [spot review](ANTIMICROBIAL_RESISTANCE/SPOT_REVIEW.md).
+  over-annotation. This is the subsumption case from the embedded [spot review](#spot-review-of-annotation-gain-candidates).
+
+## Spot Review of Annotation-Gain Candidates
+
+Manual QA of 6 candidate new annotations from the [annotation-gain report](ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md) (one per family, including the
+broad `relatedMatch` ones), checked against the UniProt record (protein name / EC number / existing
+GO) and GO subsumption (OAK). Goal: confirm correct gains and surface false positives.
+
+| # | UniProt | ARO (gene) | candidate GO | verdict |
+|---|---------|-----------|--------------|---------|
+| 1 | A0A0R6L508 <gene species="ECOLX" symbol="mcr-1">MCR-1</gene> | ARO:3003689 MCR-1.1 | GO:0043838 PE:Kdo2-lipidA pEtN transferase | ✅ **correct, high value** |
+| 2 | A0A0M5JP06 <gene species="ECOLX" symbol="rmtE">RmtE</gene> | ARO:3004679 rmtE2 | GO:0070043 rRNA guanine-N7-MTase | ✅ **correct refinement** |
+| 3 | A0A0K2B0L6 srm1 | ARO:3004605 ermZ | GO:0052910 23S rRNA A-N6-diMTase | ✅ **correct, more precise** |
+| 4 | A0A076UB44 <gene species="ENTCL" symbol="aac6-Ib">AAC(6')-Ib8</gene> | ARO:3002579 | GO:0034069 aminoglycoside N-acetyltransferase | ⚠️ **redundant (over-general)** |
+| 5 | A0A062U9V1 | ARO:3008508 OXA-1090 | GO:0008800 beta-lactamase | ❓ **questionable (PBP vs OXA)** |
+| 6 | A0A024FRF7 FosK | ARO:3003207 | GO:0004364 glutathione transferase | ⚠️ **mapping over-generalizes** |
+
+### Spot Review Details
+
+**1. <gene species="ECOLX" symbol="mcr-1">MCR-1</gene> → GO:0043838 — correct, high value.** UniProt names it "Phosphatidylethanolamine
+transferase Mcr-1 (**EC 2.7.8.43**)"; EC 2.7.8.43 *is* GO:0043838. Existing GO has only the broad
+`GO:0016776` (phosphotransferase, phosphate acceptor), which is **not** an ancestor of GO:0043838 —
+so the specific MF is genuinely missing. Representative of all 79 colistin/MCR gains.
+
+**2. <gene species="ECOLX" symbol="rmtE">RmtE</gene> → GO:0070043 — correct refinement.** UniProt: "16S rRNA (guanine(1405)-N(7))-
+methyltransferase (**EC 2.1.1.179**)". Entry currently has `GO:0008649` (general rRNA
+methyltransferase); candidate GO:0070043 is a *descendant* of it → a valid, more-specific term. (The
+ideal m7G1405 term is the recorded GO gap.)
+
+**3. ermZ/srm1 → GO:0052910 — correct, more precise.** *Streptomyces ambofaciens* spiramycin-
+producer resistance methylase. Existing `GO:0000179` is the generic N6,N6-dimethyltransferase (covers
+KsgA too); candidate GO:0052910 is the Erm 23S-A2058-specific term and is **not** subsumed by
+GO:0000179 → a genuine precision gain.
+
+**4. <gene species="ENTCL" symbol="aac6-Ib">AAC(6')-Ib8</gene> → GO:0034069 — redundant.** UniProt: "Aminoglycoside N(6')-acetyltransferase
+(**EC 2.3.1.82**)". Entry already has `GO:0047663` "aminoglycoside 6'-N-acetyltransferase activity",
+which **is a child of** the candidate GO:0034069. So the candidate is *true but over-general* — the
+entry already carries a more specific term. **Quantified across the snapshot, this affects the
+aminoglycoside families specifically:**
+
+| candidate GO | candidates | already have a more-specific child (redundant) |
+|---|---:|---:|
+| GO:0034069 aminoglycoside N-acetyltransferase (AAC) | 76 | **51** |
+| GO:0034068 aminoglycoside nucleotidyltransferase (ANT) | 35 | **22** |
+| GO:0034071 aminoglycoside phosphotransferase (APH) | 31 | **19** |
+| GO:0008800 beta-lactamase | 448 | 0 |
+| GO:0043838 colistin/MCR pEtN transferase | 79 | 0 |
+| GO:0052910 Erm 23S diMTase | 29 | 0 |
+
+Approximately **92 of 746** candidates are subsumption-redundant — all in the aminoglycoside
+families (GO has a well-developed sub-hierarchy there). The β-lactamase/MCR/Erm/FosA/16S gains have
+**no** such child term, so the family-level MF is a genuine addition. **Action: the gain filter should
+suppress a candidate when the entry already has a more specific (is_a descendant) GO term.**
+
+**5. OXA-1090 → GO:0008800 — questionable.** UniProt names A0A062U9V1 generically as "Penicillin-
+binding protein transpeptidase domain-containing protein" in an environmental alphaproteobacterium
+(*Hyphomonas beringensis*), with only `GO:0008658` (penicillin binding). Class D (OXA) β-lactamases
+and PBPs share the serine-transpeptidase fold; CARD's protein-homolog model can match a genuine **PBP**
+that is **not** a β-lactamase. GO:0008800 should not be asserted here without review — illustrates
+that the 5,317-descendant β-lactamase family node can over-reach to distant homologs.
+
+**6. FosK → GO:0004364 — mapping over-generalizes.** UniProt: "Integron-mediated fosfomycin-modifying
+enzyme (FosK)", *Acinetobacter* (Gram-negative → likely FosA-type/glutathione, so plausibly fine
+*here*). But the mapped node `ARO:3000133` "fosfomycin **thiol** transferase" also covers **FosB**,
+which uses **bacillithiol/L-cysteine, not glutathione** — so propagating GO:0004364 (glutathione
+transferase) family-wide would mis-annotate FosB members. (Existing `GO:0004462` lactoylglutathione
+lyase on this entry is itself a VOC/glyoxalase-superfamily over-annotation.) **Action: restrict the
+fosfomycin mapping to a FosA-specific ARO node, or keep `relatedMatch` with an explicit FosA-only
+caveat.**
+
+### Spot Review Takeaways / Actions
+
+1. **Add a subsumption-aware filter to the gain report**: drop a candidate GO term when the entry
+   already has a more specific descendant of it (fixes #4). *(DONE — implemented in
+   `annotation_gain_report.py`; suppressed 104 redundant candidates, 734 → 630, almost all in the
+   aminoglycoside AAC/ANT/APH families.)*
+2. **Tighten the fosfomycin mapping** (#6): map FosA, not the FosA+FosB "thiol transferase" parent.
+   *(DONE — re-anchored ARO:3000133 → glutathione-specific FosA/FosA2/FosA3/fosA5, excluding FosB/FosX.
+   Also from PR review: Erm now maps to the family-safe `GO:0008988` (not the di-methyltransferase
+   `GO:0052910`) so mono-methylating variants are not over-annotated; <gene species="ENTCL" symbol="aac6-Ib">AAC(6')-Ib</gene> review gained primary
+   references PMID:18710261 and PMID:16369542 plus a cytoplasm location.)*
+3. **Flag homology over-reach** (#5): family-node candidates for distant/environmental homologs (e.g.
+   proteins UniProt names as generic PBP/transpeptidase) warrant curator review before assertion.
+4. Net: 2/6 high-confidence correct, 2/6 correct precision gains, 1/6 redundant, 1/6 questionable —
+   consistent with treating these as **curator leads, not automatic assertions**.
 
 ### Candidate next genes
 - **mph(C), mph(E), mph(G)** — other macrolide phosphotransferase family members (ARO macrolide phosphotransferase family).
@@ -150,9 +293,9 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/AN
 
 **Project artifacts** (rendered to `pages/projects/ANTIMICROBIAL_RESISTANCE/` by `just render-ar-pages`):
 
-- [ARO → GO mapping table (HTML)](ANTIMICROBIAL_RESISTANCE/aro2go.html) — the curator view of all 23 mappings + 9 gaps.
+- **Primary:** [ARO → GO mapping table (HTML)](ANTIMICROBIAL_RESISTANCE/aro2go.html) — the curator view of all 23 mappings + 9 gaps.
 - [Annotation-gain report](ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.html) — candidate new UniProt annotations.
-- [Spot review](ANTIMICROBIAL_RESISTANCE/SPOT_REVIEW.html) — manual QA of sample candidates.
+- [Spot review](#spot-review-of-annotation-gain-candidates) — manual QA of sample candidates, embedded above.
 - [Mappings & pipeline README](ANTIMICROBIAL_RESISTANCE/README.html) — methods, validation, propagation logic.
 
 ### Recommended convention
