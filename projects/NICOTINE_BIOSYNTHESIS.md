@@ -1,4 +1,5 @@
 ---
+title: "Nicotine Biosynthesis Project"
 species: [NICAT]
 sidecars:
   genes: NICOTINE_BIOSYNTHESIS/genes.csv

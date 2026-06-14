@@ -1,3 +1,7 @@
+---
+title: "Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion"
+---
+
 # Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion
 
 ## Overview

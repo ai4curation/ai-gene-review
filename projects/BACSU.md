@@ -1,3 +1,7 @@
+---
+title: "Bacillus subtilis project"
+---
+
 # Bacillus subtilis project
 
 Use uniprot code BACSU

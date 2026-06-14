@@ -1,3 +1,7 @@
+---
+title: "SPKW Viral Clades Subproject"
+---
+
 # SPKW Viral Clades Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

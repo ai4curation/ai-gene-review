@@ -1,3 +1,7 @@
+---
+title: "C. elegans Proteostasis Network - Comprehensive Pathway Integration"
+---
+
 # C. elegans Proteostasis Network - Comprehensive Pathway Integration
 
 ## Project Overview

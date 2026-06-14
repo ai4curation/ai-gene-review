@@ -1,3 +1,7 @@
+---
+title: "SPKW Apoptosis Subproject"
+---
+
 # SPKW Apoptosis Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

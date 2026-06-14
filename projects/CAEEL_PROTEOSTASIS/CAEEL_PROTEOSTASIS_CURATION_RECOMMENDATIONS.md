@@ -1,3 +1,7 @@
+---
+title: "C. elegans Proteostasis Project: Comprehensive Curation Recommendations"
+---
+
 # C. elegans Proteostasis Project: Comprehensive Curation Recommendations
 
 ## Executive Summary

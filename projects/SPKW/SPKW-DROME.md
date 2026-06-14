@@ -1,3 +1,7 @@
+---
+title: "SPKW D. melanogaster (Drosophila) Subproject"
+---
+
 # SPKW D. melanogaster (Drosophila) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

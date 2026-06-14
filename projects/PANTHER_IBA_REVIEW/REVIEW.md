@@ -1,3 +1,7 @@
+---
+title: "PANTHER IBA family review — reviewed S. pombe genes"
+---
+
 # PANTHER IBA family review — reviewed S. pombe genes
 
 Family-level review of the **Inferred from Biological Ancestor** (IBA;

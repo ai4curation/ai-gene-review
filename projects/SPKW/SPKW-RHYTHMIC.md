@@ -1,3 +1,7 @@
+---
+title: "SPKW Rhythmic Process Subproject"
+---
+
 # SPKW Rhythmic Process Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

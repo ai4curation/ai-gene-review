@@ -1,3 +1,7 @@
+---
+title: "C. elegans Ciliopathy Project - Curation Recommendations"
+---
+
 # C. elegans Ciliopathy Project - Curation Recommendations
 
 ## Summary

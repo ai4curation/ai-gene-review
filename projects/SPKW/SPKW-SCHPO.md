@@ -1,3 +1,7 @@
+---
+title: "SPKW S. pombe (Schizosaccharomyces pombe) Subproject"
+---
+
 # SPKW S. pombe (Schizosaccharomyces pombe) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

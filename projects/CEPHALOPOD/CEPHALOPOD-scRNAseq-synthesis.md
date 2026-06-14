@@ -1,3 +1,7 @@
+---
+title: "scRNA-seq × Function → BP Inference: Cephalopod Gene Annotation Synthesis"
+---
+
 # scRNA-seq × Function → BP Inference: Cephalopod Gene Annotation Synthesis
 
 ## Concept

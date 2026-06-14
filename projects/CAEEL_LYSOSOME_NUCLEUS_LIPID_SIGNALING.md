@@ -1,3 +1,7 @@
+---
+title: "C. elegans Lysosome-to-Nucleus Lipid Signaling (OEA Pathway)"
+---
+
 # C. elegans Lysosome-to-Nucleus Lipid Signaling (OEA Pathway)
 
 ## Overview

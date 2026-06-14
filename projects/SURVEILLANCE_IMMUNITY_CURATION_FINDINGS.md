@@ -1,3 +1,7 @@
+---
+title: "GO Annotation Curation Review: C. elegans Surveillance Immunity Genes"
+---
+
 # GO Annotation Curation Review: C. elegans Surveillance Immunity Genes
 ## Executive Summary of Findings
 

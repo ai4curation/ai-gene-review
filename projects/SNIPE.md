@@ -1,3 +1,7 @@
+---
+title: "SNIPE: Membrane-Bound Nuclease Anti-Phage Defence"
+---
+
 # SNIPE: Membrane-Bound Nuclease Anti-Phage Defence
 
 ## Overview

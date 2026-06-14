@@ -1,3 +1,7 @@
+---
+title: "Neural and Glial Cell Fate Determination Project"
+---
+
 # Neural and Glial Cell Fate Determination Project
 
 ## Overview

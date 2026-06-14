@@ -1,3 +1,7 @@
+---
+title: "SPKW Methodology Notes"
+---
+
 # SPKW Methodology Notes
 
 **Parent project:** [SPKW.md](../SPKW.md)

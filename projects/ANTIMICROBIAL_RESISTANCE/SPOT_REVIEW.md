@@ -1,3 +1,7 @@
+---
+title: "Spot review of annotation-gain candidates"
+---
+
 # Spot review of annotation-gain candidates
 
 Manual QA of 6 candidate new annotations from `ANNOTATION_GAIN.md` (one per family, including the

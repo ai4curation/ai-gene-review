@@ -1,3 +1,7 @@
+---
+title: "SPKW P. putida (Pseudomonas putida) Subproject"
+---
+
 # SPKW P. putida (Pseudomonas putida) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

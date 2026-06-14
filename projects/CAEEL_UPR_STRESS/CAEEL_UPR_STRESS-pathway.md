@@ -1,3 +1,7 @@
+---
+title: "C. elegans UPR and Stress Integration Pathway Summary"
+---
+
 # C. elegans UPR and Stress Integration Pathway Summary
 
 ## Pathway Architecture

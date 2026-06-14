@@ -1,3 +1,7 @@
+---
+title: "Stress Granule Assembly Project"
+---
+
 # Stress Granule Assembly Project
 
 ## Overview

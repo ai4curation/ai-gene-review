@@ -1,3 +1,7 @@
+---
+title: "SPKW E. coli O157:H7 (ECO57) Subproject"
+---
+
 # SPKW E. coli O157:H7 (ECO57) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

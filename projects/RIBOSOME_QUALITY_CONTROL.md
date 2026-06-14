@@ -1,3 +1,7 @@
+---
+title: "Ribosome Quality Control (RQC) Project"
+---
+
 # Ribosome Quality Control (RQC) Project
 
 ## Overview

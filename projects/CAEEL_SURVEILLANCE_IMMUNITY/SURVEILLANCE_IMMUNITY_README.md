@@ -1,3 +1,7 @@
+---
+title: "Surveillance Immunity Genes Curation Project"
+---
+
 # Surveillance Immunity Genes Curation Project
 ## C. elegans Priority 2: GO Annotation Review
 

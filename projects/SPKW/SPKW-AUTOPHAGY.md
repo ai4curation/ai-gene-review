@@ -1,3 +1,7 @@
+---
+title: "SPKW Autophagy Subproject"
+---
+
 # SPKW Autophagy Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

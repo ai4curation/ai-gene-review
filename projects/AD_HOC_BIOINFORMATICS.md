@@ -1,3 +1,7 @@
+---
+title: "Ad-Hoc Bioinformatics Analysis Project"
+---
+
 # Ad-Hoc Bioinformatics Analysis Project
 
 ## Overview

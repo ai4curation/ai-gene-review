@@ -1,3 +1,7 @@
+---
+title: "BIOREASON_COMPARISON / article"
+---
+
 # BIOREASON_COMPARISON / article
 
 Paper drafts and supporting material for the **BioReason-Pro / AIGR** manuscript, intended for **ISMB 2026 Function-COSI**.

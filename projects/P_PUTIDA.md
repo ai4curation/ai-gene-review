@@ -1,3 +1,8 @@
+---
+title: "P. putida Gene Annotation Review Project"
+species: [PSEPK]
+---
+
 # P. putida Gene Annotation Review Project
 
 ## Overview

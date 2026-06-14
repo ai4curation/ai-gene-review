@@ -1,3 +1,7 @@
+---
+title: "Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)"
+---
+
 # Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)
 
 ## Overview

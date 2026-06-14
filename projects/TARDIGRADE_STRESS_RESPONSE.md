@@ -1,3 +1,7 @@
+---
+title: "Tardigrade Stress Response Protein Curation Project"
+---
+
 # Tardigrade Stress Response Protein Curation Project
 
 **Project Start Date:** 2026-04-09

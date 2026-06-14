@@ -1,3 +1,7 @@
+---
+title: "UniProt Proteome Removal Impact Assessment"
+---
+
 # UniProt Proteome Removal Impact Assessment
 
 ## Overview

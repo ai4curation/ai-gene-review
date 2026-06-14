@@ -1,3 +1,7 @@
+---
+title: "Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsoletion"
+---
+
 # Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsoletion
 
 ## Overview

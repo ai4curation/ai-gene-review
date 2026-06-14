@@ -1,3 +1,7 @@
+---
+title: "Geranylgeranyl Reductase Activity — Obsoletion & Replacement"
+---
+
 # Geranylgeranyl Reductase Activity — Obsoletion & Replacement
 
 ## Overview

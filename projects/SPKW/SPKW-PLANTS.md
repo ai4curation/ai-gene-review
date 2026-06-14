@@ -1,3 +1,7 @@
+---
+title: "SPKW Non-Arabidopsis Plants (PLANTS) Subproject"
+---
+
 # SPKW Non-Arabidopsis Plants (PLANTS) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

@@ -1,3 +1,7 @@
+---
+title: "Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement"
+---
+
 # Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement
 
 ## Overview

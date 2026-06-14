@@ -1,3 +1,7 @@
+---
+title: "Pathway Summary: C. elegans Mitophagy and Mitochondrial Quality Control"
+---
+
 # Pathway Summary: C. elegans Mitophagy and Mitochondrial Quality Control
 
 ## Overview

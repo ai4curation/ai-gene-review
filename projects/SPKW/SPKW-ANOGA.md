@@ -1,3 +1,7 @@
+---
+title: "SPKW Anopheles gambiae (ANOGA) Subproject"
+---
+
 # SPKW Anopheles gambiae (ANOGA) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

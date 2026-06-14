@@ -1,3 +1,7 @@
+---
+title: "C. elegans Proteostasis Network Project"
+---
+
 # C. elegans Proteostasis Network Project
 
 ## Overview

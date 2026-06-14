@@ -1,3 +1,7 @@
+---
+title: "Mitochondrial Protein Import Pathways — Deep Research"
+---
+
 # Mitochondrial Protein Import Pathways — Deep Research
 
 ## 1. Overview of Import Pathways

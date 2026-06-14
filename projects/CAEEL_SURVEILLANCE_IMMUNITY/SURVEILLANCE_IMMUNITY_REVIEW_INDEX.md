@@ -1,3 +1,7 @@
+---
+title: "C. elegans Surveillance Immunity Gene Review - Complete Documentation Index"
+---
+
 # C. elegans Surveillance Immunity Gene Review - Complete Documentation Index
 
 **Review Date:** 2025-12-29

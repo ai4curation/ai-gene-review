@@ -1,3 +1,7 @@
+---
+title: "Bacillus subtilis Sporulation Sigma Cascade (Pathway)"
+---
+
 # Bacillus subtilis Sporulation Sigma Cascade (Pathway)
 
 Focused pathway summary for the core sporulation regulatory cascade in *Bacillus subtilis* (BACSU), centered on the ordered activation of compartment-specific sigma factors.

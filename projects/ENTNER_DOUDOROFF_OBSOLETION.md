@@ -1,3 +1,7 @@
+---
+title: "Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)"
+---
+
 # Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)
 
 ## Overview

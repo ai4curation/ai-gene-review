@@ -1,3 +1,7 @@
+---
+title: "SPKW Arabidopsis thaliana (ARATH) Subproject"
+---
+
 # SPKW Arabidopsis thaliana (ARATH) Subproject
 
 **Parent project:** [SPKW.md](../SPKW.md)

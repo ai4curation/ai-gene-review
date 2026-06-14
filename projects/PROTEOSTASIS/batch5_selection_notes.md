@@ -1,3 +1,7 @@
+---
+title: "Proteostasis Review Batch 5 — Gene Selection"
+---
+
 # Proteostasis Review Batch 5 — Gene Selection
 
 Date: 2026-06-07

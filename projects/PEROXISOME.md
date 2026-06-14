@@ -1,3 +1,7 @@
+---
+title: "Peroxisome Biogenesis Project"
+---
+
 # Peroxisome Biogenesis Project
 
 ## Overview

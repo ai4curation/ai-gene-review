@@ -1,3 +1,7 @@
+---
+title: "Photosynthesis Project"
+---
+
 # Photosynthesis Project
 
 ## Overview
