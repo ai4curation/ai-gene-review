@@ -1,5 +1,7 @@
 # BBS2 (Q9BXC9) curation notes
 
+(See BBS2-ai-review.yaml for the structured review.)
+
 ## Identity and structure
 - Human BBS2, "BBSome complex member BBS2" / Bardet-Biedl syndrome 2 protein. 721 aa. UniProt Q9BXC9, HGNC:967.
 - Domain architecture (InterPro/Pfam): N-terminal β-propeller (WD40/YVTN repeat-like, Gene3D 2.130.10.10), middle domain, GAE (γ-adaptin ear) domain, hairpin, platform, and C-terminal helical (CtH) domain. A coiled-coil region (residues 325–369) mediates interaction with MKKS/BBS6. Architecture is coatomer/adaptin-like, consistent with the BBSome being a coat-like complex [UniProt Q9BXC9 FT/DR].
