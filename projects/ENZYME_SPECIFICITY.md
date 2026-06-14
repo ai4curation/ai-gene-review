@@ -102,6 +102,12 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 |------|---------|-------|--------|
 | LPL1 | CANAL | Substrate specificity too narrow | COMPLETE |
 | PHYKPL | human | Wrong reaction mechanism | COMPLETE |
+| eryCIII | SACEN | Wrong donor: `GO:0008194` UDP-glycosyltransferase, but uses **TDP**-D-desosamine | COMPLETE |
+
+**eryCIII (cofactor/donor specificity error, BGC project):** the desosaminyl transferase
+EryCIII (EC 2.4.1.278) was IEA-annotated `GO:0008194` UDP-glycosyltransferase activity, but it
+transfers **TDP-D-desosamine** (a dTDP-sugar), not a UDP-sugar (PMID:15303858). MODIFY to the
+accurate, IDA-supported `GO:0016758` hexosyltransferase activity. See `genes/SACEN/eryCIII/`.
 
 ### Priority 2: Pending
 | Gene | Species | Issue | Status |

@@ -43,6 +43,18 @@ This is where structure gives you something sequence often cannot:
 
 **Key insight**: A shared catalytic motif provides much stronger evidence for shared function than overall fold similarity. Local geometry is the true functional determinant, not the global fold.
 
+**Worked examples — catalytic-residue presence/absence is decisive (BGC project, `BGC.md`):**
+the same global fold gives opposite functional calls depending on the local active site.
+- **PqsC** (`genes/PSEAE/pqsC`): FabH/KAS-III fold *with* an intact Cys-129/His-269 dyad → genuine
+  condensing enzyme (EC 2.3.1.230). Its partner **PqsB** has the same fold but **lacks** the dyad →
+  non-catalytic.
+- **EryCII** (`genes/SACEN/eryCII`): cytochrome-P450 fold but the conserved heme-ligating cysteine is
+  **absent** and the heme pocket is empty (apo PDB 2YJN) → "not an active P450 enzyme" (a pseudoenzyme).
+- **Act KSβ/CLF** (`genes/STRCO/actI-ORF2`): ketosynthase fold with **no active site** → chain-length
+  factor, not a catalyst.
+These illustrate the Level-2 principle directly: presence of the active-site residue, not the fold,
+determines whether to assign (or NOT-assign) the catalytic MF. See also `PSEUDOENZYMES.md`, `TOP_NOTS.md`.
+
 ### Level 3: Learned Structural Representations (pLMs + GNNs)
 
 The revolution is the **3Di structural alphabet** (Foldseek) and models built on it:
