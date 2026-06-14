@@ -77,6 +77,14 @@ review_batches:
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch7_selection_notes.md
+  - id: proteostasis-batch-2026-06-13
+    title: "Proteostasis PN candidate additions batch 8 (UPS branch: Cullin-RING ligase substrate-recognition & assembly modules — F-box SCF/CRL1 substrate receptors FBXL/FBXW/FBXO incl. lectin F-box ERAD subfamily and APC/C-inhibitor F-box members, plus CRL4 core DDB1/DDB2/DDA1/DTL and CRL assembly regulators CAND2/GLMN)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 50
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch8_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
@@ -209,6 +217,39 @@ IDA on both `SERP1` (removed; full text confirms wrong gene) and `SRPRB`
 `HSPA5`/BiP, `HSP90B1`/GRP94 and the IRE1/PERK UPR sensors were deferred to
 dedicated reviews. See
 [batch7_selection_notes.md](PROTEOSTASIS/batch7_selection_notes.md).
+
+`proteostasis-batch-2026-06-13` (`50` reviewed) moves into the **Ubiquitin–
+Proteasome System (UPS) branch**, covering the **Cullin–RING ligase (CRL)
+substrate-recognition & assembly modules**: the `44` F-box substrate receptors
+of the SCF/CRL1 complex grouped by recognition module — leucine-rich-repeat
+`FBXL3/5/6/7/8/12/13/14/15/16/17/18/20/22`, WD40 `FBXW2/4/5/7/8/9/10/12`, and
+"other" `FBXO2/5/6/7/8/10/15/16/17/21/22/25/27/30/33/34/36/39/40/41/43/47` — plus
+the CRL4 core/receptors (`DDB1` adaptor scaffold, `DDB2` and `DTL`/CDT2 DCAF
+receptors, `DDA1` stabilizing subunit) and the CRL assembly regulators `CAND2`
+(CAND1 paralog) and `GLMN`/glomulin. All `50` review YAMLs pass schema, term
+(label + verbatim-quote), and best-practices validation; across `1590` reviewed
+annotations the action mix was `649` ACCEPT, `878` KEEP_AS_NON_CORE, `23`
+MARK_AS_OVER_ANNOTATED, `19` MODIFY, `11` NEW, `8` UNDECIDED, `2` REMOVE. The
+dominant curation pattern is the recurring **MODIFY/NEW that replaces a catalytic
+`ubiquitin protein ligase activity` / `ubiquitin-protein transferase activity`
+(IEA/NAS) on an F-box receptor with `GO:1990756 ubiquitin-like ligase-substrate
+adaptor activity`** — catalysis resides in the RBX1 RING, not the F-box adaptor —
+while bare `protein binding` was uniformly kept non-core in favor of the
+substrate-adaptor function. Notable calls: the **lectin/FBA F-box subfamily**
+(`FBXO2/6/17/27`) was framed by carbohydrate/high-mannose-glycan binding feeding
+ERAD/glycoprotein catabolism, but `FBXO17`'s ERAD term was MARK_AS_OVER_ANNOTATED
+because the experimental characterization shows it does **not** bind high-mannose
+glycans (only `FBXO2/FBXO6` do); the non-canonical "F-box" members `FBXO5`/EMI1
+and `FBXO43`/EMI2 were framed as **APC/C inhibitors** (not productive SCF
+receptors), with SCF-receptor IEA/NAS propagations marked non-core/over-annotated;
+`CAND2` and `GLMN` were modeled as CRL **assembly regulators/inhibitors** with no
+catalytic ligase activity assigned (`GLMN` core = `ubiquitin-protein transferase
+inhibitor activity` + RBX1 binding). The `2` REMOVE calls are both clearly-wrong
+IEA over-propagations — `FBXO21` `DNA binding` (a remote YccV/hemimethylated-DNA
+fold match, not a function) and `FBXO43` `cellular response to NGF` (an
+implausible Ensembl ortholog transfer onto a gonad-restricted meiotic APC/C
+inhibitor). The mega/pleiotropic UPS hubs `HUWE1` and `OGT` were left out of
+scope. See [batch8_selection_notes.md](PROTEOSTASIS/batch8_selection_notes.md).
 
 ## What The PN Resource Actually Contains
 
