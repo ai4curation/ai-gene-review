@@ -85,6 +85,14 @@ review_batches:
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch8_selection_notes.md
+  - id: proteostasis-batch-2026-06-14
+    title: "Proteostasis PN candidate additions batch 9 (ALP branch: selective autophagy cargo recognition — SQSTM1/NBR1/OPTN/CCDC50/NUFIP1/RETREG2 receptors, TBK1/AZI2/TANK activation axis, TRIM5/13/16/17, ubiquitin-tagging E3s SIAH1/RNF41/RNF166/LRSAM1, plus MEFV/NLRX1/MAP1S)"
+    status: in_progress
+    source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
+    species: human
+    target_gene_count: 20
+    sidecar: PROTEOSTASIS/review_batches.tsv
+    selection_notes: PROTEOSTASIS/batch9_selection_notes.md
 ---
 # Human Proteostasis Network Project
 
@@ -250,6 +258,40 @@ fold match, not a function) and `FBXO43` `cellular response to NGF` (an
 implausible Ensembl ortholog transfer onto a gonad-restricted meiotic APC/C
 inhibitor). The mega/pleiotropic UPS hubs `HUWE1` and `OGT` were left out of
 scope. See [batch8_selection_notes.md](PROTEOSTASIS/batch8_selection_notes.md).
+
+`proteostasis-batch-2026-06-14` (`20` reviewed) moves into the
+**Autophagy–Lysosome Pathway (ALP) branch** — the best-row-level-supported PN
+branch — covering the **selective autophagy cargo-recognition** machinery: the
+core selective autophagy receptors (`SQSTM1`/p62, `NBR1`, `OPTN`, `CCDC50`,
+the ribophagy receptor `NUFIP1`, and the ER-phagy receptor `RETREG2`/FAM134A),
+the TBK1 activation axis that phosphorylates those receptors (`TBK1`, `AZI2`/
+NAP1, `TANK`), the TRIM-family receptors/regulators (`TRIM5`, `TRIM13`,
+`TRIM16`, `TRIM17`), the ubiquitin-tagging E3 ligases that generate the
+autophagy signal (`SIAH1`, `RNF41`/NRDP1, `RNF166`, `LRSAM1`), and the
+selective-autophagy regulators `MEFV`/pyrin, `NLRX1`, and `MAP1S`. All `20`
+review YAMLs pass schema, term (label + verbatim-quote), and best-practices
+validation; across `1222` reviewed annotations the action mix was `690`
+KEEP_AS_NON_CORE, `505` ACCEPT, `19` MARK_AS_OVER_ANNOTATED, `5` NEW, `2`
+UNDECIDED, `1` REMOVE. The dominant curation pattern is the recurring elevation
+of the **selective-autophagy cargo-adaptor/receptor MF** (ubiquitin binding +
+LIR/Atg8 binding) over bare `protein binding`, which was uniformly kept non-core
+(the receptor hubs carry ~70 IPI `protein binding` entries each). Notable calls:
+genuine catalytic RING E3s (SIAH1, RNF41, RNF166, LRSAM1, TRIM5/13/17) kept
+catalytic ligase MF as core, whereas the **RING-less** TRIMs were handled
+conservatively — `TRIM16` ACCEPTed only the experimentally-supported atypical
+B-box autoubiquitination and `MEFV`/pyrin's IBA ubiquitin-ligase MF (no
+functional RING) was MARK_AS_OVER_ANNOTATED; `NEW`/proposed terms verified via
+QuickGO were added for receptor functions absent from GOA (`GO:0034517`
+ribophagy, `GO:0160247` autophagy cargo adaptor activity, `GO:0035973`
+aggrephagy, `GO:0010508` positive regulation of autophagy); disputed-direction
+electronic NF-κB-regulation terms on `NLRX1` and `AZI2` were flagged
+(MARK_AS_OVER_ANNOTATED / non-core) rather than removed; the single REMOVE is an
+implausible IEA `mitochondrial intermembrane space` localization on the
+cytosolic receptor `NBR1`; and `SIAH1`'s `zinc ion binding` IDA was ACCEPTed but
+its citation (PMID:11863358) flagged `WRONG_IDENTIFIER` in `reference_review`.
+The mega/pleiotropic hub `HUWE1` and a dedicated mitophagy/CMA effector set
+(DNM1L, MFN1, VDAC1, USP30, MARCHF5, MUL1, PARL, PGAM5, etc.) were left for a
+future batch. See [batch9_selection_notes.md](PROTEOSTASIS/batch9_selection_notes.md).
 
 ## What The PN Resource Actually Contains
 
