@@ -3,10 +3,58 @@
 import csv
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 import yaml
+
+# GO experimental evidence codes: the curator inspected direct experimental
+# results (and therefore read the cited paper, often its full text).
+EXPERIMENTAL_EVIDENCE_CODES: frozenset = frozenset(
+    {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+)
+# Author/curator-statement codes: still backed by a specific publication.
+AUTHOR_STATEMENT_CODES: frozenset = frozenset({"TAS", "NAS"})
+
+
+def referenced_pmids(
+    annotations: Iterable["GOAAnnotation"],
+    evidence_codes: Optional[Iterable[str]] = None,
+) -> Dict[str, Set[str]]:
+    """Map each PMID cited in GOA annotations to the GO evidence codes that cite it.
+
+    Only the REFERENCE column is considered; non-PMID references (``GO_REF:``,
+    ``Reactome:``, etc.) are ignored because they are not primary literature.
+    Optionally restrict to annotations whose evidence code is in ``evidence_codes``
+    (e.g. ``EXPERIMENTAL_EVIDENCE_CODES`` to find papers a curator read directly).
+
+    Args:
+        annotations: Parsed GOA annotations (see ``GOAValidator.parse_goa_file``).
+        evidence_codes: If given, only count annotations with these evidence codes.
+
+    Returns:
+        Mapping of ``PMID:NNNN`` -> set of evidence codes that cite it.
+
+    >>> row = ["UniProtKB", "O43837", "IDH3B", "", "GO:0006099",
+    ...        "tricarboxylic acid cycle", "biological_process", "ECO:0000314",
+    ...        "IDA", "PMID:14555658", "", "9606", "Homo sapiens", "UniProt",
+    ...        "IDH3B", "20200101"]
+    >>> referenced_pmids([GOAAnnotation.from_tsv_row(row)])
+    {'PMID:14555658': {'IDA'}}
+    >>> referenced_pmids([GOAAnnotation.from_tsv_row(row)], evidence_codes={"IMP"})
+    {}
+    """
+    wanted = frozenset(evidence_codes) if evidence_codes is not None else None
+    out: Dict[str, Set[str]] = {}
+    for ann in annotations:
+        if wanted is not None and ann.evidence_code not in wanted:
+            continue
+        # GOA REFERENCE may carry several pipe-separated identifiers.
+        for ref in ann.reference.split("|"):
+            ref = ref.strip()
+            if ref.startswith("PMID:"):
+                out.setdefault(ref, set()).add(ann.evidence_code)
+    return out
 
 
 @dataclass
