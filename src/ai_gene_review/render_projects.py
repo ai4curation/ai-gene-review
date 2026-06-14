@@ -478,14 +478,25 @@ def render_project(
     output_dir: Path = Path("pages/projects"),
     genes_dir: Path = Path("genes"),
     template_path: Optional[Path] = None,
+    projects_dir: Optional[Path] = None,
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
+
+    Projects follow the ``FOO.md`` + ``FOO/`` convention: a project is a
+    top-level markdown file, optionally accompanied by a same-named folder
+    holding supporting material (sub-pages, data, scripts). When ``projects_dir``
+    is supplied, any subfolder structure is mirrored into ``output_dir`` so that
+    ``FOO/bar.md`` renders to ``FOO/bar.html`` and relative links between a
+    project page and its supporting pages resolve unchanged.
 
     Args:
         md_path: Path to the markdown file
         output_dir: Directory for output HTML files
         genes_dir: Path to the genes directory for building symbol index
         template_path: Optional path to custom Jinja2 template
+        projects_dir: Root projects directory; when given, the output path
+            mirrors ``md_path``'s location relative to it. When ``None`` the
+            file is rendered flat as ``output_dir/<stem>.html``.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -495,6 +506,20 @@ def render_project(
     """
     if not md_path.exists():
         raise FileNotFoundError(f"Markdown file not found: {md_path}")
+
+    # Determine the output path (mirroring any project subfolder structure) and
+    # how deep the rendered file sits, so links back to genes/ use the right
+    # number of ``../`` segments.
+    if projects_dir is not None and md_path.resolve().is_relative_to(
+        projects_dir.resolve()
+    ):
+        rel_path = md_path.resolve().relative_to(projects_dir.resolve())
+    else:
+        rel_path = Path(md_path.name)
+    subdir_depth = len(rel_path.parts) - 1
+    # From pages/projects/<...>.html the repo-root genes/ dir is two levels up,
+    # plus one extra level per project subfolder.
+    genes_base_path = "../" * (2 + subdir_depth) + "genes"
 
     # Read content and parse frontmatter
     raw_content = md_path.read_text()
@@ -513,7 +538,7 @@ def render_project(
     content, tag_warnings = replace_gene_tags(
         content,
         genes_dir=genes_dir,
-        base_path="../../genes",
+        base_path=genes_base_path,
     )
 
     # Replace gene symbols with links
@@ -521,7 +546,7 @@ def render_project(
         content,
         symbol_index,
         species_hints=species_hints,
-        base_path="../../genes",
+        base_path=genes_base_path,
     )
     warnings = tag_warnings + symbol_warnings
 
@@ -569,9 +594,9 @@ def render_project(
         frontmatter=frontmatter,
     )
 
-    # Create output directory and write file
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"{md_path.stem}.html"
+    # Create output directory and write file, mirroring subfolder structure
+    output_path = output_dir / rel_path.with_suffix(".html")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 
     return output_path, warnings
@@ -599,7 +624,9 @@ def render_all_projects(
         print(f"Projects directory not found: {projects_dir}")
         return output_paths, all_warnings
 
-    md_files = sorted(projects_dir.glob("*.md"))
+    # Render top-level project pages (FOO.md) and any supporting markdown that
+    # lives inside a project's FOO/ folder, mirroring the subfolder structure.
+    md_files = sorted(projects_dir.rglob("*.md"))
 
     if not md_files:
         print(f"No markdown files found in {projects_dir}")
@@ -613,6 +640,7 @@ def render_all_projects(
                 md_file,
                 output_dir=output_dir,
                 genes_dir=genes_dir,
+                projects_dir=projects_dir,
             )
             output_paths.append(output_path)
 

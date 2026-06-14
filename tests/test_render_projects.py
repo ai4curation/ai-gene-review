@@ -415,6 +415,41 @@ class TestRenderProject:
         assert "Test Project" in html_content
         assert "GPX4" in html_content
 
+    def test_render_subfolder_project_mirrors_structure(self, tmp_path):
+        """A FOO/bar.md supporting page renders to FOO/bar.html with deeper genes path."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+
+        projects_dir = tmp_path / "projects"
+        (projects_dir / "FOO").mkdir(parents=True)
+        md_file = projects_dir / "FOO" / "bar.md"
+        md_file.write_text("# Sub Page\n\nGPX4 is important.")
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(
+            "<!DOCTYPE html><html><head><title>{{ title }}</title></head>"
+            "<body>{{ content | safe }}</body></html>"
+        )
+
+        output_dir = tmp_path / "pages" / "projects"
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=output_dir,
+            genes_dir=genes_dir,
+            template_path=template_file,
+            projects_dir=projects_dir,
+        )
+
+        # Output mirrors the projects/ subfolder structure
+        assert output_path == output_dir / "FOO" / "bar.html"
+        assert output_path.exists()
+
+        # Gene links resolve from one level deeper than a top-level project page
+        html_content = output_path.read_text()
+        assert "../../../genes/human/GPX4" in html_content
+
     def test_render_with_frontmatter(self, tmp_path):
         """Render project with frontmatter species hints."""
         # Create genes directory with ambiguous symbol

@@ -2882,6 +2882,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
 

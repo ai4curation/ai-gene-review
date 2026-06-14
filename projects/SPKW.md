@@ -15,7 +15,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
   annotations have been removed from live GOA for all cellular organisms (verified zero for
   human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
   project documented is now resolved at the source. Retrospective review of 38 non-Arabidopsis
-  plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
+  plant genes (see [PLANTS](SPKW/SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
   real over-annotation risk; removal was justified for those, but blanket retirement also
   dropped *correct* annotations when the keyword was the only carrier of a fact.
 
@@ -23,22 +23,22 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 
 | Subproject | Organism | Total Genes | Reviewed | Issue Rate | Main Pattern |
 |------------|----------|-------------|----------|------------|--------------|
-| [Apoptosis](SPKW-APOPTOSIS.md) | Human | 280 | 23 | 87% | Regulatory conflation |
-| [Rhythmic Process](SPKW-RHYTHMIC.md) | Human | 146 | 5 | 100% | Expression ≠ function |
-| [Autophagy](SPKW-AUTOPHAGY.md) | Human | 123 | 14 | 79% | Signaling over-extension |
-| [ANOGA](SPKW-ANOGA.md) | A. gambiae | 5,812 | 22 | Mixed | D7 toxin=100%, immune=17% |
-| [SCHPO](SPKW-SCHPO.md) | S. pombe | 1,963 | 7 | 100% | ATG-meiosis conflation |
-| [DROME](SPKW-DROME.md) | D. melanogaster | 2,753 | 4 | 50% | Mixed patterns |
-| [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
-| [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
-| [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
-| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 38 | 15% Tier-A | Term-tiering; GOA retired SPKW |
-| [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
-| [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
+| [Apoptosis](SPKW/SPKW-APOPTOSIS.md) | Human | 280 | 23 | 87% | Regulatory conflation |
+| [Rhythmic Process](SPKW/SPKW-RHYTHMIC.md) | Human | 146 | 5 | 100% | Expression ≠ function |
+| [Autophagy](SPKW/SPKW-AUTOPHAGY.md) | Human | 123 | 14 | 79% | Signaling over-extension |
+| [ANOGA](SPKW/SPKW-ANOGA.md) | A. gambiae | 5,812 | 22 | Mixed | D7 toxin=100%, immune=17% |
+| [SCHPO](SPKW/SPKW-SCHPO.md) | S. pombe | 1,963 | 7 | 100% | ATG-meiosis conflation |
+| [DROME](SPKW/SPKW-DROME.md) | D. melanogaster | 2,753 | 4 | 50% | Mixed patterns |
+| [PSEPK](SPKW/SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
+| [ARATH](SPKW/SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
+| [Virus clades](SPKW/SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
+| [PLANTS](SPKW/SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 38 | 15% Tier-A | Term-tiering; GOA retired SPKW |
+| [BPT4](SPKW/SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
+| [ECO57](SPKW/SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
 ## Methods
 
-See [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md) for detailed SQL queries and explanation of closure-based filtering (which reduces false positives by 70%+ in well-curated organisms).
+See [SPKW-METHODOLOGY.md](SPKW/SPKW-METHODOLOGY.md) for detailed SQL queries and explanation of closure-based filtering (which reduces false positives by 70%+ in well-curated organisms).
 
 ## Over-Annotation Patterns Identified
 
@@ -80,18 +80,18 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] SIRT2 - COMPLETE
 
 ### Subprojects
-- [x] [Apoptosis](SPKW-APOPTOSIS.md) - 23/280 reviewed
-- [x] [Rhythmic Process](SPKW-RHYTHMIC.md) - 5/146 reviewed
-- [x] [Autophagy](SPKW-AUTOPHAGY.md) - 14/123 reviewed
-- [x] [ANOGA](SPKW-ANOGA.md) - D7 + immune genes
-- [x] [SCHPO](SPKW-SCHPO.md) - ATG-meiosis pattern
-- [x] [DROME](SPKW-DROME.md) - Case studies
-- [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
-- [x] [ARATH](SPKW-ARATH.md) - Plant patterns
-- [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
-- [x] [BPT4](SPKW-BPT4.md) - Phage semantics
-- [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
+- [x] [Apoptosis](SPKW/SPKW-APOPTOSIS.md) - 23/280 reviewed
+- [x] [Rhythmic Process](SPKW/SPKW-RHYTHMIC.md) - 5/146 reviewed
+- [x] [Autophagy](SPKW/SPKW-AUTOPHAGY.md) - 14/123 reviewed
+- [x] [ANOGA](SPKW/SPKW-ANOGA.md) - D7 + immune genes
+- [x] [SCHPO](SPKW/SPKW-SCHPO.md) - ATG-meiosis pattern
+- [x] [DROME](SPKW/SPKW-DROME.md) - Case studies
+- [x] [PSEPK](SPKW/SPKW-PSEPK.md) - Bacterial control
+- [x] [ARATH](SPKW/SPKW-ARATH.md) - Plant patterns
+- [x] [Virus clades](SPKW/SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
+- [x] [PLANTS](SPKW/SPKW-PLANTS.md) - Non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
+- [x] [BPT4](SPKW/SPKW-BPT4.md) - Phage semantics
+- [x] [ECO57](SPKW/SPKW-ECO57.md) - Toxin/effector
 
 ## Curation Recommendations
 
@@ -117,7 +117,7 @@ Not all SPKW-unique annotations are over-annotations:
 
 **Of 71 genes with over-annotation issues: 70 are Swiss-Prot (99%)**
 
-For reviewed high-confidence organism batches, this confirms the problem is usually in the **KW→GO mapping layer**, not keyword assignment. Virus-wide analysis is different because most candidates are TrEMBL. See [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md) and [SPKW-VIRUS.md](SPKW-VIRUS.md) for stratification queries.
+For reviewed high-confidence organism batches, this confirms the problem is usually in the **KW→GO mapping layer**, not keyword assignment. Virus-wide analysis is different because most candidates are TrEMBL. See [SPKW-METHODOLOGY.md](SPKW/SPKW-METHODOLOGY.md) and [SPKW-VIRUS.md](SPKW/SPKW-VIRUS.md) for stratification queries.
 
 ---
 
@@ -125,7 +125,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 
 ### 2026-05-30
 
-- Added a **keyword-level** view to [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md): reverse-map
+- Added a **keyword-level** view to [SPKW-METHODOLOGY.md](SPKW/SPKW-METHODOLOGY.md): reverse-map
   SPKW-unique GO terms to their source UniProt keywords via the public `keyword2go`
   (external2go) mapping (the GAF stores only the GO term). Produced a tier-annotated
   watch-list of the ~30 process/role keywords that drive plant over-annotation; it is
@@ -185,7 +185,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 
 ### 2026-05-29
 
-- Extended [PLANTS](SPKW-PLANTS.md) with five more genes across four new species
+- Extended [PLANTS](SPKW/SPKW-PLANTS.md) with five more genes across four new species
   (maize, wheat, the moss *Physcomitrium patens*, potato), bringing PLANTS to 14 genes /
   13 species. Selected from the `plant.ddb` closure-filtered TRUE SPKW-unique set
   (`spkw_plants_unique` table) to stress-test the highest-risk Tier A keyword classes.
@@ -207,7 +207,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 
 ### 2026-05-21
 
-- Added [PLANTS](SPKW-PLANTS.md) subproject: SPKW over-annotation in non-Arabidopsis
+- Added [PLANTS](SPKW/SPKW-PLANTS.md) subproject: SPKW over-annotation in non-Arabidopsis
   Viridiplantae.
 - Built `plant.ddb` (go-db, `make plant`) from the Sept 2025 `goa_uniprot_gcrp` snapshot;
   40.4M annotations, 26,493 SwissProt accessions.
@@ -237,6 +237,6 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 
 ### 2026-05-21
 
-- Added [SPKW-VIRUS.md](SPKW-VIRUS.md) as the virus-wide and clade-specific counterpart to the organism SPKW subprojects
+- Added [SPKW-VIRUS.md](SPKW/SPKW-VIRUS.md) as the virus-wide and clade-specific counterpart to the organism SPKW subprojects
 - Quantified `virus.ddb`: 180,680 SPKW annotations, 135,117 naive SPKW-unique annotations, and 80,218 closure-filtered SPKW-unique annotations
 - Summarized 11 existing viral gene reviews across phage, anti-CRISPR, influenza, phage quorum-sensing, and DGR cases

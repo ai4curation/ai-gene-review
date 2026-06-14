@@ -331,12 +331,32 @@ just render-all                  # render all genes (~1200 files)
 Output: `genes/<org>/<gene>/<gene>-ai-review.html`
 
 ### Project pages
-Project docs live in `projects/*.md`. Render with:
+Project docs live in `projects/`. Render with:
 ```bash
 just render-projects                          # render all
 ai-gene-review render-projects projects/FOO.md -o pages/projects  # render one
 ```
 Output: `pages/projects/<NAME>.html`
+
+**Folder structure convention.** Each project is a top-level markdown file
+`projects/FOO.md`, optionally accompanied by a same-named folder `projects/FOO/`
+holding its supporting material (sub-pages, data, scripts, reports):
+
+```
+projects/
+  FOO.md            # the project page
+  FOO/              # supporting material for FOO (optional)
+    FOO-pathway.md  # sub-pages, notes, data, scripts, ...
+    ...
+```
+
+Put a project's pathway summaries, curation-recommendation docs, sub-analyses,
+data files, and scripts inside `FOO/` rather than as loose `FOO-*.md` siblings at
+the top level. `render-projects` renders the whole `projects/` tree recursively
+and **mirrors the subfolder structure** into `pages/projects/` (so `FOO/bar.md`
+renders to `pages/projects/FOO/bar.html`). Use ordinary relative links between a
+project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FOO.md)`
+from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
 
