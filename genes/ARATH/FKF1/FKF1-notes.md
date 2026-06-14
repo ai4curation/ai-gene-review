@@ -138,5 +138,3 @@ transcription factor — it regulates CO/FT transcription indirectly by degradin
 repressors and associating with CO chromatin. The acts_upstream_of_or_within qualifier is
 appropriate, so the annotation is defensible; kept as non-core (the molecular event is
 ubiquitin-mediated proteolysis, not direct transcription regulation).
-</content>
-</invoke>

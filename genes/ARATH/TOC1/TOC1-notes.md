@@ -172,5 +172,3 @@ molecular function — best kept as non-core.
   phospho-accepting Asp and has no role in cytokinin signaling.
 - circumnutation (GO:0010031): KEEP_AS_NON_CORE (clock output phenotype).
 - negated GO:0000976: retain negation (UNDECIDED/ACCEPT of negation as published).
-</content>
-</invoke>

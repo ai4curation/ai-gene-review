@@ -127,5 +127,3 @@ core MF in themselves.
 - GO:0010224 response to UV-B (IEP) / GO:0009411 response to UV (IMP): ACCEPT/core.
 - GO:0009649 entrainment of circadian clock (IMP): KEEP_AS_NON_CORE.
 - Add photoreceptor activity (GO:0009881) and regulation of photomorphogenesis to core_functions / proposed.
-</content>
-</invoke>

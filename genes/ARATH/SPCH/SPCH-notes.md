@@ -127,5 +127,3 @@ heterodimerization core function.
 - Q9LSE2 = SCRM2 (SCREAM2)
 - P24100 = CDKA;1 (CDC2 / cyclin-dependent kinase A;1)
 - Q9C4Z6 = RACK1B (receptor for activated C kinase 1B); UniProt INTERACTION: "Q700C7; Q9C4Z6: RACK1B; NbExp=3"
-</content>
-</invoke>

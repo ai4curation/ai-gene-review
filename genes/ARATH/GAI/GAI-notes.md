@@ -79,5 +79,3 @@ nuclear negative regulators (repressors) of the gibberellin (GA) signaling pathw
 - Core CC: nucleus (GO:0005634), strongly supported (IDA multiple).
 - GO:0003700 DNA-binding transcription factor activity (TAS/ISS x4): over-annotation; DELLAs lack a DNA-binding domain (see above). Recommend MARK_AS_OVER_ANNOTATED / MODIFY.
 - Many GO:0005515 "protein binding" IPI: real interactions but uninformative as a core MF; KEEP_AS_NON_CORE.
-</content>
-</invoke>

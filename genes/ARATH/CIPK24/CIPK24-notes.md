@@ -70,5 +70,3 @@ These are high-throughput / interactome papers contributing the IntAct GO:000551
 - GO:0007165 signal transduction (IEA): MARK_AS_OVER_ANNOTATED — true but vague; CBL-CIPK calcium signaling is the specific role; keep as non-core high-level.
 - GO:0005515 protein binding (many IPI): MARK_AS_OVER_ANNOTATED per project guidance (uninformative bare term); the specific functional interactions (CBL4/SOS3, CBL10, SOS1, ABI2, NDPK2) are captured in reasons/core_functions. Do NOT remove (valid experimental IPI evidence exists).
 - Localization (nucleus, cytoplasm, plant-type vacuole membrane): ACCEPT/KEEP_AS_NON_CORE; vacuole membrane is IDA.
-</content>
-</invoke>

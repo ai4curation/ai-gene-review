@@ -140,4 +140,3 @@ The eight GO:0005515 "protein binding" IPI annotations are real interactions but
 uninformative as MF; mark over-annotated (do not endorse as core).
 UV-B, H2O2, hypoxia, heat-acclimation are expression-readout associations →
 keep as non-core.
-</content>
