@@ -76,4 +76,13 @@ UniProt: Q8IUQ4 (SIAH1_HUMAN), 282 aa. EC 2.3.2.27. RING-type E3 ubiquitin ligas
 - nervous system development / axon guidance / morphogenesis — KEEP_AS_NON_CORE (pleiotropic dev roles).
 - protein destabilization (GO:0031648) — KEEP_AS_NON_CORE (consequence of degradation activity).
 - neuron apoptotic process — KEEP_AS_NON_CORE.
-</content>
+
+## Citation issue (PMID:11863358)
+- The GOA zinc ion binding (IDA) annotation cites PMID:11863358 "An anthropoid-specific
+  locus of orphan C to U RNA-editing enzymes on chromosome 22." The cached (abstract-only)
+  entry is entirely about APOBEC C-to-U RNA-editing enzymes and contains ZERO mention of
+  SIAH1/seven-in-absentia. This looks like a wrong-identifier citation. Per project
+  guardrails I do not REMOVE an experimental IDA on the basis of incomplete cached evidence;
+  marked UNDECIDED and flagged correctness=WRONG_IDENTIFIER. SIAH1 zinc binding itself is
+  well supported by the structural study PMID:16085652 (RING + SIAH-type Zn fingers).
+
