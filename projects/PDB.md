@@ -84,7 +84,50 @@ electronic inference — the sweet spot for structure-grounded review.
 | 23 | mdh | METEA | Q84FY8 | 2 | ✓ | ✓ |  | NAD |
 | 25 | xoxF1 | METEA | C5B120 | 2 | ✓ | ✓ |  | PQQ |
 
-Full ranked list: `pdb-bioinformatics/data/pdb_gene_enriched.tsv`.
+Full ranked list: `pdb-bioinformatics/data/pdb_gene_enriched.tsv` (now includes the
+RCSB per-entry **structure-paper PMIDs** and an `is_eukaryote` flag).
+
+## Eukaryotic candidates (so they aren't drowned out)
+
+The prokaryote/phage genomes dominate the strict "no experimental MF" cut, so here is the
+eukaryotic slice explicitly. 36 eukaryotic genes have a structure but no experimental MF GO;
+the richest (cofactor/ligand/complex-bearing) are:
+
+| # | Gene | Org | UniProt | nPDB | cof | lig | cplx | cofactors/ligands | structure papers |
+|---|------|-----|---------|----:|:--:|:--:|:--:|---|---|
+| 1 | psaC | CHLRE | Q00914 | 17 | ✓ | ✓ | ✓ | FES,SF4 (Photosystem I) | PMID:36979472 |
+| 2 | rbcL | 9POAL | P0C512 | 3 | ✓ | ✓ | ✓ | NDP (RuBisCO) | PMID:22609438 |
+| 3 | cbh1 | HYPJE | P62694 | 48 | ✓ | ✓ |  | (cellobiohydrolase Cel7A) | PMID:35997626 |
+| 4 | XYL1 | PICST | P31867 | 2 | ✓ | ✓ |  | NADP (xylose reductase) | PMID:30487522 |
+| 5 | IDH3B | human | O43837 | 9 | ✓ | ✓ | ✓ | NAD,ADP (NAD-IDH β) | PMID:36375638;PMID:31515270 |
+| 6 | ATAD1 | human | Q8NBU5 | 2 | ✓ | ✓ | ✓ | ATP,ADP (AAA+ extractase) | PMID:35550246 |
+| 7 | COX6B1 | human | P14854 | 1 | ✓ | ✓ | ✓ | CU,ZN (complex IV) | PMID:30030519 |
+| 8 | CFAP61 | human | Q8NHU2 | 1 | ✓ | ✓ | ✓ | GDP,GTP (axoneme) | PMID:37258679 |
+| 9 | SPR | human | P35270 | 14 | ✓ | ✓ |  | NADP,ZN (sepiapterin red.) | PMID:31244106 |
+| 10 | COI1 | ARATH | O04197 | 3 |  | ✓ | ✓ | JA-Ile,InsP (JA receptor) | PMID:20927106 |
+| 11 | TOMM5 | human | Q8N4H5 | 11 |  | ✓ | ✓ | (TOM import complex) | PMID:33846286 |
+| 12 | Ndufb1 | mouse | P0DN34 | 31 | ✓ | ✓ | ✓ | many (respiratory SC) | PMID:38177503 |
+
+These span the most informative structural contexts: **catalytic with cofactor** (IDH3B,
+XYL1, SPR), **mechanism from a bound substrate/product** (ATAD1, COI1), and **complex
+membership** (psaC, COX6B1, TOMM5, Ndufb1, CFAP61). For human genes the structure typically
+sharpens an existing IEA term or pins **complex membership**, rather than revealing function
+from scratch.
+
+## Grounding in the structure papers
+
+A bound ligand is the clue; the **primary structure paper** carries the functional
+interpretation. `pdb-bioinformatics/STRUCTURE_PAPERS.md` records verified, PubMed-sourced
+notes for the shortlist above (and the prokaryotic flagships mcrA, merA, pcaF), with the
+GO-annotation implication for each.
+
+**Caveat surfaced by doing this:** the `structure_papers` PMIDs are the RCSB *per-entry*
+primary citation — the paper that deposited *that* coordinate set, which is often a downstream
+ligand/inhibitor or methods study rather than the definitive structure/function paper. Verified
+drift cases: SPR's PMIDs are inhibitor-screening papers; cbh1's are glycosylation/propranolol
+NMR; merA's is the N-terminal NmerA-domain NMR. Others (XYL1, psaC, IDH3B, ATAD1, pcaF, COX6B1)
+*are* the definitive paper. **Each PMID must be verified against the gene before it is cited in
+a review** (the "verify, don't trust" rule), exactly as `STRUCTURE_PAPERS.md` does.
 
 Patterns worth noting: a cluster of **methylotrophy / PQQ-dependent dehydrogenases**
 (METEA `mxaI`, `xoxF1`, `mdh`, `mtdA`, `fae`, PSEPK `pedH`, `pqqB`) and **redox cofactor
@@ -117,10 +160,14 @@ See `pdb-bioinformatics/RESULTS.md` for method detail, caveats, and the full out
 
 ## Next steps
 
-- [ ] Run full gene reviews on the top cofactor-bound candidates (start: `mcrA`, `merA`,
-      the METEA PQQ-dehydrogenase cluster), citing the PDB entry + bound cofactor as MF evidence.
+- [ ] Run full gene reviews on a balanced shortlist, citing the verified structure paper +
+      PDB entry + bound cofactor as evidence. Recommended first batch:
+      **eukaryotic** — `human IDH3B`, `human ATAD1`, `PICST XYL1`;
+      **prokaryotic** — `PSEPK pcaF`, `METAC mcrA`, `PSEAI merA`.
 - [ ] Extend enrichment beyond the no-exp-MF set to genes with **contested** function
       (cross-reference `CONTESTED_FUNCTION.md`) where a structure could adjudicate.
 - [ ] For complexes (≥2 protein entities), map partners to UniProt to support CC / complex
       membership annotations.
+- [ ] Replace each peripheral RCSB auto-citation with the definitive structure/function paper
+      (see the caveat above) as genes go to review.
 - [ ] Consider adding a PDB-evidence field to the review schema (per `ALPHAFOLD.md` action items).

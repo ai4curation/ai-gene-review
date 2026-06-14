@@ -53,6 +53,8 @@ def query(ids):
     query($ids:[String!]!){ entries(entry_ids:$ids){
       rcsb_id
       struct{ title }
+      rcsb_primary_citation{ pdbx_database_id_PubMed pdbx_database_id_DOI year
+                             rcsb_journal_abbrev }
       rcsb_entry_info{ polymer_entity_count_protein polymer_entity_count_nucleic_acid
                        nonpolymer_entity_count }
       nonpolymer_entities{ nonpolymer_comp{ chem_comp{ id name } } }
@@ -103,10 +105,12 @@ def main():
         org, gene = pdb_to_gene[pdb_id]
         if not e:
             enriched.append({"organism": org, "gene": gene, "pdb_id": pdb_id,
-                             "title": "", "n_protein": "", "n_nucleic": "",
+                             "title": "", "pmid": "", "doi": "", "year": "",
+                             "n_protein": "", "n_nucleic": "",
                              "ligands_all": "", "ligands_meaningful": "",
                              "n_meaningful": 0, "has_cofactor": 0, "is_complex": 0})
             continue
+        cit = e.get("rcsb_primary_citation") or {}
         info = e.get("rcsb_entry_info") or {}
         np_ent = e.get("nonpolymer_entities") or []
         ligs = []
@@ -122,6 +126,9 @@ def main():
         enriched.append({
             "organism": org, "gene": gene, "pdb_id": pdb_id,
             "title": (e.get("struct") or {}).get("title") or "",
+            "pmid": cit.get("pdbx_database_id_PubMed") or "",
+            "doi": cit.get("pdbx_database_id_DOI") or "",
+            "year": cit.get("year") or "",
             "n_protein": n_prot, "n_nucleic": n_nuc,
             "ligands_all": ",".join(c for c, _ in ligs),
             "ligands_meaningful": ",".join(c for c, _ in meaningful),
@@ -139,7 +146,7 @@ def main():
     # Per-gene rollup
     roll = defaultdict(lambda: {"n_pdb": 0, "with_ligand": 0, "with_cofactor": 0,
                                 "with_complex": 0, "cofactors": set(), "ligands": set(),
-                                "has_nucleic": 0})
+                                "has_nucleic": 0, "papers": {}})
     for r in enriched:
         key = (r["organism"], r["gene"])
         d = roll[key]
@@ -158,13 +165,31 @@ def main():
             d["with_complex"] += 1
         if r["n_nucleic"] not in ("", 0, "0"):
             d["has_nucleic"] = 1
+        # collect distinct structure papers; remember which entry/ligands they describe
+        if r["pmid"]:
+            p = d["papers"].setdefault(r["pmid"], {"year": r["year"], "title": r["title"],
+                                                   "rich": False, "pdb": r["pdb_id"]})
+            if r["has_cofactor"] or r["n_meaningful"]:
+                p["rich"] = True
+
+    EUK = {"human", "mouse", "rat", "worm", "yeast", "ARATH", "SCHPO", "SCHJY", "DANRE",
+           "DROME", "XENTR", "CHICK", "BOVIN", "CRIGR", "DICDI", "CHLRE", "CANAL", "CANGA",
+           "NEUCR", "ASPNG", "ASPRC", "PICST", "HYPJE", "PENCH", "PENEN", "MAIZE", "ORYSJ",
+           "SOYBN", "SOLLC", "SOLTU", "VITVI", "WHEAT", "MEDTR", "POPTR", "PHYPA", "BRADI",
+           "SORBI", "PHAVU", "THLAR", "TOBAC", "NICAT", "OCTBM", "OCTVU", "SEPOF", "EUPSC",
+           "DAPPU", "RAMVA", "MISSI", "DESRO", "DOROP", "DORPE", "9POAL"}
 
     gmap = {(r["organism"], r["gene"]): r for r in gene_rows}
     grows = []
     for key, d in roll.items():
         g = gmap[key]
+        # up to 3 representative papers, ligand/cofactor-bearing first, newest first
+        papers = sorted(d["papers"].items(),
+                        key=lambda kv: (not kv[1]["rich"], -int(kv[1]["year"] or 0)))
+        pmids = [f'PMID:{pid}' for pid, _ in papers[:3]]
         grows.append({
             "organism": key[0], "gene": key[1], "uniprot": g["uniprot"],
+            "is_eukaryote": int(key[0] in EUK),
             "length": g["length"], "n_pdb": d["n_pdb"],
             "max_coverage_frac": g["max_coverage_frac"],
             "best_resolution_A": g["best_resolution_A"],
@@ -175,6 +200,7 @@ def main():
             "has_nucleic_acid": d["has_nucleic"],
             "cofactors": ",".join(sorted(d["cofactors"])),
             "ligands": ",".join(sorted(d["ligands"])[:25]),
+            "structure_papers": ";".join(pmids),
         })
 
     # Priority score: structure richness, gated by current annotation sparsity.
@@ -195,23 +221,28 @@ def main():
                               -int(r["n_pdb"])))
 
     gout = DATA / "pdb_gene_enriched.tsv"
+    fields = ["priority_score", "organism", "gene", "uniprot", "is_eukaryote", "length",
+              "n_pdb", "max_coverage_frac", "best_resolution_A", "exp_total",
+              "pdb_with_cofactor", "pdb_with_ligand", "pdb_with_complex",
+              "has_nucleic_acid", "cofactors", "ligands", "structure_papers"]
     with gout.open("w", newline="") as fh:
-        fields = ["priority_score", "organism", "gene", "uniprot", "length", "n_pdb",
-                  "max_coverage_frac", "best_resolution_A", "exp_total",
-                  "pdb_with_cofactor", "pdb_with_ligand", "pdb_with_complex",
-                  "has_nucleic_acid", "cofactors", "ligands"]
         w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
         w.writeheader()
         w.writerows(grows)
 
     print(f"\nWrote {out}")
     print(f"Wrote {gout}")
-    print("\nTop 30 functional-insight candidates:")
-    for r in grows[:30]:
-        print(f'  {r["priority_score"]:>4}  {r["organism"]:7s} {r["gene"]:14s} '
+    print("\nTop 20 (overall):")
+    for r in grows[:20]:
+        tag = "EUK" if r["is_eukaryote"] else "   "
+        print(f'  {r["priority_score"]:>5}  {tag} {r["organism"]:7s} {r["gene"]:14s} '
               f'cof[{r["pdb_with_cofactor"]}] lig[{r["pdb_with_ligand"]}] '
-              f'cplx[{r["pdb_with_complex"]}] nuc[{r["has_nucleic_acid"]}]  '
-              f'{r["cofactors"][:30]}')
+              f'cplx[{r["pdb_with_complex"]}]  {r["cofactors"][:24]:24s} {r["structure_papers"]}')
+    print("\nTop 20 EUKARYOTIC:")
+    for r in [x for x in grows if x["is_eukaryote"]][:20]:
+        print(f'  {r["priority_score"]:>5}  {r["organism"]:7s} {r["gene"]:14s} '
+              f'cof[{r["pdb_with_cofactor"]}] lig[{r["pdb_with_ligand"]}] '
+              f'cplx[{r["pdb_with_complex"]}]  {r["cofactors"][:24]:24s} {r["structure_papers"]}')
 
 
 if __name__ == "__main__":
