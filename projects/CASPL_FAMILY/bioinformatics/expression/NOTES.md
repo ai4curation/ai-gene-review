@@ -1,3 +1,7 @@
+> **UPDATE:** the co-expression/expression analysis WAS completed via **EBI Expression
+> Atlas** (open FTP, Potri-keyed) — see `RESULTS.md` and `ebi_atlas_analysis.py`. The
+> PlantGenIE notes below document why that particular route was not usable.
+
 # Poplar CASPL expression analysis — JGI/PlantGenIE access attempt
 
 ## Goal
