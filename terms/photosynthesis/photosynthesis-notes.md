@@ -199,7 +199,8 @@ According to PubMed:
   `term-deep-research` (falcon provider) failed — the `concept_research.md.j2` template
   uses literal `{concept}` rather than a substituted variable, so the provider received an
   unfilled placeholder and returned a "concept not provided" non-report; that file was
-  discarded rather than kept as a misleading `-deep-research-falcon.md`. These manual notes
+  discarded rather than kept as a misleading `-deep-research-falcon.md`. (Template bug fixed
+  2026-06-14: `{concept}` → Jinja `{{ concept }}`.) These manual notes
   were written instead, with GO IDs verified against `cache/go/terms.csv` + GOlr and the
   four key references verified via PubMed. Gene reviews deferred per the chosen scope
   ("just the concept writeup"); candidate genes tracked in `projects/PHOTOSYNTHESIS.md`.

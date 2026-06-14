@@ -154,6 +154,8 @@ completed" non-report. The empty file was discarded (not kept as
 `-deep-research-falcon.md`) and `terms/photosynthesis/photosynthesis-notes.md` was authored
 manually instead, with all GO IDs and PMIDs independently verified.
 
-**Follow-up infra note:** the `{concept}` → `{{ concept }}` template substitution bug in
-`templates/concept_research.md.j2` affects *all* concept deep-research runs and is worth
-fixing separately before the next `term-deep-research` invocation.
+**Follow-up infra note (RESOLVED 2026-06-14):** `templates/concept_research.md.j2` is
+detected as a Jinja template (`.j2` suffix) but used a literal f-string placeholder
+`{concept}`, which Jinja leaves untouched — so every concept deep-research run received an
+empty concept. Fixed by switching the placeholder to Jinja syntax `{{ concept }}`; verified
+by rendering through `TemplateProcessor` (now substitutes to the real concept).
