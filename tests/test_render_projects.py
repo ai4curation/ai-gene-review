@@ -575,6 +575,40 @@ ATG7 is involved in autophagy."""
         assert warnings == []
 
 
+class TestRenderProjectsTable:
+    """Tests for the derived all-projects table."""
+
+    def test_table_lists_projects_with_metadata(self, tmp_path):
+        from ai_gene_review.render_projects import render_projects_table
+
+        projects = tmp_path / "projects"
+        (projects / "ALPHA").mkdir(parents=True)
+        (projects / "ALPHA" / "alpha-pathway.md").write_text("# Alpha pathway")
+        (projects / "ALPHA.md").write_text(
+            "---\ntitle: Alpha Project\nspecies: [human, mouse]\nstatus: active\n---\n# Alpha\n"
+        )
+        (projects / "BETA.md").write_text("# Beta heading only\n")
+        # README and supporting subfolder files must be excluded as projects
+        (projects / "README.md").write_text("---\ntitle: Projects\n---\n# Projects\n")
+
+        out = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out")
+        assert out.name == "all-projects.html"
+        html = out.read_text()
+
+        # Both projects listed, README excluded
+        assert ">Alpha Project<" in html
+        assert 'href="ALPHA.html"' in html
+        assert 'href="BETA.html"' in html
+        assert 'href="README.html"' not in html  # README not a project row
+        # Metadata surfaced from frontmatter
+        assert "human, mouse" in html
+        assert "active" in html
+        # Supporting-doc count from ALPHA/ folder
+        assert "1 file" in html
+        # Title falls back to first heading when frontmatter title is absent
+        assert "Beta heading only" in html
+
+
 class TestIntegration:
     """Integration tests using real-ish data structures."""
 

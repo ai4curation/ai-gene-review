@@ -602,6 +602,85 @@ def render_project(
     return output_path, warnings
 
 
+def render_projects_table(
+    projects_dir: Path = Path("projects"),
+    output_dir: Path = Path("pages/projects"),
+    template_path: Optional[Path] = None,
+) -> Path:
+    """Render a derived table of all top-level projects from their frontmatter.
+
+    A "project" is a top-level ``projects/FOO.md`` page (``README.md`` and the
+    supporting material inside ``FOO/`` folders are excluded). For each project
+    the table surfaces metadata pulled from its YAML frontmatter (title, species,
+    status) plus a count of supporting markdown docs in its ``FOO/`` folder. This
+    complements the hand-curated ``index.html`` by guaranteeing every project is
+    listed.
+
+    Args:
+        projects_dir: Directory containing project markdown files
+        output_dir: Directory for output HTML files
+        template_path: Optional path to custom Jinja2 template
+
+    Returns:
+        Path to the written ``all-projects.html`` file.
+    """
+    if template_path is None:
+        module_dir = Path(__file__).parent
+        template_path = module_dir / "templates" / "projects_table.html.j2"
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template not found: {template_path}")
+
+    rows: List[Dict[str, Any]] = []
+    for md_path in sorted(projects_dir.glob("*.md")):
+        if md_path.name == "README.md":
+            continue
+        frontmatter, content = parse_frontmatter(md_path.read_text())
+
+        title = frontmatter.get("title")
+        if not title:
+            heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+            title = heading_match.group(1).strip() if heading_match else md_path.stem
+
+        species = frontmatter.get("species")
+        if isinstance(species, (list, tuple)):
+            species = ", ".join(str(s) for s in species)
+        elif species is not None:
+            species = str(species)
+
+        status = frontmatter.get("status")
+
+        # Count supporting markdown docs in the project's FOO/ folder, if any.
+        support_dir = projects_dir / md_path.stem
+        support_count = (
+            len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
+        )
+
+        rows.append(
+            {
+                "slug": md_path.stem,
+                "title": title,
+                "url": f"{md_path.stem}.html",
+                "species": species,
+                "status": status,
+                "support_count": support_count,
+            }
+        )
+
+    rows.sort(key=lambda r: str(r["title"]).casefold())
+
+    env = Environment(
+        loader=FileSystemLoader(template_path.parent),
+        autoescape=select_autoescape(["html", "j2"]),
+    )
+    template = env.get_template(template_path.name)
+    html = template.render(rows=rows)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "all-projects.html"
+    output_path.write_text(html)
+    return output_path
+
+
 def render_all_projects(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
@@ -655,6 +734,11 @@ def render_all_projects(
             all_warnings.append(f"{md_file.name}: Error rendering - {e}")
 
     print(f"\nRendered {len(output_paths)}/{len(md_files)} projects to {output_dir}")
+
+    # Derived, metadata-driven table of all top-level projects.
+    table_path = render_projects_table(projects_dir, output_dir)
+    output_paths.append(table_path)
+    print(f"Rendered project table -> {table_path}")
 
     if all_warnings:
         print(f"\n{len(all_warnings)} warnings:")
