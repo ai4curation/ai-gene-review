@@ -1,9 +1,13 @@
+---
+title: "Experimental Data Sources for Enzyme Substrate Specificity"
+---
+
 # Experimental data sources for enzyme substrate specificity
 
 Follow-up to [`BOLTZ2_SUBSTRATE_SPECIFICITY.md`](BOLTZ2_SUBSTRATE_SPECIFICITY.md), whose conclusion
 was: *don't predict substrate specificity with co-folding/affinity models — query the experimental
 and curated caches instead.* This project makes those caches **programmatically usable** for gene
-review, with small runnable clients in [`enzyme-specificity-data/`](enzyme-specificity-data/).
+review, with small runnable clients in [`ENZYME_SPECIFICITY_DATA_SOURCES/`](ENZYME_SPECIFICITY_DATA_SOURCES/).
 
 Companion to [`ENZYME_SPECIFICITY.md`](ENZYME_SPECIFICITY.md) (the curation cases) and
 [`STRUCTURE_FUNCTION.md`](STRUCTURE_FUNCTION.md) (structure-based methods).
@@ -63,7 +67,10 @@ Read and verify the cited papers — never hardcode a single value or over-claim
 - [x] Verified SABIO-RK, M-CSA, BRENDA API reachability and response formats
 - [x] Runnable clients for SABIO-RK (open) and M-CSA (open); smoke-tested live
 - [x] BRENDA SOAP client (credentials/zeep required; documented, not run here)
-- [ ] Apply to a real `ENZYME_SPECIFICITY` case (e.g. LPL1 phospholipase breadth, yegV sugar kinase)
+- [x] Worked demonstrator on real cases — see [`ENZYME_SPECIFICITY_DATA_SOURCES/demo/RESULTS.md`](ENZYME_SPECIFICITY_DATA_SOURCES/demo/RESULTS.md):
+      hexokinase positive control (recovers glucose≫fructose specificity, PubMed-cited); PHYKPL
+      (SABIO-RK PLP/phosphate signature corroborates the phospho-lyase MODIFY); LPL1/yegV (open
+      caches empty → fall back to literature)
 - [ ] Decide whether to add a `just` recipe wrapping these for routine review
 
 Last updated: 2026-06-14

@@ -1,3 +1,7 @@
+---
+title: "Boltz-2 for Enzyme Substrate Specificity"
+---
+
 # Boltz-2 for Enzyme Substrate Specificity
 
 ## Overview
@@ -106,7 +110,7 @@ detection (which addresses mechanism) and the literature.
 
 ## Proposed reproducible workflow
 
-Implemented as a scaffold in [`boltz2-substrate-specificity/`](boltz2-substrate-specificity/):
+Implemented as a scaffold in [`BOLTZ2_SUBSTRATE_SPECIFICITY/`](BOLTZ2_SUBSTRATE_SPECIFICITY/):
 
 1. **Inputs:** one protein sequence (UniProt) + a curated **candidate substrate panel** of
    `name,SMILES` (include the annotated substrate, plausible alternatives, and 1–2 negative-control
@@ -209,7 +213,7 @@ first.
 ## Status
 
 - [x] Capability review + scope/limitations analysis (this document)
-- [x] Reproducible input-generation + ranking scaffold (`boltz2-substrate-specificity/`)
+- [x] Reproducible input-generation + ranking scaffold (`BOLTZ2_SUBSTRATE_SPECIFICITY/`)
 - [x] Reviewed published evidence — **conclusion: not recommended for routine curation**
 - [x] Compared against MD/FEP and QM/MM; surveyed databases of cached computed results
 - [ ] (Only if a single contested case warrants it) run a known-specificity control benchmark before

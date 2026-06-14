@@ -1,3 +1,7 @@
+---
+title: "Boltz-2 Substrate-Specificity Scaffold (README)"
+---
+
 # Boltz-2 substrate-specificity scaffold
 
 Reproducible scaffold for ranking candidate enzyme substrates by Boltz-2 predicted
