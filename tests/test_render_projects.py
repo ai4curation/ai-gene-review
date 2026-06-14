@@ -233,18 +233,28 @@ class TestReplaceGeneSymbols:
         assert result == content
         assert warnings == []
 
-    def test_purely_numeric_symbols_not_auto_linked(self):
-        """Bare numbers must not auto-link to numeric gene folders (e.g. BPT4 phage genes '2','10').
+    def test_short_symbols_not_auto_linked(self):
+        """Very short symbols must not auto-link in prose.
 
-        Such symbols flood number-heavy prose/tables with false links; they should only be linked
+        Such symbols flood prose with false links; they should only be linked
         via explicit <gene> tags.
         """
-        index = {"2": ["BPT4"], "10": ["BPT4"], "GPX4": ["human"]}
-        content = "There are 2 mappings and 10 gaps; GPX4 is a gene."
+        index = {
+            "2": ["BPT4"],
+            "10": ["BPT4"],
+            "E": ["BPT4"],
+            "t": ["BPT4"],
+            "AG": ["ARATH"],
+            "GPX4": ["human"],
+        }
+        content = "There are 2 mappings and 10 gaps; mph(E) don't trust McArthur AG; GPX4 is a gene."
         result, warnings = replace_gene_symbols(content, index)
         assert "genes/BPT4/2/" not in result
         assert "genes/BPT4/10/" not in result
-        assert "[GPX4]" in result  # real (non-numeric) symbol still links
+        assert "genes/BPT4/E/" not in result
+        assert "genes/BPT4/t/" not in result
+        assert "genes/ARATH/AG/" not in result
+        assert "[GPX4]" in result  # longer symbols still link
         assert warnings == []
 
     def test_symbol_after_slash_not_linked(self):
@@ -347,6 +357,17 @@ class TestLinkUniprotCodeSpans:
         """File paths and multi-slash code spans are preserved."""
         content = "`genes/9CAUD/darB/darB-ai-review.yaml`"
         assert link_uniprot_code_spans(content) == content
+
+    def test_does_not_link_non_accession_code_span(self):
+        """Enum-like all-caps code spans are not UniProt accessions."""
+        content = "`MODIFY` and `VERIFIED` are enum values; `Q9G044` is an accession."
+        result = link_uniprot_code_spans(content)
+
+        assert "`MODIFY`" in result
+        assert "`VERIFIED`" in result
+        assert "uniprotkb/MODIFY" not in result
+        assert "uniprotkb/VERIFIED" not in result
+        assert "[Q9G044](https://www.uniprot.org/uniprotkb/Q9G044/entry)" in result
 
 
 class TestRenderProject:
