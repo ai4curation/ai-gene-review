@@ -101,7 +101,40 @@ the catalytic subunit, leaving accessory subunits unsupported.
 occasionally in the strong form. The decisive enabler is targeting `GAP_NO_EXP_CURATION`
 (no prior experimental annotation), not famous genes whose text already suffices.
 
-## Appendix — earlier-batch frontier genes (already reviewed, retroactively classified)
+## Refinement: informativeness, and the three evidence layers of a structure paper
+
+A structure paper is not one evidence unit but three, and they fill very different
+annotation classes:
+
+| Layer | What it is | GO terms it yields | Informative? | H1 status in our data |
+| --- | --- | --- | --- | --- |
+| **1. Model / coordinates** | bound cofactor, metal, fold, geometry, oligomeric state | "X binding", "metal ion binding", "ATP hydrolysis activity", "protein-containing complex", "heterooligomerization" | **No** — low information content; the same class the project guidelines tell us to avoid (cf. "protein binding") | This is where the STRUCTURE_UNIQUE / NEW wins concentrated (merA Hg & FAD binding; mcrA Ni binding; secA ATP hydrolysis; HSPB3 heterooligomerization) — i.e. structures uniquely fill the *least useful* slots |
+| **2. The paper's integrative functional hypothesis** | structure **+** assays + mutagenesis + biological context → a specific mechanism/role | informative, specific function/mechanism | **Yes** | merA: NmerA "acquisition and delivery of Hg2+ to the catalytic core" (a metallochaperone-type role); secA: ATPase "mediates extrusion … based on cycles of reversible binding to the SecYEG translocon"; mcrA: "a model for the assembly of the MCR complex and the role of McrD" |
+| **3. Specific catalytic identity (EC/family)** | rides on **sequence**, not coordinates | the defining MF (mercuric reductase, methyl-CoM reductase) | Yes | Already given by EC/Pfam/homology; structure only *confirms* it → FIRST_EXPERIMENTAL, never UNIQUE |
+
+**Consequences for H1.**
+- The *structure-demonstrated facts* (Layer 1) are low-information; the *informative function*
+  (Layer 3) is sequence-borne and merely confirmed. So "structure alone" looks weak.
+- The real informative gap-filling lives in **Layer 2 — the paper's structurally-grounded
+  hypothesis** — which is *stronger than the coordinates alone prove but consistent with them*.
+  Our exact-substring extraction leaned on Layer 1 (cofactor facts), so it **systematically
+  under-counted** the value that lives in Layer 2.
+
+**Curation posture for Layer 2 (the integrity guardrail).** A Layer-2 claim is
+structure-*enabled inference*, not structure-*demonstrated fact*. It should be: (a) annotated to
+the more informative term; (b) attributed to the authors' model and quoted as their claim
+(`supporting_text` = the hypothesis sentence); (c) given a confidence-aware stance (author-
+statement-like, or a `proposed`/hedged annotation) rather than laundered as a hard IDA from the
+model. The distinction "demonstrated by the structure" vs "proposed by the authors on the basis
+of the structure" must be preserved.
+
+**Open test (Layer 2 rate):** re-read each frontier structure paper for its single headline
+functional hypothesis and classify it on three axes — informative? · beyond coordinates? ·
+already in prior text/EC vs paper-unique? The Layer-2 informative-gap-fill rate is the honest
+measure of H1's value, and it is almost certainly higher than the ~0 Layer-1 rate but lower
+than the raw FIRST_EXPERIMENTAL count.
+
+
 
 - **XYL1** (PICST, exp_total==0): NADPH-bound D-xylose reductase structure = FIRST_EXPERIMENTAL
   (classic enzymology exists in text, but no prior experimental GO annotation).
