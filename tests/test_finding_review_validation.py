@@ -14,7 +14,6 @@ import yaml
 from ai_gene_review.validation import validate_gene_review
 from ai_gene_review.datamodel.gene_review_model import (
     FindingReview,
-    FindingReviewStatusEnum,
 )
 
 
