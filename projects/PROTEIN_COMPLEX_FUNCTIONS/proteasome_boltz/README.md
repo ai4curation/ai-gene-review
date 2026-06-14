@@ -1,3 +1,7 @@
+---
+title: "Proteasome PSMB5:PSMA1 Boltz Pilot"
+---
+
 # Proteasome PSMB5:PSMA1 Boltz Pilot
 
 This directory contains a non-OXPHOS structure-prediction pilot for protein-complex function

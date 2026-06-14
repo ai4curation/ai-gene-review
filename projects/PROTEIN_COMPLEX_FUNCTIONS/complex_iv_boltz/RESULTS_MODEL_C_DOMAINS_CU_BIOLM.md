@@ -1,3 +1,7 @@
+---
+title: "Boltz Model C Analysis (domains)"
+---
+
 # Boltz Model C Analysis (domains)
 
 Prediction directory: `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/biolm_boltz2_model_c_domains_cu_api_out`

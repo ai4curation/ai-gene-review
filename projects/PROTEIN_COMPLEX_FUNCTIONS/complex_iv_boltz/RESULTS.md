@@ -1,3 +1,7 @@
+---
+title: "Complex IV COX2 Copper-Maturation Hosted BioLM Boltz2 Results"
+---
+
 # Complex IV COX2 Copper-Maturation Hosted BioLM Boltz2 Results
 
 Date: 2026-05-20

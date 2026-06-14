@@ -1,3 +1,7 @@
+---
+title: "Boltz Proteasome PSMB5:PSMA1 Attribution Analysis"
+---
+
 # Boltz Proteasome PSMB5:PSMA1 Attribution Analysis
 
 Prediction directory: `projects/PROTEIN_COMPLEX_FUNCTIONS/proteasome_boltz/biolm_boltz2_psmb5_psma1_api_out`

@@ -1,3 +1,7 @@
+---
+title: "Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project"
+---
+
 # Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project
 
 **Project type:** Gene curation (exemplar enzymes from microbial natural-product gene clusters)

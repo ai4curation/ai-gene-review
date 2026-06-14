@@ -1,3 +1,7 @@
+---
+title: "Boltz Model A domains Analysis"
+---
+
 # Boltz Model A domains Analysis
 
 Prediction directory: `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/biolm_boltz2_model_a_cox2_sco1_domains_cu_api_out`

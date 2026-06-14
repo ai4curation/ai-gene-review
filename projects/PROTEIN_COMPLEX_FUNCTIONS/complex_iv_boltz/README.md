@@ -1,3 +1,7 @@
+---
+title: "Complex IV COX2 Copper-Maturation BioLM Boltz2 Pilot"
+---
+
 # Complex IV COX2 Copper-Maturation BioLM Boltz2 Pilot
 
 This directory contains the retained hosted structure-prediction pilot for the human Complex IV

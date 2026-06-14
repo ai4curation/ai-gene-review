@@ -1,3 +1,7 @@
+---
+title: "ESMFold2 Model C + COA6 (4-chain) Analysis"
+---
+
 # ESMFold2 Model C + COA6 (4-chain) Analysis
 
 Prediction directory: `coa6_out`

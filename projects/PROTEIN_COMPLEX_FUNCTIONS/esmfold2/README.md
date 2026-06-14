@@ -1,3 +1,7 @@
+---
+title: "ESMFold2 (Biohub) complex caller"
+---
+
 # ESMFold2 (Biohub) complex caller
 
 ESMFold2 counterpart to the BioLM Boltz2 callers used elsewhere under `projects/PROTEIN_COMPLEX_FUNCTIONS/`.

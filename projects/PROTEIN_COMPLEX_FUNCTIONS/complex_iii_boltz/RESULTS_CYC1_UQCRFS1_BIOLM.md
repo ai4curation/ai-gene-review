@@ -1,3 +1,7 @@
+---
+title: "Boltz Complex III CYC1:UQCRFS1 Domain Analysis"
+---
+
 # Boltz Complex III CYC1:UQCRFS1 Domain Analysis
 
 Prediction directory: `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iii_boltz/biolm_boltz2_cyc1_uqcrfs1_domains_api_out`
