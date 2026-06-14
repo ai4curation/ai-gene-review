@@ -1,3 +1,7 @@
+---
+title: "Structure-Based Function Prediction for Gene Review"
+---
+
 # Structure-Based Function Prediction for Gene Review
 
 How can protein structure help with function prediction, especially for distant homologs where sequence-based HMMs fail?

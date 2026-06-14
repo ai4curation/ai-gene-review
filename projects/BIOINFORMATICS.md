@@ -1,3 +1,7 @@
+---
+title: "BIOINFORMATICS Case Studies"
+---
+
 # BIOINFORMATICS Case Studies
 
 ## Purpose

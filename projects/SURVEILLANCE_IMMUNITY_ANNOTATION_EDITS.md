@@ -1,3 +1,7 @@
+---
+title: "Specific Annotation Edit Recommendations"
+---
+
 # Specific Annotation Edit Recommendations
 ## C. elegans Surveillance Immunity Genes (Priority 2)
 

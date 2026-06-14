@@ -1,3 +1,7 @@
+---
+title: "Annotation-gain report: applying the ARO→GO mappings to UniProt"
+---
+
 # Annotation-gain report: applying the ARO→GO mappings to UniProt
 
 Candidate GO annotations that UniProtKB entries with a CARD cross-reference would gain from the

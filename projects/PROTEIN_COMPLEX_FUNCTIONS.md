@@ -1,4 +1,5 @@
 ---
+title: "Protein Complex Functions Project"
 species: [human]
 ---
 

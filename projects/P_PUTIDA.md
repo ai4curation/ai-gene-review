@@ -1,3 +1,8 @@
+---
+title: "P. putida Gene Annotation Review Project"
+species: [PSEPK]
+---
+
 # P. putida Gene Annotation Review Project
 
 ## Overview
@@ -223,7 +228,7 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 
 ## Related Projects
 
-- [SPKW-PSEPK](SPKW-PSEPK.md) — Analysis of UniProtKB-KW annotation patterns in P. putida
+- [SPKW-PSEPK](SPKW/SPKW-PSEPK.md) — Analysis of UniProtKB-KW annotation patterns in P. putida
 - [REE](REE.md) — Rare earth element biology (pedH is a key gene)
 - [BIOSENSORS](BIOSENSORS.md) — Biosensor applications (BenR is relevant)
 

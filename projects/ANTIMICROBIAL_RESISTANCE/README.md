@@ -1,3 +1,7 @@
+---
+title: "ARO ↔ GO mappings & the UniProt→ARO→GO pipeline"
+---
+
 # ARO ↔ GO mappings & the UniProt→ARO→GO pipeline
 
 Part of the [Antimicrobial Resistance project](../ANTIMICROBIAL_RESISTANCE.md).

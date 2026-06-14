@@ -1,3 +1,7 @@
+---
+title: "Mevalonate Pathway Term Cleanup — Obsoletion & Replacement"
+---
+
 # Mevalonate Pathway Term Cleanup — Obsoletion & Replacement
 
 ## Overview

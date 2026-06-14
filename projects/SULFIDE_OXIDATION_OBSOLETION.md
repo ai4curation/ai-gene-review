@@ -1,3 +1,7 @@
+---
+title: "Sulfide Oxidation Children — Obsoletion & Replacement"
+---
+
 # Sulfide Oxidation Children — Obsoletion & Replacement
 
 ## Overview

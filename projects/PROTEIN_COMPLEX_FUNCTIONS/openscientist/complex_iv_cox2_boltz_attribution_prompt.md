@@ -1,3 +1,7 @@
+---
+title: "Structure-Informed Complex Function Attribution: Human Complex IV COX2 Copper-Maturation Module"
+---
+
 # Structure-Informed Complex Function Attribution: Human Complex IV COX2 Copper-Maturation Module
 
 ## Project Context

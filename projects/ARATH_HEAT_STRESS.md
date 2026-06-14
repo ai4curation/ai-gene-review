@@ -1,3 +1,7 @@
+---
+title: "Arabidopsis Heat Stress Gene Curation Project"
+---
+
 # Arabidopsis Heat Stress Gene Curation Project
 
 **Project Start Date:** 2025-11-07

@@ -1,3 +1,7 @@
+---
+title: "Enzyme Specificity Project"
+---
+
 # Enzyme Specificity Project
 
 ## Overview

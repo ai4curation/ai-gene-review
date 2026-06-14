@@ -1,4 +1,5 @@
 ---
+title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv

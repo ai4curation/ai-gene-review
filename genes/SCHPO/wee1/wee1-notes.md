@@ -48,7 +48,7 @@ Wee1 is the prototype dose-dependent negative regulator of mitotic entry (G2/M t
 - Cytokinesis checkpoint (GO:0044878, IMP PMID:10704373): [PMID:10704373 "The G(2)/M transition defect of cps1-191 mutants is suppressed by a mutation in the wee1 gene"] and [PMID:10704373 "We conclude that an F-actin and Wee1p dependent checkpoint blocks G(2)/M transition until previous cytokinesis is completed."]
 
 ## Meiotic role (GO:0110031 negative regulation of G2/MI transition of meiotic cell cycle)
-- This is a GENUINE meiotic role (unlike the autophagy "mug"-keyword over-annotations described in projects/SPKW-SCHPO.md). Wee1 (with Mik1) inhibits CDK to prevent premature meiotic divisions when the replication checkpoint is active.
+- This is a GENUINE meiotic role (unlike the autophagy "mug"-keyword over-annotations described in projects/SPKW/SPKW-SCHPO.md). Wee1 (with Mik1) inhibits CDK to prevent premature meiotic divisions when the replication checkpoint is active.
 - [PMID:25492408 "Meanwhile, activation of Cds1 inhibits CDK activity by activating Mik1 and Wee1 tyrosine kinases (Murakami & Nurse 1999), thus preventing entry into meiotic nuclear divisions."]
 - [PMID:25492408 "These results indicate that inactivation of Mik1/Wee1 triggers nuclear divisions, consistent with the results obtained from the Cdc25 overproduction experiments."]
 - [PMID:25492408 "These results indicate that inactivation of Mik1/Wee1 overcomes the DNA replication checkpoint."]

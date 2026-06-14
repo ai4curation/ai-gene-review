@@ -1,3 +1,7 @@
+---
+title: "Readout → annotation rubric (ASSAY_TO_FUNCTION)"
+---
+
 # Readout → annotation rubric (ASSAY_TO_FUNCTION)
 
 A curator-facing rubric for deciding what GO annotation a **convergent

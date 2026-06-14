@@ -1,3 +1,7 @@
+---
+title: "Surveillance Immunity Gene Curation: Implementation Checklist"
+---
+
 # Surveillance Immunity Gene Curation: Implementation Checklist
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+title: "ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)"
+---
+
 # ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)
 
 ## Overview

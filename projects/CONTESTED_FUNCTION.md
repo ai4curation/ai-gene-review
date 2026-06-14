@@ -1,3 +1,7 @@
+---
+title: "Contested Function Project"
+---
+
 # Contested Function Project
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+title: "Tier-2 re-review + the machinery discriminator"
+---
+
 # Tier-2 re-review + the machinery discriminator
 
 The Tier-2 queue (a core `ACCEPT` call on a hub-aligned BP/CC term) is large
