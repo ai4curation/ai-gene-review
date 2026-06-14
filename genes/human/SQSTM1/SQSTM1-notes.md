@@ -48,3 +48,16 @@ Disease: dominant gain/loss SQSTM1 variants cause Paget disease of bone (PDB3), 
 - Mitophagy nuance (dispensable for clearance): [PMID:20890124].
 - TLR4 negative regulation: [PMID:31281713].
 - Acylation/autophagosome recruitment: [PMID:37802024].
+
+## Review session journal (2026-06-14)
+Completed full review of the ~272 GOA annotations. Verified GO IDs used in core_functions/replacements via QuickGO API: GO:0140311 "protein sequestering activity" and GO:0035591 "signaling adaptor activity" confirmed. All other GO IDs taken directly from existing (pre-validated) annotations.
+Cached full-text checked for grounding: PMID:29343546, 29507397, 31857589, 37306101, 37802024 (phase separation / p62 bodies), 26344566 (pexophagy), 31281713 (TLR4 negative regulation), 27368102 (endosome organization), 36221902/30612879 (xenophagy/inflammasome), 34893540 (N-terminal Cys oxygen/oxidative-stress sensor → ubiquitin reader/adaptor), 20890124/20457763 (mitophagy nuance), 34471133 (reconstitution of ubiquitin condensate / phagophore assembly site).
+Abstract-only (defer to curators, no REMOVE of experimental): 17580304, 20452972, 12857745, 22017874, 23274085, 26403645, 27498865, 25127057, 8650207.
+Action policy applied:
+- Core MF (ACCEPT, IDA): GO:0140036 ubiquitin-modified protein reader, GO:0070530 K63-polyUb-dependent binding, GO:0043130 ubiquitin binding, GO:0030674 protein-macromolecule adaptor, GO:0140693 molecular condensate scaffold, GO:0140311 protein sequestering. GO:0042802 identical protein binding = genuine PB1 oligomerization, KEEP_AS_NON_CORE.
+- Core BP (ACCEPT): GO:0035973 aggrephagy, GO:0016236 macroautophagy, GO:0071211 protein targeting to vacuole in autophagy, GO:0140694 membraneless organelle assembly, GO:0030163 protein catabolic process, GO:0000425 pexophagy.
+- Localizations: GO:0005776 autophagosome, GO:0005829 cytosol ACCEPT (core sites of action); the many Reactome cytosol TAS duplicates KEEP_AS_NON_CORE (one representative ACCEPT). Lysosome/late endosome/ER/PML body/inclusion body/aggresome = real but non-core compartments KEEP_AS_NON_CORE.
+- Signaling scaffold (NF-kB, NRF2/KEAP1, TLR4): ACCEPT direct experimental MF/BP, KEEP_AS_NON_CORE broad/indirect.
+- bare protein binding GO:0005515 (~55 IPI): KEEP_AS_NON_CORE (uninformative but experimental — never REMOVE).
+- Ensembl ortholog-transfer IEA GO_REF:0000107 (temperature homeostasis, ischemia, brown fat, energy homeostasis, synapse/glutamatergic synapse, sperm midpiece, LTP, mitochondrion, Lewy body): KEEP_AS_NON_CORE (mouse-grounded, peripheral). Mitochondrion IEA over-broad but plausible.
+- GO:0043065 apoptosis (Reactome NRIF TAS), GO:0045944 pos reg transcription (Reactome NRIF), GO:0046578 reg Ras signaling (NAS): indirect/historical, KEEP_AS_NON_CORE.
