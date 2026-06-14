@@ -1,8 +1,9 @@
 # Photosynthesis — concept notes
 
 > Concept-level research notes for the AI gene review project. These are manually
-> authored notes (the automated `term-deep-research` providers were not available in
-> this environment — the run produced an empty placeholder report and was discarded).
+> authored notes that complement the automated `term-deep-research` report in
+> `photosynthesis-deep-research-falcon.md` (see provenance log — the first run failed on a
+> template bug; after fixing it the falcon provider returned a full report).
 > Provenance is recorded inline as `[PMID:xxxx "supporting text"]`. Identifiers are
 > verified against the local GO term cache (`cache/go/terms.csv`), GOlr, UniProt, and
 > PubMed; gene accessions that are not yet verified are explicitly marked.
@@ -204,3 +205,12 @@ According to PubMed:
   were written instead, with GO IDs verified against `cache/go/terms.csv` + GOlr and the
   four key references verified via PubMed. Gene reviews deferred per the chosen scope
   ("just the concept writeup"); candidate genes tracked in `projects/PHOTOSYNTHESIS.md`.
+- 2026-06-14: After fixing the template bug, re-ran `just term-deep-research-falcon
+  "Photosynthesis"` — the query now renders correctly and the provider returned a full
+  ~356-line report (41 citations) saved as `photosynthesis-deep-research-falcon.md` with
+  artifacts under `photosynthesis-deep-research-falcon_artifacts/`. That report's
+  module-by-module gene table (across *Arabidopsis*, *Synechocystis*, *Chlamydomonas*) is
+  broader than these manual notes — including PSII accessory subunits (PsbR, cyt b559),
+  cyclic electron flow (PGR5/PGRL1, NDH), state transitions (STN7), Rubisco repair (CbbY),
+  and the algal CCM (LCIA/LCIB/CAH3, carboxysome/pyrenoid). Note: the report's citations
+  are machine-generated and not yet manually adjudicated.

@@ -119,9 +119,10 @@ According to PubMed (verified):
 # STATUS
 
 ## Concept writeup
-- [x] `terms/photosynthesis/photosynthesis-notes.md` created (manual notes; deep-research provider unavailable)
+- [x] `terms/photosynthesis/photosynthesis-notes.md` created (manual notes)
 - [x] GO representation verified against `cache/go/terms.csv` + GOlr
 - [x] Key references PubMed-verified
+- [x] Automated deep research `photosynthesis-deep-research-falcon.md` (falcon; generated after the template fix; machine citations not yet manually adjudicated)
 
 ## Gene reviews (deferred — first pass is concept writeup only)
 ### Already seeded
