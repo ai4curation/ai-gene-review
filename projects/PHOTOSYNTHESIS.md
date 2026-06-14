@@ -123,6 +123,7 @@ According to PubMed (verified):
 - [x] GO representation verified against `cache/go/terms.csv` + GOlr
 - [x] Key references PubMed-verified
 - [x] Automated deep research `photosynthesis-deep-research-falcon.md` (falcon; generated after the template fix; machine citations not yet manually adjudicated)
+- [x] Structured module curated: `modules/photosynthesis.yaml` (validates against `ModuleReview`; light reactions + CBB cycle + photoprotection/CCM/pigment supply; GO IDs and UniProt members grounded only where verified)
 
 ## Gene reviews (deferred — first pass is concept writeup only)
 ### Already seeded
