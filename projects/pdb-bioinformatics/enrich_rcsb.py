@@ -77,18 +77,39 @@ def main():
     gene_rows = list(csv.DictReader(open(DATA / "pdb_gene_summary.tsv"), delimiter="\t"))
     inv_rows = list(csv.DictReader(open(DATA / "pdb_inventory.tsv"), delimiter="\t"))
 
-    # candidate genes: no experimental MF GO
-    cand = {(r["organism"], r["gene"]) for r in gene_rows if int(r["exp_mf"]) == 0}
+    CAP = 15  # max PDB entries queried per gene (rollup only needs "any structure with X")
+
+    # Candidate genes are the union of three prioritization cuts, each tagged with a reason:
+    #   dark_mf   - no experimental molecular-function GO (a structure adds the most)
+    #   euk       - eukaryotic and sparsely characterized (<=2 experimental MF terms)
+    #   contested - review disputed a catalytic MF (pseudo-enzyme question; structure decisive)
+    reasons = defaultdict(set)
+    for r in gene_rows:
+        key = (r["organism"], r["gene"])
+        if int(r["exp_mf"]) == 0:
+            reasons[key].add("dark_mf")
+        if int(r["is_eukaryote"]) and int(r["exp_mf"]) <= 2:
+            reasons[key].add("euk")
+        if int(r["n_contested_cat_mf"]) > 0:
+            reasons[key].add("contested")
+    cand = set(reasons)
+
     ids_for = defaultdict(list)
-    pdb_to_gene = {}
     for r in inv_rows:
         key = (r["organism"], r["gene"])
         if key in cand:
             ids_for[key].append(r["pdb_id"])
-            pdb_to_gene[r["pdb_id"]] = key
+    pdb_to_gene = {}
+    for key, ids in ids_for.items():
+        for pid in ids[:CAP]:
+            pdb_to_gene[pid] = key
 
     all_ids = sorted(set(pdb_to_gene))
-    print(f"Candidate genes (no exp MF GO): {len(cand)}; PDB entries to query: {len(all_ids)}")
+    print(f"Candidate genes: {len(cand)} "
+          f"(dark_mf={sum('dark_mf' in v for v in reasons.values())}, "
+          f"euk={sum('euk' in v for v in reasons.values())}, "
+          f"contested={sum('contested' in v for v in reasons.values())}); "
+          f"PDB entries to query (cap {CAP}/gene): {len(all_ids)}")
 
     results = {}
     B = 50
@@ -189,17 +210,19 @@ def main():
         pmids = [f'PMID:{pid}' for pid, _ in papers[:3]]
         grows.append({
             "organism": key[0], "gene": key[1], "uniprot": g["uniprot"],
-            "is_eukaryote": int(key[0] in EUK),
-            "length": g["length"], "n_pdb": d["n_pdb"],
+            "is_eukaryote": int(g.get("is_eukaryote") or (key[0] in EUK)),
+            "candidate_reason": ",".join(sorted(reasons[key])),
+            "length": g["length"], "n_pdb": g["n_pdb"], "n_pdb_sampled": d["n_pdb"],
             "max_coverage_frac": g["max_coverage_frac"],
             "best_resolution_A": g["best_resolution_A"],
-            "exp_total": g["exp_total"],
+            "exp_mf": g["exp_mf"], "exp_total": g["exp_total"],
             "pdb_with_cofactor": d["with_cofactor"],
             "pdb_with_ligand": d["with_ligand"],
             "pdb_with_complex": d["with_complex"],
             "has_nucleic_acid": d["has_nucleic"],
             "cofactors": ",".join(sorted(d["cofactors"])),
             "ligands": ",".join(sorted(d["ligands"])[:25]),
+            "contested_cat_mf": g.get("contested_cat_mf", ""),
             "structure_papers": ";".join(pmids),
         })
 
@@ -221,10 +244,12 @@ def main():
                               -int(r["n_pdb"])))
 
     gout = DATA / "pdb_gene_enriched.tsv"
-    fields = ["priority_score", "organism", "gene", "uniprot", "is_eukaryote", "length",
-              "n_pdb", "max_coverage_frac", "best_resolution_A", "exp_total",
+    fields = ["priority_score", "organism", "gene", "uniprot", "is_eukaryote",
+              "candidate_reason", "length", "n_pdb", "n_pdb_sampled", "max_coverage_frac",
+              "best_resolution_A", "exp_mf", "exp_total",
               "pdb_with_cofactor", "pdb_with_ligand", "pdb_with_complex",
-              "has_nucleic_acid", "cofactors", "ligands", "structure_papers"]
+              "has_nucleic_acid", "cofactors", "ligands", "contested_cat_mf",
+              "structure_papers"]
     with gout.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
         w.writeheader()
@@ -232,17 +257,18 @@ def main():
 
     print(f"\nWrote {out}")
     print(f"Wrote {gout}")
-    print("\nTop 20 (overall):")
-    for r in grows[:20]:
-        tag = "EUK" if r["is_eukaryote"] else "   "
-        print(f'  {r["priority_score"]:>5}  {tag} {r["organism"]:7s} {r["gene"]:14s} '
-              f'cof[{r["pdb_with_cofactor"]}] lig[{r["pdb_with_ligand"]}] '
-              f'cplx[{r["pdb_with_complex"]}]  {r["cofactors"][:24]:24s} {r["structure_papers"]}')
-    print("\nTop 20 EUKARYOTIC:")
-    for r in [x for x in grows if x["is_eukaryote"]][:20]:
+    print("\nTop 20 EUKARYOTIC (by score):")
+    for r in [x for x in grows if int(x["is_eukaryote"])][:20]:
         print(f'  {r["priority_score"]:>5}  {r["organism"]:7s} {r["gene"]:14s} '
-              f'cof[{r["pdb_with_cofactor"]}] lig[{r["pdb_with_ligand"]}] '
-              f'cplx[{r["pdb_with_complex"]}]  {r["cofactors"][:24]:24s} {r["structure_papers"]}')
+              f'[{r["candidate_reason"]:>18s}] cof[{r["pdb_with_cofactor"]}] '
+              f'lig[{r["pdb_with_ligand"]}] cplx[{r["pdb_with_complex"]}]  '
+              f'{r["cofactors"][:20]:20s} {r["structure_papers"][:24]}')
+    contested = [x for x in grows if "contested" in x["candidate_reason"]]
+    print(f"\nTop 20 CONTESTED-CATALYTIC ({len(contested)} total; structure adjudicates):")
+    for r in contested[:20]:
+        cof = "COFACTOR-PRESENT" if int(r["pdb_with_cofactor"]) else "no-cofactor-seen"
+        term = r["contested_cat_mf"].split("|")[1] if "|" in r["contested_cat_mf"] else ""
+        print(f'  {r["organism"]:7s} {r["gene"]:12s} {cof:17s} disputed: {term[:34]}')
 
 
 if __name__ == "__main__":

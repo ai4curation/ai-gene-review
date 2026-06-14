@@ -41,11 +41,24 @@ Computed offline from the cached UniProt records (`*-uniprot.txt`, `DR PDB` cros
 |--------|------:|
 | Genes with ≥1 deposited PDB structure | **949** / 2529 |
 | Total deposited PDB entries | **13,415** |
+| **Eukaryotic** genes with a structure | 815 |
 | Genes with a structure but **no experimental GO at all** | 73 |
 | Genes with a structure but **no experimental molecular-function GO** | 115 |
+| Genes where a review **disputed a catalytic MF** (REMOVE/over-annotated) | 130 |
 
 Top organisms by genes-with-structure: human (588), yeast (65), ARATH (53), BPT4 (32),
 mouse (30), ECOLI (23), PSEPK (19), SCHPO (17), worm (17), rat (15).
+
+### Three prioritization cuts
+
+`enrich_rcsb.py` enriches the union of three candidate cuts (281 genes; each tagged in the
+`candidate_reason` column), so the priority list is no longer prokaryote-dominated:
+
+| Cut | Definition | Genes | What structure adds |
+|-----|------------|------:|---------------------|
+| `dark_mf` | no experimental molecular-function GO | 115 | grounds a first experiment-grade MF |
+| `euk` | eukaryotic **and** ≤2 experimental MF terms | 103 | sharpens an IEA term / pins complex membership |
+| `contested` | review marked a **catalytic** MF `REMOVE`/over-annotated | 130 | adjudicates the disputed activity (pseudo-enzyme / over-general / wrong-specific) |
 
 Full inventory: `pdb-bioinformatics/data/pdb_inventory.tsv` (per entry) and
 `pdb_gene_summary.tsv` (per gene).
@@ -89,30 +102,59 @@ RCSB per-entry **structure-paper PMIDs** and an `is_eukaryote` flag).
 
 ## Eukaryotic candidates (so they aren't drowned out)
 
-The prokaryote/phage genomes dominate the strict "no experimental MF" cut, so here is the
-eukaryotic slice explicitly. 36 eukaryotic genes have a structure but no experimental MF GO;
-the richest (cofactor/ligand/complex-bearing) are:
+Broadening beyond the strict "no experimental MF" cut to `euk` + `contested` surfaces a
+much richer eukaryotic slice (815 eukaryotic genes have a structure). Top eukaryotic
+candidates by score, with the cut(s) that flagged them:
 
-| # | Gene | Org | UniProt | nPDB | cof | lig | cplx | cofactors/ligands | structure papers |
-|---|------|-----|---------|----:|:--:|:--:|:--:|---|---|
-| 1 | psaC | CHLRE | Q00914 | 17 | ✓ | ✓ | ✓ | FES,SF4 (Photosystem I) | PMID:36979472 |
-| 2 | rbcL | 9POAL | P0C512 | 3 | ✓ | ✓ | ✓ | NDP (RuBisCO) | PMID:22609438 |
-| 3 | cbh1 | HYPJE | P62694 | 48 | ✓ | ✓ |  | (cellobiohydrolase Cel7A) | PMID:35997626 |
-| 4 | XYL1 | PICST | P31867 | 2 | ✓ | ✓ |  | NADP (xylose reductase) | PMID:30487522 |
-| 5 | IDH3B | human | O43837 | 9 | ✓ | ✓ | ✓ | NAD,ADP (NAD-IDH β) | PMID:36375638;PMID:31515270 |
-| 6 | ATAD1 | human | Q8NBU5 | 2 | ✓ | ✓ | ✓ | ATP,ADP (AAA+ extractase) | PMID:35550246 |
-| 7 | COX6B1 | human | P14854 | 1 | ✓ | ✓ | ✓ | CU,ZN (complex IV) | PMID:30030519 |
-| 8 | CFAP61 | human | Q8NHU2 | 1 | ✓ | ✓ | ✓ | GDP,GTP (axoneme) | PMID:37258679 |
-| 9 | SPR | human | P35270 | 14 | ✓ | ✓ |  | NADP,ZN (sepiapterin red.) | PMID:31244106 |
-| 10 | COI1 | ARATH | O04197 | 3 |  | ✓ | ✓ | JA-Ile,InsP (JA receptor) | PMID:20927106 |
-| 11 | TOMM5 | human | Q8N4H5 | 11 |  | ✓ | ✓ | (TOM import complex) | PMID:33846286 |
-| 12 | Ndufb1 | mouse | P0DN34 | 31 | ✓ | ✓ | ✓ | many (respiratory SC) | PMID:38177503 |
+| # | Gene | Org | UniProt | reason | nPDB | cof | lig | cplx | cofactors/ligands | paper |
+|---|------|-----|---------|--------|-----:|:--:|:--:|:--:|---|---|
+| 1 | psaC | CHLRE | Q00914 | dark_mf,euk | 17 | ✓ | ✓ | ✓ | FES,SF4 (Photosystem I) | PMID:36979472 |
+| 2 | rbcL | 9POAL | P0C512 | dark_mf,euk | 3 | ✓ | ✓ | ✓ | NDP (RuBisCO) | PMID:22609438 |
+| 3 | PNO1 | yeast | Q99216 | euk | 28 | ✓ | ✓ | ✓ | GTP,ZN (ribosome assembly) | PMID:33326748 |
+| 4 | RPS3 | human | P23396 | contested | 133 | ✓ | ✓ | ✓ | ZN (ribosomal / endonuclease?) | PMID:29875412 |
+| 5 | NAA15 | human | Q9BXJ9 | contested | 10 | ✓ | ✓ | ✓ | AcCoA (NatA auxiliary) | PMID:40639378 |
+| 6 | HEN1 | ARATH | Q9C5Q8 | contested,euk | 1 | ✓ | ✓ | ✓ | SAH (RNA methyltransferase) | PMID:19812675 |
+| 7 | TERT | human | O14746 | contested | 17 | ✓ | ✓ | ✓ | (telomerase RT) | PMID:27903649 |
+| 8 | cbh1 | HYPJE | P62694 | contested,dark_mf,euk | 48 | ✓ | ✓ |  | cellobiohydrolase Cel7A | PMID:26307003 |
+| 9 | XYL1 | PICST | P31867 | contested,dark_mf,euk | 2 | ✓ | ✓ |  | NADP (xylose reductase) | PMID:30487522 |
+| 10 | UPF1 | human | Q92900 | contested | 11 | ✓ | ✓ | ✓ | ATP,Zn (NMD helicase) | PMID:38709891 |
+| 11 | BRCA2 | human | P51587 | contested | 14 | ✓ | ✓ | ✓ | ATP (HR mediator) | PMID:40441151 |
+| 12 | DOT1 | yeast | Q04089 | contested | 5 | ✓ | ✓ | ✓ | SAM/SAH (H3K79 MTase) | PMID:33479126 |
+| 13 | SIRT2 | human | Q8IXJ6 | contested | 60 | ✓ | ✓ | ✓ | NAD,Zn (deacetylase) | PMID:28286128 |
 
-These span the most informative structural contexts: **catalytic with cofactor** (IDH3B,
-XYL1, SPR), **mechanism from a bound substrate/product** (ATAD1, COI1), and **complex
-membership** (psaC, COX6B1, TOMM5, Ndufb1, CFAP61). For human genes the structure typically
-sharpens an existing IEA term or pins **complex membership**, rather than revealing function
-from scratch.
+The verified flagships (IDH3B, ATAD1, XYL1, psaC, COX6B1, SPR, COI1) are written up in
+`pdb-bioinformatics/STRUCTURE_PAPERS.md`. For human genes the structure typically sharpens an
+existing IEA term or pins **complex membership** rather than revealing function from scratch.
+
+## Contested catalytic functions (structure adjudicates)
+
+130 genes with a structure have a review that marked a **catalytic** molecular function as
+`REMOVE` or over-annotated. A deposited structure is decisive here — it shows whether the
+cofactor/active-site pocket is actually present. **Two distinct cases (don't conflate them):**
+
+- **Over-general parent** marked over-annotated (e.g. DOT1/SIRT2 "transferase activity",
+  XYL1/pobA "oxidoreductase activity"): the bound cofactor *confirms* catalysis and the
+  structure points to the **specific** child term that should replace the generic one.
+- **Genuinely-wrong specific** activity marked `REMOVE` (e.g. ARATH **HEN1** "peptidyl-prolyl
+  isomerase" — but bound **SAH** argues for its real RNA-methyltransferase activity; human
+  **CASP3** tagged "aspartic-type endopeptidase" when it is a cysteine protease; **BRCA2**
+  "histone acetyltransferase"): the structure/cofactor adjudicates against the wrong call.
+
+| Gene | Org | disputed catalytic MF | action | cofactor present? | paper |
+|------|-----|-----------------------|--------|:-----------------:|-------|
+| HEN1 | ARATH | peptidyl-prolyl cis-trans isomerase | REMOVE | **SAH** (→ methyltransferase) | PMID:19812675 |
+| CASP3 | human | aspartic-type endopeptidase | REMOVE | (cysteine protease) | — |
+| mcrA | METAC | transferase activity (generic) | REMOVE | F430,SAM,Fe-S | PMID:39772843 |
+| HAP1 | human | deoxyribonuclease (pyrimidine dimer) | REMOVE | Mn (AP endonuclease) | PMID:25251148 |
+| BRCA2 | human | histone acetyltransferase | REMOVE | ATP | PMID:40441151 |
+| DOT1 | yeast | methyltransferase activity (generic) | over-annotated | SAM/SAH | PMID:33479126 |
+| SIRT2 | human | transferase activity (generic) | over-annotated | NAD,Zn | PMID:28286128 |
+| pcaF | PSEPK | acyltransferase activity (generic) | over-annotated | CoA | PMID:32647822 |
+| XYL1 | PICST | oxidoreductase activity (generic) | REMOVE | NADP | PMID:30487522 |
+
+Full list with all disputed terms per gene: `pdb_gene_enriched.tsv` (`candidate_reason`
+contains `contested`; `contested_cat_mf` lists the term/label/action). **As always, the
+disputed-term mapping and the structure PMID must both be verified before use.**
 
 ## Grounding in the structure papers
 
