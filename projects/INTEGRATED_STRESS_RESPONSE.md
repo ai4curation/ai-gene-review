@@ -1,3 +1,7 @@
+---
+title: "Integrated Stress Response (ISR) Project"
+---
+
 # Integrated Stress Response (ISR) Project
 
 ## Overview

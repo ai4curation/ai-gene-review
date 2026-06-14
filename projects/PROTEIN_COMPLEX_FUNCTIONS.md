@@ -1,4 +1,5 @@
 ---
+title: "Protein Complex Functions Project"
 species: [human]
 ---
 
@@ -576,3 +577,21 @@ transfer interface). The SCO1/SCO2 direct-function call should remain literature
 biochemistry-driven, with structure prediction confined to small-domain triage. Result files:
 `RESULTS_MODEL_A_ESMFOLD2.md`, `RESULTS_MODEL_A_CU_ESMFOLD2.md`, `RESULTS_MODEL_A_1CU_ESMFOLD2.md`,
 `RESULTS_MODEL_C_FULL_ESMFOLD2.md`, `RESULTS_COA6_ESMFOLD2.md`.
+
+## 2026-06-13 BGC obligate-heterodimer worked examples (BGC project)
+
+Three reviewed obligate heterodimers from `BGC.md` are clean worked examples of the
+catalytic-member attribution principle (function on the catalytic subunit with `enables`;
+the required non-catalytic partner takes `contributes_to`, plus the shared complex CC):
+
+| Complex | Catalytic member (`enables` MF) | Non-catalytic partner | Partner's role |
+|---|---|---|---|
+| **PqsBC** (`genes/PSEAE/pqsC`, `pqsB`) | PqsC — EC 2.3.1.230 (active site Cys-129/His-269) | PqsB | Required FabH-fold subunit, no active site → `contributes_to acyltransferase activity` |
+| **Act KS-CLF** (`genes/STRCO/actI-ORF1`, `actI-ORF2`) | KSα/ActI-ORF1 — polyketide synthase activity (GO:0016218) | KSβ/CLF | Chain-length factor, "no active site"; proposed `polyketide chain length factor activity` |
+| **EryCII-EryCIII** (`genes/SACEN/eryCIII`, `eryCII`) | EryCIII — hexosyltransferase (EC 2.4.1.278) | EryCII | Heme-less P450 pseudoenzyme → `enzyme activator activity` (GO:0008047) + `protein stabilization` |
+
+All three were over-annotated in GOA with the catalytic MF on the non-catalytic partner
+(domain-signature propagation); corrected per the "function on the catalytic member" guideline.
+EryCII is notable: rather than `contributes_to` the GT activity, the partner has its **own** MF
+(allosteric activator), and full GT activity *requires* it. Cross-refs: `PSEUDOENZYMES.md`,
+`OVER_ANNOTATION_PATTERNS.md` (patterns 7-8).

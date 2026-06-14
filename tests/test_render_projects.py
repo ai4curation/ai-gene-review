@@ -230,8 +230,31 @@ class TestReplaceGeneSymbols:
         index = {"GPX4": ["human"]}
         content = "[GPX4](https://example.org) is already linked."
         result, warnings = replace_gene_symbols(content, index)
-
         assert result == content
+        assert warnings == []
+
+    def test_short_symbols_not_auto_linked(self):
+        """Very short symbols must not auto-link in prose.
+
+        Such symbols flood prose with false links; they should only be linked
+        via explicit <gene> tags.
+        """
+        index = {
+            "2": ["BPT4"],
+            "10": ["BPT4"],
+            "E": ["BPT4"],
+            "t": ["BPT4"],
+            "AG": ["ARATH"],
+            "GPX4": ["human"],
+        }
+        content = "There are 2 mappings and 10 gaps; mph(E) don't trust McArthur AG; GPX4 is a gene."
+        result, warnings = replace_gene_symbols(content, index)
+        assert "genes/BPT4/2/" not in result
+        assert "genes/BPT4/10/" not in result
+        assert "genes/BPT4/E/" not in result
+        assert "genes/BPT4/t/" not in result
+        assert "genes/ARATH/AG/" not in result
+        assert "[GPX4]" in result  # longer symbols still link
         assert warnings == []
 
     def test_symbol_after_slash_not_linked(self):
@@ -335,6 +358,17 @@ class TestLinkUniprotCodeSpans:
         content = "`genes/9CAUD/darB/darB-ai-review.yaml`"
         assert link_uniprot_code_spans(content) == content
 
+    def test_does_not_link_non_accession_code_span(self):
+        """Enum-like all-caps code spans are not UniProt accessions."""
+        content = "`MODIFY` and `VERIFIED` are enum values; `Q9G044` is an accession."
+        result = link_uniprot_code_spans(content)
+
+        assert "`MODIFY`" in result
+        assert "`VERIFIED`" in result
+        assert "uniprotkb/MODIFY" not in result
+        assert "uniprotkb/VERIFIED" not in result
+        assert "[Q9G044](https://www.uniprot.org/uniprotkb/Q9G044/entry)" in result
+
 
 class TestRenderProject:
     """Tests for render_project function."""
@@ -380,6 +414,41 @@ class TestRenderProject:
         html_content = output_path.read_text()
         assert "Test Project" in html_content
         assert "GPX4" in html_content
+
+    def test_render_subfolder_project_mirrors_structure(self, tmp_path):
+        """A FOO/bar.md supporting page renders to FOO/bar.html with deeper genes path."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+
+        projects_dir = tmp_path / "projects"
+        (projects_dir / "FOO").mkdir(parents=True)
+        md_file = projects_dir / "FOO" / "bar.md"
+        md_file.write_text("# Sub Page\n\nGPX4 is important.")
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(
+            "<!DOCTYPE html><html><head><title>{{ title }}</title></head>"
+            "<body>{{ content | safe }}</body></html>"
+        )
+
+        output_dir = tmp_path / "pages" / "projects"
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=output_dir,
+            genes_dir=genes_dir,
+            template_path=template_file,
+            projects_dir=projects_dir,
+        )
+
+        # Output mirrors the projects/ subfolder structure
+        assert output_path == output_dir / "FOO" / "bar.html"
+        assert output_path.exists()
+
+        # Gene links resolve from one level deeper than a top-level project page
+        html_content = output_path.read_text()
+        assert "../../../genes/human/GPX4" in html_content
 
     def test_render_with_frontmatter(self, tmp_path):
         """Render project with frontmatter species hints."""
@@ -504,6 +573,40 @@ ATG7 is involved in autophagy."""
         assert 'href="https://www.uniprot.org/uniprotkb/P06491/entry"' in html_content
         assert ">MCP/P06491</a>" in html_content
         assert warnings == []
+
+
+class TestRenderProjectsTable:
+    """Tests for the derived all-projects table."""
+
+    def test_table_lists_projects_with_metadata(self, tmp_path):
+        from ai_gene_review.render_projects import render_projects_table
+
+        projects = tmp_path / "projects"
+        (projects / "ALPHA").mkdir(parents=True)
+        (projects / "ALPHA" / "alpha-pathway.md").write_text("# Alpha pathway")
+        (projects / "ALPHA.md").write_text(
+            "---\ntitle: Alpha Project\nspecies: [human, mouse]\nstatus: active\n---\n# Alpha\n"
+        )
+        (projects / "BETA.md").write_text("# Beta heading only\n")
+        # README and supporting subfolder files must be excluded as projects
+        (projects / "README.md").write_text("---\ntitle: Projects\n---\n# Projects\n")
+
+        out = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out")
+        assert out.name == "all-projects.html"
+        html = out.read_text()
+
+        # Both projects listed, README excluded
+        assert ">Alpha Project<" in html
+        assert 'href="ALPHA.html"' in html
+        assert 'href="BETA.html"' in html
+        assert 'href="README.html"' not in html  # README not a project row
+        # Metadata surfaced from frontmatter
+        assert "human, mouse" in html
+        assert "active" in html
+        # Supporting-doc count from ALPHA/ folder
+        assert "1 file" in html
+        # Title falls back to first heading when frontmatter title is absent
+        assert "Beta heading only" in html
 
 
 class TestIntegration:

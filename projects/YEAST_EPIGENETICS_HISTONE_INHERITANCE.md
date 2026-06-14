@@ -1,3 +1,7 @@
+---
+title: "Yeast Epigenetics & Histone Inheritance"
+---
+
 # Yeast Epigenetics & Histone Inheritance
 
 ## Overview

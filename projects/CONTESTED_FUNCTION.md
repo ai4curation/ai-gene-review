@@ -1,3 +1,7 @@
+---
+title: "Contested Function Project"
+---
+
 # Contested Function Project
 
 ## Overview
@@ -60,6 +64,15 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 | Species | Gene | Domain | Contested Function | Status |
 |---------|------|--------|-------------------|--------|
 | pombe | Epe1 | JmjC | histone demethylase activity | COMPLETE |
+| SACEN | eryCII | cytochrome P450 | monooxygenase activity (heme-less; GT activator) | COMPLETE |
+| PSEAE | pqsB | FabH/KAS-III | acyltransferase activity (no active site; PqsBC partner) | COMPLETE |
+| STRCO | actI-ORF2 | β-ketoacyl synthase | acyltransferase activity (chain-length factor, no active site) | COMPLETE |
+
+> **Finding-level disputes.** Contested *claims within an otherwise sound paper* can now be
+> recorded with the schema's `finding_review` (`finding_status: DISPUTED`/`OVERTURNED` +
+> `superseded_by`), rather than condemning the whole reference. Example: in `genes/SACEN/eryCIII/`
+> the 2004 claim that EryCIII is highly active on its own (PMID:15303858) is marked DISPUTED,
+> superseded_by the 2012 structure study (PMID:22056329) showing EryCIII is inactive without EryCII.
 
 ### Priority 2: Suspected Pseudo-enzymes
 (To be identified through literature and bioinformatics)

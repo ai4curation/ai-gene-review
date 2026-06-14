@@ -1,3 +1,7 @@
+---
+title: "Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement"
+---
+
 # Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement
 
 ## Overview

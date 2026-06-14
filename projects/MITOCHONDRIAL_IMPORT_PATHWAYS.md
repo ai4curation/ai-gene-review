@@ -1,3 +1,7 @@
+---
+title: "Mitochondrial Import Pathways Project"
+---
+
 # Mitochondrial Import Pathways Project
 
 ## Overview

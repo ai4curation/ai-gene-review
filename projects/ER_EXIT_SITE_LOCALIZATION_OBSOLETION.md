@@ -1,3 +1,7 @@
+---
+title: "Protein Localization to ER Exit Site — Obsoletion"
+---
+
 # Protein Localization to ER Exit Site — Obsoletion
 
 ## Overview

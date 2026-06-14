@@ -1,3 +1,7 @@
+---
+title: "Contractile Vacuole Tethering — Obsoletion & Replacement (GO:0140025)"
+---
+
 # Contractile Vacuole Tethering — Obsoletion & Replacement (GO:0140025)
 
 ## Overview

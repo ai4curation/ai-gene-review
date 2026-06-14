@@ -1,3 +1,7 @@
+---
+title: "Rare Earth Element (REE) Extraction Pathways (Biological Systems)"
+---
+
 # Rare Earth Element (REE) Extraction Pathways (Biological Systems)
 
 Concepts for engineered pathways to sense, mobilize, capture, concentrate, and release rare earth elements (REEs) and associated strategic metals (Co, Ni, Mn) using microbial or plant chassis.

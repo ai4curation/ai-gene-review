@@ -213,8 +213,16 @@ def replace_gene_symbols(
         return link
 
     # Build regex pattern for all known symbols
-    # Sort by length (longest first) to avoid partial matches
-    symbols = sorted(symbol_index.keys(), key=len, reverse=True)
+    # Sort by length (longest first) to avoid partial matches.
+    # Exclude very short symbols from prose auto-linking. One- and two-character gene
+    # names are common enough in this repository to be valid review folders, but they
+    # also collide with ordinary text such as "don't", author initials, and allele
+    # suffixes. Link those through explicit <gene> tags instead.
+    symbols = sorted(
+        (s for s in symbol_index.keys() if len(s) >= 3 and not s.isdigit()),
+        key=len,
+        reverse=True,
+    )
 
     if not symbols:
         return content, warnings
@@ -326,9 +334,13 @@ def link_uniprot_code_spans(
     where there is no local AIGR gene-review page. Linking them makes the
     sampled evidence inspectable without confusing them with local reviews.
     """
+    accession = (
+        r"(?:[OPQ][0-9][A-Z0-9]{3}[0-9]"
+        r"|[A-NR-Z][0-9][A-Z][A-Z0-9]{2}[0-9](?:[A-Z][A-Z0-9]{2}[0-9])?)"
+    )
     pattern = re.compile(
-        r"`(?:(?P<label>[^`/\s]+/(?P<accession>[A-Za-z0-9]{6,10}))"
-        r"|(?P<bare_accession>[A-Z0-9]{6,10}))`"
+        rf"`(?:(?P<label>[^`/\s]+/(?P<accession>{accession}))"
+        rf"|(?P<bare_accession>{accession}))`"
     )
 
     def replace_match(match: re.Match) -> str:
@@ -466,14 +478,25 @@ def render_project(
     output_dir: Path = Path("pages/projects"),
     genes_dir: Path = Path("genes"),
     template_path: Optional[Path] = None,
+    projects_dir: Optional[Path] = None,
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
+
+    Projects follow the ``FOO.md`` + ``FOO/`` convention: a project is a
+    top-level markdown file, optionally accompanied by a same-named folder
+    holding supporting material (sub-pages, data, scripts). When ``projects_dir``
+    is supplied, any subfolder structure is mirrored into ``output_dir`` so that
+    ``FOO/bar.md`` renders to ``FOO/bar.html`` and relative links between a
+    project page and its supporting pages resolve unchanged.
 
     Args:
         md_path: Path to the markdown file
         output_dir: Directory for output HTML files
         genes_dir: Path to the genes directory for building symbol index
         template_path: Optional path to custom Jinja2 template
+        projects_dir: Root projects directory; when given, the output path
+            mirrors ``md_path``'s location relative to it. When ``None`` the
+            file is rendered flat as ``output_dir/<stem>.html``.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -483,6 +506,20 @@ def render_project(
     """
     if not md_path.exists():
         raise FileNotFoundError(f"Markdown file not found: {md_path}")
+
+    # Determine the output path (mirroring any project subfolder structure) and
+    # how deep the rendered file sits, so links back to genes/ use the right
+    # number of ``../`` segments.
+    if projects_dir is not None and md_path.resolve().is_relative_to(
+        projects_dir.resolve()
+    ):
+        rel_path = md_path.resolve().relative_to(projects_dir.resolve())
+    else:
+        rel_path = Path(md_path.name)
+    subdir_depth = len(rel_path.parts) - 1
+    # From pages/projects/<...>.html the repo-root genes/ dir is two levels up,
+    # plus one extra level per project subfolder.
+    genes_base_path = "../" * (2 + subdir_depth) + "genes"
 
     # Read content and parse frontmatter
     raw_content = md_path.read_text()
@@ -501,7 +538,7 @@ def render_project(
     content, tag_warnings = replace_gene_tags(
         content,
         genes_dir=genes_dir,
-        base_path="../../genes",
+        base_path=genes_base_path,
     )
 
     # Replace gene symbols with links
@@ -509,7 +546,7 @@ def render_project(
         content,
         symbol_index,
         species_hints=species_hints,
-        base_path="../../genes",
+        base_path=genes_base_path,
     )
     warnings = tag_warnings + symbol_warnings
 
@@ -557,12 +594,91 @@ def render_project(
         frontmatter=frontmatter,
     )
 
-    # Create output directory and write file
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"{md_path.stem}.html"
+    # Create output directory and write file, mirroring subfolder structure
+    output_path = output_dir / rel_path.with_suffix(".html")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 
     return output_path, warnings
+
+
+def render_projects_table(
+    projects_dir: Path = Path("projects"),
+    output_dir: Path = Path("pages/projects"),
+    template_path: Optional[Path] = None,
+) -> Path:
+    """Render a derived table of all top-level projects from their frontmatter.
+
+    A "project" is a top-level ``projects/FOO.md`` page (``README.md`` and the
+    supporting material inside ``FOO/`` folders are excluded). For each project
+    the table surfaces metadata pulled from its YAML frontmatter (title, species,
+    status) plus a count of supporting markdown docs in its ``FOO/`` folder. This
+    complements the hand-curated ``index.html`` by guaranteeing every project is
+    listed.
+
+    Args:
+        projects_dir: Directory containing project markdown files
+        output_dir: Directory for output HTML files
+        template_path: Optional path to custom Jinja2 template
+
+    Returns:
+        Path to the written ``all-projects.html`` file.
+    """
+    if template_path is None:
+        module_dir = Path(__file__).parent
+        template_path = module_dir / "templates" / "projects_table.html.j2"
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template not found: {template_path}")
+
+    rows: List[Dict[str, Any]] = []
+    for md_path in sorted(projects_dir.glob("*.md")):
+        if md_path.name == "README.md":
+            continue
+        frontmatter, content = parse_frontmatter(md_path.read_text())
+
+        title = frontmatter.get("title")
+        if not title:
+            heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+            title = heading_match.group(1).strip() if heading_match else md_path.stem
+
+        species = frontmatter.get("species")
+        if isinstance(species, (list, tuple)):
+            species = ", ".join(str(s) for s in species)
+        elif species is not None:
+            species = str(species)
+
+        status = frontmatter.get("status")
+
+        # Count supporting markdown docs in the project's FOO/ folder, if any.
+        support_dir = projects_dir / md_path.stem
+        support_count = (
+            len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
+        )
+
+        rows.append(
+            {
+                "slug": md_path.stem,
+                "title": title,
+                "url": f"{md_path.stem}.html",
+                "species": species,
+                "status": status,
+                "support_count": support_count,
+            }
+        )
+
+    rows.sort(key=lambda r: str(r["title"]).casefold())
+
+    env = Environment(
+        loader=FileSystemLoader(template_path.parent),
+        autoescape=select_autoescape(["html", "j2"]),
+    )
+    template = env.get_template(template_path.name)
+    html = template.render(rows=rows)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "all-projects.html"
+    output_path.write_text(html)
+    return output_path
 
 
 def render_all_projects(
@@ -587,7 +703,9 @@ def render_all_projects(
         print(f"Projects directory not found: {projects_dir}")
         return output_paths, all_warnings
 
-    md_files = sorted(projects_dir.glob("*.md"))
+    # Render top-level project pages (FOO.md) and any supporting markdown that
+    # lives inside a project's FOO/ folder, mirroring the subfolder structure.
+    md_files = sorted(projects_dir.rglob("*.md"))
 
     if not md_files:
         print(f"No markdown files found in {projects_dir}")
@@ -601,6 +719,7 @@ def render_all_projects(
                 md_file,
                 output_dir=output_dir,
                 genes_dir=genes_dir,
+                projects_dir=projects_dir,
             )
             output_paths.append(output_path)
 
@@ -615,6 +734,11 @@ def render_all_projects(
             all_warnings.append(f"{md_file.name}: Error rendering - {e}")
 
     print(f"\nRendered {len(output_paths)}/{len(md_files)} projects to {output_dir}")
+
+    # Derived, metadata-driven table of all top-level projects.
+    table_path = render_projects_table(projects_dir, output_dir)
+    output_paths.append(table_path)
+    print(f"Rendered project table -> {table_path}")
 
     if all_warnings:
         print(f"\n{len(all_warnings)} warnings:")

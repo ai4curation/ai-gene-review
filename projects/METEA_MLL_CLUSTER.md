@@ -1,3 +1,7 @@
+---
+title: "Methylorubrum extorquens MLL Cluster Curation Project"
+---
+
 # Methylorubrum extorquens MLL Cluster Curation Project
 
 **Project Completion Date:** 2024-11-06

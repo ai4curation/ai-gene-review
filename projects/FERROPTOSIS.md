@@ -1,3 +1,7 @@
+---
+title: "Ferroptosis Regulation Project"
+---
+
 # Ferroptosis Regulation Project
 
 ## Overview

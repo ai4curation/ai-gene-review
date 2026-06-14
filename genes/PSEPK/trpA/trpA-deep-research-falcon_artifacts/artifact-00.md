@@ -1,0 +1,32 @@
+| Topic | System/Organism | Measurement (with units) | Value(s) | Notes/Context | Source (citation id) |
+|---|---|---|---|---|---|
+| TrpA reaction | Tryptophan synthase α-subunit (TrpA) | Catalyzed reaction | Indole-3-glycerol phosphate (IGP) → indole + D-glyceraldehyde-3-phosphate (G3P) | Retro-aldol cleavage step of tryptophan synthase; indole is transferred to TrpB through the intersubunit tunnel | (pqac-00000001) |
+| TrpA kinetics, standalone | ZmTrpA alone | kcat (s^-1); KM (μM); kcat/KM (M^-1 s^-1) | 0.005 ± 0.001; 1530 ± 327; 3.3 ± 0.8 | Very low standalone activity of α-subunit without TrpB partner | (pqac-00000000, pqac-00000025) |
+| TrpA kinetics, activated complex | ZmTrpA in complex with ZmTrpB | kcat (s^-1); KM (μM); kcat/KM (M^-1 s^-1) | 2.9 ± 0.10; 195 ± 17.9; 15,006 ± 1,430 | TrpB strongly activates TrpA catalysis allosterically | (pqac-00000000, pqac-00000025) |
+| TrpA activation by TrpB | ZmTrpA + ZmTrpB | Fold activation | 4515-fold | Reported increase in catalytic efficiency/activity upon complex formation | (pqac-00000000, pqac-00000025) |
+| Engineered standalone TrpA improvement | Designed ZmTrpA variant (ZmTrpASPM4-L6BX1) | Catalytic-efficiency improvement (fold) | 163-fold | Loop-dynamics engineering enhanced standalone IGP cleavage | (pqac-00000001) |
+| Indole-responsive regulation | PpTrpI/PPP_RS00425 from Pseudomonas putida KT2440 | Maximum induction (fold) | Up to 639.6-fold | Indole-inducible transcriptional system used to build whole-cell biosensors | (pqac-00000006, pqac-00000008, pqac-00000009) |
+| Indole-responsive regulation | PpTrpI/PPP_RS00425 from Pseudomonas putida KT2440 | Linear response range (mM indole) | ~0.4–5 mM | Reported linear dose-response window for biosensor output | (pqac-00000006, pqac-00000008) |
+| Indole-responsive regulation | E. coli host carrying PpTrpI/PPP_RS00425 | Dynamic range (fold); Km (mM) | 373.5-fold in LB, Km 1.207; 639.6-fold in minimal medium, Km 1.347 | Host-dependent biosensor performance | (pqac-00000008) |
+| Indole-responsive regulation | Cupriavidus necator host carrying PpTrpI/PPP_RS00425 | Dynamic range (fold); Km (mM) | 101.4-fold in LB, Km 1.819; 11.9-fold in minimal medium, Km 0.9055 | Growth inhibition observed at >=0.125 mM indole in C. necator | (pqac-00000008) |
+| Indole production limitation | Prior microbial indole production | Titer (mM) | ~5 mM | Mentioned as an upper level in prior work, likely limited by indole toxicity | (pqac-00000006) |
+| Anthranilate biomanufacturing | Pseudomonas putida KT2440 engineered strain | Maximum anthranilate titer | 1.54 ± 0.3 g/L (11.23 mM) | Best strain: ΔtrpDC with aroGD146N + trpES40FG overexpression under tryptophan-limited fed-batch conditions | (pqac-00000011, pqac-00000012, pqac-00000013) |
+| Anthranilate biomanufacturing | Pseudomonas putida KT2440 engineered strain | Shake-flask anthranilate titer | 0.25 ± 0.004 g/L (1.83 mM) | Initial production level before fed-batch optimization | (pqac-00000012) |
+| Anthranilate biomanufacturing | Pseudomonas putida KT2440 engineered strain | Alternative fed-batch anthranilate titer | 1.0 ± 0.07 g/L | Achieved with different glucose:tryptophan feed regime | (pqac-00000012, pqac-00000013) |
+| Anthranilate biomanufacturing | Pseudomonas putida KT2440 engineered strain | Product/substrate yield (g/g) | 3.6 ± 0.5% and 3.5 ± 0.5% | Reported for two fed conditions; yields were relatively similar | (pqac-00000013) |
+| Droplet evolution platform | Directed evolution of TrpB in droplets | Throughput (experiments/day) | Up to 10^7/day | Ultrahigh-throughput droplet microfluidic screening with aptamer readout | (pqac-00000015) |
+| Droplet evolution platform | Directed evolution of TrpB in droplets | Screened variants; improvement (fold) | ~100,000 variants screened; ~5-fold improved variants recovered | Demonstrated practical uHT enzyme evolution for tryptophan synthase | (pqac-00000015) |
+| Droplet evolution platform | Directed evolution of TrpB in droplets | Variants/day; sensor signal-to-noise | ≈100,000 variants/day; ≈6-fold S/N at 5 mM Trp | CS-10 aptamer sensor performed best and was compatible with droplet incubation | (pqac-00000016) |
+| De novo indole production | Engineered Corynebacterium glutamicum with trpA/IGL route | Indole titer (g/L) | ~0.7 g/L | Achieved with shikimate-producing background, trpB deletion, and in situ product removal | (pqac-00000018) |
+| De novo indole production | Engineered production with tributyrin extraction | Indole titer (g/L) | 1.4 g/L | In situ removal improved de novo indole accumulation | (pqac-00000018) |
+| De novo indole production | Engineered production with dibutyl sebacate sequestration | Indole titer (g/L) | 5.7 g/L | Higher final indole titer by mitigating toxicity/product loss | (pqac-00000018) |
+| Industrial indigo production | Biotransformation from 2 g/L L-Trp in 3000 L fermenter | Indigo titer (mg/L) | 911 mg/L | Demonstrates scale-up of indigo bioproduction | (pqac-00000018) |
+| Indigo production | Engineered system with fused FMO–tryptophanase | Indigo titer (g/L) | 1.7 g/L | Biotransformation route from L-tryptophan | (pqac-00000018) |
+| Indigo production | Engineered fed-batch process | Indigo titer (g/L) | 18 g/L | High-titer indigoid production reported in review | (pqac-00000019) |
+| Indican production | Engineered production system | Indican titer (g/L) | 2.9 g/L | Industrially relevant indole-derivative titer | (pqac-00000018) |
+| Indirubin production | Engineered production system | Indirubin titer (mg/L) | Up to 233 mg/L | Reported under cysteine supplementation | (pqac-00000018) |
+| De novo indirubin production | Engineered pathway with coproduced indigo | Indirubin titer (mg/L); Indigo coproduction (mg/L) | 56 mg/L indirubin; 640 mg/L indigo | Combined pathway engineering for indigoid products | (pqac-00000019) |
+| Halogenated indole production | Engineered Corynebacterium glutamicum / tryptophanase routes | Final titer (mg/L) | 16 mg/L 7-Cl-indole; 23 mg/L 7-Br-indole | Demonstrates extension of Trp/indole biomanufacturing to halogenated derivatives | (pqac-00000019) |
+
+
+*Table: This table compiles the main quantitative findings relevant to TrpA/trpA function, regulation, and tryptophan/indole biomanufacturing from the gathered evidence. It is useful as a quick reference for kinetics, regulatory response ranges, engineered production titers, and throughput metrics from recent literature.*

@@ -1,3 +1,7 @@
+---
+title: "NLRP3 Inflammasome Assembly Project"
+---
+
 # NLRP3 Inflammasome Assembly Project
 
 ## Overview

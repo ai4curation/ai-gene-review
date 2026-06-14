@@ -1,3 +1,7 @@
+---
+title: "Regulation of COPII Vesicle Coating — Obsoletion & Replacement"
+---
+
 # Regulation of COPII Vesicle Coating — Obsoletion & Replacement
 
 ## Overview

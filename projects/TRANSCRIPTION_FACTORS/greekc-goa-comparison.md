@@ -1,3 +1,7 @@
+---
+title: "GREEKC dbTF Target Set vs GOA Comparison"
+---
+
 # GREEKC dbTF Target Set vs GOA Comparison
 
 Analysis comparing the GREEKC curated dbTF target set with current GOA annotations.

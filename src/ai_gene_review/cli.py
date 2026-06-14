@@ -1,5 +1,10 @@
 """CLI interface for ai-gene-review."""
 
+import re
+import shlex
+import shutil
+import subprocess
+import time
 from pathlib import Path
 from typing import List, Optional
 
@@ -22,12 +27,13 @@ from ai_gene_review.etl.publication_refresh import (
     find_active_review_pmids,
 )
 from ai_gene_review.validation import (
+    BatchValidationReport,
+    ValidationReport,
     validate_gene_review,
-    validate_multiple_files,
     ValidationSeverity,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
-from ai_gene_review.validation.validator import get_schema_path
+from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
@@ -346,6 +352,329 @@ def batch_fetch(
         raise typer.Exit(code=1)
 
 
+def _tool_command(command_name: str) -> list[str]:
+    """Return a command prefix for an installed validation CLI."""
+    resolved = shutil.which(command_name)
+    if resolved:
+        return [resolved]
+
+    uv = shutil.which("uv")
+    if uv:
+        return [uv, "run", command_name]
+
+    return [command_name]
+
+
+def _summarize_validator_output(output: str, max_chars: int = 1800) -> str:
+    """Keep the actionable lines from external validator output."""
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    if not lines:
+        return "no output"
+
+    interesting = [
+        line
+        for line in lines
+        if re.search(
+            r"error|warn|mismatch|required|not of type|additional propert"
+            r"|invalid|failed|not valid|not found",
+            line,
+            re.IGNORECASE,
+        )
+    ]
+    selected = interesting or lines[-8:]
+    summary = "; ".join(selected)
+    if len(summary) > max_chars:
+        return summary[: max_chars - 3] + "..."
+    return summary
+
+
+def _warning_lines(output: str) -> list[str]:
+    return [
+        line.strip()
+        for line in output.splitlines()
+        if re.search(r"(^|\[)(WARN|WARNING)\b", line.strip(), re.IGNORECASE)
+    ]
+
+
+def _has_error_output(output: str) -> bool:
+    return bool(
+        re.search(r"^\s*\[ERROR\]|Traceback|^Error:", output, re.IGNORECASE | re.MULTILINE)
+    )
+
+
+def _run_validation_command(
+    report: ValidationReport,
+    phase: str,
+    command: list[str],
+    validation_category: str,
+    check_type: str,
+    cwd: Path,
+    show_timing: bool = False,
+) -> None:
+    start = time.perf_counter()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"{phase} command not found: {command[0]}",
+            path=str(report.file_path) if report.file_path else None,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+        return
+
+    output = "\n".join(
+        part for part in [completed.stdout, completed.stderr] if part
+    ).strip()
+    command_text = " ".join(shlex.quote(part) for part in command)
+    details = {
+        "command": command_text,
+        "return_code": completed.returncode,
+        "output": output,
+    }
+
+    warnings = _warning_lines(output)
+
+    has_error_output = _has_error_output(output)
+
+    if completed.returncode != 0 and (has_error_output or not warnings):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"{phase} failed: {_summarize_validator_output(output)}",
+            path=str(report.file_path) if report.file_path else None,
+            details=details,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+    elif has_error_output:
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            f"{phase} reported error-like output despite exit code 0: {_summarize_validator_output(output)}",
+            path=str(report.file_path) if report.file_path else None,
+            details=details,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+    else:
+        if warnings:
+            report.add_issue(
+                ValidationSeverity.WARNING,
+                f"{phase} reported warnings: {_summarize_validator_output(chr(10).join(warnings))}",
+                path=str(report.file_path) if report.file_path else None,
+                details=details,
+                validation_category=validation_category,
+                check_type=check_type,
+            )
+
+    if show_timing:
+        typer.echo(f"  {phase}: {time.perf_counter() - start:.2f}s")
+
+
+def _merge_report(target: ValidationReport, source: ValidationReport) -> None:
+    target.issues.extend(source.issues)
+    if source.has_errors:
+        target.is_valid = False
+
+
+def _validate_gene_review_cli(
+    yaml_file: Path,
+    schema_path: Path,
+    check_best_practices: bool,
+    check_goa: bool,
+    check_references: bool,
+    check_schema: bool,
+    check_terms: bool,
+    show_timing: bool = False,
+) -> ValidationReport:
+    yaml_file = yaml_file.resolve()
+    schema_path = schema_path.resolve()
+    report = ValidationReport(file_path=yaml_file, is_valid=True)
+
+    if not yaml_file.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"File not found: {yaml_file}",
+            path=None,
+            validation_category="FileValidator",
+            check_type="file_exists",
+        )
+        return report
+
+    project_root = get_project_root()
+
+    if check_schema:
+        _run_validation_command(
+            report,
+            "Schema validation",
+            [
+                *_tool_command("linkml-validate"),
+                "--schema",
+                str(schema_path),
+                "--target-class",
+                "GeneReview",
+                str(yaml_file),
+            ],
+            "SchemaValidator",
+            "linkml_validate",
+            cwd=project_root,
+            show_timing=show_timing,
+        )
+
+    if check_terms:
+        term_wrapper = project_root / "scripts" / "run_term_validator.sh"
+        oak_config = project_root / "conf" / "oak_config.yaml"
+        term_command = (
+            [str(term_wrapper)]
+            if term_wrapper.exists()
+            else _tool_command("linkml-term-validator")
+        )
+        command = [
+            *term_command,
+            "validate-data",
+            str(yaml_file),
+            "-s",
+            str(schema_path),
+            "-t",
+            "GeneReview",
+            "--labels",
+        ]
+        if oak_config.exists():
+            command.extend(["-c", str(oak_config)])
+        _run_validation_command(
+            report,
+            "Term validation",
+            command,
+            "TermValidator",
+            "linkml_term_validator",
+            cwd=project_root,
+            show_timing=show_timing,
+        )
+
+    if check_references:
+        reference_wrapper = project_root / "scripts" / "run_reference_validator.sh"
+        reference_config = project_root / "conf" / "reference_validator_config.yaml"
+        reference_command = (
+            [str(reference_wrapper)]
+            if reference_wrapper.exists()
+            else _tool_command("linkml-reference-validator")
+        )
+        command = [
+            *reference_command,
+            "validate",
+            "data",
+            str(yaml_file),
+            "--schema",
+            str(schema_path),
+            "--target-class",
+            "GeneReview",
+        ]
+        if reference_config.exists():
+            command.extend(["--config", str(reference_config)])
+        _run_validation_command(
+            report,
+            "Reference validation",
+            command,
+            "ReferenceValidator",
+            "linkml_reference_validator",
+            cwd=project_root,
+            show_timing=show_timing,
+        )
+
+    if check_best_practices:
+        try:
+            best_practices_report = validate_gene_review(
+                yaml_file,
+                schema_path,
+                check_best_practices=True,
+                check_goa=check_goa,
+                check_supporting_text=check_references,
+            )
+            _merge_report(report, best_practices_report)
+        except Exception as e:
+            report.add_issue(
+                ValidationSeverity.ERROR,
+                f"Best practices validation failed: {e}",
+                path=str(yaml_file),
+                validation_category="BestPracticeValidator",
+                check_type="custom_rules",
+            )
+
+    return report
+
+
+def _validate_multiple_files_cli(
+    yaml_files: list[Path],
+    schema_path: Path,
+    check_best_practices: bool,
+    check_goa: bool,
+    check_references: bool,
+    check_schema: bool,
+    check_terms: bool,
+    show_progress: bool = False,
+    show_timing: bool = False,
+) -> BatchValidationReport:
+    batch_report = BatchValidationReport()
+
+    if show_progress and len(yaml_files) > 1:
+        from rich.progress import (
+            BarColumn,
+            Progress,
+            SpinnerColumn,
+            TaskProgressColumn,
+            TextColumn,
+            TimeElapsedColumn,
+        )
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=None,
+        ) as progress:
+            main_task = progress.add_task("Validating files...", total=len(yaml_files))
+
+            for yaml_file in yaml_files:
+                progress.update(main_task, description=f"Validating {yaml_file.name}")
+                batch_report.reports.append(
+                    _validate_gene_review_cli(
+                        yaml_file,
+                        schema_path,
+                        check_best_practices,
+                        check_goa,
+                        check_references,
+                        check_schema,
+                        check_terms,
+                        show_timing=show_timing,
+                    )
+                )
+                progress.advance(main_task)
+    else:
+        for yaml_file in yaml_files:
+            batch_report.reports.append(
+                _validate_gene_review_cli(
+                    yaml_file,
+                    schema_path,
+                    check_best_practices,
+                    check_goa,
+                    check_references,
+                    check_schema,
+                    check_terms,
+                    show_timing=show_timing,
+                )
+            )
+
+    return batch_report
+
+
 @app.command()
 def validate(
     yaml_files: Annotated[list[Path], typer.Argument(help="YAML file(s) to validate")],
@@ -369,14 +698,25 @@ def validate(
     no_best_practices: Annotated[
         bool, typer.Option("--no-best-practices", help="Skip best practices checks")
     ] = False,
+    no_schema: Annotated[
+        bool, typer.Option("--no-schema", help="Skip LinkML schema validation")
+    ] = False,
+    terms: Annotated[
+        bool,
+        typer.Option(
+            "--terms",
+            help="Run ontology term/label validation with linkml-term-validator",
+        ),
+    ] = False,
     no_goa: Annotated[
         bool, typer.Option("--no-goa", help="Skip GOA validation")
     ] = False,
-    no_supporting_text: Annotated[
+    no_references: Annotated[
         bool,
         typer.Option(
+            "--no-references",
             "--no-supporting-text",
-            help="Skip supporting_text validation against cached publications",
+            help="Skip reference title and supporting_text validation",
         ),
     ] = False,
     tsv_output: Annotated[
@@ -390,12 +730,18 @@ def validate(
         bool, typer.Option("--show-timing", help="Show timing information for validation steps")
     ] = False,
 ):
-    """Validate gene review YAML files against the LinkML schema.
+    """Validate gene review YAML files.
+
+    By default this runs strict LinkML schema validation, reference validation
+    for publication titles and supporting_text snippets, and custom
+    best-practices checks. Use --terms to also run ontology term/label
+    validation.
 
     Examples:
         ai-gene-review validate genes/human/CFAP300/CFAP300-ai-review.yaml
         ai-gene-review validate genes/human/*/*.yaml
         ai-gene-review validate test.yaml --schema custom_schema.yaml --verbose
+        ai-gene-review validate test.yaml --terms
         ai-gene-review validate test.yaml --strict  # Fail on warnings too
     """
     # Handle glob patterns
@@ -418,15 +764,24 @@ def validate(
 
     check_best_practices = not no_best_practices
     check_goa = not no_goa
-    check_supporting_text = not no_supporting_text
+    check_references = not no_references
+    check_schema = not no_schema
+    schema_path = Path(schema).resolve() if schema else get_schema_path()
 
     # Validate single file or multiple files
     if len(all_files) == 1:
         yaml_file = all_files[0]
         typer.echo(f"Validating {yaml_file}...")
 
-        report = validate_gene_review(
-            yaml_file, schema, check_best_practices, check_goa, check_supporting_text
+        report = _validate_gene_review_cli(
+            yaml_file,
+            schema_path,
+            check_best_practices,
+            check_goa,
+            check_references,
+            check_schema,
+            terms,
+            show_timing=show_timing,
         )
 
         # Determine status symbol and color
@@ -488,15 +843,16 @@ def validate(
         # Multiple files
         typer.echo(f"Validating {len(all_files)} files...")
 
-        # Cast to List[Path | str] for type compatibility
-        files_to_validate: list[Path | str] = [f for f in all_files]
-        batch_report = validate_multiple_files(
-            files_to_validate,
-            schema,
+        batch_report = _validate_multiple_files_cli(
+            all_files,
+            schema_path,
             check_best_practices,
             check_goa,
-            check_supporting_text,
+            check_references,
+            check_schema,
+            terms,
             show_progress=True,  # Enable progress bar for multiple files
+            show_timing=show_timing,
         )
 
         # Show summary
@@ -2526,6 +2882,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
 
@@ -2545,6 +2902,84 @@ def render_projects(
 
     else:
         typer.echo("Please specify file(s) or use --all to render all projects", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def render_modules(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to render"),
+    ] = None,
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for module HTML files"),
+    ] = Path("pages/modules"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Render all module YAML files in modules/"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show detailed output including warnings"),
+    ] = False,
+):
+    """Render module YAML files to HTML pages with an inline tree browser.
+
+    Examples:
+        # Render all modules and an index page
+        ai-gene-review render-modules --all
+
+        # Render a specific module
+        ai-gene-review render-modules modules/gluconeogenesis.yaml
+    """
+    from ai_gene_review.render_modules import render_all_modules, render_module
+
+    if all_modules:
+        typer.echo("Rendering all module YAML files...")
+        output_paths, warnings = render_all_modules(
+            modules_dir=modules_dir,
+            output_dir=output_dir,
+        )
+
+        if verbose and warnings:
+            typer.echo("\nAll warnings:")
+            for warning in warnings:
+                typer.echo(f"  - {warning}")
+
+        typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
+    elif files:
+        total_warnings = []
+        for module_file in files:
+            if not module_file.exists():
+                typer.echo(f"Error: File not found: {module_file}", err=True)
+                continue
+
+            try:
+                output_path, warnings = render_module(
+                    module_file,
+                    output_dir=output_dir,
+                    modules_dir=modules_dir,
+                )
+                total_warnings.extend(warnings)
+                if warnings:
+                    typer.echo(f"Rendered {module_file} -> {output_path} ({len(warnings)} warnings)")
+                    if verbose:
+                        for warning in warnings:
+                            typer.echo(f"    - {warning}")
+                else:
+                    typer.echo(f"Rendered {module_file} -> {output_path}")
+            except Exception as error:
+                typer.echo(f"Error rendering {module_file}: {error}", err=True)
+
+        if total_warnings and not verbose:
+            typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+    else:
+        typer.echo("Please specify file(s) or use --all to render all modules", err=True)
         raise typer.Exit(code=1)
 
 

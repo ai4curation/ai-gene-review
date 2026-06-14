@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cfr - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cfr</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A2AXI2" target="_blank" class="term-link">
+                        A2AXI2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Staphylococcus warneri</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cfr";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A2AXI2" data-a="DESCRIPTION: cfr encodes a radical SAM 23S rRNA methyltransfera..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>cfr encodes a radical SAM 23S rRNA methyltransferase that methylates carbon 8 of adenine 2503 in bacterial 23S rRNA. This A2503 C8 modification confers cross-resistance to multiple antibiotic classes that bind near the peptidyl transferase center. Cfr is related to RlmN, but the clinically relevant Cfr activity is C8 methylation rather than the housekeeping C2 methyltransferase activity represented by existing GO specificity terms.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>23S rRNA A2503 C8 methyltransferase activity</h3>
+                <span class="vote-buttons" data-g="A2AXI2" data-a="23S rRNA A2503 C8 methyltransferase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Catalysis of methyl transfer to carbon 8 of adenine 2503 in bacterial 23S rRNA, forming 8-methyladenosine at A2503.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Existing GO specificity for this enzyme family includes the RlmN/C2 methyltransferase activity, but Cfr&#39;s resistance-conferring activity is C8 methylation at A2503. The AMR mapping records this as a NoTermFound gap.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016433" target="_blank" class="term-link">
+                    rRNA (adenine) methyltransferase activity
+                </a>
+            </p>
+            
+
+            
+            <p><strong>Mappings:</strong></p>
+            <ul>
+                
+                <li>
+                    skos:exactMatch:
+                    
+                    Cfr 23S ribosomal RNA methyltransferase
+                    
+                </li>
+                
+            </ul>
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                        PMID:19144912
+                    </a>
+                    
+                    
+                    : Cfr catalyzes formation of 8-methyladenosine.
+                    
+                </li>
+                
+                <li>
+                    
+                    file:projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml
+                    
+                    
+                    : Cfr methylates C8 of A2503.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Technically true but too broad to be useful for Cfr.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The specific Cfr activity is radical-SAM 23S rRNA A2503 C8 methyltransferase activity. Generic catalytic activity should not be the retained molecular-function representation where better terms exist.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specifically methylates position 8 of adenine 2503 in 23S</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct location for a bacterial rRNA-modifying enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt record carries cytoplasm as the subcellular-location-derived GO annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   GO; GO:0005737; C:cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006364" target="_blank" class="term-link">
+                                    GO:0006364
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0006364" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad process annotation that should be replaced by rRNA base methylation for Cfr.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr performs a base methylation on mature 23S rRNA. GO:0070475 is the better process-level representation than generic rRNA processing.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070475" target="_blank" class="term-link">
+                                    rRNA base methylation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specifically methylates position 8 of adenine 2503 in 23S</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006400" target="_blank" class="term-link">
+                                    GO:0006400
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA modification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0006400" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect electronic carryover from broad methylthiotransferase signatures.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The Cfr record and Cfr mechanism literature identify 23S rRNA A2503 as the substrate. This review found no support that Cfr modifies tRNA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Specifically methylates position 8 of adenine 2503 in 23S</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008173" target="_blank" class="term-link">
+                                    GO:0008173
+                                </a>
+                            </span>
+                            <span class="term-label">RNA methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0008173" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad; replace with rRNA (adenine) methyltransferase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr is an rRNA adenine methyltransferase, not a generic RNA methyltransferase. GO still lacks the exact C8/A2503 child term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016433" target="_blank" class="term-link">
+                                    rRNA (adenine) methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                                        PMID:19144912
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cfr catalyzes formation of 8-methyladenosine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016433" target="_blank" class="term-link">
+                                    GO:0016433
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA (adenine) methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0016433" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular-function parent for Cfr, but missing the C8/A2503 specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr methylates adenine in 23S rRNA. The existing term is the best current GO parent; a Cfr-specific A2503 C8 term is proposed below.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">AltName: Full=23S rRNA (adenine(2503)-C(8))-methyltransferase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                                        PMID:19144912
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cfr catalyzes formation of 8-methyladenosine.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad; replace with rRNA (adenine) methyltransferase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic transferase activity is a weak representation of Cfr compared with GO:0016433.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016433" target="_blank" class="term-link">
+                                    rRNA (adenine) methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ribosomal RNA large subunit methyltransferase Cfr</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019843" target="_blank" class="term-link">
+                                    GO:0019843
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0019843" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible substrate-binding annotation, but secondary to catalytic methyltransferase activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr acts on 23S rRNA, but substrate binding is not the core evolved function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">adenosine(2503) in 23S rRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030488" target="_blank" class="term-link">
+                                    GO:0030488
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0030488" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Incorrect TreeGrafter propagation for Cfr.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr&#39;s supported substrate is 23S rRNA A2503, not tRNA. The tRNA methylation annotation likely comes from broader radical-SAM methylthiotransferase family context.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                                        PMID:19144912
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Cfr-mediated modification has previously been shown to occur on nucleotide A2503 of 23S rRNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad cofactor-binding term; the 4Fe-4S child is more informative and already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace broad iron-sulfur cluster binding with the specific 4Fe-4S cluster binding annotation for Cfr.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    4 iron, 4 sulfur cluster binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Name=[4Fe-4S] cluster</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0051539" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cofactor-binding annotation for a radical SAM Cfr enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The 4Fe-4S cluster is required for the radical SAM mechanism but is secondary to methyltransferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 1 [4Fe-4S] cluster.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070475" target="_blank" class="term-link">
+                                    GO:0070475
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA base methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0070475" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process annotation for the Cfr-catalyzed rRNA A2503 methylation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr directly methylates a base in 23S rRNA; the process term is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                                        PMID:19144912
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Antibiotic susceptibility data confirm that the antibiotic resistance conferred by Cfr is provided by methylation at the 8 position</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                    GO:0046677
+                                </a>
+                            </span>
+                            <span class="term-label">response to antibiotic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19144912
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of 8-methyladenosine as the modification cata...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A2AXI2" data-a="GO:0046677" data-r="PMID:19144912" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW high-level process annotation for Cfr-mediated multidrug resistance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cfr-mediated A2503 C8 methylation provides resistance to multiple peptidyl-transferase-center antibiotic classes. This is a high-level process annotation, while the core curation need remains the C8-specific molecular-function term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                                        PMID:19144912
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Cfr methyltransferase confers combined resistance to five different classes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:genes/STAWA/cfr/cfr-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Confers resistance to some classes of antibiotics.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Radical-SAM 23S rRNA A2503 C8 methyltransferase activity that produces 8-methyladenosine in 23S rRNA and confers resistance to several peptidyl-transferase-center antibiotic classes.</h3>
+                <span class="vote-buttons" data-g="A2AXI2" data-a="FUNCTION: Radical-SAM 23S rRNA A2503 C8 methyltransferase ac..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016433" target="_blank" class="term-link">
+                            rRNA (adenine) methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070475" target="_blank" class="term-link">
+                                rRNA base methylation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                response to antibiotic
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                                PMID:19144912
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Cfr catalyzes formation of 8-methyladenosine.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:genes/STAWA/cfr/cfr-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Specifically methylates position 8 of adenine 2503 in 23S</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:genes/STAWA/cfr/cfr-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt flat file for cfr (A2AXI2)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt names Cfr as a 23S rRNA A2503 C8 methyltransferase.</div>
+                        
+                        <div class="finding-text">"23S rRNA (adenine(2503)-C(8))-methyltransferase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17145796" target="_blank" class="term-link">
+                            PMID:17145796
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">IS21-558 insertion sequences are involved in the mobility of the multiresistance gene cfr.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The source-species cfr paper supports Cfr as a multiresistance gene in Staphylococcus warneri genetic context.</div>
+                        
+                        <div class="finding-text">"gene cfr for combined resistance to phenicols, lincosamides, oxazolidinones,"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19144912" target="_blank" class="term-link">
+                            PMID:19144912
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of 8-methyladenosine as the modification catalyzed by the radical SAM methyltransferase Cfr that confers antibiotic resistance in bacteria.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cfr catalyzes 8-methyladenosine formation at A2503, and resistance is provided by the C8 methylation.</div>
+                        
+                        <div class="finding-text">"Cfr catalyzes formation of 8-methyladenosine."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curated ARO to GO mapping set for AMR gene families</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The AMR mapping records the Cfr C8/A2503 methyltransferase as a GO molecular-function gap.</div>
+                        
+                        <div class="finding-text">"Cfr methylates C8 of A2503."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO add a Cfr-specific C8 term as a sibling of the existing RlmN/C2 23S rRNA methyltransferase term?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A2AXI2" data-a="Q: Should GO add a Cfr-specific C8 term as a sibling ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare Cfr and RlmN activity on the same 23S rRNA substrate by MS mapping of A2503 products to support separate C8 and C2 GO molecular functions.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A2AXI2" data-a="EXPERIMENT: Compare Cfr and RlmN activity on the same 23S rRNA..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cfr-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A2AXI2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cfr-notes">cfr notes</h1>
+<h2 id="2026-06-13-amr-go-gap-review">2026-06-13 AMR GO-gap review</h2>
+<p>Selected because Cfr illustrates a subtle but important specificity gap: the existing GO parent captures rRNA adenine methyltransferase activity, but the resistance-conferring Cfr activity is A2503 C8 methylation, not the RlmN-like C2 activity. UniProt A2AXI2 names the enzyme "23S rRNA (adenine(2503)-C(8))-methyltransferase" and says it specifically methylates position 8 of adenine 2503 in 23S rRNA [file:genes/STAWA/cfr/cfr-uniprot.txt]. The RNA paper identifies 8-methyladenosine as the Cfr product and states that resistance is provided by methylation at the 8 position <a href="https://pubmed.ncbi.nlm.nih.gov/19144912">PMID:19144912</a>.</p>
+<p>The fetched GOA has several broad or wrong electronic terms. <code>GO:0016433</code> and <code>GO:0070475</code> are good current parents; tRNA modification/methylation should be removed for Cfr. The AMR mapping records <code>ARO:3000202</code> as <code>sssom:NoTermFound</code> because <code>GO:0070040</code> is the C2/RlmN activity and no C8-specific Cfr term exists [file:projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml]. The review proposes <code>23S rRNA A2503 C8 methyltransferase activity</code>.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A2AXI2
+gene_symbol: cfr
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:1292
+  label: Staphylococcus warneri
+description: &gt;-
+  cfr encodes a radical SAM 23S rRNA methyltransferase that methylates carbon 8
+  of adenine 2503 in bacterial 23S rRNA. This A2503 C8 modification confers
+  cross-resistance to multiple antibiotic classes that bind near the peptidyl
+  transferase center. Cfr is related to RlmN, but the clinically relevant Cfr
+  activity is C8 methylation rather than the housekeeping C2 methyltransferase
+  activity represented by existing GO specificity terms.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Technically true but too broad to be useful for Cfr.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The specific Cfr activity is radical-SAM 23S rRNA A2503 C8
+      methyltransferase activity. Generic catalytic activity should not be the
+      retained molecular-function representation where better terms exist.
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Specifically methylates position 8 of adenine 2503 in 23S&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct location for a bacterial rRNA-modifying enzyme.
+    action: ACCEPT
+    reason: The UniProt record carries cytoplasm as the subcellular-location-derived GO annotation.
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;DR   GO; GO:0005737; C:cytoplasm&#34;
+- term:
+    id: GO:0006364
+    label: rRNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broad process annotation that should be replaced by rRNA base methylation for Cfr.
+    action: MODIFY
+    reason: &gt;-
+      Cfr performs a base methylation on mature 23S rRNA. GO:0070475 is the
+      better process-level representation than generic rRNA processing.
+    proposed_replacement_terms:
+    - id: GO:0070475
+      label: rRNA base methylation
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Specifically methylates position 8 of adenine 2503 in 23S&#34;
+- term:
+    id: GO:0006400
+    label: tRNA modification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Incorrect electronic carryover from broad methylthiotransferase signatures.
+    action: REMOVE
+    reason: &gt;-
+      The Cfr record and Cfr mechanism literature identify 23S rRNA A2503 as the
+      substrate. This review found no support that Cfr modifies tRNA.
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Specifically methylates position 8 of adenine 2503 in 23S&#34;
+- term:
+    id: GO:0008173
+    label: RNA methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but broad; replace with rRNA (adenine) methyltransferase activity.
+    action: MODIFY
+    reason: &gt;-
+      Cfr is an rRNA adenine methyltransferase, not a generic RNA
+      methyltransferase. GO still lacks the exact C8/A2503 child term.
+    proposed_replacement_terms:
+    - id: GO:0016433
+      label: rRNA (adenine) methyltransferase activity
+    supported_by:
+    - reference_id: PMID:19144912
+      supporting_text: &#34;Cfr catalyzes formation of 8-methyladenosine.&#34;
+- term:
+    id: GO:0016433
+    label: rRNA (adenine) methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Correct core molecular-function parent for Cfr, but missing the C8/A2503 specificity.
+    action: ACCEPT
+    reason: &gt;-
+      Cfr methylates adenine in 23S rRNA. The existing term is the best current
+      GO parent; a Cfr-specific A2503 C8 term is proposed below.
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;AltName: Full=23S rRNA (adenine(2503)-C(8))-methyltransferase&#34;
+    - reference_id: PMID:19144912
+      supporting_text: &#34;Cfr catalyzes formation of 8-methyladenosine.&#34;
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Correct but too broad; replace with rRNA (adenine) methyltransferase activity.
+    action: MODIFY
+    reason: Generic transferase activity is a weak representation of Cfr compared with GO:0016433.
+    proposed_replacement_terms:
+    - id: GO:0016433
+      label: rRNA (adenine) methyltransferase activity
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Ribosomal RNA large subunit methyltransferase Cfr&#34;
+- term:
+    id: GO:0019843
+    label: rRNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Plausible substrate-binding annotation, but secondary to catalytic methyltransferase activity.
+    action: KEEP_AS_NON_CORE
+    reason: Cfr acts on 23S rRNA, but substrate binding is not the core evolved function.
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;adenosine(2503) in 23S rRNA&#34;
+- term:
+    id: GO:0030488
+    label: tRNA methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Incorrect TreeGrafter propagation for Cfr.
+    action: REMOVE
+    reason: &gt;-
+      Cfr&#39;s supported substrate is 23S rRNA A2503, not tRNA. The tRNA
+      methylation annotation likely comes from broader radical-SAM
+      methylthiotransferase family context.
+    supported_by:
+    - reference_id: PMID:19144912
+      supporting_text: &#34;The Cfr-mediated modification has previously been shown to occur on nucleotide A2503 of 23S rRNA&#34;
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Broad cofactor-binding term; the 4Fe-4S child is more informative and already annotated.
+    action: MODIFY
+    reason: Replace broad iron-sulfur cluster binding with the specific 4Fe-4S cluster binding annotation for Cfr.
+    proposed_replacement_terms:
+    - id: GO:0051539
+      label: 4 iron, 4 sulfur cluster binding
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Name=[4Fe-4S] cluster&#34;
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct cofactor-binding annotation for a radical SAM Cfr enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: The 4Fe-4S cluster is required for the radical SAM mechanism but is secondary to methyltransferase activity.
+    supported_by:
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Binds 1 [4Fe-4S] cluster.&#34;
+- term:
+    id: GO:0070475
+    label: rRNA base methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Correct process annotation for the Cfr-catalyzed rRNA A2503 methylation.
+    action: ACCEPT
+    reason: Cfr directly methylates a base in 23S rRNA; the process term is appropriate.
+    supported_by:
+    - reference_id: PMID:19144912
+      supporting_text: &#34;Antibiotic susceptibility data confirm that the antibiotic resistance conferred by Cfr is provided by methylation at the 8 position&#34;
+- term:
+    id: GO:0046677
+    label: response to antibiotic
+  evidence_type: RCA
+  original_reference_id: PMID:19144912
+  qualifier: involved_in
+  review:
+    summary: NEW high-level process annotation for Cfr-mediated multidrug resistance.
+    action: NEW
+    reason: &gt;-
+      Cfr-mediated A2503 C8 methylation provides resistance to multiple
+      peptidyl-transferase-center antibiotic classes. This is a high-level
+      process annotation, while the core curation need remains the C8-specific
+      molecular-function term.
+    additional_reference_ids:
+    - PMID:17145796
+    - file:genes/STAWA/cfr/cfr-uniprot.txt
+    supported_by:
+    - reference_id: PMID:19144912
+      supporting_text: &#34;The Cfr methyltransferase confers combined resistance to five different classes&#34;
+    - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+      supporting_text: &#34;Confers resistance to some classes of antibiotics.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:genes/STAWA/cfr/cfr-uniprot.txt
+  title: UniProt flat file for cfr (A2AXI2)
+  findings:
+  - statement: UniProt names Cfr as a 23S rRNA A2503 C8 methyltransferase.
+    supporting_text: &#34;23S rRNA (adenine(2503)-C(8))-methyltransferase&#34;
+- id: PMID:17145796
+  title: IS21-558 insertion sequences are involved in the mobility of the multiresistance gene cfr.
+  findings:
+  - statement: The source-species cfr paper supports Cfr as a multiresistance gene in Staphylococcus warneri genetic context.
+    supporting_text: &#34;gene cfr for combined resistance to phenicols, lincosamides, oxazolidinones,&#34;
+- id: PMID:19144912
+  title: Identification of 8-methyladenosine as the modification catalyzed by the radical SAM methyltransferase Cfr that confers antibiotic resistance in bacteria.
+  findings:
+  - statement: Cfr catalyzes 8-methyladenosine formation at A2503, and resistance is provided by the C8 methylation.
+    supporting_text: &#34;Cfr catalyzes formation of 8-methyladenosine.&#34;
+- id: file:projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml
+  title: Curated ARO to GO mapping set for AMR gene families
+  findings:
+  - statement: The AMR mapping records the Cfr C8/A2503 methyltransferase as a GO molecular-function gap.
+    supporting_text: &#34;Cfr methylates C8 of A2503.&#34;
+core_functions:
+- description: &gt;-
+    Radical-SAM 23S rRNA A2503 C8 methyltransferase activity that produces
+    8-methyladenosine in 23S rRNA and confers resistance to several
+    peptidyl-transferase-center antibiotic classes.
+  molecular_function:
+    id: GO:0016433
+    label: rRNA (adenine) methyltransferase activity
+  directly_involved_in:
+  - id: GO:0070475
+    label: rRNA base methylation
+  - id: GO:0046677
+    label: response to antibiotic
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:19144912
+    supporting_text: &#34;Cfr catalyzes formation of 8-methyladenosine.&#34;
+  - reference_id: file:genes/STAWA/cfr/cfr-uniprot.txt
+    supporting_text: &#34;Specifically methylates position 8 of adenine 2503 in 23S&#34;
+proposed_new_terms:
+- proposed_name: 23S rRNA A2503 C8 methyltransferase activity
+  proposed_definition: &gt;-
+    Catalysis of methyl transfer to carbon 8 of adenine 2503 in bacterial 23S
+    rRNA, forming 8-methyladenosine at A2503.
+  justification: &gt;-
+    Existing GO specificity for this enzyme family includes the RlmN/C2
+    methyltransferase activity, but Cfr&#39;s resistance-conferring activity is C8
+    methylation at A2503. The AMR mapping records this as a NoTermFound gap.
+  proposed_parent:
+    id: GO:0016433
+    label: rRNA (adenine) methyltransferase activity
+  proposed_mappings:
+  - predicate: skos:exactMatch
+    target_term:
+      id: ARO:3000202
+      label: Cfr 23S ribosomal RNA methyltransferase
+  supported_by:
+  - reference_id: PMID:19144912
+    supporting_text: &#34;Cfr catalyzes formation of 8-methyladenosine.&#34;
+  - reference_id: file:projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml
+    supporting_text: &#34;Cfr methylates C8 of A2503.&#34;
+suggested_questions:
+- question: Should GO add a Cfr-specific C8 term as a sibling of the existing RlmN/C2 23S rRNA methyltransferase term?
+  experts: []
+suggested_experiments:
+- description: &gt;-
+    Compare Cfr and RlmN activity on the same 23S rRNA substrate by MS mapping
+    of A2503 products to support separate C8 and C2 GO molecular functions.
+  experiment_type: in vitro enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

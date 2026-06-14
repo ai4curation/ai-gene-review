@@ -1,3 +1,7 @@
+---
+title: "C. elegans P Granule/Germ Granule Dynamics Project"
+---
+
 # C. elegans P Granule/Germ Granule Dynamics Project
 
 ## Overview

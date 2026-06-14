@@ -1,3 +1,7 @@
+---
+title: "Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)"
+---
+
 # Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)
 
 ## Overview
@@ -99,7 +103,7 @@ add files without confirming the UniProt accession from the UniProt API.
    completes the two-enzyme ED core.
 5. **zwf (PSEPK)** — glucose-6-phosphate 1-dehydrogenase, the entry step into
    the ED pathway via 6-phosphogluconate. Already partially covered in the
-   PSEPK gene set per `projects/SPKW-PSEPK.md`; verify status before adding.
+   PSEPK gene set per `projects/SPKW/SPKW-PSEPK.md`; verify status before adding.
 6. **gnd / 6PGD homologs** — the diversion point between ED and the pentose
    phosphate pathway; a clean review here clarifies why annotations should
    sit at GO:0061678 rather than a sub-variant.

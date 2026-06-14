@@ -1,3 +1,7 @@
+---
+title: "Autoimmune Genetics - Greatest Hits"
+---
+
 # Autoimmune Genetics - Greatest Hits
 
 ## Overview

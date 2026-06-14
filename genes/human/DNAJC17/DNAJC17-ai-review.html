@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNAJC17 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DNAJC17</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9NVM6" target="_blank" class="term-link">
+                        Q9NVM6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DNAJC17";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9NVM6" data-a="DESCRIPTION: DNAJC17 is a poorly characterized, predominantly n..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DNAJC17 is a poorly characterized, predominantly nuclear protein of the DnaJ/HSP40 subfamily C that combines an N-terminal J domain with a C-terminal RNA recognition motif (RRM), separated by a disordered acidic/basic region. The domain architecture marks it as a putative HSP70 co-chaperone with RNA-binding capacity. Convergent evidence (phylogenetic inference from the yeast ortholog Cwc23, an RRM domain with a solved RNA-binding-domain structure, nuclear-speckle localization, and interaction with the U5 snRNP component EFTUD2) implicates DNAJC17 in spliceosome function, most likely spliceosomal complex disassembly. By orthology it has also been suggested to negatively affect PAX8-induced thyroglobulin transcription. It is phosphorylated at Ser-112 and methylated at Lys-264, and its mouse ortholog is essential for viability. Its precise molecular and cellular function in human cells has not been directly established.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000390" target="_blank" class="term-link">
+                                    GO:0000390
+                                </a>
+                            </span>
+                            <span class="term-label">spliceosomal complex disassembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0000390" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation transferred from yeast orthologs (Cwc23; PomBase SPCC10H11.02, SGD S000003096), J-domain proteins that act with the Prp43 helicase in spliceosome disassembly. Consistent with DNAJC17&#39;s RRM, nuclear-speckle localization and interaction with the spliceosomal component EFTUD2, though not directly demonstrated in human.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Convergent orthology, domain and interactome evidence supports a spliceosome-disassembly role, but there is no direct human experimental demonstration; retained as a plausible non-core process pending direct validation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0000390 spliceosomal complex disassembly biological_process ECO:0000318 IBA GO_REF:0000033</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005681" target="_blank" class="term-link">
+                                    GO:0005681
+                                </a>
+                            </span>
+                            <span class="term-label">spliceosomal complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005681" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing DNAJC17 in the spliceosomal complex, transferred from yeast orthologs. Supported by its interaction with the core U5 snRNP component EFTUD2 and nuclear-speckle localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Orthology plus a documented interaction with the spliceosomal GTPase EFTUD2 supports association with the spliceosomal complex; a reasonable cellular-component annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005681 spliceosomal complex cellular_component ECO:0000318 IBA GO_REF:0000033</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of nucleic acid binding based on the RRM domain. A generic parent of the more specific RNA binding term, supported by the same RRM evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic; RNA binding (the specific child term) is the informative molecular function for this RRM-containing protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN          178..249</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation of RNA binding based on the C-terminal RRM domain, whose structure has been solved by NMR (PDB:2D9O). A plausible, specific molecular function for this J-domain/RRM protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNAJC17 has a bona fide RRM (RNA recognition motif) with a solved RNA-binding-domain structure; RNA binding is a well-justified molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN          178..249</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated SubCell nuclear localization, consistent with the ISS annotation and the reported predominantly nuclear distribution (nuclear speckles).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNAJC17 is predominantly nuclear; nuclear localization is well supported and is its principal site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250|UniProtKB:D3ZSC8}. Nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated SubCell cytoplasmic localization, consistent with the ISS annotation; DNAJC17 is predominantly nuclear but also present in the cytoplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A genuine secondary localization (the protein is predominantly nuclear); retained as non-core relative to its nuclear site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250|UniProtKB:D3ZSC8}. Nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HuRI binary-interactome (Y2H) screen capturing a DNAJC17-MEOX2 (Q6FHY5) interaction. The bare protein binding term is uninformative and the homeobox-TF partner is not clearly related to DNAJC17&#39;s inferred spliceosome/RNA function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records a real high-throughput interaction but GO:0005515 is uninformative and the partner does not inform DNAJC17&#39;s core function; not elevated to core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:32296183 UniProtKB:Q6FHY5</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005515" data-r="PMID:35271311" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OpenCell endogenous-tagging interactome capturing a DNAJC17-EFTUD2 (Q15029) interaction. EFTUD2 is a core U5 snRNP/spliceosome component, so this interaction corroborates DNAJC17&#39;s spliceosome association, although the bare protein binding term itself is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A real and functionally suggestive interaction (with the spliceosomal component EFTUD2), but GO:0005515 is uninformative; the functional meaning is captured by the spliceosomal-complex annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:35271311 UniProtKB:Q15029</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005515" data-r="PMID:40205054" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Multimodal cell-maps interactome capturing the same DNAJC17-EFTUD2 (Q15029) interaction. The bare protein binding term is uninformative but the partner reinforces spliceosome association.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Corroborates the EFTUD2 (spliceosome) interaction; GO:0005515 itself is uninformative and not core, with the functional consequence captured by the spliceosomal-complex annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:40205054 UniProtKB:Q15029</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS, from rat ortholog D3ZSC8) annotation of nuclear localization, consistent with the reported predominantly nuclear distribution.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Corroborates the nuclear localization (the protein is predominantly nuclear); a core cellular component.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Note=Predominantly nuclear.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9NVM6" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS, from rat ortholog D3ZSC8) annotation of cytoplasmic localization, redundant with the IEA cytoplasm annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A genuine secondary localization; retained as non-core relative to the predominantly nuclear site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/DNAJC17/DNAJC17-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250|UniProtKB:D3ZSC8}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Putative HSP70 co-chaperone and RNA-binding protein (J domain plus RRM) that associates with the spliceosome, most likely functioning in spliceosomal complex disassembly by analogy to its yeast ortholog Cwc23; localizes predominantly to the nucleus.</h3>
+                <span class="vote-buttons" data-g="Q9NVM6" data-a="FUNCTION: Putative HSP70 co-chaperone and RNA-binding protei..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005681" target="_blank" class="term-link">
+                                spliceosomal complex
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/DNAJC17/DNAJC17-goa.tsv
+                            
+                        </span>
+                        
+                        <div class="finding-text">GO:0005681 spliceosomal complex cellular_component ECO:0000318 IBA GO_REF:0000033</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/DNAJC17/DNAJC17-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Note=Predominantly nuclear.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/DNAJC17/DNAJC17-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q9NVM6 (DJC17_HUMAN), DnaJ homolog subfamily C member 17</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Predominantly nuclear J-domain protein with a C-terminal RRM (RNA recognition motif); may negatively affect PAX8-induced thyroglobulin transcription (by similarity); phosphorylated at Ser-112 and methylated at Lys-264.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human DNAJC17 function in spliceosome disassembly (as the ortholog of yeast Cwc23), and does its J domain recruit/stimulate an HSP70 to remodel the spliceosome together with DHX15/Prp43?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9NVM6" data-a="Q: Does human DNAJC17 function in spliceosome disasse..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What RNA targets does the DNAJC17 RRM bind, and is the nuclear-speckle localization dependent on RNA binding or on the EFTUD2/spliceosome interaction?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9NVM6" data-a="Q: What RNA targets does the DNAJC17 RRM bind, and is..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CLIP-seq or in vitro RNA-binding assays with recombinant DNAJC17 RRM to identify its RNA targets, paired with co-immunoprecipitation to map its spliceosomal interaction network.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9NVM6" data-a="EXPERIMENT: CLIP-seq or in vitro RNA-binding assays with recom..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test DNAJC17 function in spliceosome disassembly using in vitro splicing extracts (depletion/add-back) and J-domain HPD-motif mutants to determine whether its co-chaperone activity is required, given the essentiality of the mouse ortholog.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9NVM6" data-a="EXPERIMENT: Test DNAJC17 function in spliceosome disassembly u..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DNAJC17-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9NVM6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dnajc17-research-notes">DNAJC17 research notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt Q9NVM6, HGNC:25556, 304 aa. DnaJ/HSP40 subfamily C member 17. Poorly characterized<br />
+  (Pharos Tbio).</li>
+<li>Architecture: N-terminal J domain (11-76), central disordered acidic/basic region (79-145),<br />
+  C-terminal RRM (RNA recognition motif, 178-249; NMR structure PDB:2D9O). [file:human/DNAJC17/DNAJC17-uniprot.txt]</li>
+<li>So it is a J-domain + RRM protein: a putative HSP70 co-chaperone with RNA-binding capacity.</li>
+<li>Predominantly nuclear (also cytoplasmic). Phosphorylated at Ser-112 (many MS studies);<br />
+  methylated at Lys-264. Associated with nuclear speckles (CD-CODE 804901D1). [file:human/DNAJC17/DNAJC17-uniprot.txt]</li>
+</ul>
+<h2 id="inferred-functions">Inferred functions</h2>
+<ul>
+<li>Spliceosome / spliceosomal complex disassembly (IBA, GO_REF:0000033): inferred from orthologs<br />
+  PomBase:SPCC10H11.02 and SGD:S000003096 (yeast Cwc23), a J-domain protein that functions with the<br />
+  Prp43 helicase in spliceosome disassembly. RRM + nuclear-speckle localization + EFTUD2 interaction<br />
+  are consistent. [file:human/DNAJC17/DNAJC17-goa.tsv]</li>
+<li>RNA binding (IEA from InterPro RRM, IPR000504) and nucleic acid binding (IEA, IPR035979): supported<br />
+  by the RRM domain and the RIKEN NMR structure of the RNA-binding domain. [file:human/DNAJC17/DNAJC17-uniprot.txt]</li>
+<li>UniProt FUNCTION (by similarity to mouse Q91WT4): "May negatively affect PAX8-induced<br />
+  thyroglobulin/TG transcription." Speculative/orthology-based; the gene is also reported essential<br />
+  in mouse (lethal knockout). [file:human/DNAJC17/DNAJC17-uniprot.txt]</li>
+<li>GO:0000122 negative regulation of transcription by RNA pol II (IEA Ensembl) - in UniProt DR but not<br />
+  in seeded ai-review/goa list; reflects the PAX8/TG inference.</li>
+</ul>
+<h2 id="interactions-ipi-go0005515">Interactions (IPI GO:0005515)</h2>
+<ul>
+<li>Q15029 = EFTUD2 (SNRP116/U5-116K), a core U5 snRNP/spliceosome GTPase. PMID:35271311 (OpenCell),<br />
+  PMID:40205054 (cell maps). Corroborates spliceosome association.</li>
+<li>Q6FHY5 = MEOX2 (homeobox TF). PMID:32296183 (HuRI Y2H). Less clearly relevant.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Nucleus (IEA SubCell + ISS from rat D3ZSC8), cytoplasm (IEA + ISS), predominantly nuclear.<br />
+  [file:human/DNAJC17/DNAJC17-uniprot.txt]</li>
+</ul>
+<h2 id="curation">Curation</h2>
+<ul>
+<li>Core function uncertain. Best-supported convergent picture: a nuclear J-domain/RRM protein<br />
+  associated with the spliceosome (likely human ortholog of yeast Cwc23 acting in spliceosome<br />
+  disassembly). RNA binding (RRM) is a genuine inferred MF. Keep spliceosome BP/CC as<br />
+  KEEP_AS_NON_CORE / ACCEPT given convergent (IBA + EFTUD2 IPI) but not direct human experimental<br />
+  evidence; flag the PAX8/TG transcription inference as orthology-only.</li>
+<li>Use UNDECIDED only where truly unable to assess. Here we can reason from orthology + domain +<br />
+  interactome, so avoid UNDECIDED; use ACCEPT/KEEP_AS_NON_CORE for the convergent spliceosome/RNA<br />
+  picture and KEEP_AS_NON_CORE for the protein-binding HT terms.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9NVM6
+gene_symbol: DNAJC17
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: DNAJC17 is a poorly characterized, predominantly nuclear protein of the DnaJ/HSP40
+  subfamily C that combines an N-terminal J domain with a C-terminal RNA recognition motif (RRM),
+  separated by a disordered acidic/basic region. The domain architecture marks it as a putative
+  HSP70 co-chaperone with RNA-binding capacity. Convergent evidence (phylogenetic inference from the
+  yeast ortholog Cwc23, an RRM domain with a solved RNA-binding-domain structure, nuclear-speckle
+  localization, and interaction with the U5 snRNP component EFTUD2) implicates DNAJC17 in spliceosome
+  function, most likely spliceosomal complex disassembly. By orthology it has also been suggested to
+  negatively affect PAX8-induced thyroglobulin transcription. It is phosphorylated at Ser-112 and
+  methylated at Lys-264, and its mouse ortholog is essential for viability. Its precise molecular and
+  cellular function in human cells has not been directly established.
+existing_annotations:
+- term:
+    id: GO:0000390
+    label: spliceosomal complex disassembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) annotation transferred from yeast orthologs (Cwc23; PomBase
+      SPCC10H11.02, SGD S000003096), J-domain proteins that act with the Prp43 helicase in
+      spliceosome disassembly. Consistent with DNAJC17&#39;s RRM, nuclear-speckle localization and
+      interaction with the spliceosomal component EFTUD2, though not directly demonstrated in human.
+    action: KEEP_AS_NON_CORE
+    reason: Convergent orthology, domain and interactome evidence supports a spliceosome-disassembly
+      role, but there is no direct human experimental demonstration; retained as a plausible
+      non-core process pending direct validation.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-goa.tsv
+      supporting_text: GO:0000390 spliceosomal complex disassembly biological_process ECO:0000318 IBA GO_REF:0000033
+- term:
+    id: GO:0005681
+    label: spliceosomal complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: Phylogenetic (IBA) annotation placing DNAJC17 in the spliceosomal complex, transferred
+      from yeast orthologs. Supported by its interaction with the core U5 snRNP component EFTUD2 and
+      nuclear-speckle localization.
+    action: ACCEPT
+    reason: Orthology plus a documented interaction with the spliceosomal GTPase EFTUD2 supports
+      association with the spliceosomal complex; a reasonable cellular-component annotation.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-goa.tsv
+      supporting_text: GO:0005681 spliceosomal complex cellular_component ECO:0000318 IBA GO_REF:0000033
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO electronic annotation of nucleic acid binding based on the RRM domain. A
+      generic parent of the more specific RNA binding term, supported by the same RRM evidence.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic; RNA binding (the specific child term) is the informative molecular
+      function for this RRM-containing protein.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+      supporting_text: DOMAIN          178..249
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO electronic annotation of RNA binding based on the C-terminal RRM domain,
+      whose structure has been solved by NMR (PDB:2D9O). A plausible, specific molecular function for
+      this J-domain/RRM protein.
+    action: ACCEPT
+    reason: DNAJC17 has a bona fide RRM (RNA recognition motif) with a solved RNA-binding-domain
+      structure; RNA binding is a well-justified molecular function.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+      supporting_text: DOMAIN          178..249
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated SubCell nuclear localization, consistent with the ISS annotation and the
+      reported predominantly nuclear distribution (nuclear speckles).
+    action: ACCEPT
+    reason: DNAJC17 is predominantly nuclear; nuclear localization is well supported and is its
+      principal site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250|UniProtKB:D3ZSC8}. Nucleus&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Automated SubCell cytoplasmic localization, consistent with the ISS annotation;
+      DNAJC17 is predominantly nuclear but also present in the cytoplasm.
+    action: KEEP_AS_NON_CORE
+    reason: A genuine secondary localization (the protein is predominantly nuclear); retained as
+      non-core relative to its nuclear site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250|UniProtKB:D3ZSC8}. Nucleus&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: HuRI binary-interactome (Y2H) screen capturing a DNAJC17-MEOX2 (Q6FHY5) interaction. The
+      bare protein binding term is uninformative and the homeobox-TF partner is not clearly related
+      to DNAJC17&#39;s inferred spliceosome/RNA function.
+    action: KEEP_AS_NON_CORE
+    reason: Records a real high-throughput interaction but GO:0005515 is uninformative and the
+      partner does not inform DNAJC17&#39;s core function; not elevated to core.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:32296183 UniProtKB:Q6FHY5
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  qualifier: enables
+  review:
+    summary: OpenCell endogenous-tagging interactome capturing a DNAJC17-EFTUD2 (Q15029) interaction.
+      EFTUD2 is a core U5 snRNP/spliceosome component, so this interaction corroborates DNAJC17&#39;s
+      spliceosome association, although the bare protein binding term itself is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: A real and functionally suggestive interaction (with the spliceosomal component EFTUD2),
+      but GO:0005515 is uninformative; the functional meaning is captured by the spliceosomal-complex
+      annotation.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:35271311 UniProtKB:Q15029
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: Multimodal cell-maps interactome capturing the same DNAJC17-EFTUD2 (Q15029) interaction.
+      The bare protein binding term is uninformative but the partner reinforces spliceosome
+      association.
+    action: KEEP_AS_NON_CORE
+    reason: Corroborates the EFTUD2 (spliceosome) interaction; GO:0005515 itself is uninformative and
+      not core, with the functional consequence captured by the spliceosomal-complex annotation.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-goa.tsv
+      supporting_text: GO:0005515 protein binding molecular_function ECO:0000353 IPI PMID:40205054 UniProtKB:Q15029
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: Sequence-similarity (ISS, from rat ortholog D3ZSC8) annotation of nuclear localization,
+      consistent with the reported predominantly nuclear distribution.
+    action: ACCEPT
+    reason: Corroborates the nuclear localization (the protein is predominantly nuclear); a core
+      cellular component.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+      supporting_text: Note=Predominantly nuclear.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: Sequence-similarity (ISS, from rat ortholog D3ZSC8) annotation of cytoplasmic
+      localization, redundant with the IEA cytoplasm annotation.
+    action: KEEP_AS_NON_CORE
+    reason: A genuine secondary localization; retained as non-core relative to the predominantly
+      nuclear site of action.
+    supported_by:
+    - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000250|UniProtKB:D3ZSC8}.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &#34;Cached title matches the YAML title; this is a high-throughput endogenous-tagging cell-map study (not a DNAJC17-focused paper). It contributes only an IPI protein-binding annotation (to EFTUD2/Q15029, a spliceosome component), which is corroborating but background; it does not directly establish the core RNA-binding/spliceosome function.&#34;
+  findings: []
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &#34;Cached title matches the YAML title; large-scale multimodal cell-mapping study, not DNAJC17-specific. Supplies only an IPI protein-binding annotation (to EFTUD2/Q15029); background/corroborating relevance, does not establish the core function.&#34;
+  findings: []
+- id: file:human/DNAJC17/DNAJC17-uniprot.txt
+  title: UniProt entry Q9NVM6 (DJC17_HUMAN), DnaJ homolog subfamily C member 17
+  findings:
+  - statement: Predominantly nuclear J-domain protein with a C-terminal RRM (RNA recognition motif);
+      may negatively affect PAX8-induced thyroglobulin transcription (by similarity); phosphorylated
+      at Ser-112 and methylated at Lys-264.
+    reference_section_type: OTHER
+core_functions:
+- description: Putative HSP70 co-chaperone and RNA-binding protein (J domain plus RRM) that
+    associates with the spliceosome, most likely functioning in spliceosomal complex disassembly by
+    analogy to its yeast ortholog Cwc23; localizes predominantly to the nucleus.
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  - id: GO:0005681
+    label: spliceosomal complex
+  supported_by:
+  - reference_id: file:human/DNAJC17/DNAJC17-goa.tsv
+    supporting_text: GO:0005681 spliceosomal complex cellular_component ECO:0000318 IBA GO_REF:0000033
+  - reference_id: file:human/DNAJC17/DNAJC17-uniprot.txt
+    supporting_text: Note=Predominantly nuclear.
+proposed_new_terms: []
+suggested_questions:
+- question: Does human DNAJC17 function in spliceosome disassembly (as the ortholog of yeast Cwc23),
+    and does its J domain recruit/stimulate an HSP70 to remodel the spliceosome together with DHX15/Prp43?
+- question: What RNA targets does the DNAJC17 RRM bind, and is the nuclear-speckle localization
+    dependent on RNA binding or on the EFTUD2/spliceosome interaction?
+suggested_experiments:
+- description: CLIP-seq or in vitro RNA-binding assays with recombinant DNAJC17 RRM to identify its
+    RNA targets, paired with co-immunoprecipitation to map its spliceosomal interaction network.
+- description: Test DNAJC17 function in spliceosome disassembly using in vitro splicing extracts
+    (depletion/add-back) and J-domain HPD-motif mutants to determine whether its co-chaperone
+    activity is required, given the essentiality of the mouse ortholog.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

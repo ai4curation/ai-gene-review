@@ -1,3 +1,7 @@
+---
+title: "Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation"
+---
+
 # Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation
 
 ## Overview

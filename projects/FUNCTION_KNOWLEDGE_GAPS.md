@@ -1,3 +1,7 @@
+---
+title: "Function Knowledge Gaps"
+---
+
 # Function Knowledge Gaps
 
 What does biology genuinely *not* know about how a gene works — and how do we state it
@@ -653,6 +657,37 @@ ontology) and the residual-sub-gap framing have curated exemplars.
 - **Resolve:** reconstitute Atg2–Atg9–Atg18 on asymmetric proteoliposomes with leaflet-specific
   reporters to test whether scramblase coupling sets net directionality; cryo-EM of the Atg2–Atg9
   junction at the phagophore rim.
+
+### EryCIV / EryCV (*S. erythraea*) — desosamine-pathway enzymes with unresolved catalytic identity *(curation+experiment gap)*
+
+From the BGC erythromycin curation (`terms/erythromycin_biosynthesis/`). These are *not* unknown
+genes — both are clearly TDP-D-desosamine biosynthesis enzymes of the *ery* cluster — but the
+**precise catalytic reaction of each is undetermined**, and the existing annotations actively
+*conflict*.
+
+- **Boundary (what is established):** both contribute to TDP-D-desosamine biosynthesis (a
+  monosaccharide donor for erythromycin); EryCIV (A4F7N3) is a PLP-dependent DegT/DnrJ/EryC1-family
+  enzyme; EryCV (A4F7N2) is a radical-SAM-type enzyme (binds a [4Fe-4S] cluster and SAM). The
+  cluster's dedicated PLP sugar aminotransferase is the separate gene EryCI.
+- **Gap statement:** EryCIV's reaction — PLP-dependent **3,4-dehydratase/isomerase** (UniProt/EMBL
+  name) **vs transaminase** (GOA term) — is unresolved; EryCV's reaction — **3,4-enoyl reductase**
+  (UniProt/EMBL name) **vs ammonia-lyase** (GOA term) — is unresolved.
+- **Provenance for the gap (checkable repo facts):** the GOA files carry only electronic (IEA)
+  assignments with **no experimental evidence code** (`genes/SACEN/eryCIV/eryCIV-goa.tsv`,
+  `genes/SACEN/eryCV/eryCV-goa.tsv`), and those IEA terms *contradict* the UniProt/EMBL
+  `ECO:0000313` names recorded in each gene's `*-uniprot.txt`. No primary biochemical
+  characterization was located (the erythromycin module deep-research run, `modules/…-falcon.md`,
+  explicitly states it "deliberately avoids asserting … the full enzymatic sequence of deoxysugar
+  biosynthesis … because direct primary textual support … was not successfully retrieved"). Both
+  reviews carry `action: UNDECIDED` for the catalytic MF.
+- **Type:** curation+experiment gap — the function-kind is known; the exact MF needs a primary
+  source (likely Salah-Bey et al. 1998 deoxysugar gene-inactivation work, not yet read) or new
+  reconstitution.
+- **Significance:** correct MF terms for these would complete the desosamine arm and let the
+  pathway module assert the donor-biosynthesis steps rather than leaving them UNDECIDED.
+- **Resolve:** read the primary desosamine-pathway literature (gene-inactivation / heterologous
+  reconstitution) to adjudicate; or reconstitute EryCIV (PLP) and EryCV ([4Fe-4S]/SAM) in vitro on
+  the TDP-keto-deoxysugar intermediates. Tracked per-gene in `suggested_questions`/`suggested_experiments`.
 
 ## Methodology
 

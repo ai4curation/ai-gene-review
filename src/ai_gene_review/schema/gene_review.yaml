@@ -224,6 +224,21 @@ slots:
     range: string
     description: Free-text note explaining the relevance/correctness judgment (e.g. what was
       verified, or why a citation is wrong, disputed, or low quality).
+  finding_review:
+    range: FindingReview
+    description: Manual reviewer assessment of this specific finding - in particular whether the
+      finding remains current, is disputed, or has been overturned/superseded by later evidence.
+      Reviewer-supplied; distinct from the statement/supporting_text that describe the finding itself.
+  finding_status:
+    range: FindingReviewStatusEnum
+    description: Reviewer's assessment of the empirical standing of a specific finding in light of
+      other evidence (e.g. whether it has been disputed or overturned).
+  superseded_by:
+    range: Reference
+    multivalued: true
+    inlined: false
+    description: Reference(s) that dispute, correct, or overturn this finding. Used together with
+      finding_status DISPUTED or OVERTURNED.
   ontology:
     range: string
     description: Ontology of the term. E.g `go`, `cl`, `hp`
@@ -400,7 +415,7 @@ classes:
       - ontology
     slot_usage:
       id:
-        description: An OBO CURIE for a term in GO, CL, CHEBI, etc.
+        description: A CURIE for a term or database object in GO, CL, CHEBI, UniProtKB, PANTHER, etc.
       label:
         description: the term name
         required: true
@@ -416,6 +431,10 @@ classes:
       - is_invalid
       - full_text_unavailable
       - reference_review
+    slot_usage:
+      id:
+        implements:
+          - dcterms:references
 
   ReferenceReview:
     description: Manual reviewer assessment of a reference - how relevant it is to the gene's
@@ -434,6 +453,18 @@ classes:
       - supporting_text
       - full_text_unavailable
       - reference_section_type
+      - finding_review
+
+  FindingReview:
+    description: Manual reviewer assessment of a specific finding within a reference - in
+      particular whether it remains current, is disputed, or has been overturned/superseded by
+      later evidence. This is finer-grained than reference_review (which assesses the whole
+      reference); a paper may contain some findings that stand and others that are overturned.
+      All fields optional and reviewer-supplied.
+    slots:
+      - finding_status
+      - superseded_by
+      - review_notes
 
   SupportingTextInReference:
     description: A supporting text in a reference.
@@ -443,6 +474,474 @@ classes:
       - supporting_text_fulltext
       - full_text_unavailable
       - reference_section_type
+
+  # ============== Module KB Classes ==============
+  #
+  # Modules are reusable, recursively decomposable biological sketches. They
+  # intentionally do not try to be GO-CAMs or exports of gene reviews. They
+  # provide a place to bag together functions, processes, locations, variants,
+  # and causal/temporal connections with lightweight provenance.
+
+  EvidenceItem:
+    description: >-
+      A lightweight citable source for module-level assertions. The source may
+      be a PMID, DOI, database record, local file, pathway record, issue, or any
+      other citable artifact. This is deliberately less strict than the
+      publication quote validation used in gene reviews.
+    attributes:
+      source_id:
+        range: string
+        required: true
+        description: Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...
+      title:
+        range: string
+      statement:
+        range: string
+        description: The assertion this evidence supports in this module.
+      supporting_text:
+        range: string
+        description: Optional quote or excerpt from the evidence source.
+      url:
+        range: string
+      notes:
+        range: string
+
+  Descriptor:
+    description: >-
+      A human-friendly descriptor with optional ontology/database grounding.
+      The preferred_term may be more nuanced than the term label, and the term
+      may be absent when no good identifier exists yet.
+    attributes:
+      preferred_term:
+        range: string
+        required: true
+      description:
+        range: string
+      term:
+        range: Term
+        inlined: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ChemicalEntityDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a chemical entity, metabolite, cofactor, ion, or small molecule.
+
+  GeneDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a gene or locus.
+
+  GeneProductDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a gene product, protein, isoform, or gene-product form.
+
+  FamilyDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a protein family, orthogroup, or other evolutionary grouping.
+    attributes:
+      representative_members:
+        range: GeneProductDescriptor
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Representative concrete members used to orient the family. These are
+          examples, not an exhaustive member list and not a claim that the
+          module is limited to these proteins.
+
+  DomainDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a protein domain, motif, site, or architectural feature.
+
+  CellularComponentDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a cellular component, organelle, compartment, or complex location.
+
+  ProteinComplexDescriptor:
+    is_a: CellularComponentDescriptor
+    description: A descriptor for a protein-containing complex or subcomplex.
+    attributes:
+      active_units:
+        range: ComplexUnit
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Active units or role-bearing components of the complex. This is used
+          to avoid leaving functionally important complex structure as prose.
+
+  ComplexUnit:
+    description: A role-bearing unit within a protein complex descriptor.
+    attributes:
+      id:
+        range: string
+      label:
+        range: string
+      participant:
+        range: ParticipantSelector
+        inlined: true
+      role:
+        range: string
+      stoichiometry:
+        range: string
+        description: Optional stoichiometry or copy-number statement when known.
+      function:
+        range: MolecularFunctionDescriptor
+        inlined: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  CellTypeDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a cell type or cell state.
+
+  AnatomicalEntityDescriptor:
+    is_a: Descriptor
+    description: A descriptor for an anatomical entity, tissue, organismal region, or structure.
+
+  DevelopmentalStageDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a developmental stage, life-cycle stage, or temporal window.
+
+  TaxonDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a taxon or taxonomic scope.
+
+  MolecularFunctionDescriptor:
+    is_a: Descriptor
+    description: >-
+      A descriptor for a molecular function. Extra slots capture common
+      functional nuance without requiring formal post-composition.
+    attributes:
+      substrates:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      products:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      cofactors:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      targets:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      cargo:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      source_location:
+        range: CellularComponentDescriptor
+        inlined: true
+      destination_location:
+        range: CellularComponentDescriptor
+        inlined: true
+
+  BiologicalProcessDescriptor:
+    is_a: Descriptor
+    description: >-
+      A descriptor for a biological process, pathway, reaction, or process-like
+      module grounding.
+    attributes:
+      inputs:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      outputs:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      occurs_in:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      starts_with:
+        range: Descriptor
+        inlined: true
+      ends_with:
+        range: Descriptor
+        inlined: true
+
+  RelationDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a relation or connection predicate.
+
+  ModuleReview:
+    description: >-
+      Review or curation record for a recursively decomposable biological
+      module. This can describe a pathway, organelle lifecycle, protein complex,
+      molecular function, developmental process, or abstract/evolutionary
+      functional plan.
+    tree_root: true
+    slots:
+      - id
+      - title
+      - description
+      - references
+    attributes:
+      status:
+        range: string
+      module:
+        range: ModuleNode
+        inlined: true
+        required: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleNode:
+    description: >-
+      A node in a module. Nodes can be recursively decomposed using parts and
+      variant_sets, and may also carry leaf annotons and connections.
+    attributes:
+      id:
+        range: string
+        required: true
+        identifier: true
+      label:
+        range: string
+        required: true
+      module_type:
+        range: ModuleTypeEnum
+      description:
+        range: string
+      concepts:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+        description: Optional ontology/database grounding for this module node.
+      context:
+        range: ModuleContext
+        inlined: true
+      annotons:
+        range: ModuleAnnoton
+        multivalued: true
+        inlined_as_list: true
+      parts:
+        range: ModulePart
+        multivalued: true
+        inlined_as_list: true
+      variant_sets:
+        range: ModuleVariantSet
+        multivalued: true
+        inlined_as_list: true
+      connections:
+        range: ModuleConnection
+        multivalued: true
+        inlined_as_list: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModulePart:
+    description: A conjunctive part or step of a module node.
+    attributes:
+      order:
+        range: integer
+        description: Optional display or temporal order. Equal or absent values imply partial ordering only.
+      role:
+        range: string
+        description: Curator-supplied role of this part within the parent module.
+      optional:
+        range: boolean
+        description: Whether this part is optional in the parent module.
+      node:
+        range: ModuleNode
+        inlined: true
+        required: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleVariantSet:
+    description: >-
+      A set of alternative implementations for a module node or part. Variants
+      may themselves contain parts, annotons, connections, and nested variant sets.
+    attributes:
+      id:
+        range: string
+        required: true
+      label:
+        range: string
+      axis:
+        range: string
+        description: The dimension along which these variants differ, e.g. taxon, cell type, compartment, route, enzyme family.
+      selection:
+        range: VariantSelectionEnum
+        description: How many variants may be selected in a concrete realization.
+      variants:
+        range: ModuleNode
+        multivalued: true
+        inlined_as_list: true
+        required: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleAnnoton:
+    description: >-
+      A leaf role assertion in a module. The participant may be a concrete gene
+      or an abstract selector, and the function/process/location fields are
+      descriptor holders rather than direct GO annotation exports.
+    attributes:
+      id:
+        range: string
+        required: true
+      label:
+        range: string
+      participant:
+        range: ParticipantSelector
+        inlined: true
+      function:
+        range: MolecularFunctionDescriptor
+        inlined: true
+      processes:
+        range: BiologicalProcessDescriptor
+        multivalued: true
+        inlined_as_list: true
+      locations:
+        range: CellularComponentDescriptor
+        multivalued: true
+        inlined_as_list: true
+      role_description:
+        range: string
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ParticipantSelector:
+    description: >-
+      A selector for a concrete or abstract participant in a module annoton.
+      This can ground to a gene, gene product, complex, family, domain, ortholog,
+      homolog, or any entity satisfying a functional/domain constraint.
+    attributes:
+      selector_type:
+        range: ParticipantSelectorTypeEnum
+        required: true
+      gene:
+        range: GeneDescriptor
+        inlined: true
+      gene_product:
+        range: GeneProductDescriptor
+        inlined: true
+      protein_complex:
+        range: ProteinComplexDescriptor
+        inlined: true
+      family:
+        range: FamilyDescriptor
+        inlined: true
+      domain:
+        range: DomainDescriptor
+        inlined: true
+      homolog_of:
+        range: GeneDescriptor
+        inlined: true
+      ortholog_of:
+        range: GeneDescriptor
+        inlined: true
+      required_function:
+        range: MolecularFunctionDescriptor
+        inlined: true
+      required_domain:
+        range: DomainDescriptor
+        inlined: true
+      taxon:
+        range: TaxonDescriptor
+        inlined: true
+      description:
+        range: string
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleContext:
+    description: Context that applies to a module node, variant, annoton, or connection.
+    attributes:
+      taxa:
+        range: TaxonDescriptor
+        multivalued: true
+        inlined_as_list: true
+      cell_types:
+        range: CellTypeDescriptor
+        multivalued: true
+        inlined_as_list: true
+      anatomical_locations:
+        range: AnatomicalEntityDescriptor
+        multivalued: true
+        inlined_as_list: true
+      developmental_stages:
+        range: DevelopmentalStageDescriptor
+        multivalued: true
+        inlined_as_list: true
+      cellular_components:
+        range: CellularComponentDescriptor
+        multivalued: true
+        inlined_as_list: true
+      conditions:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleConnection:
+    description: >-
+      A connection between module nodes, annotons, or other named elements.
+      Source and target are IDs scoped to the module document.
+    attributes:
+      source:
+        range: string
+        required: true
+      target:
+        range: string
+        required: true
+      connection_type:
+        range: ModuleConnectionTypeEnum
+      predicate:
+        range: RelationDescriptor
+        inlined: true
+      description:
+        range: string
+      context:
+        range: ModuleContext
+        inlined: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
         
 
   ExistingAnnotation:
@@ -1253,6 +1752,88 @@ classes:
 
 
 enums:
+  ModuleTypeEnum:
+    description: Broad type of biological module node.
+    permissible_values:
+      MODULE:
+        description: Generic or unspecified module.
+      BIOLOGICAL_PROCESS:
+        description: Biological-process-like module.
+      MOLECULAR_FUNCTION:
+        description: Molecular-function-like module.
+      METABOLIC_PATHWAY:
+        description: Metabolic pathway or pathway segment.
+      SIGNALING_PATHWAY:
+        description: Signaling pathway or pathway segment.
+      DEVELOPMENTAL_PROCESS:
+        description: Developmental process, stage, or program.
+      CELLULAR_COMPONENT:
+        description: Cellular component or structure viewed as a module.
+      ORGANELLE_LIFECYCLE:
+        description: Assembly, maintenance, operation, and turnover of an organelle.
+      PROTEIN_COMPLEX:
+        description: Protein complex or complex lifecycle.
+      REACTION:
+        description: Reaction-like module step.
+      TRANSPORT_STEP:
+        description: Transport or translocation step.
+      REGULATORY_STEP:
+        description: Regulatory or control step.
+
+  VariantSelectionEnum:
+    description: How variants in a variant set may be selected in a realization.
+    permissible_values:
+      EXACTLY_ONE:
+        description: Exactly one variant applies.
+      ONE_OR_MORE:
+        description: One or more variants may apply.
+      ZERO_OR_MORE:
+        description: Variants are optional and any number may apply.
+
+  ParticipantSelectorTypeEnum:
+    description: How a module annoton participant is selected.
+    permissible_values:
+      GENE:
+        description: A concrete gene.
+      GENE_PRODUCT:
+        description: A concrete gene product, protein, isoform, or form.
+      PROTEIN_COMPLEX:
+        description: A concrete protein-containing complex or subcomplex.
+      FAMILY:
+        description: Any member of a specified family or orthogroup.
+      DOMAIN:
+        description: Any entity with a specified domain, motif, or site.
+      ORTHOLOG_OF:
+        description: Any ortholog of a specified gene.
+      HOMOLOG_OF:
+        description: Any homolog of a specified gene.
+      ANY_WITH_FUNCTION:
+        description: Any participant satisfying the specified molecular function descriptor.
+      ANY_WITH_DOMAIN:
+        description: Any participant satisfying the specified domain descriptor.
+      ANY_PARTICIPANT:
+        description: An unspecified participant.
+
+  ModuleConnectionTypeEnum:
+    description: Common connection types between module elements.
+    permissible_values:
+      PRECEDES:
+        description: The source occurs before the target.
+      CAUSES:
+        description: The source causally promotes or produces the target.
+      POSITIVELY_REGULATES:
+        description: The source positively regulates the target.
+      NEGATIVELY_REGULATES:
+        description: The source negatively regulates the target.
+      PROVIDES_INPUT_FOR:
+        description: The source provides material, signal, or context used by the target.
+      HAS_INPUT:
+        description: The target has the source as input.
+      HAS_OUTPUT:
+        description: The source has the target as output.
+      PART_OF:
+        description: The source is part of the target.
+
   EvidenceType:
     description: |-
       Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
@@ -2000,3 +2581,21 @@ enums:
         description: Correctly cited, but the paper's central claim is contradicted or contested by other evidence
       LOW_QUALITY:
         description: Correctly cited, but methodologically weak or preliminary; treat its conclusions with caution
+
+  FindingReviewStatusEnum:
+    description: >-
+      Reviewer's assessment of the empirical standing of a specific finding (a statement extracted
+      from a reference) in light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a
+      whole reference, this applies per finding: a paper may have some findings that stand and
+      others that have been overturned. Use superseded_by to point to the reference(s) responsible.
+    permissible_values:
+      CURRENT:
+        description: The finding is consistent with the body of evidence and can be curated from
+      CORROBORATED:
+        description: The finding is independently supported by additional evidence
+      DISPUTED:
+        description: The finding is contested or contradicted by other evidence, but not definitively refuted; curate with caution
+      OVERTURNED:
+        description: The finding has been refuted or superseded by later, stronger evidence and should NOT be curated from; record the overturning reference(s) in superseded_by
+      UNVERIFIED:
+        description: The finding has not yet been manually assessed (default)

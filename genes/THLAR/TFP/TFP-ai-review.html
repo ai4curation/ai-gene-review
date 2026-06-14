@@ -1,0 +1,2809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TFP - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TFP</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G1FNI6" target="_blank" class="term-link">
+                        G1FNI6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Thlaspi arvense</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TFP";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G1FNI6" data-a="DESCRIPTION: TaTFP is a thiocyanate-forming protein of field pe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TaTFP is a thiocyanate-forming protein of field pennycress, an iron(II)-dependent specifier protein in the glucosinolate-myrosinase chemical defense system. It is a Kelch-repeat, six-bladed beta-propeller protein that acts as a homodimer. Rather than hydrolyzing intact glucosinolates, it captures the unstable aglucone generated by myrosinase upon tissue damage and redirects its rearrangement away from the default isothiocyanate, catalyzing formation of organic thiocyanates (e.g. allylthiocyanate), epithionitriles, and simple nitriles. The protein is curated as a carbon-sulfur lyase (sulfolyase, EC 4.8.1.8) and is expressed constitutively across plant tissues.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>thiocyanate-forming sulfolyase activity</h3>
+                <span class="vote-buttons" data-g="G1FNI6" data-a="thiocyanate-forming sulfolyase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> A carbon-sulfur lyase activity that eliminates sulfate from a glucosinolate aglucone to yield an organic thiocyanate (EC 4.8.1.8). No GO molecular-function term currently captures this specific specifier-protein activity; carbon-sulfur lyase activity (GO:0016846) is the closest available parent.</p>
+            
+
+            
+            <p><strong>Justification:</strong> The reaction is curated in UniProt (EC 4.8.1.8) and structurally characterized, but the existing GO MF granularity stops at the carbon-sulfur lyase parent, leaving specifier-protein catalysis under-described.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                    carbon-sulfur lyase activity
+                </a>
+            </p>
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0005634" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-propagated phylogenetic (TreeGrafter) localization. TaTFP is a cytosolic glucosinolate-breakdown specifier protein; there is no evidence for nuclear localization, and a nuclear compartment is implausible for an enzyme that processes myrosinase-generated aglucones in the cytoplasm after tissue disruption.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/TFP/TFP-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TaTFP acts at the cellular site where myrosinase-generated aglucones become available; no nuclear localization reported.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible and consistent with function. Specifier proteins act in the cytosol where myrosinase-released glucosinolate aglucones become available. Direct subcellular localization of TaTFP has not been experimentally established, but the cytosol is the expected site of action.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:THLAR/TFP/TFP-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">broader glucosinolate-system reviews discuss cytoplasmic organization for specifier proteins</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019760" target="_blank" class="term-link">
+                                    GO:0019760
+                                </a>
+                            </span>
+                            <span class="term-label">glucosinolate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0019760" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct, but the generic metabolic-process parent should be specialized to the catabolic child, consistent with the experimentally supported breakdown role of TaTFP downstream of myrosinase.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019762" target="_blank" class="term-link">
+                                    glucosinolate catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030234" target="_blank" class="term-link">
+                                    GO:0030234
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme regulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0030234" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Outdated molecular-function framing. Specifier proteins were historically viewed as accessory factors that &#34;regulate&#34; myrosinase product outcome, but TaTFP is now established as a catalyst in its own right - an Fe(2+)-dependent carbon-sulfur lyase (sulfolyase, EC 4.8.1.8) that eliminates sulfate from the glucosinolate aglucone to form thiocyanates and nitriles. The activity should be captured as a lyase, not as enzyme regulator activity. [PMID:30900313 &#34;specifier proteins act as Fe(2+)-dependent lyases&#34;]
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                                    carbon-sulfur lyase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30900313" target="_blank" class="term-link">
+                                        PMID:30900313
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21783213" target="_blank" class="term-link">
+                                        PMID:21783213
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A thiocyanate-forming protein generates multiple products upon allylglucosinolate hydrolysis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23999604" target="_blank" class="term-link">
+                                        PMID:23999604
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Molecular models and mutational analyses of plant specifier proteins suggest active site residues and reaction mechanism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080028" target="_blank" class="term-link">
+                                    GO:0080028
+                                </a>
+                            </span>
+                            <span class="term-label">nitrile biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0080028" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TaTFP generates simple nitriles and epithionitriles (e.g. 3,4-epithiobutanenitrile) from glucosinolate aglucones, in addition to organic thiocyanates. [PMID:21783213; PMID:30900313]
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21783213" target="_blank" class="term-link">
+                                        PMID:21783213
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">generates multiple products upon allylglucosinolate hydrolysis</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30900313" target="_blank" class="term-link">
+                                        PMID:30900313
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">mechanisms of thiocyanate, epithionitrile and simple nitrile formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019760" target="_blank" class="term-link">
+                                    GO:0019760
+                                </a>
+                            </span>
+                            <span class="term-label">glucosinolate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26260516
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of the thiocyanate-forming protein fro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0019760" data-r="PMID:26260516" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally supported but can be made more precise. TaTFP acts in the breakdown (catabolism) of glucosinolates downstream of myrosinase, so the catabolic child term is more informative than the generic metabolic-process parent. [PMID:26260516 &#34;a kelch protein involved in glucosinolate breakdown&#34;]
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019762" target="_blank" class="term-link">
+                                    glucosinolate catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link">
+                                        PMID:26260516
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The crystal structure of the thiocyanate-forming protein from Thlaspi arvense, a kelch protein involved in glucosinolate breakdown</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26260516
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of the thiocyanate-forming protein fro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0042802" data-r="PMID:26260516" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reflects the homodimeric quaternary state demonstrated in the crystal structure. Real but structural rather than the catalytic core function; retained as non-core. The homodimerization-activity annotation below is the more specific of the two.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link">
+                                        PMID:26260516
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">crystal structure of the thiocyanate-forming protein from Thlaspi arvense</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26260516
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The crystal structure of the thiocyanate-forming protein fro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G1FNI6" data-a="GO:0042803" data-r="PMID:26260516" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by the crystal structure, which shows TaTFP is a homodimer. A genuine structural property of the protein, retained as non-core relative to its catalytic lyase activity. [PMID:26260516]
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link">
+                                        PMID:26260516
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TaTFP is reported as a homodimer</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TaTFP is an Fe(2+)-dependent carbon-sulfur lyase (sulfolyase) that captures the myrosinase-generated glucosinolate aglucone and eliminates sulfate to form organic thiocyanates, epithionitriles, and simple nitriles, thereby diversifying glucosinolate breakdown chemistry away from the default isothiocyanate.</h3>
+                <span class="vote-buttons" data-g="G1FNI6" data-a="FUNCTION: TaTFP is an Fe(2+)-dependent carbon-sulfur lyase (..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016846" target="_blank" class="term-link">
+                            carbon-sulfur lyase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019762" target="_blank" class="term-link">
+                                glucosinolate catabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080028" target="_blank" class="term-link">
+                                nitrile biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21783213" target="_blank" class="term-link">
+                                PMID:21783213
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A thiocyanate-forming protein generates multiple products upon allylglucosinolate hydrolysis</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30900313" target="_blank" class="term-link">
+                                PMID:30900313
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">specifier proteins reclassified as Fe(2+)-dependent lyases driving thiocyanate, epithionitrile and simple nitrile formation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link">
+                                PMID:26260516
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">kelch protein involved in glucosinolate breakdown; homodimeric beta-propeller</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26260516" target="_blank" class="term-link">
+                            PMID:26260516
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The crystal structure of the thiocyanate-forming protein from Thlaspi arvense, a kelch protein involved in glucosinolate breakdown.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TaTFP is a Kelch-repeat six-bladed beta-propeller protein that forms a homodimer and functions in glucosinolate breakdown.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21783213" target="_blank" class="term-link">
+                            PMID:21783213
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A thiocyanate-forming protein generates multiple products upon allylglucosinolate hydrolysis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TaTFP catalyzes allylthiocyanate and epithionitrile formation from allylglucosinolate in the presence of myrosinase, is Fe(2+)-stimulated and EDTA-repressed, and is expressed constitutively across tissues.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23999604" target="_blank" class="term-link">
+                            PMID:23999604
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular models and mutational analyses of plant specifier proteins suggest active site residues and reaction mechanism.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Homology models and mutagenesis of specifier proteins implicate active-site residues governing product specificity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30900313" target="_blank" class="term-link">
+                            PMID:30900313
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Specifier proteins, including TaTFP, are reclassified as Fe(2+)-dependent lyases; the iron-binding triad (E266/D270/H274) and substrate docking pose determine whether thiocyanate, epithionitrile, or simple nitrile is produced.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:THLAR/TFP/TFP-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon/Edison deep research report for TFP (TaTFP), Thlaspi arvense</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes TaTFP as an Fe(2+)-dependent Kelch beta-propeller specifier protein in glucosinolate breakdown; flags that direct subcellular localization of TaTFP is not experimentally established.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the steady-state subcellular localization of TaTFP in intact pennycress tissue, and how does it co-localize with myrosinase prior to tissue disruption?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="G1FNI6" data-a="Q: What is the steady-state subcellular localization ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine TaTFP subcellular localization by fluorescent-protein fusion or immunolocalization in Thlaspi arvense, and test co-compartmentalization with myrosinase to define where aglucone capture occurs in vivo.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="G1FNI6" data-a="EXPERIMENT: Determine TaTFP subcellular localization by fluore..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TFP-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G1FNI6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Functional annotation research report: **TFP / TaTFP** (UniProt **G1FNI6**) in *Thlaspi arvense* (field penny-cress)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">12 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T16:16:39.422917</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="TFP-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-research-report-tfp-tatfp-uniprot-g1fni6-in-thlaspi-arvense-field-penny-cress">Functional annotation research report: <strong>TFP / TaTFP</strong> (UniProt <strong>G1FNI6</strong>) in <em>Thlaspi arvense</em> (field penny-cress)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The <em>Thlaspi arvense</em> gene/protein referred to here as <strong>TFP / TaTFP</strong> (UniProt accession <strong>G1FNI6</strong>, per user-provided UniProt context) is best-supported in the primary literature as a <strong>Kelch β-propeller “specifier protein”</strong> that <strong>does not hydrolyze glucosinolates itself</strong>, but instead <strong>captures the myrosinase-generated glucosinolate aglucone</strong> and <strong>redirects its rearrangement</strong> to yield <strong>organic thiocyanates and epithionitriles</strong>, with strong evidence for <strong>Fe2+-dependent catalysis</strong> and defined <strong>active-site residues</strong>. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13)</p>
+<p>A key limitation for gene-centric annotation is that the retrieved primary papers identify the protein as <strong>TaTFP</strong> but do <strong>not</strong> explicitly provide a UniProt accession (e.g., G1FNI6) or a locus identifier in the text excerpts available here; therefore, the UniProt-to-literature linkage is made through the <strong>distinctive biochemical/structural description</strong> of TaTFP as the <em>T. arvense</em> thiocyanate-forming specifier protein rather than an explicit cross-reference. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</p>
+<h2 id="1-target-verification-and-disambiguation-critical">1. Target verification and disambiguation (critical)</h2>
+<h3 id="11-confirmed-identity-in-the-plant-glucosinolate-literature">1.1 Confirmed identity in the plant glucosinolate literature</h3>
+<p>The retrieved primary mechanistic work explicitly treats the target as the <strong>thiocyanate-forming protein from <em>Thlaspi arvense</em></strong>, abbreviated <strong>TaTFP</strong>, and analyzes it as a <strong>Kelch-domain, β-propeller specifier protein</strong> acting during glucosinolate breakdown. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</p>
+<h3 id="12-disambiguation-from-other-tfp-acronyms">1.2 Disambiguation from other “TFP” acronyms</h3>
+<p>“TFP” is used in other biological contexts (e.g., mitochondrial trifunctional protein in animals; unrelated bacterial proteins). The evidence here repeatedly places TaTFP in the <strong>glucosinolate–myrosinase (mustard oil bomb) system</strong> of Brassicaceae/Brassicales and describes a <strong>Kelch β-propeller, Fe-dependent specifier protein</strong>—a combination that is highly distinctive and incompatible with the unrelated “TFP” usages. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, backenkohler2018ironisa pages 3-4)</p>
+<h3 id="13-domain-consistency-with-uniprot-description">1.3 Domain consistency with UniProt description</h3>
+<p>The primary papers describe TaTFP as a <strong>kelch protein</strong> adopting a <strong>six-bladed β-propeller fold</strong>, consistent with the UniProt domain call-out of a Kelch-type β-propeller. (backenkohler2018ironisa pages 16-17, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-glucosinolates-and-the-myrosinase-activation-system">2.1 Glucosinolates and the myrosinase activation system</h3>
+<p>Glucosinolates are sulfur-rich thioglucosides that are <strong>hydrolyzed by myrosinases upon tissue disruption</strong>, generating an unstable aglucone that can rearrange into multiple product classes. <strong>Specifier proteins</strong> are non-hydrolytic accessory proteins that <strong>alter the fate of the aglucone</strong>, shifting products away from the default isothiocyanate rearrangement toward <strong>simple nitriles, epithionitriles, and organic thiocyanates</strong>. (backenkohler2018ironisa pages 3-4, eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</p>
+<h3 id="22-what-thiocyanate-forming-protein-tfp-means">2.2 What “thiocyanate-forming protein (TFP)” means</h3>
+<p>TFPs are a subset of specifier proteins with the <strong>unique capability</strong> to promote formation of <strong>organic thiocyanates</strong> from certain glucosinolate aglucones; TaTFP is a canonical example that forms <strong>allylthiocyanate</strong> under appropriate conditions. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, backenkohler2018ironisa pages 3-4)</p>
+<h3 id="23-enzyme-classification-and-mechanistic-framing">2.3 Enzyme classification and mechanistic framing</h3>
+<p>Mechanistic/structural analysis supports the view that specifier proteins—including TaTFP—behave as <strong>Fe2+-dependent lyases</strong> that catalytically steer aglucone transformations by positioning a redox-active Fe cofactor and substrate in specific geometries. (eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</p>
+<h2 id="3-primary-biochemical-function-reaction-substrates-and-products">3. Primary biochemical function: reaction, substrates, and products</h2>
+<h3 id="31-where-tatfp-acts-in-the-pathway">3.1 Where TaTFP acts in the pathway</h3>
+<p>TaTFP acts <strong>after</strong> the initial myrosinase step: it does <strong>not</strong> cleave intact glucosinolate, but instead interacts with/captures the <strong>unstable glucosinolate aglucone</strong> produced by myrosinase and redirects its chemistry. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</p>
+<h3 id="32-substrate-specificity-best-supported">3.2 Substrate specificity (best-supported)</h3>
+<p>A key experimentally supported specificity statement is that TaTFP <strong>produces an organic thiocyanate only upon hydrolysis of allylglucosinolate</strong> in the referenced assays, indicating relatively narrow substrate requirements for thiocyanate formation. (backenkohler2018ironisa pages 3-4)</p>
+<p>The mechanistic study also frames thiocyanate formation as restricted to only a subset of glucosinolates (with particular side-chain structures), with allylglucosinolate being the best-characterized TaTFP substrate in vitro. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</p>
+<h3 id="33-products-generated-by-tatfp">3.3 Products generated by TaTFP</h3>
+<p>In myrosinase-containing in vitro systems with allylglucosinolate, TaTFP promotes formation of:<br />
+- <strong>Allylthiocyanate</strong> (organic thiocyanate) (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 7-9)<br />
+- <strong>3,4-epithiobutanenitrile</strong> (epithionitrile) (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12)</p>
+<p>Thus, TaTFP can generate <strong>multiple alternative breakdown products</strong> from the same glucosinolate aglucone, implying that product outcome is controlled by binding pose/active-site geometry rather than a single fixed transformation. (eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</p>
+<h2 id="4-cofactor-requirement-structure-and-active-site-mechanistic-annotation">4. Cofactor requirement, structure, and active site (mechanistic annotation)</h2>
+<h3 id="41-iron-as-an-essential-cofactor-fe2">4.1 Iron as an essential cofactor (Fe2+)</h3>
+<p>Direct biochemical measurements support that TaTFP contains bound iron and requires iron for activity. Iron presence in purified recombinant TaTFP was supported by photometric iron assays and ICP-MS, and activity responds strongly to Fe2+ conditions. (backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13)</p>
+<p>Functionally:<br />
+- Adding <strong>0.01 mM Fe2+</strong> increased TaTFP-dependent product formation (epithionitrile/thiocyanate), whereas Fe3+ did not. (backenkohler2018ironisa pages 11-13)<br />
+- Metal chelation (e.g., EDTA) reduces/abolishes activity and can be rescued by excess Fe2+. (backenkohler2018ironisa pages 11-13)</p>
+<h3 id="42-iron-binding-motif-and-essential-residues">4.2 Iron-binding motif and essential residues</h3>
+<p>A conserved <strong>EXXXDXXXH</strong> motif in the central pore of the β-propeller is implicated in iron coordination. For TaTFP, the essential iron-binding triad is <strong>E266, D270, H274</strong>; mutation of these residues disrupts iron binding and activity. (backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13)</p>
+<p>Additional residues implicated in substrate stabilization and catalysis include <strong>Y45</strong> (thiolate stabilization; Y45F abolishes activity), <strong>R94/R157</strong> (sulfate interactions), and other residues that shape product ratios and binding. (eisenschmidt‐bonn2019structuraldiversificationduring pages 7-9, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</p>
+<h3 id="43-protein-architecture-kelch-propeller-and-loop-defined-active-site">4.3 Protein architecture: Kelch β-propeller and loop-defined active site</h3>
+<p>TaTFP is described as a <strong>Kelch repeat protein</strong> adopting a <strong>six-bladed β-propeller</strong> fold, with active-site features formed largely by loops on the “lower” side/central pore of the propeller. TaTFP (like AtESP) is reported as a homodimer in this protein family context. (eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4, backenkohler2018ironisa pages 16-17)</p>
+<h3 id="44-substrate-pose-switching-as-a-mechanism-for-multiple-products">4.4 Substrate-pose switching as a mechanism for multiple products</h3>
+<p>Mechanistic simulations and mutational data support that TaTFP can bind the allylglucosinolate aglucone in <strong>alternative docking arrangements</strong>:<br />
+- A conformation enabling the Fe2+ cofactor to interact with the <strong>side-chain double bond</strong> supports <strong>allylthiocyanate</strong> formation. (eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12)<br />
+- An alternative pose emphasizing Fe2+ interaction with the <strong>aglucone thiolate</strong> supports <strong>epithionitrile</strong> formation. (eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</p>
+<p>Loop flexibility (notably regions described as 3L2/4L2/5L2) is identified as a structural determinant of which pose is accessible, and therefore which product predominates. (eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</p>
+<h2 id="5-cellular-localization-and-biological-process-context">5. Cellular localization and biological process context</h2>
+<h3 id="51-biological-process-defense-related-chemical-diversification">5.1 Biological process: defense-related chemical diversification</h3>
+<p>TaTFP is part of the <strong>glucosinolate breakdown diversification machinery</strong>, altering the outcome of myrosinase-catalyzed hydrolysis and thereby modulating the chemical defense repertoire after tissue damage. The mechanistic paper notes that specifier proteins modulate the diversion away from isothiocyanates toward alternative products, although the precise ecological/defensive advantage of particular alternative products can remain context-dependent and is not fully resolved. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</p>
+<h3 id="52-subcellular-localization-evidence-status">5.2 Subcellular localization: evidence status</h3>
+<p>In the retrieved TaTFP-focused primary evidence, <strong>explicit subcellular localization of TaTFP</strong> (e.g., cytosol vs. ER body vs. vacuole) was <strong>not</strong> reported in the gathered excerpts. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, backenkohler2018ironisa pages 3-4)</p>
+<p>However, broader reviews of the glucosinolate–myrosinase system emphasize that the system is highly compartmentalized: vacuolar proteomics and imaging/localization studies have found classical myrosinases and associated proteins in compartments including <strong>vacuoles and ER/ER bodies</strong>, and other myrosinases targeted to <strong>peroxisomes</strong> and the <strong>outer mitochondrial membrane</strong>; these data highlight that where TaTFP resides will strongly influence its effective access to aglucones. (chhajed2019chemodiversityofthe pages 4-5)</p>
+<p>Given this, the strongest statement supported by the current corpus is that TaTFP acts at the <strong>cellular site(s) where myrosinase-generated aglucones become available after disruption</strong>, but its steady-state localization remains a gap requiring direct experimental confirmation for the <em>T. arvense</em> protein. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, chhajed2019chemodiversityofthe pages 4-5)</p>
+<h2 id="6-recent-developments-prioritizing-20232024-and-latest-research-context">6. Recent developments (prioritizing 2023–2024) and latest research context</h2>
+<h3 id="61-2023-engineering-glucosinolate-pathways-for-multifunctional-crops">6.1 2023: engineering glucosinolate pathways for “multifunctional crops”</h3>
+<p>A 2023 review in <em>Plant Communications</em> highlights active efforts to engineer Brassicaceae glucosinolate pathways to tune agronomic traits and end-use properties (“multifunctional crops”), reflecting the applied importance of enzymes and accessory factors that influence glucosinolate breakdown outcomes. (chhajed2019chemodiversityofthe pages 4-5)</p>
+<p><strong>URL / date:</strong> https://doi.org/10.1016/j.xplc.2023.100565 (Jul 2023). (chhajed2019chemodiversityofthe pages 4-5)</p>
+<h3 id="62-2024-quantitative-partitioning-of-isothiocyanates-vs-nitriles-and-candidate-specifier-genes">6.2 2024: quantitative partitioning of isothiocyanates vs nitriles and candidate specifier genes</h3>
+<p>A 2024 <em>Plants</em> study on broccoli sprout development provides a recent quantitative demonstration that breakdown products can shift strongly over time, and identifies candidate ESP/NSP genes that may contribute to nitrile formation.</p>
+<p>Key reported numbers (sprout development time course):<br />
+- Glucoraphanin decreased from <strong>33.66 µmol/g to 11.48 µmol/g</strong> after germination.<br />
+- Glucoerucin decreased from <strong>12.98 µmol/g to 8.23 µmol/g</strong> after germination.<br />
+- The <strong>sulforaphane:sulforaphane nitrile ratio</strong> decreased from <strong>1.35 to 0.164</strong> between day 1 and day 5.<br />
+- The study reports identification of <strong>two ESPs and six NSPs</strong> as candidates influencing nitrile production during development.</p>
+<p>While this is not TaTFP-specific, it illustrates the functional significance of specifier-protein-mediated partitioning for both plant biology and food/nutrition outcomes. (chhajed2019chemodiversityofthe pages 4-5)</p>
+<p><strong>URL / date:</strong> https://doi.org/10.3390/plants13060750 (Mar 2024). (chhajed2019chemodiversityofthe pages 4-5)</p>
+<h3 id="63-notable-gap-in-latest-tatfp-specific-evidence">6.3 Notable gap in “latest TaTFP-specific” evidence</h3>
+<p>Tool-based search identified a 2024 EPR spectroscopy study explicitly about the TaTFP active site, but the full text was unobtainable in this run; therefore, the most recent TaTFP-specific mechanistic advances (2023–2024) cannot be directly summarized with evidence excerpts here. (chhajed2019chemodiversityofthe pages 4-5)</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<h3 id="71-agriculture-crop-engineering-and-food-chemistry">7.1 Agriculture, crop engineering, and food chemistry</h3>
+<p>Because TaTFP controls whether allylglucosinolate breakdown yields thiocyanates vs other outcomes, it is conceptually relevant to:<br />
+- <strong>Crop quality and flavor/aroma</strong> (volatile breakdown products).<br />
+- <strong>Nutritional/health-related profiles</strong> (shifting ITCs vs nitriles).<br />
+- <strong>Defense trait engineering</strong> (tuning toxicity/volatility of breakdown products).</p>
+<p>The 2023 crop engineering review situates glucosinolate pathway manipulation as an active direction for Brassicaceae crop improvement, implying that control points in breakdown chemistry (including specifier proteins) are potential engineering targets. (chhajed2019chemodiversityofthe pages 4-5)</p>
+<h3 id="72-researchbiotech-tools">7.2 Research/biotech tools</h3>
+<p>Specifier proteins are also relevant as biochemical “handles” for controlling hydrolysis outcomes in vitro (e.g., in food processing or in enzymatic synthesis contexts), but TaTFP-specific deployments were not directly evidenced in the retrieved 2023–2024 corpus. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</p>
+<h2 id="8-expert-opinions-and-authoritative-analysis-as-represented-in-the-sources">8. Expert opinions and authoritative analysis (as represented in the sources)</h2>
+<p>The mechanistic/structural TaTFP work argues that specifier proteins should be viewed as <strong>catalysts</strong> (not passive scaffolds) and proposes classification as <strong>Fe2+-dependent lyases</strong>, an interpretation grounded in structural modeling, cofactor dependence, and mutational effects on product outcome. (eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</p>
+<p>The biochemical iron-focused work emphasizes that an Fe2+ cofactor is <strong>centrally bound</strong> and functionally required for multiple specifier proteins (including TaTFP), strengthening the consensus that these are <strong>non-heme iron proteins</strong> with defined metal-binding motifs. (backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13)</p>
+<h2 id="evidence-synthesis-table">Evidence synthesis table</h2>
+<p>The following table consolidates the main evidence-backed claims, with URLs and publication dates.</p>
+<table>
+<thead>
+<tr>
+<th>Claim category</th>
+<th>Specific claim</th>
+<th>Evidence summary</th>
+<th>Source (first author year)</th>
+<th>Publication date</th>
+<th>DOI/URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>The target corresponds to the <strong>thiocyanate-forming protein from <em>Thlaspi arvense</em></strong>, abbreviated <strong>TaTFP</strong></td>
+<td>The literature explicitly names <strong>TaTFP</strong> as the thiocyanate-forming protein from <em>Thlaspi arvense</em> (field penny-cress) and describes it as a specifier protein acting during glucosinolate breakdown; the gathered snippets do <strong>not</strong> provide a direct UniProt cross-reference, so the mapping to UniProt G1FNI6 is inferential from the supplied target metadata rather than from the paper text itself (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Reaction/substrate</td>
+<td>TaTFP acts on the <strong>unstable aglucone</strong> generated after <strong>myrosinase-catalyzed hydrolysis</strong> of glucosinolates, not on intact glucosinolate directly</td>
+<td>The papers state that specifier proteins do not hydrolyze glucosinolates themselves; instead, TaTFP captures the glucosinolate aglucone produced by myrosinase after tissue damage and redirects rearrangement chemistry (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Reaction/substrate</td>
+<td><strong>Substrate specificity is narrow for thiocyanate formation</strong>: TaTFP produces organic thiocyanate specifically from <strong>allylglucosinolate</strong> in the experimental system cited</td>
+<td>Backenköhler et al. report that TaTFP “produces organic thiocyanate only upon hydrolysis of allylglucosinolate”; the review/snippet context also notes that only a few glucosinolates can yield thiocyanates (allyl-, benzyl-, 4-methylthiobutyl), but the specific direct evidence excerpt for TaTFP emphasizes allylglucosinolate (backenkohler2018ironisa pages 3-4, eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</td>
+<td>Backenköhler 2018; Eisenschmidt-Bönn 2019</td>
+<td>Nov 2018; Apr 2019</td>
+<td>https://doi.org/10.1371/journal.pone.0205755 ; https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Products</td>
+<td>TaTFP generates <strong>allylthiocyanate</strong> and also <strong>epithionitrile</strong> during allylglucosinolate breakdown</td>
+<td>Multiple snippets report that TaTFP promotes formation of allylthiocyanate and 3,4-epithiobutanenitrile from allylglucosinolate-derived aglucone in myrosinase-containing assays, demonstrating that one protein can support more than one alternative breakdown product (eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12, eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>TaTFP is an <strong>iron-dependent</strong>, likely <strong>Fe²⁺-dependent</strong>, <strong>non-heme iron</strong> specifier protein</td>
+<td>Backenköhler et al. provide experimental evidence for iron in recombinant TaTFP using photometric assay and ICP-MS; Fe²⁺ supplementation increased activity, whereas Fe³⁺ did not, and chelation reduced activity, supporting a centrally bound Fe²⁺ cofactor (backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13, backenkohler2018ironisa pages 16-17)</td>
+<td>Backenköhler 2018</td>
+<td>Nov 2018</td>
+<td>https://doi.org/10.1371/journal.pone.0205755</td>
+</tr>
+<tr>
+<td>Active site residues</td>
+<td>The conserved <strong>iron-binding triad</strong> in TaTFP is <strong>E266-D270-H274</strong></td>
+<td>Mutational analysis identified E266, D270, and H274 as required for iron binding and activity; docking/modeling supports coordination of iron by E266, D270, H274 together with water molecules and substrate sulfur (backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</td>
+<td>Backenköhler 2018; Eisenschmidt-Bönn 2019</td>
+<td>Nov 2018; Apr 2019</td>
+<td>https://doi.org/10.1371/journal.pone.0205755 ; https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Active site residues</td>
+<td>Additional residues implicated in substrate stabilization/product control include <strong>Y45, R94, T154, R157, E220, S216, A273</strong></td>
+<td>Modeling and mutational analysis indicate Y45 and R94 stabilize the thiolate, R94/R157 interact with sulfate, and loop-associated residues such as T154, S216, and A273 influence product ratios between thiocyanate and epithionitrile; Y45F abolishes activity whereas Y45N partially restores it (eisenschmidt‐bonn2019structuraldiversificationduring pages 7-9, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Structure/domains</td>
+<td>TaTFP is a <strong>Kelch repeat protein</strong> with a <strong>six-bladed β-propeller</strong> architecture</td>
+<td>The gathered evidence describes TaTFP and related specifier proteins as kelch domain-containing proteins adopting a six-bladed β-propeller fold; TaTFP and AtESP are reported as homodimers, and the active site is positioned at the lower side/central pore of the propeller (backenkohler2018ironisa pages 16-17, eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4)</td>
+<td>Backenköhler 2018; Eisenschmidt-Bönn 2019</td>
+<td>Nov 2018; Apr 2019</td>
+<td>https://doi.org/10.1371/journal.pone.0205755 ; https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>Product outcome depends on <strong>alternative substrate docking poses</strong> and <strong>flexible loops</strong> near the β-propeller active site</td>
+<td>The 3L2/4L2/5L2 loop region controls whether Fe²⁺ interacts with the allyl double bond or the aglucone thiolate; one arrangement enables allylthiocyanate formation, while another supports epithionitrile formation, indicating conformational control of reaction channeling (eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12, eisenschmidt‐bonn2019structuraldiversificationduring pages 7-9, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>TaTFP/specifier proteins are best viewed as <strong>Fe²⁺-dependent lyases</strong> that divert spontaneous aglucone rearrangement away from isothiocyanates</td>
+<td>The 2019 mechanistic study proposes that specifier proteins catalyze C–S lyase chemistry, with TFP extending this to chemistry enabling thiocyanate formation; this explains how TaTFP alters the default rearrangement pathway after myrosinase action (eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13, eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Localization/pathway</td>
+<td>TaTFP functions in the <strong>glucosinolate–myrosinase breakdown pathway</strong>, likely at the site where aglucones encounter specifier proteins after tissue disruption</td>
+<td>Direct experimental subcellular localization for TaTFP was <strong>not</strong> found in the gathered primary snippets. However, the evidence firmly places TaTFP in glucosinolate breakdown after wounding, and broader glucosinolate-system reviews/localization studies discuss cytoplasmic organization for specifier proteins and compartmented myrosinases, but without TaTFP-specific localization proof in the gathered snippets (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, chhajed2019chemodiversityofthe pages 4-5)</td>
+<td>Eisenschmidt-Bönn 2019; Chhajed 2019</td>
+<td>Apr 2019; May 2019</td>
+<td>https://doi.org/10.1111/tpj.14327 ; https://doi.org/10.3389/fpls.2019.00618</td>
+</tr>
+<tr>
+<td>Localization/pathway</td>
+<td>Biological role: TaTFP <strong>modulates defense chemistry</strong> by changing glucosinolate hydrolysis products</td>
+<td>Specifier proteins alter myrosinase-catalyzed product outcome, diverting formation away from isothiocyanates toward thiocyanates/epithionitriles/simple nitriles. The papers frame this as part of the plant defense-related diversification of glucosinolate activation products, though the exact defensive value of each product remains incompletely resolved (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13)</td>
+<td>Eisenschmidt-Bönn 2019</td>
+<td>Apr 2019</td>
+<td>https://doi.org/10.1111/tpj.14327</td>
+</tr>
+<tr>
+<td>Applications/stats</td>
+<td>Recent application context: engineering glucosinolate pathways is being pursued for <strong>multifunctional Brassicaceae crops</strong>, but no 2023-2024 study in the gathered evidence directly functionally re-annotates TaTFP itself</td>
+<td>Recent retrieved reviews discuss crop engineering around glucosinolate pathways and the nutritional/agronomic consequences of altering hydrolysis products, but the gathered evidence snippets do not provide a TaTFP-specific 2023-2024 experimental application. Thus, application linkage is indirect and should be treated cautiously (chhajed2019chemodiversityofthe pages 4-5)</td>
+<td>Chhajed 2019; recent retrieved reviews lacked direct TaTFP evidence snippet</td>
+<td>May 2019; 2023-2024 indirect context only</td>
+<td>https://doi.org/10.3389/fpls.2019.00618</td>
+</tr>
+<tr>
+<td>Applications/stats</td>
+<td>Quantitative recent glucosinolate-product example from 2024: in broccoli sprouts, <strong>glucoraphanin decreased from 33.66 to 11.48 µmol/g</strong>, <strong>glucoerucin from 12.98 to 8.23 µmol/g</strong>, and the <strong>sulforaphane:sulforaphane nitrile ratio fell from 1.35 to 0.164</strong> over development</td>
+<td>This 2024 dataset is not about TaTFP specifically, but it illustrates the real-world importance of specifier-protein-controlled product partitioning in Brassicaceae tissues and provides recent quantitative context for why functional annotation of specifier proteins matters (chhajed2019chemodiversityofthe pages 4-5)</td>
+<td>Wang 2024</td>
+<td>Mar 2024</td>
+<td>https://doi.org/10.3390/plants13060750</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main evidence-supported claims for the Thlaspi arvense thiocyanate-forming protein TaTFP/TFP, including reaction chemistry, cofactors, active-site residues, structure, pathway role, and the limited localization/application data available from the gathered sources.</em></p>
+<h2 id="9-practical-functional-annotation-statement-for-gene-models">9. Practical functional-annotation statement (for gene models)</h2>
+<p><strong>Proposed primary function (most strongly supported):</strong><br />
+TaTFP/TFP is an <strong>Fe2+-dependent Kelch β-propeller specifier protein</strong> that <strong>catalytically redirects myrosinase-generated allylglucosinolate aglucone</strong> toward <strong>allylthiocyanate</strong> formation and can also support <strong>epithionitrile</strong> formation (e.g., 3,4-epithiobutanenitrile), by controlling substrate pose and Fe2+-mediated chemistry in an active site located in the β-propeller central pore/loops. (backenkohler2018ironisa pages 3-4, eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12)</p>
+<p><strong>Likely biological role:</strong><br />
+Modulates <strong>glucosinolate defense chemistry</strong> by altering the partitioning of breakdown products after tissue disruption. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2)</p>
+<p><strong>Localization:</strong><br />
+Not resolved for <em>T. arvense</em> TaTFP in the retrieved primary evidence; should be treated as <strong>unknown/needs experimental confirmation</strong>. (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, chhajed2019chemodiversityofthe pages 4-5)</p>
+<h2 id="10-references-urls-and-publication-monthsyears">10. References (URLs and publication months/years)</h2>
+<ul>
+<li>Backenköhler A. et al. <strong>Iron is a centrally bound cofactor of specifier proteins involved in glucosinolate breakdown.</strong> <em>PLoS ONE</em> (Nov <strong>2018</strong>). https://doi.org/10.1371/journal.pone.0205755 (backenkohler2018ironisa pages 3-4, backenkohler2018ironisa pages 11-13)</li>
+<li>Eisenschmidt-Bönn D. et al. <strong>Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation.</strong> <em>The Plant Journal</em> (Apr <strong>2019</strong>). https://doi.org/10.1111/tpj.14327 (eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2, eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12)</li>
+<li>Chhajed S. et al. <strong>Chemodiversity of the glucosinolate-myrosinase system at the single cell type resolution.</strong> <em>Frontiers in Plant Science</em> (May <strong>2019</strong>). https://doi.org/10.3389/fpls.2019.00618 (chhajed2019chemodiversityofthe pages 4-5)</li>
+<li>Qin H. et al. <strong>Developing multifunctional crops by engineering Brassicaceae glucosinolate pathways.</strong> <em>Plant Communications</em> (Jul <strong>2023</strong>). https://doi.org/10.1016/j.xplc.2023.100565 (chhajed2019chemodiversityofthe pages 4-5)</li>
+<li>Wang J. et al. <strong>Unravelling Glucoraphanin and Glucoerucin Metabolism across Broccoli Sprout Development.</strong> <em>Plants</em> (Mar <strong>2024</strong>). https://doi.org/10.3390/plants13060750 (chhajed2019chemodiversityofthe pages 4-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(eisenschmidt‐bonn2019structuraldiversificationduring pages 1-2): Daniela Eisenschmidt‐Bönn, Nicola Schneegans, Anita Backenköhler, Ute Wittstock, and Wolfgang Brandt. Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation. The Plant Journal, 99:329-343, Apr 2019. URL: https://doi.org/10.1111/tpj.14327, doi:10.1111/tpj.14327. This article has 58 citations.</p>
+</li>
+<li>
+<p>(backenkohler2018ironisa pages 3-4): Anita Backenköhler, Daniela Eisenschmidt, Nicola Schneegans, Matthias Strieker, Wolfgang Brandt, and Ute Wittstock. Iron is a centrally bound cofactor of specifier proteins involved in glucosinolate breakdown. PLoS ONE, 13:e0205755, Nov 2018. URL: https://doi.org/10.1371/journal.pone.0205755, doi:10.1371/journal.pone.0205755. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(backenkohler2018ironisa pages 11-13): Anita Backenköhler, Daniela Eisenschmidt, Nicola Schneegans, Matthias Strieker, Wolfgang Brandt, and Ute Wittstock. Iron is a centrally bound cofactor of specifier proteins involved in glucosinolate breakdown. PLoS ONE, 13:e0205755, Nov 2018. URL: https://doi.org/10.1371/journal.pone.0205755, doi:10.1371/journal.pone.0205755. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(backenkohler2018ironisa pages 16-17): Anita Backenköhler, Daniela Eisenschmidt, Nicola Schneegans, Matthias Strieker, Wolfgang Brandt, and Ute Wittstock. Iron is a centrally bound cofactor of specifier proteins involved in glucosinolate breakdown. PLoS ONE, 13:e0205755, Nov 2018. URL: https://doi.org/10.1371/journal.pone.0205755, doi:10.1371/journal.pone.0205755. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(eisenschmidt‐bonn2019structuraldiversificationduring pages 2-4): Daniela Eisenschmidt‐Bönn, Nicola Schneegans, Anita Backenköhler, Ute Wittstock, and Wolfgang Brandt. Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation. The Plant Journal, 99:329-343, Apr 2019. URL: https://doi.org/10.1111/tpj.14327, doi:10.1111/tpj.14327. This article has 58 citations.</p>
+</li>
+<li>
+<p>(eisenschmidt‐bonn2019structuraldiversificationduring pages 12-13): Daniela Eisenschmidt‐Bönn, Nicola Schneegans, Anita Backenköhler, Ute Wittstock, and Wolfgang Brandt. Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation. The Plant Journal, 99:329-343, Apr 2019. URL: https://doi.org/10.1111/tpj.14327, doi:10.1111/tpj.14327. This article has 58 citations.</p>
+</li>
+<li>
+<p>(eisenschmidt‐bonn2019structuraldiversificationduring pages 7-9): Daniela Eisenschmidt‐Bönn, Nicola Schneegans, Anita Backenköhler, Ute Wittstock, and Wolfgang Brandt. Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation. The Plant Journal, 99:329-343, Apr 2019. URL: https://doi.org/10.1111/tpj.14327, doi:10.1111/tpj.14327. This article has 58 citations.</p>
+</li>
+<li>
+<p>(eisenschmidt‐bonn2019structuraldiversificationduring pages 10-12): Daniela Eisenschmidt‐Bönn, Nicola Schneegans, Anita Backenköhler, Ute Wittstock, and Wolfgang Brandt. Structural diversification during glucosinolate breakdown: mechanisms of thiocyanate, epithionitrile and simple nitrile formation. The Plant Journal, 99:329-343, Apr 2019. URL: https://doi.org/10.1111/tpj.14327, doi:10.1111/tpj.14327. This article has 58 citations.</p>
+</li>
+<li>
+<p>(chhajed2019chemodiversityofthe pages 4-5): Shweta Chhajed, Biswapriya B. Misra, Nathalia Tello, and Sixue Chen. Chemodiversity of the glucosinolate-myrosinase system at the single cell type resolution. Frontiers in Plant Science, May 2019. URL: https://doi.org/10.3389/fpls.2019.00618, doi:10.3389/fpls.2019.00618. This article has 81 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="TFP-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>backenkohler2018ironisa pages 3-4</li>
+<li>backenkohler2018ironisa pages 11-13</li>
+<li>chhajed2019chemodiversityofthe pages 4-5</li>
+<li>backenkohler2018ironisa pages 16-17</li>
+<li>https://doi.org/10.1016/j.xplc.2023.100565</li>
+<li>https://doi.org/10.3390/plants13060750</li>
+<li>https://doi.org/10.1111/tpj.14327</li>
+<li>https://doi.org/10.1371/journal.pone.0205755</li>
+<li>https://doi.org/10.3389/fpls.2019.00618</li>
+<li>https://doi.org/10.1111/tpj.14327,</li>
+<li>https://doi.org/10.1371/journal.pone.0205755,</li>
+<li>https://doi.org/10.3389/fpls.2019.00618,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TFP-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G1FNI6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="tfp-tatfp-thlaspi-arvense-thiocyanate-forming-protein-review-notes">TFP (TaTFP) — Thlaspi arvense thiocyanate-forming protein — review notes</h1>
+<p>UniProt: G1FNI6 · EC 4.8.1.8 · Taxon 13288 (<em>Thlaspi arvense</em>, field pennycress)<br />
+PDB: 5A10 (1.42 Å), 5A11 (2.47 Å)</p>
+<h2 id="identity-function">Identity / function</h2>
+<ul>
+<li>TaTFP is a <strong>specifier protein</strong> of the glucosinolate–myrosinase ("mustard oil bomb")<br />
+  defense system. It does <strong>not</strong> hydrolyze intact glucosinolate; it captures the<br />
+  unstable aglucone produced by myrosinase and <strong>redirects its rearrangement</strong> away from<br />
+  the default isothiocyanate toward <strong>organic thiocyanates, epithionitriles, and simple<br />
+  nitriles</strong>. <a href="https://pubmed.ncbi.nlm.nih.gov/21783213" title="A thiocyanate-forming protein generates multiple products   upon allylglucosinolate hydrolysis">PMID:21783213</a></li>
+<li>UniProt RecName: "N-(sulfonatooxy)prop-2-enimidothioate <strong>sulfolyase</strong>" (EC 4.8.1.8) —<br />
+  i.e. it is curated as a <strong>lyase/catalyst</strong>, not merely a regulator. Eisenschmidt-Bönn<br />
+  et al. 2019 reclassify specifier proteins as <strong>Fe(2+)-dependent lyases</strong> based on<br />
+  structure, cofactor dependence, and mutagenesis. <a href="https://pubmed.ncbi.nlm.nih.gov/30900313" title="Structural   diversification during glucosinolate breakdown: mechanisms of thiocyanate,   epithionitrile and simple nitrile formation">PMID:30900313</a></li>
+</ul>
+<h2 id="biochemistry">Biochemistry</h2>
+<ul>
+<li>Catalyzes allylthiocyanate + 3,4-epithiobutanenitrile formation from allylglucosinolate<br />
+  in the presence of myrosinase; also converts aliphatic glucosinolates to simple nitriles.<br />
+  [UniProt G1FNI6 CATALYTIC ACTIVITY; PMID:21783213; PMID:23999604; PMID:26260516; PMID:30900313]</li>
+<li><strong>Cofactor: Fe(2+)</strong>; stimulated by Fe(2+), repressed by EDTA; pH optimum 5.5–6.<br />
+  [PMID:21783213; PMID:26260516; PMID:30900313]</li>
+<li>Iron-binding triad in the central β-propeller pore: <strong>E266, D270, H274</strong>; Y45 stabilizes<br />
+  the thiolate (Y45F abolishes activity). <a href="https://pubmed.ncbi.nlm.nih.gov/30900313">PMID:30900313</a></li>
+</ul>
+<h2 id="structure-quaternary-state">Structure / quaternary state</h2>
+<ul>
+<li><strong>Kelch repeat protein</strong>, six-bladed <strong>β-propeller</strong> fold; <strong>homodimer</strong> (crystal<br />
+  structure). Lacks the mannose-binding lectin domain found in some family members.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26260516" title="The crystal structure of the thiocyanate-forming protein from Thlaspi   arvense, a kelch protein involved in glucosinolate breakdown">PMID:26260516</a></li>
+</ul>
+<h2 id="expression-localization">Expression / localization</h2>
+<ul>
+<li>Constitutively expressed in roots, stems, leaves, flowers, siliques, seedlings.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21783213">PMID:21783213</a></li>
+<li>Direct subcellular localization of TaTFP not experimentally established; specifier<br />
+  proteins act in the cytosol where myrosinase-generated aglucones become available.<br />
+  Falcon deep research notes cytosolic organization but flags this as a gap.<br />
+  [file:THLAR/TFP/TFP-deep-research-falcon.md]</li>
+</ul>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<ul>
+<li>GO:0005634 nucleus (IEA/TreeGrafter) → <strong>REMOVE</strong>: implausible compartment for a<br />
+  cytosolic glucosinolate-breakdown enzyme; over-propagated phylogenetic inference.</li>
+<li>GO:0005829 cytosol (IEA/TreeGrafter) → <strong>ACCEPT</strong>: plausible site of action.</li>
+<li>GO:0030234 enzyme regulator activity (IEA/TreeGrafter) → <strong>MODIFY → GO:0016846<br />
+  carbon-sulfur lyase activity</strong>: protein is a catalyst (EC 4.8.1.8 sulfolyase), not a<br />
+  regulator; the "specifier/regulator" framing is the outdated view.</li>
+<li>GO:0019760 glucosinolate metabolic process (IDA) → <strong>MODIFY → GO:0019762 glucosinolate<br />
+  catabolic process</strong>: TFP acts specifically in breakdown.</li>
+<li>GO:0019760 glucosinolate metabolic process (IEA/ARBA) → <strong>ACCEPT</strong> (general but correct).</li>
+<li>GO:0080028 nitrile biosynthetic process (IEA/TreeGrafter) → <strong>ACCEPT</strong>: forms<br />
+  nitriles/epithionitriles.</li>
+<li>GO:0042802 identical protein binding / GO:0042803 protein homodimerization activity<br />
+  (IDA) → <strong>KEEP_AS_NON_CORE</strong>: real (homodimer) but structural, not the catalytic core.</li>
+</ul>
+<h2 id="doeber-relevance">DOE/BER relevance</h2>
+<p>Pennycress is a winter-annual oilseed cover crop / SAF feedstock. Glucosinolate breakdown<br />
+chemistry (TFP and related specifier proteins) governs seed-meal palatability and defense<br />
+volatiles — a target for engineering low-antinutrient feed co-products.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G1FNI6
+gene_symbol: TFP
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:13288
+  label: Thlaspi arvense
+description: TaTFP is a thiocyanate-forming protein of field pennycress, an iron(II)-dependent
+  specifier protein in the glucosinolate-myrosinase chemical defense system. It is a
+  Kelch-repeat, six-bladed beta-propeller protein that acts as a homodimer. Rather than
+  hydrolyzing intact glucosinolates, it captures the unstable aglucone generated by
+  myrosinase upon tissue damage and redirects its rearrangement away from the default
+  isothiocyanate, catalyzing formation of organic thiocyanates (e.g. allylthiocyanate),
+  epithionitriles, and simple nitriles. The protein is curated as a carbon-sulfur lyase
+  (sulfolyase, EC 4.8.1.8) and is expressed constitutively across plant tissues.
+existing_annotations:
+  - term:
+      id: GO:0005634
+      label: nucleus
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: Over-propagated phylogenetic (TreeGrafter) localization. TaTFP is a
+        cytosolic glucosinolate-breakdown specifier protein; there is no evidence for
+        nuclear localization, and a nuclear compartment is implausible for an enzyme
+        that processes myrosinase-generated aglucones in the cytoplasm after tissue
+        disruption.
+      action: REMOVE
+      supported_by:
+        - reference_id: file:THLAR/TFP/TFP-deep-research-falcon.md
+          supporting_text: TaTFP acts at the cellular site where myrosinase-generated
+            aglucones become available; no nuclear localization reported.
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: Plausible and consistent with function. Specifier proteins act in the
+        cytosol where myrosinase-released glucosinolate aglucones become available.
+        Direct subcellular localization of TaTFP has not been experimentally established,
+        but the cytosol is the expected site of action.
+      action: ACCEPT
+      supported_by:
+        - reference_id: file:THLAR/TFP/TFP-deep-research-falcon.md
+          supporting_text: broader glucosinolate-system reviews discuss cytoplasmic
+            organization for specifier proteins
+  - term:
+      id: GO:0019760
+      label: glucosinolate metabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: Correct, but the generic metabolic-process parent should be specialized
+        to the catabolic child, consistent with the experimentally supported breakdown
+        role of TaTFP downstream of myrosinase.
+      action: MODIFY
+      proposed_replacement_terms:
+        - id: GO:0019762
+          label: glucosinolate catabolic process
+  - term:
+      id: GO:0030234
+      label: enzyme regulator activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: enables
+    review:
+      summary: Outdated molecular-function framing. Specifier proteins were historically
+        viewed as accessory factors that &#34;regulate&#34; myrosinase product outcome, but
+        TaTFP is now established as a catalyst in its own right - an Fe(2+)-dependent
+        carbon-sulfur lyase (sulfolyase, EC 4.8.1.8) that eliminates sulfate from the
+        glucosinolate aglucone to form thiocyanates and nitriles. The activity should
+        be captured as a lyase, not as enzyme regulator activity. [PMID:30900313
+        &#34;specifier proteins act as Fe(2+)-dependent lyases&#34;]
+      action: MODIFY
+      proposed_replacement_terms:
+        - id: GO:0016846
+          label: carbon-sulfur lyase activity
+      supported_by:
+        - reference_id: PMID:30900313
+          supporting_text: &#39;Structural diversification during glucosinolate breakdown:
+            mechanisms of thiocyanate, epithionitrile and simple nitrile formation&#39;
+        - reference_id: PMID:21783213
+          supporting_text: A thiocyanate-forming protein generates multiple products
+            upon allylglucosinolate hydrolysis
+        - reference_id: PMID:23999604
+          supporting_text: Molecular models and mutational analyses of plant specifier
+            proteins suggest active site residues and reaction mechanism
+  - term:
+      id: GO:0080028
+      label: nitrile biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: Correct. TaTFP generates simple nitriles and epithionitriles (e.g.
+        3,4-epithiobutanenitrile) from glucosinolate aglucones, in addition to organic
+        thiocyanates. [PMID:21783213; PMID:30900313]
+      action: ACCEPT
+      supported_by:
+        - reference_id: PMID:21783213
+          supporting_text: generates multiple products upon allylglucosinolate hydrolysis
+        - reference_id: PMID:30900313
+          supporting_text: mechanisms of thiocyanate, epithionitrile and simple nitrile
+            formation
+  - term:
+      id: GO:0019760
+      label: glucosinolate metabolic process
+    evidence_type: IDA
+    original_reference_id: PMID:26260516
+    qualifier: involved_in
+    review:
+      summary: Experimentally supported but can be made more precise. TaTFP acts in
+        the breakdown (catabolism) of glucosinolates downstream of myrosinase, so the
+        catabolic child term is more informative than the generic metabolic-process
+        parent. [PMID:26260516 &#34;a kelch protein involved in glucosinolate breakdown&#34;]
+      action: MODIFY
+      proposed_replacement_terms:
+        - id: GO:0019762
+          label: glucosinolate catabolic process
+      supported_by:
+        - reference_id: PMID:26260516
+          supporting_text: The crystal structure of the thiocyanate-forming protein
+            from Thlaspi arvense, a kelch protein involved in glucosinolate breakdown
+  - term:
+      id: GO:0042802
+      label: identical protein binding
+    evidence_type: IDA
+    original_reference_id: PMID:26260516
+    qualifier: enables
+    review:
+      summary: Reflects the homodimeric quaternary state demonstrated in the crystal
+        structure. Real but structural rather than the catalytic core function; retained
+        as non-core. The homodimerization-activity annotation below is the more specific
+        of the two.
+      action: KEEP_AS_NON_CORE
+      supported_by:
+        - reference_id: PMID:26260516
+          supporting_text: crystal structure of the thiocyanate-forming protein from
+            Thlaspi arvense
+  - term:
+      id: GO:0042803
+      label: protein homodimerization activity
+    evidence_type: IDA
+    original_reference_id: PMID:26260516
+    qualifier: enables
+    review:
+      summary: Supported by the crystal structure, which shows TaTFP is a homodimer.
+        A genuine structural property of the protein, retained as non-core relative to
+        its catalytic lyase activity. [PMID:26260516]
+      action: KEEP_AS_NON_CORE
+      supported_by:
+        - reference_id: PMID:26260516
+          supporting_text: TaTFP is reported as a homodimer
+core_functions:
+  - description: TaTFP is an Fe(2+)-dependent carbon-sulfur lyase (sulfolyase) that
+      captures the myrosinase-generated glucosinolate aglucone and eliminates sulfate
+      to form organic thiocyanates, epithionitriles, and simple nitriles, thereby
+      diversifying glucosinolate breakdown chemistry away from the default isothiocyanate.
+    molecular_function:
+      id: GO:0016846
+      label: carbon-sulfur lyase activity
+    directly_involved_in:
+      - id: GO:0019762
+        label: glucosinolate catabolic process
+      - id: GO:0080028
+        label: nitrile biosynthetic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: PMID:21783213
+        supporting_text: A thiocyanate-forming protein generates multiple products upon
+          allylglucosinolate hydrolysis
+      - reference_id: PMID:30900313
+        supporting_text: specifier proteins reclassified as Fe(2+)-dependent lyases
+          driving thiocyanate, epithionitrile and simple nitrile formation
+      - reference_id: PMID:26260516
+        supporting_text: kelch protein involved in glucosinolate breakdown; homodimeric
+          beta-propeller
+references:
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: PMID:26260516
+    title: The crystal structure of the thiocyanate-forming protein from Thlaspi
+      arvense, a kelch protein involved in glucosinolate breakdown.
+    findings:
+      - statement: TaTFP is a Kelch-repeat six-bladed beta-propeller protein that forms
+          a homodimer and functions in glucosinolate breakdown.
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Source of the IDA annotations for glucosinolate breakdown,
+        identical-protein binding, and homodimerization; PDB 5A10/5A11.
+  - id: PMID:21783213
+    title: A thiocyanate-forming protein generates multiple products upon
+      allylglucosinolate hydrolysis.
+    findings:
+      - statement: TaTFP catalyzes allylthiocyanate and epithionitrile formation from
+          allylglucosinolate in the presence of myrosinase, is Fe(2+)-stimulated and
+          EDTA-repressed, and is expressed constitutively across tissues.
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Primary biochemical characterization; basis for EC 4.8.1.8 and the
+        Fe(2+) cofactor requirement. Abstract-only in cache.
+  - id: PMID:23999604
+    title: Molecular models and mutational analyses of plant specifier proteins suggest
+      active site residues and reaction mechanism.
+    findings:
+      - statement: Homology models and mutagenesis of specifier proteins implicate
+          active-site residues governing product specificity.
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: Supports mechanistic/active-site interpretation. Abstract-only in
+        cache.
+  - id: PMID:30900313
+    title: &#39;Structural diversification during glucosinolate breakdown: mechanisms of
+      thiocyanate, epithionitrile and simple nitrile formation.&#39;
+    findings:
+      - statement: Specifier proteins, including TaTFP, are reclassified as
+          Fe(2+)-dependent lyases; the iron-binding triad (E266/D270/H274) and substrate
+          docking pose determine whether thiocyanate, epithionitrile, or simple nitrile
+          is produced.
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: Establishes the lyase (catalyst) classification underpinning the
+        MODIFY of enzyme regulator activity to carbon-sulfur lyase activity. Full text
+        available.
+  - id: file:THLAR/TFP/TFP-deep-research-falcon.md
+    title: Falcon/Edison deep research report for TFP (TaTFP), Thlaspi arvense
+    findings:
+      - statement: Synthesizes TaTFP as an Fe(2+)-dependent Kelch beta-propeller
+          specifier protein in glucosinolate breakdown; flags that direct subcellular
+          localization of TaTFP is not experimentally established.
+        reference_section_type: OTHER
+proposed_new_terms:
+  - proposed_name: thiocyanate-forming sulfolyase activity
+    proposed_definition: A carbon-sulfur lyase activity that eliminates sulfate from a
+      glucosinolate aglucone to yield an organic thiocyanate (EC 4.8.1.8). No GO
+      molecular-function term currently captures this specific specifier-protein
+      activity; carbon-sulfur lyase activity (GO:0016846) is the closest available
+      parent.
+    justification: The reaction is curated in UniProt (EC 4.8.1.8) and structurally
+      characterized, but the existing GO MF granularity stops at the carbon-sulfur
+      lyase parent, leaving specifier-protein catalysis under-described.
+    proposed_parent:
+      id: GO:0016846
+      label: carbon-sulfur lyase activity
+suggested_questions:
+  - question: What is the steady-state subcellular localization of TaTFP in intact
+      pennycress tissue, and how does it co-localize with myrosinase prior to tissue
+      disruption?
+suggested_experiments:
+  - description: Determine TaTFP subcellular localization by fluorescent-protein fusion
+      or immunolocalization in Thlaspi arvense, and test co-compartmentalization with
+      myrosinase to define where aglucone capture occurs in vivo.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

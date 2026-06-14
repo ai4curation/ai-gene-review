@@ -1,3 +1,7 @@
+---
+title: "C. elegans Unfolded Protein Response & Stress Integration Project"
+---
+
 # C. elegans Unfolded Protein Response & Stress Integration Project
 
 ## Overview

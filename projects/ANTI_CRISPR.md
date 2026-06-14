@@ -1,3 +1,7 @@
+---
+title: "Anti-CRISPR Proteins Project"
+---
+
 # Anti-CRISPR Proteins Project
 
 ## Overview

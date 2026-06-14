@@ -1,3 +1,7 @@
+---
+title: "Over-Annotation Patterns Project"
+---
+
 # Over-Annotation Patterns Project
 
 ## Overview
@@ -77,6 +81,29 @@ These patterns emerge from multiple sources:
 
 **Recommended Action**: REMOVE when experimental localization data contradicts prediction.
 
+### 7. Fold-Based Pathway Mis-Propagation (wrong product class)
+
+**The Problem**: A catalytic-domain signature shared between two pathways propagates the
+**wrong pathway's** terms. The β-ketoacyl-synthase (FabH/KAS-III) fold is common to fatty-acid
+and polyketide synthases, so InterPro/IEA assigns fatty-acid terms to polyketide/secondary-
+metabolite enzymes.
+
+**Examples (BGC project)**:
+- **pqsC** (PSEAE): `GO:0006633` fatty acid biosynthetic process and `GO:0004315` 3-oxoacyl-ACP
+  synthase → the enzyme makes a quinolone QS signal (octanoate is a *substrate*, not the product).
+- **actI-ORF1** (STRCO): `GO:0006633` / `GO:0030497` fatty acid elongation → it is a **polyketide**
+  ketosynthase (`GO:0016218`); MODIFY to `GO:1901112` actinorhodin biosynthetic process.
+
+### 8. Catalytic Function Assigned to Non-Catalytic Complex Subunits
+
+**The Problem**: Domain signatures assign a catalytic MF to every subunit of an obligate
+heterodimer, including the partner that lacks the active site. Per GO guidelines the activity
+belongs on the catalytic member (`enables`); the partner takes `contributes_to` at most.
+
+**Examples (BGC project)**: **pqsB** (PqsBC; catalytic Cys/His in PqsC), **actI-ORF2/CLF**
+(no active site), **eryCII** (heme-less P450 activator). See `PSEUDOENZYMES.md` and
+`PROTEIN_COMPLEX_FUNCTIONS.md`.
+
 ## Genes Exemplifying Patterns
 
 | Gene | Species | Over-Annotation Pattern | Status |
@@ -85,6 +112,11 @@ These patterns emerge from multiple sources:
 | UBA7 | human | Protein binding, generic ligase | COMPLETE |
 | Epe1 | pombe | Domain-based demethylase (pseudo-enzyme) | COMPLETE |
 | LPL1 | CANAL | Generic hydrolase, membrane localization | COMPLETE |
+| pqsC | PSEAE | Fatty-acid synthase terms (KAS-III fold) on a quinolone synthase | COMPLETE |
+| actI-ORF1 | STRCO | Fatty-acid biosynthesis/elongation terms on a polyketide synthase | COMPLETE |
+| pqsB | PSEAE | Catalytic acyltransferase MF on the non-catalytic subunit | COMPLETE |
+| actI-ORF2 | STRCO | Catalytic acyltransferase MF on the chain-length factor (no active site) | COMPLETE |
+| eryCII | SACEN | Full P450 MF/cofactor set on a heme-less pseudoenzyme | COMPLETE |
 
 ## Recommended Curation Principles
 
