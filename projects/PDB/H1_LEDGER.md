@@ -29,10 +29,15 @@ that already have experimental curation (that is what distinguishes it from
 structure can only ever corroborate. We were testing H1 on the genes guaranteed to refute
 it. Confirmed empirically: among 148 GAP_OPPORTUNITY genes, **0** have `exp_total==0`.
 
-A secondary but real observation: HSPB3's genuinely structure-distinctive fact — the 3:1
-HspB2–HspB3 hetero-tetramer — has **no GO annotation slot at all** in the gene's GOA. The
-structure's unique content often corresponds to a *missing* annotation (a `proposed_new_term`),
-not a fillable existing one.
+A secondary but important observation: HSPB3's genuinely structure-distinctive fact — the
+3:1 HspB2–HspB3 hetero-tetramer — had **no GO annotation slot** among HSPB3's existing
+annotations. The structure's unique content corresponds to a *missing* annotation, not a
+fillable existing one. **Resolution:** rather than leave it in free-text, we added it as a
+`NEW` annotation — `GO:0051291 protein heterooligomerization` (IPI, PMID:29969581, PDB
+6F2R). This is the cleanest demonstration of H1's *net-new-annotation* mode: the structure
+motivates a GO annotation that the existing curation did not have. (The function was also
+described in older non-structure complex work, so it is FIRST_STRUCTURAL but not strictly
+UNIQUE; still, as a curation outcome it is a structure-driven gap-fill.)
 
 ## Round 2 — the correct frontier: GAP_NO_EXP_CURATION (n=63; 36 with cofactor/complex)
 
