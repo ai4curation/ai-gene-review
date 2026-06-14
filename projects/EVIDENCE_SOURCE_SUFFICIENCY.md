@@ -111,10 +111,16 @@ Stratify by aspect (MF / BP / CC) and by whether the term is a conserved /
 phylogenetically-inferred function (where H-a's "reviews carry the phylogenetic
 reasoning" should bite hardest).
 
+A pre-registered protocol operationalizing this for ACCEPT decisions is in
+[`EVIDENCE_SOURCE_SUFFICIENCY/PROTOCOL.md`](EVIDENCE_SOURCE_SUFFICIENCY/PROTOCOL.md);
+the reproducible stratified sample (30 genes, 484 ACCEPT annotations, seed
+`20260614`) is produced by `EVIDENCE_SOURCE_SUFFICIENCY/sample/sample_genes.py`.
+
 ## Status
 
 - [x] `publication_type` schema field + PubMed-PT inference + cache
 - [x] `analyze-evidence-sources` CLI and first human census report
+- [x] Pre-registered study protocol + reproducible stratified-by-aspect sampler
 - [ ] Better review detection (journal/MeSH heuristics) + `publication_type` backfill
 - [ ] Raise `reference_section_type` coverage above the current ~5%
 - [ ] Ablation re-review harness for ACCEPT annotations (sufficiency test)
