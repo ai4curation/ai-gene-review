@@ -69,11 +69,50 @@ reusable **cell-component module** for the BBSome under `modules/bbsome.yaml`.
 ## Project Status
 
 - [x] Define gene set (14 BBS-associated genes) and confirm scope (all BBS-associated)
-- [ ] Fetch UniProt/GOA/publications for all genes
-- [ ] Build `modules/bbsome.yaml` cell-component module
-- [ ] Per-gene annotation reviews (0/14)
-- [ ] Validate all (`just validate-all` / `linkml-validate`)
-- [ ] Pathway/summary integration
+- [x] Fetch UniProt/GOA/publications for all genes
+- [x] Build `modules/bbsome.yaml` cell-component module (passes `linkml-validate` + term-validator)
+- [x] Per-gene annotation reviews (14/14)
+- [x] Validate all (module + all 14 gene reviews `✓ Valid`)
+- [ ] Pathway/summary integration (optional follow-up)
+
+### Review summary (completed 2026-06-14)
+
+All 14 gene reviews are complete and validate cleanly. Each gene received a
+standalone `description`, full per-annotation review (action + summary + reason),
+`core_functions`, `suggested_questions`/`suggested_experiments`, `reference_review`
+blocks, and a `<GENE>-notes.md` research journal with cited provenance.
+
+| Gene | Ann (+NEW) | ACCEPT | Non-core | Over-ann. | MODIFY | REMOVE |
+|------|-----------|--------|----------|-----------|--------|--------|
+| BBS1 | 60 | 30 | 18 | 7 | 5 | 0 |
+| BBS2 | 67 | 16 | 24 | 25 | 0 | 2 |
+| ARL6 | 39 | 11 | 19 | 7 | 0 | 0 |
+| BBS4 | 110 | 42 | 37 | 31 | 0 | 0 |
+| BBS5 | 44 | 18 | 12 | 14 | 0 | 0 |
+| MKKS | 61 (+1) | 5 | 23 | 30 | 2 | 0 |
+| BBS7 | 48 (+1) | 15 | 18 | 14 | 1 | 0 |
+| TTC8 | 47 | 23 | 10 | 14 | 0 | 0 |
+| BBS9 | 48 (+1) | 20 | 13 | 13 | 2 | 0 |
+| BBS10 | 12 (+2) | 5 | 4 | 3 | 0 | 0 |
+| BBS12 | 12 (+1) | 3 | 3 | 6 | 0 | 0 |
+| LZTFL1 | 24 | 12 | 2 | 9 | 0 | 0 |
+| BBIP1 | 24 (+3) | 13 | 8 | 3 | 0 | 0 |
+| CCDC28B | 6 | 4 | 0 | 2 | 0 | 0 |
+
+**Cross-cutting findings:**
+- The pervasive uninformative `protein binding` (GO:0005515) IPI annotations were
+  consistently flagged (`MARK_AS_OVER_ANNOTATED`), with the real biology captured by
+  BBSome membership (GO:0034464) or specific MF terms (e.g. BBS1→`small GTPase binding`
+  for the ARL6/BBS3-GTP interaction).
+- The chaperonin-like assembly factors (MKKS/BBS6, BBS10, BBS12) are correctly treated as
+  **assembly factors, not structural BBSome subunits**; their core MF is now the
+  non-obsolete GO:0044183 (`protein folding chaperone`) — the obsolete GO:0051082
+  (`unfolded protein binding`) surfaced during review was replaced here and in the module.
+- A recurring `RNA Pol II transcription factor binding` (GO:0061629) annotation derived
+  from a BBS7-centric study (PMID:22302990) was flagged as MISCITED/DISPUTED across the
+  scaffold subunits.
+- BBS2 had two over-propagated electronic (IEA) annotations (`microvillus`, `stereocilium`)
+  removed as biologically unsupported.
 
 ## Key References
 
