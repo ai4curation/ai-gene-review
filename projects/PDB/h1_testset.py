@@ -2,19 +2,21 @@
 
 H1: structures/structure-papers fill annotation gaps that traditional (non-structure)
 publications would not. The fair test set is NOT famous, heavily-studied genes (whose
-text already suffices) but genuinely under-characterized proteins where:
+text already suffices).
 
-  * the gene is GAP_OPPORTUNITY (has an uncited structure paper predating its last
-    experimental curation),
-  * it has ZERO experimental molecular-function annotations (exp_mf == 0), and
-  * its literature is shallow (few distinct PMIDs cited in GOA), so there is little
-    non-structure text that could fill the gap instead, and
-  * the deposited structure actually carries a bound cofactor/metal or is a complex,
-    i.e. there is structural evidence capable of pinning an MF/CC term.
+METHODOLOGICAL NOTE (important): an earlier version of this selector used the
+GAP_OPPORTUNITY bucket filtered to exp_mf==0. That was subtly wrong: GAP_OPPORTUNITY
+is, by construction, the set of genes that HAVE experimental curation (it is precisely
+what distinguishes it from GAP_NO_EXP_CURATION). So every GAP_OPPORTUNITY gene has some
+experimental annotation, and a structure can only ever corroborate -- which is exactly
+what we observed (SPR, TOMM5, HSPB3, CFAP61 all came back STRUCTURE_CORROBORATES).
 
-The ranking favors the most under-characterized genes with the most informative
-structures -- the cleanest cases to ask "could the non-structure pubs have filled
-this?".
+The correct H1 frontier is GAP_NO_EXP_CURATION: genes with an uncited structure paper
+AND NO experimental GO annotation of any aspect. For these the structure is the only
+candidate route to an experimental-grade annotation, so they are the genes where a
+structure could plausibly fill a gap that the (absent) experimental literature did not.
+We keep those whose structures carry a bound cofactor/metal or are a complex -- i.e.
+there is diagnostic structural evidence capable of pinning an MF/CC term.
 
 Reuses ai_gene_review.validation.goa_validator (parse_goa_file, referenced_pmids,
 EXPERIMENTAL_EVIDENCE_CODES). Project-specific glue lives here.
@@ -68,20 +70,21 @@ def build(gap_tsv: Path, gene_enriched: Path, enriched: Path, genes_dir: Path) -
     }
     enr_by_pdb = {r["pdb_id"]: r for r in csv.DictReader(enriched.open(), delimiter="\t")}
 
-    # Group GAP_OPPORTUNITY papers by gene.
+    # Group GAP_NO_EXP_CURATION papers by gene -- the correct H1 frontier
+    # (uncited structure paper AND no experimental annotation of any aspect).
     by_gene: Dict[Tuple[str, str], List[dict]] = {}
     for r in gap:
-        if r["category"] != "GAP_OPPORTUNITY":
+        if r["category"] != "GAP_NO_EXP_CURATION":
             continue
         by_gene.setdefault((r["organism"], r["gene"]), []).append(r)
 
     rows: List[H1Row] = []
     for (organism, gene), papers in by_gene.items():
         gi = gene_info.get((organism, gene), {})
-        exp_mf = gi.get("exp_mf", "")
-        # Restrict to the genuinely dark set: no experimental MF annotation.
-        if exp_mf != "0":
+        # Confirm no experimental annotation of any aspect.
+        if gi.get("exp_total", "") not in ("0", ""):
             continue
+        exp_mf = gi.get("exp_mf", "")
 
         goa_file = genes_dir / organism / gene / f"{gene}-goa.tsv"
         if not goa_file.exists():
