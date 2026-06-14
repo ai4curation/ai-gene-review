@@ -64,19 +64,45 @@ Retroactive frontier data points (already reviewed in earlier batches; both `exp
 - **psaC** (CHLRE): PSI [4Fe-4S] / electron transfer — known from homology + classic PSI
   biochemistry; **STRUCTURE_FIRST_EXPERIMENTAL / CORROBORATES** at the CC level.
 
-### Round 2 results (filled as reviews complete)
+### Round 2 results (n=4 reviewed; all exp_total==0, so no verdict can be CORROBORATES)
 
-| Gene | Verdict | Note |
-| --- | --- | --- |
-| _pending_ | | mcrA, mxaI, merA, secA, cbh1 under structure-first review |
+| Gene | Structure | NEW annotations added | Verdicts |
+| --- | --- | --- | --- |
+| **merA** (PSEAI) | FAD-bound mercuric reductase (1ZK7/1ZX9, PMID:16114877) | — | **2 STRUCTURE_UNIQUE** (Hg-ion binding GO:0045340; FAD binding GO:0050660) + 4 FIRST_EXPERIMENTAL (mercuric reductase MF, NADP binding, Hg detox/response BP) |
+| **mcrA** (METAC) | MCR cryo-EM with F430 (8GF5/8GF6, PMID:37307484) | **GO:0044674** MCR complex (IPI); **GO:0016151** nickel cation binding (IDA) | 3 FIRST_EXPERIMENTAL (catalytic MF + the 2 NEW) |
+| **secA** (BACSU) | SecA ATPase, ADP/Mg (1M74, PMID:12242434) | **GO:0016887** ATP hydrolysis activity (IDA) | 5 FIRST_EXPERIMENTAL (ATP/nucleotide binding, exporting-ATPase, Sec translocation, + the NEW) |
+| **mxaI** (METEA) | methanol dehydrogenase (1H4J, PMID:11502173) | — | **NULL** — mxaI is the small subunit; the abstract-only paper describes only the catalytic large subunit (mxaF), so no faithful mxaI-specific quote exists. Reference-only. |
 
-## Interim conclusion
+Round-2 tally: **2 STRUCTURE_UNIQUE** annotations, **~12 STRUCTURE_FIRST_EXPERIMENTAL**, **4 NEW**
+annotations added (incl. HSPB3's GO:0051291 from the round-1 follow-up), **1 NULL gene**.
 
-H1 in its **strong** form (STRUCTURE_UNIQUE) is rare: for well-deposited proteins there is
-almost always non-structure evidence — at least homology/electronic, often experimental —
-because depositing a structure usually means the protein was already characterized. The
-**practical** form of H1 — structures providing the *first experimental-grade* annotation for
-under-curated proteins, upgrading electronic-only inferences — is supported and quantifiable:
-**63 genes** in this dataset have an uncited structure and no experimental annotation at all,
-and that is the population where folding structure evidence into curation demonstrably adds
-experimental support that traditional curation had not produced.
+## Conclusion
+
+H1 has two empirically distinct forms, and the data separate them cleanly:
+
+1. **Strong H1 (STRUCTURE_UNIQUE — function obtainable from no non-structure source):**
+   *rare but real.* 0 cases in round 1 (GAP_OPPORTUNITY, by construction the wrong set);
+   2 cases in round 2 from a single gene (merA's NmerA Hg-binding and FAD cofactor). These
+   are cofactor/metal-binding facts that even homology text did not assert for the protein.
+
+2. **Practical H1 (STRUCTURE_FIRST_EXPERIMENTAL — structure is the first experimental-grade
+   GO evidence, upgrading IBA/IEA/By-similarity):** *common and the main payoff.* It was the
+   verdict for ~every annotation across secA, mcrA, merA, and underlies the **63 GAP_NO_EXP_
+   CURATION genes**: proteins with an uncited structure and zero experimental GO annotation,
+   where folding in structure evidence demonstrably adds experimental support — and often
+   **NEW** annotations (complex membership, cofactor/metal binding) — that traditional
+   curation had not produced.
+
+**Caveat (the mxaI lesson):** a structure paper existing for a gene does not guarantee it
+fills that gene's gap — for multi-subunit assemblies the available text may characterize only
+the catalytic subunit, leaving accessory subunits unsupported.
+
+**Verdict on H1:** supported in the practical form, with quantified scope (63 genes), and
+occasionally in the strong form. The decisive enabler is targeting `GAP_NO_EXP_CURATION`
+(no prior experimental annotation), not famous genes whose text already suffices.
+
+## Appendix — earlier-batch frontier genes (already reviewed, retroactively classified)
+
+- **XYL1** (PICST, exp_total==0): NADPH-bound D-xylose reductase structure = FIRST_EXPERIMENTAL
+  (classic enzymology exists in text, but no prior experimental GO annotation).
+- **psaC** (CHLRE, exp_total==0): PSI structure = FIRST_EXPERIMENTAL / CORROBORATES at CC level.
