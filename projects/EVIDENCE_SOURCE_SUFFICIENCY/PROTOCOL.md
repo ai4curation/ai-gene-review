@@ -131,3 +131,14 @@ uv run python projects/EVIDENCE_SOURCE_SUFFICIENCY/sample/sample_genes.py \
 Outputs (committed, with the seed) under `sample/`:
 `selected_genes.tsv`, `annotation_instrument.tsv`, `reference_instrument.tsv`,
 `blind_ablation_assignments.tsv`.
+
+Once the instruments are filled, score with:
+
+```bash
+uv run python projects/EVIDENCE_SOURCE_SUFFICIENCY/score.py
+```
+
+which prints each estimand (overall + per aspect) with gene-clustered bootstrap
+95% CIs, the conserved/IBA subgroup, the per-bundle blind sufficiency, and the
+retrospective-vs-blind calibration gap. It runs safely on partially-filled
+instruments (each estimand uses only its filled rows).
