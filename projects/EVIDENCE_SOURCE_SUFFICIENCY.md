@@ -122,6 +122,9 @@ the reproducible stratified sample (30 genes, 484 ACCEPT annotations, seed
 - [x] `analyze-evidence-sources` CLI and first human census report
 - [x] Pre-registered study protocol + reproducible stratified-by-aspect sampler
 - [x] Scoring harness (`sample/../score.py`): estimands + gene-clustered bootstrap CIs + blind calibration
+- [x] Objective auto-labeling pass (`autolabel.py`, cited-snippet provenance) + [preliminary results](EVIDENCE_SOURCE_SUFFICIENCY/RESULTS.md): for ACCEPT annotations citing a full-text-cached pub, the justifying quote is in the **abstract 90.6%** of the time (artifact-free fair test)
+- [ ] Full-text reading pass (fixes H-d; upgrades fact_in_abstract to semantic)
+- [ ] Run blind-ablation bundles (unbiased sufficiency + calibration)
 - [ ] Better review detection (journal/MeSH heuristics) + `publication_type` backfill
 - [ ] Raise `reference_section_type` coverage above the current ~5%
 - [ ] Ablation re-review harness for ACCEPT annotations (sufficiency test)
