@@ -21,6 +21,23 @@ It is a methods/feasibility companion to three existing projects:
 Affinity Prediction* (2025), [PMC12262699](https://pmc.ncbi.nlm.nih.gov/articles/PMC12262699/);
 code: https://github.com/jwohlwend/boltz (MIT license).
 
+## Recommendation (TL;DR)
+
+**Not recommended for routine substrate-specificity curation.** Published evaluations show Boltz-2's
+affinity module memorizes training data, fails to rank true binders above decoy targets, and
+compresses its predicted dynamic range — exactly the failure modes that break substrate
+discrimination (see *Evidence against*, below). More fundamentally, substrate specificity is a
+*catalysis* property (kcat/Km, transition-state stabilization), whereas Boltz-2 — like all
+binding-affinity methods including MD/FEP — only scores *ground-state binding*. The physically
+correct method is **QM/MM**, but that is a per-enzyme specialist study, not a pipeline tool, and
+**there is no public database of precomputed QM/MM substrate-specificity results** to draw on.
+
+**Use instead:** the authoritative *experimental* caches — **BRENDA** and **SABIO-RK** (kcat/Km per
+enzyme×substrate), **M-CSA** (catalytic mechanism), and **Rhea** (reaction scope) — which are
+cheaper, authoritative, and consistent with the gene-review preference for experimental evidence.
+Boltz-2 retains only a narrow niche as a *hypothesis-generating* binder-vs-decoy gate for a single
+contested case, and only after passing a known-specificity control benchmark.
+
 ## The idea in one sentence
 
 For an enzyme of uncertain specificity, **co-fold the protein with each of a panel of candidate
@@ -122,13 +139,81 @@ annotations.** Never hardcode or assume results — let the benchmark come back 
 - Install: `pip install boltz` (or `uv add boltz`). First run downloads model weights (~GBs).
 - Use `--use_msa_server` for automatic MSA, or precompute MSAs for reproducibility/offline use.
 
+## Evidence against (published evaluations)
+
+Independent benchmarks since the Boltz-2 release argue specifically against using it for
+discriminating among related ligands — which is what substrate specificity requires:
+
+- **Decoy-target failure (the most damning).** Bekos et al., *On the Reliability of AI Methods in
+  Drug Discovery: Evaluation of Boltz-2*
+  ([arXiv 2603.05532](https://arxiv.org/html/2603.05532v1)): the affinity module *"is still not able
+  to identify the correct protein target by correctly predicting higher binding affinity in
+  comparison to decoy targets … a generalisation of protein–ligand interactions is still not
+  achieved, which is in line with other benchmarks that indicate a memorizing effect."* Discriminating
+  a true binder from decoys is structurally the same task as discriminating a true substrate from
+  near-miss candidates.
+- **Memorization, not physics.** *Have protein-ligand co-folding methods moved beyond memorisation?*
+  ([bioRxiv 2025.02.03.636309](https://www.biorxiv.org/content/10.1101/2025.02.03.636309v1.full)):
+  AF3/Boltz/Chai accuracy *"significantly declines on complexes dissimilar to the training data."*
+  Uncharacterized enzymes (the curation use case) are by definition out-of-distribution.
+- **Breaks chemical rules under perturbation.** *Investigating whether deep learning models for
+  co-folding learn the physics of protein–ligand interactions*, Nat. Commun. 2025
+  ([s41467-025-63947-5](https://www.nature.com/articles/s41467-025-63947-5)).
+- **Range compression / regress-to-center** and poor/negative correlation vs FEP on some targets
+  (external benchmark tracking, [rowansci.com](https://rowansci.com/blog/boltz2-benchmarks)).
+- **Boltz-2's own caveats** ([PMC12262699](https://pmc.ncbi.nlm.nih.gov/articles/PMC12262699/)):
+  affinity is *relative not absolute*, *"performance varies strongly between assays,"* and the
+  affinity module *"does not explicitly handle … cofactors, including ions, water, or multimeric
+  binding partners."* The r≈0.66 headline is on congeneric inhibitor series within well-studied
+  targets — not novel-substrate discrimination across enzyme families.
+
+## Methods comparison: binding vs catalysis
+
+The deciding insight: **substrate specificity is governed by kcat/Km, i.e. transition-state
+stabilization (catalysis), not ground-state binding** (Fersht). Boltz-2 and all binding-affinity MD
+score ground-state binding only.
+
+| Method | Physically grounded | What it answers | Cost | Pipeline-scalable | Cofactors/metals |
+|---|---|---|---|---|---|
+| Boltz-2 / co-folding | No (memorization-prone) | binding rank (≈Km) | seconds | yes-ish | not handled |
+| Binding MD (FEP/TI, MM-GBSA) | Yes | ΔΔG binding (≈Km) | days–weeks, expert | **no** | hard (force-field limited) |
+| **QM/MM** | **Yes (catalysis)** | reaction barrier ΔG‡ (≈kcat) | weeks+, specialist | **no** | better, very costly |
+
+- **MD/FEP** is the gold standard Boltz-2 is benchmarked against (and underperforms), but it still
+  answers *binding*, not *specificity*, and is far too expensive and setup-sensitive for routine use.
+- **QM/MM** is the only method that directly models catalysis-driven specificity, but it needs a
+  known mechanism, a good starting structure, and specialist effort — a single-enzyme deep-dive, not
+  infrastructure.
+
+## Databases of cached computed results
+
+Asked whether one can avoid the compute by pulling precomputed results:
+
+- **Structures (abundant):** AlphaFold DB (~200M), ESM Atlas, PDB/PDBe — good *upstream inputs*.
+- **MD trajectories (growing, but apo dynamics only):** mdCATH
+  ([Nat Sci Data 2024](https://www.nature.com/articles/s41597-024-04140-z)), ATLAS
+  ([NAR 2024](https://academic.oup.com/nar/article/52/D1/D384/7438909)), GPCRmd, MoDEL, MDDB. These
+  cache single-protein flexibility, **not** protein–ligand or substrate-specific simulations.
+- **Quantum chemistry (abundant, small molecules only):** QCArchive, QM9, PubChemQC, ANI, SPICE —
+  isolated molecules, **not** enzyme active-site reactions.
+- **QM/MM enzyme reaction barriers — the gap:** there is **no centralized public database** of
+  precomputed activation free energies / substrate-specificity calculations; only scattered
+  per-paper case studies ([review, PMC3727228](https://pmc.ncbi.nlm.nih.gov/articles/PMC3727228/)).
+
+**Therefore the authoritative cached resources for substrate specificity are experimental/curated, not
+computed:** **BRENDA** and **SABIO-RK** (kcat, Km, kcat/Km per enzyme×substrate — the "answer key"),
+**M-CSA** (catalytic mechanism + reactive residues), **Rhea/MetaCyc/KEGG** (reaction scope), and
+**BindingDB/ChEMBL/PDBbind/BioLiP** (experimental binding + ligand-bound structures). Query these
+first.
+
 ## Status
 
 - [x] Capability review + scope/limitations analysis (this document)
 - [x] Reproducible input-generation + ranking scaffold (`boltz2-substrate-specificity/`)
-- [ ] Run control/benchmark panel on a GPU (known-specificity enzymes) — **gating step**
-- [ ] First demonstrator on a real ENZYME_SPECIFICITY case (candidate: yegV PLI, or LPL1 lipid panel)
-- [ ] Decide whether Boltz-2 ranking earns a place in the gene-review bioinformatics toolkit
+- [x] Reviewed published evidence — **conclusion: not recommended for routine curation**
+- [x] Compared against MD/FEP and QM/MM; surveyed databases of cached computed results
+- [ ] (Only if a single contested case warrants it) run a known-specificity control benchmark before
+      using Boltz-2 even as a hypothesis-generating gate
 
 ## Open questions
 
@@ -137,4 +222,4 @@ annotations.** Never hardcode or assume results — let the benchmark come back 
 3. Is pose-based active-site proximity a better specificity signal than the affinity scalar?
 4. How does it compare head-to-head with cheaper alternatives (docking, M-CSA, simple pocket analysis)?
 
-Last updated: 2026-06-11
+Last updated: 2026-06-14

@@ -4,6 +4,13 @@ Reproducible scaffold for ranking candidate enzyme substrates by Boltz-2 predict
 binding affinity. See [`../BOLTZ2_SUBSTRATE_SPECIFICITY.md`](../BOLTZ2_SUBSTRATE_SPECIFICITY.md)
 for the full rationale, scope, and **limitations** (read these before interpreting any output).
 
+> **Conclusion up front:** based on published evaluations, Boltz-2 is **not recommended for routine
+> substrate-specificity curation** (memorization, decoy-target failure, range compression; and it
+> scores *binding*, while specificity is a *catalysis* property). For substrate specificity, query
+> experimental caches first — **BRENDA**, **SABIO-RK** (kcat/Km), **M-CSA**, **Rhea**. This scaffold
+> remains only for a hypothesis-generating binder-vs-decoy gate on a single contested enzyme, after a
+> known-specificity control benchmark.
+
 > **Honesty note:** Boltz-2 inference requires a GPU and downloads multi-GB weights. These scripts
 > only *prepare inputs* and *parse outputs*; they do **not** run the model. They were authored in a
 > CPU-only environment, so no predictions have been run here. Run `boltz predict` yourself on a GPU.
