@@ -25,11 +25,11 @@ Reusable parsing lives in the core module
 ``referenced_pmids``); this script is the project-specific analysis on top of it.
 
 Usage:
-    uv run python projects/pdb-bioinformatics/curation_gap.py \
-        --enriched projects/pdb-bioinformatics/data/pdb_enriched.tsv \
+    uv run python projects/PDB/curation_gap.py \
+        --enriched projects/PDB/data/pdb_enriched.tsv \
         --genes-dir genes \
-        --out-tsv projects/pdb-bioinformatics/data/curation_gap.tsv \
-        --out-md projects/pdb-bioinformatics/CURATION_GAP.md
+        --out-tsv projects/PDB/data/curation_gap.tsv \
+        --out-md projects/PDB/CURATION_GAP.md
 """
 
 from __future__ import annotations
@@ -266,18 +266,18 @@ def main() -> None:
     ap.add_argument(
         "--enriched",
         type=Path,
-        default=Path("projects/pdb-bioinformatics/data/pdb_enriched.tsv"),
+        default=Path("projects/PDB/data/pdb_enriched.tsv"),
     )
     ap.add_argument("--genes-dir", type=Path, default=Path("genes"))
     ap.add_argument(
         "--out-tsv",
         type=Path,
-        default=Path("projects/pdb-bioinformatics/data/curation_gap.tsv"),
+        default=Path("projects/PDB/data/curation_gap.tsv"),
     )
     ap.add_argument(
         "--out-md",
         type=Path,
-        default=Path("projects/pdb-bioinformatics/CURATION_GAP.md"),
+        default=Path("projects/PDB/CURATION_GAP.md"),
     )
     args = ap.parse_args()
 

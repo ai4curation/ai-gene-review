@@ -60,7 +60,7 @@ mouse (30), ECOLI (23), PSEPK (19), SCHPO (17), worm (17), rat (15).
 | `euk` | eukaryotic **and** ≤2 experimental MF terms | 103 | sharpens an IEA term / pins complex membership |
 | `contested` | review marked a **catalytic** MF `REMOVE`/over-annotated | 130 | adjudicates the disputed activity (pseudo-enzyme / over-general / wrong-specific) |
 
-Full inventory: `pdb-bioinformatics/data/pdb_inventory.tsv` (per entry) and
+Full inventory: `PDB/data/pdb_inventory.tsv` (per entry) and
 `pdb_gene_summary.tsv` (per gene).
 
 ## Prioritized candidates (first pass)
@@ -97,7 +97,7 @@ electronic inference — the sweet spot for structure-grounded review.
 | 23 | mdh | METEA | Q84FY8 | 2 | ✓ | ✓ |  | NAD |
 | 25 | xoxF1 | METEA | C5B120 | 2 | ✓ | ✓ |  | PQQ |
 
-Full ranked list: `pdb-bioinformatics/data/pdb_gene_enriched.tsv` (now includes the
+Full ranked list: `PDB/data/pdb_gene_enriched.tsv` (now includes the
 RCSB per-entry **structure-paper PMIDs** and an `is_eukaryote` flag).
 
 ## Eukaryotic candidates (so they aren't drowned out)
@@ -123,7 +123,7 @@ candidates by score, with the cut(s) that flagged them:
 | 13 | SIRT2 | human | Q8IXJ6 | contested | 60 | ✓ | ✓ | ✓ | NAD,Zn (deacetylase) | PMID:28286128 |
 
 The verified flagships (IDH3B, ATAD1, XYL1, psaC, COX6B1, SPR, COI1) are written up in
-`pdb-bioinformatics/STRUCTURE_PAPERS.md`. For human genes the structure typically sharpens an
+`PDB/STRUCTURE_PAPERS.md`. For human genes the structure typically sharpens an
 existing IEA term or pins **complex membership** rather than revealing function from scratch.
 
 ## Contested catalytic functions (structure adjudicates)
@@ -159,7 +159,7 @@ disputed-term mapping and the structure PMID must both be verified before use.**
 ## Grounding in the structure papers
 
 A bound ligand is the clue; the **primary structure paper** carries the functional
-interpretation. `pdb-bioinformatics/STRUCTURE_PAPERS.md` records verified, PubMed-sourced
+interpretation. `PDB/STRUCTURE_PAPERS.md` records verified, PubMed-sourced
 notes for the shortlist above (and the prokaryotic flagships mcrA, merA, pcaF), with the
 GO-annotation implication for each.
 
@@ -181,13 +181,13 @@ targets.
 
 ```bash
 # 1. offline inventory from cached UniProt + GOA (no network)
-python3 projects/pdb-bioinformatics/inventory_pdb.py
+python3 projects/PDB/inventory_pdb.py
 
 # 2. RCSB enrichment of the prioritized (no-exp-MF) candidate genes (network)
-python3 projects/pdb-bioinformatics/enrich_rcsb.py
+python3 projects/PDB/enrich_rcsb.py
 ```
 
-See `pdb-bioinformatics/RESULTS.md` for method detail, caveats, and the full output schema.
+See `PDB/RESULTS.md` for method detail, caveats, and the full output schema.
 
 ## Caveats
 
@@ -200,12 +200,37 @@ See `pdb-bioinformatics/RESULTS.md` for method detail, caveats, and the full out
 - UniProt `DR PDB` residue ranges drive the coverage metric; a gene present only as a short
   peptide in a partner's structure scores low coverage, correctly.
 
+## Are structure papers overlooked by curation? (`PDB/CURATION_GAP.md`)
+
+`PDB/curation_gap.py` measures, for every deposited structure with a linked primary
+publication, whether that PMID is cited in the gene's GOA `REFERENCE` column. Across
+**745** structure-paper × gene pairs (250 genes), only **15%** are cited by GOA; **65%**
+are `GAP_OPPORTUNITY` (the paper predates the gene's last *experimental* annotation yet is
+never referenced), and **177/250** genes cite zero of their structure papers. "Not cited"
+means the structural study is absent from the evidence trail, not that the function is
+unannotated — but it quantifies how under-used the structural literature is as a GO evidence
+source. The lag boundary uses the latest *experimental* annotation year, since overall GOA
+dates are inflated by IEA/IBA pipeline refreshes.
+
+The reusable GOA-citation helper lives in core
+(`ai_gene_review.validation.goa_validator.referenced_pmids`); the analysis is
+project-specific.
+
+## Prioritized worklist (`PDB/GAP_WORKLIST.md`)
+
+`PDB/gap_worklist.py` ranks the `GAP_OPPORTUNITY` papers by gene priority
+(dark-MF / eukaryote / contested) plus the cofactor / ligand / complex richness of the
+uncited structures, collapsed to one row per gene (the review unit). Top targets:
+`yeast PNO1`, `human RPS3`, `human BIRC5`, `human GCH1`, `human SIRT2`, `human MAPK1`,
+`ARATH CRY2`. Per-paper detail in `PDB/data/gap_worklist.tsv`.
+
 ## Next steps
 
-- [ ] Run full gene reviews on a balanced shortlist, citing the verified structure paper +
-      PDB entry + bound cofactor as evidence. Recommended first batch:
-      **eukaryotic** — `human IDH3B`, `human ATAD1`, `PICST XYL1`;
-      **prokaryotic** — `PSEPK pcaF`, `METAC mcrA`, `PSEAI merA`.
+- [x] First eukaryotic batch reviewed with structure evidence: `PICST XYL1`, `human IDH3B`,
+      `human COX6B1`, `CHLRE psaC`, `ARATH COI1`, `human ATAD1`.
+- [ ] Work down `GAP_WORKLIST.md` from the top, citing the verified structure paper + PDB
+      entry + bound cofactor as evidence; remaining shortlist includes **prokaryotic**
+      `PSEPK pcaF`, `METAC mcrA`, `PSEAI merA`.
 - [ ] Extend enrichment beyond the no-exp-MF set to genes with **contested** function
       (cross-reference `CONTESTED_FUNCTION.md`) where a structure could adjudicate.
 - [ ] For complexes (≥2 protein entities), map partners to UniProt to support CC / complex
