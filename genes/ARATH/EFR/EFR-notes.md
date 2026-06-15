@@ -80,3 +80,28 @@ IBA terms present in UniProt DR block but NOT in GOA stub (not part of existing_
 1. elf18/EF-Tu pattern recognition receptor — transmembrane receptor Ser/Thr kinase (GO:0019199) at the plasma membrane (GO:0005886) that detects bacterial EF-Tu (GO:0016045).
 2. Ligand-activated protein serine/threonine kinase (GO:0106310) that autophosphorylates and phosphorylates BIK1.
 3. Initiation of PAMP-triggered immune signaling (GO:0140426) leading to PTI defense outputs.
+
+## Augmentation note (Falcon/Edison deep-research, 2026-06-15)
+
+Incorporated the Falcon/Edison deep-research report
+(file:ARATH/EFR/EFR-deep-research-falcon.md) as supporting context. It corroborates
+the core verdicts (PRR for EF-Tu elf18/elf26; plasma-membrane signaling; PTI outputs
+ROS/MAPK/Ca2+/callose; antibacterial immunity restricting Pto DC3000), which were
+added as supported_by entries on the PRR, PTI-signaling, plasma-membrane,
+PAMP-receptor-signaling-pathway, and positive-regulation-of-defense annotations/core
+functions.
+
+Refinement (not a verdict flip): the report emphasizes a recent allosteric-activation
+model (Muhlenbeck/Bender/Zipfel 2024, eLife; Bender et al. 2021 PNAS) in which EFR's
+own catalytic activity can be partly dispensable in vivo for antibacterial immunity,
+and BIK1 trans-phosphorylation is driven largely by EFR-activated BAK1 rather than by
+EFR acting as the sole/primary BIK1 kinase [file:ARATH/EFR/EFR-deep-research-falcon.md
+"kinase-dead EFR still retains some capacity to enhance BAK1->BIK1 phosphorylation,
+supporting the non-catalytic EFR model"]. The direct EFR->BIK1 kinase-substrate
+annotation (PMID:29649442, EXP) is retained but a mechanistic caveat was appended to
+its reason field. This is conservative; the curator-asserted experimental annotation
+is not overruled.
+
+The report also reinforces the existing MARK_AS_OVER_ANNOTATED verdict on
+GO:0009626 (plant-type hypersensitive response): "Retrieved EFR-focused studies do
+not directly support EFR as an executor of apoptosis, PCD, HR, pyroptosis."
