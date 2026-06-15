@@ -38,7 +38,7 @@ def abstract_text(pmid: str) -> str:
     if not parsed:
         return ""
     path = al.PUBS / f"PMID_{pmid}.md"
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     if "## Abstract" in text:
         seg = text.split("## Abstract", 1)[1]
         seg = seg.split("## Full Text", 1)[0]
@@ -110,7 +110,7 @@ def main() -> None:
             bundle_text = "\n\n---\n\n".join(chunks)
         elif bundle == "DEEP_RESEARCH_ONLY":
             dr = " ".join(
-                Path(f).read_text()
+                Path(f).read_text(encoding="utf-8")
                 for f in glob.glob(str(gene_dir.get(g, Path(".")) / "*deep-research*.md"))
             )
             if dr:
