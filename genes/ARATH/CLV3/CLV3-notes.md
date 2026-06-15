@@ -57,3 +57,23 @@ proliferation and differentiation). Loss of CLV3 enlarges shoot and floral meris
 - Core CC: extracellular region / apoplast (secreted). GO:0048046 apoplast (IDA) is the most precise and directly supported; GO:0005576 extracellular region (IEA/ISM) is a correct parent.
 - GO:0005739 mitochondrion (ISM, AtSubP prediction GO_REF:0000122): biologically implausible for a secreted CLE peptide with an N-terminal signal peptide and experimentally demonstrated apoplastic secretion. Algorithmic mislocalization -> REMOVE.
 - GO:0045087 innate immune response (IDA, PMID:21499263) vs GO:0002221 NOT (IEP, PMID:22923673): the two annotations are contradictory and both are in the GOA. The community has been unable to reproduce CLV3p-FLS2 immunity; the NOT annotation is the more recent consensus. Treat innate immune response as not a core function (MARK_AS_OVER_ANNOTATED / contested), and ACCEPT the NOT annotation that records the refutation. Per CLAUDE.md, do not REMOVE the experimental IDA; mark it as over-annotated/contested and retain the negation.
+
+## Augmentation: Falcon/Edison deep-research report (2026-06-15)
+
+Incorporated `CLV3-deep-research-falcon.md` (AI-generated GO-focused literature
+synthesis) as supporting context. Added it to the top-level `references:` list and
+attached verbatim supporting_text quotes to the most important annotations and core
+functions (receptor S/T-kinase binding GO:0033612, cell-cell signaling in cell fate
+commitment GO:0045168, maintenance of meristem identity GO:0010074, apoplast
+GO:0048046, and both core_functions).
+
+No existing action verdicts were flipped. The Falcon report is fully concordant with
+the prior review: it endorses extracellular/apoplastic ligand activity, CLV1/BAM/CLV2
+receptor binding, and the CLV3-WUS feedback loop, and it explicitly treats
+apoptosis/immunity/inflammatory/neuronal roles and cytosolic/nuclear localization as
+unsupported. This corroborates (does not contradict) the existing MARK_AS_OVER_ANNOTATED
+verdict on innate immune response (GO:0045087) and the REMOVE verdict on mitochondrion
+(GO:0005739) — a sentence was appended to the GO:0045087 `reason` recording this.
+
+Caveat recorded in the reference_review: the report is LLM-generated; individual claims
+should be traced to primary literature before being treated as definitive.
