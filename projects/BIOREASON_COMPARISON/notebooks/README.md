@@ -1,3 +1,7 @@
+---
+title: "BioReason-Pro comparison — stats notebooks"
+---
+
 # BioReason-Pro comparison — stats notebooks
 
 Reproducible Jupyter notebooks that recompute the summary statistics quoted in
