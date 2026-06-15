@@ -107,3 +107,16 @@ ENDOU (Endonuclease, Poly(U) specific) encodes a uridylate-specific endoribonucl
 
 ## Summary
 ENDOU represents a fascinating example of gene function evolution and misannotation correction. Originally thought to be a serine protease, it is actually a unique uridylate-specific endoribonuclease with roles in RNA metabolism, lipid homeostasis, and potentially immune regulation. Its expression in placenta and tumors, combined with its newly discovered metabolic functions, makes it an important gene for understanding both normal physiology and disease pathogenesis.
+
+## Review verification pass (2026-06-15)
+
+Ran a critical verification pass (annotation-reviewer skill) over the already-COMPLETE review. Verified all key claims against cached full texts. Changes applied:
+
+1. **Metal cofactor reconciliation.** PMID:40169637 (1.7 Å crystal structure of human EndoU) shows the eukaryotic enzyme is specifically **Ca2+-activated**: "only calcium stimulated cleavage, unlike manganese or other divalent metals." This updates the earlier in vitro **Mn2+** report (PMID:18936097, bacterially expressed His-PP11). Updated `description` and the metal-related `core_functions` to present this tension rather than asserting Mn2+-dependence as settled fact. Kept GO:0030145 manganese ion binding (TAS) as ACCEPT — defensible as historically reported.
+2. **GO:0006417 → GO:0045727** (positive regulation of translation). PMID:33511665 is explicitly directional — ENDOU "enhance[s] CHOP mRNA translation"; overexpression "increased CHOP expression" in human HEK293T/HeLa (and zebrafish). Positive term preferred.
+3. **GO:0006915 → GO:0043065** (positive regulation of apoptotic process). PMID:24344237 is a **mouse** study; "EndoU gene disruption prevents AICD and normalizes c-Myc" → EndoU is pro-apoptotic. Flagged organism = mouse (ortholog transfer) in both this and the GO:0002514 reasons.
+4. **GO:0016829 lyase** — kept ACCEPT but corrected the muddled "elimination" reasoning: UniProt assigns EC 4.6.1.- (phosphorus-oxygen lyase) alongside EC 3.1.-.- and carries KW-0456; the 2',3'-cyclic-phosphate-forming transesterification is a deliberate current lyase classification.
+5. **Quote quality.** Replaced several title-only `supporting_text` quotes (negated peptidase, CHOP ER-stress/translation, B-cell, calcium) with substantive findings from the full texts.
+6. Added `reference_review` (relevance/correctness/notes) for the four verified primary full-text references (PMID:18936097, 33511665, 24344237, 37803019, 40169637).
+
+The other decisions (REMOVEs for signal transduction, scavenger receptor, polysaccharide binding, growth factor activity, plasma membrane, proteolysis, serine peptidase IDA; negated-peptidase ACCEPT; lipid/RNA-endonuclease ACCEPTs; B-cell tolerance MODIFY) were all re-verified and left unchanged. File re-validates.
