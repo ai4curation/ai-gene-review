@@ -65,13 +65,35 @@
    would be preferable. However it is not *wrong*. → MODIFY toward a more specific hydrolase
    term, or KEEP_AS_NON_CORE if remaining conservative for a homology-only entry.
 
-### Note on UniProt DR GO lines not in GOA
-The UniProt flat file also lists IBA terms (GO:0004620 glycerophospholipase activity,
-GO:0047372 monoacylglycerol lipase activity, both IBA:GO_Central) and GO:0006952 defense
-response (IEA:UniProtKB-KW). These are **not** in the QuickGO `-goa.tsv` pull (only the 2 IEA
-above), so they are not part of `existing_annotations`. They are consistent with the
-family-level inference and could be considered as proposed terms, but defense response for
-this specific locus is unsupported beyond keyword propagation.
+### IBA lipase annotations missing from QuickGO GOA pull (confirmed in AmiGO) — IMPORTANT
+The UniProt flat file lists two **IBA** molecular-function terms that are **absent from the
+QuickGO `-goa.tsv` pull** used to seed the review (which returned only the 2 IEAs above).
+I verified these directly against **AmiGO/GOlr** (via the GO MCP `search_annotations` on
+`UniProtKB:A0A3B6GK97`; web record:
+http://amigo.geneontology.org/amigo/gene_product/UniProtKB:A0A3B6GK97):
+
+| GO term | Label | Evidence | Reference | Assigned by | Date |
+|---|---|---|---|---|---|
+| GO:0004620 | glycerophospholipase activity | IBA (ECO:0000318) | GO_REF:0000033 | GO_Central | 2017-02-28 |
+| GO:0047372 | monoacylglycerol lipase activity | IBA (ECO:0000318) | GO_REF:0000033 | GO_Central | 2017-02-28 |
+
+QuickGO and AmiGO are **complementary** here: QuickGO returned only the 2 IEAs
+(InterPro2GO + ARBA); AmiGO/GOlr returned only the 2 GO_Central IBAs. These IBA
+annotations are manually-reviewed phylogenetic (PAINT) assertions that this protein is a
+**lipase** (glycerophospholipase + monoacylglycerol lipase), which is stronger and more
+specific than the generic IEA hydrolase term.
+
+**Handling decision (per maintainer):** do NOT add these IBAs to `existing_annotations` —
+the CI consistency check requires `existing_annotations` to mirror the seeded GOA tsv, so
+adding rows it doesn't contain would fail CI. Instead they are recorded as **out-of-band
+knowledge**: cited via `GO_REF:0000033` (with the AmiGO URL) in the references list and
+woven into the `GO:0016787` MODIFY reasoning and `core_functions`. They reinforce (but do
+not change) the MODIFY of the generic hydrolase IEA toward carboxylic ester hydrolase
+activity, the immediate informative parent of both IBA lipase terms.
+
+The UniProt flat file additionally lists GO:0006952 defense response (IEA:UniProtKB-KW),
+also not in the GOA pull; defense response for this specific locus is unsupported beyond
+keyword propagation and is not asserted here.
 
 ## Bottom line
 A plausibly-real but entirely **uncharacterized** wheat patatin/PNPLA-family lipid acyl
