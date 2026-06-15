@@ -166,6 +166,21 @@ class Publication:
     pmcid: Optional[str] = None
     doi: Optional[str] = None
     keywords: Optional[List[str]] = None
+    pubmed_publication_types: Optional[List[str]] = None  # raw PubMed PT list
+
+    @property
+    def publication_type(self) -> Optional[str]:
+        """Classified PublicationTypeEnum value inferred from PubMed PT metadata.
+
+        Returns ``None`` if no PubMed publication-type metadata is available.
+        """
+        if not self.pubmed_publication_types:
+            return None
+        from ai_gene_review.etl.publication_type import (
+            classify_pubmed_publication_type,
+        )
+
+        return classify_pubmed_publication_type(self.pubmed_publication_types)
 
     def to_frontmatter_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for YAML frontmatter."""
@@ -185,6 +200,9 @@ class Publication:
             data["doi"] = self.doi
         if self.keywords:
             data["keywords"] = self.keywords
+        if self.pubmed_publication_types:
+            data["pubmed_publication_types"] = self.pubmed_publication_types
+            data["publication_type"] = self.publication_type
         return data
 
     def to_markdown(self) -> str:
@@ -430,6 +448,9 @@ def fetch_pubmed_data(
         )
         doi = str(record.get("DOI", "")) if record.get("DOI") else None
 
+        # PubMed publication types (PT), e.g. ["Journal Article", "Review"].
+        pub_types = [str(pt) for pt in record.get("PubTypeList", [])] or None
+
         # Check for PMC ID with override support
         pmcid = None
         
@@ -491,6 +512,7 @@ def fetch_pubmed_data(
             abstract=abstract,
             pmcid=pmcid,
             doi=doi,
+            pubmed_publication_types=pub_types,
         )
 
         # Try to fetch full text from PMC if available

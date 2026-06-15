@@ -123,9 +123,11 @@ According to PubMed (verified):
 # STATUS
 
 ## Concept writeup
-- [x] `terms/photosynthesis/photosynthesis-notes.md` created (manual notes; deep-research provider unavailable)
+- [x] `terms/photosynthesis/photosynthesis-notes.md` created (manual notes)
 - [x] GO representation verified against `cache/go/terms.csv` + GOlr
 - [x] Key references PubMed-verified
+- [x] Automated deep research `photosynthesis-deep-research-falcon.md` (falcon; generated after the template fix; machine citations not yet manually adjudicated)
+- [x] Structured module curated: `modules/photosynthesis.yaml` (validates against `ModuleReview`; light reactions + CBB cycle + photoprotection/CCM/pigment supply; GO IDs and UniProt members grounded only where verified)
 
 ## Gene reviews (deferred — first pass is concept writeup only)
 ### Already seeded
@@ -158,6 +160,8 @@ completed" non-report. The empty file was discarded (not kept as
 `-deep-research-falcon.md`) and `terms/photosynthesis/photosynthesis-notes.md` was authored
 manually instead, with all GO IDs and PMIDs independently verified.
 
-**Follow-up infra note:** the `{concept}` → `{{ concept }}` template substitution bug in
-`templates/concept_research.md.j2` affects *all* concept deep-research runs and is worth
-fixing separately before the next `term-deep-research` invocation.
+**Follow-up infra note (RESOLVED 2026-06-14):** `templates/concept_research.md.j2` is
+detected as a Jinja template (`.j2` suffix) but used a literal f-string placeholder
+`{concept}`, which Jinja leaves untouched — so every concept deep-research run received an
+empty concept. Fixed by switching the placeholder to Jinja syntax `{{ concept }}`; verified
+by rendering through `TemplateProcessor` (now substitutes to the real concept).

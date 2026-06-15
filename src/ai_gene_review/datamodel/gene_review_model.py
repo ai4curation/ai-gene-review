@@ -1,5 +1,5 @@
 # Auto generated from gene_review.yaml by pythongen.py version: 0.0.1
-# Generation date: 2026-06-13T18:47:40
+# Generation date: 2026-06-14T17:46:30
 # Schema: gene_review
 #
 # id: https://ai4curation.io/ai-gene-review
@@ -385,6 +385,7 @@ class Reference(YAMLRoot):
     title: str = None
     findings: Optional[Union[Union[dict, "Finding"], list[Union[dict, "Finding"]]]] = empty_list()
     is_invalid: Optional[Union[bool, Bool]] = None
+    publication_type: Optional[Union[str, "PublicationTypeEnum"]] = None
     full_text_unavailable: Optional[Union[bool, Bool]] = None
     reference_review: Optional[Union[dict, "ReferenceReview"]] = None
 
@@ -405,6 +406,9 @@ class Reference(YAMLRoot):
 
         if self.is_invalid is not None and not isinstance(self.is_invalid, Bool):
             self.is_invalid = Bool(self.is_invalid)
+
+        if self.publication_type is not None and not isinstance(self.publication_type, PublicationTypeEnum):
+            self.publication_type = PublicationTypeEnum(self.publication_type)
 
         if self.full_text_unavailable is not None and not isinstance(self.full_text_unavailable, Bool):
             self.full_text_unavailable = Bool(self.full_text_unavailable)
@@ -3697,6 +3701,54 @@ class FindingReviewStatusEnum(EnumDefinitionImpl):
         description="""Reviewer's assessment of the empirical standing of a specific finding (a statement extracted from a reference) in light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a whole reference, this applies per finding: a paper may have some findings that stand and others that have been overturned. Use superseded_by to point to the reference(s) responsible.""",
     )
 
+class PublicationTypeEnum(EnumDefinitionImpl):
+    """
+    The kind of publication or source a reference is. For PMIDs this is inferred from the PubMed publication-type
+    ('PT') metadata; for non-literature references it is inferred from the identifier scheme. Used to test hypotheses
+    about which evidence sources (primary papers, reviews, abstracts, deep research) suffice for GO annotation review.
+    """
+    PRIMARY_RESEARCH = PermissibleValue(
+        text="PRIMARY_RESEARCH",
+        description="""An original/primary research article reporting new experimental or observational results (PubMed 'Journal Article' without a more specific review/secondary type).""")
+    REVIEW = PermissibleValue(
+        text="REVIEW",
+        description="""A narrative review article that synthesizes prior literature (PubMed PT 'Review'). Reviews often carry phylogenetic/comparative reasoning and broad functional context.""")
+    SYSTEMATIC_REVIEW = PermissibleValue(
+        text="SYSTEMATIC_REVIEW",
+        description="A systematic review (PubMed PT 'Systematic Review').")
+    META_ANALYSIS = PermissibleValue(
+        text="META_ANALYSIS",
+        description="A meta-analysis combining results across studies (PubMed PT 'Meta-Analysis').")
+    COMMENT_EDITORIAL = PermissibleValue(
+        text="COMMENT_EDITORIAL",
+        description="""A comment, editorial, letter, or news item (PubMed PT 'Comment', 'Editorial', 'Letter', 'News').""")
+    CASE_REPORT = PermissibleValue(
+        text="CASE_REPORT",
+        description="A clinical case report (PubMed PT 'Case Reports').")
+    PREPRINT = PermissibleValue(
+        text="PREPRINT",
+        description="A preprint or other not-yet-peer-reviewed manuscript (PubMed PT 'Preprint').")
+    DATABASE = PermissibleValue(
+        text="DATABASE",
+        description="""A database record or curated method reference rather than a narrative publication (e.g. a GO_REF, Reactome pathway, or UniProt entry).""")
+    BIOINFORMATICS = PermissibleValue(
+        text="BIOINFORMATICS",
+        description="""A local ad-hoc bioinformatics analysis carried out for this review, referenced via a 'file:' identifier (e.g. a bioinformatics RESULTS.md).""")
+    DEEP_RESEARCH = PermissibleValue(
+        text="DEEP_RESEARCH",
+        description="""An AI/LLM deep-research report generated for this review, referenced via a 'file:' identifier (e.g. GENE-deep-research-PROVIDER.md).""")
+    OTHER = PermissibleValue(
+        text="OTHER",
+        description="A publication or source that does not fit the other categories.")
+    UNKNOWN = PermissibleValue(
+        text="UNKNOWN",
+        description="The publication type could not be determined (e.g. PubMed metadata unavailable).")
+
+    _defn = EnumDefinition(
+        name="PublicationTypeEnum",
+        description="""The kind of publication or source a reference is. For PMIDs this is inferred from the PubMed publication-type ('PT') metadata; for non-literature references it is inferred from the identifier scheme. Used to test hypotheses about which evidence sources (primary papers, reviews, abstracts, deep research) suffice for GO annotation review.""",
+    )
+
 # Slots
 class slots:
     pass
@@ -3844,6 +3896,9 @@ slots.additional_reference_ids = Slot(uri=GENE_REVIEW.additional_reference_ids, 
 
 slots.is_invalid = Slot(uri=GENE_REVIEW.is_invalid, name="is_invalid", curie=GENE_REVIEW.curie('is_invalid'),
                    model_uri=GENE_REVIEW.is_invalid, domain=None, range=Optional[Union[bool, Bool]])
+
+slots.publication_type = Slot(uri=GENE_REVIEW.publication_type, name="publication_type", curie=GENE_REVIEW.curie('publication_type'),
+                   model_uri=GENE_REVIEW.publication_type, domain=None, range=Optional[Union[str, "PublicationTypeEnum"]])
 
 slots.reference_section_type = Slot(uri=GENE_REVIEW.reference_section_type, name="reference_section_type", curie=GENE_REVIEW.curie('reference_section_type'),
                    model_uri=GENE_REVIEW.reference_section_type, domain=None, range=Optional[Union[str, "ManuscriptSection"]])
