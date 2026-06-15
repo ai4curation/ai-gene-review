@@ -1,36 +1,34 @@
-# Follow-up: obsolete GO terms in `core_functions` (not CI-blocking)
+# Obsolete GO terms in `core_functions` — RESOLVED
 
-Generated 2026-06-15 as a logged follow-up from the CI-speedup / term-cleanup work
+Originally logged as a deferred follow-up during the CI-speedup / term-cleanup work
 (see `docs/superpowers/specs/2026-06-15-ci-speedup-and-term-cleanup-design.md`).
+**Now resolved**: `core_functions` is our own synthesis and should reference reasonably
+up-to-date GO, so each obsolete term was migrated to its current equivalent. (Obsolete
+terms remaining in `existing_annotations` are intentionally left as-is — those are
+historical GOA annotation records.)
 
-## The validator gap
+## The validator gap (still open, optional future work)
 
-`linkml-term-validator` validates the `core_functions` GO term slots (`molecular_function`,
-`directly_involved_in`, `locations`, `in_complex`, …) against **dynamic enums expanded by
-branch-reachability** (`reachable_from`). It does **not** check whether a term is marked
-`owl:deprecated`. An obsolete GO term that still retains its `is_a` edges therefore **passes
-validation** — it is reachable from the branch root even though it is obsolete.
+`linkml-term-validator` validates `core_functions` GO slots against dynamic enums expanded
+by branch-**reachability** (`reachable_from`); it does **not** check `owl:deprecated`. An
+obsolete term that keeps its `is_a` edges still passes. So nothing currently *prevents*
+obsolete terms from re-entering `core_functions`.
 
-Consequence: obsolete terms can sit in `core_functions` indefinitely without failing CI.
-This is distinct from the complex-misslotting errors fixed in the cleanup (those failed
-because complex terms are genuinely outside the cellular-location branch).
+Optional enhancement: add an obsolete-term check to strict term validation so obsolete
+terms in `core_functions` become hard errors. Safe to add now that the data is clean.
 
-## Current obsolete-term usages
+## Migrations applied (21 usages across 16 files)
 
-See `class2-obsolete-terms-in-core-functions.tsv` (21 usages across 16 files). Obsoletion
-status confirmed against QuickGO:
+| Obsolete term | → current term | slot | count |
+|---|---|---|---|
+| `GO:0005615` extracellular space | `GO:0005576` extracellular region | locations | 16 |
+| `GO:0009097` isoleucine biosynthetic process | `GO:1901705` L-isoleucine biosynthetic process | directly_involved_in | 3 |
+| `GO:0019264` glycine biosynthetic process from L-serine | `GO:0006545` glycine biosynthetic process | directly_involved_in | 1 |
+| `GO:0019629` propionate catabolic process, 2-methylcitrate cycle | `GO:0019543` propionate catabolic process | directly_involved_in | 1 |
 
-| Term | Status | Recommended replacement | Count |
-|------|--------|-------------------------|-------|
-| `GO:0005615` extracellular space | obsolete | same concept as `GO:0005576` extracellular region | 16 |
-| `GO:0009097` isoleucine biosynthetic process | obsolete | use a more-specific isoleucine biosynthesis term | 3 |
-| `GO:0019264` glycine biosynthetic process from L-serine | obsolete (represents a GO-CAM model) | re-express as activity/process terms | 1 |
-| `GO:0019629` propionate catabolic process, 2-methylcitrate cycle | obsolete (too narrow) | use a broader propionate catabolism term | 1 |
+Replacements verified against OLS/QuickGO (current, non-obsolete). Where a `locations` list
+already contained `GO:0005576`, the resulting duplicate was removed (this also cleaned up 3
+pre-existing duplicate `GO:0005576` entries in `ANOGA/TEP1`, `ANOGA/D7L1`, `ANOGA/TEP2`).
 
-## Suggested remediation (future PR)
-
-1. **Data:** replace the obsolete terms above with their current equivalents in the affected
-   `core_functions` (mostly `GO:0005615` → `GO:0005576`).
-2. **Validator (optional but recommended):** add an explicit obsolete-term check to strict
-   term validation so obsolete terms in `core_functions` become hard errors. Note this would
-   make the usages above CI-blocking, so it must land *after* the data is fixed.
+Verification: corpus-wide scan now reports **0 obsolete terms and 0 duplicate location
+lists** in `core_functions`, and all touched files pass schema + term validation.
