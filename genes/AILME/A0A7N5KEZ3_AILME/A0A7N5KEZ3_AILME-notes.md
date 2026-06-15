@@ -72,12 +72,22 @@ GO_REF codes and the expected annotation pattern for the KAP family.
   (Initially marked KEEP_AS_NON_CORE; revised to MARK_AS_OVER_ANNOTATED on annotation-reviewer advice.)
 
 No molecular-function or biological-process term is currently annotated in GOA. The real "core"
-of this protein is the **structural / matrix-cross-linking** role. Two **NEW** (ISS, homology-based)
-annotations were added to make the core function traceable: **GO:0005198 structural molecule
-activity** (MF, `enables`) and **GO:0031424 keratinization** (BP, `involved_in`), both supported by
-the KAP family reviews and the Pfam/InterPro domain evidence. These are explicitly flagged as
-homology inferences with no panda-specific evidence (GO does not currently assert an MF on human
-KRTAPs, so the MF is a proposed addition).
+of this protein is the **structural / matrix-cross-linking** role. One **NEW** (ISS, homology-based)
+annotation was added to make the core function traceable: **GO:0005198 structural molecule
+activity** (MF, `enables`), supported by the KAP family reviews and the Pfam/InterPro domain
+evidence (flagged as a homology inference; GO does not currently assert an MF on human KRTAPs).
+
+**No biological-process term is asserted.** A `GO:0031424 keratinization` (BP) annotation was
+initially added but then **removed**: by its GO definition keratinization is the *cellular
+cornification process* ("the cytoplasm of the outermost cells of the vertebrate epidermis is
+replaced by keratin"), i.e. the process epidermal cells undergo, not the state of being/containing
+keratin. A structural matrix KAP is a *component/product* of that process, so `involved_in
+keratinization` is a component-vs-process over-annotation. Confirmed against the family: InterPro
+maps IPR002494 only to keratin filament (CC), **not** keratinization; the IBA-reviewed BP for the
+KAP family is `GO:0042633 hair cycle` (e.g. KRTAP4-3 Q9BYR4, KRTAP4-2 Q9BYR3). Hair cycle was *not*
+asserted either, because it would force an unsupported hair-vs-claw context commitment for this
+uncharacterized panda protein. The structural role is fully captured by the MF (structural molecule
+activity) + CC (keratin filament).
 
 ## Tooling notes
 
