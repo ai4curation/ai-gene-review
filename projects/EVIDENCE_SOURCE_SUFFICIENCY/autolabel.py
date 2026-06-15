@@ -67,7 +67,7 @@ def parse_pub(pmid: str) -> Optional[Tuple[str, str, dict]]:
     path = PUBS / f"PMID_{pmid}.md"
     if not path.exists():
         return None
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     fm: dict = {}
     if text.startswith("---"):
         parts = text.split("---", 2)
@@ -124,7 +124,7 @@ def is_review_ref(ref_id: str, type_cache: Dict[str, List[str]]) -> bool:
 def deep_research_text(gene_dir: Path) -> str:
     chunks = []
     for f in glob.glob(str(gene_dir / "*deep-research*.md")):
-        chunks.append(normalize(Path(f).read_text()))
+        chunks.append(normalize(Path(f).read_text(encoding="utf-8")))
     return " ".join(chunks)
 
 
