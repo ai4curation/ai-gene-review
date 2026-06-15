@@ -137,7 +137,7 @@ def main() -> None:
     # gene -> (yaml dict, gene_dir)
     gene_yaml: Dict[str, Tuple[dict, Path]] = {}
     for y in glob.glob("genes/human/*/*-ai-review.yaml"):
-        d = yaml.safe_load(open(y))
+        d = yaml.safe_load(Path(y).read_text(encoding="utf-8"))
         if d:
             gene_yaml[d.get("gene_symbol")] = (d, Path(y).parent)
 
@@ -153,7 +153,12 @@ def main() -> None:
 
     dr_cache: Dict[str, str] = {}
 
-    rows = list(csv.DictReader(open(sample / "annotation_instrument.tsv"), delimiter="\t"))
+    rows = list(
+        csv.DictReader(
+            (sample / "annotation_instrument.tsv").read_text(encoding="utf-8").splitlines(),
+            delimiter="\t",
+        )
+    )
     filled = 0
     for r in rows:
         gene, tid = r["gene"], r["term_id"]
@@ -229,20 +234,25 @@ def main() -> None:
             r["notes"] = "quote(s) not locatable in cached text"
 
     cols = rows[0].keys()
-    with open(sample / "annotation_instrument.tsv", "w", newline="") as f:
+    with open(sample / "annotation_instrument.tsv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols, delimiter="\t", extrasaction="ignore")
         w.writeheader()
         w.writerows(rows)
 
     # Reference instrument: fill publication_type_final + is_review_final.
-    refs = list(csv.DictReader(open(sample / "reference_instrument.tsv"), delimiter="\t"))
+    refs = list(
+        csv.DictReader(
+            (sample / "reference_instrument.tsv").read_text(encoding="utf-8").splitlines(),
+            delimiter="\t",
+        )
+    )
     for rr in refs:
         ref_id = rr["reference_id"]
         auto = rr.get("publication_type_auto") or ""
         rr["publication_type_final"] = auto
         rr["is_review_final"] = "Y" if (auto in REVIEW_TYPES or is_review_ref(ref_id, type_cache)) else "N"
         rr["notes"] = "auto: PT + journal-name heuristic"
-    with open(sample / "reference_instrument.tsv", "w", newline="") as f:
+    with open(sample / "reference_instrument.tsv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=refs[0].keys(), delimiter="\t", extrasaction="ignore")
         w.writeheader()
         w.writerows(refs)

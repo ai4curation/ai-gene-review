@@ -33,7 +33,7 @@ ASPECTS = ("MF", "BP", "CC")
 def read_tsv(path: Path) -> List[dict]:
     if not path.exists():
         return []
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f, delimiter="\t"))
 
 
@@ -272,7 +272,7 @@ def main() -> None:
     report = "\n".join(lines) + "\n"
     print(report)
     if args.out:
-        Path(args.out).write_text(report)
+        Path(args.out).write_text(report, encoding="utf-8")
         print(f"[written to {args.out}]")
 
 

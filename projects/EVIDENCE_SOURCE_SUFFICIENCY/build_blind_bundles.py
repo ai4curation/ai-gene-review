@@ -58,7 +58,7 @@ def main() -> None:
     gene_refs: dict = {}
     gene_dir: dict = {}
     for y in glob.glob("genes/human/*/*-ai-review.yaml"):
-        d = yaml.safe_load(open(y))
+        d = yaml.safe_load(Path(y).read_text(encoding="utf-8"))
         if not d:
             continue
         g = d.get("gene_symbol")
@@ -73,11 +73,17 @@ def main() -> None:
 
     # term labels from the annotation instrument
     labels: dict = {}
-    for r in csv.DictReader(open(SAMPLE / "annotation_instrument.tsv"), delimiter="\t"):
+    for r in csv.DictReader(
+        (SAMPLE / "annotation_instrument.tsv").read_text(encoding="utf-8").splitlines(),
+        delimiter="\t",
+    ):
         labels[(r["gene"], r["term_id"])] = r.get("term_label", "")
 
     rows = list(
-        csv.DictReader(open(SAMPLE / "blind_ablation_assignments.tsv"), delimiter="\t")
+        csv.DictReader(
+            (SAMPLE / "blind_ablation_assignments.tsv").read_text(encoding="utf-8").splitlines(),
+            delimiter="\t",
+        )
     )
     out = []
     for i, r in enumerate(rows):
@@ -131,7 +137,7 @@ def main() -> None:
             }
         )
 
-    (SAMPLE / "blind_bundles.json").write_text(json.dumps(out, indent=1))
+    (SAMPLE / "blind_bundles.json").write_text(json.dumps(out, indent=1), encoding="utf-8")
     empty = sum(1 for o in out if not o["has_evidence"])
     by = defaultdict(lambda: [0, 0])
     for o in out:
