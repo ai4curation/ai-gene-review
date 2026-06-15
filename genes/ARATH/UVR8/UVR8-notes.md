@@ -127,3 +127,29 @@ core MF in themselves.
 - GO:0010224 response to UV-B (IEP) / GO:0009411 response to UV (IMP): ACCEPT/core.
 - GO:0009649 entrainment of circadian clock (IMP): KEEP_AS_NON_CORE.
 - Add photoreceptor activity (GO:0009881) and regulation of photomorphogenesis to core_functions / proposed.
+
+## Augmentation with Falcon/Edison deep-research report (2026-06-15)
+
+Incorporated file:ARATH/UVR8/UVR8-deep-research-falcon.md as a supporting reference
+(relevance HIGH, correctness VERIFIED with caveat that it is an AI-generated synthesis
+and individual claims should be traced to primary literature). The report strongly
+corroborates the core verdicts: UV-B photoreception via intrinsic tryptophans (not an
+enzyme/RanGEF), homodimer->monomer photoconversion as the signaling-competent switch,
+UV-B-dependent COP1 binding by the monomer, nuclear accumulation (with the caveat that
+nuclear localization alone is insufficient), and the UV-B response/photomorphogenesis
+BP. Falcon quotes added as supported_by to: photoreceptor activity (GO:0009881),
+homodimerization activity (GO:0042803), response to UV-B (GO:0010224), nucleus EXP
+(GO:0005634), and the COP1 core_function.
+
+CONTRADICTION / refinement noted (verdicts NOT flipped, per augmentation rules):
+The Falcon report flags direct UVR8 chromatin / histone-H2B binding as DISPUTED. It
+reports that earlier histone-agarose/ChIP studies (PMID:16330762, PMID:20031919) were
+followed by a careful re-examination (Binkert et al. 2016, BMC Plant Biology,
+doi:10.1186/s12870-016-0732-5) that found no convincing UVR8 chromatin association at
+HY5/MYB12 loci, no in vitro nucleosome binding, and that RCC1-like histone/DNA-binding
+residues are not conserved in UVR8. The current review ACCEPTs both GO:0003682
+(chromatin binding) and GO:0000785 (chromatin). I left these as ACCEPT but appended a
+cautionary sentence to each `reason` flagging the dispute. A future full re-review
+should weigh Binkert 2016 directly and may want to downgrade these to
+MARK_AS_OVER_ANNOTATED / UNDECIDED. (Binkert PMID not asserted in the YAML because it
+was not verified against PubMed here.)
