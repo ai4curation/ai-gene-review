@@ -47,6 +47,9 @@ from ai_gene_review.validation.goa_validator import (
     referenced_pmids,
 )
 
+# Repo root, so paths resolve regardless of the caller's working directory.
+REPO = Path(__file__).resolve().parents[2]
+
 
 @dataclass
 class StructurePaperRow:
@@ -173,9 +176,9 @@ def analyze(enriched: Path, genes_dir: Path) -> List[StructurePaperRow]:
                     latest_goa_year=latest,
                     latest_exp_goa_year=latest_exp,
                     in_publications_cache=(
-                        Path("publications") / f"PMID_{bare}.md"
+                        REPO / "publications" / f"PMID_{bare}.md"
                     ).exists(),
-                    in_ai_review=(bare in review_text),
+                    in_ai_review=(f"PMID:{bare}" in review_text),
                 )
             )
     return rows

@@ -25,14 +25,17 @@ from pathlib import Path
 
 import yaml
 
+from ai_gene_review.validation.goa_validator import EXPERIMENTAL_EVIDENCE_CODES
+
 REPO = Path(__file__).resolve().parents[2]
 GENES = REPO / "genes"
 OUTDIR = Path(__file__).resolve().parent / "data"
 OUTDIR.mkdir(exist_ok=True)
 
-# GO evidence codes that reflect direct experimental characterization
-EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"}
-HIGH_THROUGHPUT = {"HTP", "HDA", "HMP", "HGI", "HEP"}
+# GO experimental evidence codes -- single source of truth shared with the
+# validator (includes both low-throughput EXP/IDA/IPI/IMP/IGI/IEP and the
+# high-throughput HTP/HDA/HMP/HGI/HEP codes; HTP evidence is still experimental).
+EXPERIMENTAL = set(EXPERIMENTAL_EVIDENCE_CODES)
 
 # Organism codes treated as eukaryotic (so euk candidates aren't drowned out).
 EUKARYOTES = {

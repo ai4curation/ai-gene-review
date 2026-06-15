@@ -2,14 +2,14 @@
 
 Per (gene, structure-paper) status: is the structure's primary publication cited in the gene's GOA REFERENCE column?
 
-- Structure papers assessed (gene x PMID pairs): **745** across **250** genes
+- Structure papers assessed (gene x PMID pairs): **737** across **247** genes
 - **CITED** by GOA: **110** (15%)
-- **GAP_OPPORTUNITY** (not cited; gene curated experimentally after the structure's year): **486** (65%)
+- **GAP_OPPORTUNITY** (not cited; gene curated experimentally after the structure's year): **478** (65%)
 - **GAP_LAG** (not cited; structure newer than latest GOA annotation): **21** (3%)
 - **GAP_NO_EXP_CURATION** (not cited; gene has no experimental GO annotations at all): **128** (17%)
 - NO_GOA_FILE (could not assess): **0**
 
-Genes where **no** structure paper is cited by GOA: **177** / 250.
+Genes where **no** structure paper is cited by GOA: **174** / 247.
 
 ## Interpretation
 

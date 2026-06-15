@@ -63,12 +63,14 @@ def _truthy(v: str) -> bool:
 
 def build(gap_tsv: Path, gene_enriched: Path, enriched: Path, genes_dir: Path) -> List[H1Row]:
     validator = GOAValidator()
-    gap = list(csv.DictReader(gap_tsv.open(), delimiter="\t"))
-    gene_info: Dict[Tuple[str, str], dict] = {
-        (r["organism"], r["gene"]): r
-        for r in csv.DictReader(gene_enriched.open(), delimiter="\t")
-    }
-    enr_by_pdb = {r["pdb_id"]: r for r in csv.DictReader(enriched.open(), delimiter="\t")}
+    with gap_tsv.open() as fh:
+        gap = list(csv.DictReader(fh, delimiter="\t"))
+    with gene_enriched.open() as fh:
+        gene_info: Dict[Tuple[str, str], dict] = {
+            (r["organism"], r["gene"]): r for r in csv.DictReader(fh, delimiter="\t")
+        }
+    with enriched.open() as fh:
+        enr_by_pdb = {r["pdb_id"]: r for r in csv.DictReader(fh, delimiter="\t")}
 
     # Group GAP_NO_EXP_CURATION papers by gene -- the correct H1 frontier
     # (uncited structure paper AND no experimental annotation of any aspect).

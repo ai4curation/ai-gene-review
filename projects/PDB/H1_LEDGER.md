@@ -27,7 +27,7 @@ STRUCTURE_CORROBORATES.**
 that already have experimental curation (that is what distinguishes it from
 `GAP_NO_EXP_CURATION`). So every gene in it has non-structure experimental evidence, and a
 structure can only ever corroborate. We were testing H1 on the genes guaranteed to refute
-it. Confirmed empirically: among 148 GAP_OPPORTUNITY genes, **0** have `exp_total==0`.
+it. Confirmed empirically: among 145 GAP_OPPORTUNITY genes, **0** have `exp_total==0`.
 
 A secondary but important observation: HSPB3's genuinely structure-distinctive fact — the
 3:1 HspB2–HspB3 hetero-tetramer — had **no GO annotation slot** among HSPB3's existing

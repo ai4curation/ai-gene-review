@@ -74,8 +74,10 @@ def query(ids):
 
 
 def main():
-    gene_rows = list(csv.DictReader(open(DATA / "pdb_gene_summary.tsv"), delimiter="\t"))
-    inv_rows = list(csv.DictReader(open(DATA / "pdb_inventory.tsv"), delimiter="\t"))
+    with (DATA / "pdb_gene_summary.tsv").open() as fh:
+        gene_rows = list(csv.DictReader(fh, delimiter="\t"))
+    with (DATA / "pdb_inventory.tsv").open() as fh:
+        inv_rows = list(csv.DictReader(fh, delimiter="\t"))
 
     CAP = 15  # max PDB entries queried per gene (rollup only needs "any structure with X")
 
@@ -193,12 +195,9 @@ def main():
             if r["has_cofactor"] or r["n_meaningful"]:
                 p["rich"] = True
 
-    EUK = {"human", "mouse", "rat", "worm", "yeast", "ARATH", "SCHPO", "SCHJY", "DANRE",
-           "DROME", "XENTR", "CHICK", "BOVIN", "CRIGR", "DICDI", "CHLRE", "CANAL", "CANGA",
-           "NEUCR", "ASPNG", "ASPRC", "PICST", "HYPJE", "PENCH", "PENEN", "MAIZE", "ORYSJ",
-           "SOYBN", "SOLLC", "SOLTU", "VITVI", "WHEAT", "MEDTR", "POPTR", "PHYPA", "BRADI",
-           "SORBI", "PHAVU", "THLAR", "TOBAC", "NICAT", "OCTBM", "OCTVU", "SEPOF", "EUPSC",
-           "DAPPU", "RAMVA", "MISSI", "DESRO", "DOROP", "DORPE", "9POAL"}
+    # Single source of truth: reuse the eukaryote set from inventory_pdb so the
+    # two scripts cannot drift (local import; this script's dir is on sys.path).
+    from inventory_pdb import EUKARYOTES as EUK
 
     gmap = {(r["organism"], r["gene"]): r for r in gene_rows}
     grows = []

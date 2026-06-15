@@ -182,12 +182,27 @@ targets.
 ```bash
 # 1. offline inventory from cached UniProt + GOA (no network)
 python3 projects/PDB/inventory_pdb.py
-
-# 2. RCSB enrichment of the prioritized (no-exp-MF) candidate genes (network)
+# 2. RCSB enrichment of the prioritized candidate genes (network)
 python3 projects/PDB/enrich_rcsb.py
+# 3. structure-paper -> GOA citation gap (offline); writes CURATION_GAP.md
+python3 projects/PDB/curation_gap.py
+# 4. ranked GAP_OPPORTUNITY review worklist (offline); writes GAP_WORKLIST.md
+python3 projects/PDB/gap_worklist.py
+# 5. H1 frontier test set: GAP_NO_EXP_CURATION genes (offline); writes data/h1_testset.tsv
+python3 projects/PDB/h1_testset.py
 ```
 
 See `PDB/RESULTS.md` for method detail, caveats, and the full output schema.
+
+## Does structural evidence fill annotation gaps? (`PDB/H1_LEDGER.md`)
+
+`H1_LEDGER.md` tests whether structures fill GO gaps that traditional publications would
+not. It records the GAP_OPPORTUNITY→GAP_NO_EXP_CURATION methodology correction, the
+three-evidence-layer model of a structure paper (coordinates → low-information binding
+terms; the paper's integrative hypothesis → informative function; sequence/EC → catalytic
+identity), and the Layer-2 scoring pass. Bottom line: structures reliably supply *first
+experimental-grade* evidence for under-curated proteins, but genuinely *new informative*
+function is rare — throttled by subunit mismatch and GO expressivity.
 
 ## Caveats
 
@@ -204,9 +219,9 @@ See `PDB/RESULTS.md` for method detail, caveats, and the full output schema.
 
 `PDB/curation_gap.py` measures, for every deposited structure with a linked primary
 publication, whether that PMID is cited in the gene's GOA `REFERENCE` column. Across
-**745** structure-paper × gene pairs (250 genes), only **15%** are cited by GOA; **65%**
+**737** structure-paper × gene pairs (247 genes), only **14%** are cited by GOA; **64%**
 are `GAP_OPPORTUNITY` (the paper predates the gene's last *experimental* annotation yet is
-never referenced), and **177/250** genes cite zero of their structure papers. "Not cited"
+never referenced), and **174/247** genes cite zero of their structure papers. "Not cited"
 means the structural study is absent from the evidence trail, not that the function is
 unannotated — but it quantifies how under-used the structural literature is as a GO evidence
 source. The lag boundary uses the latest *experimental* annotation year, since overall GOA
