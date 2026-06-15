@@ -551,6 +551,45 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
+# Validate ONLY the given changed gene-review files (full strict per-gene stack:
+# schema + terms + references + best practices, plus PMID-markdown checks).
+# Term/label-mismatch warnings are advisory; enum/not-found errors block.
+# Deleted files and non gene-review paths are skipped. Used by CI to validate
+# only the genes a PR touched instead of the whole corpus.
+# Example: just validate-changed genes/human/TP53/TP53-ai-review.yaml genes/worm/lrx-1/lrx-1-ai-review.yaml
+[group('QC')]
+validate-changed *files:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    existing=()
+    for f in {{files}}; do
+        if [[ "$f" == genes/*/*/*-ai-review.yaml && -f "$f" ]]; then
+            existing+=("$f")
+        elif [[ ! -f "$f" ]]; then
+            echo "Skipping deleted/missing file: $f"
+        else
+            echo "Skipping non gene-review file: $f"
+        fi
+    done
+    if [ ${#existing[@]} -eq 0 ]; then
+        echo "No existing changed gene-review files to validate."
+        exit 0
+    fi
+    echo "Validating ${#existing[@]} changed gene-review file(s) (strict)..."
+    rc=0
+    uv run ai-gene-review validate --verbose --terms "${existing[@]}" || rc=1
+    # PMID references in markdown, once per affected gene directory.
+    # Process substitution (not a pipe) so rc updates stay in this shell.
+    while read -r dir; do
+        echo "Checking PMID references in $dir ..."
+        uv run python src/ai_gene_review/tools/validate_pmid_references.py "$dir" || rc=1
+    done < <(printf '%s\n' "${existing[@]}" | xargs -n1 dirname | sort -u)
+    if [ $rc -ne 0 ]; then
+        echo "✗ Validation failed for one or more changed files (see above)"
+        exit $rc
+    fi
+    echo "✓ All changed files passed validation."
+
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
 # per-file reference and best-practices checks.
@@ -561,10 +600,18 @@ validate-all:
     echo "Schema validation (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
-    echo "Term validation (batch)..."
-    # Term validation reports label mismatches and branch errors; treat as advisory
-    # for now (pre-existing issues on main). Use just validate-terms for strict checks.
-    uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
+    echo "Term validation (batch, errors block; label-mismatch warnings advisory)..."
+    # Enum-membership / not-found errors (❌ ERROR) are fatal; ontology label-mismatch
+    # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
+    # bidirectional. Use just validate-terms for a fully strict (warnings-too) check.
+    term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
+    printf '%s\n' "$term_out"
+    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
+        echo "✗ Term validation found errors (see above)"
+        exit_code=1
+    else
+        echo "✓ Term validation: no errors (label warnings, if any, are advisory)"
+    fi
     echo ""
     echo "Reference and best practices validation..."
     mkdir -p reports
