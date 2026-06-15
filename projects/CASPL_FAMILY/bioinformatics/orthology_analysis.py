@@ -93,7 +93,7 @@ def main() -> None:
     aligner = make_aligner()
 
     n = len(labels)
-    idx = {l: i for i, l in enumerate(labels)}
+    idx = {lab: i for i, lab in enumerate(labels)}
     dist = [[0.0] * n for _ in range(n)]
     ident = {}
 
@@ -105,8 +105,8 @@ def main() -> None:
         dist[idx[a]][idx[b]] = d
         dist[idx[b]][idx[a]] = d
 
-    poptr = [l for l in labels if l.startswith("POPTR_")]
-    arath = [l for l in labels if l.startswith("ARATH_")]
+    poptr = [lab for lab in labels if lab.startswith("POPTR_")]
+    arath = [lab for lab in labels if lab.startswith("ARATH_")]
 
     def best_hit(query: str, pool: list[str]) -> tuple[str, float]:
         best, bid = None, -1.0
