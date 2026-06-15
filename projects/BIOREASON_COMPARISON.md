@@ -10,6 +10,10 @@ Systematic evaluation of BioReason-Pro functional summaries and reasoning traces
 
 **Paper drafts** based on this project live in [`BIOREASON_COMPARISON/article/`](BIOREASON_COMPARISON/article/): see [`manuscript.md`](BIOREASON_COMPARISON/article/manuscript.md) for the full manuscript draft (intended for ISMB 2026 Function-COSI), plus [`abstract.md`](BIOREASON_COMPARISON/article/abstract.md) (long-form) and [`short-abstract.md`](BIOREASON_COMPARISON/article/short-abstract.md) (250 words).
 
+**Slide deck** (ISMB 2026 Function-COSI talk): [`slides.md`](BIOREASON_COMPARISON/article/slides.md) (Marp source) / [`slides.html`](BIOREASON_COMPARISON/article/slides.html) (rendered). Regenerate with `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files` (add `--pdf` or `--pptx` on a machine with a browser).
+
+**Reproducible stats notebooks** (`uv`-managed): [`notebooks/`](BIOREASON_COMPARISON/notebooks/) recomputes the summary statistics below directly from the committed per-gene files (no hard-coded numbers). [`01_narrative_scores.ipynb`](BIOREASON_COMPARISON/notebooks/01_narrative_scores.ipynb) reproduces the overall means, score distribution (Table 1), per-organism means (Table 2), and top/bottom performers; [`02_prediction_assessments.ipynb`](BIOREASON_COMPARISON/notebooks/02_prediction_assessments.ipynb) audits the per-term de Crécy-Lagard assessments (Table 5 analog). See the [notebooks README](BIOREASON_COMPARISON/notebooks/README.md).
+
 ## Methods
 
 We downloaded the reports for selected genes from https://app.bioreason.net/ (there is no API yet so this cannot be done in bulk). We assigned an AI agent to review this, and compare them with both existing pipelines (e.g. interpro2go), and also with the complete AI gene review.
