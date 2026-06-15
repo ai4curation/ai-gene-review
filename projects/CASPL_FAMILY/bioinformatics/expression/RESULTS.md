@@ -1,3 +1,7 @@
+---
+title: "Poplar CASPL expression analysis — RESULTS (EBI Expression Atlas)"
+---
+
 # Poplar CASPL expression analysis — RESULTS (EBI Expression Atlas)
 
 After the PlantGenIE route proved session-gated (see NOTES.md), the analysis was
