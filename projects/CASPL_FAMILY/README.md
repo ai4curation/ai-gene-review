@@ -1,3 +1,7 @@
+---
+title: "CASPL_FAMILY working directory"
+---
+
 # CASPL_FAMILY working directory
 
 Working files for the CASP-like (CASPL) family curation (see `../CASPL_FAMILY.md` for the overview).

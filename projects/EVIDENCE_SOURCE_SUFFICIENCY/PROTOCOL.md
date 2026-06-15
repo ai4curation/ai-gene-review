@@ -1,3 +1,7 @@
+---
+title: "EVIDENCE_SOURCE_SUFFICIENCY — Study Protocol (pre-registered)"
+---
+
 # EVIDENCE_SOURCE_SUFFICIENCY — Study Protocol (pre-registered)
 
 **Version:** 1.0 · **Status:** PRE-REGISTERED (lock before any labeling) · **Scope:** human

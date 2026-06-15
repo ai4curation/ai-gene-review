@@ -1,3 +1,7 @@
+---
+title: "EVIDENCE_SOURCE_SUFFICIENCY"
+---
+
 # EVIDENCE_SOURCE_SUFFICIENCY
 
 **Which lower-effort evidence sources are *sufficient* to support an ACCEPT decision for an existing GO annotation — review papers, abstracts alone, or deep-research reports?**
