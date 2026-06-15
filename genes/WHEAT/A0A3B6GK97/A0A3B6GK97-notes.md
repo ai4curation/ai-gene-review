@@ -95,6 +95,32 @@ The UniProt flat file additionally lists GO:0006952 defense response (IEA:UniPro
 also not in the GOA pull; defense response for this specific locus is unsupported beyond
 keyword propagation and is not asserted here.
 
+## Bioinformatics analysis (subfamily + catalytic-site integrity) — IMPORTANT
+Reproducible analysis in `A0A3B6GK97-bioinformatics/` (see RESULTS.md). MSA of the query
+against 13 characterized plant pPLAs (Arabidopsis pPLAI/II/III, rice PLP1/2, potato patatin)
+with FAMSA + BioPython; input-driven control included.
+
+Two findings:
+1. **Subfamily = pPLAII.** The query is 42–50% identical to the pPLAII subfamily and rice
+   pPLAs, vs only ~23% to pPLAIII and ~16% to pPLAI; NJ tree places it in the pPLAII/rice/
+   patatin clade. So it is the soluble acyl-hydrolase (defense/wounding/stress) clade, NOT
+   the pPLAIII galactolipase/growth clade or the large iPLA2-like pPLAI. Single-domain
+   architecture + this placement make a **membrane-trafficking role very unlikely** (answers
+   the trafficking question raised in review).
+2. **The deposited 302-aa model lacks the catalytic serine.** It is fully gapped through the
+   N-terminal patatin catalytic core: no oxyanion **DGGG** block and no catalytic-Ser
+   **G-T-S-T-G** nucleophile elbow (zero G-x-S-x-G motifs in 302 aa); it retains only the
+   C-terminal portion incl. the catalytic Asp (D121). Every active reference has GTSTG+DGGG;
+   the annotated-inactive PLP9 control also lacks GTSTG. **Predicted catalytically inactive
+   as modeled.** Most parsimonious = **incomplete/incorrect gene model** (~100–130 aa shorter
+   than orthologs, missing a clean N-terminal block), though a true degenerate pseudo-enzyme
+   cannot be excluded from sequence alone (would need genomic/homoeolog/RNA-seq checks).
+
+Consequence: the GO_Central IBA lipase calls (GO:0004620, GO:0047372) were propagated
+phylogenetically and do NOT verify active-site integrity, so they are not supported by the
+current sequence. The review keeps the MODIFY → carboxylic ester hydrolase activity as the
+family-level term but adds this explicit caveat, and flags the gene model for curation.
+
 ## Bottom line
 A plausibly-real but entirely **uncharacterized** wheat patatin/PNPLA-family lipid acyl
 hydrolase. All evidence is homology/profile-based (IEA). No experimental data, no
