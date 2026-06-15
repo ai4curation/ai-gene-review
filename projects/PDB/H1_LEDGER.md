@@ -134,7 +134,43 @@ already in prior text/EC vs paper-unique? The Layer-2 informative-gap-fill rate 
 measure of H1's value, and it is almost certainly higher than the ~0 Layer-1 rate but lower
 than the raw FIRST_EXPERIMENTAL count.
 
+## Layer-2 pass: scoring the papers' headline functional hypotheses
 
+For each frontier paper we read its single headline functional hypothesis (Layer 2) and
+scored it: *informative?* · *beyond coordinates?* · *paper-unique for THIS protein?* ·
+*expressible as a GO term?*
+
+| Gene | Paper's headline hypothesis (Layer 2) | Informative | Beyond coords | Unique (this protein) | GO-expressible | Net |
+| --- | --- | --- | --- | --- | --- | --- |
+| **merA** | NmerA scavenges Hg²⁺ from proteins and **delivers it to the catalytic core**; cytoprotective under glutathione depletion (metallochaperone-type role) | Yes | Yes (Hg-transfer + cell-protection assays) | **Yes** — NmerA was "of uncertain function" | Partial (detox BP yes; delivery MF has no good term) | **Layer-2 gap-fill** |
+| **secA** | ATP/ADP binding gates an interdomain conformational cycle that drives extrusion of preprotein N-termini through SecYEG | Yes | Yes (two structures + fluorescence anisotropy) | Partial — SecA-as-translocation-ATPase already known; gated-cycle model refined | Yes, at process level (already broadly annotated) | Marginal (mostly prior) |
+| **mcrA** | McrD binds asymmetrically, improving active-site fidelity; model for MCR assembly | hypothesis is about **McrD**, not mcrA | — | targets a different subunit | — | **NULL for mcrA** |
+| **mxaI** | MDH catalytic mechanism (Asp303 base / Ca / PQQ) | about the large subunit **mxaF**, not mxaI | — | targets a different subunit | — | **NULL for mxaI** |
+| **psaC** | antenna arrangement and energy-transfer pathways of the PSI-LHCI supercomplex | about the **LHC antenna**, not psaC | — | targets different proteins | — | **NULL for psaC** |
+| **XYL1** | NADPH binding drives an open/closed conformational change; substrate-pocket determinants of specificity | a *mechanism*, not a new function | borderline (apo/holo comparison) | function already known (enzymology) | mechanism is not a GO term | **NULL (no new informative MF)** |
+
+**Layer-2 informative-gap-fill rate: ~1 of 6 clear (merA), 1 marginal (secA), 4 null.** Even
+crediting the papers' broader, structurally-grounded hypotheses — not just the coordinates —
+the rate stays low.
+
+**Meta-finding (compounds the mxaI lesson):** for multi-subunit / supercomplex structures the
+paper's headline hypothesis frequently concerns a **different subunit** than the gene of
+interest (mcrA paper → McrD; mxaI paper → mxaF; psaC paper → LHC antenna). So Layer-2 value
+often misses the target protein entirely.
+
+**Two independent throttles on Layer 2**, both visible here:
+1. *Subunit mismatch* — the informative hypothesis is about a partner subunit (3 of 6).
+2. *GO expressivity* — even the one genuine win (merA) states an informative function ("delivers
+   Hg²⁺ to the catalytic core") with **no precise GO MF term**; it can only be banked as a
+   `proposed_new_term` (added to the merA review) plus the expressible detox BP.
+
+**Net on H1, all layers considered:** structures-via-papers reliably supply *first experimental
+evidence* for under-curated proteins (common), but **new informative function is rare** — it
+needs the paper's Layer-2 hypothesis to (a) concern the target protein, (b) state a specific
+function, and (c) have a GO term to land in. In our frontier sample that conjunction held cleanly
+once (merA), partly via a proposed new term.
+
+## Appendix — earlier-batch frontier genes (already reviewed, retroactively classified)
 
 - **XYL1** (PICST, exp_total==0): NADPH-bound D-xylose reductase structure = FIRST_EXPERIMENTAL
   (classic enzymology exists in text, but no prior experimental GO annotation).
