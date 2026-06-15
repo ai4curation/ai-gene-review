@@ -71,10 +71,13 @@ GO_REF codes and the expected annotation pattern for the KAP family.
   enough to REMOVE, but a generic rule-based over-annotation rather than an informative localization.
   (Initially marked KEEP_AS_NON_CORE; revised to MARK_AS_OVER_ANNOTATED on annotation-reviewer advice.)
 
-No molecular-function or biological-process term is currently annotated. The real "core" of this
-protein is the **structural / matrix-cross-linking** role; a structural-constituent MF and a
-keratinization/hair process would be defensible by family inference but are flagged as
-proposed/suggested rather than asserted, given the absence of panda-specific data.
+No molecular-function or biological-process term is currently annotated in GOA. The real "core"
+of this protein is the **structural / matrix-cross-linking** role. Two **NEW** (ISS, homology-based)
+annotations were added to make the core function traceable: **GO:0005198 structural molecule
+activity** (MF, `enables`) and **GO:0031424 keratinization** (BP, `involved_in`), both supported by
+the KAP family reviews and the Pfam/InterPro domain evidence. These are explicitly flagged as
+homology inferences with no panda-specific evidence (GO does not currently assert an MF on human
+KRTAPs, so the MF is a proposed addition).
 
 ## Tooling notes
 
