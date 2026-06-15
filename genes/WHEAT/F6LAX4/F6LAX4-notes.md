@@ -52,6 +52,22 @@ Wheat F6LAX4 is a direct ortholog (PTHR10648 A-subunit clade), so the conserved 
 5. GO:0032991 protein-containing complex — IEA/ARBA (part_of), GO_REF:0000117 → **MARK_AS_OVER_ANNOTATED**
    (true but uninformative root-level term; fully subsumed by the more specific GO:0000159 already present).
 
+## Follow-up review refinements (inline items)
+- **gene_symbol**: changed from the accession `F6LAX4` to the UniProt/NCBI gene name
+  `LOC123103357` (the actual locus symbol; the accession remains the `id`).
+- **cytosol (GO:0005829)**: the F6LAX4 UniProt record's GO cross-references include
+  `GO:0005829; C:cytosol; IBA:GO_Central`, but the fetched GOA snapshot dropped it and kept
+  only the ARBA IEA `cytoplasm`. Cytosol is the more specific, GO_Central-supported compartment,
+  so the cytoplasm annotation was changed to `MODIFY` with proposed replacement GO:0005829, and
+  `core_functions.locations` updated to cytosol + nucleus.
+- **Biological process (BP)**: deliberately none. Checked GO_Central annotations on the human
+  ortholog PPP2R1A (P30153, in the GOA WITH/FROM column) via QuickGO: its only IBA BP terms are
+  `GO:0051225 spindle assembly` and `GO:0051754 meiotic sister chromatid cohesion, centromeric` —
+  animal mitosis/meiosis-specific functions that GO_Central correctly did NOT propagate to the
+  plant ortholog. Inventing a BP for wheat F6LAX4 would be unsupported; the scaffold's role is
+  fully captured by MF (regulator activity) + complex membership + localization. Documented as a
+  comment above `core_functions` in the YAML.
+
 ## Notes on evidence
 - No PMIDs in GOA (only GO_REFs); `fetch-gene-pmids` found nothing to cache.
 - Entry is TrEMBL/PE3; all functional inference is by homology (IBA + ARBA IEA). Decisions rest on
