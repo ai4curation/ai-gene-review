@@ -5,18 +5,32 @@ PE=4 (Predicted), TrEMBL/unreviewed. Locus / ORF name **SORBI_3003G204000**
 (Gramene EES00992; chromosome 3). No assigned gene symbol; "Uncharacterized
 protein".
 
-## Deep-research tooling note
-The repo deep-research harness could not be run in this session:
-- `falcon` provider failed with a template bug (`Missing template variables:
-  gene_id, gene_info, gene_symbol, organism_full, protein_description,
-  protein_domains, protein_family, uniprot_accession`) — the bundled template
-  expects richer variables than `deep_research_unified.py` supplies. Pre-existing
-  tool bug, unrelated to this gene.
-- `perplexity` provider not available in this environment (only falcon/asta/
-  openscientist configured; `asta`/`openscientist` not exposed as CLI choices).
-Per CLAUDE.md, manual research is recorded here instead of a fake
-`-deep-research-{provider}.md` file. No gene-specific PMIDs were cached
-(`fetch-gene-pmids` found none; the only seeded reference is GO_REF:0000002).
+## Deep-research tooling note (RESOLVED)
+Initial failure was operator error: I invoked
+`src/ai_gene_review/tools/deep_research_unified.py` directly, which does not
+populate the `gene_research_go_focused.md` template variables (hence
+`Missing template variables: gene_id, gene_info, protein_family, ...`). The
+correct entry point is the justfile target `just deep-research-falcon` ->
+`scripts/deep_research_wrapper.py` -> `deep-research-client research --template
+... --var ...`, which parses the UniProt file and supplies every `--var`. The
+run succeeded once invoked correctly:
+`uv run python scripts/deep_research_wrapper.py SORBI C5XPJ5 falcon --alias
+SORBI_3003G204000 --fallback asta openscientist`, producing
+`SORBI_3003G204000-deep-research-falcon.md` (+ artifacts) and
+`-deep-research-asta.md`. (Env notes: `just` was not installed in this container
+-- installed via `uv tool install rust-just`; `perplexity` has no API key here,
+so only falcon/asta/openscientist are available and a `perplexity-lite` fallback
+is unusable.)
+
+The falcon report independently reaches the same conclusion as this review --
+"the most parsimonious functional assignment is that C5XPJ5 encodes a putative
+SPC24 subunit of the NDC80 outer-kinetochore complex" -- and found no paper
+naming C5XPJ5/SORBI_3003G204000 (all statements are domain/orthology inference).
+Additional corroborating sources it surfaced: Xie 2024 (plant kinetochore
+complex / KMN network), Kozgunova 2025 (recent advances in plant kinetochores),
+Ustinov 2020 (NDC80 complex structure: SPC24/SPC25 as structural adaptor). No
+gene-specific PMIDs were cached (`fetch-gene-pmids` found none; the only seeded
+reference is GO_REF:0000002).
 
 ## Family / domain assignment (basis of the single annotation)
 - InterPro **IPR044951** "SPC24-like" → InterPro2GO maps to GO:0051983
