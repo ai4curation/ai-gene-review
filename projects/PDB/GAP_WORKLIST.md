@@ -1,3 +1,6 @@
+---
+title: "PDB GAP_OPPORTUNITY review worklist"
+---
 # PDB GAP_OPPORTUNITY review worklist
 
 Genes whose deposited structure papers predate their last experimental GO curation yet are never cited by GOA -- i.e. structural evidence that curation had the opportunity to use but did not. Ranked by gene priority (dark-MF / eukaryote / contested-catalytic) plus the cofactor / ligand / complex richness and number of the uncited structures. Collapsed to one row per gene (the review unit); per-paper detail is in `data/gap_worklist.tsv`.

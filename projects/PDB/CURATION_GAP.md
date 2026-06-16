@@ -1,3 +1,6 @@
+---
+title: "Are PDB structure papers overlooked by GO/MOD curation?"
+---
 # Are PDB structure papers overlooked by GO/MOD curation?
 
 Per (gene, structure-paper) status: is the structure's primary publication cited in the gene's GOA REFERENCE column?

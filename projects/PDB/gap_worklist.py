@@ -174,6 +174,9 @@ def _gene_rollup(rows: List[WorklistRow]) -> List[dict]:
 def write_md(rows: List[WorklistRow], out: Path, top: int = 30) -> str:
     genes = [g for g in _gene_rollup(rows) if not g["already_in_review"]]
     lines = [
+        "---",
+        'title: "PDB GAP_OPPORTUNITY review worklist"',
+        "---",
         "# PDB GAP_OPPORTUNITY review worklist",
         "",
         "Genes whose deposited structure papers predate their last experimental GO "

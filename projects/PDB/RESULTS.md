@@ -1,3 +1,6 @@
+---
+title: "PDB inventory & prioritization — results"
+---
 # PDB inventory & prioritization — results
 
 Bioinformatics backing for `../PDB.md`. All scripts use the Python standard library only

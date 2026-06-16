@@ -211,6 +211,9 @@ def summarize(rows: List[StructurePaperRow]) -> str:
         return f"{100 * n / total:.0f}%" if total else "n/a"
 
     lines = [
+        "---",
+        'title: "Are PDB structure papers overlooked by GO/MOD curation?"',
+        "---",
         "# Are PDB structure papers overlooked by GO/MOD curation?",
         "",
         "Per (gene, structure-paper) status: is the structure's primary publication "

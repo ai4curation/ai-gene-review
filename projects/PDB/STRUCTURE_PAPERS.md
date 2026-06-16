@@ -1,3 +1,6 @@
+---
+title: "Structure papers for the prioritized candidates"
+---
 # Structure papers for the prioritized candidates
 
 For the top functional-insight candidates, the bound ligand/cofactor is only the *clue*;

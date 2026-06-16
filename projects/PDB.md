@@ -1,3 +1,6 @@
+---
+title: "PDB: Deposited Structures as Functional-Insight Evidence"
+---
 # PDB: Deposited Structures as Functional-Insight Evidence
 
 ## Goal
