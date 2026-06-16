@@ -64,6 +64,15 @@ retained. Same pattern as
 [OVER_ANNOTATION_PATTERNS](../OVER_ANNOTATION_PATTERNS.md) /
 [CONTESTED_FUNCTION](../CONTESTED_FUNCTION.md).
 
+> **Action taken.** `genes/human/DPYSL5/DPYSL5-ai-review.yaml` is now a full
+> DRAFT review (schema- and term-validated). The two IEA hydrolase terms
+> (`GO:0016787`, `GO:0016810`) are set to **`REMOVE`** with the reasoning above
+> (electronic over-propagation refutable on biological grounds — *not*
+> `MARK_AS_OVER_ANNOTATED`, which is reserved for terms the gene is genuinely but
+> peripherally related to). The two curated `NOT` annotations are `ACCEPT`-ed as
+> correct, and the IMP `negative regulation of dendrite morphogenesis`
+> (PMID:33894126) is recorded as the core function.
+
 ## Cross-resource insight (worth generalizing)
 
 For 4 of 5 genes the GO **`NOT` qualifier is the curated counterpart of the

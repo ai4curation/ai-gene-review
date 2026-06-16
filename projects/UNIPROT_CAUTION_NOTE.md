@@ -246,9 +246,14 @@ failure modes:
   suspect domain-based over-annotation (DPYSL5 hydrolase IEAs — evidentially
   weak, not a logical contradiction)**.
 
+- [x] **DPYSL5 (CRMP5) full review** written and validated
+  (`genes/human/DPYSL5/DPYSL5-ai-review.yaml`, DRAFT): `REMOVE` on the two IEA
+  hydrolase over-annotations (`GO:0016787`, `GO:0016810`), `ACCEPT` on the curated
+  `NOT`s, core function = negative regulation of dendrite morphogenesis.
+
 ## Pending
-- [ ] Write the full DPYSL5 (CRMP5) review and set `MARK_AS_OVER_ANNOTATED` on
-  `GO:0016787` / `GO:0016810`; complete reviews for the other 4 fetched stubs.
+- [ ] Complete reviews for the other 4 fetched stubs (RHBDF1, SUMF2, PANK4,
+  NAALADL2) — each already largely consistent with GO; lower priority.
 - [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
   the 1,342 degenerate-domain candidates to auto-surface over-annotations.
 - [ ] Audit retracted-reference candidates for retracted `original_reference_id`s
