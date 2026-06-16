@@ -83,3 +83,18 @@ noted in the deep-research reference_review; MCM-4's strongest evidence remains 
 licensing/helicase. The deep-research file is now cited (additional_reference_ids +
 supported_by) on the ssDNA helicase activity annotation.
 
+### Thorough integration pass (follow-up)
+Wove the deep-research findings into the relevant annotations beyond the single
+ssDNA-helicase citation:
+- DNA helicase activity (GO:0003678, IEA) and ATP hydrolysis (GO:0016887, IEA): added
+  the MCM4/6/7 subcomplex biochemistry (intrinsic ssDNA-dependent ATP hydrolysis;
+  ATPase/helicase with ATP hydrolysis in the MCM ring driving translocation/unwinding).
+- nucleus (GO:0005634, IDA) and chromosome (GO:0005694, EXP): added the cell-cycle
+  localization dynamics (nuclear interphase → diffuse at NEBD → not on metaphase
+  chromatin → reassociates in late anaphase).
+- Added Ruijtenberg, van den Heuvel & The 2011 (doi:10.5772/19397) to references,
+  surfaced by deep research; marked correctness=UNVERIFIED because it has no PMID, is
+  not in the GOA, and was not independently retrieved/read in this review.
+All deep-research supporting_text quotes validate against the cached report.
+
+
