@@ -1,10 +1,10 @@
 ---
 provider: perplexity
 model: sonar-pro
-cached: false
-start_time: '2025-11-23T16:14:33.605609'
-end_time: '2025-11-23T16:14:44.231627'
-duration_seconds: 10.63
+cached: true
+start_time: '2026-06-03T10:00:29.303228'
+end_time: '2026-06-03T10:00:29.318058'
+duration_seconds: 0.01
 provider_config:
   timeout: 600
   max_retries: 3
