@@ -222,7 +222,7 @@ function is rare — throttled by subunit mismatch and GO expressivity.
 
 `PDB/curation_gap.py` measures, for every deposited structure with a linked primary
 publication, whether that PMID is cited in the gene's GOA `REFERENCE` column. Across
-**737** structure-paper × gene pairs (247 genes), only **15%** are cited by GOA; **64%**
+**737** structure-paper × gene pairs (247 genes), only **15%** are cited by GOA; **65%**
 are `GAP_OPPORTUNITY` (the paper predates the gene's last *experimental* annotation yet is
 never referenced), and **174/247** genes cite zero of their structure papers. "Not cited"
 means the structural study is absent from the evidence trail, not that the function is
