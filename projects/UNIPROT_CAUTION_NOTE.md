@@ -239,6 +239,42 @@ exactly matching the STRONG-vs-supported split; CHMP1A `REMOVE`s the mistranslat
 metalloprotease/zinc terms). No edits were needed — the queries reproduced the
 experts' decisions, which is the validation we wanted before scaling UniProt-wide.
 
+### G. UniProt-wide scaling (QuickGO) — net-new candidates
+
+[`uniprot_wide_queries.py`](UNIPROT_CAUTION_NOTE/uniprot_wide_queries.py) pulls
+molecular-function GOA from QuickGO for **all 14,513 reviewed CAUTION accessions**
+(MF annotations found for 12,194) and runs both queries database-wide, flagging
+genes **not yet in this repo** (`net_new`). Output:
+[`uniprot_wide_queries.md`](UNIPROT_CAUTION_NOTE/uniprot_wide_queries.md),
+`uniprot_wide_conjunctions.tsv`, `uniprot_wide_pmid.tsv` (the multi-MB GOA dump is
+gitignored, reproducible from the script).
+
+- **Query A: 247 conjunctions → 105 STRONG (100 in net-new genes)**, plus **97
+  DIRECT same-term conflicts**.
+- **Query B: 1,140 flags (1,083 net-new).**
+
+**The STRONG net-new hits land squarely on known pseudoenzyme families**, recovered
+automatically and extended across orthologs — strong external validation:
+
+| Gene(s) | Lost activity (NOT) | Persisting electronic over-annotation |
+|---------|---------------------|----------------------------------------|
+| **DPYSL2/CRMP2, DPYSL3, DPYSL4, CRMP1** (+ mouse/rat/chicken/bovine orthologs) | dihydropyrimidinase (GO:0004157) | `hydrolase activity` (GO:0016787/0016810) IEA — *the exact DPYSL5 pattern across the whole CRMP family* |
+| **ILK** (integrin-linked kinase) | protein Ser/Thr kinase (GO:0004674) | `protein kinase activity` IEA — classic **pseudokinase** |
+| **ROR1** (+ orthologs, lin-18) | receptor tyrosine kinase (GO:0004714) | `protein kinase activity` IEA — **pseudokinase RTK** |
+| **CASP12** (+ CASP13 bovine) | cysteine-type endopeptidase (GO:0004197) | `cysteine-type peptidase activity` IEA — **pseudo-caspase** |
+| **AZIN2** (+ orthologs) | ornithine/arginine decarboxylase (GO:0004586/0008792) | `catalytic activity` IEA — dead ODC paralog (antizyme inhibitor) |
+| **Cpt1c** (mouse/rat) | carnitine O-palmitoyltransferase (GO:0004095) | `acyltransferase activity` IEA — same as the human CPT1C we audited |
+
+That the method **independently rediscovers ILK, ROR1, CASP12, AZIN2 and the CRMP
+family** — canonical pseudoenzymes — from nothing but "CAUTION text + GO `NOT` +
+GO ancestry" is the validation that matters. **Immediate human review targets** (not
+yet in this repo): DPYSL2 (Q16555), DPYSL3 (Q14195), DPYSL4 (O14531), CRMP1
+(Q14194), ILK (Q13418), ROR1 (Q01973), CASP12 (Q6UXS9), AZIN2.
+
+The same caveats apply: Query A STRONG is a prioritized flag (a parent can be a real
+activity that simply lacks an experimental annotation), and Query B over-flags at the
+PMID level. Both are curator-review lists, now ranked and family-clustered.
+
 ### Local corpus tallies (cached records, for reference)
 
 
@@ -353,10 +389,16 @@ failure modes:
   CONFIRMED catches (rest are expected PMID-level false-positives). **CPT1C and
   CHMP1A were already correctly curated** — the queries reproduced the experts'
   REMOVE/MODIFY decisions, so no edits needed.
+- [x] **Scaled both queries UniProt-wide via QuickGO** (`uniprot_wide_queries.py`):
+  14,513 CAUTION accessions → Query A 247 conjunctions / 105 STRONG (100 net-new) +
+  97 direct conflicts; Query B 1,140 flags. STRONG net-new hits recover known
+  pseudoenzyme families (CRMP/DPYSL, ILK, ROR1, CASP12, AZIN2) across orthologs.
 
 ## Pending
-- [ ] Report the 9 DIRECT same-term GOA conflicts (EDEM1/2, ENDOU, PARK7, CYB5R4)
-  upstream to GO.
+- [ ] Review the net-new human pseudoenzymes surfaced (DPYSL2/3/4, CRMP1, ILK,
+  ROR1, CASP12, AZIN2) — strongest start: the CRMP family (same fix as DPYSL5).
+- [ ] Report the 9 local + 97 UniProt-wide DIRECT same-term GOA conflicts upstream
+  to GO.
 - [ ] Scale Queries A/B UniProt-wide via a QuickGO GOA pull keyed on the 14k
   CAUTION accessions.
 - [ ] Audit the 255 retracted-reference candidates for retracted

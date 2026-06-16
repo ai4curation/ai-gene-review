@@ -39,13 +39,13 @@ def local_accessions():
     return acc
 
 def load_survey():
-    """accession -> set(caution PMIDs)."""
+    """accession -> (set(caution PMIDs), gene, organism)."""
     cp = {}
     with SURVEY.open() as fh:
         r = csv.reader(fh, delimiter="\t"); next(r, None)
         for row in r:
             if len(row) < 6: continue
-            cp[row[0]] = set(PMID_RE.findall(row[5]))
+            cp[row[0]] = (set(PMID_RE.findall(row[5])), row[1] or "?", row[2][:28])
     return cp
 
 def get_json(url):
@@ -88,18 +88,29 @@ def pull_mf_goa(accessions):
 def main():
     if not SURVEY.exists():
         sys.exit("Run uniprot_api_survey.py first (need caution_uniprot_reviewed.tsv).")
-    caution_pmids = load_survey()
-    pull_mf_goa(set(caution_pmids))
+    survey = load_survey()
+    caution_pmids = {a: v[0] for a, v in survey.items()}
+    meta = {a: (v[1], v[2]) for a, v in survey.items()}  # acc -> (gene, organism)
+    pull_mf_goa(set(survey))
 
-    # group GOA by accession
+    # group GOA by accession; collect GO term labels from goName
     by_acc = defaultdict(list)
+    label = {}
     with GOA_CACHE.open() as fh:
         r = csv.DictReader(fh, delimiter="\t")
         for row in r:
             by_acc[row["accession"]].append(row)
+            if row.get("goName") and row["goName"] != "None":
+                label[row["goId"]] = row["goName"]
+    def gm(acc): return meta.get(acc, ("?", "?"))
 
     local = local_accessions()
     go = get_adapter("sqlite:obo:go")
+    def lb(t):
+        if t not in label:
+            try: label[t] = go.label(t) or ""
+            except Exception: label[t] = ""
+        return label[t]
     anc_cache = {}
     def anc(t):
         if t not in anc_cache:
@@ -121,13 +132,14 @@ def main():
             exp_pos = {a["goId"] for a in pos if a["evidence"] not in ELECTRONIC}
             for yt, yr in neg_by.items():
                 ya = anc(yt)
+                g_sym, g_org = gm(acc)
                 for xt, xr in pos_by.items():
                     if xt == yt:
-                        direct.append((net_new, acc, xt, xr["goName"], xr["evidence"], yr["evidence"]))
+                        direct.append((net_new, acc, g_sym, g_org, xt, lb(xt), xr["evidence"], yr["evidence"]))
                     elif xt in ya:
                         supported = any(zt == xt or xt in anc(zt) for zt in exp_pos if zt != yt)
-                        conj.append((net_new, acc, xt, xr["goName"], xr["evidence"],
-                                     yt, yr["goName"], yr["evidence"],
+                        conj.append((net_new, acc, g_sym, g_org, xt, lb(xt), xr["evidence"],
+                                     yt, lb(yt), yr["evidence"],
                                      "supported" if supported else "UNSUPPORTED"))
         # ---- Query B (MF) ----
         cpmids = caution_pmids.get(acc, set())
@@ -139,22 +151,24 @@ def main():
             pm = m.group(1)
             if (a["qualifier"] or "").startswith("NOT"): not_pmid.add(pm)
             else: pos_pmid[pm].append((a["goId"], a["goName"], a["evidence"]))
+        g_sym, g_org = gm(acc)
         for pm in cpmids:
             if pm in pos_pmid and pm not in not_pmid:
                 terms = pos_pmid[pm]
-                brows.append((net_new, acc, pm, len(terms),
-                              "; ".join(f"{t}({ev})" for t,_,ev in terms[:6])))
+                brows.append((net_new, acc, g_sym, g_org, pm, len(terms),
+                              "; ".join(f"{t} {lb(t)[:24]}({ev})" for t,_,ev in terms[:6])))
 
     def wtsv(path, header, rows):
         with path.open("w", newline="") as fh:
             w = csv.writer(fh, delimiter="\t"); w.writerow(header)
             for r in sorted(rows): w.writerow(r)
     wtsv(OUT/"uniprot_wide_conjunctions.tsv",
-         ["scope","accession","pos_term","pos_name","pos_evidence","neg_term","neg_name","neg_evidence","parent_support"], conj)
+         ["scope","accession","gene","organism","pos_term","pos_name","pos_evidence",
+          "neg_term","neg_name","neg_evidence","parent_support"], conj)
     wtsv(OUT/"uniprot_wide_pmid.tsv",
-         ["scope","accession","caution_pmid","n_pos","positive_mf_terms"], brows)
+         ["scope","accession","gene","organism","caution_pmid","n_pos","positive_mf_terms"], brows)
 
-    strong = [r for r in conj if r[4] in ELECTRONIC and r[8] == "UNSUPPORTED"]
+    strong = [r for r in conj if r[6] in ELECTRONIC and r[10] == "UNSUPPORTED"]
     strong_new = [r for r in strong if r[0] == "net_new"]
     b_new = [r for r in brows if r[0] == "net_new"]
     with (OUT/"uniprot_wide_queries.md").open("w") as fh:
@@ -169,13 +183,13 @@ def main():
         fh.write(f"- Query B (CAUTION-PMID positive, never negated): **{len(brows)}** "
                  f"(**{len(b_new)}** net-new).\n\n")
         fh.write("## Query A — STRONG over-annotation candidates, net-new genes\n\n")
-        fh.write("| accession | positive parent (ev) | NOT-ed child (ev) |\n|---|---|---|\n")
-        for sc,acc,xt,xn,xe,yt,yn,ye,su in sorted(strong_new)[:80]:
-            fh.write(f"| {acc} | {xt} {xn} ({xe}) | {yt} {yn} ({ye}) |\n")
+        fh.write("| gene | organism | accession | positive parent (ev) | NOT-ed child (ev) |\n|---|---|---|---|---|\n")
+        for sc,acc,gs,go_,xt,xn,xe,yt,yn,ye,su in sorted(strong_new, key=lambda r:(r[2],r[3]))[:120]:
+            fh.write(f"| {gs} | {go_} | {acc} | {xt} {xn} ({xe}) | {yt} {yn} ({ye}) |\n")
         fh.write("\n## Query B — net-new flags (CAUTION PMID, positive MF, no NOT)\n\n")
-        fh.write("| accession | CAUTION PMID | #pos | positive MF terms |\n|---|---|--:|---|\n")
-        for sc,acc,pm,n,terms in sorted(b_new)[:80]:
-            fh.write(f"| {acc} | PMID:{pm} | {n} | {terms} |\n")
+        fh.write("| gene | organism | accession | CAUTION PMID | #pos | positive MF terms |\n|---|---|---|---|--:|---|\n")
+        for sc,acc,gs,go_,pm,n,terms in sorted(b_new, key=lambda r:(r[2],r[3]))[:120]:
+            fh.write(f"| {gs} | {go_} | {acc} | PMID:{pm} | {n} | {terms} |\n")
     print(f"Query A: {len(conj)} conjunctions, {len(strong)} STRONG ({len(strong_new)} net-new), {len(direct)} direct")
     print(f"Query B: {len(brows)} flags ({len(b_new)} net-new)")
 
