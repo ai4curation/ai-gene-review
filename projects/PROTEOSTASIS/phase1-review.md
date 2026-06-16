@@ -113,9 +113,10 @@ CHIC2 STUB1–CHIC2 PMID:40796662).
   mis-actioned `UNDECIDED`; should be `ACCEPT` (curator established non-binding).
 - **SRPRB** — PMID:23264731 confirmed (full text now cached) to be entirely about
   MTR120/KIAA1383, never assaying SRPRB; the `GO:0005881 cytoplasmic microtubule`
-  IDA `UNDECIDED` should become `MARK_AS_OVER_ANNOTATED` + `reference_review:
-  WRONG_IDENTIFIER`. **This resolves the open human-follow-up caveat recorded in
-  PROTEOSTASIS.md.**
+  IDA `UNDECIDED` → `REMOVE` + `reference_review: WRONG_IDENTIFIER` (wrong-gene
+  mis-attribution — the paper does not mention SRPRB at all, so REMOVE rather than
+  MARK_AS_OVER_ANNOTATED, matching the already-removed sibling SERP1). **This
+  resolves the open human-follow-up caveat recorded in PROTEOSTASIS.md.**
 - **USP25 ≠ USP21** — the batch treated them as one synonym-resolved gene; they are
   distinct (Q9UHP3 vs Q9UK80). USP25 carries no RQC role and should not inherit RQC
   projections. (Batch-metadata correction.)
@@ -2940,7 +2941,7 @@ the dominant correction is structural (PN node mappings) rather than per-gene.
 - **PN story / NEW pressure:** PN asserts only the canonical SR docking role in cotranslational targeting, already captured (GO:0045047, GO:0006617, GO:0005785 SR complex, GO:0005525 GTP binding, GO:0005789 ER membrane). A genuinely novel SRbeta function — coordinating cotranslational N-glycosylation via OST engagement (PMID:36921042) — is in the review references but is not the PN story; nearest GO term GO:0180058 (verified real, OST-centric) is not a clean fit. Conclusion: **already captured** for the PN node (no NEW pressure on the mapping).
 - **Mapping strategy:** No change needed. GO:0006614 closure-entailed projection is consistent with the review's accepted GO:0045047/0006617 (both descend the same ER-targeting branch); not broader than the review in a problematic way. Class-level GO:0015031 is a broad class target, not asserted of SRPRB.
 - **Evidence alignment:** PN dossier lists no reference titles; alignment via projected-term provenance. Review's core support (PMID:16439358 SR-beta/SRalpha Longin structure; PMID:29567807 prehandover cryo-EM; PMID:34020957 SR compaction/GTPase; PMID:37643813 SRPRB KO stabilizes SRalpha) all encode SR docking biology. **MTR120 re-examination:** the cached full text of PMID:23264731 (now available) is entirely about MTR120/KIAA1383, a 120 kDa MT-associated protein found in an ORFeome localization screen; SRPRB (Q9Y5M8, 271 aa ER GTPase) is never mentioned or assayed. The GO:0005881 cytoplasmic-microtubule IDA on SRPRB is a definitive mis-attribution (wrong protein), not merely unverifiable — the review's UNDECIDED was conservative only because full text was unavailable; it now is.
-- **Verdict:** Consistent for the PN node; PN already captured. One warranted edit: with full text confirming PMID:23264731 does not assay SRPRB, the cytoplasmic-microtubule annotation should move from UNDECIDED to MARK_AS_OVER_ANNOTATED (wrong-gene citation; correctness → WRONG_IDENTIFIER).
+- **Verdict:** Consistent for the PN node; PN already captured. One warranted edit (**applied**): with full text confirming PMID:23264731 does not assay SRPRB at all, the cytoplasmic-microtubule annotation was moved from UNDECIDED to **REMOVE** (wrong-gene citation; `reference_review.correctness → WRONG_IDENTIFIER`). REMOVE rather than MARK_AS_OVER_ANNOTATED because the paper does not mention SRPRB — this is a mis-attribution, not an over-broad-but-real annotation — matching the already-removed sibling SERP1.
 
 ## TXNDC11
 - **UniProt:** Q6PKC3 (EFP1) · **batch:** proteostasis-batch-2026-06-11 · **review status:** COMPLETE
