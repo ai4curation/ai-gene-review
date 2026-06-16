@@ -1,0 +1,9 @@
+## TRAPPC5
+- **UniProt:** Q8IUR0 · **batch:** proteostasis-pr-1217 · **review status:** COMPLETE
+- **PN placement:** `Autophagy-Lysosome Pathway|Autophagophore initiation and elongation|Autophagy component recruitment to autophagophore|TRAPP complex component` ; **PN-node mapping:** type-leaf mapped, scope=ok_for_propagation_to_go, GO:0030008 TRAPP complex (already_in_goa_exact)
+- **Consistency:** Coherent. Notes, review, PN row ("TRAPP complex, core subunit"), and node mapping agree TRAPPC5 (Trs31 ortholog, small core subunit) acts via complex-level RAB1 GEF + ER-to-Golgi transport. Review carries GO:0030008 (IDA/IEA) and TRAPPII/TRAPPIII memberships. Notable, defensible deviation from raw GOA: the IBA GO:1990070 TRAPPI complex annotation is MARK_AS_OVER_ANNOTATED because mammalian TRAPP I existence is "in question" (PMID:21525244, PMID:27066478) — well argued, not a contradiction.
+- **PN story / NEW pressure:** PN Notes mention ATG9/ATG2 trafficking. Review keeps autophagy as TRAPPIII-membership context only; TRAPPC5 has no gene-specific autophagy evidence. Defensible. Conclusion: already captured via complex membership; no NEW term.
+- **Mapping strategy:** No change to node. Projected GO:0030008 (OLS-verified) already in GOA. One subtlety worth flagging: the review demotes TRAPPI (GO:1990070) as a mammalian artifact, but the PN node projects only the parent GO:0030008, so no conflict with the projection.
+- **Evidence alignment:** PN titles ("Membrane Trafficking in Autophagy"; PMID:27066478) both in review; review adds PMID:21525244 and Reactome. Generic protein-binding rows (PMID:25416956/28514442/31515488/32296183/33961781) over-annotated. No miscitation.
+- **Verdict:** Consistent; ACCEPT mapping. Includes a sound TRAPPI-overannotation call beyond the PN scope.
+- **Recommended edits:** None required.

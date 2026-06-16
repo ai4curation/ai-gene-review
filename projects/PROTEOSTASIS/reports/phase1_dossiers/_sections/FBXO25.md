@@ -1,0 +1,8 @@
+## FBXO25
+- **UniProt:** Q8TCJ0 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE (well-developed; 3 isoforms tracked)
+- **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|other` ; **PN-node mapping:** group=mapped GO:1990756; subtype/type/branch=no_mapping; class=context_only (GO:0061630).
+- **Consistency:** Strong. Deep research (Falcon → ELK-1 as best-validated substrate; FAND nuclear puncta; H2BK120ub/osteogenesis), UniProt, GOA and review all concordant. Review MODIFY of GO:0004842 (NAS transferase, PMID:10531035) → GO:1990756 matches the PN group target. NOT-nucleolus IDA (PMID:16278047) correctly accepted. No contradictions.
+- **PN story / NEW pressure:** PN asserts only the generic adaptor MF, already captured (core_function MF = GO:1990756, verified). ELK-1 substrate and FAND compartment exceed GOA but review correctly keeps them as core_function descriptions without proposing substrate-specific NEW terms (proposed_new_terms empty). Conclusion: PN adaptor claim ALREADY CAPTURED.
+- **Mapping strategy:** Correct; gene does not change the node. GO:1990756 equals the review's core MF (not broader/narrower). Note FBXO25 has a real cytoplasm IBA the review downgraded to non-core (experimental localization is nuclear) — does not affect the MF mapping.
+- **Evidence alignment:** PN cites only "15340381 / rev" (not in review refs). Review anchored on the FBXO25 characterization paper (PMID:16278047), the founding family paper (PMID:10531035), and PMID:34445249, with Falcon supplying ELK-1. Divergence: PN reference disjoint from and thinner than review's; both support adaptor framing.
+- **Verdict:** CONSISTENT — no changes needed.
