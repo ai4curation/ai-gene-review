@@ -43,6 +43,8 @@ function.
 
 ## Data
 
+### A. Local corpus (genes already fetched)
+
 Extracted reproducibly by [`extract_caution_notes.py`](UNIPROT_CAUTION_NOTE/extract_caution_notes.py):
 
 ```bash
@@ -55,7 +57,77 @@ Outputs (regenerated, not hand-edited):
   (organism, gene, UniProt ID, category, retracted flag, PMIDs, text)
 - [`caution_notes.md`](UNIPROT_CAUTION_NOTE/caution_notes.md) — grouped human-readable report
 
-### Current tallies (cached records as of 2026-06-16)
+### B. Database-wide survey (live UniProt REST API, no fetch-gene)
+
+To see the global distribution without fetching anything, query the UniProt REST
+API directly on the `cc_caution` field
+([`uniprot_api_survey.py`](UNIPROT_CAUTION_NOTE/uniprot_api_survey.py)):
+
+```bash
+python3 projects/UNIPROT_CAUTION_NOTE/uniprot_api_survey.py            # all reviewed
+python3 projects/UNIPROT_CAUTION_NOTE/uniprot_api_survey.py --organism 9606  # human only
+```
+
+Outputs: [`caution_uniprot_reviewed.tsv`](UNIPROT_CAUTION_NOTE/caution_uniprot_reviewed.tsv)
+(raw per-entry download) and [`api_survey.md`](UNIPROT_CAUTION_NOTE/api_survey.md)
+(aggregated report).
+
+**Headline numbers (Swiss-Prot / reviewed, 2026-06-16):**
+
+- **14,513** reviewed entries carry a CAUTION comment (vs 45,468 with the
+  unrelated `SEQUENCE CAUTION` block — confirming `cc_caution` is the right field).
+- **14,830** individual CAUTION notes; **~7,200** fall in high-signal categories.
+
+| Category | Notes (DB-wide) | Curation value |
+|----------|------:|----------------|
+| contested-function | 3,035 | high |
+| reclassified-function | 2,476 | high |
+| degenerate-domain (pseudo-enzyme) | 1,366 | high |
+| retracted-reference | 279 | high |
+| possible-artifact | 63 | high |
+| other | 7,605 | mixed (keyword classifier residual) |
+| lacks-conserved-residue | 6 | low |
+
+The WGS-preliminary boilerplate that dominated the *local* corpus essentially
+**vanishes** in reviewed entries (0–6), confirming it was a TrEMBL/unreviewed
+artifact rather than a curatorial signal.
+
+**Distribution by organism** (top): Human (2,298 entries), *S. cerevisiae* (895),
+Mouse (844), *A. thaliana* (714), *E. coli* K12 (334), Rat (329), Bovine (206),
+*Dictyostelium* (192), *Drosophila* (160), Rice (150), *C. elegans* (122),
+Zebrafish (109). Full table in `api_survey.md`.
+
+### C. Prioritized review worklist (deeper dive)
+
+[`shortlist_candidates.py`](UNIPROT_CAUTION_NOTE/shortlist_candidates.py)
+cross-references the DB-wide survey against the accessions we have **already
+fetched** (148 of our local genes overlap the reviewed-CAUTION set) and emits the
+high-value entries we have **not** yet touched:
+
+```bash
+python3 projects/UNIPROT_CAUTION_NOTE/shortlist_candidates.py
+```
+
+Outputs: [`candidates_high_value.tsv`](UNIPROT_CAUTION_NOTE/candidates_high_value.tsv)
+and [`candidates.md`](UNIPROT_CAUTION_NOTE/candidates.md).
+
+**4,046 high-value, not-yet-reviewed candidates**: reclassified-function (2,401),
+degenerate-domain (1,342), retracted-reference (255), possible-artifact (48).
+Human alone contributes **95 pseudo-enzyme (degenerate-domain)** and **111
+retracted-reference** candidates, e.g.:
+
+- **RHBDF1** (Q96CC6) — "Lacks serine protease activity ... lacks the catalytic
+  Ser residue at position 720" (iRhom pseudo-protease).
+- **SUMF2** (Q8NBJ7) — "strongly similar to formylglycine-generating enzyme,
+  lacks the catalytic Cys".
+- **PANK4** (Q9NVE7) — pantothenate kinase domain is degenerate.
+- **CHI3L1** (P36222), **SPACA3** (Q8IXA5) — glycosyl hydrolase folds with
+  substituted catalytic residues.
+- **ERCC8** (Q13216), **H3-3A/B** (P84243), **CBX1/CBX5** — annotations resting
+  on retracted papers.
+
+### Local corpus tallies (cached records, for reference)
+
 
 | Category | Count | Curation value | Description |
 |----------|------:|----------------|-------------|
@@ -138,16 +210,22 @@ failure modes:
 ## Done
 - [x] Confirmed UniProt CAUTION comments exist and are present in the cached
   corpus (209 notes / 201 records).
-- [x] Wrote reproducible extractor `extract_caution_notes.py`.
-- [x] Generated categorized worklist (`caution_notes.tsv`, `caution_notes.md`).
+- [x] Wrote reproducible local extractor `extract_caution_notes.py`.
+- [x] Surveyed the **whole reviewed UniProt** via the REST API
+  (`uniprot_api_survey.py`): 14,513 entries / 14,830 notes, with category and
+  per-organism distributions — no `fetch-gene` required.
+- [x] Built `shortlist_candidates.py` → 4,046 high-value, not-yet-reviewed
+  candidates (`candidates_high_value.tsv`, `candidates.md`).
 
 ## Pending
-- [ ] Cross-reference high-value notes against existing `*-ai-review.yaml` files
-  to find annotations contradicted by a CAUTION note.
-- [ ] Audit the 12 retracted-reference genes for retracted `original_reference_id`s.
-- [ ] Triage the 38 "other" notes; promote genuine cases into the high-value
-  categories or refine the classifier.
-- [ ] Add a `just` target / CI hook to regenerate the worklist when genes are added.
+- [ ] Pick a first deep-dive batch from `candidates.md` (suggest human
+  degenerate-domain pseudo-enzymes: RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2) and
+  run full reviews.
+- [ ] Audit retracted-reference candidates for retracted `original_reference_id`s
+  in any existing review.
+- [ ] Refine the keyword classifier to shrink the large "other" bucket (7,605
+  DB-wide notes) — many are genuine but unmatched.
+- [ ] Add a `just` target to regenerate the survey + shortlist on demand.
 
 Last updated: 2026-06-16
 
@@ -165,3 +243,11 @@ automatic boilerplate (WGS-preliminary, lacks-conserved-residue). The
 degenerate-domain bucket overlaps heavily with existing CONTESTED_FUNCTION and
 PSEUDOENZYMES work, confirming CAUTION notes are a good signal for finding
 over-annotated catalytic functions.
+
+**API survey added (same day).** Per request, queried the live UniProt REST API
+on the `cc_caution` field (distinct from `cc_sequence_caution`) to get a
+database-wide distribution without fetching genes: 14,513 reviewed entries,
+14,830 notes, ~7,200 high-signal. Human dominates (2,298). Cross-referencing
+against the 148 reviewed-CAUTION genes we already have yields a 4,046-entry
+high-value worklist — the basis for a prioritized deep dive (starting with human
+pseudo-enzymes flagged by degenerate-domain cautions).
