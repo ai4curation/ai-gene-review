@@ -73,6 +73,26 @@ retained. Same pattern as
 > correct, and the IMP `negative regulation of dendrite morphogenesis`
 > (PMID:33894126) is recorded as the core function.
 
+## All five reviews completed
+
+Full, schema- and term-validated DRAFT reviews are now written for every gene in
+the batch:
+
+| Gene | Catalytic `NOT` handled | Notable actions |
+|------|-------------------------|-----------------|
+| **DPYSL5** | ACCEPT (dihydropyrimidinase) | **2× REMOVE** of domain-based hydrolase IEAs; core = neg. reg. dendrite morphogenesis |
+| **RHBDF1** | ACCEPT (serine endopeptidase, IBA+IDA) | core = ADAM17/EGFR sheddase regulation; ER/Golgi scaffold |
+| **SUMF2** | n/a (no catalytic MF was asserted) | ACCEPT enzyme-inhibitor activity (inhibits SUMF1); 4× over-annotated viral/interactome protein binding |
+| **PANK4** | ACCEPT (pantothenate kinase, IBA+IMP) | ACCEPT real phosphatase activity — a **domain-swap** pseudoenzyme (dead PanK domain + active 4'-phosphopantetheine phosphatase) |
+| **NAALADL2** | n/a (no catalytic MF asserted) | molecular function recorded as **not established**; flagged nucleoplasm vs membrane-topology conflict |
+
+Only DPYSL5 required a `REMOVE` of a positively-asserted catalytic term; the
+others were already self-consistent (curators had either negated the lost
+activity or never asserted it). PANK4 is the most instructive: the CAUTION
+negates one domain's activity while a *different*, real activity is correctly
+annotated — a reminder that "pseudoenzyme" can mean domain-specific, not
+whole-protein, inactivation.
+
 ## Cross-resource insight (worth generalizing)
 
 For 4 of 5 genes the GO **`NOT` qualifier is the curated counterpart of the

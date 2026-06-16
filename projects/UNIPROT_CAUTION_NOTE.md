@@ -251,9 +251,16 @@ failure modes:
   hydrolase over-annotations (`GO:0016787`, `GO:0016810`), `ACCEPT` on the curated
   `NOT`s, core function = negative regulation of dendrite morphogenesis.
 
+- [x] **All 5 batch-1 reviews completed** and validated (RHBDF1, SUMF2, PANK4,
+  NAALADL2 + DPYSL5). DPYSL5 was the only one needing a `REMOVE` of a positively
+  asserted catalytic term; PANK4 is a domain-swap pseudoenzyme (dead PanK domain
+  + real, correctly annotated 4'-phosphopantetheine phosphatase).
+
 ## Pending
-- [ ] Complete reviews for the other 4 fetched stubs (RHBDF1, SUMF2, PANK4,
-  NAALADL2) — each already largely consistent with GO; lower priority.
+- [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
+  the 1,342 degenerate-domain candidates to auto-surface over-annotations.
+- [ ] Audit the 255 retracted-reference candidates for retracted
+  `original_reference_id`s in existing reviews.
 - [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
   the 1,342 degenerate-domain candidates to auto-surface over-annotations.
 - [ ] Audit retracted-reference candidates for retracted `original_reference_id`s
