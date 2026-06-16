@@ -137,13 +137,19 @@ results:
   `NOT|enables` on the lost catalytic term — frequently citing the *same* paper
   named in the CAUTION (RHBDF1↔PMID:21439629, PANK4↔PMID:30927326). The GO `NOT`
   qualifier is effectively the curated counterpart of the UniProt CAUTION.
-- **One genuine over-annotation found — DPYSL5 (CRMP5):** `GO:0004157`
-  dihydropyrimidinase is correctly `NOT`-ed, but two positive **InterPro IEA**
-  parent terms (`GO:0016787`, `GO:0016810` hydrolase activity) survive and
-  contradict the loss-of-activity caution → candidate `MARK_AS_OVER_ANNOTATED`.
-- **Generalizable query:** the over-annotations hide where a **positive IEA**
-  catalytic/parent term **co-exists with a curated `NOT`** of its child (or a
-  CAUTION of lost activity) — not simply where any catalytic term exists.
+- **One suspect over-annotation — DPYSL5 (CRMP5):** `GO:0004157`
+  dihydropyrimidinase is correctly `NOT`-ed, while two positive **InterPro IEA**
+  parent terms (`GO:0016787`, `GO:0016810` hydrolase activity) survive. This is
+  *not* a logical contradiction (GO `NOT` propagates **down**, not up — so a
+  negated child does not negate the parent), but it is an evidentially weak
+  fold/domain-based propagation: the metal-site loss that justifies the `NOT`
+  also removes the mechanistic basis for *any* metallo-hydrolase activity, with
+  no positive evidence for an alternative → candidate `MARK_AS_OVER_ANNOTATED`.
+- **Generalizable review flag:** look for a **positive IEA** parent term whose
+  curated, more-specific **child is `NOT`-ed** (or whose activity a CAUTION
+  reports as lost). Such pairs are logically admissible but flag a
+  domain-based parent annotation that may have lost its evidential basis; the
+  adjudication is then evidential, not logical.
 
 ### Local corpus tallies (cached records, for reference)
 
@@ -237,7 +243,8 @@ failure modes:
   candidates (`candidates_high_value.tsv`, `candidates.md`).
 - [x] **Deep dive batch 1** (`deep_dive_batch1.md`): fetched RHBDF1, SUMF2,
   PANK4, DPYSL5, NAALADL2; found 4/5 already correctly negated by GO and **1
-  genuine over-annotation (DPYSL5 hydrolase IEAs)**.
+  suspect domain-based over-annotation (DPYSL5 hydrolase IEAs — evidentially
+  weak, not a logical contradiction)**.
 
 ## Pending
 - [ ] Write the full DPYSL5 (CRMP5) review and set `MARK_AS_OVER_ANNOTATED` on

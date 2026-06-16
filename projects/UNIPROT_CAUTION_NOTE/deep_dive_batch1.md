@@ -20,7 +20,7 @@ catalytic activity that the CAUTION note says the protein has lost?**
 | **SUMF2** | Q8NBJ7 | FGE catalytic Cys-261/266 | (oxidoreductase / FGE) | **absent**; only binding + GO:0004857 enzyme inhibitor (TAS) | ✅ GO never asserted it |
 | **PANK4** | Q9NVE7 | functional pantothenate kinase | GO:0004594 pantothenate kinase | **NOT\|enables** (IBA + IMP, PMID:30927326); real GO:0016791 phosphatase is positively annotated (EXP, PMID:27322068) | ✅ GO negates it; real function captured |
 | **NAALADL2** | Q58DX5 | M28-peptidase zinc-binding + active sites | (peptidase / hydrolase) | **absent**; only protein binding | ✅ GO never asserted it |
-| **DPYSL5** | Q9BPU6 | dihydropyrimidinase activity (metal-cofactor residues) | GO:0004157 dihydropyrimidinase | **NOT\|enables** (IBA) **but** two positive **IEA** hydrolase terms remain (see below) | ⚠️ **over-annotation found** |
+| **DPYSL5** | Q9BPU6 | dihydropyrimidinase activity (metal-cofactor residues) | GO:0004157 dihydropyrimidinase | **NOT\|enables** (IBA) **plus** two positive **IEA** hydrolase parent terms (see below) | ⚠️ **suspect over-annotation** (not a strict contradiction) |
 
 ## The one actionable finding: DPYSL5 (CRMP5)
 
@@ -28,25 +28,40 @@ DPYSL5 has the specific catalytic term correctly negated:
 
 - `GO:0004157` dihydropyrimidinase activity — **NOT|enables** (IBA, GO_REF:0000033)
 
-…yet still carries two **positive InterPro-derived IEA** parent terms that
-contradict the loss-of-activity caution:
+…and still carries two positive **IEA** parent terms derived from
+metallo-hydrolase fold signatures:
 
-- `GO:0016787` hydrolase activity — IEA, InterPro:IPR006680
-- `GO:0016810` hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds — IEA, InterPro:IPR011059
+- `GO:0016787` hydrolase activity — IEA, InterPro:IPR006680 (Amidohydrolase-related)
+- `GO:0016810` hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds — IEA, InterPro:IPR011059 (Metal-dependent hydrolase composite)
 
-The UniProt CAUTION states DPYSL5 "Lacks most of the conserved residues that are
-essential for binding the metal cofactor and hence for dihydropyrimidinase
-activity" — i.e. it is a catalytically dead member of the amidohydrolase
-(DHP/CRMP) family that functions as a cytoskeletal/axon-guidance adapter (CRMP5).
-The two generic-hydrolase IEAs are **domain-presence over-annotations** of the
-classic kind: they propagate the family's ancestral catalytic MF onto a member
-that has demonstrably lost it.
+**This is not a logical contradiction.** Under GO's true-path rule a `NOT`
+annotation propagates *downward* (to subtypes of dihydropyrimidinase), **not**
+upward — so `NOT enables dihydropyrimidinase` does not entail `NOT enables
+hydrolase`. A protein can consistently be "some hydrolase" while "not a
+dihydropyrimidinase," so the positive-parent + negated-child pair is logically
+admissible.
 
-**Proposed action:** `MARK_AS_OVER_ANNOTATED` (or `REMOVE`) for `GO:0016787` and
-`GO:0016810` on DPYSL5, consistent with the curated `NOT|dihydropyrimidinase`
-and the CAUTION note. (The CRMP5 protein-binding / cytoskeleton annotations are
-the real function and are retained.) This belongs to the same pattern catalogued
-in [OVER_ANNOTATION_PATTERNS](../OVER_ANNOTATION_PATTERNS.md) /
+**It is, however, an evidentially suspect domain-based over-annotation.** Both
+positive terms rest *only* on fold/superfamily signatures (IPR006680, IPR011059;
+UniProt `SIMILARITY: Belongs to the metallo-dependent hydrolases superfamily`) —
+pure "has-the-fold ⇒ has-the-activity" propagation. The CAUTION states DPYSL5
+"Lacks most of the conserved residues that are essential for binding the metal
+cofactor and hence for dihydropyrimidinase activity," and catalysis across the
+*entire* metallo-dependent hydrolase superfamily depends on that metal site. So
+the very fact that justifies the curated `NOT` (no metal-binding residues) also
+undermines the evidential basis for the generic hydrolase parents: there is no
+positive evidence DPYSL5 performs *any* hydrolysis, and its curated function is
+non-catalytic (`FUNCTION: negative regulation of dendrite outgrowth`; a CRMP5
+cytoskeletal adapter).
+
+**Proposed action:** `MARK_AS_OVER_ANNOTATED` for `GO:0016787` and `GO:0016810`
+on DPYSL5 — domain-based IEA propagations that are unsupported and biologically
+improbable given metal-site loss. This is a deliberately *weaker* claim than
+`REMOVE`-as-contradiction, and weaker than asserting `NOT hydrolase` (which would
+overclaim absence of activity without positive evidence). The CRMP5
+protein-binding / cytoskeleton annotations are the real function and are
+retained. Same pattern as
+[OVER_ANNOTATION_PATTERNS](../OVER_ANNOTATION_PATTERNS.md) /
 [CONTESTED_FUNCTION](../CONTESTED_FUNCTION.md).
 
 ## Cross-resource insight (worth generalizing)
@@ -59,11 +74,15 @@ PMID:30927326). This is a strong cross-resource consistency signal and a good
 sanity check on the CAUTION→over-annotation hypothesis.
 
 The remaining leak is almost always **IEA from InterPro/UniRule domain rules**
-(DPYSL5's two hydrolase terms), which are applied before/independently of the
-member-specific NOT. So the high-yield query for this project is **not** "does a
-catalytic term exist?" but: *"does a **positive IEA** catalytic/parent term
-co-exist with a curated **NOT** of its child (or a CAUTION of lost activity)?"* —
-that conjunction is where the genuine over-annotations hide.
+(DPYSL5's two hydrolase terms), applied before/independently of the
+member-specific NOT. So a useful **review flag** (not a contradiction detector)
+is: *"a **positive IEA** parent term whose curated, more-specific **child** is
+`NOT`-ed (or whose activity a CAUTION reports as lost)."* Such a pair is
+logically consistent — `NOT` does not propagate up — but it marks a
+**fold/domain-based parent annotation that may have lost its evidential basis**,
+and is worth a curator's eye. The adjudication is then evidential, not logical:
+is there any positive support for the parent activity, or does it rest solely on
+the fold signature that the CAUTION/`NOT` has specifically discredited?
 
 ## Reproducibility
 
