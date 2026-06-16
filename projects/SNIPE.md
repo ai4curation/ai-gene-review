@@ -1,3 +1,7 @@
+---
+title: "SNIPE: Membrane-Bound Nuclease Anti-Phage Defence"
+---
+
 # SNIPE: Membrane-Bound Nuclease Anti-Phage Defence
 
 ## Overview
@@ -113,7 +117,7 @@ This mapping assumes GIY-YIG = DNA repair (as in UvrC), but SNIPE demonstrates t
 | Project | File | Connection |
 |---------|------|------------|
 | Anti-CRISPR | `projects/ANTI_CRISPR.md` | Parallel bacterial defence systems and phage counter-strategies |
-| SPKW-BPT4 | `projects/SPKW-BPT4.md` | Annotation challenges for phage-bacteria interactions |
+| SPKW-BPT4 | `projects/SPKW/SPKW-BPT4.md` | Annotation challenges for phage-bacteria interactions |
 | cGAS-STING | `projects/CGAS_STING_PATHWAY.md` | Eukaryotic cytosolic DNA sensing; conceptual parallel (cGAS senses foreign DNA in cytoplasm; SNIPE intercepts it at the membrane) |
 | Surveillance Immunity | `projects/CAEEL_SURVEILLANCE_IMMUNITY.md` | Innate immunity via spatial/contextual detection rather than sequence recognition |
 

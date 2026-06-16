@@ -1,3 +1,7 @@
+---
+title: "C. elegans Mitophagy & Mitochondrial Quality Control Project"
+---
+
 # C. elegans Mitophagy & Mitochondrial Quality Control Project
 
 ## Overview

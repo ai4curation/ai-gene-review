@@ -1,3 +1,7 @@
+---
+title: "Gene annotation edits from the ASSAY_TO_FUNCTION analysis"
+---
+
 # Gene annotation edits from the ASSAY_TO_FUNCTION analysis
 
 YAML edits made to gene review files as a direct result of this project's

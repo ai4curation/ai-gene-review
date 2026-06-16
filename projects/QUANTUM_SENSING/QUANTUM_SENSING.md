@@ -1,3 +1,7 @@
+---
+title: "Quantum Sensing Proteins and Engineering Chassis"
+---
+
 # Quantum Sensing Proteins and Engineering Chassis
 
 ## Scope

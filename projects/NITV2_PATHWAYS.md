@@ -1,3 +1,7 @@
+---
+title: "Nitratidesulfovibrio vulgaris Pathways Project"
+---
+
 # Nitratidesulfovibrio vulgaris Pathways Project
 
 ## Overview

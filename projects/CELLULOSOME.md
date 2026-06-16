@@ -1,3 +1,7 @@
+---
+title: "Cellulosome Project"
+---
+
 # Cellulosome Project
 
 ## Overview

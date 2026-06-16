@@ -1,3 +1,7 @@
+---
+title: "short-abstract"
+---
+
 Assigning functions to gene products is a foundational task of molecular biology, accomplished through literature-based expert curation and computational prediction. Most annotation databases deploy HMM- and family-based pipelines, but protein language models and agentic LLM predictors have triggered an explosion of new tools. How should databases decide whether to deploy them?
 
 CAFA-style aggregate metrics track progress against GOA snapshots, but carry biases in their metrics, ground truth, and holdout-set composition — and cannot grade the free-text reasoning traces that modern agentic predictors such as BioReason-Pro emit alongside their GO terms. de Crécy-Lagard et al. manually reviewed 453 predictions from a top deep learning method on uncharacterised *E. coli* proteins: only 3/453 were genuinely novel and correct, the remainder falling into systematic error classes. Such manual review does not scale.

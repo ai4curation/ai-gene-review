@@ -1,3 +1,7 @@
+---
+title: "Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor"
+---
+
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor
 
 ## Overview

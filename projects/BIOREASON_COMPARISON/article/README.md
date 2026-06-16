@@ -1,3 +1,7 @@
+---
+title: "BIOREASON_COMPARISON / article"
+---
+
 # BIOREASON_COMPARISON / article
 
 Paper drafts and supporting material for the **BioReason-Pro / AIGR** manuscript, intended for **ISMB 2026 Function-COSI**.
@@ -7,6 +11,7 @@ Paper drafts and supporting material for the **BioReason-Pro / AIGR** manuscript
 - `manuscript.md` — **full manuscript draft** (title, abstract, introduction, background, methods, results, discussion, limitations, conclusions, figure/table callouts, references). ~7,800 words. Start here.
 - `abstract.md` — 2-page long-form conference abstract (earlier draft; largely superseded by the manuscript but kept as a source for the short version).
 - `short-abstract.md` — 250-word short-form abstract (based on Google-Doc edits).
+- `slides.md` / `slides.html` — **ISMB 2026 Function-COSI slide deck** (Marp source + rendered HTML; embeds `figures/`). Render: `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files`.
 - `README.md` — this file.
 - `bioreason-pro-biorxiv.pdf` — *(not committed)* reference PDF: Fallahpour *et al.* (2026) *BioReason-Pro: Advancing Protein Function Prediction with Multimodal Biological Reasoning*, bioRxiv 10.64898/2026.03.19.712954. Local reference only; excluded via `.gitignore` due to third-party rights.
 

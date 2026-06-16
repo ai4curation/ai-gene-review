@@ -1,3 +1,7 @@
+---
+title: "ASSAY_TO_FUNCTION — working notes"
+---
+
 # ASSAY_TO_FUNCTION — working notes
 
 Journal of decisions and findings. Append, don't rewrite.

@@ -1,3 +1,7 @@
+---
+title: "Tier-1 re-review (MF-from-hub-readout candidates)"
+---
+
 # Tier-1 re-review (MF-from-hub-readout candidates)
 
 Re-review of the 7 Tier-1 candidates produced by `flag_candidates.py`, checked

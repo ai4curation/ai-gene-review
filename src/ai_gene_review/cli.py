@@ -2882,6 +2882,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
 
@@ -3097,6 +3098,59 @@ def descriptions_status(
 
     if update:
         typer.echo("\nStatus fields updated in YAML files.")
+
+
+@app.command()
+def analyze_evidence_sources(
+    organism: Annotated[
+        str, typer.Option("--organism", "-o", help="Organism subdirectory under genes/")
+    ] = "human",
+    genes_dir: Annotated[
+        Path, typer.Option("--genes-dir", help="Root genes directory")
+    ] = Path("genes"),
+    cache_path: Annotated[
+        Path,
+        typer.Option(
+            "--type-cache", help="TSV cache of PMID -> PubMed publication types"
+        ),
+    ] = Path("publications/publication_types.tsv"),
+    output_dir: Annotated[
+        Path, typer.Option("--output-dir", help="Directory for the report and TSVs")
+    ] = Path("reports/evidence_sources"),
+    refresh: Annotated[
+        bool, typer.Option("--refresh", help="Re-fetch all publication types from PubMed")
+    ] = False,
+    no_network: Annotated[
+        bool,
+        typer.Option(
+            "--no-network", help="Do not query PubMed; classify only from the cache"
+        ),
+    ] = False,
+):
+    """Analyze which evidence sources support GO annotation review decisions.
+
+    Cross-tabulates reference publication_type (review vs primary vs deep
+    research, inferred from PubMed PT metadata) against the manuscript section
+    of each supporting-text snippet and the curator's review action, to test
+    hypotheses about whether reviews / abstracts / deep research suffice.
+
+    Examples:
+        ai-gene-review analyze-evidence-sources --organism human
+        ai-gene-review analyze-evidence-sources -o human --no-network
+    """
+    from ai_gene_review.tools.analyze_evidence_sources import (
+        analyze_evidence_sources as _run,
+    )
+
+    report_path = _run(
+        organism=organism,
+        genes_dir=genes_dir,
+        cache_path=cache_path,
+        output_dir=output_dir,
+        refresh=refresh,
+        network=not no_network,
+    )
+    typer.echo(f"Report written to {report_path}")
 
 
 def main():

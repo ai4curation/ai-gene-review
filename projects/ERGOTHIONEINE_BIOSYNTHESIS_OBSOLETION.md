@@ -1,3 +1,7 @@
+---
+title: "Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion"
+---
+
 # Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion
 
 ## Overview

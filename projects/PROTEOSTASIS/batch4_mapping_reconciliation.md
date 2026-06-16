@@ -1,3 +1,7 @@
+---
+title: "Proteostasis Batch 4 — PN mapping reconciliation"
+---
+
 # Proteostasis Batch 4 — PN mapping reconciliation
 
 Date: 2026-06-07

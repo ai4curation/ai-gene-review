@@ -1,3 +1,7 @@
+---
+title: "Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)"
+---
+
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)
 
 ## Overview

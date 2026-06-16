@@ -1,3 +1,7 @@
+---
+title: "Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)"
+---
+
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)
 
 ## Overview

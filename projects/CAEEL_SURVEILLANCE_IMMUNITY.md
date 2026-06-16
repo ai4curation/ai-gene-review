@@ -1,3 +1,7 @@
+---
+title: "C. elegans Surveillance Immunity Project"
+---
+
 # C. elegans Surveillance Immunity Project
 
 ## Overview

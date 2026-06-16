@@ -1,4 +1,5 @@
 ---
+title: "BioReason-Pro Comparison Project"
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
@@ -8,6 +9,10 @@ sidecars:
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against expert-curated AIGR gene reviews.
 
 **Paper drafts** based on this project live in [`BIOREASON_COMPARISON/article/`](BIOREASON_COMPARISON/article/): see [`manuscript.md`](BIOREASON_COMPARISON/article/manuscript.md) for the full manuscript draft (intended for ISMB 2026 Function-COSI), plus [`abstract.md`](BIOREASON_COMPARISON/article/abstract.md) (long-form) and [`short-abstract.md`](BIOREASON_COMPARISON/article/short-abstract.md) (250 words).
+
+**Slide deck** (ISMB 2026 Function-COSI talk): [`slides.md`](BIOREASON_COMPARISON/article/slides.md) (Marp source) / [`slides.html`](BIOREASON_COMPARISON/article/slides.html) (rendered). Regenerate with `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files` (add `--pdf` or `--pptx` on a machine with a browser).
+
+**Reproducible stats notebooks** (`uv`-managed): [`notebooks/`](BIOREASON_COMPARISON/notebooks/) recomputes the summary statistics below directly from the committed per-gene files (no hard-coded numbers). [`01_narrative_scores.ipynb`](BIOREASON_COMPARISON/notebooks/01_narrative_scores.ipynb) reproduces the overall means, score distribution (Table 1), per-organism means (Table 2), and top/bottom performers; [`02_prediction_assessments.ipynb`](BIOREASON_COMPARISON/notebooks/02_prediction_assessments.ipynb) audits the per-term de Crécy-Lagard assessments (Table 5 analog). See the [notebooks README](BIOREASON_COMPARISON/notebooks/README.md).
 
 ## Methods
 

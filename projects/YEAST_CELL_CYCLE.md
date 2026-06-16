@@ -1,3 +1,7 @@
+---
+title: "Yeast Cell Cycle & Translation Control"
+---
+
 # Yeast Cell Cycle & Translation Control
 
 ## Overview

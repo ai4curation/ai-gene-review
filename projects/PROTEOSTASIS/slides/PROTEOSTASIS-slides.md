@@ -1,4 +1,5 @@
 ---
+title: "Human Proteostasis Network"
 marp: true
 theme: default
 paginate: true

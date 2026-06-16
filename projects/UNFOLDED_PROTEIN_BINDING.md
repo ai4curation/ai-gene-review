@@ -1,4 +1,5 @@
 ---
+title: "Unfolded Protein Binding Annotation Review"
 species: [human, mouse, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, HYPJE, ARATH, worm]
 sidecars:
   genes: UNFOLDED_PROTEIN_BINDING/genes.csv

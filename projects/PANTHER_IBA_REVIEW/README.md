@@ -1,3 +1,7 @@
+---
+title: "PANTHER IBA family review"
+---
+
 # PANTHER IBA family review
 
 Family-level (PANTHER/PAINT) review of the IBA annotations on the 40 reviewed
