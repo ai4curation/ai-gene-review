@@ -66,9 +66,20 @@ checkpoint coupling M-phase entry to S-phase completion.
 
 ## Deep research status
 Falcon deep research (`just deep-research-falcon worm mcm-4 --fallback perplexity-lite`)
-was launched in parallel with publication caching but produced no output within the
-session window (provider apparently stalled; no `-deep-research-*.md` file was written).
-The review was completed instead from the three cached primary publications (PMID:21146520
-full text, PMID:31283754 full text, PMID:7262539 abstract), the UniProt record (Q95XQ8),
-and the PANTHER PTHR11630 family data. mcm-4 is a well-characterized, deeply conserved
-MCM2-7 subunit, so the primary literature is sufficient for a confident review.
+was launched in parallel with publication caching. The wrapper reported a 600s timeout
+(and the `perplexity-lite` fallback was unavailable in this environment), but falcon in
+fact completed after ~1406s and wrote `mcm-4-deep-research-falcon.md` (51 citations) plus
+artifacts. The report **corroborates the entire review**: it confirms the
+lin-6/let-358 = mcm-4 = MCM4 identity, the complex-level ATPase/helicase activities
+(incl. the MCM4/6/7 subcomplex biochemistry), the replication checkpoint role, the
+epidermis-specific requirement, and the nuclear→diffuse(NEBD)→late-anaphase chromatin
+localization dynamics. No annotation decision needed changing.
+
+New context (not annotation-changing): a 2024 study (Memar et al., Nat Commun) reports a
+replication-*independent* role for the CMG helicase in asymmetric cell-fate divergence
+(via the GINS subunit PSF-2, not mcm-4 directly), proposed to act through
+chromatin/histone handling at the egl-1 locus. Captured as a new suggested_question and
+noted in the deep-research reference_review; MCM-4's strongest evidence remains canonical
+licensing/helicase. The deep-research file is now cited (additional_reference_ids +
+supported_by) on the ssDNA helicase activity annotation.
+
