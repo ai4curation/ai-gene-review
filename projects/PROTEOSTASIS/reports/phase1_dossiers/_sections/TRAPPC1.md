@@ -1,0 +1,9 @@
+## TRAPPC1
+
+- **UniProt:** Q9Y5R8 (TRAPP subunit 1 / Mum2) · **batch:** proteostasis-pr-1217 · **review status:** COMPLETE
+- **PN placement:** `Autophagy-Lysosome Pathway → Autophagophore initiation and elongation → Autophagy component recruitment to autophagophore → TRAPP complex component` (1 row, ALP) ; **PN-node mapping:** leaf type=`mapped`/`ok_for_propagation`→GO:0030008 TRAPP complex; group=`no_mapping`; class=`context_only`/`too_broad`→GO:0016236 macroautophagy; branch=`no_mapping`. **Projects GO:0030008 (already_in_goa_exact).**
+- **Consistency:** Fully consistent. Notes, review YAML and PN converge on TRAPP-complex membership as the strongest gene-level annotation; review ACCEPTs GO:0030008 (IBA+IEA) and TRAPPII/TRAPPIII memberships, and explicitly declines a broad autophagy BP ("avoid adding a broad autophagy BP for TRAPPC1"). No contradictions.
+- **PN story / NEW pressure:** PN's autophagophore-recruitment story is deliberately resolved to **complex membership only** (GO:0030008, verified real, already in GOA). Review concurs and routes autophagy to TRAPPIII context (GO:1990072) rather than a BP, citing PMID:27066478 "the connection of the mammalian TRAPP III complex to autophagy is currently not clear." `proposed_new_terms: []`. Conclude: **already captured; no NEW warranted.**
+- **Mapping strategy:** Gene does not change the node. The PN node correctly avoids projecting macroautophagy (the documented "TRAPP-like overpropagation" precedent the rationale itself names) and restricts to the CC GO:0030008. Status/scope right; not broader than the review.
+- **Evidence alignment:** Overlap. PN cites the Frontiers "TRAPP Complexes in Secretion and Autophagy" review = review's PMID:27066478 (core). Review enriches with structural (PMID:16828797) and Reactome RAB1-GEF/ER-Golgi evidence PN does not list.
+- **Verdict:** Fully consistent, conservative, well-curated. No edits needed.
