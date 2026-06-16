@@ -98,3 +98,17 @@ ssDNA-helicase citation:
 All deep-research supporting_text quotes validate against the cached report.
 
 
+
+### PR #1514 review fix: protein binding (GO:0005515, IPI)
+Reviewer correctly flagged that the original supporting_text quoted the NMAD-1/TOP-2
+in vivo co-IP and the summary wrongly implied MCM-4 co-IP. Verified from PMID:31283754
+full text:
+- MCM-4 identified in NMAD-1 IP/MS as a candidate binder.
+- NMAD-1 binds MCM-4 **directly in vitro** (recombinant His-NMAD-1 pulldown of MCM-4;
+  Fig 4B / S5). [PMID:31283754 "NMAD-1 directly bound to MTSS-1, TOP-2, and MCM-4, components of the DNA replication machinery"]
+- In vivo interaction with MCM-4 was **not** confirmed; only NMAD-1/TOP-2 confirmed in
+  vivo. [PMID:31283754 "Although we were unable to confirm NMAD-1's interaction with MTSS-1 and MCM-4 in vivo"]
+Corrected the annotation summary/reason and supporting_text accordingly (in vitro direct
+binding cited; in vivo caveat stated), and refined the PMID:31283754 reference finding.
+Action remains KEEP_AS_NON_CORE (uninformative MF term; in vitro direct binding still
+supports the IPI).
