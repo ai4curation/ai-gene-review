@@ -33,7 +33,7 @@ style: |
 
 # Evaluating ProtNLM2 Predictions Against Curated GO Annotations
 
-**Preliminary analysis of 28,553 proteins across 440 species**
+**Analysis of 28,553 proteins across 440 species (pre-release dataset)**
 
 Using ontology closure-based comparison against GOA
 
@@ -49,17 +49,19 @@ Google's protein language model that predicts protein names, GO terms, subcellul
 
 ---
 
-## ProtNLM2 architecture (inferred from evidence blocks)
+## ProtNLM2 architecture ([UniProt docs](https://www.uniprot.org/help/ProtNLM))
 
-We lack official documentation, but the XML evidence blocks reveal a hybrid system:
+**T5 seq2seq model** trained on 240M proteins (UniProt 2023_04, Swiss-Prot + TrEMBL). Inputs: amino acid sequence, organism TaxID, AlphaFold secondary structure. Ensemble of multiple models.
 
-1. **Neural model** generates predictions with per-prediction confidence scores (`model_score`, 0--1)
-2. **Post-hoc evidence** attached for interpretability:
-   - **String match** (56%): predicted text matched a known database entry (domain, PANTHER, GO, keyword)
-   - **phmmer** (40%): sequence similarity to characterized proteins (accession + bit score)
-   - **TM-align** (4%): structure-based alignment (presumably AlphaFold models)
+**Post-processing: the Evidencer** --- a corroboration pipeline (not part of the model):
+1. **Exclusion filter**: GO taxon constraints, nomenclature violations, malformed IDs → rejected
+2. **String match** (56%): predicted text matches existing annotations or cross-referenced DBs (InterPro, GO, EC)
+3. **phmmer** (40%): sequence similarity to proteins with matching annotations (bit score > 25)
+4. **TM-align** (4%): structural similarity via AlphaFold models (TM-score > 0.5)
 
-**Key insight:** `model_score` is independent of phmmer score (r = -0.01). Same phmmer hit, different predictions get different scores. The score is the LM's own confidence, not a summary of evidence strength.
+**Key insight:** `model_score` is the LM's own confidence (threshold: 0.05), independent of evidence strength (r = −0.01 with phmmer score).
+
+**Dataset note:** our XML (28,553 entries) is a pre-release; the [public pilot](https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv) has 26,856 (1,697 removed by quality filtering).
 
 ---
 
@@ -138,9 +140,9 @@ Compare ProtNLM2 GO predictions against curated GOA using **`isa_partof_closure`
 | **LESS_SPECIFIC** | Predicted term is a strict ancestor of a GOA term (redundant) |
 | **MORE_SPECIFIC** | Predicted term is a strict descendant (potentially novel) |
 | **NO_OVERLAP** | Different ontology branch --- novel or incorrect |
-| **NOT_IN_GOA** | Protein has no GOA annotations --- cannot evaluate |
+| **NOT_IN_GCRP** | Protein not in Gene Centric Reference Proteome --- cannot evaluate |
 
-Four species: **Human**, **Arabidopsis**, **Wheat** (new DuckDB), **S. coelicolor**
+Seven species: **Human**, **Mouse**, **Arabidopsis**, **Wheat**, **S. coelicolor**, **X. laevis**, **X. tropicalis**
 
 ---
 
