@@ -253,15 +253,15 @@ to every component.
   MT-CO2/SCO1/SCO2 domain-only Model C run with copper pocket constraints. This is a static GitHub
   Pages-compatible viewer. The model is still hypothesis-generating and should not be used as
   evidence for GO curation.
-- `analysis/complex_iv_boltz/RESULTS_MODEL_C_FULL_CU_BIOLM.md` and
-  `analysis/complex_iv_boltz/RESULTS_MODEL_C_DOMAINS_CU_BIOLM.md` record hosted BioLM Boltz2 runs
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/RESULTS_MODEL_C_FULL_CU_BIOLM.md` and
+  `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/RESULTS_MODEL_C_DOMAINS_CU_BIOLM.md` record hosted BioLM Boltz2 runs
   of the same Model C inputs with larger sampling settings. These improved domain confidence but
   did not produce high-confidence COX2 interfaces.
-- `analysis/complex_iv_boltz/RESULTS_MODEL_A_COX2_SCO1_DOMAINS_CU_BIOLM.md` records a hosted
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iv_boltz/RESULTS_MODEL_A_COX2_SCO1_DOMAINS_CU_BIOLM.md` records a hosted
   pairwise MT-CO2:SCO1 domain run. This is the direct terminal-donor control for Model C.
-- `analysis/complex_iii_boltz/RESULTS_CYC1_UQCRFS1_BIOLM.md` records a hosted BioLM Boltz2 run
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/complex_iii_boltz/RESULTS_CYC1_UQCRFS1_BIOLM.md` records a hosted BioLM Boltz2 run
   for the Complex III active electron-transfer interface between CYC1 and UQCRFS1.
-- `analysis/proteasome_boltz/RESULTS_PSMB5_PSMA1_BIOLM.md` records a non-OXPHOS hosted BioLM
+- `projects/PROTEIN_COMPLEX_FUNCTIONS/proteasome_boltz/RESULTS_PSMB5_PSMA1_BIOLM.md` records a non-OXPHOS hosted BioLM
   Boltz2 run for proteasome attribution: catalytic beta subunit PSMB5 versus structural alpha
   subunit PSMA1.
 
@@ -270,7 +270,7 @@ to every component.
 API access should separate retrieval from prediction. For existing structures, use RCSB PDB and
 AlphaFold DB APIs first. For new complex predictions, use a hosted prediction API when we want a
 quick no-infrastructure result. This pilot used BioLM's hosted Boltz2 endpoint and archived the
-returned CIF, confidence summary, input payload, and analysis notes under `analysis/`. Local
+returned CIF, confidence summary, input payload, and analysis notes under `projects/PROTEIN_COMPLEX_FUNCTIONS/`. Local
 `boltz predict` can still be useful for reproducibility or batch work, but local run outputs are not
 part of this project PR.
 
@@ -491,7 +491,7 @@ result = client.fold_all_atom(
 
 Multi-chain complexes are assembled from `ProteinInput` / `DNAInput` / `LigandInput` components
 with distinct chain IDs. This is a different client surface from the BioLM Boltz2 caller, so the
-existing payload generator / endpoint caller under `analysis/` would need an ESMFold2 adapter
+existing payload generator / endpoint caller under `projects/PROTEIN_COMPLEX_FUNCTIONS/` would need an ESMFold2 adapter
 rather than a drop-in URL swap.
 
 ### Recommendation
@@ -512,14 +512,14 @@ the ligand input.
 ### 2026-05-29 hosted re-run on archived protein-complex inputs
 
 Ran the three archived Boltz2 inputs through the Biohub hosted ESMFold2 endpoint using the pinned
-GitHub SDK adapter in `analysis/esmfold2/run_esmfold2.py`. The live runs succeeded and produced
-CIF, raw response JSON, confidence JSON, and analyzer markdown under `analysis/esmfold2/`.
+GitHub SDK adapter in `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/run_esmfold2.py`. The live runs succeeded and produced
+CIF, raw response JSON, confidence JSON, and analyzer markdown under `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/`.
 
 | Input | Result note | ipTM | pTM | complex pLDDT | Analyzer readout |
 |---|---|---:|---:|---:|---|
-| CYC1:UQCRFS1 | `analysis/esmfold2/RESULTS_CYC1_UQCRFS1_ESMFOLD2.md` | 0.228 | 0.603 | 0.829 | heme/Rieske min CA distance 14.63 A |
-| PSMB5:PSMA1 | `analysis/esmfold2/RESULTS_PSMB5_PSMA1_ESMFOLD2.md` | 0.362 | 0.616 | 0.825 | 27 residue contacts within 5 A; active-site T60 to PSMA1 30.00 A |
-| COX2:SCO1:SCO2 Model C | `analysis/esmfold2/RESULTS_MODEL_C_ESMFOLD2.md` | 0.390 | 0.532 | 0.757 | SCO1/SCO2 CxxxC motifs remain far from COX2 CuA residues |
+| CYC1:UQCRFS1 | `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/RESULTS_CYC1_UQCRFS1_ESMFOLD2.md` | 0.228 | 0.603 | 0.829 | heme/Rieske min CA distance 14.63 A |
+| PSMB5:PSMA1 | `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/RESULTS_PSMB5_PSMA1_ESMFOLD2.md` | 0.362 | 0.616 | 0.825 | 27 residue contacts within 5 A; active-site T60 to PSMA1 30.00 A |
+| COX2:SCO1:SCO2 Model C | `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/RESULTS_MODEL_C_ESMFOLD2.md` | 0.390 | 0.532 | 0.757 | SCO1/SCO2 CxxxC motifs remain far from COX2 CuA residues |
 
 Interpretation: none of the hosted ESMFold2 runs exceeded the provisional interface-confidence
 threshold (ipTM > 0.5). The global pLDDT values are higher than the prior Boltz2 runs, but the
@@ -531,7 +531,7 @@ backend rather than replacing the Boltz2 notes or using any output as curation-g
 
 Followed up the Complex IV Model A pairwise (MT-CO2 CuA domain + SCO1 metallochaperone domain) on
 ESMFold2 to test whether the weak, off-target interface seen with Boltz2 was an artifact of missing
-metals or missing complex context. Extended `analysis/esmfold2/run_esmfold2.py` with `--ligand
+metals or missing complex context. Extended `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/run_esmfold2.py` with `--ligand
 ID:CCD` and `--pocket BINDER:CHAIN/RES,...`, and made it surface the `ESMProteinError` that
 `fold_all_atom` returns as a value instead of writing an empty response.
 
@@ -555,7 +555,7 @@ site (both CuA cysteines, ~2.0 A) leaving SCO1 apo, i.e. no spontaneous bridging
 The 3-Cu run is separately a strong validation of the model against experiment: unforced, it
 reconstructed the binuclear CuA centre (Cu-Cu 2.67 A; both Cys196/200 + His161 + His204 + Met207)
 matching human Complex IV `9I6F` (Cu-Cu 2.75 A) within ~0.1 A. See the reproducible check
-`analysis/esmfold2/validate_cua_vs_pdb.py`. The PDB has the components individually (SCO1 ~10
+`projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/validate_cua_vs_pdb.py`. The PDB has the components individually (SCO1 ~10
 structures; COX2/CuA in 5Z62/9I6F/9I7U) but ZERO structures of any SCO1:COX2, SCO2:COX2, or
 SCO1:SCO2 complex, consistent with a transient transfer interaction.
 

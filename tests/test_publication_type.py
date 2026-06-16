@@ -87,7 +87,7 @@ def test_enum_values_match_schema():
     """Every value produced by classification must be a valid PublicationTypeEnum."""
     from pathlib import Path
 
-    from linkml_runtime.utils.schemaview import SchemaView
+    from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
     schema = (
         Path(__file__).parent.parent

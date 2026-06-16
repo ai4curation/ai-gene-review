@@ -33,7 +33,7 @@ ASPECTS = ("MF", "BP", "CC")
 def read_tsv(path: Path) -> List[dict]:
     if not path.exists():
         return []
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f, delimiter="\t"))
 
 
@@ -228,21 +228,29 @@ def main() -> None:
         lines.append("- not yet labeled (n=0)")
 
     lines.append("\n## Blind-ablation validation (unbiased sufficiency)")
-    blind_filled = [r for r in blind if (r.get("blind_verdict") or "").strip()]
-    if blind_filled:
-        for bundle in ("ABSTRACT_ONLY", "REVIEW_ONLY", "DEEP_RESEARCH_ONLY"):
-            sub = [r for r in blind_filled if r.get("bundle") == bundle]
-            acc = lambda r: 1.0 if (r.get("blind_verdict") or "").strip().upper() == "ACCEPT" else 0.0  # noqa: E731
-            lines.append(f"- P(ACCEPT | {bundle}): {fmt(estimate(sub, acc, seed=args.seed))}")
-        # calibration vs retrospective E-b
-        retro = estimate(anns, abstract, seed=args.seed)
-        sub = [r for r in blind_filled if r.get("bundle") == "ABSTRACT_ONLY"]
+    blind_scored = [r for r in blind if (r.get("blind_verdict") or "").strip()]
+    # "Available" = a restricted bundle actually had evidence (not NO_SOURCE).
+    blind_avail = [r for r in blind_scored if (r.get("blind_verdict") or "").strip().upper() != "NO_SOURCE"]
+    if blind_scored:
         acc = lambda r: 1.0 if (r.get("blind_verdict") or "").strip().upper() == "ACCEPT" else 0.0  # noqa: E731
-        blind_abs = estimate(sub, acc, seed=args.seed)
+        for bundle in ("ABSTRACT_ONLY", "REVIEW_ONLY", "DEEP_RESEARCH_ONLY"):
+            assigned = [r for r in blind_scored if r.get("bundle") == bundle]
+            avail = [r for r in blind_avail if r.get("bundle") == bundle]
+            n_assigned = len(assigned)
+            n_avail = len(avail)
+            lines.append(
+                f"- **{bundle}** — source available {n_avail}/{n_assigned}; "
+                f"P(ACCEPT | available): {fmt(estimate(avail, acc, seed=args.seed))}; "
+                f"P(ACCEPT | assigned): {fmt(estimate(assigned, acc, seed=args.seed))}"
+            )
+        # calibration vs retrospective E-b (abstract), among available abstracts
+        retro = estimate(anns, abstract, seed=args.seed)
+        abs_avail = [r for r in blind_avail if r.get("bundle") == "ABSTRACT_ONLY"]
+        blind_abs = estimate(abs_avail, acc, seed=args.seed)
         if retro["n"] and blind_abs["n"]:
             lines.append(
                 f"- **calibration**: retrospective abstract-sufficient "
-                f"{retro['point'] * 100:.1f}% vs blind ACCEPT|ABSTRACT_ONLY "
+                f"{retro['point'] * 100:.1f}% vs blind ACCEPT|ABSTRACT_ONLY (available) "
                 f"{blind_abs['point'] * 100:.1f}% "
                 f"(gap {100 * (retro['point'] - blind_abs['point']):+.1f} pts = "
                 f"retrospective optimism)"
@@ -264,7 +272,7 @@ def main() -> None:
     report = "\n".join(lines) + "\n"
     print(report)
     if args.out:
-        Path(args.out).write_text(report)
+        Path(args.out).write_text(report, encoding="utf-8")
         print(f"[written to {args.out}]")
 
 
