@@ -46,7 +46,7 @@ Computed offline from the cached UniProt records (`*-uniprot.txt`, `DR PDB` cros
 | Total deposited PDB entries | **13,415** |
 | **Eukaryotic** genes with a structure | 815 |
 | Genes with a structure but **no experimental GO at all** | 73 |
-| Genes with a structure but **no experimental molecular-function GO** | 115 |
+| Genes with a structure but **no experimental molecular-function GO** | 114 |
 | Genes where a review **disputed a catalytic MF** (REMOVE/over-annotated) | 130 |
 
 Top organisms by genes-with-structure: human (588), yeast (65), ARATH (53), BPT4 (32),
@@ -54,13 +54,13 @@ mouse (30), ECOLI (23), PSEPK (19), SCHPO (17), worm (17), rat (15).
 
 ### Three prioritization cuts
 
-`enrich_rcsb.py` enriches the union of three candidate cuts (281 genes; each tagged in the
+`enrich_rcsb.py` enriches the union of three candidate cuts (278 genes; each tagged in the
 `candidate_reason` column), so the priority list is no longer prokaryote-dominated:
 
 | Cut | Definition | Genes | What structure adds |
 |-----|------------|------:|---------------------|
-| `dark_mf` | no experimental molecular-function GO | 115 | grounds a first experiment-grade MF |
-| `euk` | eukaryotic **and** ≤2 experimental MF terms | 103 | sharpens an IEA term / pins complex membership |
+| `dark_mf` | no experimental molecular-function GO | 114 | grounds a first experiment-grade MF |
+| `euk` | eukaryotic **and** ≤2 experimental MF terms | 100 | sharpens an IEA term / pins complex membership |
 | `contested` | review marked a **catalytic** MF `REMOVE`/over-annotated | 130 | adjudicates the disputed activity (pseudo-enzyme / over-general / wrong-specific) |
 
 Full inventory: `PDB/data/pdb_inventory.tsv` (per entry) and
@@ -68,7 +68,7 @@ Full inventory: `PDB/data/pdb_inventory.tsv` (per entry) and
 
 ## Prioritized candidates (first pass)
 
-The 115 genes with a structure but no experimental MF GO were enriched with RCSB metadata
+The 114 genes with a structure but no experimental MF GO were enriched with RCSB metadata
 (bound ligands, entity counts, titles). Of the 105 that resolved:
 
 - **42** have a structure with a bound **cofactor / catalytic metal**
@@ -222,7 +222,7 @@ function is rare — throttled by subunit mismatch and GO expressivity.
 
 `PDB/curation_gap.py` measures, for every deposited structure with a linked primary
 publication, whether that PMID is cited in the gene's GOA `REFERENCE` column. Across
-**737** structure-paper × gene pairs (247 genes), only **14%** are cited by GOA; **64%**
+**737** structure-paper × gene pairs (247 genes), only **15%** are cited by GOA; **64%**
 are `GAP_OPPORTUNITY` (the paper predates the gene's last *experimental* annotation yet is
 never referenced), and **174/247** genes cite zero of their structure papers. "Not cited"
 means the structural study is absent from the evidence trail, not that the function is

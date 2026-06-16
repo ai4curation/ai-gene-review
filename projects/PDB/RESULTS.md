@@ -34,7 +34,7 @@ enrich_rcsb.py     RCSB GraphQL for no-exp-MF candidate genes  ->  data/pdb_enri
    - `euk` — eukaryotic **and** `exp_mf <= 2`: broadens beyond the prokaryote-dominated dark
      set so eukaryotic proteins aren't lost; structure sharpens an IEA term / pins complex.
    - `contested` — ≥1 contested catalytic MF (above): structure adjudicates the disputed
-     activity. 281 genes total. To bound RCSB calls, ≤15 entries are queried per gene (the
+     activity. 278 genes total (union of the three cuts). To bound RCSB calls, ≤15 entries are queried per gene (the
      rollup only needs "does *any* deposited structure carry feature X").
 
 3. **Enrichment (network).** For each candidate's PDB entries, query the RCSB Data API for
@@ -52,10 +52,10 @@ enrich_rcsb.py     RCSB GraphQL for no-exp-MF candidate genes  ->  data/pdb_enri
 ## Headline numbers
 
 - 949 / 2529 genes have ≥1 deposited PDB structure; 13,415 entries total; 815 eukaryotic.
-- Candidate union = 281 genes: `dark_mf` 115, `euk` 103, `contested` (catalytic MF) 130
-  (overlapping). 1,371 PDB entries queried (≤15/gene).
-- The strict `dark_mf` cut (105 resolved): 42 with a bound cofactor/metal, 69 with a
-  meaningful ligand, 40 in a complex, 6 with bound nucleic acid, 23 apo/no-partner.
+- Candidate union = 278 genes: `dark_mf` 114, `euk` 100, `contested` (catalytic MF) 130
+  (overlapping). 1,361 PDB entries queried (≤15/gene).
+- The strict `dark_mf` cut (102 resolved): 40 with a bound cofactor/metal, 66 with a
+  meaningful ligand, 36 in a complex, 6 with bound nucleic acid, 23 apo/no-partner.
 - `contested` catalytic cases split into **over-general parent terms** (cofactor present →
   pick the specific child) vs **genuinely-wrong specifics** (structure/cofactor refutes the
   call, e.g. HEN1 PPIase→SAH-methyltransferase; CASP3 aspartic→cysteine protease).
