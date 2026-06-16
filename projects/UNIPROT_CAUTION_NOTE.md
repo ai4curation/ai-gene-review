@@ -126,6 +126,25 @@ retracted-reference** candidates, e.g.:
 - **ERCC8** (Q13216), **H3-3A/B** (P84243), **CBX1/CBX5** — annotations resting
   on retracted papers.
 
+### D. First deep dive (batch 1)
+
+[`deep_dive_batch1.md`](UNIPROT_CAUTION_NOTE/deep_dive_batch1.md) fetched 5 human
+`degenerate-domain` candidates (RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2) and
+checked their curated GO molecular functions against the CAUTION note. Key
+results:
+
+- **4 of 5 are already correctly handled by GO**, usually via an explicit
+  `NOT|enables` on the lost catalytic term — frequently citing the *same* paper
+  named in the CAUTION (RHBDF1↔PMID:21439629, PANK4↔PMID:30927326). The GO `NOT`
+  qualifier is effectively the curated counterpart of the UniProt CAUTION.
+- **One genuine over-annotation found — DPYSL5 (CRMP5):** `GO:0004157`
+  dihydropyrimidinase is correctly `NOT`-ed, but two positive **InterPro IEA**
+  parent terms (`GO:0016787`, `GO:0016810` hydrolase activity) survive and
+  contradict the loss-of-activity caution → candidate `MARK_AS_OVER_ANNOTATED`.
+- **Generalizable query:** the over-annotations hide where a **positive IEA**
+  catalytic/parent term **co-exists with a curated `NOT`** of its child (or a
+  CAUTION of lost activity) — not simply where any catalytic term exists.
+
 ### Local corpus tallies (cached records, for reference)
 
 
@@ -216,11 +235,15 @@ failure modes:
   per-organism distributions — no `fetch-gene` required.
 - [x] Built `shortlist_candidates.py` → 4,046 high-value, not-yet-reviewed
   candidates (`candidates_high_value.tsv`, `candidates.md`).
+- [x] **Deep dive batch 1** (`deep_dive_batch1.md`): fetched RHBDF1, SUMF2,
+  PANK4, DPYSL5, NAALADL2; found 4/5 already correctly negated by GO and **1
+  genuine over-annotation (DPYSL5 hydrolase IEAs)**.
 
 ## Pending
-- [ ] Pick a first deep-dive batch from `candidates.md` (suggest human
-  degenerate-domain pseudo-enzymes: RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2) and
-  run full reviews.
+- [ ] Write the full DPYSL5 (CRMP5) review and set `MARK_AS_OVER_ANNOTATED` on
+  `GO:0016787` / `GO:0016810`; complete reviews for the other 4 fetched stubs.
+- [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
+  the 1,342 degenerate-domain candidates to auto-surface over-annotations.
 - [ ] Audit retracted-reference candidates for retracted `original_reference_id`s
   in any existing review.
 - [ ] Refine the keyword classifier to shrink the large "other" bucket (7,605
