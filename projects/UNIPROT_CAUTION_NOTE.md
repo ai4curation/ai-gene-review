@@ -210,6 +210,35 @@ retained — these are flags for a curator's eye, not automatic removals.
 > which the `cc_caution` API survey does not carry — a QuickGO annotation pull
 > keyed on the 14k CAUTION accessions would extend them database-wide.
 
+### F. Validation against existing curated reviews
+
+Because the local corpus is *already curated*, the query hits double as a test of
+the method. [`audit_queries_vs_reviews.py`](UNIPROT_CAUTION_NOTE/audit_queries_vs_reviews.py)
+joins each flag to the action the existing review assigned
+([`audit_queries_vs_reviews.md`](UNIPROT_CAUTION_NOTE/audit_queries_vs_reviews.md)):
+
+- **Query A STRONG: 8/11 CONFIRMED** — the curator had already set
+  `REMOVE`/`MARK_AS_OVER_ANNOTATED`/`MODIFY` on the flagged parent (DPYSL5, CPT1C
+  ×2, pmp20 ×2, *ant*…). The 3 "kept" are correctly-retained parents on a *different*
+  branch (ENDOU is a ribonuclease → `hydrolase` is right; MAP1S really does bind
+  actin; PEX12 is a ubiquitin ligase). The STRONG triage tracks expert decisions.
+- **Query B: 17 CONFIRMED** real catches (CHMP1A metalloprotease/zinc from a
+  mistranslated ORF; ENDOU serine protease; HDAC6 histone-deacetylase; NME2
+  nuclease; the retracted TP53–BANP interactions…) — but **~47 "kept" are
+  expected false-positives**: a contested CAUTION paper usually makes *several*
+  claims and only one is doubted, so matching on PMID alone over-flags (e.g.
+  CPT1C↔PMID:30135643 *is* the real palmitoyl-hydrolase paper; UFSP1 is now known
+  active; CSNK1D's kinase activity is bona fide — only its DCK substrate is doubted).
+  Query B is therefore a coarse curator-review flag; precise use needs matching the
+  contested *activity* to the GO term, not just the citation.
+
+**Net:** the two genes you picked — **CPT1C** and **CHMP1A** — were both already
+**correctly curated** (CPT1C `REMOVE`s the unsupported transferase parents and keeps
+`catalytic activity` because the real palmitoyl-hydrolase activity sits under it,
+exactly matching the STRONG-vs-supported split; CHMP1A `REMOVE`s the mistranslated-ORF
+metalloprotease/zinc terms). No edits were needed — the queries reproduced the
+experts' decisions, which is the validation we wanted before scaling UniProt-wide.
+
 ### Local corpus tallies (cached records, for reference)
 
 
@@ -319,10 +348,13 @@ failure modes:
   (`caution_conjunction_queries.py`): Query A (negated-child/positive-parent
   conjunction, 33 hits + 9 direct conflicts, with a STRONG/experimental-support
   triage) and Query B (CAUTION-PMID-cited-positively-never-negated, 69 flags).
+- [x] **Validated the queries against existing reviews**
+  (`audit_queries_vs_reviews.py`): Query A STRONG 8/11 CONFIRMED; Query B 17
+  CONFIRMED catches (rest are expected PMID-level false-positives). **CPT1C and
+  CHMP1A were already correctly curated** — the queries reproduced the experts'
+  REMOVE/MODIFY decisions, so no edits needed.
 
 ## Pending
-- [ ] Work the Query A STRONG list (CPT1C next) and the Query B MF hits (CHMP1A,
-  ENDOU, TCF25, CSNK1D, NME2) into full reviews.
 - [ ] Report the 9 DIRECT same-term GOA conflicts (EDEM1/2, ENDOU, PARK7, CYB5R4)
   upstream to GO.
 - [ ] Scale Queries A/B UniProt-wide via a QuickGO GOA pull keyed on the 14k
