@@ -389,16 +389,25 @@ def _summarize_validator_output(output: str, max_chars: int = 1800) -> str:
 
 
 def _warning_lines(output: str) -> list[str]:
+    # Matches both the linkml-reference-validator "[WARN]" / leading "WARN" style
+    # and the linkml-term-validator "⚠️  WARN:" emoji style (ontology label drift).
     return [
         line.strip()
         for line in output.splitlines()
         if re.search(r"(^|\[)(WARN|WARNING)\b", line.strip(), re.IGNORECASE)
+        or "⚠" in line
     ]
 
 
 def _has_error_output(output: str) -> bool:
+    # "❌ ERROR" is the linkml-term-validator error marker; the "❌ ... issue(s):"
+    # header (also emitted for warning-only results) intentionally does not match.
     return bool(
-        re.search(r"^\s*\[ERROR\]|Traceback|^Error:", output, re.IGNORECASE | re.MULTILINE)
+        re.search(
+            r"^\s*\[ERROR\]|❌\s*ERROR|Traceback|^Error:",
+            output,
+            re.IGNORECASE | re.MULTILINE,
+        )
     )
 
 
