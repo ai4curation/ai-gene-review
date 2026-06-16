@@ -151,6 +151,65 @@ results:
   domain-based parent annotation that may have lost its evidential basis; the
   adjudication is then evidential, not logical.
 
+### E. Systematic over-annotation queries (local corpus)
+
+[`caution_conjunction_queries.py`](UNIPROT_CAUTION_NOTE/caution_conjunction_queries.py)
+operationalizes two CAUTION-driven detectors over the 2,675 locally-fetched genes
+(GO ancestry via oaklib; no network). Output:
+[`caution_conjunction.md`](UNIPROT_CAUTION_NOTE/caution_conjunction.md),
+`conjunction_hits.tsv`, `caution_pmid_unnegated.tsv`.
+
+**Query A — negated-child / positive-parent conjunction.** Within a gene, a
+molecular-function term `X` is annotated positively while a more specific
+descendant `Y` is annotated `NOT`. **33 hits / 22 genes** (24 with an electronic
+IEA/IBA parent). A triage column marks a hit **STRONG** when the parent's
+specificity has *no* experimental positive support in GOA (the DPYSL5 pattern):
+
+| Gene | positive parent | NOT-ed child | note |
+|------|-----------------|--------------|------|
+| DPYSL5 | hydrolase activity (IEA) | dihydropyrimidinase (IBA) | confirmed over-annotation → REMOVE (done) |
+| CPT1C | (acyl)transferase activity (IEA) | carnitine O-palmitoyltransferase (ISS) | CAUTION: little/no CPT activity in vivo — likely over-annotation |
+| ENDOU | hydrolase activity (IEA) | serine-type peptidase (IDA) | parent legit (it's a ribonuclease), child correctly NOT-ed |
+| pmp20 | peroxidase activity (IEA) | glutathione peroxidase (IDA) | **false positive**: genuine peroxiredoxin, peroxidase only IEA-annotated |
+
+The STRONG flag means "no experimental backing for the parent's specificity in
+GOA" — a prioritization signal, **not** a verdict: some flagged parents are real
+activities that simply lack an experimental annotation (pmp20). Adjudication
+stays evidential.
+
+Query A also surfaces **9 DIRECT same-term conflicts** — a term annotated *both*
+positively and `NOT` on the same gene (genuine GOA inconsistencies worth
+reporting upstream), e.g. EDEM1/EDEM2 `mannosyl-oligosaccharide 1,2-α-mannosidase`
+(TAS vs NOT IDA), ENDOU `serine-type peptidase` (IDA vs NOT IDA), PARK7
+`protein deglycase` (IDA vs NOT IDA), CYB5R4 `NAD(P)H oxidase` (IDA vs NOT IDA).
+
+**Query B — CAUTION PMID cited positively, never negated.** Flags genes where a
+UniProt CAUTION cites a PMID, a GO annotation is made *to that same PMID*, and
+there is *no* `NOT` annotation citing it — i.e. the curator's caveat about that
+paper may not be reflected as a negation in GO. **69 flags / 39 genes.** Needs no
+ontology. Highest-value molecular-function hits:
+
+- **CHMP1A** ↔ PMID:8863740 — `metallopeptidase activity` + `zinc ion binding`
+  (TAS) from a paper whose "metalloprotease (PRSM1)" reading came from a **wrong
+  ORF translation** → strong REMOVE candidates.
+- **ENDOU** ↔ PMID:2350438 — `serine-type peptidase activity` (IDA) from the paper
+  later refuted (it is an endoribonuclease, not a protease).
+- **HDAC6** ↔ PMID:10220385 — `histone deacetylase activity` (IDA) from the
+  "originally thought to be a histone deacetylase" paper (it is predominantly a
+  cytoplasmic tubulin deacetylase).
+- **TCF25** ↔ PMID:16574069 — DNA-binding shown only via a GAL4-DBD fusion (CAUTION:
+  "uncertain"); **CSNK1D** ↔ PMID:20637175 — DCK phosphorylation "probably not in
+  vivo"; **NME2** ↔ PMID:11121025 — contested intrinsic nuclease activity.
+
+Many other Query B hits are *localization* debates (AGK, AIFM2, ASAH2, C1QBP,
+ATP13A1, Dnajb11) where the positive annotation may have been deliberately
+retained — these are flags for a curator's eye, not automatic removals.
+
+> **Scaling.** Both queries currently run on the locally-fetched corpus. To run
+> UniProt-wide they need GOA (evidence codes + `NOT` qualifiers) per accession,
+> which the `cc_caution` API survey does not carry — a QuickGO annotation pull
+> keyed on the 14k CAUTION accessions would extend them database-wide.
+
 ### Local corpus tallies (cached records, for reference)
 
 
@@ -256,9 +315,18 @@ failure modes:
   asserted catalytic term; PANK4 is a domain-swap pseudoenzyme (dead PanK domain
   + real, correctly annotated 4'-phosphopantetheine phosphatase).
 
+- [x] **Two systematic over-annotation queries implemented**
+  (`caution_conjunction_queries.py`): Query A (negated-child/positive-parent
+  conjunction, 33 hits + 9 direct conflicts, with a STRONG/experimental-support
+  triage) and Query B (CAUTION-PMID-cited-positively-never-negated, 69 flags).
+
 ## Pending
-- [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
-  the 1,342 degenerate-domain candidates to auto-surface over-annotations.
+- [ ] Work the Query A STRONG list (CPT1C next) and the Query B MF hits (CHMP1A,
+  ENDOU, TCF25, CSNK1D, NME2) into full reviews.
+- [ ] Report the 9 DIRECT same-term GOA conflicts (EDEM1/2, ENDOU, PARK7, CYB5R4)
+  upstream to GO.
+- [ ] Scale Queries A/B UniProt-wide via a QuickGO GOA pull keyed on the 14k
+  CAUTION accessions.
 - [ ] Audit the 255 retracted-reference candidates for retracted
   `original_reference_id`s in existing reviews.
 - [ ] Scale the "positive-IEA-catalytic + curated-NOT" conjunction query across
