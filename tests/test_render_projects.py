@@ -7,9 +7,12 @@ from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
     link_uniprot_code_spans,
     parse_frontmatter,
+    process_markdown_content,
     replace_gene_tags,
     replace_gene_symbols,
     render_project,
+    render_project_bundle,
+    should_autolink_gene_symbols,
 )
 
 
@@ -118,6 +121,21 @@ class TestParseFrontmatter:
         content = "---\ninvalid: [\n---\n# Content"
         fm, body = parse_frontmatter(content)
         assert fm == {}
+
+
+class TestAutolinkGeneSymbolsFrontmatter:
+    """Tests for the gene-symbol autolink frontmatter switch."""
+
+    def test_defaults_to_linking(self):
+        assert should_autolink_gene_symbols({}) is True
+
+    def test_can_disable_with_canonical_key(self):
+        assert should_autolink_gene_symbols({"autolink_gene_symbols": False}) is False
+        assert should_autolink_gene_symbols({"autolink_gene_symbols": "false"}) is False
+
+    def test_supports_inverse_suppress_alias(self):
+        assert should_autolink_gene_symbols({"suppress_gene_symbol_links": True}) is False
+        assert should_autolink_gene_symbols({"suppress_gene_symbol_links": "yes"}) is False
 
 
 class TestReplaceGeneSymbols:
@@ -370,6 +388,20 @@ class TestLinkUniprotCodeSpans:
         assert "[Q9G044](https://www.uniprot.org/uniprotkb/Q9G044/entry)" in result
 
 
+class TestProcessMarkdownContent:
+    """Tests for markdown-to-HTML link rewriting."""
+
+    def test_rewrites_local_notebook_links_to_html(self):
+        """Local notebook links target generated static notebook HTML."""
+        html = process_markdown_content(
+            "[Notebook](notebooks/analysis.ipynb) and "
+            "[external](https://example.org/demo.ipynb)."
+        )
+
+        assert 'href="notebooks/analysis.ipynb.html"' in html
+        assert 'href="https://example.org/demo.ipynb"' in html
+
+
 class TestRenderProject:
     """Tests for render_project function."""
 
@@ -449,6 +481,132 @@ class TestRenderProject:
         # Gene links resolve from one level deeper than a top-level project page
         html_content = output_path.read_text()
         assert "../../../genes/human/GPX4" in html_content
+
+    def test_render_can_disable_gene_symbol_autolinks(self, tmp_path):
+        """Frontmatter can suppress automatic gene-symbol links for prose pages."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        (genes_dir / "human" / "TP53").mkdir(parents=True)
+
+        projects_dir = tmp_path / "projects"
+        projects_dir.mkdir()
+        md_file = projects_dir / "PAPER.md"
+        md_file.write_text(
+            """---
+title: Paper
+autolink_gene_symbols: false
+---
+# Paper
+
+GPX4 appears as prose, while <gene species="human" symbol="TP53">TP53 review</gene>
+is an explicit link."""
+        )
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(
+            "<!DOCTYPE html><html><head><title>{{ title }}</title></head>"
+            "<body>{{ content | safe }}</body></html>"
+        )
+
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=tmp_path / "pages" / "projects",
+            genes_dir=genes_dir,
+            template_path=template_file,
+        )
+
+        html_content = output_path.read_text()
+        assert "human/GPX4" not in html_content
+        assert "GPX4 appears as prose" in html_content
+        assert 'href="../../genes/human/TP53/TP53-ai-review.html"' in html_content
+        assert warnings == []
+
+    def test_render_project_bundle_includes_support_pages_and_assets(self, tmp_path):
+        """Rendering FOO.md also renders FOO/**/*.md and copies referenced assets."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+
+        projects_dir = tmp_path / "projects"
+        (projects_dir / "FOO" / "figures").mkdir(parents=True)
+        (projects_dir / "FOO.md").write_text(
+            "---\n"
+            "title: Foo\n"
+            "sidecars:\n"
+            "  genes: FOO/genes.csv\n"
+            "---\n"
+            "# Foo\n\nSee the [support folder](FOO/), "
+            "[supporting page](FOO/detail.md), and "
+            "[analysis](FOO/analysis.ipynb)."
+        )
+        (projects_dir / "FOO" / "README.md").write_text("# Folder README")
+        (projects_dir / "FOO" / "genes.csv").write_text("gene,score\nGPX4,5\n")
+        (projects_dir / "FOO" / "detail.md").write_text(
+            "# Detail\n\nGPX4 is important.\n\n"
+            "See the [analysis notebook](analysis.ipynb).\n\n"
+            "![Plot](figures/plot.png)"
+        )
+        (projects_dir / "FOO" / "figures" / "plot.png").write_bytes(b"png-data")
+        (projects_dir / "FOO" / "analysis.ipynb").write_text(
+            """{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "analysis",
+   "metadata": {},
+   "source": ["# Analysis\\n", "Notebook body"]
+  }
+ ],
+ "metadata": {},
+ "nbformat": 4,
+ "nbformat_minor": 5
+}"""
+        )
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(
+            "<!DOCTYPE html><html><head><title>{{ title }}</title></head>"
+            "<body>{{ content | safe }}</body></html>"
+        )
+
+        output_dir = tmp_path / "pages" / "projects"
+        output_paths, warnings = render_project_bundle(
+            projects_dir / "FOO.md",
+            output_dir=output_dir,
+            genes_dir=genes_dir,
+            template_path=template_file,
+            projects_dir=projects_dir,
+        )
+
+        assert warnings == []
+        assert output_dir / "FOO.html" in output_paths
+        assert output_dir / "FOO" / "README.html" in output_paths
+        assert output_dir / "FOO" / "index.html" in output_paths
+        assert output_dir / "FOO" / "detail.html" in output_paths
+        assert output_dir / "FOO" / "analysis.ipynb.html" in output_paths
+        assert output_dir / "FOO" / "genes.csv" in output_paths
+        assert output_dir / "FOO" / "figures" / "plot.png" in output_paths
+        assert (output_dir / "FOO.html").exists()
+        assert (output_dir / "FOO" / "README.html").exists()
+        assert (output_dir / "FOO" / "index.html").exists()
+        assert (output_dir / "FOO" / "detail.html").exists()
+        assert (output_dir / "FOO" / "analysis.ipynb.html").exists()
+        assert (output_dir / "FOO" / "genes.csv").read_text() == "gene,score\nGPX4,5\n"
+        assert not (output_dir / "FOO" / "analysis.ipynb").exists()
+        copied_plot = output_dir / "FOO" / "figures" / "plot.png"
+        assert copied_plot.read_bytes() == b"png-data"
+
+        top_html = (output_dir / "FOO.html").read_text()
+        assert 'href="FOO/"' in top_html
+        assert 'href="FOO/analysis.ipynb.html"' in top_html
+
+        detail_html = (output_dir / "FOO" / "detail.html").read_text()
+        assert "../../../genes/human/GPX4" in detail_html
+        assert 'href="analysis.ipynb.html"' in detail_html
+        assert 'src="figures/plot.png"' in detail_html
 
     def test_render_with_frontmatter(self, tmp_path):
         """Render project with frontmatter species hints."""

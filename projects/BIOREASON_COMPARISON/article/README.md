@@ -8,7 +8,8 @@ Paper drafts and supporting material for the **BioReason-Pro / AIGR** manuscript
 
 ## Files
 
-- `manuscript.md` — **full manuscript draft** (title, abstract, introduction, background, methods, results, discussion, limitations, conclusions, figure/table callouts, references). ~7,800 words. Start here.
+- `manuscript.md` — **full manuscript draft** (title, abstract, introduction, background, methods, results, discussion, limitations, conclusions, figure/table callouts, references). Start here.
+- `supplemental-benchmark-details.md` — source-availability and denominator details moved out of the main manuscript.
 - `abstract.md` — 2-page long-form conference abstract (earlier draft; largely superseded by the manuscript but kept as a source for the short version).
 - `short-abstract.md` — 250-word short-form abstract (based on Google-Doc edits).
 - `slides.md` / `slides.html` — **ISMB 2026 Function-COSI slide deck** (Marp source + rendered HTML; embeds `figures/`). Render: `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files`.
@@ -25,15 +26,16 @@ Annotation databases face a practical deployment question — *when is a new fun
 
 ## Evidence base
 
-- **139-gene BioReason-Pro evaluation** across 11 eukaryotic and bacterial clades (see `../BIOREASON_COMPARISON.md`): overall correctness 3.7/5, completeness 2.9/5, with a seven-mode failure-mode taxonomy and an InterPro2GO baseline comparison per gene.
-- **7-gene *E. coli* blinded cross-validation** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md`): AIGR independently recovers all 7 error classifications (COR / PLI / NPI / UNC / REP) along with the underlying mechanistic rationales.
-- **SFT vs RL cross-check** on the public HuggingFace `wanglab/protein_catalogue` dataset (45 proteins, 15 clades): SFT scores lower (correctness 2.9/5, completeness 2.7/5) and fabricates UniProt summary text in 16% of cases.
+- **ARGO139 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): fixed 139-gene benchmark used for both RL narrative review and SFT GO-term review, with overall RL correctness 3.7/5, completeness 2.9/5, a seven-mode failure-mode taxonomy, and source-stratified SFT term assessments.
+- **7-gene *E. coli* VDCL positive control** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md`): AIGR reproduces all 7 error classifications (COR / PLI / NPI / UNC / REP) along with the underlying mechanistic rationales. This is retrospective and not blinded.
+- **Supplemental SFT source checks** on the public HuggingFace `wanglab/protein_catalogue` dataset: retained for auditability in `supplemental-benchmark-details.md`.
 
 ## How to read this directory
 
 For a reviewer coming in cold, read in this order:
 
 1. `manuscript.md` — the full story.
-2. `../BIOREASON_COMPARISON.md` — the underlying experimental log with per-organism breakdown, top performers, critical failures, and full failure-mode taxonomy.
-3. `../VALIDATING_ECOLI_PREDICTIONS.md` — the de Crécy-Lagard replication experimental log.
-4. `short-abstract.md` — a 250-word pitch.
+2. `supplemental-benchmark-details.md` — source availability and supplemental denominator checks.
+3. `../BIOREASON_COMPARISON.md` — the underlying experimental log with per-organism breakdown, top performers, critical failures, and full failure-mode taxonomy.
+4. `../VALIDATING_ECOLI_PREDICTIONS.md` — the de Crécy-Lagard positive-control experimental log.
+5. `short-abstract.md` — a 250-word pitch.

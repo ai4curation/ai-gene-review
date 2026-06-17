@@ -2859,10 +2859,17 @@ def render_projects(
         # Render a specific project
         ai-gene-review render-projects projects/FERROPTOSIS.md
 
+        # Rendering projects/FOO.md also renders markdown under projects/FOO/
+        # converts linked notebooks, and copies referenced local assets into
+        # the mirrored output tree.
+
         # Render to custom output directory
         ai-gene-review render-projects --all -o docs/projects
     """
-    from ai_gene_review.render_projects import render_project, render_all_projects
+    from ai_gene_review.render_projects import (
+        render_all_projects,
+        render_project_bundle,
+    )
 
     if all_projects:
         typer.echo("Rendering all project markdown files...")
@@ -2887,21 +2894,33 @@ def render_projects(
                 continue
 
             try:
-                output_path, warnings = render_project(
+                output_paths, warnings = render_project_bundle(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
+                rendered_pages = [
+                    path for path in output_paths if path.suffix.lower() == ".html"
+                ]
+                copied_assets = [
+                    path for path in output_paths if path.suffix.lower() != ".html"
+                ]
 
                 if warnings:
-                    typer.echo(f"✓ {md_file.name} -> {output_path} ({len(warnings)} warnings)")
+                    typer.echo(
+                        f"✓ {md_file.name} -> {len(rendered_pages)} page(s), "
+                        f"{len(copied_assets)} asset(s) ({len(warnings)} warnings)"
+                    )
                     if verbose:
                         for w in warnings:
                             typer.echo(f"    - {w}")
                 else:
-                    typer.echo(f"✓ {md_file.name} -> {output_path}")
+                    typer.echo(
+                        f"✓ {md_file.name} -> {len(rendered_pages)} page(s), "
+                        f"{len(copied_assets)} asset(s)"
+                    )
 
             except Exception as e:
                 typer.echo(f"✗ {md_file.name}: {e}", err=True)

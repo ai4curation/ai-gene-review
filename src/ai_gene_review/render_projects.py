@@ -6,12 +6,17 @@ automatically linking gene symbols to their corresponding gene review pages.
 """
 
 import re
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import unquote, urlparse
 
 import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+MARKDOWN_SUFFIXES = {".md", ".markdown"}
+NOTEBOOK_SUFFIXES = {".ipynb"}
 
 
 def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
@@ -124,6 +129,43 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     remaining = '\n'.join(lines[end_idx + 1:])
 
     return frontmatter, remaining
+
+
+def _frontmatter_bool(value: Any, default: bool) -> bool:
+    """Parse a permissive boolean-like frontmatter value."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "on", "1"}:
+            return True
+        if normalized in {"false", "no", "off", "0"}:
+            return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return default
+
+
+def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
+    """Return whether automatic prose gene-symbol linking should run.
+
+    The default remains on for project pages. Use
+    ``autolink_gene_symbols: false`` in frontmatter for paper-like pages where
+    prose gene symbols should not become review links. ``suppress_gene_symbol_links``
+    is accepted as an explicit inverse alias.
+    """
+    if "autolink_gene_symbols" in frontmatter:
+        return _frontmatter_bool(frontmatter["autolink_gene_symbols"], default=True)
+    if "auto_link_gene_symbols" in frontmatter:
+        return _frontmatter_bool(frontmatter["auto_link_gene_symbols"], default=True)
+    if "suppress_gene_symbol_links" in frontmatter:
+        return not _frontmatter_bool(
+            frontmatter["suppress_gene_symbol_links"],
+            default=False,
+        )
+    return True
 
 
 def replace_gene_symbols(
@@ -406,7 +448,8 @@ def link_go_ids(
 def process_markdown_content(content: str) -> str:
     """Convert markdown content to HTML with useful extensions.
 
-    Handles mermaid diagrams, tables, code blocks, .md to .html link conversion, etc.
+    Handles mermaid diagrams, tables, code blocks, rendered-source link
+    conversion, etc.
 
     Args:
         content: Markdown content
@@ -420,6 +463,8 @@ def process_markdown_content(content: str) -> str:
     '<p><a href="SPKW-APOPTOSIS.html">link</a></p>'
     >>> process_markdown_content("[link](../other/file.md)")
     '<p><a href="../other/file.html">link</a></p>'
+    >>> process_markdown_content("[nb](notebooks/example.ipynb)")
+    '<p><a href="notebooks/example.ipynb.html">nb</a></p>'
     >>> "http://example.com/page.md" in process_markdown_content("[ext](http://example.com/page.md)")
     True
     """
@@ -436,22 +481,28 @@ def process_markdown_content(content: str) -> str:
         flags=re.DOTALL
     )
 
-    # Convert local .md links to .html links (but not external URLs)
-    # Pattern matches markdown links like [text](path.md) but not [text](http://...)
-    def convert_md_link(match: re.Match) -> str:
+    def convert_rendered_link(match: re.Match) -> str:
         text = match.group(1)
         url = match.group(2)
-        # Don't convert external URLs
-        if url.startswith(('http://', 'https://', 'mailto:')):
+        parsed = urlparse(url)
+        if parsed.scheme or parsed.netloc:
             return match.group(0)
-        # Convert .md to .html
-        if url.endswith('.md'):
-            url = url[:-3] + '.html'
+
+        path = parsed.path
+        lower_path = path.lower()
+        if lower_path.endswith(".md"):
+            path = path[:-3] + ".html"
+        elif lower_path.endswith(".markdown"):
+            path = path[:-9] + ".html"
+        elif lower_path.endswith(".ipynb"):
+            path = path + ".html"
+
+        url = parsed._replace(path=path).geturl()
         return f'[{text}]({url})'
 
     processed = re.sub(
         r'\[([^\]]+)\]\(([^)]+)\)',
-        convert_md_link,
+        convert_rendered_link,
         processed
     )
 
@@ -471,6 +522,288 @@ def process_markdown_content(content: str) -> str:
     ])
 
     return md.convert(processed)
+
+
+def project_bundle_markdown_files(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Return markdown files that belong to a top-level project page.
+
+    Rendering ``projects/FOO.md`` should include supporting pages under
+    ``projects/FOO/``. Rendering a file that is already inside a support folder
+    remains scoped to that single file.
+    """
+    if not md_path.exists():
+        raise FileNotFoundError(f"Markdown file not found: {md_path}")
+
+    md_path = md_path.resolve()
+    projects_root = projects_dir.resolve()
+    files = [md_path]
+
+    if md_path.is_relative_to(projects_root):
+        rel_path = md_path.relative_to(projects_root)
+        if len(rel_path.parts) == 1 and md_path.suffix.lower() in MARKDOWN_SUFFIXES:
+            support_dir = projects_root / md_path.stem
+            if support_dir.is_dir():
+                files.extend(sorted(support_dir.rglob("*.md")))
+
+    # De-duplicate while preserving deterministic order.
+    seen: set[Path] = set()
+    unique_files: List[Path] = []
+    for file_path in files:
+        resolved = file_path.resolve()
+        if resolved not in seen:
+            seen.add(resolved)
+            unique_files.append(resolved)
+
+    return unique_files
+
+
+def _extract_local_reference_urls(markdown_content: str) -> List[str]:
+    """Extract raw URLs from markdown links/images and simple HTML attrs."""
+    urls: List[str] = []
+    urls.extend(
+        match.group(1)
+        for match in re.finditer(r"!?\[[^\]]*\]\(([^)]+)\)", markdown_content)
+    )
+    urls.extend(
+        match.group(1)
+        for match in re.finditer(
+            r"\b(?:src|href)\s*=\s*[\"']([^\"']+)[\"']",
+            markdown_content,
+            flags=re.IGNORECASE,
+        )
+    )
+    urls.extend(
+        match.group(1)
+        for match in re.finditer(
+            r"^\s*\[[^\]]+\]:\s*(\S+)",
+            markdown_content,
+            flags=re.MULTILINE,
+        )
+    )
+    return urls
+
+
+def _local_url_path(url: str) -> Optional[str]:
+    """Return a filesystem path for a local URL, or None for non-local URLs."""
+    url = url.strip()
+    if not url or url.startswith("#"):
+        return None
+    if url.startswith("<") and url.endswith(">"):
+        url = url[1:-1]
+
+    # Drop optional markdown title text from forms like: image.png "caption".
+    url = url.split()[0]
+    parsed = urlparse(url)
+    if parsed.scheme or parsed.netloc or parsed.path.startswith("/"):
+        return None
+    if not parsed.path:
+        return None
+
+    return unquote(parsed.path)
+
+
+def _referenced_local_files(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Find existing local files referenced by a markdown file."""
+    root = projects_dir.resolve()
+    files: List[Path] = []
+    seen: set[Path] = set()
+
+    for url in _extract_local_reference_urls(md_path.read_text()):
+        local_path = _local_url_path(url)
+        if local_path is None:
+            continue
+
+        candidate = (md_path.parent / local_path).resolve()
+        if not candidate.is_file():
+            continue
+        if not candidate.is_relative_to(root):
+            continue
+        if candidate in seen:
+            continue
+
+        seen.add(candidate)
+        files.append(candidate)
+
+    return files
+
+
+def referenced_local_assets(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Find non-rendered local assets referenced by a markdown file."""
+    return [
+        path
+        for path in _referenced_local_files(md_path, projects_dir)
+        if path.suffix.lower() not in MARKDOWN_SUFFIXES | NOTEBOOK_SUFFIXES
+    ]
+
+
+def referenced_local_notebooks(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Find local notebooks referenced by a markdown file."""
+    return [
+        path
+        for path in _referenced_local_files(md_path, projects_dir)
+        if path.suffix.lower() in NOTEBOOK_SUFFIXES
+    ]
+
+
+def _flatten_sidecar_values(value: Any) -> List[str]:
+    """Return string paths nested under a sidecars frontmatter value."""
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        paths: List[str] = []
+        for nested_value in value.values():
+            paths.extend(_flatten_sidecar_values(nested_value))
+        return paths
+    if isinstance(value, (list, tuple, set)):
+        paths = []
+        for nested_value in value:
+            paths.extend(_flatten_sidecar_values(nested_value))
+        return paths
+    return []
+
+
+def referenced_frontmatter_sidecars(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Find local files declared under ``sidecars:`` frontmatter."""
+    frontmatter, _ = parse_frontmatter(md_path.read_text())
+    sidecars = frontmatter.get("sidecars")
+    if sidecars is None:
+        return []
+
+    root = projects_dir.resolve()
+    files: List[Path] = []
+    seen: set[Path] = set()
+
+    for url in _flatten_sidecar_values(sidecars):
+        local_path = _local_url_path(url)
+        if local_path is None:
+            continue
+
+        candidate = (md_path.parent / local_path).resolve()
+        if not candidate.is_file():
+            continue
+        if not candidate.is_relative_to(root):
+            continue
+        if candidate.suffix.lower() in MARKDOWN_SUFFIXES | NOTEBOOK_SUFFIXES:
+            continue
+        if candidate in seen:
+            continue
+
+        seen.add(candidate)
+        files.append(candidate)
+
+    return files
+
+
+def notebook_output_path(
+    notebook_path: Path,
+    output_dir: Path,
+    projects_dir: Path,
+) -> Path:
+    """Return the mirrored HTML path for a project notebook."""
+    rel_path = notebook_path.resolve().relative_to(projects_dir.resolve())
+    return output_dir.resolve() / Path(str(rel_path) + ".html")
+
+
+def render_notebook(
+    notebook_path: Path,
+    output_dir: Path,
+    projects_dir: Path,
+) -> List[Path]:
+    """Render an existing notebook to static HTML without executing it."""
+    import nbformat
+    from nbconvert import HTMLExporter
+
+    output_path = notebook_output_path(notebook_path, output_dir, projects_dir)
+
+    with notebook_path.open(encoding="utf-8") as handle:
+        notebook = nbformat.read(handle, as_version=4)
+
+    html, resources = HTMLExporter().from_notebook_node(notebook)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html, encoding="utf-8")
+    output_paths = [output_path]
+
+    # Most nbconvert HTML output embeds rich outputs, but some exporters may
+    # emit sibling resource files. Preserve those if present.
+    for name, data in resources.get("outputs", {}).items():
+        resource_path = (output_path.parent / name).resolve()
+        if resource_path.is_relative_to(output_path.parent.resolve()):
+            resource_path.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, bytes):
+                resource_path.write_bytes(data)
+            else:
+                resource_path.write_text(str(data), encoding="utf-8")
+            output_paths.append(resource_path)
+
+    return output_paths
+
+
+def convert_referenced_notebooks(
+    md_files: List[Path],
+    output_dir: Path,
+    projects_dir: Path,
+) -> Tuple[List[Path], List[str]]:
+    """Render notebooks referenced by project markdown files."""
+    output_paths: List[Path] = []
+    warnings: List[str] = []
+    seen_notebooks: set[Path] = set()
+
+    for md_file in md_files:
+        for notebook_path in referenced_local_notebooks(md_file, projects_dir):
+            if notebook_path in seen_notebooks:
+                continue
+            seen_notebooks.add(notebook_path)
+
+            try:
+                output_paths.extend(
+                    render_notebook(
+                        notebook_path,
+                        output_dir=output_dir,
+                        projects_dir=projects_dir,
+                    )
+                )
+            except Exception as e:
+                warnings.append(
+                    f"{notebook_path.name}: Error rendering notebook - {e}"
+                )
+
+    return output_paths, warnings
+
+
+def copy_referenced_assets(
+    md_files: List[Path],
+    output_dir: Path,
+    projects_dir: Path,
+    rendered_paths: Optional[List[Path]] = None,
+) -> List[Path]:
+    """Copy local assets referenced by markdown content or sidecar metadata."""
+    projects_root = projects_dir.resolve()
+    output_root = output_dir.resolve()
+    rendered = {path.resolve() for path in (rendered_paths or [])}
+    copied: List[Path] = []
+    seen_assets: set[Path] = set()
+
+    for md_file in md_files:
+        asset_paths = referenced_local_assets(
+            md_file,
+            projects_dir,
+        ) + referenced_frontmatter_sidecars(md_file, projects_dir)
+        for asset_path in asset_paths:
+            if asset_path in seen_assets:
+                continue
+            seen_assets.add(asset_path)
+
+            rel_path = asset_path.resolve().relative_to(projects_root)
+            output_path = output_root / rel_path
+            if output_path.resolve() in rendered:
+                continue
+
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(asset_path, output_path)
+            copied.append(output_path)
+
+    return copied
 
 
 def render_project(
@@ -541,13 +874,17 @@ def render_project(
         base_path=genes_base_path,
     )
 
-    # Replace gene symbols with links
-    linked_content, symbol_warnings = replace_gene_symbols(
-        content,
-        symbol_index,
-        species_hints=species_hints,
-        base_path=genes_base_path,
-    )
+    # Replace prose gene symbols with links unless the page opts out. Explicit
+    # <gene> tags above still link because they are intentional, not automatic.
+    if should_autolink_gene_symbols(frontmatter):
+        linked_content, symbol_warnings = replace_gene_symbols(
+            content,
+            symbol_index,
+            species_hints=species_hints,
+            base_path=genes_base_path,
+        )
+    else:
+        linked_content, symbol_warnings = content, []
     warnings = tag_warnings + symbol_warnings
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
@@ -600,6 +937,94 @@ def render_project(
     output_path.write_text(html)
 
     return output_path, warnings
+
+
+def readme_index_alias_path(
+    md_path: Path,
+    output_path: Path,
+    projects_dir: Path,
+) -> Optional[Path]:
+    """Return the support-folder index alias path for a README page."""
+    if md_path.name.lower() != "readme.md":
+        return None
+
+    md_path = md_path.resolve()
+    projects_root = projects_dir.resolve()
+    if not md_path.is_relative_to(projects_root):
+        return None
+
+    rel_path = md_path.relative_to(projects_root)
+    if len(rel_path.parts) <= 1:
+        return None
+
+    return output_path.with_name("index.html")
+
+
+def write_readme_index_alias(
+    md_path: Path,
+    output_path: Path,
+    projects_dir: Path,
+) -> Optional[Path]:
+    """Write index.html next to rendered support-folder README.html."""
+    index_path = readme_index_alias_path(md_path, output_path, projects_dir)
+    if index_path is None:
+        return None
+
+    index_path.write_text(output_path.read_text(encoding="utf-8"), encoding="utf-8")
+    return index_path
+
+
+def render_project_bundle(
+    md_path: Path,
+    output_dir: Path = Path("pages/projects"),
+    genes_dir: Path = Path("genes"),
+    template_path: Optional[Path] = None,
+    projects_dir: Path = Path("projects"),
+) -> Tuple[List[Path], List[str]]:
+    """Render a project page plus its same-named supporting folder.
+
+    This is the public "render a project" behavior used by the CLI. For a
+    top-level ``projects/FOO.md`` file it renders both that file and every
+    ``*.md`` file under ``projects/FOO/``. It also renders linked notebooks,
+    writes ``index.html`` aliases for support-folder READMEs, and copies local
+    non-rendered assets while preserving paths under ``output_dir``.
+    """
+    md_files = project_bundle_markdown_files(md_path, projects_dir)
+    output_paths: List[Path] = []
+    all_warnings: List[str] = []
+
+    for bundle_file in md_files:
+        output_path, warnings = render_project(
+            bundle_file,
+            output_dir=output_dir,
+            genes_dir=genes_dir,
+            template_path=template_path,
+            projects_dir=projects_dir,
+        )
+        output_paths.append(output_path)
+        index_path = write_readme_index_alias(bundle_file, output_path, projects_dir)
+        if index_path is not None:
+            output_paths.append(index_path)
+        if warnings:
+            all_warnings.extend([f"{bundle_file.name}: {w}" for w in warnings])
+
+    notebook_paths, notebook_warnings = convert_referenced_notebooks(
+        md_files,
+        output_dir=output_dir,
+        projects_dir=projects_dir,
+    )
+    output_paths.extend(notebook_paths)
+    all_warnings.extend(notebook_warnings)
+
+    copied_assets = copy_referenced_assets(
+        md_files,
+        output_dir=output_dir,
+        projects_dir=projects_dir,
+        rendered_paths=output_paths,
+    )
+    output_paths.extend(copied_assets)
+
+    return output_paths, all_warnings
 
 
 def render_projects_table(
@@ -722,6 +1147,9 @@ def render_all_projects(
                 projects_dir=projects_dir,
             )
             output_paths.append(output_path)
+            index_path = write_readme_index_alias(md_file, output_path, projects_dir)
+            if index_path is not None:
+                output_paths.append(index_path)
 
             if warnings:
                 all_warnings.extend([f"{md_file.name}: {w}" for w in warnings])
@@ -734,6 +1162,26 @@ def render_all_projects(
             all_warnings.append(f"{md_file.name}: Error rendering - {e}")
 
     print(f"\nRendered {len(output_paths)}/{len(md_files)} projects to {output_dir}")
+
+    notebook_paths, notebook_warnings = convert_referenced_notebooks(
+        md_files,
+        output_dir=output_dir,
+        projects_dir=projects_dir,
+    )
+    output_paths.extend(notebook_paths)
+    all_warnings.extend(notebook_warnings)
+    if notebook_paths:
+        print(f"Rendered {len(notebook_paths)} referenced notebook HTML file(s)")
+
+    copied_assets = copy_referenced_assets(
+        md_files,
+        output_dir=output_dir,
+        projects_dir=projects_dir,
+        rendered_paths=output_paths,
+    )
+    output_paths.extend(copied_assets)
+    if copied_assets:
+        print(f"Copied {len(copied_assets)} referenced asset files to {output_dir}")
 
     # Derived, metadata-driven table of all top-level projects.
     table_path = render_projects_table(projects_dir, output_dir)
