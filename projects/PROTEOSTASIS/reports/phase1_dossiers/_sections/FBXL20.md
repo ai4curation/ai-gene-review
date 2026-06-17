@@ -1,0 +1,10 @@
+## FBXL20
+
+- **UniProt:** Q96IG2 (FBXL20/FBL2; mouse ortholog SCRAPPER) · **batch:** proteostasis-batch-2026-06-13 (Falcon DR) · **review status:** COMPLETE
+- **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|LRR` ; **PN-node mapping:** group `Cul1 substrate receptor`=`mapped`/ok_for_propagation→GO:1990756; F-box/LRR subtype+type=`no_mapping`; class=`context_only`/too_broad→GO:0061630.
+- **Consistency:** Fully consistent. Falcon DR (VPS34/PIK3C3 phosphodegron axis; CAAX-isoprenylation/RIM1; PR55alpha), the review YAML, the PN F-box LRR substrate-receptor placement, and the GO:1990756 group mapping all converge. No contradictions.
+- **PN story / NEW pressure:** PN projects GO:1990756 (verified real, OLS: "binding...brings together a ubiquitin-like ligase and its substrate. Usually mediated by F-box...proteins") as new_to_goa. Review **independently ADDS GO:1990756 as `action: NEW`** (IDA, PMID:34731788), replacing five bare protein binding (SKP1/PR55alpha) IPI annotations. Matches PN projection exactly. Conclude: ADD — warranted and concordant.
+- **Mapping strategy:** Gene supports, does not change, the node. KEY PATTERN holds: F-box = SCF substrate receptor, catalysis in RBX1; the correct shared MF is the GO:1990756 adaptor term at the receptor group, with the catalytic GO:0061630 correctly held at class level as too_broad. No PN-projected term is broader than the review (unlike TOMM20/HSPA8 precedent). Scopes correct.
+- **Evidence alignment:** PN reference is only "15340381 / rev" (Jin et al. F-box family review), not directly in the review's PMID set; review anchors on the human PR55alpha study PMID:34731788 (HIGH/VERIFIED) plus FBXL family review PMID:33234069 and Falcon DR for the VPS34 axis. Divergence is benign — PN uses a generic family review; review uses gene-specific primary literature.
+- **Verdict:** Consistent; GO:1990756 NEW warranted and matches PN (new_to_goa). No over-reach.
+- **Recommended edits:** none to FBXL20-ai-review.yaml; PN mappings sound as-is.

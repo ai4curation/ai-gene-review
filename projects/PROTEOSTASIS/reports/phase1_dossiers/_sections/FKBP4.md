@@ -1,0 +1,8 @@
+## FKBP4
+- **UniProt:** Q02790 (FKBP52) · **batch:** proteostasis-batch-2026-06-07b · **review status:** COMPLETE
+- **PN placement:** `Cytonuclear|Chaperone|HSP90 system|HSP90 cochaperone|CC-TPR and PPIase domain`; `Cytonuclear|Folding enzyme|Peptidyl-prolyl isomerases|FKBP type` ; **PN-node mapping:** mapped → GO:0051879 (Hsp90 protein binding, more_specific_than_existing_goa), GO:0003755 (PPIase activity, already_in_goa_exact)
+- **Consistency:** Strong. Review, notes and PN agree FKBP52 is a catalytically active FKBP PPIase (N-terminal domain, FK506-inhibited) AND an HSP90 co-chaperone (TPR→EEVD) in steroid-receptor heterocomplexes, plus a dynein-recruiting adaptor. Both the catalytic (PPIase) and scaffold/co-chaperone MFs are distinguished — prompt's catalytic-vs-scaffold check satisfied. Core MFs = GO:0003755, GO:0031072, GO:0030674. No contradictions.
+- **PN story / NEW pressure:** Nothing new. PN's GO:0003755 already in review (core, ACCEPT). PN's GO:0051879 (Hsp90 binding) already present in review ×6 — so the "more_specific_than_existing_goa" projection is **already captured**, not a NEW pressure.
+- **Mapping strategy:** PN type node maps to broad GO:0031072 at the subtype but elects GO:0051879 (the narrower, OLS-confirmed child) at the projection level, matching the review. Conservative and correct: subtype-level PPIase mapping is withheld (mixed-member node) while the gene genuinely carries PPIase. No mapping change.
+- **Evidence alignment:** PN carries no extra reference titles; review GO:0031072/0051879 supported by GOA IPI PMID:9660753 (HSP90). Consistent.
+- **Verdict:** Fully consistent; PN adds no new defensible term (both projected terms already in review). **Recommended edits:** none.
