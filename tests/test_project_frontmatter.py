@@ -1,9 +1,9 @@
 """Enforce that project markdown files carry YAML frontmatter with a title.
 
-Every authored project page under ``projects/`` must begin with a YAML
-frontmatter block that defines a non-empty ``title``. Auto-generated artifacts
-(deep-research dumps and ``*.citations.md`` sidecars) are exempt because they are
-machine-written and must not be hand-edited.
+Only top-level project pages (``projects/*.md``) must begin with a YAML
+frontmatter block that defines a non-empty ``title``. Files nested inside a
+project's subdirectories (sub-pages, generated reports/dossiers, deep-research
+dumps, ``*.citations.md`` sidecars) are not required to carry frontmatter.
 """
 
 from pathlib import Path
@@ -22,7 +22,7 @@ def _is_exempt(path: Path) -> bool:
 def _project_markdown_files() -> list[Path]:
     if not PROJECTS_DIR.is_dir():
         return []
-    return sorted(p for p in PROJECTS_DIR.rglob("*.md") if not _is_exempt(p))
+    return sorted(p for p in PROJECTS_DIR.glob("*.md") if not _is_exempt(p))
 
 
 def _parse_frontmatter_title(text: str) -> str | None:
