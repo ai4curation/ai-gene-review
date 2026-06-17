@@ -1,0 +1,8 @@
+## FBXO39
+- **UniProt:** Q8N4B4 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
+- **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|LRR` ; **PN-node mapping:** F-box subtype/type = no_mapping; group = mapped, ok_for_propagation_to_go, GO:1990756; class = context_only/too_broad (GO:0061630).
+- **Consistency:** Consistent. Deep research (cancer/testis antigen BCP-20; testis-enriched; no validated substrate; emerging 2026 p53/LDHA lead), review YAML, PN annotation, and PN-node mapping all agree on an F-box+LRR SCF substrate receptor. Review ACCEPTs GO:0019005/GO:0031146 (both IBA + NAS), KEEP_AS_NON_CORE on the bare protein binding (FBXO39-MEOX2, HuRI), core MF = GO:1990756. No contradictions.
+- **PN story / NEW pressure:** PN asserts only the generic adaptor role = already captured. The emerging p53-degradation mechanism is a single 2026 lead correctly held UNVERIFIED (not in cache, author-year only) and not promoted. proposed_new_terms = []. Conclusion: **already captured**; no defensible NEW term yet (a future "negative regulation of p53" claim would need verification).
+- **Mapping strategy:** Gene does not change the node. GO:1990756 (OLS-verified) is correctly scoped and matches review core MF; the LRR subtype correctly defers to the parent group mapping. Not over-broad.
+- **Evidence alignment:** PN cites only "15340381 / rev." Review anchors on GO_REF:0000033 (IBA), PMID:34445249 (NAS), PMID:32296183 (HuRI), plus Falcon leads. No PMID overlap with PN's generic citation; same family-level framing.
+- **Verdict:** Consistent, mapping correct, no NEW pressure. ACCEPT as-is. **Recommended edits:** none.
