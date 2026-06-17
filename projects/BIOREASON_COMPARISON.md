@@ -3,6 +3,8 @@ title: "BioReason-Pro Comparison Project"
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
+  benchmark_cohorts: BIOREASON_COMPARISON/benchmark-cohorts.csv
+  benchmark_genes: BIOREASON_COMPARISON/benchmark-genes.csv
 ---
 # BioReason-Pro Comparison Project
 
@@ -12,7 +14,9 @@ Systematic evaluation of BioReason-Pro functional summaries and reasoning traces
 
 **Slide deck** (ISMB 2026 Function-COSI talk): [`slides.md`](BIOREASON_COMPARISON/article/slides.md) (Marp source) / [`slides.html`](BIOREASON_COMPARISON/article/slides.html) (rendered). Regenerate with `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files` (add `--pdf` or `--pptx` on a machine with a browser).
 
-**Reproducible stats notebooks** (`uv`-managed): [`notebooks/`](BIOREASON_COMPARISON/notebooks/) recomputes the summary statistics below directly from the committed per-gene files (no hard-coded numbers). [`01_narrative_scores.ipynb`](BIOREASON_COMPARISON/notebooks/01_narrative_scores.ipynb) reproduces the overall means, score distribution (Table 1), per-organism means (Table 2), and top/bottom performers; [`02_prediction_assessments.ipynb`](BIOREASON_COMPARISON/notebooks/02_prediction_assessments.ipynb) audits the per-term de Crécy-Lagard assessments (Table 5 analog). See the [notebooks README](BIOREASON_COMPARISON/notebooks/README.md).
+**Reproducible stats notebooks** (`uv`-managed): [`notebooks/`](BIOREASON_COMPARISON/notebooks/) recomputes the summary statistics below directly from the committed per-gene files (no hard-coded numbers). [`01_narrative_scores.ipynb`](BIOREASON_COMPARISON/notebooks/01_narrative_scores.ipynb) reproduces the overall means, score distribution (Table 1), per-organism means (Table 2), and top/bottom performers; [`02_prediction_assessments.ipynb`](BIOREASON_COMPARISON/notebooks/02_prediction_assessments.ipynb) audits the SFT per-term de Crécy-Lagard assessments (Table 5). See the [notebooks README](BIOREASON_COMPARISON/notebooks/README.md).
+
+**Benchmark membership:** [`genes.csv`](BIOREASON_COMPARISON/genes.csv) is the legacy 139-gene BioReason-Pro RL narrative-evaluation list. The full benchmark denominators are enumerated in [`benchmark-cohorts.csv`](BIOREASON_COMPARISON/benchmark-cohorts.csv) and [`benchmark-genes.csv`](BIOREASON_COMPARISON/benchmark-genes.csv), including the 184-gene SFT term-prediction cohort and the separate 300-gene GO-GPT overlap audit. The SFT cohort is availability-driven: the HF catalogue covers 95/139 RL genes plus 45 HF-only genes, and the SFT web export covers the 44 RL genes absent from HF.
 
 ## Methods
 
@@ -62,6 +66,7 @@ Per gene, the following files are available (example: [ECOLI/SlyD](https://githu
 | `{GENE}-deep-research-bioreason-rl.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
 | `{GENE}-bioreason-rl-review.md` | Evaluation of reasoning trace vs curated review (correctness/completeness scores + interpro2go comparison) |
 | `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
+| `{GENE}-sft-predictions.yaml` | BioReason-Pro SFT GO terms as PredictionReview YAML |
 | `{GENE}-ai-review.yaml` | Expert-curated AIGR review (ground truth for comparison) |
 
 ## Evaluation rubric
