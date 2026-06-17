@@ -12,9 +12,9 @@ autolink_gene_symbols: false
 
 New protein function prediction methods appear monthly, but annotation databases lack a scalable way to decide which ones are good enough to deploy. Aggregate metrics like CAFA's $F_{\max}$ track field-level progress, yet they reward predictions that match a biased ground truth, hide systematic errors behind averages, and cannot evaluate the free-text reasoning that modern agentic predictors now produce alongside their GO terms. We describe AI Gene Review (AIGR), an agentic curation pipeline in which LLM-based curator-agents synthesise literature, domain architecture, and existing annotations to evaluate predictions gene by gene, producing structured, human-readable assessments.
 
-We apply AIGR to BioReason-Pro, a recent agentic function predictor. The model mostly tells databases what they already know: its narratives largely restate InterPro2GO, and two-thirds of its GO term predictions are already in the annotation record. About one prediction in nine is wrong, and the errors are not random — they cluster around pseudoenzymes, misassigned compartments, indistinguishable paralogs, and absent organism-specific biology. The model's narrative and its GO term predictions can disagree, with each sometimes correct when the other is wrong. Across the 184-gene SFT term-prediction cohort, the model does not discover a single function unknown to the literature, though it occasionally names known biology more precisely than existing annotation pipelines have.
+We apply AIGR to BioReason-Pro, a recent agentic function predictor, using a single paired BioReason-Pro benchmark: **ARGO139** (Annotation Review GO), a manually selected 139-gene set spanning proteins from eukaryotes, bacteria, and a phage, with edge cases such as a snake-venom metalloproteinase. On ARGO139, BioReason-Pro mostly tells databases what they already know. Its RL narratives largely restate InterPro2GO and show seven reproducible failure modes, while its SFT GO terms are dominated by existing GOA annotations. In the cleaner HuggingFace SFT source subset (95 ARGO139 genes, 955 terms), 67.5% of terms were correct-but-not-novel, 10.6% were incorrect, and 5.4% were correct novel annotations already known from the literature but absent from GOA. The model's narrative and GO-term outputs can also disagree, with each sometimes correct when the other is wrong.
 
-These findings required a level of evaluation that aggregate metrics cannot provide. We propose a three-tier framework — aggregate scoring, expert or agentic review, and prospective experiment — and argue that the middle tier, partially automated, is the most practical basis for deployment decisions. A blinded replication of a published expert error taxonomy confirms that the agentic synthesis step is reliable. All data and code are publicly available.
+These findings required a level of evaluation that aggregate metrics cannot provide. We propose a three-tier framework — aggregate scoring, expert or agentic review, and prospective experiment — and argue that the middle tier, partially automated, is the most practical basis for deployment decisions. A retrospective reproduction of a published expert error taxonomy provides a positive-control check that AIGR can represent the same biological error classes, but it should not be interpreted as a blinded validation. All data and code are publicly available.
 
 ## 1. Introduction
 
@@ -32,7 +32,7 @@ Each rejection in the de Crécy-Lagard analysis required the reviewer to synthes
 
 Here we ask whether the synthesis step itself can be partially automated. We present the **AI Gene Review (AIGR)** framework, an agentic curation pipeline in which LLM curator-agents, grounded in a per-gene evidence package (UniProt record, the full GO annotation table, InterPro domain architecture, cached full-text publications, an orthogonal deep-research report, and a LinkML-defined review schema with GO best-practice constraints), produce structured, human-readable reviews of existing and predicted annotations. AIGR is explicitly designed as a *complement* to CAFA-style benchmarks rather than a replacement: it grades the narrative and reasoning content that aggregate metrics cannot ingest, it surfaces systematic failure modes that metric aggregation hides, and it distinguishes genuinely novel insight from a restatement of existing domain-based annotation.
 
-We make five contributions: (1) the AIGR pipeline and its review schema, with a LinkML-based validation layer enforcing that every claim traces to a verbatim quote from a cached publication; (2) a 139-gene, 11-clade BioReason-Pro RL narrative evaluation reporting seven reproducible failure modes invisible to $F_{\max}$; (3) an SFT term-prediction audit over 184 genes, with the primary manual analysis restricted to 1,292 HuggingFace-catalogue leaf-term predictions across 140 genes, yielding 67% CNN, 11.5% NPI, and 4.5% COR; (4) a blinded 7-gene replication of the de Crécy-Lagard *et al.* [10] *E. coli* error taxonomy (7/7 classifications recovered); and (5) all benchmarks released as open resources at `github.com/ai4curation/ai-gene-review`.
+We make five contributions: (1) the AIGR pipeline and its review schema, with a LinkML-based validation layer enforcing that every claim traces to a verbatim quote from a cached publication; (2) a 7-gene retrospective reproduction of the de Crécy-Lagard *et al.* [10] *E. coli* error taxonomy as a positive control; (3) ARGO139, a manually selected 139-gene benchmark for paired BioReason-Pro SFT-term and RL-narrative review; (4) a BioReason-Pro evaluation showing that SFT GO terms and RL narratives mostly restate existing pipelines while failing in systematic, biologically diagnosable ways; and (5) all benchmarks released as open resources at `github.com/ai4curation/ai-gene-review`.
 
 ## 2. Background and related work
 
@@ -68,7 +68,7 @@ The BioReason-Pro paper itself highlights several impressive case studies, inclu
 
 ### 2.4 The de Crécy-Lagard *E. coli* audit
 
-The second central reference for this paper is de Crécy-Lagard *et al.* (2025) [10], who manually reviewed all 453 EC number predictions made by DeepECTransformer for *E. coli* proteins of unknown function. Their core finding — only 3/453 genuinely novel and correct — is already significant. But the paper's lasting contribution is the **error taxonomy** developed to classify the remaining 450 predictions: COR (correct novel), CNN (correct but not novel — the prediction matches training data), LSP (less precise than existing UniProt), PLI (paralog incorrect — wrong paralog subfamily), NPI (non-paralog incorrect — refuted by pathway/genome context), REP (frequency-biased repetition), and UNC (uncertain). This taxonomy is exactly the kind of fine-grained, biologically motivated classification that $F_{\max}$ cannot express. It provides us with both (i) a motivation for the agentic-review approach and (ii) an external gold standard against which to validate it.
+The second central reference for this paper is de Crécy-Lagard *et al.* (2025) [10], who manually reviewed all 453 EC number predictions made by DeepECTransformer for *E. coli* proteins of unknown function. Their core finding — only 3/453 genuinely novel and correct — is already significant. But the paper's lasting contribution is the **error taxonomy** developed to classify the remaining 450 predictions: COR (correct novel), CNN (correct but not novel — the prediction matches training data), LSP (less precise than existing UniProt), PLI (paralog incorrect — wrong paralog subfamily), NPI (non-paralog incorrect — refuted by pathway/genome context), REP (frequency-biased repetition), and UNC (uncertain). This taxonomy is exactly the kind of fine-grained, biologically motivated classification that $F_{\max}$ cannot express. It provides both a motivation for the agentic-review approach and a positive-control target for checking whether AIGR can encode the same expert error classes.
 
 ## 3. Methods
 
@@ -84,189 +84,132 @@ AIGR is an agentic curation pipeline in which an LLM curator-agent processes a p
 
 **Implementation.** AIGR is implemented as a Python package (`ai-gene-review`) with a Typer-based CLI, `uv`-managed dependencies, and a set of `just` targets for common operations. Gene reviews, the schema, the validator, and all evaluation data are released at `github.com/ai4curation/ai-gene-review` under an open licence. A public browser at `https://ai4curation.io/ai-gene-review/` renders individual reviews as HTML for human inspection.
 
-### 3.2 Case study 1: large-scale evaluation of BioReason-Pro
+### 3.2 ARGO139 construction and BioReason-Pro evaluation
 
-We selected 139 proteins from 11 eukaryotic and bacterial clades spanning well-characterised model-organism genes and harder edge cases (pseudoenzymes, sporulation sigma factor paralogs, organism-specific transcription factors, moonlighting proteins, and cross-kingdom venom enzymes). The full gene list, together with the selection rationale, is given in `projects/BIOREASON_COMPARISON/genes.csv` and cross-referenced in **Table 1**.
+For the BioReason-Pro analyses we use a single paired benchmark, **ARGO139** (Annotation Review GO). ARGO139 contains 139 proteins selected manually from genes for which we could assemble an AIGR evidence package and a BioReason-Pro RL output. The selection was not intended to approximate a random UniProt sample. Instead, it was designed to test deployment-relevant biology: well-characterised model-organism proteins; species with specialist organism resources; species without comparable MOD-backed coverage, especially *Bacillus subtilis*; and edge cases such as pseudoenzymes, paralog families, sporulation sigma factors, organism-specific regulators, moonlighting proteins, a phage protein, and a snake-venom metalloproteinase.
 
-For each gene we obtained the BioReason-Pro RL functional summary and reasoning trace from the public BioReason-Pro web application (`app.bioreason.net`), together with the upstream GO-GPT leaf-term predictions exported from the same tool. We also ran the AIGR pipeline to produce a curated gene review, treated as a local ground truth. A dedicated **comparison agent** then scored each BioReason-Pro output against the AIGR review along two axes, each on a 1–5 scale:
+ARGO139 spans 14 species labels. Most genes (115/139) come from species with model-organism or specialist curation resources; 24/139 come from non-MOD or less-specialized contexts, including *B. subtilis*, *Pseudomonas putida*, a phage entry, a southern copperhead venom enzyme, and a mosquito protein. The full member list is `projects/BIOREASON_COMPARISON/genes.csv`; derived composition files are `argo139-species-counts.csv` and `argo139-curation-context-counts.csv`.
+
+**Table 1.** ARGO139 species composition.
+
+| Species label | Display label | Genes | Curation context |
+|---|---|---:|---|
+| SCHPO | *S. pombe* | 23 | Model organism / specialist curation resource |
+| human | *H. sapiens* | 19 | Model organism / specialist curation resource |
+| worm | *C. elegans* | 15 | Model organism / specialist curation resource |
+| BACSU | *B. subtilis* | 13 | Non-MOD or less-specialized species |
+| ECOLI | *E. coli* | 13 | Model organism / specialist curation resource |
+| rat | *R. norvegicus* | 12 | Model organism / specialist curation resource |
+| mouse | *M. musculus* | 11 | Model organism / specialist curation resource |
+| yeast | *S. cerevisiae* | 11 | Model organism / specialist curation resource |
+| DROME | *D. melanogaster* | 8 | Model organism / specialist curation resource |
+| PSEPK | *P. putida* | 8 | Non-MOD or less-specialized species |
+| ARATH | *A. thaliana* | 3 | Model organism / specialist curation resource |
+| 9CAUD | 9CAUD phage | 1 | Non-MOD or less-specialized species |
+| AGKCO | *A. contortrix* | 1 | Non-MOD or less-specialized species |
+| ANOGA | *A. gambiae* | 1 | Non-MOD or less-specialized species |
+
+![ARGO139 species distribution. Teal bars mark model-organism or specialist-resource species; orange bars mark non-MOD or less-specialized species.](figures/argo139_species_distribution.png)
+
+For each ARGO139 gene we obtained the BioReason-Pro RL functional summary and reasoning trace from the public BioReason-Pro web application (`app.bioreason.net`). We also ran the AIGR pipeline to produce a curated gene review, treated as local ground truth. A dedicated **comparison agent** then scored each BioReason-Pro RL output against the AIGR review along two axes, each on a 1–5 scale:
 
 - **Correctness**: 5 = all claims supported by evidence; 3 = core function right but some wrong claims; 1 = fundamental mischaracterisation.
 - **Completeness**: 5 = covers core functions, complexes, and pathway context; 3 = gets the basics, misses significant biology; 1 = superficial or one-dimensional.
 
-The comparison agent was required to cite supporting-text quotes from the AIGR review or cached literature for each score, and was instructed to additionally write a qualitative comparison against the InterPro2GO pipeline (`GO_REF:0000002`) as a domain-based baseline: does BioReason-Pro add biological insight beyond what InterPro2GO already encodes, or does it narratively restate InterPro2GO's output? Reviews were stored per gene as `{GENE}-bioreason-rl-review.md`, with the raw BioReason-Pro export cached as `{GENE}-deep-research-bioreason-rl.md` and the GO-GPT leaf terms as `{GENE}-gogpt-leaf-predictions.yaml`.
+The comparison agent was required to cite supporting-text quotes from the AIGR review or cached literature for each score, and was instructed to additionally write a qualitative comparison against the InterPro2GO pipeline (`GO_REF:0000002`) as a domain-based baseline: does BioReason-Pro add biological insight beyond what InterPro2GO already encodes, or does it narratively restate InterPro2GO's output? Reviews were stored per gene as `{GENE}-bioreason-rl-review.md`, with the raw BioReason-Pro export cached as `{GENE}-deep-research-bioreason-rl.md`.
 
-As a supplementary analysis we repeated the evaluation on a 45-protein, 15-clade sample drawn from the public HuggingFace `wanglab/protein_catalogue` dataset [4], which contains SFT-model outputs only. This allowed an SFT-vs-RL cross-check.
+For SFT GO-term review we kept the same ARGO139 membership. The public HuggingFace `wanglab/protein_catalogue` download contained SFT term predictions for 95/139 ARGO139 genes. For the remaining 44 ARGO139 genes, which were absent from that HuggingFace snapshot, we used BioReason-Pro SFT web-export predictions. Because the two sources expose different pruning levels — the web export includes many GO ancestor terms — all SFT results retain source labels and are interpreted source-stratified. Larger source-availability views, the SFT narrative cross-check, and a separate GO-GPT overlap audit are retained only as supplemental material.
 
-The BioReason-Pro case study therefore uses related but distinct denominators. The primary RL narrative benchmark is the 139-gene set in `genes.csv`, selected first to span model organisms, taxonomic breadth, well-curated genes, and harder edge cases. The SFT narrative cross-check contains 45 genes, 44 of which have parseable 1–5 correctness/completeness scores. When we later audited SFT term predictions, our downloaded HuggingFace `wanglab/protein_catalogue` SFT catalogue contained 95 of the 139 RL genes, but not the remaining 44. We therefore obtained SFT web-export predictions for those 44 missing RL genes. The HuggingFace catalogue also contributed 45 additional SFT-only genes outside the RL benchmark. The resulting SFT term-prediction audit contains 184 genes in total: 95 RL genes from HuggingFace, 44 RL genes from the SFT web export, and 45 additional HuggingFace-only genes. The GO-GPT overlap audit in §4.5 is separate: it contains 300 AIGR-reviewed genes selected to quantify GOA-overlap behaviour, only 40 of which overlap the BioReason-Pro benchmark. We release `benchmark-cohorts.csv` and `benchmark-genes.csv` alongside the paper to make these denominators explicit.
+### 3.3 Case study 2: retrospective reproduction of the de Crécy-Lagard *E. coli* taxonomy
 
-We did not force all analyses onto a single benchmark because the analyses ask different questions about different model outputs. The RL narrative benchmark tests whether the public RL reasoner writes biologically valid functional summaries. The SFT term-prediction audit tests whether structured SFT terms add value over GOA, but those terms were only partly available for the original 139-gene set in the cleaner HuggingFace source. The GO-GPT overlap audit tests a metric question: how much apparent performance changes when the reference set moves from raw GOA to AIGR-reviewed core biology. Restricting every analysis to the genes shared by all sources would trade a transparent availability-driven design for a much smaller and less stable benchmark, while still not making RL narratives, SFT terms, and GO-GPT overlap scores biologically equivalent. We therefore use the largest appropriate denominator for each question, report the membership explicitly, and avoid interpreting estimates from different cohorts as paired comparisons.
-
-### 3.3 Case study 2: blind replication of the de Crécy-Lagard *E. coli* taxonomy
-
-From the 453 DeepECTransformer predictions in de Crécy-Lagard *et al.* [10] we selected 7 genes spanning all error classes represented in the paper, specifically: **ygfF** (COR), **yciO** and **yegV** (PLI), **yjhQ** and **yrhB** (NPI), **yjdM** (UNC), and **fepE** (REP). Selection was deterministic from the published tables; the agent was not told the paper's verdict, and the paper's taxonomy was read only after review completion.
+From the 453 DeepECTransformer predictions in de Crécy-Lagard *et al.* [10] we selected 7 genes spanning all error classes represented in the paper, specifically: **ygfF** (COR), **yciO** and **yegV** (PLI), **yjhQ** and **yrhB** (NPI), **yjdM** (UNC), and **fepE** (REP). Selection was deterministic from the published tables and used the published classes. The current repository artifacts are therefore not blinded: the project file lists the paper's verdicts, the gene reviews can cite PMID:40703034, and the structured prediction-review files quote the VDCL rationale directly. We treat this exercise as a positive-control reproduction of the taxonomy, not as an independent validation of AIGR accuracy.
 
 For each gene we ran the full AIGR pipeline to produce a gene review, and separately produced a `predictions-review.yaml` for the DeepECTransformer prediction itself, using the same COR/CNN/LSP/PLI/NPI/REP/UNC taxonomy and structured error-type tags described in §3.1. After review completion we compared the agent's classification and rationale against the published classification in [10].
 
 ### 3.4 Reproducibility
 
-All reviews, raw predictions, curated ground truth, and validator configurations for both case studies are in the repository under `genes/{ORG}/{GENE}/` and `projects/BIOREASON_COMPARISON/`. `genes.csv` is the legacy 139-gene RL narrative list; `benchmark-cohorts.csv` and `benchmark-genes.csv` enumerate the full RL, SFT, and GO-GPT overlap denominators used in the text. `just` targets are provided for reproducing each stage. The full corpus of 139 BioReason-Pro reviews and 7 *E. coli* prediction reviews is also browsable at the public site.
+All reviews, raw predictions, curated ground truth, and validator configurations for both case studies are in the repository under `genes/{ORG}/{GENE}/` and `projects/BIOREASON_COMPARISON/`. `genes.csv` is the ARGO139 member list; `argo139-species-counts.csv`, `argo139-curation-context-counts.csv`, `benchmark-cohorts.csv`, and `benchmark-genes.csv` enumerate the cohort composition and source provenance. Supplemental source-availability details are in [supplemental-benchmark-details.md](supplemental-benchmark-details.md). `just` targets are provided for reproducing each stage. The full corpus of 139 BioReason-Pro reviews and 7 *E. coli* prediction reviews is also browsable at the public site.
 
 ## 4. Results
 
-### 4.1 BioReason-Pro: overall scores
+### 4.1 AIGR reproduces the VDCL taxonomy as a positive control
 
-Across the 139 genes, BioReason-Pro RL achieved a mean correctness of **3.7/5** and a mean completeness of **2.9/5** against AIGR ground truth. The two axes are weakly correlated (predictions that state something correct are not necessarily complete, and vice versa). The score distribution is shown in **Table 1**.
+We first asked whether AIGR can represent and apply an existing expert biological-validity taxonomy before using it to evaluate BioReason-Pro. We reviewed 7 *E. coli* genes from the de Crécy-Lagard (VDCL) audit [10]. On all 7 genes, the AIGR prediction-review classification matched the published classification and recorded substantially the same mechanistic rationale (**Table 2**). Because the paper's labels and rationales were available in the project artifacts, this result is a positive control rather than a blinded benchmark.
 
-**Table 1.** Score distribution for BioReason-Pro RL on 139 genes (11 clades). Correctness measures whether the claims made are accurate; Completeness measures whether the claims span the gene's core biology.
+**Table 2.** Retrospective reproduction of de Crécy-Lagard *et al.* [10] on 7 *E. coli* DeepECTransformer predictions.
+
+| Gene | Paper class | AIGR class | AIGR-recovered rationale (abbrev.) |
+|---|---|---|---|
+| ygfF | COR | COR | SDR family; GDH activity confirmed; existing GOA appropriate |
+| yciO | PLI | PLI | TsaC paralog; ~10⁴× weaker activity; recommend removing EC 2.7.7.87 |
+| yegV | PLI | PLI | Correct first 3 EC digits (sugar kinase); substrate identity unknown |
+| yjhQ | NPI | NPI | Mycothiol pathway absent from *E. coli*; protein is an antitoxin |
+| yrhB | NPI | NPI | QueD already encodes this activity; yrhB is an Imm35 immunity domain |
+| yjdM | UNC | UNC | In-vitro phosphonoacetate hydrolase activity, no in-vivo phenotype |
+| fepE | REP | REP | No sequence similarity to HK family; actually a Wzz O-antigen length regulator; frequency-bias call |
+
+The recorded rationales are important, not just the class labels. In the yciO case, the review records the paralog-subfamily argument and the 10⁴-fold activity gap. In yjhQ, it records the absence of the mycothiol pathway in *E. coli*. In fepE, it records the Wzz O-antigen length-regulator assignment from the Cpd domain architecture. This demonstrates that the AIGR schema and review workflow can encode the expert taxonomy, but it does not by itself prove that AIGR would recover those calls under blinded conditions.
+
+### 4.2 ARGO139 SFT GO-term review
+
+We next reviewed BioReason-Pro SFT GO-term predictions on ARGO139. Each predicted term was classified against GOA and the AIGR review using the VDCL taxonomy: terms already in GOA were assigned CNN; terms absent from GOA but supported by AIGR core functions or accepted annotations were reviewed as COR candidates; terms contradicted by the AIGR review were reviewed as NPI candidates; less precise terms were assigned LSP; high-frequency generic terms were assigned REP; and terms not supported or refuted by available evidence were assigned UNC.
+
+ARGO139 SFT terms came from two sources. The cleaner HuggingFace `wanglab/protein_catalogue` source covered 95 ARGO139 genes and 955 terms. The web export covered the remaining 44 ARGO139 genes but exposed a much larger GO ancestor hierarchy (9,742 terms; mean 221 terms/gene). We therefore treat the source-stratified rows in **Table 3** as the interpretable result; the combined ARGO139 row is included only to show the complete paired benchmark accounting.
+
+**Table 3.** ARGO139 SFT GO-term assessments by source.
+
+| Source | Genes | Terms | CNN | NPI | COR | LSP | REP | UNC |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| HF catalogue | 95 | 955 | 645 (67.5%) | 101 (10.6%) | 52 (5.4%) | 37 (3.9%) | 21 (2.2%) | 99 (10.4%) |
+| Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
+| ARGO139 total | 139 | 10,697 | 2,966 (27.7%) | 143 (1.3%) | 59 (0.6%) | 425 (4.0%) | 22 (0.2%) | 7,082 (66.2%) |
+
+![Assessment distribution for 955 BioReason-Pro SFT HF-catalogue terms on 95 ARGO139 genes. CNN dominates; COR terms are known biology absent from GOA, not functions unknown to the literature.](figures/sft_assessment_distribution.png)
+
+The HF catalogue subset gives the cleanest estimate of term quality: about two-thirds of SFT terms restate GOA, roughly one in ten is wrong, and only 52/955 (5.4%) are correct novel terms that a database might consider importing. The COR calls are not discoveries of biology unknown to the literature. They are known functions missing from GOA or captured less precisely than the model's term, such as RAS2 activation of adenylate cyclase, CYCS activation of caspase signalling through the apoptosome, KEAP1 negative regulation of NRF2, and more precise peptidase or methyltransferase activities.
+
+The web-export subset makes a different point. Because it includes many ancestor terms, most web-export predictions are UNC and structurally uninformative for deployment review. This is why ARGO139 keeps the 44 web-export genes for paired membership but does not pool the web percentages with the HF percentages as if they were the same assay.
+
+The incorrect SFT terms recapitulate the same biological failure modes seen in the RL narratives: pseudoenzyme overcalls, holdase/foldase confusion in bacterial chaperones, wrong compartments, antibiotic-target/response confusion, and substrate/partner role reversal. The RAS2 and CpxP cases also show that the term and narrative arms can fail independently. RAS2's SFT GO terms include the core adenylate-cyclase activation biology that the RL narrative missed; CpxP's SFT terms place it in the periplasm while the RL narrative calls it cytoplasmic. For database deployment, neither output should be trusted without reviewing the other.
+
+### 4.3 ARGO139 RL narrative review
+
+Across ARGO139, BioReason-Pro RL achieved a mean correctness of **3.7/5** and a mean completeness of **2.9/5** against AIGR ground truth. The two axes are weakly correlated: predictions that state something correct are not necessarily complete. The score distribution is shown in **Table 4**.
+
+**Table 4.** Score distribution for BioReason-Pro RL on ARGO139.
 
 | Score | Correctness | Completeness |
-|-------|-------------|--------------|
-| 5     | 38 (27%)    | 1 (1%)       |
-| 4     | 48 (35%)    | 40 (29%)     |
-| 3     | 32 (23%)    | 51 (37%)     |
-| 2     | 15 (11%)    | 40 (29%)     |
-| 1     | 6 (4%)      | 7 (5%)       |
+|---|---:|---:|
+| 5 | 38 (27%) | 1 (1%) |
+| 4 | 48 (35%) | 40 (29%) |
+| 3 | 32 (23%) | 51 (37%) |
+| 2 | 15 (11%) | 40 (29%) |
+| 1 | 6 (4%) | 7 (5%) |
 
-Two observations stand out. First, 38 genes (27%) scored 5/5 on correctness, but only 1 gene scored 5/5 on completeness (Uggt1, the rat UDP-glucose:glycoprotein glucosyltransferase, whose InterPro family name is itself highly diagnostic of its ER quality-control function). This is a quantitative signature of a well-known agentic-model pattern: the model is safe when it makes a claim, but it rarely reaches the full breadth of a gene's biology. Second, the failure tail is small but structurally distinctive: 6 genes (4%) scored 1/5 on correctness, and these failures were not random — each fell into one of the reproducible failure modes described in §4.3.
+The high-correctness tail is real: 38 genes scored 5/5 on correctness. But completeness is much weaker; only one gene scored 5/5 on both axes (Uggt1, whose InterPro family name is itself highly diagnostic). BioReason-Pro performs best on mammalian model organisms (mouse 4.7, rat 4.4, human 4.2 correctness) and worst on *S. pombe* (2.8), consistent with both training-distribution skew and the varying informativeness of InterPro family names.
 
-### 4.2 Per-organism performance
+![Per-organism correctness and completeness for BioReason-Pro RL across ARGO139. Mammals score highest; *S. pombe* lowest. Dashed lines show overall means. Sample size shown above each bar pair.](figures/per_organism_scores.png)
 
-Per-organism mean scores are shown in **Table 2**. BioReason-Pro performs best on mammalian model organisms (mouse 4.7, rat 4.4, human 4.2 correctness) and worst on *S. pombe* (2.8). This gradient closely tracks the richness and specificity of InterPro family-level names for each organism's proteins. It also tracks the representation of each organism in the upstream training distribution. We discuss the implications for out-of-distribution deployment in §5.
+The failures are not random. We identified seven reproducible modes in the RL narratives (**Table 5**). These are invisible to aggregate GO-term metrics but immediately useful for curation triage, because each points to a specific missing capability: catalytic-residue checking, signal-peptide and transmembrane reasoning, paralog-subfamily discrimination, organism-context reasoning, and detection of training-set leakage.
 
-![Per-organism correctness and completeness for BioReason-Pro RL across 11 clades. Mammals score highest; *S. pombe* lowest. Dashed lines show overall means. Sample size shown above each bar pair.](figures/per_organism_scores.png)
+**Table 5.** Representative ARGO139 RL narrative failure modes.
 
-### 4.3 Seven reproducible failure modes
+| Failure mode | Gene (organism) | Brief description of the failure |
+|---|---|---|
+| Pseudoenzyme blind spot | Epe1 (*S. pombe*) | Claims JmjC demethylase activity despite degenerate active site and no in-vitro activity |
+| Pseudoenzyme blind spot | cts2 (*S. pombe*) | Called active chitinase despite lacking catalytic glutamate |
+| Localisation default | CpxP (*E. coli*) | Called cytoplasmic; is periplasmic with a cleavable signal peptide |
+| Localisation default | ETR1 (*A. thaliana*) | Called soluble cytoplasmic signal transducer; is an ER-membrane receptor |
+| Paralog indistinguishability | Fyn / Src (mouse) | Generic Src-family kinase descriptions; misses paralog-specific biology |
+| Paralog indistinguishability | sigF/sigG/sigK (*B. subtilis*) | Treated as generic sigma factors; compartment-stage sporulation biology absent |
+| Organism-specific biology absent | daf-16 (*C. elegans*) | Generic FoxO; no IIS/longevity/dauer biology |
+| Organism-specific biology absent | atfs-1 (*C. elegans*) | Generic bZIP; misses UPRmt master regulator identity |
+| Neo-functionalisation missed | Nmnat (*Drosophila*) | NAD biosynthesis enzyme; moonlighting neuroprotection role missed |
+| Narrative/GO disconnect | RidA (*E. coli*) | Narrative mechanism mostly right; emitted term is generic `protein binding` |
+| Cross-kingdom fold bias | aprE (*B. subtilis*) | Subtilisin described with human hemostasis and blood-coagulation processes |
+| Cross-kingdom fold bias | PGRPLB (*A. gambiae*) | Mosquito protein described as a fruit-fly protein |
 
-Aggregate scores conceal what is arguably the most important finding of the study. A scalar loss of 0.8 points on the correctness scale is spread very unevenly across genes: for many proteins BioReason-Pro is essentially correct; for a structured minority it is wrong in the same way repeatedly. We identify **seven reproducible failure modes** in the 139-gene set. Each is invisible to an aggregate metric but immediately diagnostic to a reader of the narrative output. Representative examples are summarised in **Table 3**.
-
-To give the reader a sense of what BioReason-Pro narratives look like in practice, we reproduce the functional summaries for three genes below. The first two illustrate failure modes; the third is a success.
-
-> **RAS2** (*S. cerevisiae*, correctness 2/5): "A Ras-family small GTPase in baker's yeast that cycles between GTP- and GDP-bound states to regulate intracellular vesicle traffic converging on the vacuole. Its nucleotide-driven switch mechanism enables transient effector recruitment that times vesicle budding, tethering, and fusion steps."
->
-> *Ground truth: RAS2 is the primary activator of the cAMP/PKA signaling pathway. The vesicle-trafficking narrative was apparently seeded by a misleading UniProt summary.*
-
-> **Epe1** (*S. pombe*, correctness 2/5): "A nuclear histone demethylase that employs a JmjC oxygenase core to remove methyl groups from lysine residues on histone tails, thereby reshaping chromatin architecture."
->
-> *Ground truth: Epe1 is a pseudoenzyme — its JmjC domain has degenerate catalytic residues (HVD not HXD) and no detectable demethylase activity. It functions as an anti-silencing factor via HP1/Swi6 binding.*
-
-> **TOR1** (*S. cerevisiae*, correctness 5/5): "A large serine/threonine kinase of the PIKK lineage in baker's yeast that uses extensive HEAT/armadillo repeats to scaffold regulatory assemblies, a central catalytic core to phosphorylate protein substrates, and a C-terminal regulatory gate that modulates access and signaling. By integrating nutrient and stress cues, it drives a signaling axis analogous to TOR pathways."
->
-> *Ground truth: correct. The FRB domain enabled pathway-level inference beyond what single-domain annotation provides.*
-
-**Failure mode 1: Pseudoenzyme blind spot.** BioReason-Pro assigns ancestral catalytic activity to domains that have demonstrably lost it. In **Epe1** (*S. pombe*), a JmjC-family pseudo-demethylase, the model confidently claims a "JmjC catalytic center dictates a lysine demethylase mechanism"; in fact Epe1 has a degenerate active site (HVD rather than the canonical HXD, and Tyr307 replacing the catalytic histidine), shows no detectable demethylase activity in mass-spec assays, and functions as an anti-silencing factor via HP1/Swi6 binding. In **cts2** (*S. pombe*), an GH18 chitinase-fold protein with no catalytic glutamate, the model calls it an active chitinase. In **pmp20** (*S. pombe*), a peroxiredoxin that has lost its resolving cysteine and acts as a chaperone, the model reports peroxidase activity. Literature-grounded review refutes all three claims; the BioReason-Pro paper itself correctly flags CFAP61 as a pseudoenzyme [§2.6 of 4], so pseudoenzyme detection is not systematically absent from the model, but it is case-dependent and unreliable.
-
-**Failure mode 2: Localisation defaults.** When InterPro annotations do not explicitly mention a compartment, BioReason-Pro systematically defaults to "cytosolic" or "cytoplasmic." Among the 139 genes we observed this for periplasmic proteins (*Skp*, *CpxP*, *Spy*), ER-membrane proteins (*ETR1*, *IRE1*), mitochondrial matrix proteins (*alo1*, *HSP60*, *CAT2*), vacuolar proteins (*cps1*), and a secreted snake-venom fibrolase (*fibrolase*). The systematic nature of the bias — always in the same direction, always failing when the domain name does not encode the compartment — indicates that the model is defaulting to the training-set mode rather than reasoning about signal peptides and transmembrane regions. Proteins succeed only when the InterPro name itself contains the compartment (*KAR2*/BiP, *PDI1*).
-
-**Failure mode 3: Paralog indistinguishability.** Closely related paralogs receive essentially identical generic summaries. In the mouse Src family, *Fyn* and *Src* both get a generic "Src-family non-receptor tyrosine kinase" description, with no mention of Fyn-specific T-cell signalling, tau phosphorylation, or myelination, and no mention of Src-specific osteoclast biology. In the *B. subtilis* sporulation sigma factor family, *sigF*, *sigG*, and *sigK* are described interchangeably, despite representing three distinct regulatory stages (forespore-early, forespore-late, mother-cell-late) with different partner-switching and anti-sigma regulation. In the rat Hsp70 family, *Hspa5* (BiP, ER UPR) and *Hspa8* (Hsc70, cytosolic constitutive chaperone, clathrin uncoating, CMA) are both called generic Hsp70 chaperones.
-
-**Failure mode 4: Organism-specific biology absent.** Domain-based reasoning cannot capture biology that is lineage-specific. Recurring failures include the entire *C. elegans* dauer / insulin-IGF-1 signalling axis (*daf-16* described as a generic FoxO transcription factor with no mention of IIS or longevity; *daf-2* as a generic RTK; *atfs-1* as a generic bZIP missing the UPRmt master-regulator identity; *hlh-30* as a generic bHLH missing the TFEB-orthology and autophagy/lysosome biology); *B. subtilis* competence and sporulation biology (*aprE* missing Phr peptide quorum-sensing, *comK* described via generic protein binding instead of competence regulation); *S. cerevisiae* prion biology (*HSP104* missing thermotolerance and [PSI+]-propagation), and *S. pombe* cytoophidia (*ura7*).
-
-**Failure mode 5: Neo-functionalisation and moonlighting missed.** Where a protein has acquired a function divergent from its ancestral domain, BioReason-Pro defaults to the ancestral function. *pmp20* (already listed under §4.3 failure mode 1) is a peroxiredoxin-fold protein functioning as a chaperone. *Nmnat* (*Drosophila*) is a NAD⁺-biosynthesis enzyme with a moonlighting chaperone/neuroprotection role missed by the model. *LysB* (*Drosophila*) is a lysozyme-fold digestive enzyme, not an immune-defence protein. *GAPDH* (human) is correctly identified as a glycolytic enzyme but all moonlighting roles (nuclear tRNA export, apoptosis, mitochondrial fission) are absent.
-
-**Failure mode 6: Narrative–GO disconnect.** Because BioReason-Pro's narrative and its final GO-term list are generated semi-independently, they can disagree. In *RidA* (*E. coli*) the narrative correctly describes the protein as "accelerating hydrolysis of reactive intermediates" (the correct reactive-intermediate-deaminase mechanism) but then labels this "non-enzymatic" and emits `GO:0005515 protein binding` rather than `GO:0019239 deaminase activity`. In *atg2* (*S. pombe*) the emitted GO terms include correct autophagy terms, but the narrative describes only scaffolding, missing the primary lipid-transfer function. In *BenR* (*P. putida*) the emitted GO terms are reasonable but the narrative describes a CO/formate regulator instead of a benzoate pathway activator.
-
-**Failure mode 7: Cross-kingdom fold bias.** Training-data skew toward well-studied organisms leaks into predictions for less-studied ones. *aprE* (*B. subtilis* subtilisin) receives a narrative about human hemostasis and blood coagulation. *PGRPLB* from *Anopheles gambiae* is called a "fruit fly" protein. *NFE2L2* (human NRF2) is given an erythroid-function bias from the NF-E2 family name, rather than the correct antioxidant-response master-regulator role.
-
-**Table 3.** Representative examples of each reproducible failure mode.
-
-| Failure mode                  | Gene (organism)       | Brief description of the failure                                                                   |
-|-------------------------------|-----------------------|----------------------------------------------------------------------------------------------------|
-| 1. Pseudoenzyme blind spot    | Epe1 (*S. pombe*)     | Claims JmjC demethylase activity despite degenerate active site and no in-vitro activity           |
-| 1.                            | cts2 (*S. pombe*)     | Called active chitinase despite lacking catalytic glutamate                                        |
-| 1.                            | pmp20 (*S. pombe*)    | Called peroxidase; actually a chaperone (lost resolving cysteine)                                  |
-| 2. Localisation defaults      | CpxP (*E. coli*)      | Called cytoplasmic; is periplasmic with a cleavable signal peptide                                 |
-| 2.                            | ETR1 (*A. thaliana*)  | Called soluble cytoplasmic signal transducer; is an ER-membrane receptor with 3 TM helices         |
-| 3. Paralog indistinguishability| Fyn / Src (mouse)    | Identical Src-family kinase descriptions; misses Fyn-specific and Src-specific biology             |
-| 3.                            | sigF/sigG/sigK (BACSU)| Treated as generic sigma factors; compartment-specific sporulation biology absent                  |
-| 4. Organism-specific biology  | daf-16 (*C. elegans*) | Generic FoxO; no IIS/longevity/dauer biology                                                       |
-| 4.                            | atfs-1 (*C. elegans*) | Generic bZIP; misses UPRmt master regulator identity                                               |
-| 5. Neo-functionalisation      | Nmnat (*Drosophila*)  | NAD⁺ biosynthesis enzyme; moonlighting chaperone/neuroprotection role missed                      |
-| 6. Narrative–GO disconnect    | RidA (*E. coli*)      | Narrative correct; emitted term wrong (`protein binding` vs `deaminase activity`)                   |
-| 7. Cross-kingdom fold bias    | aprE (*B. subtilis*)  | Subtilisin annotated with human hemostasis/blood-coagulation processes                             |
-| 7.                            | PGRPLB (*A. gambiae*) | Mosquito protein called a "fruit fly" protein                                                      |
-
-### 4.4 BioReason-Pro vs InterPro2GO baseline
-
-For each of the 139 genes the comparison agent produced a side-by-side assessment of BioReason-Pro's narrative against the InterPro2GO annotations already present in GOA. The dominant mode across the corpus is **narrative restatement**: in most cases, BioReason-Pro translates InterPro domain annotations into prose without adding new biological insight. Where InterPro2GO makes an error (e.g., assigning generic "protein binding" to *CnoX*; importing eukaryotic-flagellar terms for *B. subtilis divIVA*), BioReason-Pro typically recapitulates and sometimes amplifies the error rather than correcting it.
-
-BioReason-Pro adds genuinely new biology in a minority of cases, specifically when a multi-domain architecture is diagnostic of function. **TOR1** is the clearest example: the combination of HEAT repeats, FAT, FRB, and kinase domains enables a pathway-level inference that a single-domain annotation cannot. Similar wins occur for **NOTCH1** (proteolytic cascade encoded in the EGF-repeat / LNR / NRR / TMD / ANK / PEST architecture), **PTEN** (dual-specificity phosphatase domains are unambiguous), **EGFR** (canonical RTK architecture), and **spo0A** (response regulator + DNA-binding domains cleanly predict phosphorelay TF). It also inherits wins from highly informative family-level InterPro names, most notably **Uggt1** (the only 5/5 gene on both axes), **bst1** (GPI inositol deacylase), and **KAR2**/BiP (ER Hsp70).
-
-A method that restates InterPro2GO with 3.7/5 correctness provides no net annotation value on top of the existing production pipeline, even though its headline $F_{\max}$ might look competitive.
-
-### 4.5 Three-level GO-GPT overlap: GOA agreement vs. biological-core agreement
-
-To quantify the gap between CAFA-style GOA agreement and curator-defined biological validity, we ran the upstream GO-GPT predictor directly on 300 AIGR-reviewed genes in a separate GO-GPT overlap audit and compared its predictions against three progressively stricter reference sets: (i) raw GOA annotations, (ii) the post-AIGR-review annotation set (GOA minus terms the curated review removed or modified), and (iii) the AIGR core-function terms only. This 300-gene audit is not a superset of the 139/184-gene BioReason-Pro benchmarks; 40 genes overlap them. Results are in **Table 4**.
-
-**Table 4.** GO-GPT prediction overlap at three reference levels (300 genes).
-
-| Reference level | Terms in reference | Predictions overlapping | % of 8,910 predictions |
-|---|---:|---:|---:|
-| Raw GOA | 2,967 | 1,046 | 11.7 |
-| Post-AIGR-review | 2,913 | 971 | 10.9 |
-| AIGR core functions only | 933 | 210 | 2.4 |
-
-![GO-GPT prediction overlap at three reference levels (300 genes). The five-fold gap between raw GOA agreement (11.7%) and core-function agreement (2.4%) quantifies the difference between CAFA-style scoring and biological-validity scoring.](figures/three_level_overlap.png)
-
-GO-GPT emitted 8,910 predictions across 300 genes (mean 29.7 per gene). Of these, 11.7% matched a raw GOA term — the number a CAFA-style evaluator would count as correct. When the reference is tightened to only those annotations that survived agentic review (terms not marked REMOVE or MARK_AS_OVER_ANNOTATED), the overlap drops modestly to 10.9%. But when measured against the curator-defined core functions — the terms that capture what the protein actually does, in what compartment, and in what process — only 2.4% of predictions match. The five-fold gap between GOA agreement (11.7%) and core-function agreement (2.4%) is a direct, quantitative measure of the difference between "scores well on CAFA" and "predicts what a curator would consider the gene's real biology."
-
-### 4.6 SFT GO term predictions: what the model actually predicts vs. what GOA already knows
-
-The analyses in §4.1–4.4 evaluated BioReason-Pro's *narrative* output, while §4.5 evaluated GO-GPT overlap on a separate 300-gene audit set. A separate question is whether BioReason-Pro's SFT *GO term predictions* — the structured terms emitted alongside its narrative — add value over what GOA already contains.
-
-The SFT term-prediction cohort contains 184 genes: the 139 RL narrative genes plus 45 additional SFT-only genes. We extracted predictions from two sources. The HuggingFace `wanglab/protein_catalogue` [4] provided the cleaner leaf-term subset for 140 genes: 95 from the RL benchmark plus 45 additional SFT-only catalogue genes. For the 44 RL genes absent from the HuggingFace catalogue, we used the BioReason-Pro SFT web export (mean 221 terms per gene including the full GO ancestor hierarchy). The web-export predictions carry many non-leaf ancestor terms that are structurally uninformative (GO:0050896 "response to stimulus," etc.), so we report both sources separately and combined.
-
-**Automated review against AIGR ground truth.** Each of the 11,034 SFT predictions across 184 genes was automatically classified by comparison against the GOA annotation table and the curated AIGR review for that gene: terms present in GOA were assigned CNN; terms absent from GOA but present in AIGR core functions or accepted annotations were flagged as COR candidates; terms that the AIGR review explicitly recommends removing were flagged as NPI candidates; and the remainder were assigned UNC. All COR and NPI candidates (21 predictions) were then manually verified against the primary literature. In parallel, the 29 genes from the initial manual review (§4.6 of the prior analysis) retained their literature-verified assessments.
-
-For the HF catalogue subset (1,292 leaf-term predictions across 140 genes), the distribution closely mirrors the 29-gene manual review: **64% CNN, 3.4% NPI, 1.1% COR, 3.1% LSP, 28% UNC, 0.5% REP**. The web-export subset (9,742 predictions across 44 genes) is dominated by ancestor-hierarchy noise: 81% of terms match nothing in GOA or AIGR and are classified UNC. Restricting to the 1,817 biologically assessable terms (those matching GOA or AIGR), 98% are CNN and only 9 are COR. Across both sources, filtering to the 2,744 biologically assessable predictions gives (**Table 5**):
-
-For the HF catalogue subset (1,292 leaf-term predictions, 140 genes), where the signal is cleanest, the distribution after full manual review is shown in **Table 5**.
-
-**Table 5.** Manual assessment of 1,292 SFT leaf-term predictions (HF catalogue, 140 genes). Every prediction was reviewed against the curated AIGR review, GOA, and — for all COR and NPI calls — primary literature.
-
-| Assessment | Count | % | Interpretation |
-|---|---:|---:|---|
-| CNN (correct, not novel) | 862 | 66.7 | Already in GOA — restates existing knowledge |
-| NPI (incorrect) | 149 | 11.5 | Wrong biology |
-| UNC (uncertain) | 149 | 11.5 | Cannot confirm or refute |
-| COR (correct novel) | 58 | 4.5 | Not in GOA, biologically verified |
-| LSP (less precise) | 49 | 3.8 | Correct direction, more specific term exists |
-| REP (frequency bias) | 25 | 1.9 | Generic high-frequency term (typically `protein binding`) |
-
-![Assessment of 1,292 SFT leaf-term predictions. CNN dominates at 67%; genuinely novel correct predictions (COR) account for 4.5%.](figures/sft_assessment_distribution.png)
-
-Two-thirds of the model's leaf-term output reproduces what GOA already knows. The 58 COR predictions (4.5%) are the fraction a database would actually want to import; the 149 NPI predictions (11.5%) are the fraction a database must filter out.
-
-The 44 web-export genes (full ancestor hierarchy, mean 221 terms per gene) show a complementary pattern: 81.6% of their 3,902 non-UNC predictions are CNN, confirming that the ancestor hierarchy adds bulk without novelty. The remaining ~72% of web-export terms are UNC — non-leaf ancestors that match nothing in GOA or AIGR and are structurally uninformative.
-
-**What the COR predictions look like.** The 65 COR predictions across both sources cluster into three classes. *Organism-specific biology absent from GOA* accounts for the largest group, concentrated in *C. elegans* (34 COR) where the model correctly predicts IIS/dauer, UPRmt, autophagy, and innate-immunity terms that GOA has not yet annotated for worm-specific genes such as skn-1, pmk-1, hsf-1, hlh-30, and atfs-1. *Well-known biology that GOA has simply not yet recorded* includes RAS2 activation of adenylate cyclase (GO:0007190), CYCS caspase activation via the apoptosome, KEAP1 negative regulation of NRF2, and several others. *More precise GO terms than what GOA currently uses* includes mrdA's D,D-peptidase activity (GO:0008696) and rlmC's uracil-C5-methyltransferase (GO:0070043). In no case did the model discover a function unknown to the literature; it named known biology that the annotation pipeline had not yet captured or captured less precisely.
-
-**Case study: RAS2 — where the GO predictions outperform the narrative.** The RL narrative for RAS2 scored 2/5 for correctness, describing the protein as a "regulator of intracellular vesicle traffic converging on the vacuole" — a fundamental mischaracterisation apparently seeded by a misleading UniProt summary line and then elaborated with HOPS/CORVET/Vam3 biology that belongs to Rab GTPases, not Ras. The SFT GO term predictions for the same protein correctly included GO:0007190 (activation of adenylate cyclase activity) — the single most important function of RAS2 — alongside expected GTPase, pseudohyphal-growth, and localization terms. The GO prediction arm captured the core cAMP/PKA biology that the narrative completely missed.
-
-The same dissociation appeared in CpxP, where the SFT GO predictions correctly assign the protein to the periplasm (GO:0030288) while the RL narrative called it cytoplasmic. These cases show that the model's GO term section and its reasoning trace are generated semi-independently: the model can emit a correct term while narrating the wrong mechanism. For a database considering deployment, neither the narrative nor the term list can be trusted in isolation.
-
-**NPI errors recapitulate the narrative failure modes.** Of 50 NPI predictions, the errors cluster into recognisable patterns: pseudoenzyme overcalls (Epe1: 2-oxoglutarate-dependent oxidoreductase, iron binding, and 2-oxoglutarate binding predicted for a protein with degenerate catalytic residues); holdase–foldase confusion (*E. coli* chaperones CnoX, Skp, and SecB are holdases or anti-folding chaperones predicted with "chaperone-mediated protein folding" terms — SecB in particular *prevents* folding, yet receives "regulation of protein stability"); localization errors (sigF predicted at plasma membrane and spore wall, confusing the sigma factor with its regulators and target gene products; DnaK and RidA incorrectly placed at membranes); antibiotic-target/response confusion (ftsI and mrdA are *targets* of beta-lactams, not participants in antibiotic response pathways); and substrate/partner role reversal (NFE2L2 predicted with KEAP1's proteasomal-degradation terms, inverting the E3 ligase adaptor/substrate relationship). Each of these parallels a failure mode identified in the narrative evaluation (§4.3), confirming that the biases are architectural rather than specific to the narrative or term-prediction arm.
-
-**SFT narrative quality: lower than RL.** On the 44 scored SFT narrative reviews, SFT scored lower than RL (correctness 2.9/5 vs 3.7/5; completeness 2.7/5 vs 2.9/5). The SFT-specific failure mode most concerning for databases is fabrication of fake "UniProt Summary" blocks: 7/45 SFT outputs (16%) contained invented UniProt prose for proteins that UniProt describes only as "Uncharacterised protein." On the proteins where BioReason-Pro could add the most value — uncharacterised proteins with 0–3 GOA annotations — it consistently scored lowest (0–1/5), while proteins scoring 4–5/5 already have extensive annotations making the narrative redundant.
-
-**Directional errors are invisible to GOA-agreement metrics.** RAS2's autophagy and Cvt pathway predictions match GOA terms that the curated review flags for modification — the protein *inhibits* both processes, so the correct terms would be negative-regulation variants. A CAFA-style $F_{\max}$ evaluation would score these as correct. daf-16's 38 predictions include no IIS/longevity/dauer-specific terms beyond what GOA already contains — the organism-specific biology that defines daf-16 is absent, but the aggregate score looks fine because every prediction matches a GOA entry. And NFE2L2's off-by-one GO ID (GO:0036498 predicted instead of the correct GO:0036499 in GOA) would be invisible to any metric that does not verify term identity at the ID level.
-
-### 4.7 Blind replication of the de Crécy-Lagard *E. coli* taxonomy
-
-We ran the AIGR pipeline on 7 *E. coli* genes from the de Crécy-Lagard audit [10], blinded to the paper's verdicts. Results are in **Table 6**: on all 7 genes, AIGR's independent prediction-review classification matched the paper's classification, together with substantially concordant mechanistic rationales.
-
-**Table 6.** Blinded replication of de Crécy-Lagard *et al.* [10] on 7 *E. coli* DeepECTransformer predictions.
-
-| Gene  | Paper class | AIGR class | AIGR-recovered rationale (abbrev.)                                                                  |
-|-------|-------------|------------|------------------------------------------------------------------------------------------------------|
-| ygfF  | COR         | COR        | SDR family; GDH activity confirmed; existing GOA appropriate                                         |
-| yciO  | PLI         | PLI        | TsaC paralog; ~10⁴× weaker activity; recommend removing EC 2.7.7.87                                 |
-| yegV  | PLI         | PLI        | Correct first 3 EC digits (sugar kinase); substrate identity unknown                                |
-| yjhQ  | NPI         | NPI        | Mycothiol pathway absent from *E. coli*; protein is an antitoxin                                    |
-| yrhB  | NPI         | NPI        | QueD already encodes this activity; yrhB is an Imm35 immunity domain                                 |
-| yjdM  | UNC         | UNC        | In-vitro phosphonoacetate hydrolase activity, no in-vivo phenotype                                  |
-| fepE  | REP         | REP        | No sequence similarity to HK family; actually a Wzz O-antigen length regulator; frequency-bias call |
-
-In the yciO case, AIGR independently recovered both the paralog-subfamily argument (TsaC vs yciO subfamily separation in the TsaC/SUA5 tree) and the 10⁴-fold activity gap that the paper cites. In the yjhQ case, AIGR independently found the mycothiol-pathway-absence argument from organism metadata without being prompted. In the fepE case, AIGR independently arrived at the Wzz-length-regulator assignment from the Cpd domain architecture and flagged the tyrosine-kinase IBA annotation as a secondary erroneous call. This cross-validation provides external evidence that the agentic synthesis step in AIGR is reliable on a hard benchmark that required a human expert group to construct.
+The InterPro2GO comparison explains why the aggregate scores are misleading. Across ARGO139 the dominant mode is narrative restatement: BioReason-Pro translates InterPro domain annotations into prose without adding new biology. It succeeds when domain architecture is diagnostic (TOR1, NOTCH1, PTEN, EGFR, spo0A) and fails when the biology depends on catalytic-site loss, lineage-specific context, paralog identity, or compartmental signals not encoded in the family name. Where InterPro2GO is wrong or uninformative, BioReason-Pro usually repeats the problem rather than repairing it.
 
 ## 5. Discussion
 
@@ -274,71 +217,61 @@ In the yciO case, AIGR independently recovered both the paralog-subfamily argume
 
 Agentic review surfaces information that aggregate metrics cannot, and this information is what annotation database leads need for deployment decisions.
 
-Agentic review can **read the narrative**. Modern agentic predictors such as BioReason-Pro emit free-text functional summaries and chain-of-thought reasoning traces whose content is scientifically substantive — proposed mechanisms, cited domain evidence, identified pseudoenzymes, placed-in-pathway claims — and none of this can be projected onto the bag-of-GO-terms space on which CAFA scoring operates. An LLM curator-agent with access to the underlying evidence package can grade the narrative directly.
+First, it can read the narrative. BioReason-Pro emits free-text summaries and reasoning traces whose scientific content cannot be projected onto a bag of GO terms. AIGR can grade those claims directly against cached literature and existing annotation.
 
-Agentic review can **surface reproducible failure modes**. Seven of them, in our case. A 0.8-point drop in mean correctness looks like noise on an aggregate plot but hides a structured set of biases — pseudoenzyme overcalls, periplasmic/ER/mitochondrial localisation defaults, paralog indistinguishability, absent organism-specific biology, missed neo-functionalisation, narrative–GO disconnect, and cross-kingdom fold bias — each of which predicts where the model will fail on deployment. An annotation database lead who knows about these failure modes can at least triage predictions accordingly (e.g., never auto-accept a BioReason-Pro pseudoenzyme call without manual review).
+Second, it surfaces reproducible failure modes. In ARGO139, the RL mean correctness of 3.7/5 hides failures that are biologically patterned: pseudoenzyme overcalls, localisation defaults, paralog indistinguishability, missing organism-specific biology, missed neo-functionalisation, narrative/GO disagreement, and cross-kingdom bias. These are not merely lower scores; they are deployment warnings.
 
-Agentic review can **distinguish novel insight from restatement**. The most striking finding of the 139-gene narrative evaluation is that BioReason-Pro is, for most genes, a narrative restatement of InterPro2GO. The 1,292-prediction term-level review reinforces this quantitatively: 67% of SFT leaf-term predictions already exist in GOA, and only 4.5% are genuinely novel and correct. An aggregate GOA-agreement score cannot see this distinction — a predictor that restates InterPro2GO will score identically to one that adds new biology on top of it. An agentic review, because it can classify each prediction as CNN, COR, NPI, or LSP, can answer the deployment question directly.
+Third, it distinguishes novelty from restatement. The SFT GO-term review shows that most terms are CNN, not new biology. The COR terms are useful curation candidates, but they are known functions absent from GOA, not discoveries unknown to the literature. A CAFA-style agreement score cannot make that distinction.
 
-Agentic review can **evaluate the narrative and term-prediction arms independently**. The RAS2 case demonstrates that these arms can disagree: the SFT GO terms correctly predicted adenylate cyclase activation while the RL narrative described vesicle trafficking. CpxP showed the reverse pattern for localisation. This dissociation means neither output can be trusted in isolation, and any deployment protocol should evaluate both. CAFA-style metrics, which see only the term list, cannot detect a narrative that contradicts the model's own predictions.
+### 5.2 Why ARGO139
 
-### 5.2 External validity via the de Crécy-Lagard replication
+The earlier draft separated the RL narrative, SFT term, and GO-GPT overlap analyses into different denominators. That made the story unnecessarily fragile. ARGO139 is a clearer benchmark: it fixes one biological gene set for BioReason-Pro and asks two paired questions on that set, one about SFT GO terms and one about RL narratives.
 
-A natural concern about an LLM-curator-agent evaluation is that the curator itself might be an LLM making the same kinds of mistakes as the predictors it is evaluating. The blinded replication of the de Crécy-Lagard [10] *E. coli* taxonomy is our first, and deliberately conservative, external-validity check. AIGR recovered the paper's classification on 7/7 genes, together with the mechanistic rationale, using only the per-gene evidence package and the structured review schema. Critically, each of these cases required a synthesis step that mirrors the one that made the manual audit so labour-intensive in the first place — pathway-presence reasoning for yjhQ, paralog-subfamily reasoning for yciO, in-vitro/in-vivo reasoning for yjdM, training-label-frequency-bias reasoning for fepE. That an LLM-curator-agent, given the right evidence package and schema, can independently recover these calls is a non-trivial finding.
+ARGO139 is still not a population sample. It was deliberately constructed to span characterized biology, model-organism resources, and non-MOD or less-specialized contexts such as *B. subtilis*. That design is appropriate for deployment triage because it enriches for the edge cases where production databases most need review: pseudoenzymes, paralogs, lineage-specific biology, compartments, and moonlighting proteins. It should not be interpreted as an estimate of BioReason-Pro performance on a random UniProt draw.
 
-We stress that 7 genes is a small benchmark, and we view this as a starting point rather than a conclusive evaluation. Scaling the replication to the full 453-prediction DeepECTransformer set from [10] is the natural next step.
+The main remaining complexity is source availability. The HuggingFace SFT snapshot contains 95/139 ARGO139 genes; the remaining 44 require the web export, which includes many ancestor terms. We therefore keep one benchmark but report SFT term results source-stratified. The larger source-availability views and GO-GPT overlap audit are useful reproducibility checks, but they belong in the supplement rather than in the main denominator story.
 
-### 5.3 Three tiers of function-prediction evaluation
+### 5.3 VDCL as a positive control
 
-It helps to frame function-prediction evaluation as a hierarchy of increasing rigour and decreasing scale, analogous to how the structural-biology community uses CASP.
+A natural concern is that an LLM curator-agent might share failure modes with the predictor it evaluates. The current VDCL exercise does not eliminate that concern, because it was not blinded. Its value is narrower: it shows that AIGR can encode the same expert taxonomy and assemble the same kinds of mechanistic rationale for pathway-presence reasoning, paralog-subfamily reasoning, in-vitro/in-vivo distinction, and training-label-frequency-bias detection. A true external-validity test requires a fresh blinded set whose labels and rationales are withheld from both the evidence package and the reviewing agent.
 
-**Tier 1: Aggregate metric evaluation (CAFA-style).** Predictions are scored against a GOA temporal holdout using $F_{\max}$, $S_{\min}$, or similar metrics. This tier scales to tens of thousands of proteins and provides head-to-head method comparison, but carries the biases catalogued in §2.2: metric leniency toward false positives and generic terms [15,16], GOA-as-ground-truth with its annotation-popularity cycle [17,18], and holdout-set composition driven by curation-campaign funding rather than by the distribution of biology that databases need to annotate [7,20]. For the new generation of agentic predictors, Tier 1 has an additional structural gap: it cannot grade narrative or reasoning output at all.
+### 5.4 Three tiers of function-prediction evaluation
 
-**Tier 2: Expert or agentic evaluation.** A domain expert — or, as we argue here, an LLM curator-agent grounded in primary literature — reads the prediction, reads the evidence, and classifies each call using a biologically motivated taxonomy (COR/CNN/LSP/NPI/REP/UNC). The de Crécy-Lagard *et al.* audit [10] is the paradigmatic Tier 2 study; AIGR partially automates it. This tier addresses the biases that Tier 1 cannot: it can grade narratives, detect failure modes masked by metric aggregation, distinguish novel insight from restatement of existing pipelines, and flag directional errors and pseudoenzyme overcalls that GOA-agreement metrics score as correct. The trade-off is scale: our 335-prediction review required substantial effort (29 genes, two review passes, literature verification of every COR and UNC call). Tier 2 is appropriate for deployment decisions — "should we import this method's predictions into our database?" — not for population-level benchmarking.
+It is useful to separate function-prediction evaluation into three tiers.
 
-**Tier 3: Prospective experimental validation.** In CASP, the gold standard is the experimentally determined structure — one experiment resolves one prediction unambiguously. For function prediction, no analogous single experiment exists. Verifying a molecular-function prediction requires an enzyme assay, a binding assay, or a transport assay, each testing one substrate or partner at a time. Verifying a biological-process prediction requires genetics — knockouts, interaction screens, phenotype analysis — which is organism-specific and often multi-experiment. Verifying a cellular-component prediction requires microscopy, fractionation, or proximity labelling. A full validation of one protein's predicted function across MF, BP, and CC might require half a dozen independent experiments, and even then the open-world problem persists: negative results do not prove absence of function. CAFA3 moved toward Tier 3 by commissioning genome-wide screens for three organisms [7], but each screen assayed a single phenotype, yielding annotations clustered around that phenotype. A true function-prediction equivalent of CASP — blind prediction followed by unbiased multi-assay experimental resolution — remains an aspiration, not a practical protocol. The fundamental reason is that "protein function" is not one thing: it is a multi-dimensional, context-dependent, organism-specific description that no single experiment can pin down.
+**Tier 1: aggregate metric evaluation.** CAFA-style $F_{\max}$ and $S_{\min}$ scale to large holdouts and enable method comparison, but they inherit GOA-as-ground-truth bias, metric bias toward generic terms, and no capacity to grade narratives.
 
-**Where this work sits.** AIGR operates at Tier 2. We argue this is currently the most practical tier for deployment decisions: Tier 1 has too many biases to discriminate between a method that adds new biology and one that merely restates InterPro2GO, while Tier 3 does not scale and has no clear protocol. The contribution of AIGR is to partially automate Tier 2, bringing its cost closer to Tier 1 while retaining its ability to read narratives, surface failure modes, and classify predictions against a biologically grounded taxonomy. A sensible benchmarking protocol for a function-prediction paper in 2026 would report Tier 1 metrics ($F_{\max}$, $S_{\min}$) on a CAFA-style temporal holdout *and* a Tier 2 agentic biological-validity score on a smaller, curated gene set. Our released starting points are the 139-gene BioReason-Pro RL narrative benchmark, the 184-gene SFT term-prediction audit, the separate 300-gene GO-GPT overlap audit, and the 7-gene *E. coli* replication.
+**Tier 2: expert or agentic biological-validity review.** A domain expert, or an LLM curator-agent grounded in primary evidence, reads the prediction and classifies it using a biological taxonomy such as COR/CNN/LSP/NPI/REP/UNC. This is the tier AIGR partially automates. It is the right level for deployment decisions.
 
-### 5.4 Implications for annotation database curation workflows
+**Tier 3: prospective experimental validation.** This is the strongest evidence but the least scalable. Protein function is multi-dimensional: validating MF, BP, and CC claims can require different assays, organisms, and conditions. Tier 3 is essential for discovery claims, but not a practical first-pass filter for every computational prediction.
 
-The most concrete practical implication of this work, from our perspective, is that **the synthesis step inside the curator's head is partially automatable**. AIGR is not a replacement for expert curation — we are not proposing that LLMs annotate genes in place of humans — but it provides a reviewed, structured, auditable starting point for an expert. In the de Crécy-Lagard replication, the agent independently recovered the reviewer's reasoning for each of the 7 genes, which means that in principle a database could receive an agentic review for *every* DeepECTransformer prediction for *E. coli* rather than for the 7 that happened to fit in the paper. The expert's job becomes approving, editing, or rejecting a structured review, not performing the synthesis from scratch.
+### 5.5 What we learned about BioReason-Pro
 
-### 5.5 Broader implications
+BioReason-Pro is not ready for unsupervised import into a production annotation database. On ARGO139, its SFT terms mostly restate GOA, with a non-trivial incorrect fraction in the cleaner HF subset. Its RL narratives are often plausible prose versions of InterPro2GO, not independent biological reasoning. The model is useful when domain architecture is diagnostic, but fails when the answer depends on catalytic-site loss, organism context, paralog identity, or compartmental signals.
 
-Our results suggest that **the most valuable thing a foundation-model predictor can produce is not a GO term but a well-reasoned narrative**, because narratives can be audited, corrected, and combined with other evidence, whereas naked GO terms cannot. The agentic-review approach we describe here depends on this. If BioReason-Pro emitted only GO terms we could not have found the pseudoenzyme blind spot, the localisation defaults, the paralog indistinguishability, or the narrative–GO disconnect. The narrative made the failures legible. The 16% fabricated-UniProt-summary rate in SFT outputs highlights a distinct and underappreciated risk: **agentic predictors can make fabrication errors that misrepresent authoritative databases**, and these errors need separate detection machinery (e.g., literal-string matching against the UniProt cache).
-
-### 5.6 What we learned about BioReason-Pro
-
-The narrative reasoning arm produces prose that is, for most genes, a restatement of InterPro2GO in natural language. It works when domain architecture is diagnostic (TOR1, NOTCH1, EGFR, PTEN, spo0A) and fails when it is not — and the failures are not random. The seven failure modes are all architectural: the model cannot detect loss of catalytic residues in pseudoenzymes, cannot distinguish paralogs that share a domain but differ in biology, defaults to cytoplasm when InterPro doesn't name the compartment, has no access to organism-specific biology, misses neo-functionalised proteins, and carries cross-kingdom training-data bias. Each of these points to a specific missing capability rather than a general accuracy deficit.
-
-The GO term prediction arm tells a quantitatively concordant story. Two-thirds of leaf-term predictions restate GOA. Roughly one in nine (11.5%) is wrong, and the errors cluster around the same failure modes — pseudoenzyme overcalls, holdase/foldase confusion, paralog overannotation, peptidoglycan/glycosaminoglycan conflation, wrong compartments. The 4.5% that are genuinely novel and correct fill gaps in GOA, but they are gaps that any knowledgeable curator would also fill: RAS2 activation of adenylate cyclase, cytochrome c activation of caspase-9, KEAP1 suppression of NRF2. Across the 184-gene SFT term-prediction cohort, the model did not discover a single function unknown to the literature.
-
-The two arms fail independently. For RAS2, the GO terms correctly predict adenylate cyclase activation while the narrative describes vesicle trafficking. For CpxP, the GO terms correctly place the protein in the periplasm while the narrative says cytoplasm. This dissociation — the model emitting a correct term while narrating the wrong mechanism, or vice versa — means that for a database considering deployment, neither the narrative nor the term list can be trusted in isolation.
-
-BioReason-Pro is not ready for unsupervised import into a production annotation database. The 1-in-9 error rate, the systematic nature of those errors, and the narrative–term dissociation all argue against bulk ingestion. The model's genuine contribution may be elsewhere: the narrative format makes the *reasoning* legible in a way that a naked GO term list does not, and legible reasoning is what curators need to diagnose and correct errors efficiently. If BioReason-Pro's developers address the specific architectural gaps — catalytic-residue checking for pseudoenzymes, signal-peptide and transmembrane reasoning for localisation, paralog-subfamily discrimination, organism-context metadata — the narrative format could become genuinely useful for curator-assisted annotation. The current version is a proof of concept for the format, not yet a production tool.
+The model's best contribution may be format rather than current accuracy. A narrative can be audited, corrected, and triaged in ways that a naked GO-term list cannot. But the narrative and term arms must be reviewed independently, because they can disagree.
 
 ## 6. Limitations
 
-**Agent bias.** AIGR itself depends on an LLM curator-agent, which has its own biases. We mitigate this through (i) grounding in cached full-text literature with literal-quote checking, (ii) a structured schema and validator that force explicit justification for each action, and (iii) external validation against an expert taxonomy. But we cannot exclude that some of AIGR's own failure patterns correlate with BioReason-Pro's, which would tend to flatter both models. The 7-gene de Crécy-Lagard replication is our strongest protection against this concern because the classification comes from an unrelated research group.
+**Agent bias.** AIGR itself depends on an LLM curator-agent. We mitigate this through cached evidence, literal-quote checking, and schema validation, but shared blind spots remain possible. The current VDCL reproduction is useful as a positive control, not as a blinded external validation.
 
-**Sample selection.** The 139-gene BioReason-Pro RL narrative corpus was selected to span model organisms and harder edge cases, not to be a random sample. The SFT term-prediction cohort extends this to 184 genes, and the GO-GPT overlap audit uses a separate 300-gene AIGR-reviewed set. These denominators answer different questions and should not be pooled as a population-level estimate of BioReason-Pro's performance on a random slice of UniProt. The cost of this design is that cross-section comparisons such as "139 vs. 184 vs. 300" are not paired benchmark comparisons; their purpose is to evaluate distinct failure modes and output types under explicit membership lists.
+**ARGO139 sample selection.** ARGO139 is manually selected for characterized biology and hard deployment cases. It is not random, and its estimates should not be read as population-level BioReason-Pro performance.
 
-**Rubric subjectivity.** The 1–5 Correctness and Completeness scales involve a judgement call. We mitigate this by requiring supporting-text citation for each score and by making the full per-gene reviews browsable so that readers can inspect any individual call. Inter-agent reliability is an open question we intend to quantify in follow-up work.
+**SFT source heterogeneity.** ARGO139 keeps one gene set, but SFT terms come from two sources: 95 HF-catalogue genes and 44 web-export genes. The web export includes ancestor hierarchy, so source-stratified results are more meaningful than the combined total.
 
-**Single predictor in depth.** We evaluated one agentic reasoner (BioReason-Pro) in detail, plus one classical EC predictor (DeepECTransformer) through the de Crécy-Lagard replication. A comparative evaluation across multiple agentic reasoners would be more informative for field-wide deployment decisions; this is planned but out of scope for the present paper.
+**Rubric subjectivity.** The 1-5 Correctness and Completeness scales involve judgement. We mitigate this by requiring supporting evidence and releasing the per-gene reviews for inspection. Inter-agent reliability remains future work.
 
-**Curator-ground-truth staleness.** The AIGR reviews that serve as ground truth are themselves generated by a pipeline whose outputs can become stale as literature and curation standards evolve. We plan to re-run the pipeline periodically; the browse site shows the generation date of each review.
+**Single predictor in depth.** We evaluate BioReason-Pro in detail, plus DeepECTransformer through the VDCL positive-control reproduction. Comparative evaluation across multiple agentic reasoners is out of scope.
 
-**Small *E. coli* replication.** 7 genes is a small benchmark. The natural next step is to scale the replication to the full DeepECTransformer set from [10] and to add at least one independent taxonomy study (e.g., a protein-language-model audit from a different group) to demonstrate that the replication generalises.
+**VDCL label leakage.** The 7-gene VDCL exercise was selected from the published tables and the repository artifacts include the published labels and rationales. It should not be described as blinded. A stronger follow-up would hold out VDCL labels, remove PMID:40703034 from the per-gene evidence package, and score the agent's classifications before unblinding.
+
+**Curator-ground-truth staleness.** AIGR reviews can become stale as literature and curation standards evolve. The pipeline is reproducible, and the browse site exposes generated review files for future reruns.
 
 ## 7. Conclusions
 
-BioReason-Pro mostly tells you what you already know, occasionally tells you something correct that GOA hasn't recorded yet, and about one time in nine tells you something wrong — in predictable, diagnosable ways. Its narratives restate InterPro2GO for most genes (correctness 3.7/5, completeness 2.9/5), with seven reproducible failure modes that are invisible to CAFA-style aggregate metrics but immediately diagnostic to a reader of the output. Its GO term predictions are 67% not-novel, 11.5% incorrect, and 4.5% genuinely novel in the primary 140-gene HF-catalogue leaf-term subset. Its narrative and term-prediction arms fail independently — for some genes the terms are right when the narrative is wrong, and vice versa. Across the 184-gene SFT term-prediction cohort, the model does not discover a single function unknown to the literature.
+AIGR reproduces the VDCL expert taxonomy on a 7-gene positive-control set, showing that the schema and review workflow can encode biologically meaningful error classes. Applying AIGR to ARGO139 shows that BioReason-Pro mostly restates existing annotation pipelines, occasionally names known biology missing from GOA, and makes systematic errors that aggregate metrics would hide.
 
-These findings required evaluation at a level of granularity that CAFA-style $F_{\max}$ cannot provide. We frame function-prediction evaluation as a three-tier hierarchy: aggregate metrics (Tier 1), expert or agentic review (Tier 2), and prospective experimental validation (Tier 3). Tier 1 carries documented biases in its metrics, ground truth, and holdout-set composition. Tier 3 remains impractical because "protein function" is multi-dimensional, context-dependent, and organism-specific. Tier 2 — partially automated by AIGR — is the most practical level for the question that annotation databases actually need answered: should we import this method's predictions?
-
-On a blinded *E. coli* benchmark, AIGR independently recovers all 7 of de Crécy-Lagard *et al.*'s expert error classifications, providing evidence that the synthesis step can be partially automated without sacrificing biological rigour. All reviews, data, and the AIGR pipeline are released at `github.com/ai4curation/ai-gene-review`.
+The practical conclusion is not that CAFA-style metrics should be abandoned. It is that deployment decisions need a Tier 2 layer: expert or agentic review that can read narratives, classify novelty, and identify biologically meaningful failure modes. ARGO139 is our first paired benchmark for that layer across BioReason-Pro SFT terms and RL narratives.
 
 ## Figures
 
@@ -376,6 +309,6 @@ References are drafted in a mixed short format; a cleaned bibliography will acco
 
 ## Data and code availability
 
-*Repository:* `github.com/ai4curation/ai-gene-review` — 139-gene BioReason-Pro RL narrative review set, 184-gene SFT term-prediction audit, 300-gene GO-GPT overlap audit, 7-gene *E. coli* cross-validation, AIGR pipeline, LinkML schema, and validator.
+*Repository:* `github.com/ai4curation/ai-gene-review` — ARGO139 BioReason-Pro RL narrative and SFT GO-term reviews, `article/supplemental-benchmark-details.md`, 7-gene VDCL *E. coli* positive-control reproduction, AIGR pipeline, LinkML schema, and validator.
 *Browsable reviews:* `https://ai4curation.io/ai-gene-review/`
 *Correspondence:* (TBD before submission)

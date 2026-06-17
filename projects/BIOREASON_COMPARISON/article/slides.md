@@ -127,11 +127,11 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 
 ---
 
-## Case study 1 — design
+## Case study 1 — ARGO139 design
 
-- **139 proteins**, 11 eukaryotic & bacterial clades
-- Spanning model-organism genes **and** hard edge cases: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
-- For each gene: BioReason-Pro RL summary + trace, GO-GPT leaf terms, **AIGR curated review as ground truth**
+- **139 proteins**, 14 species labels
+- Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
+- For each gene: BioReason-Pro RL summary + trace, SFT GO terms where available, **AIGR curated review as ground truth**
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
   - **Completeness** — do they span the gene's core biology?
@@ -206,7 +206,7 @@ TOR1 · NOTCH1 · PTEN · EGFR · spo0A · (informative family names: Uggt1, KAR
 
 ---
 
-## GOA agreement ≠ biological validity
+## Supplemental audit: GOA agreement ≠ biological validity
 
 GO-GPT run directly on 300 genes; overlap measured against three progressively stricter references:
 
@@ -216,15 +216,15 @@ The **5-fold gap** between raw-GOA agreement (11.7%) and curator core-function a
 
 ---
 
-## Term-level review: two-thirds is old news
+## ARGO139 SFT terms: two-thirds is old news
 
-1,292 SFT leaf-term predictions (140 genes), every COR/NPI verified against primary literature:
+955 SFT HF-catalogue terms (95 ARGO139 genes), every COR/NPI verified against primary literature:
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**67% CNN** (already in GOA) · **11.5% NPI** (wrong) · **4.5% COR** (novel & correct) · 3.8% LSP · 1.9% REP
+**67.5% CNN** (already in GOA) · **10.6% NPI** (wrong) · **5.4% COR** (novel & correct) · 3.9% LSP · 2.2% REP
 
-The 4.5% COR are gaps **any knowledgeable curator would also fill**. Across 184 genes: **not one function unknown to the literature.**
+The 5.4% COR are gaps **any knowledgeable curator would also fill**. Across ARGO139: **not one function unknown to the literature.**
 
 ---
 
@@ -241,9 +241,11 @@ BioReason-Pro's narrative and its GO-term list are generated semi-independently 
 
 ---
 
-## Case study 2 — blind replication of an expert taxonomy
+## Case study 2 — VDCL positive control
 
-7 *E. coli* genes spanning all classes; AIGR run **blind** to the paper's verdicts.
+7 *E. coli* genes spanning all classes; AIGR reproduces the published taxonomy.
+
+Not blinded: the project artifacts include the VDCL labels/rationales.
 
 | Gene | Paper | AIGR | Recovered rationale |
 |---|---|---|---|
@@ -255,7 +257,7 @@ BioReason-Pro's narrative and its GO-term list are generated semi-independently 
 | yjdM | UNC | **UNC** | In-vitro activity, no in-vivo phenotype |
 | fepE | REP | **REP** | No HK similarity; Wzz O-antigen regulator |
 
-**7 / 7 classifications + mechanistic rationales recovered.** External evidence the synthesis step is reliable — and not just one LLM flattering another.
+**7 / 7 classifications + mechanistic rationales reproduced.** This is a positive control for the schema/workflow, not a blinded accuracy estimate.
 
 ---
 
@@ -280,12 +282,12 @@ BioReason-Pro's narrative and its GO-term list are generated semi-independently 
 **BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA hasn't recorded, and **~1 in 9 times something wrong — in predictable, diagnosable ways.**
 
 - Narratives restate InterPro2GO (3.7 / 2.9); **seven architectural failure modes**
-- GO terms: 67% not-novel, 11.5% wrong, 4.5% novel-correct; **0 functions unknown to literature** across 184 genes
+- GO terms: 67.5% not-novel, 10.6% wrong, 5.4% novel-correct in the cleaner ARGO139 HF subset; **0 functions unknown to literature**
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
 **The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be audited, corrected, combined. Naked GO terms cannot.
 
-**Agentic Tier-2 review** reads narratives, surfaces systematic failures, separates novelty from restatement — and **blindly reproduces a published expert taxonomy (7/7).**
+**Agentic Tier-2 review** reads narratives, surfaces systematic failures, separates novelty from restatement — and can encode a published expert taxonomy as a positive control.
 
 ---
 

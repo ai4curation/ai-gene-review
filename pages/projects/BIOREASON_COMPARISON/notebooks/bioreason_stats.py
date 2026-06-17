@@ -15,6 +15,7 @@ Data sources
 """
 from __future__ import annotations
 
+import csv
 import re
 from pathlib import Path
 
@@ -73,6 +74,17 @@ def parse_narrative_reviews(kind: str, repo_root: Path | None = None) -> pd.Data
     df.attrs["skipped"] = skipped
     df.attrs["kind"] = kind
     return df
+
+
+def load_rl_benchmark_keys(repo_root: Path | None = None) -> set[tuple[str, str]]:
+    """Load ARGO139 benchmark membership from genes.csv."""
+    repo_root = repo_root or find_repo_root()
+    path = repo_root / "projects" / "BIOREASON_COMPARISON" / "genes.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {
+            (row["species"], row["symbol"])
+            for row in csv.DictReader(handle)
+        }
 
 
 def load_prediction_assessments(repo_root: Path | None = None) -> pd.DataFrame:
