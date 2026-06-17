@@ -613,9 +613,14 @@ validate-all:
         echo "✓ Term validation: no errors (label warnings, if any, are advisory)"
     fi
     echo ""
-    echo "Reference and best practices validation..."
+    echo "Reference validation (batch; errors block, advisory warnings allowed)..."
+    # One linkml-reference-validator process over all files (schema parsed once),
+    # rather than one process per file. Requires linkml-reference-validator >= 0.2.1.
+    {{ref_validator}} validate data genes/*/*/*-ai-review.yaml --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}} || exit_code=1
+    echo ""
+    echo "Best practices validation..."
     mkdir -p reports
-    uv run ai-gene-review validate --verbose --no-schema --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    uv run ai-gene-review validate --verbose --no-schema --no-references --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
     echo ""
     echo "Checking PMID references in all pathway markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
