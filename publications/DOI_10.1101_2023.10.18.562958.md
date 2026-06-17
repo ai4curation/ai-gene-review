@@ -1,8 +1,6 @@
 ---
 reference_id: DOI:10.1101/2023.10.18.562958
-title: "UGGT1-mediated reglucosylation of
-                  <i>N</i>
-                  -glycan competes with ER-associated degradation of unstable and misfolded glycoproteins"
+title: "UGGT1-mediated reglucosylation of <i>N</i> -glycan competes with ER-associated degradation of unstable and misfolded glycoproteins"
 authors:
 - Satoshi Ninagawa
 - Masaki Matsuo
@@ -25,11 +23,10 @@ authors:
 year: '2023'
 doi: 10.1101/2023.10.18.562958
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# UGGT1-mediated reglucosylation of
-                  <i>N</i>
-                  -glycan competes with ER-associated degradation of unstable and misfolded glycoproteins
+# UGGT1-mediated reglucosylation of <i>N</i> -glycan competes with ER-associated degradation of unstable and misfolded glycoproteins
 **Authors:** Satoshi Ninagawa, Masaki Matsuo, Deng Ying, Shuichiro Oshita, Shinya Aso, Kazutoshi Matsushita, Mai Taniguchi, Akane Fueki, Moe Yamashiro, Kaoru Sugasawa, Shunsuke Saito, Koshi Imami, Yasuhiko Kizuka, Tetsushi Sakuma, Takashi Yamamoto, Hirokazu Yagi, Koichi Kato, Kazutoshi Mori
 **DOI:** [10.1101/2023.10.18.562958](https://doi.org/10.1101/2023.10.18.562958)
 

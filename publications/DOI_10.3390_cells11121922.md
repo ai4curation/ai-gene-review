@@ -9,6 +9,7 @@ journal: Cells
 year: '2022'
 doi: 10.3390/cells11121922
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Fission Impossible (?)—New Insights into Disorders of Peroxisome Dynamics

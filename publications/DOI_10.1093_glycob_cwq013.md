@@ -9,6 +9,7 @@ journal: Glycobiology
 year: '2010'
 doi: 10.1093/glycob/cwq013
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # The role of MRH domain-containing lectins in ERAD

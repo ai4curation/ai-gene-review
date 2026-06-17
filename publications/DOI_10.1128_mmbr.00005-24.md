@@ -7,6 +7,7 @@ journal: Microbiology and Molecular Biology Reviews
 year: '2024'
 doi: 10.1128/mmbr.00005-24
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Lipoic acid attachment to proteins: stimulating new developments

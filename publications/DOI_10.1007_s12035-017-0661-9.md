@@ -8,6 +8,7 @@ journal: Molecular Neurobiology
 year: '2018'
 doi: 10.1007/s12035-017-0661-9
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Vertebrate Presynaptic Active Zone Assembly: a Role Accomplished by Diverse Molecular and Cellular Mechanisms

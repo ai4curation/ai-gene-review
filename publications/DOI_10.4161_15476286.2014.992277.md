@@ -9,6 +9,7 @@ journal: RNA Biology
 year: '2014'
 doi: 10.4161/15476286.2014.992277
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Diversity of the biosynthesis pathway for threonylcarbamoyladenosine (t<sup>6</sup>A), a universal modification of tRNA

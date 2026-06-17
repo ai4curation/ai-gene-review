@@ -10,6 +10,7 @@ journal: Glycobiology
 year: '2010'
 doi: 10.1093/glycob/cwp182
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Human XTP3-B binds to  1-antitrypsin variant nullHong Kong via the C-terminal MRH domain in a glycan-dependent manner

@@ -6,6 +6,7 @@ authors:
 year: '2023'
 doi: 10.53846/goediss-10204
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Quantitative molecular physiology at active zones of calyceal synapses of the auditory pathway

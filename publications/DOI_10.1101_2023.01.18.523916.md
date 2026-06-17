@@ -11,6 +11,7 @@ authors:
 year: '2023'
 doi: 10.1101/2023.01.18.523916
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Proteomics of the astrocyte secretome reveals changes in their response to soluble oligomeric Aß

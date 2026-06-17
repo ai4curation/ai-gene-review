@@ -1,7 +1,6 @@
 ---
 reference_id: DOI:10.1128/JB.01214-10
-title: "Novel Members of the Cra Regulon Involved in Carbon Metabolism in
-            <i>Escherichia coli</i>"
+title: "Novel Members of the Cra Regulon Involved in Carbon Metabolism in <i>Escherichia coli</i>"
 authors:
 - Tomohiro Shimada
 - Kaneyoshi Yamamoto
@@ -10,10 +9,10 @@ journal: Journal of Bacteriology
 year: '2011'
 doi: 10.1128/JB.01214-10
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# Novel Members of the Cra Regulon Involved in Carbon Metabolism in
-            <i>Escherichia coli</i>
+# Novel Members of the Cra Regulon Involved in Carbon Metabolism in <i>Escherichia coli</i>
 **Authors:** Tomohiro Shimada, Kaneyoshi Yamamoto, Akira Ishihama
 **Journal:** Journal of Bacteriology (2011)
 **DOI:** [10.1128/JB.01214-10](https://doi.org/10.1128/JB.01214-10)

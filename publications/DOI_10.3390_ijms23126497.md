@@ -14,6 +14,7 @@ journal: International Journal of Molecular Sciences
 year: '2022'
 doi: 10.3390/ijms23126497
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Targeted Analysis of HSP70 Isoforms in Human Spermatozoa in the Context of Capacitation and Motility

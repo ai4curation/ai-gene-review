@@ -11,6 +11,7 @@ journal: ACS Synthetic Biology
 year: '2018'
 doi: 10.1021/acssynbio.7b00455
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Remote Control of Mammalian Cells with Heat-Triggered Gene Switches and Photothermal Pulse Trains

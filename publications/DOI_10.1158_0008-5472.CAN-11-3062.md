@@ -25,6 +25,7 @@ journal: Cancer Research
 year: '2012'
 doi: 10.1158/0008-5472.CAN-11-3062
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # HSP DNAJB8 Controls Tumor-Initiating Ability in Renal Cancer Stem–like Cells

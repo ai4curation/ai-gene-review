@@ -15,6 +15,7 @@ journal: iScience
 year: '2024'
 doi: 10.1016/j.isci.2024.109510
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # The activation of LBH-CRYAB signaling promotes cardiac protection against I/R injury by inhibiting apoptosis and ferroptosis

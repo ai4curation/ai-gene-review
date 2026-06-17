@@ -12,6 +12,7 @@ journal: Acta Crystallographica Section F Structural Biology Communications
 year: '2019'
 doi: 10.1107/S2053230X19008653
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Structural comparison of <i>p</i>-hydroxybenzoate hydroxylase (PobA) from <i>Pseudomonas putida</i> with PobA from other <i>Pseudomonas</i> spp. and other monooxygenases

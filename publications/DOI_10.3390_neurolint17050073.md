@@ -10,6 +10,7 @@ journal: Neurology International
 year: '2025'
 doi: 10.3390/neurolint17050073
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Impaired DNAJB2 Response to Heat Shock in Fibroblasts from a Neuropathy Patient with DNAJB2/HSJ1 Mutation: Cystamine as a Potential Therapeutic Intervention

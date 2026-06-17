@@ -10,6 +10,7 @@ journal: Nucleic Acids Research
 year: '2017'
 doi: 10.1093/nar/gkx271
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # A network of cis and trans interactions is required for ParB spreading

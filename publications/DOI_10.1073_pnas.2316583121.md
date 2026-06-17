@@ -13,6 +13,7 @@ journal: Proceedings of the National Academy of Sciences
 year: '2024'
 doi: 10.1073/pnas.2316583121
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # A coadapted KNL1 and spindle assembly checkpoint axis orchestrates precise mitosis in Arabidopsis

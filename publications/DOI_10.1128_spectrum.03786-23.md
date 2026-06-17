@@ -1,8 +1,6 @@
 ---
 reference_id: DOI:10.1128/spectrum.03786-23
-title: "c-di-AMP accumulation impairs toxin expression of
-            <i>Bacillus anthracis</i>
-            by down-regulating potassium importers"
+title: "c-di-AMP accumulation impairs toxin expression of <i>Bacillus anthracis</i> by down-regulating potassium importers"
 authors:
 - Jia Hu
 - Junmin Yao
@@ -12,11 +10,10 @@ journal: Microbiology Spectrum
 year: '2024'
 doi: 10.1128/spectrum.03786-23
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# c-di-AMP accumulation impairs toxin expression of
-            <i>Bacillus anthracis</i>
-            by down-regulating potassium importers
+# c-di-AMP accumulation impairs toxin expression of <i>Bacillus anthracis</i> by down-regulating potassium importers
 **Authors:** Jia Hu, Junmin Yao, Chengfeng Lei, Xiulian Sun
 **Journal:** Microbiology Spectrum (2024)
 **DOI:** [10.1128/spectrum.03786-23](https://doi.org/10.1128/spectrum.03786-23)

@@ -16,6 +16,7 @@ journal: PROTEOMICS
 year: '2006'
 doi: 10.1002/pmic.200500930
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # A proteomic view of <b><i>Desulfovibrio vulgaris</i></b> metabolism as determined by liquid chromatography coupled with tandem mass spectrometry

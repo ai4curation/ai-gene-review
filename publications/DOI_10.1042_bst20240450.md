@@ -9,6 +9,7 @@ journal: Biochemical Society Transactions
 year: '2024'
 doi: 10.1042/bst20240450
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Role of Yme1 in mitochondrial protein homeostasis: from regulation of protein import, OXPHOS function to lipid synthesis and mitochondrial dynamics

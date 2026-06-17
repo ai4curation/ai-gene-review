@@ -13,6 +13,7 @@ journal: Microorganisms
 year: '2023'
 doi: 10.3390/microorganisms11041077
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Structural Analysis of Bacillus subtilis Sigma Factors

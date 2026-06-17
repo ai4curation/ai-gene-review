@@ -11,6 +11,7 @@ journal: International Journal of Molecular Sciences
 year: '2023'
 doi: 10.3390/ijms24097829
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Identification and Characterization of Proteins That Are Involved in RTP1S-Dependent Transport of Olfactory Receptors

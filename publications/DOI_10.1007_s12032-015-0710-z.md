@@ -21,6 +21,7 @@ journal: Medical Oncology
 year: '2015'
 doi: 10.1007/s12032-015-0710-z
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # PFDN1, an indicator for colorectal cancer prognosis, enhances tumor cell proliferation and motility through cytoskeletal reorganization

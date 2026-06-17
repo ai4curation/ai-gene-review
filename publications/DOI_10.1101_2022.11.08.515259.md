@@ -20,6 +20,7 @@ authors:
 year: '2022'
 doi: 10.1101/2022.11.08.515259
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Astrocytic Gapjinc (TMEM43) modulates gap junction networks by facilitating transjunctional potentials

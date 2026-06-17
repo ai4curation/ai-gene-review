@@ -22,6 +22,7 @@ journal: Nature
 year: '2020'
 doi: 10.1038/s41586-020-2210-3
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Ligand-induced monoubiquitination of BIK1 regulates plant immunity

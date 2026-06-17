@@ -11,6 +11,7 @@ journal: Molecular Cell
 year: '2018'
 doi: 10.1016/j.molcel.2018.03.026
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Redundant and Antagonistic Roles of XTP3B and OS9 in Decoding Glycan and Non-glycan Degrons in ER-Associated Degradation

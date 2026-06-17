@@ -10,6 +10,7 @@ journal: International Journal of Molecular Sciences
 year: '2020'
 doi: 10.3390/ijms21041409
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Neuromuscular Diseases Due to Chaperone Mutations: A Review and Some New Results

@@ -12,6 +12,7 @@ journal: Cancers
 year: '2024'
 doi: 10.3390/cancers16030638
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The Interplay between Heat Shock Proteins and Cancer Pathogenesis: A Novel Strategy for Cancer Therapeutics

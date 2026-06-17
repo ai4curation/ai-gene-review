@@ -9,6 +9,7 @@ journal: Molecular Phylogenetics and Evolution
 year: '2017'
 doi: 10.1016/j.ympev.2016.12.033
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Slr0006-like proteins: A TsaC/TsaC2/YciO subfamily exclusive to cyanobacteria

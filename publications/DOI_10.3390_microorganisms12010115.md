@@ -13,6 +13,7 @@ journal: Microorganisms
 year: '2024'
 doi: 10.3390/microorganisms12010115
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Regulatory Role of GgaR (YegW) for Glycogen Accumulation in Escherichia coli K-12

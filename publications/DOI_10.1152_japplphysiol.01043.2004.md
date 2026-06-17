@@ -13,6 +13,7 @@ journal: Journal of Applied Physiology
 year: '2005'
 doi: 10.1152/japplphysiol.01043.2004
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Transduction of phosphorylated heat shock-related protein 20, HSP20, prevents vasospasm of human umbilical artery smooth muscle

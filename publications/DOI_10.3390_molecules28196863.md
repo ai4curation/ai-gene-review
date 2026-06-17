@@ -13,6 +13,7 @@ journal: Molecules
 year: '2023'
 doi: 10.3390/molecules28196863
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The Microbial Degradation of Natural and Anthropogenic Phosphonates

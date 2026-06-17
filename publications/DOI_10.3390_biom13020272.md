@@ -10,6 +10,7 @@ journal: Biomolecules
 year: '2023'
 doi: 10.3390/biom13020272
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # HSP70 and Primary Arterial Hypertension

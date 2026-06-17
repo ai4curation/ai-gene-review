@@ -22,6 +22,7 @@ journal: Metabolic Engineering
 year: '2022'
 doi: 10.1016/j.ymben.2021.12.010
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Debottlenecking 4-hydroxybenzoate hydroxylation in Pseudomonas putida KT2440 improves muconate productivity from p-coumarate

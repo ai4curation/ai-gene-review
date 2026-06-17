@@ -1,7 +1,6 @@
 ---
 reference_id: DOI:10.1126/science.1077136
-title: "Immunity-Related Genes and Gene Families in
-            <i>Anopheles gambiae</i>"
+title: "Immunity-Related Genes and Gene Families in <i>Anopheles gambiae</i>"
 authors:
 - George K. Christophides
 - Evgeny Zdobnov
@@ -42,10 +41,10 @@ journal: Science
 year: '2002'
 doi: 10.1126/science.1077136
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# Immunity-Related Genes and Gene Families in
-            <i>Anopheles gambiae</i>
+# Immunity-Related Genes and Gene Families in <i>Anopheles gambiae</i>
 **Authors:** George K. Christophides, Evgeny Zdobnov, Carolina Barillas-Mury, Ewan Birney, Stephanie Blandin, Claudia Blass, Paul T. Brey, Frank H. Collins, Alberto Danielli, George Dimopoulos, Charles Hetru, Ngo T. Hoa, Jules A. Hoffmann, Stefan M. Kanzok, Ivica Letunic, Elena A. Levashina, Thanasis G. Loukeris, Gareth Lycett, Stephan Meister, Kristin Michel, Luis F. Moita, Hans-Michael Müller, Mike A. Osta, Susan M. Paskewitz, Jean-Marc Reichhart, Andrey Rzhetsky, Laurent Troxler, Kenneth D. Vernick, Dina Vlachou, Jennifer Volz, Christian von Mering, Jiannong Xu, Liangbiao Zheng, Peer Bork, Fotis C. Kafatos
 **Journal:** Science (2002)
 **DOI:** [10.1126/science.1077136](https://doi.org/10.1126/science.1077136)

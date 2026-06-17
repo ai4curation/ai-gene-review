@@ -1,8 +1,6 @@
 ---
 reference_id: DOI:10.1073/pnas.2322677121
-title: "The
-                    <i>Arabidopsis</i>
-                    BUB1/MAD3 family protein BMF3 requires BUB3.3 to recruit CDC20 to kinetochores in spindle assembly checkpoint signaling"
+title: "The <i>Arabidopsis</i> BUB1/MAD3 family protein BMF3 requires BUB3.3 to recruit CDC20 to kinetochores in spindle assembly checkpoint signaling"
 authors:
 - Xingguang Deng
 - Felicia Lei Peng
@@ -14,11 +12,10 @@ journal: Proceedings of the National Academy of Sciences
 year: '2024'
 doi: 10.1073/pnas.2322677121
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# The
-                    <i>Arabidopsis</i>
-                    BUB1/MAD3 family protein BMF3 requires BUB3.3 to recruit CDC20 to kinetochores in spindle assembly checkpoint signaling
+# The <i>Arabidopsis</i> BUB1/MAD3 family protein BMF3 requires BUB3.3 to recruit CDC20 to kinetochores in spindle assembly checkpoint signaling
 **Authors:** Xingguang Deng, Felicia Lei Peng, Xiaoya Tang, Yuh-Ru Julie Lee, Hong-Hui Lin, Bo Liu
 **Journal:** Proceedings of the National Academy of Sciences (2024)
 **DOI:** [10.1073/pnas.2322677121](https://doi.org/10.1073/pnas.2322677121)

@@ -6,6 +6,7 @@ authors:
 year: '2022'
 doi: 10.53846/goediss-6529
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Molecular physiology of signal transmission along the auditory pathway

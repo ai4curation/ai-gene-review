@@ -21,6 +21,7 @@ journal: Cardiovascular Research
 year: '2024'
 doi: 10.1093/cvr/cvae181
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The diabetic myocardial transcriptome reveals Erbb3 and Hspa2 as a novel biomarkers of incident heart failure

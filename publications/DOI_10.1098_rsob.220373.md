@@ -15,6 +15,7 @@ journal: Open Biology
 year: '2023'
 doi: 10.1098/rsob.220373
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The lipid linked oligosaccharide polymerase Wzy and its regulating co-polymerase, Wzz, from enterobacterial common antigen biosynthesis form a complex

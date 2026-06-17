@@ -18,6 +18,7 @@ journal: The EMBO Reports
 year: '2018'
 doi: 10.15252/embr.201745471
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Map7/7D1 and Dvl form a feedback loop that facilitates microtubule remodeling and Wnt5a signaling

@@ -20,6 +20,7 @@ journal: Science Advances
 year: '2023'
 doi: 10.1126/sciadv.ade0387
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The p23 co-chaperone is a succinate-activated COX-2 transcription factor in lung adenocarcinoma tumorigenesis

@@ -10,6 +10,7 @@ journal: Environmental Microbiology
 year: '2002'
 doi: 10.1046/j.1462-2920.2002.00370.x
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Genomic analysis of the aromatic catabolic pathways from <i>Pseudomonas putida</i> KT2440

@@ -15,6 +15,7 @@ journal: Proceedings of the National Academy of Sciences
 year: '2024'
 doi: 10.1073/pnas.2317978121
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # An evolutionarily conserved ubiquitin ligase drives infection and transmission of flaviviruses
