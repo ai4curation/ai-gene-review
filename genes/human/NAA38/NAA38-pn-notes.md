@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: NAA38 (N-alpha-acetyltransferase 38; also LSMD1, MAK31) is a small Sm-like (LSm-fold) non-catalytic auxiliary subunit of the human NatC N-terminal acetyltransferase complex (NatC = NAA30 catalytic + NAA35 + NAA38). It does not catalyze acetyl transfer but is a structural component of NatC, which co-translationally acetylates the alpha-amino group of N-terminal methionine residues retained in front of bulky/hydrophobic residues; this modification shields substrates from N-degron-mediated ubiquitination and degradation. NAA38 is predominantly cytoplasmic (ribosome-associated) with some nuclear localization. Loss of NatC subunits triggers p53-dependent apoptosis.
-- Existing/core annotation action counts: ACCEPT: 7; KEEP_AS_NON_CORE: 8; MARK_AS_OVER_ANNOTATED: 1
+- Existing/core annotation action counts: ACCEPT: 7; KEEP_AS_NON_CORE: 8; MARK_AS_OVER_ANNOTATED: 1; NEW: 1
 
 ## PN Consistency Summary
 
@@ -45,6 +45,7 @@
 - **Mapping strategy:** Correct. Subtype→NatC complex exact CC; BP at type level. No node-mapping change warranted.
 - **Evidence alignment:** Concordant. Review/notes anchor to PMID:19398576 (NatC; hMak31; IDA GO:0031417, IMP GO:0043066) and PMID:37891180. PN row carries no titles. No divergence.
 - **Verdict:** Consistent, high-quality. Same minor notes-vs-YAML mismatch as NAA35: notes say HT protein-binding PMID:25416956/PMID:32814053 should be MARK_AS_OVER_ANNOTATED, YAML uses KEEP_AS_NON_CORE. **Recommended edits:** Add BP GO:0006474 (involved_in, auxiliary subunit) to NAA38 review [YAML]; optionally reconcile PMID:25416956 / PMID:32814053 protein-binding actions with notes [YAML].
+- **2026-06-18 follow-up:** Implemented the high-confidence YAML edit: added GO:0006474 N-terminal protein amino acid acetylation as a NEW BP recommendation and core process for the NatC auxiliary subunit. The optional protein-binding action-style reconciliation remains separate.
 
 ## PN Dossier Context
 

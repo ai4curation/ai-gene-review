@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: BCL2L13 (Bcl-rambo, Mil1) is a tail-anchored mitochondrial outer-membrane protein of the BCL-2 family that contains all four BCL-2 homology motifs (BH1-BH4) plus a unique ~250-residue insertion with tandem repeats preceding its C-terminal transmembrane anchor. It is the mammalian functional homolog of the yeast mitophagy receptor Atg32: through an LC3-interacting region it binds Atg8-family proteins (LC3/GABARAP, including GABARAPL2) to recruit the autophagy machinery to mitochondria, promoting mitochondrial fragmentation and selective autophagy of mitochondria (mitophagy) independently of the canonical DRP1 fission machinery. BCL2L13 was originally described as a pro-apoptotic BCL-2 homolog whose cell-death activity, which can promote caspase-3 activation, is conferred by its membrane-anchored C-terminal region rather than its BH motifs; unlike most BCL-2-family members it does not heterodimerize with other family members. It is broadly expressed (notably in heart, placenta, pancreas and skeletal muscle) and is targeted by the Legionella pneumophila effector SidF, which neutralizes it to block host apoptosis. A short nuclear-localized splice isoform lacking the transmembrane anchor also exists.
-- Existing/core annotation action counts: ACCEPT: 6; KEEP_AS_NON_CORE: 5; MARK_AS_OVER_ANNOTATED: 11
+- Existing/core annotation action counts: ACCEPT: 6; KEEP_AS_NON_CORE: 5; MARK_AS_OVER_ANNOTATED: 11; NEW: 2
 
 ## PN Consistency Summary
 
@@ -45,6 +45,7 @@
 - **Mapping strategy:** Mitophagy type → GO:0000423 projection is appropriate for BCL2L13 (well-supported Atg32-homolog receptor). The shared-node projection is sound; this gene strengthens (does not over-broaden) the node, unlike rejected-broader precedents.
 - **Evidence alignment:** PN cites the Murakawa Nat Commun mitophagy paper (=PMID:26146385) and a selective-autophagy ATG8/LIR review — both align with the review's references. Strong overlap. Deep research adds DRP1-dependent (GBM, PMID:37660127) vs DRP1-independent (Murakawa) context and MAM/Ca2+ role (PMID:39175772), none contradicting the mitophagy core.
 - **Verdict:** Consistent; mitophagy process correctly added (note it is already IEA in UniProt GOA). Key finding: the review's proposed NEW "mitophagy receptor activity" duplicates existing **GO:0140580**. **Recommended edits:** [YAML][REF] replace the BCL2L13 proposed_new_term with existing GO:0140580 mitochondrion autophagosome adaptor activity (add as core MF, supported by PMID:26146385); [MAP] note GO:0000423 is already UniProt-IEA, so goa_status is closer to "already_in_goa" than "new_to_goa".
+- **2026-06-18 follow-up:** Implemented the high-confidence YAML edits: added GO:0140580 mitochondrion autophagosome adaptor activity and GO:0000423 mitophagy as NEW recommendations, updated the core MF, and removed the duplicate mitophagy-receptor NTR block. Mapping goa_status cleanup remains separate.
 
 ## PN Dossier Context
 

@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: NAA30 (N-alpha-acetyltransferase 30; also hMak3, NAT12) is the catalytic subunit of the human NatC N-terminal acetyltransferase complex (NatC = NAA30 + NAA35 + NAA38). It is a GNAT-fold acetyltransferase (MAK3 subfamily, EC 2.3.1.256) that co-translationally transfers an acetyl group from acetyl-CoA to the alpha-amino group of N-terminal methionine residues retained in front of bulky/hydrophobic residues (Met-Leu, Met-Ile, Met-Phe, Met-Trp, Met-Tyr). NatC associates with ribosomes and acts on nascent polypeptides; this N-terminal acetylation can shield proteins from N-degron-mediated ubiquitination and degradation. NAA30 activity is required for the lysosomal localization of the small GTPase ARL8B (a NatC substrate), and depletion of NatC subunits triggers p53-dependent apoptosis. NAA30 is predominantly cytoplasmic (ribosome-associated) with some reported nuclear localization.
-- Existing/core annotation action counts: ACCEPT: 14; KEEP_AS_NON_CORE: 6; MARK_AS_OVER_ANNOTATED: 1
+- Existing/core annotation action counts: ACCEPT: 14; KEEP_AS_NON_CORE: 6; MARK_AS_OVER_ANNOTATED: 1; NEW: 1
 
 ## PN Consistency Summary
 
@@ -45,6 +45,7 @@
 - **Mapping strategy:** Sound for the catalytic subunit. Subtype→NatC complex (exact CC) and type→Nt-acetylation BP are both appropriate and not too broad (NAA30 directly performs the catalysis). No change to node mapping warranted.
 - **Evidence alignment:** Concordant. PN row carries no reference titles; review/notes anchor to PMID:19398576 (NatC characterization, hMak3 catalytic; IDA GO:0004596/GO:0031417) and PMID:37891180 (Nt-acetylation shields from degradation). Both VERIFIED in the YAML reference_review. No divergence.
 - **Verdict:** Consistent and high-quality. Optional ADD of BP GO:0006474 to the review to mirror the PN projection. **Recommended edits:** Add existing/new BP annotation GO:0006474 (N-terminal protein amino acid acetylation, involved_in) to NAA30 review [YAML].
+- **2026-06-18 follow-up:** Implemented the YAML edit: added GO:0006474 N-terminal protein amino acid acetylation as a NEW BP recommendation and added it to the catalytic NatC core function.
 
 ## PN Dossier Context
 

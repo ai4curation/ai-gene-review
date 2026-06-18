@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: NAA35 (N-alpha-acetyltransferase 35; also MAK10, EGAP) is the large non-catalytic auxiliary/scaffold subunit of the human NatC N-terminal acetyltransferase complex (NatC = NAA30 catalytic + NAA35 + NAA38). It does not itself catalyze acetyl transfer; instead it scaffolds the complex and is required for NatC function and integrity. NatC co-translationally acetylates the alpha-amino group of N-terminal methionine residues retained in front of bulky/hydrophobic residues, a modification that shields substrates from N-degron-mediated ubiquitination and degradation. NAA35 is predominantly cytoplasmic and ribosome-associated. Loss of NatC subunits triggers p53-dependent apoptosis, and the mouse ortholog (EGAP) has been linked to smooth-muscle-cell proliferation and embryonic vascular development.
-- Existing/core annotation action counts: ACCEPT: 10; KEEP_AS_NON_CORE: 8
+- Existing/core annotation action counts: ACCEPT: 10; KEEP_AS_NON_CORE: 8; NEW: 1
 
 ## PN Consistency Summary
 
@@ -45,6 +45,7 @@
 - **Mapping strategy:** Correct. Subtype→NatC complex exact CC is the safe target for an auxiliary subunit; BP propagated at type level. No node-mapping change warranted.
 - **Evidence alignment:** Concordant. Review/notes use PMID:19398576 (NatC; hMak10 auxiliary; IDA GO:0031417, IMP GO:0043066), PMID:37891180, plus mouse EGAP origin (PMID:16484612, cited in notes) for the smooth-muscle/vascular ISS/IEA. PN row carries no titles. No divergence.
 - **Verdict:** Consistent, high-quality. Internal note vs YAML mismatch: notes say PMID:32296183 (TRIM7) protein-binding should be MARK_AS_OVER_ANNOTATED, but YAML uses KEEP_AS_NON_CORE (minor, defensible either way). **Recommended edits:** Add BP GO:0006474 (involved_in, auxiliary subunit of the acetylating complex) to NAA35 review [YAML]; optionally reconcile PMID:32296183 action with notes (KEEP_AS_NON_CORE vs MARK_AS_OVER_ANNOTATED) [YAML].
+- **2026-06-18 follow-up:** Implemented the high-confidence YAML edit: added GO:0006474 N-terminal protein amino acid acetylation as a NEW BP recommendation and core process for the NatC auxiliary subunit. The optional protein-binding action-style reconciliation remains separate.
 
 ## PN Dossier Context
 

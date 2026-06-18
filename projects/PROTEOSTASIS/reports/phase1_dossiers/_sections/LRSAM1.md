@@ -7,3 +7,4 @@
 - **Evidence alignment:** Strong. PN row1 ref (LRR+RING LRSAM1 E3 xenophagy of Salmonella = PMID:23245322) is the review's HIGH/VERIFIED anchor. PN row2 "19489725 / rev" is a family-review pointer not in the review.
 - **Verdict:** Fully consistent and mutually reinforcing; catalytic ligase MF is core (already in GOA); base xenophagy BP is a justified ADD the review omits (regulation child already curated).
 - **Recommended edits:** [YAML] add GO:0098792 xenophagy (BP, involved_in) — the base process is absent though GO:1904417 (its positive-regulation child) is already accepted as core; cite PMID:23245322.
+- **2026-06-18 follow-up:** Implemented the YAML edit: added GO:0098792 xenophagy as a NEW recommendation and added the base process to the core xenophagy function while retaining GO:1904417 positive regulation of xenophagy.

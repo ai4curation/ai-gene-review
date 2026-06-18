@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: NUFIP1 (nuclear fragile X mental retardation-interacting protein 1) is a small zinc-finger, RNA-binding nucleocytoplasmic shuttling protein with two well-supported, distinct roles. In the nucleus/nucleolus it acts as a box C/D small nucleolar ribonucleoprotein (snoRNP) biogenesis/assembly factor: as part of the R2TP-associated pre-snoRNP machinery (with ZNHIT3, BCD1/ZNHIT6 and the AAA+ ATPases RUVBL1/TIP49 and RUVBL2/TIP48), NUFIP1 serves as a scaffold that bridges interactions between the core box C/D proteins, facilitating assembly of the snoRNPs that process and modify rRNA. In the cytoplasm, upon mTORC1 inhibition/nutrient starvation, NUFIP1 relocalizes from the nucleus to autophagosomes and functions as the selective-autophagy receptor for ribosomes (ribophagy): together with its partner ZNHIT3 it binds ribosomes and delivers them to the autophagosome by directly binding the ATG8-family protein LC3B through a LIR motif, providing metabolites that support cell survival under starvation. NUFIP1 was originally identified as a nuclear interactor of the fragile X protein FMR1/FMRP and is associated with active synaptoneurosomes; it has also been reported to cooperate with BRCA1 and the elongation factor P-TEFb (via Cyclin T1) to stimulate RNA polymerase II transcription, although it does not bind DNA directly. NUFIP1 localizes mainly to the nucleoplasm, nucleolus, perichromatin fibrils and nuclear matrix, redistributing to the cytoplasm during starvation-induced ribophagy.
-- Existing/core annotation action counts: ACCEPT: 13; KEEP_AS_NON_CORE: 21
+- Existing/core annotation action counts: ACCEPT: 13; KEEP_AS_NON_CORE: 21; NEW: 2
 
 ## PN Consistency Summary
 
@@ -45,6 +45,7 @@
 - **Mapping strategy:** No node change needed. Ribophagy projection (GO:0034517) is correct, specific, and new_to_goa. Cargo-adaptor MF (GO:0160247) over bare protein binding is the prescribed receptor pattern and the review already uses it. The PN node need not also project the MF — the review covers it.
 - **Evidence alignment:** Strong overlap on the autophagy arm. PN cites the LIR/cargo-receptor review and the Wyant ribophagy paper (= PMID:29700228, review HIGH, PubMed-verified). Review refs additionally span the snoRNP-assembly (PMID:17636026) and FMRP/transcription (PMID:10556305, 15107825) functions that PN omits.
 - **Verdict:** Consistent; ribophagy ADD already implemented in review; only the proposed bespoke MF term over-reaches. **Recommended edits:** [YAML] drop the `proposed_new_terms` "ribophagy receptor activity" entry — the existing GO:0034517 ribophagy (BP) + GO:0160247 autophagy cargo adaptor activity (MF), both already in the review's core_functions, fully capture the role (mirrors the BNIP3L/CALCOCO1 "use existing terms, don't mint new" precedent).
+- **2026-06-18 follow-up:** Implemented the YAML cleanup: added explicit NEW recommendations for GO:0034517 ribophagy and GO:0160247 autophagy cargo adaptor activity, and removed the redundant bespoke ribophagy-receptor NTR block.
 
 ## PN Dossier Context
 

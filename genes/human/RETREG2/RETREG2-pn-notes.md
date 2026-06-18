@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: RETREG2 (reticulophagy regulator 2; also called FAM134A) is an endoplasmic-reticulum (ER) membrane protein of the FAM134/RETREG family (RETREG1/FAM134B, RETREG2/FAM134A, RETREG3/FAM134C) that functions as a selective-autophagy receptor for the ER (ER-phagy/reticulophagy). It is a multi-pass ER membrane protein whose transmembrane segments form a reticulon-homology domain (RHD) that bends and shapes ER membranes, and it carries a cytosolic LC3-interacting region (LIR) motif that binds ATG8-family proteins (LC3/GABARAP). RETREG2 is held in an inactive state under basal conditions and is activated by cellular stress; once activated it promotes ER fragmentation and delivers ER fragments into lysosomes by sequestering them into autophagosomes through its LIR-mediated interaction with ATG8 proteins, thereby driving selective turnover of the ER. Beyond bulk ER-phagy, the FAM134 paralogues contribute to ER membrane remodeling and to collagen quality control (the latter reported to be LIR-independent). RETREG2 localizes to the ER membrane.
-- Existing/core annotation action counts: ACCEPT: 4; KEEP_AS_NON_CORE: 4
+- Existing/core annotation action counts: ACCEPT: 4; KEEP_AS_NON_CORE: 4; NEW: 1
 
 ## PN Consistency Summary
 
@@ -46,6 +46,7 @@
 - **Evidence alignment:** Strong overlap. PN's single reference (FAM134 paralogues EMBO reports = PMID:34338405) is in the review (HIGH/VERIFIED). Review additionally anchors on the foundational FAM134 ER-phagy paper PMID:26040720.
 - **Verdict:** Fully consistent; the reticulophagy BP is a justified ADD the review currently lacks (function captured at MF/generic-BP level only).
 - **Recommended edits:** [YAML] add GO:0061709 reticulophagy (BP, involved_in; the specific process for this ER-phagy receptor) — currently absent; more precise than the accepted generic GO:0061753. Cite PMID:26040720/PMID:34338405.
+- **2026-06-18 follow-up:** Implemented the YAML edit: added GO:0061709 reticulophagy as a NEW BP recommendation and added it to the core ER-phagy function while retaining GO:0061753 substrate localization to autophagosome.
 
 ## PN Dossier Context
 

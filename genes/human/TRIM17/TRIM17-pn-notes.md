@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: TRIM17 (terf, testis RING finger protein; RNF16) is a RING-type E3 ubiquitin ligase of the TRIM/RBCC family with the canonical architecture of an N-terminal RING-HC zinc finger (conferring E3 ubiquitin ligase activity, EC 2.3.2.27), a B-box, a coiled-coil and a C-terminal B30.2/SPRY domain; it is expressed almost exclusively in testis and undergoes autoubiquitination. TRIM17 is a key regulator of neuronal apoptosis: it ubiquitinates and degrades the anti-apoptotic protein MCL1 to initiate neuronal death, and it controls NFAT transcription factors (NFATC3/NFATC4) by preventing their nuclear localization and thereby inhibiting their transcriptional activity. It also modulates selective autophagy in a target-selective manner: it inhibits autophagic degradation of diverse substrates while contributing to autophagy of midbodies, with its autophagy-inhibitory activity involving MCL1, which TRIM17 assembles into complexes with the autophagy regulator BECN1. Additional reported activities include stimulating proteasomal degradation of the kinetochore protein ZWINT to negatively regulate cell proliferation, antagonizing other TRIM ligases (it prevents TRIM28 from ubiquitinating the anti-apoptotic BCL2A1, and decreases TRIM41-mediated degradation of ZSCAN-family substrates to promote alpha-synuclein/SNCA transcription in neurons), and being stabilized through interaction with TRIM44. TRIM17 localizes to the cytoplasm and lysosome.
-- Existing/core annotation action counts: ACCEPT: 13; KEEP_AS_NON_CORE: 12; MARK_AS_OVER_ANNOTATED: 1
+- Existing/core annotation action counts: ACCEPT: 13; KEEP_AS_NON_CORE: 12; MARK_AS_OVER_ANNOTATED: 1; NEW: 1
 
 ## PN Consistency Summary
 
@@ -45,6 +45,7 @@
 - **Mapping strategy:** No node change needed. Cargo-adaptor MF over bare protein binding is the prescribed pattern and matches the review. Genuine RING → GO:0061630 already_in_goa_exact, correctly retained. Caution: TRIM17's autophagy role is predominantly inhibitory/selective; the cargo-adaptor MF should be scoped to the midbody-autophagy contribution, not read as a general pro-autophagy receptor.
 - **Evidence alignment:** Strong overlap. PN cites the LIR/cargo-receptor review and the midbody paper (= PMID:27562068, review HIGH) and 33791238/19489725 (TRIM/E3 reviews). Review refs (PMID:27562068, 25127057, 19358823) cover the autophagy + ligase arms; the MCL1/neuronal-apoptosis primary paper (PMID:22023800, in notes) is not a cited reference in the review.
 - **Verdict:** Consistent; cargo-adaptor MF upgrade warranted; RING ligase already captured. **Recommended edits:** [YAML] upgrade the GO:0030674 adaptor MF to the more specific GO:0160247 autophagy cargo adaptor activity (supported by PMID:27562068/25127057), scoped to midbody autophagy. [REF] consider adding PMID:22023800 (MCL1/ZWINT, neuronal apoptosis) to references to support the core MCL1-degradation function.
+- **2026-06-18 follow-up:** Implemented the YAML MF upgrade by adding GO:0160247 as a NEW recommendation and updating the core selective-autophagy function. PMID:22023800 was added as a medium-relevance ZWINT/proliferation reference with an explicit caveat that the cached abstract does not support the MCL1 apoptosis claim.
 
 ## PN Dossier Context
 

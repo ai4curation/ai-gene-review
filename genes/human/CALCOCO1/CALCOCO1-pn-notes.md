@@ -27,7 +27,7 @@
 ## AIGR Review Snapshot
 
 - Description: CALCOCO1 (Calcium-binding and coiled-coil domain-containing protein 1; also known as CoCoA/coiled-coil coactivator and calphoglin) is a multidomain protein built from an N-terminal SKICH domain, a central CALCOCO1 domain with several coiled-coil segments, a disordered region, and a C-terminal UBZ1-type zinc finger. It is a soluble selective-autophagy cargo receptor that mediates turnover of the endoplasmic reticulum (reticulophagy/ER-phagy) and of the Golgi apparatus (Golgiphagy). In this role it binds membrane-associated ER/Golgi proteins on one side and members of the ATG8 family (LC3/GABARAP, in particular GABARAPL1 and GABARAPL2) on the other through LIR- and UIM/UDS-type interaction motifs, thereby tethering organelle fragments to the forming autophagosome. CALCOCO1 acts predominantly in the cytoplasm. Independently of autophagy, CALCOCO1 has a long-standing characterization as a nuclear transcriptional coactivator (CoCoA) that shuttles between cytoplasm and nucleus and acts as a secondary/bridging coactivator for nuclear receptors, the aryl hydrocarbon receptor, and the Wnt/beta-catenin (CTNNB1) and LEF1/TCF pathways, cooperating with p160 coactivators (GRIP1/NCOA2), p300/CBP, CARM1, and with CCAR1/MED1 (for example enhancing GATA1-driven transcription during erythroid differentiation). It has also been reported as a component of a calphoglin complex that activates inorganic pyrophosphatase and phosphoglucomutase.
-- Existing/core annotation action counts: ACCEPT: 2; KEEP_AS_NON_CORE: 18; MARK_AS_OVER_ANNOTATED: 7; MODIFY: 3
+- Existing/core annotation action counts: ACCEPT: 2; KEEP_AS_NON_CORE: 18; MARK_AS_OVER_ANNOTATED: 7; MODIFY: 3; NEW: 2
 
 ## PN Consistency Summary
 
@@ -47,6 +47,7 @@
 - **Verdict:** Consistent; ADD reticulophagy is warranted. Avoid minting new MF terms — existing GO:0160247 covers the receptor MF.
 
 **Recommended edits:** [YAML] Add GO:0061709 reticulophagy (BP, involved_in) to CALCOCO1 existing/core annotations — currently new_to_goa and the validated core process. [YAML] Replace `proposed_new_terms` "reticulophagy/Golgiphagy receptor activity" with existing GO:0160247 autophagy cargo adaptor activity (and GO:0038024 cargo receptor activity) as the molecular_function for the core receptor role. [REF] Add the EMBO J "CALCOCO1 acts with VAMP-associated proteins to mediate ER-phagy" PMID (named in PN dossier) to the review references.
+- **2026-06-18 follow-up:** Implemented the high-confidence YAML edits: added GO:0061709 reticulophagy and GO:0160247 autophagy cargo adaptor activity, updated the core receptor function, and removed the bespoke reticulophagy/Golgiphagy receptor NTR block. The separate EMBO J reference gap remains a follow-up.
 
 ## PN Dossier Context
 
