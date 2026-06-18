@@ -400,9 +400,16 @@ failure modes:
   dihydropyrimidinase (TAS) + its dependent nucleobase-metabolism term. Core
   function recorded as catalytically dead cytoskeletal regulator in semaphorin signaling.
 
+- [x] **Reviewed net-new pseudoenzymes ILK, ROR1, CASP12, AZIN2** — full validated
+  DRAFT reviews. Each `REMOVE`s the electronic catalytic over-annotation flagged by
+  the query (ILK `protein kinase activity`; ROR1 `protein kinase activity` + legacy
+  TAS RTK/PTK-signaling; CASP12 `cysteine peptidase`/`endopeptidase`/proteolysis;
+  AZIN2 `catalytic activity`/`carboxy-lyase`/legacy arginine-decarboxylase), `ACCEPT`s
+  the curated `NOT`s, and records the real non-catalytic core (ILK = IPP-complex
+  scaffold; ROR1 = Wnt coreceptor; CASP12 = dominant-negative inflammasome modulator;
+  AZIN2 = ODC-activator/antizyme inhibitor).
+
 ## Pending
-- [ ] Review the remaining net-new pseudoenzymes surfaced (ILK, ROR1, CASP12,
-  AZIN2) — standalone reviews.
 - [ ] Report the 9 local + 97 UniProt-wide DIRECT same-term GOA conflicts upstream
   to GO.
 - [ ] Scale Queries A/B UniProt-wide via a QuickGO GOA pull keyed on the 14k
