@@ -14,6 +14,7 @@ journal: Journal of Biological Chemistry
 year: '2015'
 doi: 10.1074/jbc.m114.631242
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # NMR-based Structural Analysis of Threonylcarbamoyl-AMP Synthase and Its Substrate Interactions

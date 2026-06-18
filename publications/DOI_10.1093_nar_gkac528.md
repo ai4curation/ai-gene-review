@@ -9,6 +9,7 @@ journal: Nucleic Acids Research
 year: '2022'
 doi: 10.1093/nar/gkac528
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # HSP90 and Aha1 modulate microRNA maturation through promoting the folding of Dicer1

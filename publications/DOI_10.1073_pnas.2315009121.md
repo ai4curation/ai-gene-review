@@ -12,6 +12,7 @@ journal: Proceedings of the National Academy of Sciences
 year: '2024'
 doi: 10.1073/pnas.2315009121
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Insights into the interaction between UGGT, the gatekeeper of folding in the ER, and its partner, the selenoprotein SEP15

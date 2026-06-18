@@ -9,6 +9,7 @@ journal: Microbiology
 year: '2022'
 doi: 10.1099/mic.0.001259
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Regulation of DNA replication initiation by ParA is independent of parS location in Bacillus subtilis

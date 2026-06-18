@@ -7,6 +7,7 @@ journal: Microbiology
 year: '2023'
 doi: 10.1099/mic.0.001311
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Mechanism of assembly of type 4 filaments: everything you always wanted to know (but were afraid to ask)

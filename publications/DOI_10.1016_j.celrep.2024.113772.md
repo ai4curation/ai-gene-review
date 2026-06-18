@@ -19,6 +19,7 @@ journal: Cell Reports
 year: '2024'
 doi: 10.1016/j.celrep.2024.113772
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Identification of MIMAS, a multifunctional mega-assembly integrating metabolic and respiratory biogenesis factors of mitochondria

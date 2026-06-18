@@ -10,6 +10,7 @@ journal: Journal of Bacteriology
 year: '2006'
 doi: 10.1128/jb.188.2.587-598.2006
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # YdgG (TqsA) Controls Biofilm Formation in<i>Escherichia coli</i>K-12 through Autoinducer 2 Transport

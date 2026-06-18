@@ -12,6 +12,7 @@ journal: EcoSal Plus
 year: '2023'
 doi: 10.1128/ecosalplus.esp-0020-2022
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Repeat-Unit Elongations To Produce Bacterial Complex Long Polysaccharide Chains, an O-Antigen Perspective

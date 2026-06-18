@@ -8,6 +8,7 @@ journal: Cells
 year: '2024'
 doi: 10.3390/cells13151266
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Nucleophosmin: A Nucleolar Phosphoprotein Orchestrating Cellular Stress Responses

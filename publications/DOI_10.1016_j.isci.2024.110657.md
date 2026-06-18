@@ -13,6 +13,7 @@ journal: iScience
 year: '2024'
 doi: 10.1016/j.isci.2024.110657
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # HSPB6: A lipid-dependent molecular chaperone inhibits α-synuclein aggregation

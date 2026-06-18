@@ -11,6 +11,7 @@ authors:
 year: '2023'
 doi: 10.1101/2023.12.13.571474
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Genome-wide CRISPRi Screen in Human iNeurons to Identify Novel Focal Cortical Dysplasia Genes

@@ -10,6 +10,7 @@ journal: Microorganisms
 year: '2020'
 doi: 10.3390/microorganisms8010105
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Rules and Exceptions: The Role of Chromosomal ParB in DNA Segregation and Other Cellular Processes

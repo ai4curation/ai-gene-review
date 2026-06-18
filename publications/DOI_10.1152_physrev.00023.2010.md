@@ -9,6 +9,7 @@ journal: Physiological Reviews
 year: '2011'
 doi: 10.1152/physrev.00023.2010
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Large Potentials of Small Heat Shock Proteins

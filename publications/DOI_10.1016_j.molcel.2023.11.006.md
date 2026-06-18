@@ -16,6 +16,7 @@ journal: Molecular Cell
 year: '2023'
 doi: 10.1016/j.molcel.2023.11.006
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # ER chaperones use a protein folding and quality control glyco-code

@@ -9,6 +9,7 @@ journal: Journal of Cell Science
 year: '2023'
 doi: 10.1242/jcs.260060
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Functional crosstalk between the TIM22 complex and YME1 machinery maintains mitochondrial proteostasis and integrity

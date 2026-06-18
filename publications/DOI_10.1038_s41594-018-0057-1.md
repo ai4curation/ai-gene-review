@@ -23,6 +23,7 @@ journal: "Nature Structural &amp; Molecular Biology"
 year: '2018'
 doi: 10.1038/s41594-018-0057-1
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Mapping interactions with the chaperone network reveals factors that protect against tau aggregation

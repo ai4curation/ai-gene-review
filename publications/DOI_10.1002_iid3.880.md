@@ -11,6 +11,7 @@ journal: "Immunity, Inflammation and Disease"
 year: '2023'
 doi: 10.1002/iid3.880
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Synoviolin alleviates GSDMD‐mediated periodontitis by suppressing its stability

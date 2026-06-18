@@ -15,6 +15,7 @@ journal: Cardiovascular Research
 year: '2024'
 doi: 10.1093/cvr/cvae121
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # A suite of genome-engineered hepatic cells provides novel insights into the spatiotemporal metabolism of apolipoprotein B and apolipoprotein B–containing lipoprotein secretion

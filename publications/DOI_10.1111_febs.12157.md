@@ -11,6 +11,7 @@ journal: The FEBS Journal
 year: '2013'
 doi: 10.1111/febs.12157
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Endoplasmic reticulum lectin <scp>XTP</scp>3‐B inhibits endoplasmic reticulum‐associated degradation of a misfolded α1‐antitrypsin variant

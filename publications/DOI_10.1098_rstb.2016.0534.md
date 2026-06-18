@@ -11,6 +11,7 @@ journal: "Philosophical Transactions of the Royal Society B: Biological Sciences
 year: '2018'
 doi: 10.1098/rstb.2016.0534
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # DNAJ Proteins in neurodegeneration: essential and protective factors

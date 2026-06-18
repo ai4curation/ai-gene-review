@@ -9,6 +9,7 @@ journal: Genes
 year: '2022'
 doi: 10.3390/genes14010110
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Gene Structure Evolution of the Short-Chain Dehydrogenase/Reductase (SDR) Family

@@ -9,6 +9,7 @@ journal: Diabetes
 year: '2020'
 doi: 10.2337/db19-0276
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Revisiting Proinsulin Processing: Evidence That Human β-Cells Process Proinsulin With Prohormone Convertase (PC) 1/3 but Not PC2

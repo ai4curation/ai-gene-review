@@ -11,6 +11,7 @@ journal: Physiological and Molecular Plant Pathology
 year: '2004'
 doi: 10.1016/j.pmpp.2005.02.006
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Identification and functional analysis of Arabidopsis proteins that interact with resistance gene product RPS2 in yeast

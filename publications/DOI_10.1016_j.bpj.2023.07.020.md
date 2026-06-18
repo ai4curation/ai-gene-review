@@ -13,6 +13,7 @@ journal: Biophysical Journal
 year: '2023'
 doi: 10.1016/j.bpj.2023.07.020
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Aha1 regulates Hsp90’s conformation and function in a stoichiometry-dependent way

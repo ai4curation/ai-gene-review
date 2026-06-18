@@ -28,6 +28,7 @@ journal: Proceedings of the National Academy of Sciences
 year: '2017'
 doi: 10.1073/pnas.1703682114
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Interdomain conformational flexibility underpins the activity of UGGT, the eukaryotic glycoprotein secretion checkpoint

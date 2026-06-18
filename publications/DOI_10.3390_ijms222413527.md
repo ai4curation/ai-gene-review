@@ -8,6 +8,7 @@ journal: International Journal of Molecular Sciences
 year: '2021'
 doi: 10.3390/ijms222413527
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Regulation of p53 and Cancer Signaling by Heat Shock Protein 40/J-Domain Protein Family Members

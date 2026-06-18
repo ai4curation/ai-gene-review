@@ -9,6 +9,7 @@ journal: "European Journal of Obstetrics &amp; Gynecology and Reproductive Biolo
 year: '2019'
 doi: 10.1016/j.ejogrb.2019.06.014
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # HSPA1L and HSPA1B gene polymorphisms and haplotypes are associated with idiopathic male infertility in Iranian population

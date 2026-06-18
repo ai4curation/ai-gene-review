@@ -9,6 +9,7 @@ journal: Current Opinion in Neurology
 year: '2024'
 doi: 10.1097/WCO.0000000000001299
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Current advance on distal myopathy genetics

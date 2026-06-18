@@ -10,6 +10,7 @@ journal: Journal of Cell Science
 year: '2021'
 doi: 10.1242/jcs.255596
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # DNAJB chaperones suppress destabilised protein aggregation via a region distinct from that used to inhibit amyloidogenesis

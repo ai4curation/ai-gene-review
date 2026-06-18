@@ -15,6 +15,7 @@ journal: Biomolecules
 year: '2023'
 doi: 10.3390/biom13040604
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Is It Still Possible to Think about HSP70 as a Therapeutic Target in Onco-Hematological Diseases?

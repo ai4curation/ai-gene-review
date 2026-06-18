@@ -10,6 +10,7 @@ journal: "Expert Review of Endocrinology &amp; Metabolism"
 year: '2010'
 doi: 10.1586/eem.10.42
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Role of the aryl hydrocarbon receptor-interacting protein in familial isolated pituitary adenoma

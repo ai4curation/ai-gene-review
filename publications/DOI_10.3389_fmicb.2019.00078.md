@@ -10,6 +10,7 @@ journal: Frontiers in Microbiology
 year: '2019'
 doi: 10.3389/fmicb.2019.00078
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Concentration Dependent Effect of Plant Root Exudates on the Chemosensory Systems of Pseudomonas putida KT2440

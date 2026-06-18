@@ -1,7 +1,6 @@
 ---
 reference_id: DOI:10.1073/pnas.1010575107
-title: "A heterodimeric complex of the LRR proteins LRIM1 and APL1C regulates complement-like immunity in
-                    <i>Anopheles gambiae</i>"
+title: "A heterodimeric complex of the LRR proteins LRIM1 and APL1C regulates complement-like immunity in <i>Anopheles gambiae</i>"
 authors:
 - Richard H. G. Baxter
 - Stefanie Steinert
@@ -13,10 +12,10 @@ journal: Proceedings of the National Academy of Sciences
 year: '2010'
 doi: 10.1073/pnas.1010575107
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# A heterodimeric complex of the LRR proteins LRIM1 and APL1C regulates complement-like immunity in
-                    <i>Anopheles gambiae</i>
+# A heterodimeric complex of the LRR proteins LRIM1 and APL1C regulates complement-like immunity in <i>Anopheles gambiae</i>
 **Authors:** Richard H. G. Baxter, Stefanie Steinert, Yogarany Chelliah, Gloria Volohonsky, Elena A. Levashina, Johann Deisenhofer
 **Journal:** Proceedings of the National Academy of Sciences (2010)
 **DOI:** [10.1073/pnas.1010575107](https://doi.org/10.1073/pnas.1010575107)

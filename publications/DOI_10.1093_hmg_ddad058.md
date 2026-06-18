@@ -17,6 +17,7 @@ journal: Human Molecular Genetics
 year: '2023'
 doi: 10.1093/hmg/ddad058
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Extension of the DNAJB2a isoform in a dominant neuromyopathy family

@@ -15,6 +15,7 @@ journal: mBio
 year: '2018'
 doi: 10.1128/mbio.01905-18
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Identification of Novel Protein Lysine Acetyltransferases in Escherichia coli

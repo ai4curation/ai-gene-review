@@ -1,8 +1,6 @@
 ---
 reference_id: DOI:10.1046/j.1462-2920.2002.00331.x
-title: "Global features of the
-                    <i>Pseudomonas putida</i>
-                    KT2440 genome sequence"
+title: "Global features of the <i>Pseudomonas putida</i> KT2440 genome sequence"
 authors:
 - Christian Weinel
 - Karen E. Nelson
@@ -11,11 +9,10 @@ journal: Environmental Microbiology
 year: '2002'
 doi: 10.1046/j.1462-2920.2002.00331.x
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# Global features of the
-                    <i>Pseudomonas putida</i>
-                    KT2440 genome sequence
+# Global features of the <i>Pseudomonas putida</i> KT2440 genome sequence
 **Authors:** Christian Weinel, Karen E. Nelson, Burkhard Tümmler
 **Journal:** Environmental Microbiology (2002)
 **DOI:** [10.1046/j.1462-2920.2002.00331.x](https://doi.org/10.1046/j.1462-2920.2002.00331.x)

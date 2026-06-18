@@ -9,6 +9,7 @@ journal: BMC Genomics
 year: '2024'
 doi: 10.1186/s12864-024-10415-x
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The modular architecture of sigma factors in cyanobacteria: a framework to assess their diversity and understand their evolution

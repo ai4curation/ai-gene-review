@@ -7,6 +7,7 @@ journal: Life
 year: '2024'
 doi: 10.3390/life14030364
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Back to the Future of Metabolism—Advances in the Discovery and Characterization of Unknown Biocatalytic Functions and Pathways

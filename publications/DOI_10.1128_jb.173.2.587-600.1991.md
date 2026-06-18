@@ -8,6 +8,7 @@ journal: Journal of Bacteriology
 year: '1991'
 doi: 10.1128/jb.173.2.587-600.1991
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Involvement of the Escherichia coli phn (psiD) gene cluster in assimilation of phosphorus in the form of phosphonates, phosphite, Pi esters, and Pi

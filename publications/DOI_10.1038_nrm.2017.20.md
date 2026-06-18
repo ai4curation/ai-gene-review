@@ -9,6 +9,7 @@ journal: Nature Reviews Molecular Cell Biology
 year: '2017'
 doi: 10.1038/nrm.2017.20
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # The HSP90 chaperone machinery

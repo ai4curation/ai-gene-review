@@ -8,6 +8,7 @@ journal: Biochemistry
 year: '2010'
 doi: 10.1021/bi101215f
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Lipoic Acid Synthesis: A New Family of Octanoyltransferases Generally Annotated as Lipoate Protein Ligases

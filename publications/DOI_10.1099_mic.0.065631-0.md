@@ -8,6 +8,7 @@ journal: Microbiology
 year: '2013'
 doi: 10.1099/mic.0.065631-0
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Residues located inside the Escherichia coli FepE protein oligomer are essential for lipopolysaccharide O-antigen modal chain length regulation

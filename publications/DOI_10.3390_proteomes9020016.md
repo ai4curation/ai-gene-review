@@ -11,6 +11,7 @@ journal: Proteomes
 year: '2021'
 doi: 10.3390/proteomes9020016
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The Protein Interactome of Glycolysis in Escherichia coli
