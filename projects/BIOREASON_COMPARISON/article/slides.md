@@ -42,7 +42,7 @@ Annotation databases (GO, UniProt) face a concrete, recurring decision:
 
 > **Should we import *this* method's predictions into production?**
 
-Classical pipelines (InterPro2GO, PANTHER/PAINT, orthology transfer) are **auditable**: every annotation traces to a curated family → GO mapping.
+Classical pipelines (InterPro2GO, PANTHER/PAINT, orthology transfer) are **traceable**: every annotation traces to a curated family → GO mapping.
 
 The new methods are **opaque, prolific, and emit free text** — not just GO terms.
 
@@ -56,7 +56,7 @@ CAFA ($F_{\max}$, $S_{\min}$ vs GOA temporal holdout) tracks **field-level progr
 - **Ground-truth** — GOA is *not* truth: over-annotations, paralog-inherited errors, <1% negative annotations; 58% of human annotations cover 16% of genes.
 - **Holdout-set** — benchmark composition is set by curation-campaign funding, not the biology you need to annotate.
 
-**And the big one:** aggregate metrics operate on the *bag-of-GO-terms projection* — they **cannot grade narrative or reasoning** at all.
+**And the big one:** aggregate metrics operate on the *bag-of-GO-terms projection* — they leave narrative and reasoning unscored.
 
 ---
 
@@ -66,7 +66,7 @@ Manually reviewed **all 453** DeepECTransformer EC predictions for uncharacteris
 
 > Only **3 / 453** were genuinely novel **and** correct.
 
-The lasting contribution is the **error taxonomy** — invisible to $F_{\max}$, obvious to a curator:
+The lasting contribution is the **error taxonomy** — the structure a curator needs after the aggregate score:
 
 | | |
 |---|---|
@@ -89,7 +89,7 @@ That does **not scale** when methods ship monthly and prediction sets run to the
 
 > Can the **synthesis step itself** be partially automated?
 
-→ **AI Gene Review (AIGR)**: LLM curator-agents grounded in a per-gene evidence package, producing structured, auditable reviews.
+→ **AI Gene Review (AIGR)**: LLM curator-agents grounded in a per-gene evidence package, producing structured, traceable synthetic reviews.
 
 AIGR is a **complement to**, not a replacement for, CAFA.
 
@@ -166,7 +166,7 @@ Best on **mammals** (mouse 4.7, rat 4.4, human 4.2); worst on ***S. pombe*** (2.
 
 ## Seven reproducible failure modes
 
-Invisible to $F_{\max}$; immediately diagnostic to a reader of the narrative.
+Immediately diagnostic to a reader of the narrative.
 
 | # | Failure mode | Example |
 |---|---|---|
@@ -206,7 +206,7 @@ TOR1 · NOTCH1 · PTEN · EGFR · spo0A · (informative family names: Uggt1, KAR
 
 ---
 
-## Supplemental audit: GOA agreement ≠ biological validity
+## Supplemental review: GOA agreement ≠ biological validity
 
 GO-GPT run directly on 300 genes; overlap measured against three progressively stricter references:
 
@@ -261,6 +261,22 @@ Not blinded: the project artifacts include the VDCL labels/rationales.
 
 ---
 
+## Answer-key withheld recap: useful, not expert-equivalent
+
+A separate literature/bioinformatics-assisted run excluded the VDCL paper and published rationales.
+
+| Gene | VDCL | Withheld run | Interpretation |
+|---|---|---|---|
+| fepE | REP | **REP** | Frequency-bias smell test recovered |
+| yciO | PLI | **PLI** | Paralog-overannotation recovered |
+| yjhQ / yrhB | NPI | **NPI** | Pathway-context failures recovered |
+| yegV / ygfF | PLI / COR | **UNC** | Conservative misses |
+| yjdM | UNC | **NPI** | Too harsh on in-vitro vs in-vivo boundary |
+
+**4 / 7 exact labels.** Good enough to triage suspicious sequence-AI predictions; not a substitute for expert boundary judgments.
+
+---
+
 ## A three-tier framework for evaluation
 
 | Tier | What | Scales? | Grades narrative? |
@@ -285,9 +301,9 @@ Not blinded: the project artifacts include the VDCL labels/rationales.
 - GO terms: 67.5% not-novel, 10.6% wrong, 5.4% novel-correct in the cleaner ARGO139 HF subset; **0 functions unknown to literature**
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
-**The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be audited, corrected, combined. Naked GO terms cannot.
+**The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be reviewed, corrected, combined. Naked GO terms cannot.
 
-**Agentic Tier-2 review** reads narratives, surfaces systematic failures, separates novelty from restatement — and can encode a published expert taxonomy as a positive control.
+**Agentic Tier-2 review** reads narratives, surfaces systematic failures, separates novelty from restatement — and is already useful as a triage/smell-test layer, even though expert-level nuance remains human.
 
 ---
 
@@ -298,7 +314,7 @@ Not blinded: the project artifacts include the VDCL labels/rationales.
 **Data, reviews, pipeline, schema & validator — all open:**
 `github.com/ai4curation/ai-gene-review`
 
-Browse 139 BioReason-Pro reviews + 7-gene *E. coli* audit:
+Browse 139 BioReason-Pro reviews + 7-gene *E. coli* synthetic review:
 `ai4curation.io/ai-gene-review`
 
 <span class="cite">de Crécy-Lagard et al. 2025 (G3, PMID:40703034) · Fallahpour et al. 2026 (bioRxiv 10.64898/2026.03.19.712954)</span>

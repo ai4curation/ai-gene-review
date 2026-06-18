@@ -235,7 +235,7 @@ def main() -> None:
             "n_genes": len({(row["organism"], row["gene"]) for row in argo_predictions}),
             "n_predictions": sum(row["n_predictions"] for row in argo_predictions),
             "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
-            "description": f"ARGO139 SFT term-prediction audit: {len(argo_hf)} HF-catalogue genes and {len(argo_web)} web-export genes.",
+            "description": f"ARGO139 SFT term-prediction review: {len(argo_hf)} HF-catalogue genes and {len(argo_web)} web-export genes.",
         },
         {
             "benchmark": "argo139_sft_terms_hf_catalogue",
@@ -293,14 +293,14 @@ def main() -> None:
             "n_genes": len({(row["organism"], row["gene"]) for row in sft_predictions}),
             "n_predictions": sum(row["n_predictions"] for row in sft_predictions),
             "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
-            "description": f"Combined SFT term-prediction audit: {len(rl_keys)} genes in ARGO139 plus {len(hf_keys - rl_keys)} HF-only genes; source partitions are listed separately.",
+            "description": f"Combined SFT term-prediction review: {len(rl_keys)} genes in ARGO139 plus {len(hf_keys - rl_keys)} HF-only genes; source partitions are listed separately.",
         },
         {
             "benchmark": "supplement_gogpt_overlap_300",
             "n_genes": len(gogpt_overlap),
             "n_predictions": sum(row["n_predictions"] for row in gogpt_overlap),
             "source": "reports/gogpt-comparison-levels.json",
-            "description": "Separate GO-GPT overlap audit against raw GOA, post-review GOA, and AIGR core functions.",
+            "description": "Separate GO-GPT overlap review against raw GOA, post-review GOA, and AIGR core functions.",
         },
     ]
     write_csv(
