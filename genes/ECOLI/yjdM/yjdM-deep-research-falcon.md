@@ -143,7 +143,7 @@ The *Escherichia coli* K-12 gene **yjdM** (UniProt **P0AFJ1**; locus **b4108/JW4
 
 A major recent advance (2023) is the **direct biochemical validation** that purified *E. coli* K-12 MG1655 YjdM exhibits **phosphonoacetate hydrolase activity** (EC **3.11.1.2**) on phosphonoacetate in vitro, providing strong evidence for its catalytic potential. (kim2023functionalannotationof pages 6-7, kim2023functionalannotationof media 4546f8e8)
 
-However, the **physiological role in vivo** (true native substrate(s), pathway membership, and conditions where it contributes to growth/fitness) remains **uncertain**, and some analyses emphasize that genomic context in *E. coli* is atypical relative to bona fide phosphonoacetate-utilization modules found in other bacteria. (crecylagard2025limitationsofcurrent pages 7-9)
+However, the **physiological role in vivo** (true native substrate(s), pathway membership, and conditions where it contributes to growth/fitness) remains **uncertain** in the retrieved literature. Foundational work places the established broad phosphonate-utilization phenotype in the canonical *E. coli* **phnCDEFGHIJLKMNOP** C-P lyase operon rather than resolving a specific role for yjdM/phnA. (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10)
 
 
 ### 1) Key concepts and definitions (current understanding)
@@ -183,7 +183,7 @@ For bona fide PhnA enzymes, detailed substrate/inhibitor profiling indicates:
 * Much lower turnover for **phosphonoacetaldehyde** compared with phosphonoacetate, and lack of detectable turnover on some other tested phosphonates such as **fosfomycin** and **phosphonopyruvate** under the assay conditions described. (kim2011divergenceofchemical pages 7-9)
 * Competitive inhibition by phosphonate analogs including **phosphonopropionate** and **phosphonoformate** (Ki values reported). (kim2011divergenceofchemical pages 7-9)
 
-These biochemical benchmarks support a view that phosphonoacetate hydrolases are typically **specialized** enzymes, and provide expectations for what might be tested for *E. coli* YjdM in future work; however, such specificity claims should not be assumed for YjdM without direct profiling. (kim2011divergenceofchemical pages 7-9, crecylagard2025limitationsofcurrent pages 7-9)
+These biochemical benchmarks support a view that phosphonoacetate hydrolases are typically **specialized** enzymes, and provide expectations for what might be tested for *E. coli* YjdM in future work; however, such specificity claims should not be assumed for YjdM without direct profiling. (kim2011divergenceofchemical pages 7-9, kim2023functionalannotationof pages 6-7)
 
 #### 3.4 Mechanism and catalytic features (inference from characterized PhnA enzymes)
 Multiple structural/mechanistic studies of phosphonoacetate hydrolase (PhnA/PAH) support common mechanistic themes:
@@ -192,7 +192,7 @@ Multiple structural/mechanistic studies of phosphonoacetate hydrolase (PhnA/PAH)
 * Metal dependence: in one detailed kinetic analysis, **3 mM Zn2+ increased initial velocity ~10-fold** relative to metal-depleted enzyme, and Zn was used as activator for kinetic measurements. (kim2011divergenceofchemical pages 7-9)
 * Proposed leaving-group stabilization involves metal coordination and/or conserved Lys residues (e.g., Lys126/Lys128 implicated in one study) and features unique relative to typical alkaline phosphatase reactions because the leaving group is carbon-centered (enolate/aci-carboxylate) rather than an oxyanion. (peck2013phosphonatebiosynthesisand pages 6-7, kim2011divergenceofchemical pages 1-2)
 
-These mechanistic conclusions are strongest for **PhnA enzymes from organisms where the phosphonoacetate pathway is genetically and physiologically established**; they are best treated as mechanistic context for YjdM rather than as directly proven for *E. coli* YjdM, unless YjdM is shown to be homologous and experimentally similar at the active-site level. (crecylagard2025limitationsofcurrent pages 7-9, agarwal2011structuralandmechanistic pages 6-8)
+These mechanistic conclusions are strongest for **PhnA enzymes from organisms where the phosphonoacetate pathway is genetically and physiologically established**; they are best treated as mechanistic context for YjdM rather than as directly proven for *E. coli* YjdM, unless YjdM is shown to be homologous and experimentally similar at the active-site level. (agarwal2011structuralandmechanistic pages 6-8, kamat2013theenzymaticconversion pages 2-4)
 
 
 ### 4) Biological role, pathways, and regulation in *E. coli* (and why interpretation is nuanced)
@@ -212,14 +212,12 @@ The 2023 review further notes that phosphonoacetate hydrolase pathways may be **
 #### 4.3 Reconciling *E. coli* yjdM (formerly phnA) with pathway biology
 A key tension is that *E. coli* yjdM is historically called **phnA**, yet the main established *E. coli* phosphonate assimilation system is the Pho‑regulated **phnCDE…P** C–P lyase operon. (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10)
 
-A later analysis highlights that although YjdM has in vitro phosphonoacetate hydrolase activity, genomic context and comparative neighborhood evidence suggest that *E. coli* yjdM is **not embedded in a typical phosphonoacetate utilization module**, and earlier claims that *E. coli* possesses functional phosphonoacetate hydrolase activity in vivo may not hold; thus, the **physiological pathway role remains unresolved**. (crecylagard2025limitationsofcurrent pages 7-9)
-
 Taken together, the most evidence-supported statement at present is:
-*YjdM from *E. coli* K‑12 can catalyze phosphonoacetate hydrolysis in vitro, but its native substrate(s) and contribution to phosphonate assimilation in vivo in *E. coli* are not yet firmly established.* (kim2023functionalannotationof pages 6-7, crecylagard2025limitationsofcurrent pages 7-9)
+*YjdM from *E. coli* K‑12 can catalyze phosphonoacetate hydrolysis in vitro, but its native substrate(s) and contribution to phosphonate assimilation in vivo in *E. coli* are not yet firmly established.* (kim2023functionalannotationof pages 6-7, metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10)
 
 
 ### 5) Cellular localization and where the reaction occurs
-Direct experimental localization (e.g., fractionation, microscopy) for *E. coli* YjdM was not identified in the retrieved sources. (kim2023functionalannotationof pages 6-7, crecylagard2025limitationsofcurrent pages 7-9)
+Direct experimental localization (e.g., fractionation, microscopy) for *E. coli* YjdM was not identified in the retrieved sources. (kim2023functionalannotationof pages 6-7)
 
 Nonetheless, based on the fact that phosphonoacetate hydrolase/PhnA enzymes are characterized as soluble metalloenzymes acting on small cytosolic metabolites in hydrolytic phosphonate pathways, the most plausible working model is that YjdM acts **intracellularly (cytosol)**, downstream of transport of phosphonates/phosphonoacetate or generation of phosphonoacetate from other intermediates. This inference should be treated as provisional until *E. coli*-specific localization evidence is produced. (kamat2013theenzymaticconversion pages 2-4, ruffolo2023themicrobialdegradation pages 5-7)
 
@@ -240,10 +238,6 @@ While this biosensor does not directly involve *E. coli* yjdM, it illustrates re
 #### 7.1 Expert synthesis of pathway diversity (2023 review)
 The 2023 review by Ruffolo et al. emphasizes that hydrolytic and oxidative phosphonate catabolic systems are often **substrate-specific**, whereas C–P lyase is broad-spectrum; it also stresses the importance of gene clustering and regulation in interpreting function from genomes. This framing is directly relevant to interpreting yjdM in *E. coli*, where gene neighborhood and regulatory logic differ from prototypical PhnA modules. (ruffolo2023themicrobialdegradation pages 2-4, ruffolo2023themicrobialdegradation pages 8-10)
 
-#### 7.2 Caution on assigning physiological roles from in vitro activity alone
-A later critical analysis (preprint context) uses yjdM as an example where activity can be shown in vitro but genomic context comparisons complicate the conclusion that the enzyme participates in the expected physiological pathway in vivo in *E. coli*. This underscores that **functional annotation** benefits from integrating biochemical assays with genetics, physiology, and comparative genomics. (crecylagard2025limitationsofcurrent pages 7-9)
-
-
 ### 8) Key statistics and data points (recent + foundational)
 * **YjdM (*E. coli* K‑12 MG1655) in vitro specific activity on phosphonoacetate:** **139.85 U·mg⁻1** (Kim et al., **2023-11**, *Nature Communications*). (kim2023functionalannotationof pages 6-7, kim2023functionalannotationof media 4546f8e8)
 * **Reference PAH (*Pseudomonas fluorescens* 23F) specific activity (as compared in 2023 paper):** **60 U·mg⁻1**. (kim2023functionalannotationof pages 6-7)
@@ -256,7 +250,7 @@ A later critical analysis (preprint context) uses yjdM as an example where activ
 1. **Identity:** *E. coli* **yjdM** is explicitly stated to be **formerly called phnA** in *E. coli* literature, supporting correct gene mapping. (smithfrieday2022deletionofprou pages 5-8)
 2. **Biochemical function:** Purified *E. coli* YjdM has **phosphonoacetate hydrolase activity** in vitro with substantial specific activity. (kim2023functionalannotationof pages 6-7, kim2023functionalannotationof media 4546f8e8)
 3. **Mechanistic class (context):** Phosphonoacetate hydrolases characterized in other bacteria are **alkaline phosphatase superfamily metalloenzymes** with a **Thr nucleophile** and **binuclear metal center**; these studies provide mechanistic expectations but do not by themselves prove the identical active-site architecture in *E. coli* YjdM. (agarwal2011structuralandmechanistic pages 6-8, kim2011divergenceofchemical pages 1-2, kamat2013theenzymaticconversion pages 2-4)
-4. **Pathway role in *E. coli*:** The canonical *E. coli* phosphonate utilization pathway is the **Pho-regulated C–P lyase operon** (phnCDEFGHIJLKMNOP). Foundational genetics indicates phnC–phnP are sufficient/required for phosphonate use, suggesting yjdM/phnA is not essential for the canonical phenotype. Therefore, the **in vivo physiological role of YjdM remains unresolved**. (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10, crecylagard2025limitationsofcurrent pages 7-9)
+4. **Pathway role in *E. coli*:** The canonical *E. coli* phosphonate utilization pathway is the **Pho-regulated C–P lyase operon** (phnCDEFGHIJLKMNOP). Foundational genetics indicates phnC–phnP are sufficient/required for phosphonate use, suggesting yjdM/phnA is not essential for the canonical phenotype. Therefore, the **in vivo physiological role of YjdM remains unresolved**. (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10)
 
 
 ### Supporting figure
@@ -265,7 +259,7 @@ The following figure panel from Kim et al. (2023) provides direct visual evidenc
 
 | Gene/protein (organism) | Synonyms / identifiers | Primary reaction / annotation | Evidence type | Key quantitative values | Pathway context | Regulation context | Localization | Key source(s), year, DOI/URL |
 |---|---|---|---|---|---|---|---|---|
-| **yjdM** (*Escherichia coli* K-12; UniProt **P0AFJ1**) | **yjdM**; formerly **phnA**; locus **b4108 / JW4069**; neighboring legacy synonym context includes **yjdN = phnB** (smithfrieday2022deletionofprou pages 5-8) | Assigned **phosphonoacetate hydrolase** (EC **3.11.1.2**), catalyzing **phosphonoacetate + H2O → acetate + Pi**; direct E. coli evidence is in vitro enzymology, while detailed chemistry is inferred from characterized PhnA homologs (kim2023functionalannotationof pages 6-7, agarwal2011structuralandmechanistic pages 1-2, kamat2013theenzymaticconversion pages 2-4) | **Direct in vitro assay in E. coli K-12 MG1655** plus **comparative structural/mechanistic inference** from bona fide PhnA proteins in other bacteria (kim2023functionalannotationof pages 6-7, kim2011divergenceofchemical pages 1-2, agarwal2011structuralandmechanistic pages 4-5) | E. coli YjdM specific activity on phosphonoacetate: **139.85 U mg⁻1**; benchmark reported for *Pseudomonas fluorescens* 23F PAH: **60 U mg⁻1** (comparison in 2023 study). Mechanistic benchmark from characterized PAH: **kcat/Km ≈ 4 × 10^4 M⁻1 s⁻1** at **pH 7, 30°C**; **3 mM Zn2+** increased initial velocity ~**10-fold** (kim2023functionalannotationof pages 6-7, kim2011divergenceofchemical pages 7-9, kim2023functionalannotationof media 4546f8e8) | In **E. coli**, yjdM is historically named phnA but is **not part of the canonical C–P lyase operon**; the well-established phosphate-starvation phosphonate-utilization operon is **phnCDEFGHIJLKMNOP**. By contrast, bona fide **PhnWAY** pathways in other bacteria use **PhnW + PhnY + PhnA** to degrade 2-AEP via phosphonoacetate (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10, ruffolo2023themicrobialdegradation pages 10-11, ruffolo2023themicrobialdegradation pages 5-7) | Canonical E. coli **phnCDEFGHIJLKMNOP** is **Pho regulon** controlled and induced ~**100-fold** by Pi limitation; in contrast, phosphonoacetate-specific **PhnA** pathways in other organisms are often **substrate-inducible** and **phosphate-independent**. Direct regulation data for E. coli yjdM itself were not identified (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 16-17) | Best current annotation is **likely cytosolic**, inferred from enzyme chemistry and absence of reported secretion/periplasmic evidence in the cited literature; **no direct localization experiment** for E. coli YjdM was identified in the reviewed sources (crecylagard2025limitationsofcurrent pages 7-9, kim2023functionalannotationof pages 6-7) | **Kim et al.**, 2023, *Nat Commun* — DOI: https://doi.org/10.1038/s41467-023-43216-z (kim2023functionalannotationof pages 6-7); **Metcalf & Wanner**, 1991, *J Bacteriol* — DOI: https://doi.org/10.1128/jb.173.2.587-600.1991 (metcalf1991involvementofthe pages 11-11); **Ruffolo et al.**, 2023, *Molecules* — DOI: https://doi.org/10.3390/molecules28196863 (ruffolo2023themicrobialdegradation pages 8-10, ruffolo2023themicrobialdegradation pages 16-17, ruffolo2023themicrobialdegradation pages 5-7) |
+| **yjdM** (*Escherichia coli* K-12; UniProt **P0AFJ1**) | **yjdM**; formerly **phnA**; locus **b4108 / JW4069**; neighboring legacy synonym context includes **yjdN = phnB** (smithfrieday2022deletionofprou pages 5-8) | Assigned **phosphonoacetate hydrolase** (EC **3.11.1.2**), catalyzing **phosphonoacetate + H2O → acetate + Pi**; direct E. coli evidence is in vitro enzymology, while detailed chemistry is inferred from characterized PhnA homologs (kim2023functionalannotationof pages 6-7, agarwal2011structuralandmechanistic pages 1-2, kamat2013theenzymaticconversion pages 2-4) | **Direct in vitro assay in E. coli K-12 MG1655** plus **comparative structural/mechanistic inference** from bona fide PhnA proteins in other bacteria (kim2023functionalannotationof pages 6-7, kim2011divergenceofchemical pages 1-2, agarwal2011structuralandmechanistic pages 4-5) | E. coli YjdM specific activity on phosphonoacetate: **139.85 U mg⁻1**; benchmark reported for *Pseudomonas fluorescens* 23F PAH: **60 U mg⁻1** (comparison in 2023 study). Mechanistic benchmark from characterized PAH: **kcat/Km ≈ 4 × 10^4 M⁻1 s⁻1** at **pH 7, 30°C**; **3 mM Zn2+** increased initial velocity ~**10-fold** (kim2023functionalannotationof pages 6-7, kim2011divergenceofchemical pages 7-9, kim2023functionalannotationof media 4546f8e8) | In **E. coli**, yjdM is historically named phnA but is **not part of the canonical C–P lyase operon**; the well-established phosphate-starvation phosphonate-utilization operon is **phnCDEFGHIJLKMNOP**. By contrast, bona fide **PhnWAY** pathways in other bacteria use **PhnW + PhnY + PhnA** to degrade 2-AEP via phosphonoacetate (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 8-10, ruffolo2023themicrobialdegradation pages 10-11, ruffolo2023themicrobialdegradation pages 5-7) | Canonical E. coli **phnCDEFGHIJLKMNOP** is **Pho regulon** controlled and induced ~**100-fold** by Pi limitation; in contrast, phosphonoacetate-specific **PhnA** pathways in other organisms are often **substrate-inducible** and **phosphate-independent**. Direct regulation data for E. coli yjdM itself were not identified (metcalf1991involvementofthe pages 11-11, ruffolo2023themicrobialdegradation pages 16-17) | Best current annotation is **likely cytosolic**, inferred from enzyme chemistry and absence of reported secretion/periplasmic evidence in the cited literature; **no direct localization experiment** for E. coli YjdM was identified in the reviewed sources (kim2023functionalannotationof pages 6-7, kamat2013theenzymaticconversion pages 2-4) | **Kim et al.**, 2023, *Nat Commun* — DOI: https://doi.org/10.1038/s41467-023-43216-z (kim2023functionalannotationof pages 6-7); **Metcalf & Wanner**, 1991, *J Bacteriol* — DOI: https://doi.org/10.1128/jb.173.2.587-600.1991 (metcalf1991involvementofthe pages 11-11); **Ruffolo et al.**, 2023, *Molecules* — DOI: https://doi.org/10.3390/molecules28196863 (ruffolo2023themicrobialdegradation pages 8-10, ruffolo2023themicrobialdegradation pages 16-17, ruffolo2023themicrobialdegradation pages 5-7) |
 | **PhnA / PAH homologs** (comparative reference, not E. coli-specific) | Phosphonoacetate hydrolase; PAH; characterized in *Sinorhizobium meliloti* and *P. fluorescens* (agarwal2011structuralandmechanistic pages 1-2, kamat2013theenzymaticconversion pages 2-4) | Hydrolyzes **phosphonoacetate to acetate + Pi** via a **catalytic Thr** and **binuclear metal center**; member of the **alkaline phosphatase superfamily** (peck2013phosphonatebiosynthesisand pages 6-7, agarwal2011structuralandmechanistic pages 1-2, kamat2013theenzymaticconversion pages 2-4) | **Primary structural and mechanistic evidence**: crystallography, mutagenesis, metal reconstitution, kinetics (agarwal2011structuralandmechanistic pages 6-8, kim2011divergenceofchemical pages 1-2, agarwal2011structuralandmechanistic pages 4-5, agarwal2011structuralandmechanistic pages 9-10) | Catalytic nucleophile **Thr64/Thr68** (species numbering dependent); **Zn2+** preferred; competitive inhibitor **phosphonoformate**; non-substrates reported include **fosfomycin** and **phosphonopyruvate** under tested conditions (kim2011divergenceofchemical pages 7-9, agarwal2011structuralandmechanistic pages 6-8, kim2011divergenceofchemical pages 1-2) | Usually embedded in **PhnWAY**-type hydrolytic phosphonate catabolism downstream of **PhnY** oxidation of phosphonoacetaldehyde to phosphonoacetate (agarwal2014structureandfunction pages 1-2, agarwal2014structureandfunction pages 5-6, ruffolo2023themicrobialdegradation pages 5-7) | Often **substrate-inducible**, not necessarily Pho-regulated; this differs from E. coli C–P lyase control (ruffolo2023themicrobialdegradation pages 16-17, ruffolo2023themicrobialdegradation pages 5-7) | Soluble intracellular enzyme in characterized systems; supports **cytosolic inference** for YjdM but not direct proof in E. coli (agarwal2011structuralandmechanistic pages 1-2, kamat2013theenzymaticconversion pages 2-4) | **Kim et al.**, 2011, *Biochemistry* — DOI: https://doi.org/10.1021/bi200165h (kim2011divergenceofchemical pages 7-9, kim2011divergenceofchemical pages 1-2); **Agarwal et al.**, 2011, *Chem Biol* — DOI: https://doi.org/10.1016/j.chembiol.2011.07.019 (agarwal2011structuralandmechanistic pages 6-8, agarwal2011structuralandmechanistic pages 1-2, agarwal2011structuralandmechanistic pages 4-5) |
 
 
@@ -280,8 +274,6 @@ References
 3. (kim2023functionalannotationof pages 6-7): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
 
 4. (kim2023functionalannotationof media 4546f8e8): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
-
-5. (crecylagard2025limitationsofcurrent pages 7-9): Valérie de Crécy-Lagard, Raquel Dias, Nick Sexson, Iddo Friedberg, Yifeng Yuan, and Manal A. Swairjo. Limitations of current machine-learning models in predicting enzymatic functions for uncharacterized proteins. BioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.01.601547, doi:10.1101/2024.07.01.601547. This article has 8 citations.
 
 6. (ruffolo2023themicrobialdegradation pages 2-4): Francesca Ruffolo, Tamara Dinhof, Leanne Murray, Erika Zangelmi, Jason P. Chin, Katharina Pallitsch, and Alessio Peracchi. The microbial degradation of natural and anthropogenic phosphonates. Molecules, 28:6863, Sep 2023. URL: https://doi.org/10.3390/molecules28196863, doi:10.3390/molecules28196863. This article has 37 citations.
 
@@ -315,37 +307,35 @@ References
 
 ## Citations
 
-1. crecylagard2025limitationsofcurrent pages 7-9
-2. ruffolo2023themicrobialdegradation pages 2-4
-3. smithfrieday2022deletionofprou pages 5-8
-4. kim2023functionalannotationof pages 6-7
-5. kim2011divergenceofchemical pages 7-9
-6. ruffolo2023themicrobialdegradation pages 8-10
-7. metcalf1991involvementofthe pages 11-11
-8. ruffolo2023themicrobialdegradation pages 16-17
-9. agarwal2011structuralandmechanistic pages 1-2
-10. kamat2013theenzymaticconversion pages 2-4
-11. peck2013phosphonatebiosynthesisand pages 6-7
-12. agarwal2011structuralandmechanistic pages 4-5
-13. kim2011divergenceofchemical pages 1-2
-14. agarwal2011structuralandmechanistic pages 6-8
-15. agarwal2014structureandfunction pages 1-2
-16. ruffolo2023themicrobialdegradation pages 5-7
-17. ruffolo2023themicrobialdegradation pages 10-11
-18. agarwal2011structuralandmechanistic pages 9-10
-19. agarwal2014structureandfunction pages 5-6
-20. https://doi.org/10.1038/s41467-023-43216-z
-21. https://doi.org/10.1128/jb.173.2.587-600.1991
-22. https://doi.org/10.3390/molecules28196863
-23. https://doi.org/10.1021/bi200165h
-24. https://doi.org/10.1016/j.chembiol.2011.07.019
-25. https://doi.org/10.1101/2022.03.01.481631,
-26. https://doi.org/10.3390/molecules28196863,
-27. https://doi.org/10.1038/s41467-023-43216-z,
-28. https://doi.org/10.1101/2024.07.01.601547,
-29. https://doi.org/10.1016/j.chembiol.2011.07.019,
-30. https://doi.org/10.1016/j.cbpa.2013.06.006,
-31. https://doi.org/10.1016/j.cbpa.2013.06.018,
-32. https://doi.org/10.1021/bi200165h,
-33. https://doi.org/10.1128/jb.173.2.587-600.1991,
-34. https://doi.org/10.1016/j.chembiol.2013.11.006,
+1. ruffolo2023themicrobialdegradation pages 2-4
+2. smithfrieday2022deletionofprou pages 5-8
+3. kim2023functionalannotationof pages 6-7
+4. kim2011divergenceofchemical pages 7-9
+5. ruffolo2023themicrobialdegradation pages 8-10
+6. metcalf1991involvementofthe pages 11-11
+7. ruffolo2023themicrobialdegradation pages 16-17
+8. agarwal2011structuralandmechanistic pages 1-2
+9. kamat2013theenzymaticconversion pages 2-4
+10. peck2013phosphonatebiosynthesisand pages 6-7
+11. agarwal2011structuralandmechanistic pages 4-5
+12. kim2011divergenceofchemical pages 1-2
+13. agarwal2011structuralandmechanistic pages 6-8
+14. agarwal2014structureandfunction pages 1-2
+15. ruffolo2023themicrobialdegradation pages 5-7
+16. ruffolo2023themicrobialdegradation pages 10-11
+17. agarwal2011structuralandmechanistic pages 9-10
+18. agarwal2014structureandfunction pages 5-6
+19. https://doi.org/10.1038/s41467-023-43216-z
+20. https://doi.org/10.1128/jb.173.2.587-600.1991
+21. https://doi.org/10.3390/molecules28196863
+22. https://doi.org/10.1021/bi200165h
+23. https://doi.org/10.1016/j.chembiol.2011.07.019
+24. https://doi.org/10.1101/2022.03.01.481631,
+25. https://doi.org/10.3390/molecules28196863,
+26. https://doi.org/10.1038/s41467-023-43216-z,
+27. https://doi.org/10.1016/j.chembiol.2011.07.019,
+28. https://doi.org/10.1016/j.cbpa.2013.06.006,
+29. https://doi.org/10.1016/j.cbpa.2013.06.018,
+30. https://doi.org/10.1021/bi200165h,
+31. https://doi.org/10.1128/jb.173.2.587-600.1991,
+32. https://doi.org/10.1016/j.chembiol.2013.11.006,

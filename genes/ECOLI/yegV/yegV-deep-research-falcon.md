@@ -144,7 +144,7 @@ The E. coli K-12 gene **yegV** (UniProt P76419) encodes a protein consistently d
 The sources retrieved refer explicitly to **E. coli K-12** and the **yegTUV operon**, describing **yegV** as a *putative sugar kinase* and (in one study) linking YegV to **UniProt P76419**, consistent with the user-provided target. (saito2024regulatoryroleof pages 7-10, chowdhury2021theproteininteractome pages 14-15)
 
 ### 1.2 Key concepts and definitions
-- **Functional annotation**: assignment of *molecular function* (e.g., catalytic activity), *biological role* (pathway/physiology), and *cellular context* (localization/regulation). Best practice distinguishes in vitro catalytic activity from in vivo physiological function and emphasizes evidence codes/tiers. A 2024 bioRxiv analysis underscores that purely computational/ML-based enzymatic predictions can systematically fail for “true unknowns,” motivating conservative, evidence-tiered annotation. (crecylagard2025limitationsofcurrent pages 7-9)
+- **Functional annotation**: assignment of *molecular function* (e.g., catalytic activity), *biological role* (pathway/physiology), and *cellular context* (localization/regulation). Best practice distinguishes in vitro catalytic activity from in vivo physiological function and emphasizes evidence codes/tiers.
 - **Operon (yegTUV)**: a co-transcribed gene cluster producing a single mRNA. yegV is reported as part of the **~3.3 kb yegTUV transcript**. (saito2024regulatoryroleof pages 7-10)
 - **ADP-glucose (ADPG)**: an activated glucose donor used in glycogen synthesis; in the 2024 work, ADPG is proposed as the intracellular effector sensed by the regulator **GgaR/YegW** controlling yegTUV. (saito2024regulatoryroleof pages 10-12)
 
@@ -168,7 +168,7 @@ Across the retrieved primary literature, there is **no direct enzymology** for Y
 - no direct evidence that YegV phosphorylates ADPG or a specific sugar;
 - no direct subcellular localization experiments (e.g., fractionation/fluorescent tagging). (saito2024regulatoryroleof pages 7-10, chowdhury2021theproteininteractome pages 14-15)
 
-Accordingly, the UniProt description “uncharacterized sugar kinase; PfkB family” should be treated as **bioinformatic inference** until validated experimentally in E. coli K-12. (crecylagard2025limitationsofcurrent pages 7-9)
+Accordingly, the UniProt description “uncharacterized sugar kinase; PfkB family” should be treated as **bioinformatic inference** until validated experimentally in E. coli K-12. (saito2024regulatoryroleof pages 7-10, chowdhury2021theproteininteractome pages 14-15)
 
 ## 3. Regulation, pathways, and cellular context
 ### 3.1 Local regulatory architecture: GgaR (YegW) → yegTUV
@@ -183,9 +183,6 @@ No direct localization evidence for YegV was found. Given its predicted enzymati
 ## 4. Recent developments (prioritizing 2023–2024)
 ### 4.1 2024 operon-level functional linkage to glycogen accumulation
 The principal 2024 advance is the detailed characterization of the **GgaR–ADPG–yegTUV** regulatory axis, providing a concrete physiological context for yegV (as part of yegTUV) in glycogen accumulation and growth trade-offs in glucose minimal media. (saito2024regulatoryroleof pages 12-15, saito2024regulatoryroleof media 190aa077)
-
-### 4.2 2024 expert analysis relevant to annotation reliability
-A 2024 bioRxiv preprint (version posted **Oct 15, 2024**, doi: **10.1101/2024.07.01.601547**) argues that supervised ML approaches are **not designed to predict functions of true unknowns** and can produce systematic misannotations; the authors emphasize using multiple evidence types (e.g., gene neighborhood, structural active-site signatures) and reporting uncertainty. This is directly relevant to yegV because it remains uncharacterized and sits in an enzyme superfamily where paralog divergence can cause over-annotation errors. (crecylagard2025limitationsofcurrent pages 7-9, crecylagard2025limitationsofcurrent pages 1-4)
 
 ## 5. Current applications and real-world implementations
 Because YegV’s molecular function is not experimentally established, there are **no yegV-specific applied implementations** supported by the retrieved literature. Instead, the *operon-level* regulatory findings suggest practical directions:
@@ -208,11 +205,11 @@ Because YegV’s molecular function is not experimentally established, there are
 - **Cellular localization (not established)**: no direct evidence; likely cytosolic is *inference only*. (saito2024regulatoryroleof pages 7-10)
 
 ### 7.2 Key experiments needed to resolve yegV function
-Consistent with the emphasis on integrating evidence types and avoiding overconfident predictions for unknown enzymes, the following experiments would directly answer the remaining questions:
+The following experiments would directly answer the remaining questions:
 - purified YegV enzymatic assays against a targeted panel of sugars/sugar-phosphates and nucleotide sugars (including ADPG-related hypotheses);
 - genetic tests (ΔyegV and complemented strains) measuring glycogen, growth, and metabolite pools;
 - subcellular localization by tagging/fractionation;
-- structure/active-site motif comparison within PfkB family members, followed by mutagenesis. (crecylagard2025limitationsofcurrent pages 7-9, chowdhury2021theproteininteractome pages 14-15)
+- structure/active-site motif comparison within PfkB family members, followed by mutagenesis. (chowdhury2021theproteininteractome pages 14-15)
 
 ## Evidence map (quick reference)
 | Source (citation short) | Publication date | Evidence type | Key findings about yegV/yegTUV | What is NOT established (gaps) | URL/DOI |
@@ -229,9 +226,6 @@ Consistent with the emphasis on integrating evidence types and avoiding overconf
 - Saito S. et al. **Regulatory Role of GgaR (YegW) for Glycogen Accumulation in Escherichia coli K-12.** *Microorganisms*. **Jan 2024**. https://doi.org/10.3390/microorganisms12010115 (saito2024regulatoryroleof pages 10-12)
 - Chowdhury S. et al. **The Protein Interactome of Glycolysis in Escherichia coli.** *Proteomes*. **Apr 2021**. https://doi.org/10.3390/proteomes9020016 (chowdhury2021theproteininteractome pages 14-15)
 - Shimada T. et al. **Novel Members of the Cra Regulon Involved in Carbon Metabolism in Escherichia coli.** *Journal of Bacteriology*. **Feb 2011**. https://doi.org/10.1128/JB.01214-10 (shimada2011novelmembersof pages 5-6)
-- de Crécy-Lagard V. et al. **Limitations of Current Machine-Learning Models in Predicting Enzymatic Functions for Uncharacterized Proteins.** bioRxiv preprint. **version posted Oct 15, 2024**. https://doi.org/10.1101/2024.07.01.601547 (crecylagard2025limitationsofcurrent pages 1-4, crecylagard2025limitationsofcurrent pages 7-9)
-
-
 References
 
 1. (saito2024regulatoryroleof pages 7-10): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
@@ -240,38 +234,30 @@ References
 
 3. (chowdhury2021theproteininteractome pages 14-15): Shomeek Chowdhury, Stephen Hepper, Mudassir K. Lodi, Milton H. Saier, and Peter Uetz. The protein interactome of glycolysis in escherichia coli. Proteomes, 9:16, Apr 2021. URL: https://doi.org/10.3390/proteomes9020016, doi:10.3390/proteomes9020016. This article has 12 citations.
 
-4. (crecylagard2025limitationsofcurrent pages 7-9): Valérie de Crécy-Lagard, Raquel Dias, Nick Sexson, Iddo Friedberg, Yifeng Yuan, and Manal A. Swairjo. Limitations of current machine-learning models in predicting enzymatic functions for uncharacterized proteins. BioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.01.601547, doi:10.1101/2024.07.01.601547. This article has 8 citations.
+4. (saito2024regulatoryroleof media 12354a51): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
 
-5. (saito2024regulatoryroleof media 12354a51): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
+5. (saito2024regulatoryroleof pages 12-15): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
 
-6. (saito2024regulatoryroleof pages 12-15): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
+6. (saito2024regulatoryroleof media 190aa077): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
 
-7. (saito2024regulatoryroleof media 190aa077): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
+7. (saito2024regulatoryroleof pages 2-3): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
 
-8. (saito2024regulatoryroleof pages 2-3): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
+8. (shimada2011novelmembersof pages 5-6): Tomohiro Shimada, Kaneyoshi Yamamoto, and Akira Ishihama. Novel members of the cra regulon involved in carbon metabolism in <i>escherichia coli</i>. Journal of Bacteriology, 193:649-659, Feb 2011. URL: https://doi.org/10.1128/jb.01214-10, doi:10.1128/jb.01214-10. This article has 127 citations and is from a peer-reviewed journal.
 
-9. (shimada2011novelmembersof pages 5-6): Tomohiro Shimada, Kaneyoshi Yamamoto, and Akira Ishihama. Novel members of the cra regulon involved in carbon metabolism in <i>escherichia coli</i>. Journal of Bacteriology, 193:649-659, Feb 2011. URL: https://doi.org/10.1128/jb.01214-10, doi:10.1128/jb.01214-10. This article has 127 citations and is from a peer-reviewed journal.
-
-10. (crecylagard2025limitationsofcurrent pages 1-4): Valérie de Crécy-Lagard, Raquel Dias, Nick Sexson, Iddo Friedberg, Yifeng Yuan, and Manal A. Swairjo. Limitations of current machine-learning models in predicting enzymatic functions for uncharacterized proteins. BioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.01.601547, doi:10.1101/2024.07.01.601547. This article has 8 citations.
-
-11. (saito2024regulatoryroleof pages 15-16): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
+9. (saito2024regulatoryroleof pages 15-16): Shunsuke Saito, Ikki Kobayashi, Motoki Hoshina, Emi Uenaka, Atsushi Sakurai, Sousuke Imamura, and Tomohiro Shimada. Regulatory role of ggar (yegw) for glycogen accumulation in escherichia coli k-12. Microorganisms, 12:115, Jan 2024. URL: https://doi.org/10.3390/microorganisms12010115, doi:10.3390/microorganisms12010115. This article has 0 citations.
 
 ## Citations
 
-1. crecylagard2025limitationsofcurrent pages 7-9
-2. saito2024regulatoryroleof pages 7-10
-3. saito2024regulatoryroleof pages 10-12
-4. shimada2011novelmembersof pages 5-6
-5. saito2024regulatoryroleof pages 12-15
-6. chowdhury2021theproteininteractome pages 14-15
-7. saito2024regulatoryroleof pages 2-3
-8. crecylagard2025limitationsofcurrent pages 1-4
-9. saito2024regulatoryroleof pages 15-16
-10. https://doi.org/10.3390/microorganisms12010115
-11. https://doi.org/10.1128/JB.01214-10
-12. https://doi.org/10.3390/proteomes9020016
-13. https://doi.org/10.1101/2024.07.01.601547
-14. https://doi.org/10.3390/microorganisms12010115,
-15. https://doi.org/10.3390/proteomes9020016,
-16. https://doi.org/10.1101/2024.07.01.601547,
-17. https://doi.org/10.1128/jb.01214-10,
+1. saito2024regulatoryroleof pages 7-10
+2. saito2024regulatoryroleof pages 10-12
+3. shimada2011novelmembersof pages 5-6
+4. saito2024regulatoryroleof pages 12-15
+5. chowdhury2021theproteininteractome pages 14-15
+6. saito2024regulatoryroleof pages 2-3
+7. saito2024regulatoryroleof pages 15-16
+8. https://doi.org/10.3390/microorganisms12010115
+9. https://doi.org/10.1128/JB.01214-10
+10. https://doi.org/10.3390/proteomes9020016
+11. https://doi.org/10.3390/microorganisms12010115,
+12. https://doi.org/10.3390/proteomes9020016,
+13. https://doi.org/10.1128/jb.01214-10,

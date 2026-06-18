@@ -298,7 +298,7 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C Predicti
 Track predictions from: DeepECTF, PANTHER/IBA, InterPro2GO, CLEAN, GloEC, MAPred, or any
 other computational method that produces GO or EC predictions.
 
-### Assessment categories (from de Crécy-Lagard et al. 2025, PMID:40703034)
+### Assessment categories (from de Crécy-Lagard et al. 2025)
 
 | Code | CS | Description |
 |------|-----|-------------|

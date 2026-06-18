@@ -137,7 +137,7 @@ Include evidence where possible. We are interested in both experimental evidence
 ## Research report: *Escherichia coli* K-12 **yjhQ** (UniProt P39368; locus **b4307**; ASKA clone **JW4269**)
 
 ### Executive summary
-The *E. coli* K-12 gene **yjhQ** (b4307; JW4269; UniProt P39368 per the user-supplied identity) encodes a small (~181 aa) protein that has historically been annotated as a **hypothetical/uncharacterized ORF** in experimental studies, despite being handled as a candidate acetyltransferase-family gene in systematic acetylation research. In the tool-accessible literature reviewed here, **no substrate-level enzymatic reaction** (EC assignment with validated substrate specificity) and **no direct localization experiment** were found for YjhQ. The strongest direct evidence available is: (i) **biofilm-associated upregulation** in a transcriptomics dataset (expression ratio 11.3) where it remains “hypothetical” (Herzberg 2006), and (ii) **in vivo phosphorylation at Thr11** whose occupancy is reduced in a ΔyeaG ser/thr-kinase mutant during a glucose→malate shift, suggesting YjhQ participates in a kinase-regulated response to carbon-source transition (Sultan 2021). A recent preprint on ML annotation failures highlights YjhQ as an example where a supervised model predicted an implausible enzymatic function (mycothiol synthase) that conflicts with *E. coli* pathway context, reinforcing that **current evidence does not justify a precise metabolic role** (de Crécy-Lagard et al., bioRxiv posted Oct 15, 2024). (herzberg2006ydgg(tqsa)controls pages 8-9, sultan2021phosphoproteomestudyof pages 7-8, crecylagard2025limitationsofcurrent pages 7-9)
+The *E. coli* K-12 gene **yjhQ** (b4307; JW4269; UniProt P39368 per the user-supplied identity) encodes a small (~181 aa) protein that has historically been annotated as a **hypothetical/uncharacterized ORF** in experimental studies, despite being handled as a candidate acetyltransferase-family gene in systematic acetylation research. In the tool-accessible literature reviewed here, **no substrate-level enzymatic reaction** (EC assignment with validated substrate specificity) and **no direct localization experiment** were found for YjhQ. The strongest direct evidence available is: (i) **biofilm-associated upregulation** in a transcriptomics dataset (expression ratio 11.3) where it remains “hypothetical” (Herzberg 2006), and (ii) **in vivo phosphorylation at Thr11** whose occupancy is reduced in a ΔyeaG ser/thr-kinase mutant during a glucose→malate shift, suggesting YjhQ participates in a kinase-regulated response to carbon-source transition (Sultan 2021). (herzberg2006ydgg(tqsa)controls pages 8-9, sultan2021phosphoproteomestudyof pages 7-8)
 
 ### 1) Identity verification (mandatory)
 **Gene symbol and organism match:** The target is **yjhQ** from *Escherichia coli* K-12.
@@ -172,9 +172,7 @@ This distinction is explicit in Sultan et al., who caution that further evidence
 * In Herzberg et al. (2006), yjhQ is listed as an **“ORF, hypothetical protein”**; no enzyme activity, substrate, or reaction is provided. (herzberg2006ydgg(tqsa)controls pages 8-9)
 * In Christensen et al. (2018), yjhQ appears in strain/plasmid tables as an **ASKA clone (pCA24n-yjhQ)** used in a broad study to identify/characterize lysine acetyltransferases in *E. coli*, but the retrieved table excerpt does not provide a positive biochemical activity for YjhQ. (christensen2018identificationofnovel pages 19-20)
 
-**Important caution on incorrect computational assignments:** de Crécy-Lagard et al. (bioRxiv preprint posted Oct 15, 2024; DOI minted July 2024) explicitly cite **YjhQ/b4307** as being predicted by a supervised ML system to be **mycothiol synthase (EC 2.3.1.189)** and argue this is refutable because *E. coli* does not synthesize mycothiol and the rest of the pathway is absent. This is not evidence of YjhQ’s true activity; it is evidence that **substrate-level predictions can be wrong without pathway context**. (crecylagard2025limitationsofcurrent pages 7-9)
-
-**Conclusion:** Based on tool-accessible primary literature, YjhQ’s **primary enzymatic reaction and substrate specificity are currently unknown**; any claim beyond acetyltransferase-family membership (from UniProt context) would be speculative without additional direct biochemical studies. (herzberg2006ydgg(tqsa)controls pages 8-9, christensen2018identificationofnovel pages 19-20, crecylagard2025limitationsofcurrent pages 7-9)
+**Conclusion:** Based on tool-accessible primary literature, YjhQ’s **primary enzymatic reaction and substrate specificity are currently unknown**; any claim beyond acetyltransferase-family membership (from UniProt context) would be speculative without additional direct biochemical studies. (herzberg2006ydgg(tqsa)controls pages 8-9, christensen2018identificationofnovel pages 19-20)
 
 #### 3.2 Biological processes and pathway involvement (direct evidence)
 ##### 3.2.1 Biofilm-associated expression
@@ -187,9 +185,7 @@ A SILAC-based proteome and phosphoproteome comparison of WT vs ΔyeaG during a *
 No direct localization experiment for YjhQ (e.g., fractionation, fluorescence tagging, topology mapping) was found in the retrieved texts. The “Transport” grouping in Herzberg et al. reflects table categorization rather than a demonstrated membrane location, and the description remains “hypothetical protein.” (herzberg2006ydgg(tqsa)controls pages 8-9)
 
 ### 4) Recent developments and latest research (prioritize 2023–2024)
-Direct 2023–2024 primary studies focused on YjhQ were not retrieved via the available tool searches. However, a highly relevant 2024 development affecting YjhQ annotation is methodological: **systematic critique of ML-based enzyme function prediction for uncharacterized proteins**.
-
-* **2024 preprint posting (Oct 15, 2024; bioRxiv DOI: 10.1101/2024.07.01.601547):** de Crécy-Lagard et al. analyze supervised ML predictions for *E. coli* “unknowns” and explicitly refute YjhQ/b4307 being a mycothiol synthase because the **host organism lacks the mycothiol pathway context**. For functional annotation workflows, this is a concrete, recent, authoritative caution that substrate-level EC predictions for YjhQ should not be accepted without biological-context checks and validation. (crecylagard2025limitationsofcurrent pages 7-9)
+Direct 2023–2024 primary studies focused on YjhQ were not retrieved via the available tool searches.
 
 ### 5) Current applications and real-world implementations
 Although YjhQ lacks a validated biochemical function, it appears in **real-world functional genomics and systems biology workflows** as a representative “unknown” gene:
@@ -199,18 +195,13 @@ Although YjhQ lacks a validated biochemical function, it appears in **real-world
 3. **Systematic acetyltransferase discovery screens / clone libraries:** yjhQ is present in the ASKA overexpression library (JW4269; pCA24n-yjhQ) and was handled as part of the candidate set in an *E. coli* lysine acetyltransferase study. This is an implementation detail showing YjhQ can be readily overexpressed for functional testing, though a positive functional readout is not provided in the retrieved excerpt. (christensen2018identificationofnovel pages 19-20)
 
 ### 6) Expert opinions and analysis from authoritative sources
-#### 6.1 Annotation and inference limits
-de Crécy-Lagard et al. emphasize that supervised ML methods are fundamentally limited for “true unknowns” and can yield **biologically inconsistent EC assignments**; they highlight YjhQ/b4307 specifically as an example of a refutable prediction. This constitutes an expert methodological assessment relevant to how YjhQ should be annotated: **avoid adopting specific enzymatic functions without orthogonal evidence and pathway plausibility**. (crecylagard2025limitationsofcurrent pages 7-9)
-
-#### 6.2 Interpretation of phosphoproteomics evidence
+#### 6.1 Interpretation of phosphoproteomics evidence
 Sultan et al. provide an expert interpretation framework for kinase knockout phosphoproteomes: decreased site occupancy in Δkinase can suggest a direct kinase–substrate relationship, but alternative indirect regulatory paths exist; accordingly, they explicitly require **additional evidence** before calling YjhQ a direct YeaG substrate. This is authoritative guidance on interpreting YjhQ Thr11 phosphorylation. (sultan2021phosphoproteomestudyof pages 7-8)
 
 ### 7) Relevant statistics and data (recent studies)
 * **Protein length (dataset report):** yjhQ/b4307 listed as **181 aa** in Herzberg et al. table. (herzberg2006ydgg(tqsa)controls pages 8-9, herzberg2006ydgg(tqsa)controls media 482a2066)
 * **Biofilm-associated expression metric:** Herzberg et al. report **expression ratio 11.3** for yjhQ/b4307 in their table (context: genes grouped under “Transport”). (herzberg2006ydgg(tqsa)controls pages 8-9, herzberg2006ydgg(tqsa)controls media 482a2066)
 * **Phosphosite and directionality:** Sultan et al. report YjhQ **Thr11** phosphorylation is **significantly reduced in ΔyeaG** vs WT during glucose→malate shift (quantitative phosphoproteomics; see Table 2 and surrounding discussion). (sultan2021phosphoproteomestudyof pages 7-8)
-* **Annotation-quality statistic:** In their manual review of DeepECTF predictions for *E. coli* unknowns, de Crécy-Lagard et al. state they could **refute 142 predictions** through literature/context analyses, framing YjhQ’s incorrect “mycothiol synthase” prediction as one illustrative example. (crecylagard2025limitationsofcurrent pages 7-9)
-
 ### 8) Evidence summary table
 The following table consolidates the key direct observations about yjhQ from the retrieved sources.
 
@@ -219,24 +210,20 @@ The following table consolidates the key direct observations about yjhQ from the
 | yjhQ maps to E. coli K-12 locus b4307 and was listed as a hypothetical protein in a biofilm-expression dataset | Transcriptomics | Table entry: **yjhQ / b4307**; grouped under **Transport**; annotated **"ORF, hypothetical protein"**; **expression ratio 11.3**; **protein length 181 aa** | Herzberg et al., *Journal of Bacteriology* | Jan 2006 | https://doi.org/10.1128/jb.188.2.587-598.2006 | (herzberg2006ydgg(tqsa)controls pages 8-9, herzberg2006ydgg(tqsa)controls media 482a2066) |
 | YjhQ carries a phosphorylation site whose regulation is linked to YeaG during glucose-to-malate shift | Phosphoproteomics | **Thr11** phosphorylation on YjhQ was **significantly reduced in ΔyeaG** versus wild type during the shift; authors say the most logical explanation is direct phosphorylation by YeaG, but **further evidence is required** before declaring YjhQ a direct substrate | Sultan et al., *Frontiers in Microbiology* | Apr 2021 | https://doi.org/10.3389/fmicb.2021.657562 | (sultan2021phosphoproteomestudyof pages 7-8) |
 | yjhQ was included as an ASKA clone and expression construct in an E. coli acetyltransferase-screening workflow | Strain/plasmid resource | **JW4269 = ASKA pCA24n-yjhQ** listed in strain/plasmid resources; indicates yjhQ was among candidate genes available for overexpression/testing in the acetyltransferase study, but no direct functional result for YjhQ is shown in the retrieved excerpt | Christensen et al., *mBio* | Nov 2018 | https://doi.org/10.1128/mbio.01905-18 | (christensen2018identificationofnovel pages 19-19, christensen2018identificationofnovel pages 19-20) |
-| A recent analysis explicitly rejects an ML-predicted annotation of YjhQ as mycothiol synthase in E. coli | Critique of ML prediction | DeepECTF predicted **YjhQ/b4307 = mycothiol synthase (EC 2.3.1.189)**; authors argue this is biologically implausible because **E. coli does not synthesize mycothiol** and the rest of the pathway is absent | de Crécy-Lagard et al., *bioRxiv* | Oct 15 2024 posting / Jul 2025 record | https://doi.org/10.1101/2024.07.01.601547 | (crecylagard2025limitationsofcurrent pages 7-9) |
 
-
-*Table: This table compiles the direct evidence retrieved for E. coli K-12 yjhQ/P39368, including expression, phosphorylation, cloning-resource, and annotation-critique data. It is useful for separating experimentally observed facts from unvalidated or refuted functional predictions.*
+*Table: This table compiles the direct evidence retrieved for E. coli K-12 yjhQ/P39368, including expression, phosphorylation, and cloning-resource data. It is useful for separating experimentally observed facts from unvalidated functional predictions.*
 
 ### 9) Visual evidence
 A cropped extract of Herzberg et al. (2006) Table 2 showing the yjhQ (b4307) row—expression ratio 11.3, “ORF, hypothetical protein,” length 181 aa—is available here: (herzberg2006ydgg(tqsa)controls media 482a2066)
 
 ### 10) Conclusions and recommended annotation (strictly evidence-bounded)
 * **Most defensible current functional description (from retrieved primary literature):** *E. coli* K-12 yjhQ (b4307/JW4269) encodes a **small, uncharacterized protein** that is **biofilm-condition responsive** and **phosphorylated at Thr11** in a manner linked to the ser/thr kinase YeaG during a carbon-source shift. (herzberg2006ydgg(tqsa)controls pages 8-9, sultan2021phosphoproteomestudyof pages 7-8)
-* **Not supported here:** any specific substrate-level acetyltransferase function, any assignment to mycothiol synthase activity, or any confirmed cellular localization. The ML-based mycothiol synthase prediction is explicitly **refuted by pathway-context reasoning** in a recent expert analysis. (crecylagard2025limitationsofcurrent pages 7-9)
+* **Not supported here:** any specific substrate-level acetyltransferase function or any confirmed cellular localization.
 
 ### References (URLs and publication dates)
 * Herzberg M, Kaye IK, Peti W, Wood TK. “YdgG (TqsA) Controls Biofilm Formation in *Escherichia coli* K-12 through Autoinducer 2 Transport.” *Journal of Bacteriology*. **Jan 2006**. https://doi.org/10.1128/jb.188.2.587-598.2006 (herzberg2006ydgg(tqsa)controls pages 8-9, herzberg2006ydgg(tqsa)controls media 482a2066)
 * Sultan A, Jers C, Ganief TA, et al. “Phosphoproteome Study of *Escherichia coli* Devoid of Ser/Thr Kinase YeaG During the Metabolic Shift From Glucose to Malate.” *Frontiers in Microbiology*. **Apr 2021**. https://doi.org/10.3389/fmicb.2021.657562 (sultan2021phosphoproteomestudyof pages 7-8)
 * Christensen DG, Meyer JG, Baumgartner JT, et al. “Identification of Novel Protein Lysine Acetyltransferases in *Escherichia coli*.” *mBio*. **Sep/Oct 2018** (issue). https://doi.org/10.1128/mbio.01905-18 (christensen2018identificationofnovel pages 19-20)
-* de Crécy-Lagard V, Dias R, Sexson N, et al. “Limitations of Current Machine-Learning Models in Predicting Enzymatic Functions for Uncharacterized Proteins.” *bioRxiv* preprint. **posted Oct 15, 2024** (DOI: 10.1101/2024.07.01.601547). https://doi.org/10.1101/2024.07.01.601547 (crecylagard2025limitationsofcurrent pages 7-9)
-
 
 References
 
@@ -244,25 +231,20 @@ References
 
 2. (sultan2021phosphoproteomestudyof pages 7-8): Abida Sultan, Carsten Jers, Tariq A. Ganief, Lei Shi, Meriem Senissar, Julie Bonne Køhler, Boris Macek, and Ivan Mijakovic. Phosphoproteome study of escherichia coli devoid of ser/thr kinase yeag during the metabolic shift from glucose to malate. Frontiers in Microbiology, Apr 2021. URL: https://doi.org/10.3389/fmicb.2021.657562, doi:10.3389/fmicb.2021.657562. This article has 22 citations and is from a peer-reviewed journal.
 
-3. (crecylagard2025limitationsofcurrent pages 7-9): Valérie de Crécy-Lagard, Raquel Dias, Nick Sexson, Iddo Friedberg, Yifeng Yuan, and Manal A. Swairjo. Limitations of current machine-learning models in predicting enzymatic functions for uncharacterized proteins. BioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.01.601547, doi:10.1101/2024.07.01.601547. This article has 8 citations.
+3. (christensen2018identificationofnovel pages 19-20): David G. Christensen, Jesse G. Meyer, Jackson T. Baumgartner, Alexandria K. D’Souza, William C. Nelson, Samuel H. Payne, Misty L. Kuhn, Birgit Schilling, and Alan J. Wolfe. Identification of novel protein lysine acetyltransferases in escherichia coli. Nov 2018. URL: https://doi.org/10.1128/mbio.01905-18, doi:10.1128/mbio.01905-18. This article has 115 citations and is from a domain leading peer-reviewed journal.
 
-4. (christensen2018identificationofnovel pages 19-20): David G. Christensen, Jesse G. Meyer, Jackson T. Baumgartner, Alexandria K. D’Souza, William C. Nelson, Samuel H. Payne, Misty L. Kuhn, Birgit Schilling, and Alan J. Wolfe. Identification of novel protein lysine acetyltransferases in escherichia coli. Nov 2018. URL: https://doi.org/10.1128/mbio.01905-18, doi:10.1128/mbio.01905-18. This article has 115 citations and is from a domain leading peer-reviewed journal.
+4. (herzberg2006ydgg(tqsa)controls media 482a2066): Moshe Herzberg, Ian K. Kaye, Wolfgang Peti, and Thomas K. Wood. Ydgg (tqsa) controls biofilm formation in escherichia coli k-12 through autoinducer 2 transport. Journal of Bacteriology, 188:587-598, Jan 2006. URL: https://doi.org/10.1128/jb.188.2.587-598.2006, doi:10.1128/jb.188.2.587-598.2006. This article has 256 citations and is from a peer-reviewed journal.
 
-5. (herzberg2006ydgg(tqsa)controls media 482a2066): Moshe Herzberg, Ian K. Kaye, Wolfgang Peti, and Thomas K. Wood. Ydgg (tqsa) controls biofilm formation in escherichia coli k-12 through autoinducer 2 transport. Journal of Bacteriology, 188:587-598, Jan 2006. URL: https://doi.org/10.1128/jb.188.2.587-598.2006, doi:10.1128/jb.188.2.587-598.2006. This article has 256 citations and is from a peer-reviewed journal.
-
-6. (christensen2018identificationofnovel pages 19-19): David G. Christensen, Jesse G. Meyer, Jackson T. Baumgartner, Alexandria K. D’Souza, William C. Nelson, Samuel H. Payne, Misty L. Kuhn, Birgit Schilling, and Alan J. Wolfe. Identification of novel protein lysine acetyltransferases in escherichia coli. Nov 2018. URL: https://doi.org/10.1128/mbio.01905-18, doi:10.1128/mbio.01905-18. This article has 115 citations and is from a domain leading peer-reviewed journal.
+5. (christensen2018identificationofnovel pages 19-19): David G. Christensen, Jesse G. Meyer, Jackson T. Baumgartner, Alexandria K. D’Souza, William C. Nelson, Samuel H. Payne, Misty L. Kuhn, Birgit Schilling, and Alan J. Wolfe. Identification of novel protein lysine acetyltransferases in escherichia coli. Nov 2018. URL: https://doi.org/10.1128/mbio.01905-18, doi:10.1128/mbio.01905-18. This article has 115 citations and is from a domain leading peer-reviewed journal.
 
 ## Citations
 
 1. christensen2018identificationofnovel pages 19-20
 2. sultan2021phosphoproteomestudyof pages 7-8
-3. crecylagard2025limitationsofcurrent pages 7-9
-4. christensen2018identificationofnovel pages 19-19
-5. https://doi.org/10.1128/jb.188.2.587-598.2006
-6. https://doi.org/10.3389/fmicb.2021.657562
-7. https://doi.org/10.1128/mbio.01905-18
-8. https://doi.org/10.1101/2024.07.01.601547
-9. https://doi.org/10.1128/jb.188.2.587-598.2006,
-10. https://doi.org/10.3389/fmicb.2021.657562,
-11. https://doi.org/10.1101/2024.07.01.601547,
-12. https://doi.org/10.1128/mbio.01905-18,
+3. christensen2018identificationofnovel pages 19-19
+4. https://doi.org/10.1128/jb.188.2.587-598.2006
+5. https://doi.org/10.3389/fmicb.2021.657562
+6. https://doi.org/10.1128/mbio.01905-18
+7. https://doi.org/10.1128/jb.188.2.587-598.2006,
+8. https://doi.org/10.3389/fmicb.2021.657562,
+9. https://doi.org/10.1128/mbio.01905-18,

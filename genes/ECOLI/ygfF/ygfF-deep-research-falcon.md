@@ -138,15 +138,15 @@ Include evidence where possible. We are interested in both experimental evidence
 ## Comprehensive Research Report: Functional Annotation of *Escherichia coli* K-12 **ygfF** (UniProt: **P52037**)
 
 ### Scope and identity verification
-This report concerns *Escherichia coli* (strain K-12/MG1655) gene **ygfF** (synonym **yqfD**; locus **b2902 / JW2870**) whose curated description is **glucose 1-dehydrogenase YgfF** and enzyme classification **EC 1.1.1.47**, belonging to the **short-chain dehydrogenases/reductases (SDR)** superfamily (as also reflected in SDR-family subgrouping discussed below). The key, direct experimental evidence in the retrieved literature comes from a 2023 primary study that explicitly labels YgfF as EC 1.1.1.47 and biochemically validates this activity in vitro (kim2023functionalannotationof pages 6-7).
+This report concerns *Escherichia coli* (strain K-12/MG1655) gene **ygfF** (synonym **yqfD**; locus **b2902 / JW2870**) whose curated description is **glucose 1-dehydrogenase YgfF** and enzyme classification **EC 1.1.1.47**. The key, direct experimental evidence in the retrieved literature comes from a 2023 primary study that explicitly labels YgfF as EC 1.1.1.47 and biochemically validates this activity in vitro (kim2023functionalannotationof pages 6-7).
 
 ### 1) Key concepts and definitions (current understanding)
 
 #### 1.1 The “y-ome” concept and why ygfF was historically difficult to annotate
 In *E. coli* K-12 MG1655, a substantial fraction of genes remains incompletely characterized. Kim et al. (published Nov 2023) describe that *E. coli* still has roughly **~30% of genes incompletely characterized**, and define the “**y-ome**” as genes lacking sufficient experimental evidence for functional characterization (kim2023functionalannotationof pages 5-6). They operationalize this by assembling a y-ome protein set and applying machine-learning (ML) function prediction followed by targeted biochemical validation (kim2023functionalannotationof pages 5-6).
 
-#### 1.2 SDR enzymes (short-chain dehydrogenases/reductases)
-SDR enzymes are a large and diverse oxidoreductase superfamily. In the context of ygfF, an expert commentary evaluating ML annotation states that **YgfF is a member of the SDR superfamily** (InterPro family IPR002347) and can be classified into an SDR subgroup consistent with glucose 1-dehydrogenase function (crecylagard2025limitationsofcurrent pages 7-9). This family-level classification provides mechanistic plausibility for nicotinamide-dependent sugar oxidation/reduction, but does not by itself establish the physiological substrate or pathway role (crecylagard2025limitationsofcurrent pages 7-9).
+#### 1.2 Oxidoreductase annotation context
+The retrieved primary study supports a glucose 1-dehydrogenase activity for YgfF in vitro. Broader family or subgroup assignments can provide useful context, but the retrieved passages retained here do not establish a physiological substrate or pathway role beyond the biochemical assay result. (kim2023functionalannotationof pages 6-7)
 
 ### 2) Recent developments and latest research (prioritizing 2023–2024)
 
@@ -162,9 +162,6 @@ A major recent development is the explicit experimental validation of YgfF’s e
 #### 2.2 2024 review context: rediscovery and characterization of unknown biocatalytic functions
 A 2024 review (Wohlgemuth, *Life*, **Mar 2024**, DOI: **10.3390/life14030364**, URL: https://doi.org/10.3390/life14030364) highlights the DeepECtransformer study as an example of assigning enzyme functions to previously unannotated proteins, explicitly noting YgfF as a predicted glucose 1-dehydrogenase and that **in vitro enzyme assays were performed on overexpressed and affinity-purified YgfF** (wohlgemuth2024backtothe pages 3-6). The review stresses that function assignment for unusual/unknown enzymes often requires extensive experimental work (expression/purification, substrate synthesis, analytical methods, kinetic characterization such as kcat and KM), and emphasizes the need for protein- and time-dependent catalysis demonstrations (wohlgemuth2024backtothe pages 3-6). This is relevant because the current YgfF evidence base (in the retrieved sources) includes a specific activity but not full kinetic constants (wohlgemuth2024backtothe pages 3-6).
 
-#### 2.3 Expert analysis and critique: limits of ML predictions vs physiological function
-A later expert analysis evaluating current ML model limitations notes that YgfF’s case is best understood as **propagation of a known SDR subgroup function**: YgfF is predicted (using SDR subgroup HMMs) to belong to **SDR63C / glucose 1-dehydrogenase subgroup**, consistent with Kim et al.’s prediction and in vitro validation (crecylagard2025limitationsofcurrent pages 7-9). Critically, this analysis argues that **in vitro activity alone is insufficient to establish physiological (in vivo) function** and that best practice is combining biochemical and genetic evidence (crecylagard2025limitationsofcurrent pages 7-9). This caveat directly impacts how confidently ygfF can be placed into an *E. coli* pathway based on currently retrieved evidence.
-
 ### 3) Current applications and real-world implementations
 
 #### 3.1 Practical uses in functional annotation pipelines
@@ -176,7 +173,7 @@ While glucose 1-dehydrogenases are widely used as redox biocatalysts or in sugar
 ### 4) Expert opinions and authoritative analysis
 
 #### 4.1 Caution in interpreting biochemical validation as physiological role
-The expert commentary on ML annotation emphasizes a key interpretive point: YgfF’s glucose 1-dehydrogenase activity is biochemically supported, but **physiological function in the native organism requires additional evidence**, ideally including genetics (knockout/phenotyping, complementation) and pathway context (crecylagard2025limitationsofcurrent pages 7-9). The 2024 review similarly emphasizes the broader methodological standard of deeper characterization (including kinetic parameters and analytical validation) when asserting metabolic roles (wohlgemuth2024backtothe pages 3-6).
+The 2024 review emphasizes the broader methodological standard of deeper characterization, including kinetic parameters and analytical validation, when asserting metabolic roles for newly assigned enzyme activities. This is relevant because the current YgfF evidence base includes specific activity under assay conditions but not full kinetic or in vivo pathway characterization. (wohlgemuth2024backtothe pages 3-6)
 
 #### 4.2 Evidence that annotation gaps remain large (motivating continued research)
 Kim et al. quantify the annotation shortfall and the need for bridging EC/GO mappings: they note that among fully specified four-digit EC numbers, as of July 2023 **only 5,216 of 8,056** had corresponding GO terms, implying substantial ontology linkage gaps even when enzymatic functions exist (kim2023functionalannotationof pages 6-7). This supports the view that systematic function discovery and careful curation are still necessary.
@@ -204,21 +201,20 @@ The retrieved evidence does not provide:
 - A substrate panel demonstrating specificity beyond glucose (only glucose is directly described in assay conditions) (kim2023functionalannotationof pages 7-8).
 - Michaelis–Menten parameters (Km, kcat) or mechanistic kinetic order (wohlgemuth2024backtothe pages 3-6).
 - Definitive **NAD vs NADP preference** by comparative kinetics; only NAD is shown in the figure scheme (kim2023functionalannotationof media 81d7b013).
-- Native **subcellular localization** measurements (e.g., cytosolic vs periplasmic) or genetic/pathway linkage in *E. coli* K-12 (crecylagard2025limitationsofcurrent pages 7-9, wohlgemuth2024backtothe pages 3-6).
+- Native **subcellular localization** measurements (e.g., cytosolic vs periplasmic) or genetic/pathway linkage in *E. coli* K-12 (wohlgemuth2024backtothe pages 3-6).
 
-Accordingly, the most evidence-consistent interpretation is that YgfF is a soluble SDR oxidoreductase capable of catalyzing glucose oxidation in vitro with NAD as depicted cofactor, but its **physiological substrate(s), pathway integration, and cellular compartment of action remain unresolved** in the retrieved literature and require in vivo validation (crecylagard2025limitationsofcurrent pages 7-9, wohlgemuth2024backtothe pages 3-6).
+Accordingly, the most evidence-consistent interpretation is that YgfF catalyzes glucose oxidation in vitro with NAD as depicted cofactor, but its **physiological substrate(s), pathway integration, and cellular compartment of action remain unresolved** in the retrieved literature and require further validation (kim2023functionalannotationof media 81d7b013, wohlgemuth2024backtothe pages 3-6).
 
 ### Evidence summary table
 | Property | Finding for *E. coli* K-12 YgfF (UniProt P52037) | Evidence type | Localization / solubility note | Key reference |
 |---|---|---|---|---|
-| Gene/protein identity | YgfF from *Escherichia coli* K-12/MG1655 y-ome; UniProt-linked annotation aligns with an SDR-family oxidoreductase later assigned as glucose 1-dehydrogenase (kim2023functionalannotationof pages 6-7, crecylagard2025limitationsofcurrent pages 7-9) | Database-linked annotation + literature synthesis | No direct subcellular localization experimentally reported in the retrieved sources; treated as a soluble recombinant protein in validation experiments (kim2023functionalannotationof pages 7-8, wohlgemuth2024backtothe pages 3-6) | Kim et al., 2023, Nat Commun, doi:10.1038/s41467-023-43216-z, https://doi.org/10.1038/s41467-023-43216-z |
+| Gene/protein identity | YgfF from *Escherichia coli* K-12/MG1655 y-ome; assigned as glucose 1-dehydrogenase in the retrieved primary study (kim2023functionalannotationof pages 6-7) | Database-linked annotation + literature synthesis | No direct subcellular localization experimentally reported in the retrieved sources; treated as a soluble recombinant protein in validation experiments (kim2023functionalannotationof pages 7-8, wohlgemuth2024backtothe pages 3-6) | Kim et al., 2023, Nat Commun, doi:10.1038/s41467-023-43216-z, https://doi.org/10.1038/s41467-023-43216-z |
 | Predicted function / EC number | DeepECtransformer predicted YgfF as EC 1.1.1.47, glucose 1-dehydrogenase, with prediction score 0.6331 (kim2023functionalannotationof pages 6-7) | ML prediction | Among uniquely predicted 4-digit EC proteins, many were predicted soluble in *E. coli* by NetSolP, but no YgfF-specific solubility value was reported (kim2023functionalannotationof pages 5-6) | Kim et al., 2023, Nat Commun, doi:10.1038/s41467-023-43216-z, https://doi.org/10.1038/s41467-023-43216-z |
-| Family/subgroup assignment | YgfF is in the Short-Chain Dehydrogenase/Reductase (SDR) superfamily (IPR002347) and predicted to fall in the SDR63C / glucose 1-dehydrogenase subgroup (crecylagard2025limitationsofcurrent pages 7-9) | HMM / family classification | Family assignment supports a soluble cytosolic enzyme-like oxidoreductase interpretation, but no direct localization experiment was cited for YgfF (crecylagard2025limitationsofcurrent pages 7-9) | de Crécy-Lagard et al., 2025 preprint, doi:10.1101/2024.07.01.601547, https://doi.org/10.1101/2024.07.01.601547 |
 | Reaction / cofactor | Figure-linked reaction scheme indicates glucose oxidation coupled to NAD reduction to NADH + H+, consistent with glucose 1-dehydrogenase activity and NAD dependence rather than an explicitly demonstrated NADP preference (kim2023functionalannotationof media 81d7b013, kim2023functionalannotationof pages 6-7) | Figure-supported biochemical interpretation | No intracellular compartment or membrane association evidence reported; recombinant purified enzyme assayed in vitro (kim2023functionalannotationof media 81d7b013, kim2023functionalannotationof pages 7-8) | Kim et al., 2023, Nat Commun, doi:10.1038/s41467-023-43216-z, https://doi.org/10.1038/s41467-023-43216-z |
 | Experimental validation | Purified His-tagged YgfF showed specific glucose 1-dehydrogenase activity of 305.55 U mg−1 in vitro; authors compared this with 205.70 U mg−1 reported for a characterized *Lysinibacillus sphaericus* glucose 1-dehydrogenase (kim2023functionalannotationof pages 6-7) | In vitro enzyme assay | Overexpressed in *E. coli* BL21(DE3), purified by metal-affinity resin; this supports biochemical tractability/solubility but not native localization (kim2023functionalannotationof pages 7-8) | Kim et al., 2023, Nat Commun, doi:10.1038/s41467-023-43216-z, https://doi.org/10.1038/s41467-023-43216-z |
 | Assay conditions | Validation used a glucose dehydrogenase colorimetric kit with glucose substrate, GDH assay buffer, developer, and OD450 readout at 37 °C; confirms activity with glucose under assay conditions but does not define broader substrate range or kinetic constants (kim2023functionalannotationof pages 7-8) | In vitro assay protocol | Assay performed on purified protein; no localization inference beyond soluble preparation (kim2023functionalannotationof pages 7-8) | Kim et al., 2023, Nat Commun, doi:10.1038/s41467-023-43216-z, https://doi.org/10.1038/s41467-023-43216-z |
-| Physiological role / pathway inference | Current evidence supports biochemical function as a glucose 1-dehydrogenase, but no in vivo pathway assignment, physiological substrate context, or genetic validation in *E. coli* K-12 was reported in the retrieved literature (kim2023functionalannotationof pages 6-7, crecylagard2025limitationsofcurrent pages 7-9, wohlgemuth2024backtothe pages 3-6) | Inference with explicit caution | Native localization remains unresolved in retrieved sources (crecylagard2025limitationsofcurrent pages 7-9, wohlgemuth2024backtothe pages 3-6) | Wohlgemuth, 2024, *Life*, doi:10.3390/life14030364, https://doi.org/10.3390/life14030364; de Crécy-Lagard et al., 2025 preprint, doi:10.1101/2024.07.01.601547, https://doi.org/10.1101/2024.07.01.601547 |
-| Evidence limitations | Retrieved sources do not provide YgfF-specific Km, kcat, Vmax, structural data, substrate spectrum beyond glucose assay conditions, or definitive native localization; expert commentary cautions that in vitro activity alone is insufficient to establish physiological function (crecylagard2025limitationsofcurrent pages 7-9, wohlgemuth2024backtothe pages 3-6) | Expert analysis / review | Solubility/localization evidence is indirect only (purification, expression, model-wide solubility statistics) (kim2023functionalannotationof pages 7-8, kim2023functionalannotationof pages 5-6) | de Crécy-Lagard et al., 2025 preprint, doi:10.1101/2024.07.01.601547, https://doi.org/10.1101/2024.07.01.601547; Wohlgemuth, 2024, doi:10.3390/life14030364, https://doi.org/10.3390/life14030364 |
+| Physiological role / pathway inference | Current evidence supports biochemical function as a glucose 1-dehydrogenase, but no in vivo pathway assignment, physiological substrate context, or genetic validation in *E. coli* K-12 was reported in the retrieved literature (kim2023functionalannotationof pages 6-7, wohlgemuth2024backtothe pages 3-6) | Inference with explicit caution | Native localization remains unresolved in retrieved sources (wohlgemuth2024backtothe pages 3-6) | Wohlgemuth, 2024, *Life*, doi:10.3390/life14030364, https://doi.org/10.3390/life14030364 |
+| Evidence limitations | Retrieved sources do not provide YgfF-specific Km, kcat, Vmax, structural data, substrate spectrum beyond glucose assay conditions, or definitive native localization (wohlgemuth2024backtothe pages 3-6) | Review/context | Solubility/localization evidence is indirect only (purification, expression, model-wide solubility statistics) (kim2023functionalannotationof pages 7-8, kim2023functionalannotationof pages 5-6) | Wohlgemuth, 2024, doi:10.3390/life14030364, https://doi.org/10.3390/life14030364 |
 
 
 *Table: This table compiles the main experimentally supported and predicted properties of E. coli K-12 YgfF, including its EC assignment, biochemical evidence, cofactor inference, and current evidence gaps. It is useful as a compact evidence map separating validated findings from family-based or model-based inference.*
@@ -226,8 +222,6 @@ Accordingly, the most evidence-consistent interpretation is that YgfF is a solub
 ### Key sources (with dates and URLs)
 - Kim GB, Kim JY, Lee JA, Norsigian CJ, Palsson BO, Lee SY. **Functional annotation of enzyme-encoding genes using deep learning with transformer layers.** *Nature Communications* (Nov **2023**). DOI: **10.1038/s41467-023-43216-z**. URL: https://doi.org/10.1038/s41467-023-43216-z (kim2023functionalannotationof pages 6-7, kim2023functionalannotationof media 81d7b013)
 - Wohlgemuth R. **Back to the Future of Metabolism—Advances in the Discovery and Characterization of Unknown Biocatalytic Functions and Pathways.** *Life* (Mar **2024**). DOI: **10.3390/life14030364**. URL: https://doi.org/10.3390/life14030364 (wohlgemuth2024backtothe pages 3-6)
-- de Crécy-Lagard V, Dias R, Sexson N, Friedberg I, Yuan Y, Swairjo MA. **Limitations of Current Machine-Learning Models in Predicting Enzymatic Functions for Uncharacterized Proteins.** bioRxiv (posted **2024-07-01** per DOI record; accessed here as 2025 listing). DOI: **10.1101/2024.07.01.601547**. URL: https://doi.org/10.1101/2024.07.01.601547 (crecylagard2025limitationsofcurrent pages 7-9)
-
 
 References
 
@@ -235,26 +229,20 @@ References
 
 2. (kim2023functionalannotationof pages 5-6): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
 
-3. (crecylagard2025limitationsofcurrent pages 7-9): Valérie de Crécy-Lagard, Raquel Dias, Nick Sexson, Iddo Friedberg, Yifeng Yuan, and Manal A. Swairjo. Limitations of current machine-learning models in predicting enzymatic functions for uncharacterized proteins. BioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.01.601547, doi:10.1101/2024.07.01.601547. This article has 8 citations.
+3. (kim2023functionalannotationof media 81d7b013): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
 
-4. (kim2023functionalannotationof media 81d7b013): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
+4. (kim2023functionalannotationof pages 7-8): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
 
-5. (kim2023functionalannotationof pages 7-8): Gi Bae Kim, Ji Yeon Kim, Jong An Lee, Charles J. Norsigian, Bernhard O. Palsson, and Sang Yup Lee. Functional annotation of enzyme-encoding genes using deep learning with transformer layers. Nature Communications, Nov 2023. URL: https://doi.org/10.1038/s41467-023-43216-z, doi:10.1038/s41467-023-43216-z. This article has 110 citations and is from a highest quality peer-reviewed journal.
-
-6. (wohlgemuth2024backtothe pages 3-6): Roland Wohlgemuth. Back to the future of metabolism—advances in the discovery and characterization of unknown biocatalytic functions and pathways. Life, 14:364, Mar 2024. URL: https://doi.org/10.3390/life14030364, doi:10.3390/life14030364. This article has 2 citations.
+5. (wohlgemuth2024backtothe pages 3-6): Roland Wohlgemuth. Back to the future of metabolism—advances in the discovery and characterization of unknown biocatalytic functions and pathways. Life, 14:364, Mar 2024. URL: https://doi.org/10.3390/life14030364, doi:10.3390/life14030364. This article has 2 citations.
 
 ## Citations
 
 1. kim2023functionalannotationof pages 6-7
 2. kim2023functionalannotationof pages 5-6
-3. crecylagard2025limitationsofcurrent pages 7-9
-4. kim2023functionalannotationof pages 7-8
-5. wohlgemuth2024backtothe pages 3-6
-6. https://doi.org/10.1038/s41467-023-43216-z
-7. https://doi.org/10.3390/life14030364
-8. https://doi.org/10.1101/2024.07.01.601547
-9. https://doi.org/10.3390/life14030364;
-10. https://doi.org/10.1101/2024.07.01.601547;
-11. https://doi.org/10.1038/s41467-023-43216-z,
-12. https://doi.org/10.1101/2024.07.01.601547,
-13. https://doi.org/10.3390/life14030364,
+3. kim2023functionalannotationof pages 7-8
+4. wohlgemuth2024backtothe pages 3-6
+5. https://doi.org/10.1038/s41467-023-43216-z
+6. https://doi.org/10.3390/life14030364
+7. https://doi.org/10.3390/life14030364;
+8. https://doi.org/10.1038/s41467-023-43216-z,
+9. https://doi.org/10.3390/life14030364,
