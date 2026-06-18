@@ -393,10 +393,16 @@ failure modes:
   14,513 CAUTION accessions → Query A 247 conjunctions / 105 STRONG (100 net-new) +
   97 direct conflicts; Query B 1,140 flags. STRONG net-new hits recover known
   pseudoenzyme families (CRMP/DPYSL, ILK, ROR1, CASP12, AZIN2) across orthologs.
+- [x] **Reviewed the human CRMP family** (DPYSL2, DPYSL3, DPYSL4, CRMP1) — full
+  validated DRAFT reviews applying the DPYSL5 fix: `REMOVE` the electronic
+  `hydrolase activity` parents (GO:0016787/0016810/0016812), `ACCEPT` the curated
+  `NOT|dihydropyrimidinase`; DPYSL2 additionally `REMOVE`s a legacy positive
+  dihydropyrimidinase (TAS) + its dependent nucleobase-metabolism term. Core
+  function recorded as catalytically dead cytoskeletal regulator in semaphorin signaling.
 
 ## Pending
-- [ ] Review the net-new human pseudoenzymes surfaced (DPYSL2/3/4, CRMP1, ILK,
-  ROR1, CASP12, AZIN2) — strongest start: the CRMP family (same fix as DPYSL5).
+- [ ] Review the remaining net-new pseudoenzymes surfaced (ILK, ROR1, CASP12,
+  AZIN2) — standalone reviews.
 - [ ] Report the 9 local + 97 UniProt-wide DIRECT same-term GOA conflicts upstream
   to GO.
 - [ ] Scale Queries A/B UniProt-wide via a QuickGO GOA pull keyed on the 14k
