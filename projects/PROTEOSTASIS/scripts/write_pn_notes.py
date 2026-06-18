@@ -16,8 +16,8 @@ import argparse
 import csv
 import os
 import re
-import subprocess
 from collections import Counter
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -37,8 +37,8 @@ def repo_root() -> Path:
 
 
 def today() -> str:
-    """Use the shell date so generated notes match the current workspace date."""
-    return subprocess.check_output(["date", "+%F"], text=True).strip()
+    """Return the current local date for generated note stamps."""
+    return date.today().isoformat()
 
 
 def read_text(path: Path) -> str:

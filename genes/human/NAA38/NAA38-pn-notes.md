@@ -45,7 +45,7 @@
 - **Mapping strategy:** Correct. Subtype→NatC complex exact CC; BP at type level. No node-mapping change warranted.
 - **Evidence alignment:** Concordant. Review/notes anchor to PMID:19398576 (NatC; hMak31; IDA GO:0031417, IMP GO:0043066) and PMID:37891180. PN row carries no titles. No divergence.
 - **Verdict:** Consistent, high-quality. Same minor notes-vs-YAML mismatch as NAA35: notes say HT protein-binding PMID:25416956/PMID:32814053 should be MARK_AS_OVER_ANNOTATED, YAML uses KEEP_AS_NON_CORE. **Recommended edits:** Add BP GO:0006474 (involved_in, auxiliary subunit) to NAA38 review [YAML]; optionally reconcile PMID:25416956 / PMID:32814053 protein-binding actions with notes [YAML].
-- **2026-06-18 follow-up:** Implemented the high-confidence YAML edit: added GO:0006474 N-terminal protein amino acid acetylation as a NEW BP recommendation and core process for the NatC auxiliary subunit. The optional protein-binding action-style reconciliation remains separate.
+- **2026-06-18 follow-up:** Implemented the high-confidence YAML edit: added GO:0006474 N-terminal protein amino acid acetylation as a NEW BP recommendation and core process for the NatC auxiliary subunit, using IC to reflect inference from NatC complex membership rather than direct catalytic activity. The optional protein-binding action-style reconciliation remains separate.
 
 ## PN Dossier Context
 
