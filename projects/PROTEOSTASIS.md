@@ -222,7 +222,7 @@ annotations, and handling of negated (NOT) historical mannosidase annotations on
 (MTR120/KIAA1383 microtubule study) is cited for a `cytoplasmic microtubule`
 IDA on both `SERP1` (removed; full text confirms wrong gene) and `SRPRB`
 (left UNDECIDED where full text was unavailable). The mega-hub ER chaperones
-`HSPA5`/BiP, `HSP90B1`/GRP94 and the IRE1/PERK UPR sensors were deferred to
+`HSPA5`/BiP, `HSP90B1`/GRP94, and the `ERN1`/`EIF2AK3` UPR sensors were deferred to
 dedicated reviews. See
 [batch7_selection_notes.md](PROTEOSTASIS/batch7_selection_notes.md).
 
@@ -326,11 +326,11 @@ Coverage after the completion pass:
 
 | Level | Total source codes | Pending review | Mapped | Context only | No mapping | Deferred | Missing from YAML |
 |-------|--------------------|----------------|--------|--------------|------------|----------|-------------------|
-| Branch | 9 | 8 | 0 | 1 | 0 | 0 | 0 |
-| Class | 42 | 30 | 9 | 2 | 1 | 0 | 0 |
-| Group | 297 | 229 | 60 | 2 | 1 | 5 | 0 |
-| Type | 800 | 661 | 119 | 2 | 14 | 4 | 0 |
-| Subtype | 881 | 795 | 64 | 1 | 14 | 7 | 0 |
+| Branch | 9 | 0 | 0 | 1 | 8 | 0 | 0 |
+| Class | 42 | 0 | 9 | 16 | 17 | 0 | 0 |
+| Group | 297 | 0 | 133 | 31 | 133 | 0 | 0 |
+| Type | 800 | 0 | 233 | 26 | 541 | 0 | 0 |
+| Subtype | 881 | 0 | 105 | 16 | 760 | 0 | 0 |
 
 Every `2026-04-17` PN source code now has exactly one `subject_curations`
 record in a branch mapping YAML. `missing_from_yaml` is now a QA failure state,
@@ -341,37 +341,36 @@ The YAML inventory contains:
 
 | Curation status | Records | Meaning |
 |-----------------|---------|---------|
-| `pending_review` | 1723 | Accounted for in YAML, but not yet manually analyzed in depth |
-| `mapped` | 252 | Reviewed and mapped to a GO term |
-| `context_only` | 8 | GO relationship recorded, but unsafe for gene-level propagation |
-| `no_mapping` | 30 | Reviewed and concluded that no GO mapping should be made |
-| `deferred` | 16 | Reviewed, but blocked by evidence, taxonomy ambiguity, or a missing/better GO term |
+| `mapped` | 480 | Reviewed and mapped to a GO term |
+| `context_only` | 90 | GO relationship recorded, but unsafe for gene-level propagation |
+| `no_mapping` | 1459 | Reviewed and concluded that no GO mapping should be made |
 
 Mapping scopes are:
 
 | Mapping scope | Records | Use |
 |---------------|---------|-----|
-| `exact` | 4 | Direct semantic match |
-| `ok_for_propagation_to_go` | 248 | May produce candidate gene-GO propagations |
-| `too_broad_to_propagate` | 8 | Real contextual alignment, but excluded from propagation |
+| `exact` | 3 | Direct semantic match |
+| `ok_for_propagation_to_go` | 477 | May produce candidate gene-GO propagations |
+| `too_broad_to_propagate` | 90 | Real contextual alignment, but excluded from propagation |
 
-Most PN source codes are not yet final non-map calls. They are explicitly
-tracked as pending review so curators can distinguish coverage bookkeeping from
-completed curation decisions.
+There are no remaining `pending_review`, `deferred`, or `missing_from_yaml`
+records in the current mapping set. Most source codes now resolve to
+`no_mapping`, which is an intentional curation outcome: the PN node is useful
+for proteostasis taxonomy but should not become a GO assertion.
 
 Projection against the human GOA DuckDB at
 `~/repos/go-db/db/goa_human.ddb` produced:
 
 | Projection status | Unique gene-GO pairs |
 |-------------------|----------------------|
-| already in GOA exactly | 703 |
-| entailed by GOA closure | 403 |
-| more specific than existing GOA | 238 |
-| supported by GOA regulation | 77 |
-| new to GOA | 760 |
-| no local GOA available | 16 |
+| already in GOA exactly | 1928 |
+| entailed by GOA closure | 512 |
+| more specific than existing GOA | 305 |
+| supported by GOA regulation | 35 |
+| new to GOA | 753 |
+| no local GOA available | 32 |
 
-Only the `1075` candidate additions (`more_specific_than_existing_goa` +
+Only the `1093` candidate additions (`more_specific_than_existing_goa` +
 `supported_by_goa_regulation` + `new_to_goa`) should enter manual AIGR
 rereview queues. The `no_local_goa` class is mostly a data-availability state,
 not biological evidence; with the DuckDB source it is now a small residual
@@ -379,21 +378,21 @@ category.
 
 ### Extra-Scrutiny Findings
 
-The mapping audit flags `180/260` GO-bearing curation records as requiring manual
+The mapping audit flags `430/519` GO-bearing curation records as requiring manual
 gene-level review before they are used to change a gene review. These are not
 necessarily wrong mappings; they are places where propagation can mislead if the
 projected GO term is treated as an asserted gene function.
 
 Main flagged patterns:
 
-- `151` mappings have regulatory, recruitment, localization, sensing, or other
+- `313` mappings have regulatory, recruitment, localization, sensing, or other
   contextual PN source labels.
-- `73` mappings use broad or context-losing GO targets such as generic
+- `131` mappings use broad or context-losing GO targets such as generic
   translation, protein transport, DNA repair, DNA binding, or stress-response
   terms.
-- `44` mappings include domain, family, or subtype metadata in the source label.
-- `12` mappings are at branch or class level.
-- `8` mappings are explicitly categorized as `too_broad_to_propagate` and are
+- `262` mappings include domain, family, or subtype metadata in the source label.
+- `190` mappings are at branch or class level.
+- `89` mappings are explicitly categorized as `too_broad_to_propagate` and are
   excluded from propagation reports.
 
 Representative cases that should stay in the manual review queue:
@@ -510,76 +509,85 @@ So the right reading is:
 - some rows are close to GO MF/BP/CC concepts
 - many rows are module, family, or pathway-context labels rather than GO-annotatable facts
 
-## Strategy For Bringing PN Into GO
+## PN-GO Bridge Contract
 
-This section is independent of AIGR workflow.
+The recommended collaboration is not "PN keeps doing PN, GO keeps doing GO, and
+we occasionally sync." That is too loose. The better model is a **GO-ready
+companion layer** for each PN release.
 
-### 1. Separate membership from GO assertion
+PN should keep its native Branch/Class/Group/Type/Subtype taxonomy because it
+captures proteostasis systems information that GO should not flatten. But each
+PN row should also carry a bridge decision saying exactly what GO can do with
+that row.
 
-A PN row first tells us:
+### Row-level bridge fields
 
-- this gene belongs in proteostasis
-- the authors place it in a particular proteostasis module
+Each PN row should be assigned:
 
-It does **not** automatically tell us:
+- `go_bridge_status`: `direct_go_annotation`, `go_annotation_after_gene_review`,
+  `ontology_gap`, `pn_context_only`, `domain_family_only`, or `not_go_relevant`
+- `go_term_id`: the candidate GO term, when one exists
+- `go_relation`: `exact`, `narrower_than_pn`, `broader_than_pn`,
+  `contextual_to_pn`, or `none`
+- `evidence_basis`: `row_primary_literature`, `review_article`,
+  `domain_architecture`, `orthology`, `database_seed`, or `unknown`
+- `directness`: `direct_gene_evidence`, `family_inference`, `module_context`,
+  `regulator`, or `hypothesis`
+- `gene_exceptions`: genes in the node that must not inherit the candidate GO term
+- `ontology_gap`: optional NTR/design triage when the existing GO target is
+  insufficient
+- `aigr_outcome`: `accepted`, `modified`, `rejected`, `ontology_ticket`,
+  `pending_gene_review`, or `not_reviewed`
 
-- the correct GO aspect
-- the exact GO term
-- whether the role is core vs contextual
-- whether the evidence is strong enough for manual GO curation
+This turns PN into a GO-compatible curation product without forcing PN to become
+a GO annotation table.
 
-### 2. Tag each row by provenance
+### Ontology-gap triage
 
-At minimum, rows should be split into:
+The `ontology_gap` block lives inside the existing mapping row so it does not
+duplicate the mapping schema. The parent row still answers: "what existing GO
+term, if any, can represent this PN node today?" The nested block answers:
+"does this mismatch justify ontology work?"
 
-- `entity_based_literature_supported`
-- `domain_based_family_inference`
-- `ALP_note_backed`
-- `UPS_domain_backed`
-- `cross_branch_context_only`
+The block records `status` values such as `covered_by_existing_go`,
+`ntr_candidate`, `ntr_justified`, `needs_design_pattern`, or
+`better_as_gocam_or_annotation_extension`; a `gap_type`; candidate parent GO
+terms; example genes; anti-scope notes; recommended action; and priority. For
+example, the SPNS1/ALR efflux row is marked `ntr_candidate`, not yet
+`ntr_justified`, because `GO:0007041 lysosomal transport` is usable today but
+loses the autophagic-lysosome-reformation efflux semantics that PN captures.
 
-This is the biggest determinant of whether a row is GO-ready, prediction-like, or just useful context.
+### Deliverables per PN release
 
-### 3. Decompose each PN row into candidate GO semantics
+For each PN workbook release, GO/AIGR should produce four artifacts:
 
-Each row should be classified into one of four buckets:
+1. **GO annotation candidate table**: only rows with `direct_go_annotation` or
+   `go_annotation_after_gene_review`.
+2. **Exception table**: cases such as `HSPA12A/HSPA12B` under HSP70, `TTC28`
+   under HSP90 cochaperone, BAG6 under broad ER protein transport, and
+   pseudoenzymes under enzyme-family buckets.
+3. **Ontology-gap list**: missing GO concepts exposed by PN, separated from
+   ordinary annotation work.
+4. **PN feedback table**: workbook corrections, ambiguous placements, weak
+   domain-only inclusions, and evidence upgrades needed from PN authors.
 
-1. `exact_or_near_GO`
-   Example: complex component, transport process, clear enzymatic role.
-2. `GO_with_context_loss`
-   Example: a GO term exists but loses the proteostasis-system framing.
-3. `ontology_gap`
-   Example: the biology is real but current GO lacks a clean term or term family.
-4. `non_GO_metadata`
-   Example: family/domain/subtype labels that should stay as supporting metadata.
+The sync point should be release-gated, not informal: PN release -> bridge
+classification -> projection/audit -> gene-level review of action rows -> GO
+annotations, ontology tickets, and PN feedback.
 
-### 4. Curate by branch, not all at once
+### Decision policy
 
-The branches are not equally reusable.
+| PN row type | GO action |
+|-------------|-----------|
+| Direct complex/component/enzyme/process role with gene-level evidence | Curate or project to GO, then validate gene-by-gene if propagation is involved |
+| Family/domain bucket with known divergent members | Keep PN-native; add gene exceptions before any GO projection |
+| Regulatory or pathway-stage placement | Usually GO-review queue, not automatic annotation |
+| Proteostasis systems context with no clean GO semantics | Keep as PN context only |
+| Real biology lacking a GO term | Open an ontology ticket; do not force into a broad existing GO box |
 
-- Start with ALP rows that have notes and references.
-- Use non-ALP/non-UPS branches to identify likely GO-compatible roles and obvious positive controls.
-- Treat UPS as a mixed case: many rows are probably best handled as prediction candidates or review leads until branch-specific evidence is inspected.
-
-### 5. Keep domain-based rows conservative
-
-The papers explicitly flag domain-based inclusions and borderline cases.
-
-Concrete examples:
-
-- `HSPA12A` and `HSPA12B` are included as HSP70-family PN components even though MS1 says their proteostasis functions are not yet known.
-- UPS authors explicitly say they aimed to be inclusive and that domain weight is debatable in some cases.
-
-These should not be imported into GO as manual curation without independent evidence.
-
-### 6. Expect ontology-gap work
-
-The PN resource reinforces that GO has missing or awkward coverage around:
-
-- holdase chaperoning
-- sensor/adaptor roles in quality control
-- co-chaperone mechanistic MF space
-- proteostasis-system context that mixes process and molecular role
+This is stricter than a periodic mapping sync. It makes every PN row either
+actionable for GO, explicitly non-actionable for GO, or queued as an ontology or
+evidence problem.
 
 ## AIGR Triage Opportunities
 
@@ -653,18 +661,25 @@ manual rereview.
   fusion step itself. That was not strong enough to add the more specific term
   to the human review.
 
-## Priority Review Targets
+## Priority Follow-up Targets
 
 See [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
 
-Recommended first-pass jobs:
+These rows began as first-pass priorities, but local reviews now exist for all
+listed genes. They are not yet represented in `review_batches.tsv` or the
+phase-1 dossier set, so the next task is bookkeeping plus bridge-outcome
+integration rather than initial fetch/review.
 
-1. `BTF3`: fetch and review the true human `BTF3` gene (`P20290`) as the PN
-   nascent-polypeptide-associated complex component.
-2. `HSPA12A` and `HSPA12B`: fetch and review as explicit domain-based PN inclusions.
-3. `AARSD1`: review the dual chaperone/translation placement.
-4. `BAG6`: review as a multi-branch boundary case connecting transport, UBL biology, and proteostasis.
-5. `TTC28`: explicitly test the PN cochaperone claim against the existing mitosis-focused review.
+Recommended follow-up jobs:
+
+1. Add these reviewed boundary cases to PN review tracking or create a
+   separate `boundary-review` batch so they appear in phase-1-style dossiers.
+2. Materialize their mapping outcomes in the bridge layer:
+   `HSPA12A/HSPA12B` are HSP70-family exceptions; `AARSD1` and `TTC28` are
+   HSP90-cochaperone exceptions; `BAG6` supports specific GET/ERAD/holdase
+   terms but not broad ER protein-transport propagation; `BTF3` is a positive
+   NAC-component case.
+3. Re-run the phase-1 dossier builder after updating the tracking sidecar.
 
 ## PN-vs-UPB Comparison
 
@@ -687,8 +702,13 @@ The PN project is broader:
 
 ## Next Steps
 
-- Audit the highest-priority genes in [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv).
-- Work through the `1075` projected candidate additions, using the unusual
+- Add the reviewed priority/boundary genes in
+  [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv) to tracking and
+  phase-1-style dossier generation.
+- Work through the `1093` projected candidate additions, using the unusual
   propagation report as a blocklist for automatic review edits.
 - Promote only gene-level decisions that survive evidence review into AIGR
-  YAML; leave broad PN context as project metadata.
+  YAML.
+- Convert the mapping layer into the explicit PN-GO bridge contract described
+  above, including actionability status, evidence basis, directness, exceptions,
+  ontology gaps, and PN feedback.

@@ -7,3 +7,4 @@
 - **Evidence alignment:** Strong overlap. PN's single reference (FAM134 paralogues EMBO reports = PMID:34338405) is in the review (HIGH/VERIFIED). Review additionally anchors on the foundational FAM134 ER-phagy paper PMID:26040720.
 - **Verdict:** Fully consistent; the reticulophagy BP is a justified ADD the review currently lacks (function captured at MF/generic-BP level only).
 - **Recommended edits:** [YAML] add GO:0061709 reticulophagy (BP, involved_in; the specific process for this ER-phagy receptor) — currently absent; more precise than the accepted generic GO:0061753. Cite PMID:26040720/PMID:34338405.
+- **2026-06-18 follow-up:** Implemented the YAML edit: added GO:0061709 reticulophagy as a NEW BP recommendation and added it to the core ER-phagy function while retaining GO:0061753 substrate localization to autophagosome.
