@@ -1,0 +1,137 @@
+---
+name: Warm reference cache
+
+# Keeps the committed reference cache (publications/) complete so the full
+# `just validate-all` reference phase stays cache-bound instead of re-fetching
+# references from PubMed/providers on every run. Runs weekly (newly-added
+# references are fetched; an unchanged cache is a no-op) and on demand.
+
+on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: '0 4 * * 1'   # Mondays 04:00 UTC, ahead of the weekly validate-all
+  workflow_dispatch:
+
+concurrency:
+  group: warm-reference-cache
+  cancel-in-progress: true
+
+jobs:
+  warm-reference-cache:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Install project
+        run: uv sync --dev
+
+      - name: Warm the reference cache
+        run: just warm-references
+
+      - name: Check for cache changes
+        id: check-changes
+        run: |
+          if git diff --quiet publications/; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "Reference cache already complete; nothing to commit."
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            git diff --stat publications/ | tail -1
+          fi
+
+      - name: Compute metadata
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: metadata
+        run: |
+          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
+          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
+          {
+            echo "branch=auto/warm-reference-cache"
+            echo "changed=$CHANGED"
+            echo "total=$TOTAL"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create or update warm-cache PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
+          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
+          git checkout -B "$BRANCH_NAME"
+
+          git add publications/
+          git commit -m "$(cat <<EOF
+          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
+
+          Automated weekly warm so validate-all reads cached references instead of
+          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
+          EOF
+          )"
+
+          git push --force-with-lease origin "$BRANCH_NAME"
+
+          PR_BODY="$(mktemp)"
+          {
+            echo "## Summary"
+            echo
+            echo "Automated weekly warm of the reference cache (\`publications/\`)."
+            echo "Fetches references that are new or lack full text so the full"
+            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
+            echo
+            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
+            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
+            echo
+            echo "Cache data only — no functional review needed; merge when convenient."
+            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
+          } > "$PR_BODY"
+
+          EXISTING_PR_NUMBER="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json number \
+            --limit 1 \
+            --jq '.[0].number // empty')"
+
+          if [ -n "$EXISTING_PR_NUMBER" ]; then
+            gh api \
+              --method PATCH \
+              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
+              -f body="$(cat "$PR_BODY")" \
+              >/dev/null
+            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "Warm reference cache" \
+            --body-file "$PR_BODY"
+
+          echo "Created warm-cache PR."
