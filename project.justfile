@@ -424,6 +424,12 @@ validate-references-all:
         {{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
     done
 
+# Warm the reference cache (publications/) so validate-all stops re-fetching.
+# Fetches every referenced PMID/DOI (with full text) into the cache; commit the result.
+[group('QC')]
+warm-references:
+    uv run python scripts/warm_reference_cache.py
+
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
