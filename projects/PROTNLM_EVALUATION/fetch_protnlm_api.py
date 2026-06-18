@@ -87,9 +87,9 @@ def fetch_one(accession: str) -> dict | None:
                 time.sleep(wait)
                 continue
             raise
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError):
             if attempt < MAX_RETRIES - 1:
-                time.sleep(1)
+                time.sleep(2 ** (attempt + 1))
                 continue
             raise
     return None
