@@ -154,7 +154,7 @@ print(pd.DataFrame([summarise(rl, "RL"), summarise(sft, "SFT")]).to_string(index
 ])
 
 # --------------------------------------------------------------------------
-# Notebook 2: per-term SFT prediction assessments (de Crecy-Lagard taxonomy)
+# Notebook 2: per-term SFT prediction assessments (Expert Synthetic Review taxonomy)
 # --------------------------------------------------------------------------
 nb2 = new_notebook(cells=[
     md(r"""
@@ -162,13 +162,13 @@ nb2 = new_notebook(cells=[
 
 This notebook checks the per-term prediction assessments stored in
 `genes/<species>/<gene>/<gene>-sft-predictions.yaml`. Each predicted GO term
-carries a `review.assessment` using the de Crecy-Lagard taxonomy (COR / CNN /
-LSP / UNC / PLI / NPI / REP), the same scheme used in the 7-gene *E. coli*
-replication and in the SFT results of the manuscript.
+carries a `review.assessment` using the Expert Synthetic Review taxonomy
+(COR / CNN / LSP / UNC / PLI / NPI / REP), the same scheme used in
+`ESR-ECOLI-DET-Mini` and in the SFT results of the manuscript.
 
 The primary paired benchmark is **ARGO139** (Annotation Review GO), the fixed
-139-gene biological benchmark used for all non-VDCL BioReason-Pro analyses in
-the paper. SFT terms for ARGO139 genes come from the HuggingFace
+139-gene biological benchmark used for the paired BioReason-Pro analyses in the
+paper. SFT terms for ARGO139 genes come from the HuggingFace
 `wanglab/protein_catalogue` snapshot where available (95 genes) and from the
 BioReason-Pro SFT web export for the 44 ARGO139 genes absent from the HF
 catalogue. The larger 184-gene union (ARGO139 + 45 HF-only genes) is retained as
@@ -221,7 +221,7 @@ print(f"  ARGO139 genes with HF SFT terms: {len(hf_gene_keys)}")
 print(f"  ARGO139 genes absent from HF, filled by web export: {len(web_gene_keys)}")
 print(f"  web set equals ARGO139 minus HF: {web_gene_keys == (rl_keys - hf_gene_keys)}")
 """),
-    md("## Assessment Distribution\n\nOrdered by the de Crecy-Lagard taxonomy, with glosses. The first table is ARGO139. Because web exports include many ancestor terms, the source-stratified tables are the most interpretable."),
+    md("## Assessment Distribution\n\nOrdered by the Expert Synthetic Review taxonomy, with glosses. The first table is ARGO139. Because web exports include many ancestor terms, the source-stratified tables are the most interpretable."),
     code(r"""
 def assessment_table(frame):
     counts = frame.assessment.value_counts()

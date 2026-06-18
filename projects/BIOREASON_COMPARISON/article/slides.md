@@ -103,7 +103,7 @@ UniProt record · full GO annotation table (QuickGO) · InterPro architecture ·
 **2 · Curator-agent review** (three phases)
 - *Annotation-level*: each GO term → `ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE / MARK_AS_OVER_ANNOTATED / UNDECIDED` + **verbatim supporting quote**
 - *Core-function synthesis*: free-text summary + proposed terms
-- *Prediction review*: classify each predicted term with the **de Crécy-Lagard taxonomy** + error-type tags
+- *Prediction review*: classify each predicted term with the **Expert Synthetic Review taxonomy** + error-type tags
 
 **3 · Validation** — LinkML schema + best-practice checks; **every quote must literally appear in a cached publication**
 
@@ -241,11 +241,13 @@ BioReason-Pro's narrative and its GO-term list are generated semi-independently 
 
 ---
 
-## Case study 2 — VDCL positive control
+## Case study 2 — ESR-ECOLI-DET-Mini
 
 7 *E. coli* genes spanning all classes; AIGR reproduces the published taxonomy.
 
-Not blinded: the project artifacts include the VDCL labels/rationales.
+Not blinded: the project artifacts include the published expert labels/rationales.
+
+Dataset ID: `10.5281/zenodo.20751016`
 
 | Gene | Paper | AIGR | Recovered rationale |
 |---|---|---|---|
@@ -263,9 +265,9 @@ Not blinded: the project artifacts include the VDCL labels/rationales.
 
 ## Answer-key withheld recap: useful, not expert-equivalent
 
-A separate literature/bioinformatics-assisted run excluded the VDCL paper and published rationales.
+A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard paper and published rationales.
 
-| Gene | VDCL | Withheld run | Interpretation |
+| Gene | Expert | Withheld run | Interpretation |
 |---|---|---|---|
 | fepE | REP | **REP** | Frequency-bias smell test recovered |
 | yciO | PLI | **PLI** | Paralog-overannotation recovered |
@@ -314,7 +316,7 @@ A separate literature/bioinformatics-assisted run excluded the VDCL paper and pu
 **Data, reviews, pipeline, schema & validator — all open:**
 `github.com/ai4curation/ai-gene-review`
 
-Browse 139 BioReason-Pro reviews + 7-gene *E. coli* synthetic review:
+Browse 139 BioReason-Pro reviews + `ESR-ECOLI-DET-Mini`:
 `ai4curation.io/ai-gene-review`
 
 <span class="cite">de Crécy-Lagard et al. 2025 (G3, PMID:40703034) · Fallahpour et al. 2026 (bioRxiv 10.64898/2026.03.19.712954)</span>

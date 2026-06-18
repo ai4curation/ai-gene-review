@@ -6,7 +6,7 @@ title: "BioReason-Pro comparison — stats notebooks"
 
 Reproducible Jupyter notebooks that recompute the summary statistics quoted in
 [`../../BIOREASON_COMPARISON.md`](../../BIOREASON_COMPARISON.md) and the
-[manuscript](../article/manuscript.md) **directly from the committed per-gene
+[manuscript](../article/manuscript.tex) **directly from the committed per-gene
 files** under `genes/`. Nothing is hard-coded — every table and figure is derived
 on the fly, so the notebooks double as a reproducibility check for the paper's numbers.
 

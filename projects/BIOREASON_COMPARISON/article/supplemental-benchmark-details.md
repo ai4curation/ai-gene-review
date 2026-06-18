@@ -5,7 +5,7 @@ autolink_gene_symbols: false
 
 # Supplemental benchmark and source-availability details
 
-This supplement documents analyses that are useful for reproducibility but are not part of the main paper's single BioReason-Pro benchmark story. The main manuscript uses **ARGO139** for all non-VDCL BioReason-Pro results. The views below explain why earlier drafts used multiple denominators and preserve those results for reproducibility.
+This supplement documents analyses that are useful for reproducibility but are not part of the main paper's single BioReason-Pro benchmark story. The main manuscript uses **ARGO139** for the paired BioReason-Pro results, while `ESR-ECOLI-DET-Mini` is the separate Expert Synthetic Review recap positive control. The views below explain why earlier drafts used multiple denominators and preserve those results for reproducibility.
 
 ## S1. Cohort accounting
 

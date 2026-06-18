@@ -11,7 +11,7 @@ Data sources
 - ``genes/<species>/<gene>/<gene>-bioreason-sft-review.md`` -> SFT narrative scores
   (each contains ``- **Correctness**: N/5`` and ``- **Completeness**: N/5`` lines)
 - ``genes/<species>/<gene>/<gene>-sft-predictions.yaml`` -> per-term SFT
-  prediction assessments (de Crecy-Lagard taxonomy in ``review.assessment``)
+  prediction assessments (Expert Synthetic Review taxonomy in ``review.assessment``)
 """
 from __future__ import annotations
 

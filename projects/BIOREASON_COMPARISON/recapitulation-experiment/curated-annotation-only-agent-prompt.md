@@ -1,12 +1,12 @@
 # Curated-Annotation-Only Recapitulation Prompt
 
-Use this prompt for **Arm A** of the VDCL recapitulation experiment: a blinded, curated-annotation-only review of computational predictions.
+Use this prompt for **Arm A** of the `ESR-ECOLI-DET-Mini` recapitulation experiment: a blinded, curated-annotation-only review of computational predictions.
 
 ````text
 You are performing a blinded, curated-annotation-only prediction review.
 
 Goal:
-For each gene, review the computational prediction(s) in the assigned `*-predictions-review.yaml` stub and fill in the `review:` section using only the allowed local evidence. The purpose is to test whether an agent can approximate a curator's biological-validity classification from curated database annotations, without literature review and without access to the published VDCL answer key.
+For each gene, review the computational prediction(s) in the assigned `*-predictions-review.yaml` stub and fill in the `review:` section using only the allowed local evidence. The purpose is to test whether an agent can approximate a curator's biological-validity classification from curated database annotations, without literature review and without access to the published de Crécy-Lagard answer key.
 
 Hard restrictions:
 - Do not use web search.
@@ -104,7 +104,7 @@ Important judgment rules:
 - Prefer `LSP` over `CNN` when the prediction is correct but materially less specific than the curated annotation.
 - Use `PLI` only when the error is specifically homolog/paralog/subfamily confusion.
 - Use `NPI` for pathway absence, wrong organismal context, wrong compartment/process, or contradiction by curated function.
-- Do not cite or mention VDCL, de Crécy-Lagard, PMID:40703034, or any published label/rationale.
+- Do not cite or mention de Crécy-Lagard, PMID:40703034, `ESR-ECOLI-DET-Mini`, or any published label/rationale.
 - End by validating the YAML if the validation command is available.
 ````
 
