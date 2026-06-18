@@ -18,11 +18,21 @@ Predictions are post-processed by the **Evidencer** — a corroboration pipeline
 
 ## Data source
 
-Post-processed ProtNLM2 XML export (`post-processed-2026_02_28k.xml`): 28,553 entries with predicted protein names, GO terms, subcellular locations, and function comments. All predictions use evidence code ECO:0008006 with source `Google:ProtNLM2`.
+### REST API (recommended, reproducible)
 
-**Dataset version note:** The public ProtNLM2 pilot release (UniProt 2026_02) covers [26,856 accessions](https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv). Our XML is an earlier pre-release with 1,697 additional entries that were subsequently removed during quality filtering. Some predictions in our data may have been caught by the production Evidencer exclusion criteria.
+Predictions are fetched from the UniProt REST API endpoint `https://rest.uniprot.org/uniprotkb/protnlm/{accession}`. The canonical accession list (26,856 entries) is published at the [FTP site](https://ftp.ebi.ac.uk/pub/contrib/UniProt/ProtNLM2/List_of_UniProt_accessions_that_have_ProtNLM2_annotations.tsv).
 
-**Note:** The XML uses a synthetic UniProt-like format with placeholder values for organism, dates, and dataset fields (`dataset="TrEMBL"`, `proteinExistence: uncertain`, `organism: PLACEHOLDER`). It is not a snapshot of actual UniProt entries — the proteins span the full range from long-established Swiss-Prot entries (e.g. Q6P6B1, Swiss-Prot since 2007) to unreviewed TrEMBL sequences.
+```bash
+python projects/PROTNLM_EVALUATION/fetch_protnlm_api.py          # fetch all + convert to TSVs
+python projects/PROTNLM_EVALUATION/fetch_protnlm_api.py --resume  # resume interrupted fetch
+python projects/PROTNLM_EVALUATION/fetch_protnlm_api.py --convert-only  # re-convert existing JSONL
+```
+
+The API returns JSON with evidence inline per prediction. The fetch script saves raw JSONL (`protnlm_api.jsonl`) for reproducibility and converts to the same 3 TSV files used by the analysis notebooks.
+
+### Pre-release XML (historical)
+
+The original analysis used a pre-release XML export (`post-processed-2026_02_28k.xml`, 28,553 entries) parsed by `parse_protnlm_xml.py`. This included 1,697 entries subsequently removed during quality filtering (64.5% Swiss-Prot entries excluded from the TrEMBL-only public pilot, plus QC-filtered TrEMBL entries). The API serves the same predictions in a cleaner format.
 
 ## Prediction types
 
@@ -46,17 +56,29 @@ Each prediction has a model score (0–1, threshold 0.05) and post-hoc corrobora
 - **recommended_protein_name** (543): Name transferred from characterized homolog
 - Plus many smaller categories (Pfam, SUPFAM, Gene3D, CDD, etc.)
 
+## ARGO-ProtNLM-50 Benchmark
+
+A curated set of 50 proteins for systematic evaluation, stratified across:
+- 14 taxonomic groups (mammals, plants, bacteria, fish, insects, fungi, etc.)
+- 4 prediction categories (rich, partial, go_only, name_only)
+- Multiple evidence methods (string match, phmmer, tmalign)
+- 5 case studies from the exploratory analysis (trivially correct, phmmer transfer, false positive, cross-kingdom error, ontology gap)
+
+All 50 are in the public pilot release. See `argo_protnlm_50.csv`.
+
 ## Files
 
 | File | Description |
 |------|-------------|
-| `PROTNLM_EVALUATION/parse_protnlm_xml.py` | Parser: XML -> TSV files |
+| `PROTNLM_EVALUATION/fetch_protnlm_api.py` | Fetches from REST API -> JSONL + TSV files |
+| `PROTNLM_EVALUATION/parse_protnlm_xml.py` | Legacy parser: XML -> TSV files |
 | `PROTNLM_EVALUATION/fetch_taxonomy.py` | Fetches species from UniProt REST API |
+| `PROTNLM_EVALUATION/argo_protnlm_50.csv` | Benchmark set of 50 proteins for evaluation |
 | `PROTNLM_EVALUATION/entries.tsv` | One row per entry (accession, name, prediction counts) |
 | `PROTNLM_EVALUATION/predictions.tsv` | One row per GO/function/location prediction |
 | `PROTNLM_EVALUATION/evidence.tsv` | One row per evidence block (scores, provenance) |
 | `PROTNLM_EVALUATION/taxonomy.tsv` | Accession -> species mapping from UniProt |
-| `PROTNLM_EVALUATION/protnlm_summary.ipynb` | Summary statistics notebook |
+| `PROTNLM_EVALUATION/protnlm_summary.ipynb` | Exploratory analysis notebook |
 
 ## Overlap with AIGR reviews
 
