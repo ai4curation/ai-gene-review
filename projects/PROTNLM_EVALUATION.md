@@ -79,6 +79,7 @@ All 50 are in the public pilot release. See `argo_protnlm_50.csv`.
 | `PROTNLM_EVALUATION/evidence.tsv` | One row per evidence block (scores, provenance) |
 | `PROTNLM_EVALUATION/taxonomy.tsv` | Accession -> species mapping from UniProt |
 | `PROTNLM_EVALUATION/protnlm_summary.ipynb` | Exploratory analysis notebook |
+| `PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb` | ARGO-ProtNLM-50 benchmark evaluation notebook |
 
 ## Overlap with AIGR reviews
 
