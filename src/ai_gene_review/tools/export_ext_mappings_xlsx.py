@@ -118,6 +118,13 @@ README_ROWS = [
         "the projected GO annotation.",
     ),
     (
+        "ontology_gap_*",
+        "Optional GO ontology-gap / NTR triage fields. These fields record whether "
+        "the PN node exposes missing GO coverage, whether an NTR is justified or "
+        "still a candidate, and what GO editorial action is recommended. They do "
+        "not replace target_go_id, mapping_scope, or rationale.",
+    ),
+    (
         "rationale",
         "Manual curator explanation of why the mapping is defensible.",
     ),
@@ -169,6 +176,16 @@ class MappingRow:
     rationale: str
     notes: str
     references: str
+    ontology_gap_status: str
+    ontology_gap_type: str
+    ontology_gap_proposed_label: str
+    ontology_gap_go_aspect: str
+    ontology_gap_recommended_action: str
+    ontology_gap_priority: str
+    ontology_gap_candidate_parent_terms: str
+    ontology_gap_example_genes: str
+    ontology_gap_insufficient_reason: str
+    ontology_gap_anti_scope_notes: str
 
 
 @dataclass(frozen=True)
@@ -190,6 +207,16 @@ class UnmappedRow:
     rationale: str
     notes: str
     references: str
+    ontology_gap_status: str
+    ontology_gap_type: str
+    ontology_gap_proposed_label: str
+    ontology_gap_go_aspect: str
+    ontology_gap_recommended_action: str
+    ontology_gap_priority: str
+    ontology_gap_candidate_parent_terms: str
+    ontology_gap_example_genes: str
+    ontology_gap_insufficient_reason: str
+    ontology_gap_anti_scope_notes: str
 
 
 def _clean_value(value: Any) -> str:
@@ -233,6 +260,37 @@ def _format_string_list(raw_values: Any) -> str:
     return "; ".join(_clean_value(value) for value in raw_values if _clean_value(value))
 
 
+def _format_go_term_list(raw_terms: Any) -> str:
+    if not raw_terms:
+        return ""
+    parts = []
+    for term in raw_terms:
+        term_id = _clean_value(term.get("id"))
+        label = _clean_value(term.get("label"))
+        parts.append(" ".join(value for value in (term_id, label) if value))
+    return "; ".join(part for part in parts if part)
+
+
+def _ontology_gap_fields(entry: dict[str, Any]) -> dict[str, str]:
+    gap = entry.get("ontology_gap") or {}
+    return {
+        "ontology_gap_status": _clean_value(gap.get("status")),
+        "ontology_gap_type": _clean_value(gap.get("gap_type")),
+        "ontology_gap_proposed_label": _clean_value(gap.get("proposed_label")),
+        "ontology_gap_go_aspect": _clean_value(gap.get("go_aspect")),
+        "ontology_gap_recommended_action": _clean_value(gap.get("recommended_action")),
+        "ontology_gap_priority": _clean_value(gap.get("priority")),
+        "ontology_gap_candidate_parent_terms": _format_go_term_list(
+            gap.get("candidate_parent_terms")
+        ),
+        "ontology_gap_example_genes": _format_string_list(gap.get("example_genes")),
+        "ontology_gap_insufficient_reason": _clean_value(
+            gap.get("why_existing_mapping_is_insufficient")
+        ),
+        "ontology_gap_anti_scope_notes": _clean_value(gap.get("anti_scope_notes")),
+    }
+
+
 def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[UnmappedRow]]:
     """Load all mapping YAML files into flat row objects."""
     mapping_rows: list[MappingRow] = []
@@ -247,6 +305,7 @@ def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[Unmappe
             curation_status = _clean_value(entry.get("curation_status"))
             split = _split_subject_code(_clean_value(entry.get("subject_code")))
             target_term = entry.get("target_term", {}) or {}
+            ontology_gap = _ontology_gap_fields(entry)
             if target_term and entry.get("mapping_scope"):
                 mapping_rows.append(
                     MappingRow(
@@ -270,6 +329,7 @@ def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[Unmappe
                         rationale=_clean_value(entry.get("rationale")),
                         notes=_clean_value(entry.get("notes")),
                         references=_format_references(entry.get("references")),
+                        **ontology_gap,
                     )
                 )
             else:
@@ -290,6 +350,7 @@ def load_mapping_rows(mapping_dir: Path) -> tuple[list[MappingRow], list[Unmappe
                         rationale=_clean_value(entry.get("rationale")),
                         notes=_clean_value(entry.get("notes")),
                         references=_format_references(entry.get("references")),
+                        **ontology_gap,
                     )
                 )
 
@@ -543,6 +604,16 @@ def build_workbook(
         "rationale",
         "notes",
         "references",
+        "ontology_gap_status",
+        "ontology_gap_type",
+        "ontology_gap_proposed_label",
+        "ontology_gap_go_aspect",
+        "ontology_gap_recommended_action",
+        "ontology_gap_priority",
+        "ontology_gap_candidate_parent_terms",
+        "ontology_gap_example_genes",
+        "ontology_gap_insufficient_reason",
+        "ontology_gap_anti_scope_notes",
     ]
     all_mapping_rows = [
         [
@@ -566,6 +637,16 @@ def build_workbook(
             row.rationale,
             row.notes,
             row.references,
+            row.ontology_gap_status,
+            row.ontology_gap_type,
+            row.ontology_gap_proposed_label,
+            row.ontology_gap_go_aspect,
+            row.ontology_gap_recommended_action,
+            row.ontology_gap_priority,
+            row.ontology_gap_candidate_parent_terms,
+            row.ontology_gap_example_genes,
+            row.ontology_gap_insufficient_reason,
+            row.ontology_gap_anti_scope_notes,
         ]
         for row in mapping_rows
     ]
@@ -588,6 +669,16 @@ def build_workbook(
         "rationale",
         "notes",
         "references",
+        "ontology_gap_status",
+        "ontology_gap_type",
+        "ontology_gap_proposed_label",
+        "ontology_gap_go_aspect",
+        "ontology_gap_recommended_action",
+        "ontology_gap_priority",
+        "ontology_gap_candidate_parent_terms",
+        "ontology_gap_example_genes",
+        "ontology_gap_insufficient_reason",
+        "ontology_gap_anti_scope_notes",
     ]
     all_unmapped_rows = [
         [
@@ -606,6 +697,16 @@ def build_workbook(
             row.rationale,
             row.notes,
             row.references,
+            row.ontology_gap_status,
+            row.ontology_gap_type,
+            row.ontology_gap_proposed_label,
+            row.ontology_gap_go_aspect,
+            row.ontology_gap_recommended_action,
+            row.ontology_gap_priority,
+            row.ontology_gap_candidate_parent_terms,
+            row.ontology_gap_example_genes,
+            row.ontology_gap_insufficient_reason,
+            row.ontology_gap_anti_scope_notes,
         ]
         for row in unmapped_rows
     ]
@@ -666,6 +767,16 @@ def build_workbook(
                 row.rationale,
                 row.notes,
                 row.references,
+                row.ontology_gap_status,
+                row.ontology_gap_type,
+                row.ontology_gap_proposed_label,
+                row.ontology_gap_go_aspect,
+                row.ontology_gap_recommended_action,
+                row.ontology_gap_priority,
+                row.ontology_gap_candidate_parent_terms,
+                row.ontology_gap_example_genes,
+                row.ontology_gap_insufficient_reason,
+                row.ontology_gap_anti_scope_notes,
             ]
         )
     for row in unmapped_rows:
@@ -689,6 +800,16 @@ def build_workbook(
                 row.rationale,
                 row.notes,
                 row.references,
+                row.ontology_gap_status,
+                row.ontology_gap_type,
+                row.ontology_gap_proposed_label,
+                row.ontology_gap_go_aspect,
+                row.ontology_gap_recommended_action,
+                row.ontology_gap_priority,
+                row.ontology_gap_candidate_parent_terms,
+                row.ontology_gap_example_genes,
+                row.ontology_gap_insufficient_reason,
+                row.ontology_gap_anti_scope_notes,
             ]
         )
 
@@ -711,6 +832,16 @@ def build_workbook(
         "rationale",
         "notes",
         "references",
+        "ontology_gap_status",
+        "ontology_gap_type",
+        "ontology_gap_proposed_label",
+        "ontology_gap_go_aspect",
+        "ontology_gap_recommended_action",
+        "ontology_gap_priority",
+        "ontology_gap_candidate_parent_terms",
+        "ontology_gap_example_genes",
+        "ontology_gap_insufficient_reason",
+        "ontology_gap_anti_scope_notes",
     ]
     for file_name in seen_files:
         sheet = workbook.create_sheet(_sheet_name_for_mapping_file(file_name))
