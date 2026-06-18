@@ -5,7 +5,7 @@ autolink_gene_symbols: false
 
 # Supplemental benchmark and source-availability details
 
-This supplement documents analyses that are useful for auditability but are not part of the main paper's single BioReason-Pro benchmark story. The main manuscript uses **ARGO139** for all non-VDCL BioReason-Pro results. The views below explain why earlier drafts used multiple denominators and preserve those results for reproducibility.
+This supplement documents analyses that are useful for reproducibility but are not part of the main paper's single BioReason-Pro benchmark story. The main manuscript uses **ARGO139** for all non-VDCL BioReason-Pro results. The views below explain why earlier drafts used multiple denominators and preserve those results for reproducibility.
 
 ## S1. Cohort accounting
 
@@ -22,7 +22,7 @@ The main BioReason-Pro benchmark is ARGO139, a fixed 139-gene set listed in `../
 | `supplement_sft_narrative_hf` | 45 | - | SFT narrative cross-check |
 | `supplement_sft_terms_hf_catalogue_140` | 140 | 1,292 | Full HF catalogue view |
 | `supplement_sft_terms_union_184` | 184 | 11,034 | ARGO139 plus 45 HF-only genes |
-| `supplement_gogpt_overlap_300` | 300 | 8,910 | Separate GO-GPT overlap audit |
+| `supplement_gogpt_overlap_300` | 300 | 8,910 | Separate GO-GPT overlap review |
 
 The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue` SFT download contained 95/139 ARGO139 genes. The remaining 44 ARGO139 genes were not present in that download, so the main paper fills them from BioReason-Pro SFT web exports. The web exports include many GO ancestor terms, so the source label is retained throughout.
 
@@ -74,9 +74,9 @@ The older 184-gene union is the broadest source-availability view, but it combin
 
 The HuggingFace SFT narrative sample contains 45 proteins, 44 of which have parseable 1-5 correctness/completeness scores. It is not paired to ARGO139 and is not used as a main result. It remains a useful cross-check: SFT narrative scores are lower than RL (correctness 2.9/5 vs. 3.7/5; completeness 2.7/5 vs. 2.9/5), and 7/45 SFT outputs contained fabricated "UniProt Summary" prose for proteins that UniProt describes only as uncharacterized.
 
-## S4. GO-GPT overlap audit
+## S4. GO-GPT overlap review
 
-The main paper removes the GO-GPT section because it is a separate 300-gene audit of the upstream GO-GPT predictor, not a paired ARGO139 BioReason-Pro result. The audit remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
+The main paper removes the GO-GPT section because it is a separate 300-gene synthetic review of the upstream GO-GPT predictor, not a paired ARGO139 BioReason-Pro result. The review remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
 **Table S6.** GO-GPT prediction overlap at three reference levels (300 genes).
 

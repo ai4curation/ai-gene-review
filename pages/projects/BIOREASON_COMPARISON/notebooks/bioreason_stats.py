@@ -3,7 +3,7 @@
 Everything here reads the *committed* per-gene files under ``genes/`` and derives
 the summary statistics quoted in ``projects/BIOREASON_COMPARISON.md`` and the
 manuscript. Nothing is hard-coded: every number a notebook prints is computed
-from the files on disk, so the notebooks double as an audit of those tables.
+from the files on disk, so the notebooks double as a reproducibility check for those tables.
 
 Data sources
 ------------

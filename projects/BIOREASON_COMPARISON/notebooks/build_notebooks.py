@@ -160,7 +160,7 @@ nb2 = new_notebook(cells=[
     md(r"""
 # BioReason-Pro SFT term-prediction assessments on ARGO139
 
-This notebook audits the per-term prediction assessments stored in
+This notebook checks the per-term prediction assessments stored in
 `genes/<species>/<gene>/<gene>-sft-predictions.yaml`. Each predicted GO term
 carries a `review.assessment` using the de Crecy-Lagard taxonomy (COR / CNN /
 LSP / UNC / PLI / NPI / REP), the same scheme used in the 7-gene *E. coli*
@@ -262,7 +262,7 @@ for label, frame in [
     print("\n" + label)
     print(per_gene.describe().round(1).to_string())
 """),
-    md("## Supplemental Views\n\nThese retain the older availability-driven denominators for auditability: all 184 SFT genes, and the full 140-gene HF catalogue subset used in the earlier draft."),
+    md("## Supplemental Views\n\nThese retain the older availability-driven denominators for reproducibility: all 184 SFT genes, and the full 140-gene HF catalogue subset used in the earlier draft."),
     code(r"""
 hf = preds[preds.source_version == "wanglab/protein_catalogue"].copy()
 web = preds[preds.source_version != "wanglab/protein_catalogue"].copy()
@@ -300,7 +300,7 @@ plt.show()
 The primary denominator is ARGO139. The HF and web-export source partitions
 should be read separately because the web export includes the full GO ancestor
 hierarchy. The 184-gene union and 140-gene HF catalogue views are retained as
-supplemental audit views, not as the primary BioReason-Pro paired benchmark.
+supplemental review views, not as the primary BioReason-Pro paired benchmark.
 """),
 ])
 
