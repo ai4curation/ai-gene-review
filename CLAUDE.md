@@ -179,6 +179,24 @@ Therefore:
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
 
+### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
+
+Validation deliberately treats the two sources of GO term ids differently:
+
+- **`existing_annotations[].term.id` is NOT hard-validated.** These ids come from GOA, not
+  from you, so there is no hallucination risk — and GOA legitimately lags or leads the
+  ontology version used for validation. `linkml-term-validator` therefore does **not**
+  reject unresolvable or obsolete ids here (e.g. a non-existent `GO:9999999` passes); label
+  correctness is instead checked against GOA in the best-practices rules. **Do not rewrite
+  an existing-annotation id just to satisfy validation.**
+- **`core_functions` term ids ARE strictly validated.** These you author, so the
+  `molecular_function`, `contributes_to_molecular_function`, `locations`, and `in_complex`
+  slots are bound to dynamic enums (branch-reachability). A wrong-branch term — e.g. a
+  cellular-component term placed in `molecular_function` — is a blocking `❌ ERROR`.
+
+Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
+are real GOA terms); author-supplied ids are checked hard.
+
 ## Reviewing references
 
 Entries in the top-level `references:` list can carry an optional `reference_review` object recording
@@ -186,6 +204,14 @@ your **manual** assessment of each reference. The `id` and `title` are machine-f
 from the cached `publications/PMID_xxxx.md`); `reference_review` is reviewer-supplied judgment. Use it
 especially to flag citation problems that format validation cannot catch (e.g. a well-formed PMID that
 points to the wrong paper).
+
+The reference validator already catches the *mechanical* citation failures automatically: it
+verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
+title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
+cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+`reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
+citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
+simply the wrong choice for this gene.
 
 ```yaml
 references:
