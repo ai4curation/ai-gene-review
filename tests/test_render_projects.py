@@ -196,6 +196,26 @@ class TestReplaceGeneSymbols:
         assert "[ATG7]" not in result
         assert len(warnings) == 1
 
+    def test_ambiguous_symbol_priority_ordered_hints(self):
+        """Hints are priority-ordered: first listed species wins for a symbol
+        that exists in several of the hinted species."""
+        index = {"CASPL4C1": ["ARATH", "ORYSJ", "POPTR"]}
+        content = "CASPL4C1 is cold-inducible."
+        # POPTR listed first -> link to POPTR even though ARATH also has it.
+        result, warnings = replace_gene_symbols(
+            content, index, species_hints=["POPTR", "ARATH"]
+        )
+        assert "[CASPL4C1]" in result
+        assert "POPTR/CASPL4C1" in result
+        assert warnings == []
+
+        # Reordering the hints flips the chosen species.
+        result, warnings = replace_gene_symbols(
+            content, index, species_hints=["ARATH", "POPTR"]
+        )
+        assert "ARATH/CASPL4C1" in result
+        assert warnings == []
+
     def test_unknown_symbol_unchanged(self):
         """Unknown symbols are left unchanged."""
         index = {"GPX4": ["human"]}

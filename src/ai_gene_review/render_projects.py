@@ -206,7 +206,14 @@ def replace_gene_symbols(
     processed_ambiguous: set = set()
 
     def resolve_species(symbol: str) -> Optional[str]:
-        """Resolve which species to link for a symbol."""
+        """Resolve which species to link for a symbol.
+
+        ``species_hints`` is treated as a *priority-ordered* preference list: the
+        first hinted species that actually has a review for the symbol wins. This
+        lets a multi-species project list every species it covers (so the
+        all-projects table is complete) while still disambiguating symbols that
+        exist in more than one of those species.
+        """
         if symbol not in symbol_index:
             return None
 
@@ -215,13 +222,12 @@ def replace_gene_symbols(
         if len(species_list) == 1:
             return species_list[0]
 
-        # Try to resolve using species hints
-        matching = [s for s in species_list if s in species_hints]
+        # Resolve using the priority-ordered species hints: first match wins.
+        for hint in species_hints:
+            if hint in species_list:
+                return hint
 
-        if len(matching) == 1:
-            return matching[0]
-
-        # Still ambiguous
+        # Still ambiguous: no hint matched any species carrying this symbol.
         if symbol not in processed_ambiguous:
             processed_ambiguous.add(symbol)
             warnings.append(

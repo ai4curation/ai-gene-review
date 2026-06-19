@@ -1,5 +1,6 @@
 ---
 title: "Poplar CASPL expression analysis — JGI/PlantGenIE access attempt"
+species: [POPTR, ARATH]
 ---
 
 > **UPDATE:** the co-expression/expression analysis WAS completed via **EBI Expression
