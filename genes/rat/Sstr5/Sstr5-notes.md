@@ -79,7 +79,7 @@
 
 ## BioReason Report Errors
 
-The BioReason SFT report (Sstr5-deep-research-bioreason.md) contains several errors:
+The BioReason SFT report (Sstr5-deep-research-bioreason-sft.md) contains several errors:
 
 1. **Ligand preference reversed**: The functional summary states "a strong preference for the 14-residue form" -- this is WRONG. SSTR5 has preferential affinity for somatostatin-28 (28-residue), not somatostatin-14. This is clearly stated in the original cloning paper [PMID:1362243] which found ~30-fold preference for SRIF-28 over SRIF-14.
 

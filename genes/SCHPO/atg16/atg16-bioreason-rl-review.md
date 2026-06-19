@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: atg16 (S. pombe)
 
-Source: atg16-deep-research-bioreason-rl.md
+Source: atg16-bioreason-rl-predictions.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5

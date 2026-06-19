@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Pten (mouse)
 
-Source: Pten-deep-research-bioreason-rl.md
+Source: Pten-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

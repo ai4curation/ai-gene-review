@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: SPCC16C4.02c (S. pombe)
 
-Source: SPCC16C4.02c-deep-research-bioreason-rl.md
+Source: SPCC16C4.02c-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

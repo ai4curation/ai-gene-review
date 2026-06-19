@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pvdA (P. putida)
 
-Source: pvdA-deep-research-bioreason-rl.md
+Source: pvdA-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Casp3 (rat)
 
-Source: Casp3-deep-research-bioreason-rl.md
+Source: Casp3-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

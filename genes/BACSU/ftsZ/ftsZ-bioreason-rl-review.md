@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ftsZ (B. subtilis)
 
-Source: ftsZ-deep-research-bioreason-rl.md
+Source: ftsZ-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

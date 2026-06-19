@@ -128,7 +128,7 @@ def gogpt_overlap_rows() -> list[dict[str, Any]]:
 
 def write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({field: row.get(field, "") for field in fieldnames})
@@ -176,16 +176,12 @@ def main() -> None:
     for row in sft_predictions:
         key = (row["organism"], row["gene"])
         if key in rl_keys:
-            benchmark_rows.append({"benchmark": "argo139_sft_terms", **row})
-            argo_source = (
-                "argo139_sft_terms_hf_catalogue"
-                if row["source_version"] == "wanglab/protein_catalogue"
-                else "argo139_sft_terms_web_export"
-            )
-            benchmark_rows.append({"benchmark": argo_source, **row})
-        benchmark_rows.append({"benchmark": "supplement_sft_terms_union_184", **row})
+            if row["source_version"] == "wanglab/protein_catalogue":
+                benchmark_rows.append({"benchmark": "argo95_sft_terms", **row})
+            benchmark_rows.append({"benchmark": "supplement_sft_terms_argo139_mixed_sources", **row})
+        benchmark_rows.append({"benchmark": "supplement_sft_terms_union_all", **row})
         supplement_source = (
-            "supplement_sft_terms_hf_catalogue_140"
+            "supplement_sft_terms_hf_catalogue_all"
             if row["source_version"] == "wanglab/protein_catalogue"
             else "supplement_sft_terms_web_export_44"
         )
@@ -231,25 +227,18 @@ def main() -> None:
             "description": "ARGO139 primary narrative-quality benchmark; member list is genes.csv.",
         },
         {
-            "benchmark": "argo139_sft_terms",
-            "n_genes": len({(row["organism"], row["gene"]) for row in argo_predictions}),
-            "n_predictions": sum(row["n_predictions"] for row in argo_predictions),
-            "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
-            "description": f"ARGO139 SFT term-prediction review: {len(argo_hf)} HF-catalogue genes and {len(argo_web)} web-export genes.",
-        },
-        {
-            "benchmark": "argo139_sft_terms_hf_catalogue",
+            "benchmark": "argo95_sft_terms",
             "n_genes": len(argo_hf),
             "n_predictions": sum(row["n_predictions"] for row in argo_hf),
             "source": "HuggingFace wanglab/protein_catalogue SFT term predictions",
-            "description": "ARGO139 genes available in the cleaner HF catalogue source.",
+            "description": "ARGO95 primary SFT term-prediction benchmark: ARGO139 genes available in the cleaner HF catalogue source.",
         },
         {
-            "benchmark": "argo139_sft_terms_web_export",
-            "n_genes": len(argo_web),
-            "n_predictions": sum(row["n_predictions"] for row in argo_web),
-            "source": "BioReason-Pro SFT web export",
-            "description": "ARGO139 genes absent from the HF catalogue; web export includes full ancestor hierarchy.",
+            "benchmark": "supplement_sft_terms_argo139_mixed_sources",
+            "n_genes": len({(row["organism"], row["gene"]) for row in argo_predictions}),
+            "n_predictions": sum(row["n_predictions"] for row in argo_predictions),
+            "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
+            "description": f"Supplemental mixed-source ARGO139 SFT diagnostic: {len(argo_hf)} HF-catalogue genes and {len(argo_web)} web-export genes; not a primary benchmark.",
         },
         {
             "benchmark": "supplement_sft_narrative_hf",
@@ -259,7 +248,7 @@ def main() -> None:
             "description": "Supplementary SFT narrative cross-check; 44/45 files have parseable 1-5 scores.",
         },
         {
-            "benchmark": "supplement_sft_terms_hf_catalogue_140",
+            "benchmark": "supplement_sft_terms_hf_catalogue_all",
             "n_genes": sum(
                 1
                 for row in sft_predictions
@@ -271,7 +260,7 @@ def main() -> None:
                 if row["source_version"] == "wanglab/protein_catalogue"
             ),
             "source": "HuggingFace wanglab/protein_catalogue SFT term predictions",
-            "description": f"Supplemental cleaner leaf-term source view; includes {len(hf_keys & rl_keys)} ARGO139 genes plus {len(hf_keys - rl_keys)} additional HF-only genes.",
+            "description": f"Supplemental all-HF source view; includes {len(hf_keys & rl_keys)} ARGO139 genes plus {len(hf_keys - rl_keys)} additional HF-only genes.",
         },
         {
             "benchmark": "supplement_sft_terms_web_export_44",
@@ -289,11 +278,11 @@ def main() -> None:
             "description": f"SFT web-export predictions for {len(web_keys & rl_keys)} ARGO139 genes absent from the HF catalogue; includes full ancestor hierarchy.",
         },
         {
-            "benchmark": "supplement_sft_terms_union_184",
+            "benchmark": "supplement_sft_terms_union_all",
             "n_genes": len({(row["organism"], row["gene"]) for row in sft_predictions}),
             "n_predictions": sum(row["n_predictions"] for row in sft_predictions),
             "source": "HuggingFace wanglab/protein_catalogue plus BioReason-Pro SFT web export",
-            "description": f"Combined SFT term-prediction review: {len(rl_keys)} genes in ARGO139 plus {len(hf_keys - rl_keys)} HF-only genes; source partitions are listed separately.",
+            "description": f"All available SFT term-prediction reviews: {len(rl_keys)} genes in ARGO139 plus {len(hf_keys - rl_keys)} HF-only genes; source partitions are listed separately.",
         },
         {
             "benchmark": "supplement_gogpt_overlap_300",

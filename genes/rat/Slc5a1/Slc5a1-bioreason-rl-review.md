@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Slc5a1 (rat)
 
-Source: Slc5a1-deep-research-bioreason-rl.md
+Source: Slc5a1-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

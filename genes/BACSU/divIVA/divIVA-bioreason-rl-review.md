@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: divIVA (B. subtilis)
 
-Source: divIVA-deep-research-bioreason-rl.md
+Source: divIVA-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

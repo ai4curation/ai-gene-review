@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: RidA (E. coli)
 
-Source: RidA-deep-research-bioreason-rl.md
+Source: RidA-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

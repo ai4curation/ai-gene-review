@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ire-1 (C. elegans)
 
-Source: ire-1-deep-research-bioreason-rl.md
+Source: ire-1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

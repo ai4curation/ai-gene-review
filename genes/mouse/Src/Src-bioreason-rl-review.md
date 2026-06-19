@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Src (mouse)
 
-Source: Src-deep-research-bioreason-rl.md
+Source: Src-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

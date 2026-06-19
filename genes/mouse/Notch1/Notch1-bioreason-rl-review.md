@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Notch1 (mouse)
 
-Source: Notch1-deep-research-bioreason-rl.md
+Source: Notch1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

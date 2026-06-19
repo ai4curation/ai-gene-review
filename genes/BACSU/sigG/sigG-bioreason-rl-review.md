@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: sigG (B. subtilis)
 
-Source: sigG-deep-research-bioreason-rl.md
+Source: sigG-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 2/5

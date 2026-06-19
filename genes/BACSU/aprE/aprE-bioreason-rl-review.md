@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: aprE (B. subtilis)
 
-Source: aprE-deep-research-bioreason-rl.md
+Source: aprE-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

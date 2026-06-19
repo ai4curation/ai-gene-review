@@ -103,7 +103,7 @@ UniProt record · full GO annotation table (QuickGO) · InterPro architecture ·
 **2 · Curator-agent review** (three phases)
 - *Annotation-level*: each GO term → `ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE / MARK_AS_OVER_ANNOTATED / UNDECIDED` + **verbatim supporting quote**
 - *Core-function synthesis*: free-text summary + proposed terms
-- *Prediction review*: classify each predicted term with the **de Crécy-Lagard taxonomy** + error-type tags
+- *Prediction review*: classify each predicted term with the **Expert Synthetic Review taxonomy** + error-type tags
 
 **3 · Validation** — LinkML schema + best-practice checks; **every quote must literally appear in a cached publication**
 
@@ -131,7 +131,7 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 
 - **139 proteins**, 14 species labels
 - Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
-- For each gene: BioReason-Pro RL summary + trace, SFT GO terms where available, **AIGR curated review as ground truth**
+- For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **AIGR curated review as ground truth**
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
   - **Completeness** — do they span the gene's core biology?
@@ -216,7 +216,7 @@ The **5-fold gap** between raw-GOA agreement (11.7%) and curator core-function a
 
 ---
 
-## ARGO139 SFT terms: two-thirds is old news
+## ARGO95 SFT terms: two-thirds is old news
 
 955 SFT HF-catalogue terms (95 ARGO139 genes), every COR/NPI verified against primary literature:
 
@@ -224,7 +224,7 @@ The **5-fold gap** between raw-GOA agreement (11.7%) and curator core-function a
 
 **67.5% CNN** (already in GOA) · **10.6% NPI** (wrong) · **5.4% COR** (novel & correct) · 3.9% LSP · 2.2% REP
 
-The 5.4% COR are gaps **any knowledgeable curator would also fill**. Across ARGO139: **not one function unknown to the literature.**
+The 5.4% COR are gaps **any knowledgeable curator would also fill**. Across ARGO95: **not one function unknown to the literature.**
 
 ---
 
@@ -241,11 +241,13 @@ BioReason-Pro's narrative and its GO-term list are generated semi-independently 
 
 ---
 
-## Case study 2 — VDCL positive control
+## Case study 2 — ESR-ECOLI-DET-Mini
 
 7 *E. coli* genes spanning all classes; AIGR reproduces the published taxonomy.
 
-Not blinded: the project artifacts include the VDCL labels/rationales.
+Not blinded: the project artifacts include the published expert labels/rationales.
+
+Dataset ID: `10.5281/zenodo.20751016`
 
 | Gene | Paper | AIGR | Recovered rationale |
 |---|---|---|---|
@@ -263,9 +265,9 @@ Not blinded: the project artifacts include the VDCL labels/rationales.
 
 ## Answer-key withheld recap: useful, not expert-equivalent
 
-A separate literature/bioinformatics-assisted run excluded the VDCL paper and published rationales.
+A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard paper and published rationales.
 
-| Gene | VDCL | Withheld run | Interpretation |
+| Gene | Expert | Withheld run | Interpretation |
 |---|---|---|---|
 | fepE | REP | **REP** | Frequency-bias smell test recovered |
 | yciO | PLI | **PLI** | Paralog-overannotation recovered |
@@ -298,7 +300,7 @@ A separate literature/bioinformatics-assisted run excluded the VDCL paper and pu
 **BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA hasn't recorded, and **~1 in 9 times something wrong — in predictable, diagnosable ways.**
 
 - Narratives restate InterPro2GO (3.7 / 2.9); **seven architectural failure modes**
-- GO terms: 67.5% not-novel, 10.6% wrong, 5.4% novel-correct in the cleaner ARGO139 HF subset; **0 functions unknown to literature**
+- GO terms: 67.5% not-novel, 10.6% wrong, 5.4% novel-correct in ARGO95; **0 functions unknown to literature**
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
 **The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be reviewed, corrected, combined. Naked GO terms cannot.
@@ -314,7 +316,7 @@ A separate literature/bioinformatics-assisted run excluded the VDCL paper and pu
 **Data, reviews, pipeline, schema & validator — all open:**
 `github.com/ai4curation/ai-gene-review`
 
-Browse 139 BioReason-Pro reviews + 7-gene *E. coli* synthetic review:
+Browse 139 BioReason-Pro reviews + `ESR-ECOLI-DET-Mini`:
 `ai4curation.io/ai-gene-review`
 
 <span class="cite">de Crécy-Lagard et al. 2025 (G3, PMID:40703034) · Fallahpour et al. 2026 (bioRxiv 10.64898/2026.03.19.712954)</span>
