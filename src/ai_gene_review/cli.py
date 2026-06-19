@@ -3074,6 +3074,65 @@ def render_module_notation(
 
 
 @app.command()
+def compare_module_regulation(
+    module_file: Annotated[
+        Path, typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)")
+    ],
+    maud_toml: Annotated[
+        Path, typer.Argument(help="Maud model TOML to ingest as a regulatory source")
+    ],
+    mapping: Annotated[
+        Optional[Path],
+        typer.Option("--mapping", "-m", help="Reviewed id-mapping (source ids -> module symbols)"),
+    ] = None,
+    emit_candidates: Annotated[
+        bool,
+        typer.Option(
+            "--emit-candidates",
+            help="Also print source edges as candidate module connections (YAML)",
+        ),
+    ] = False,
+):
+    """Diff a curated module's regulation against a Maud model's regulatory tables.
+
+    Reduces both sides to canonical (effector, enzyme, sign, mechanism) edges and
+    reports agreements, missing/extra edges, and sign/mechanism conflicts. The Maud
+    source is treated as evidence (mediated by the reviewed --mapping), not merged.
+
+    Example:
+        ai-gene-review compare-module-regulation \\
+            modules/methionine_cycle.yaml \\
+            models/methionine/methionine_cycle.regulation.toml \\
+            -m models/methionine/maud_methionine_mapping.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.maud_ingest import candidate_connections, maud_edges_from_files
+    from ai_gene_review.regulation_compare import (
+        diff_edges,
+        format_edge_diff,
+        module_regulatory_edges,
+    )
+
+    if not module_file.exists():
+        typer.echo(f"Error: module file not found: {module_file}", err=True)
+        raise typer.Exit(code=1)
+    if not maud_toml.exists():
+        typer.echo(f"Error: TOML file not found: {maud_toml}", err=True)
+        raise typer.Exit(code=1)
+
+    curated = module_regulatory_edges(_yaml.safe_load(module_file.read_text()))
+    source = maud_edges_from_files(maud_toml, mapping)
+    diff = diff_edges(curated, source)
+    typer.echo(format_edge_diff(diff, module_file.name, maud_toml.name))
+
+    if emit_candidates:
+        candidates = candidate_connections(source, source_id=f"file:{maud_toml}")
+        typer.echo("# candidate connections (review before adding to a module):")
+        typer.echo(_yaml.safe_dump(candidates, sort_keys=False))
+
+
+@app.command()
 def fetch_descriptions(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., human, yeast)")
