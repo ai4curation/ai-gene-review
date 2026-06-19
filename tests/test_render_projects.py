@@ -10,6 +10,7 @@ from ai_gene_review.render_projects import (
     process_markdown_content,
     replace_gene_tags,
     replace_gene_symbols,
+    replace_species_qualified_symbols,
     render_project,
     render_project_bundle,
     should_autolink_gene_symbols,
@@ -374,6 +375,92 @@ class TestReplaceGeneTags:
         assert result == "E/P00720"
         assert len(warnings) == 1
         assert "missing required" in warnings[0]
+
+
+class TestReplaceSpeciesQualifiedSymbols:
+    """Tests for the inline ``CODE/symbol`` disambiguation convention."""
+
+    def test_links_uppercase_mnemonic(self, tmp_path):
+        """A 5-char uppercase species code links to that species' review."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+        (genes_dir / "ARATH" / "CASPL4C1").mkdir(parents=True)
+
+        content = "Compare POPTR/CASPL4C1 and ARATH/CASPL4C1."
+        result, warnings = replace_species_qualified_symbols(content, genes_dir)
+
+        assert "[POPTR/CASPL4C1](../../genes/POPTR/CASPL4C1/CASPL4C1-ai-review.html)" in result
+        assert "[ARATH/CASPL4C1](../../genes/ARATH/CASPL4C1/CASPL4C1-ai-review.html)" in result
+        assert warnings == []
+
+    def test_links_lowercase_exception_code(self, tmp_path):
+        """Allowlisted lowercase model-organism codes also link."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "human" / "TP53").mkdir(parents=True)
+
+        result, warnings = replace_species_qualified_symbols(
+            "See human/TP53.", genes_dir
+        )
+
+        assert "[human/TP53](../../genes/human/TP53/TP53-ai-review.html)" in result
+        assert warnings == []
+
+    def test_unknown_lowercase_token_is_not_a_code(self, tmp_path):
+        """Arbitrary lowercase words are not treated as species codes."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "and" / "or").mkdir(parents=True)  # contrived; must not link
+
+        result, warnings = replace_species_qualified_symbols("read and/or skim", genes_dir)
+
+        assert result == "read and/or skim"
+        assert warnings == []
+
+    def test_missing_symbol_in_known_species_warns(self, tmp_path):
+        """A known species code with a missing symbol warns (likely a typo)."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "POPTR").mkdir(parents=True)
+
+        result, warnings = replace_species_qualified_symbols(
+            "POPTR/NOTREAL is bogus", genes_dir
+        )
+
+        assert result == "POPTR/NOTREAL is bogus"
+        assert len(warnings) == 1
+        assert "not found" in warnings[0]
+
+    def test_unknown_uppercase_code_is_silent(self, tmp_path):
+        """A 5-letter uppercase word that is not a species directory is left
+        untouched and produces no warning."""
+        genes_dir = tmp_path / "genes"
+        genes_dir.mkdir()
+
+        result, warnings = replace_species_qualified_symbols("ABOUT/CONFIG here", genes_dir)
+
+        assert result == "ABOUT/CONFIG here"
+        assert warnings == []
+
+    def test_path_like_text_is_not_linked(self, tmp_path):
+        """A code preceded by '/' (a path) does not match."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+
+        content = "see `genes/POPTR/CASPL4C1`"
+        result, warnings = replace_species_qualified_symbols(content, genes_dir)
+
+        # Inside a code span -> preserved verbatim.
+        assert result == content
+        assert warnings == []
+
+    def test_existing_link_is_preserved(self, tmp_path):
+        """References already inside a markdown link are not re-linked."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+
+        content = "[POPTR/CASPL4C1](http://example.com)"
+        result, warnings = replace_species_qualified_symbols(content, genes_dir)
+
+        assert result == content
+        assert warnings == []
 
 
 class TestLinkUniprotCodeSpans:

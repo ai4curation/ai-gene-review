@@ -386,6 +386,25 @@ from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the pat
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
 
+**Gene-symbol auto-linking.** Project pages auto-link prose gene symbols to their
+review pages — never hardcode `genes/...` URLs. Linking is convention + metadata
+driven:
+
+- **Bare symbols** (`GPX4`, `CASPL4C1`) link automatically when the symbol maps to
+  exactly one species directory. When a symbol exists in several species, list the
+  project's species in frontmatter; `species:` is treated as a **priority-ordered**
+  preference, so the first listed species that has the review wins (this also fills
+  the all-projects table). Add `genes: [...]` to populate the table's gene count.
+- **`CODE/symbol`** (e.g. `POPTR/CASPL4C1`, `human/TP53`) is the inline convention
+  for explicit, per-mention disambiguation in genuinely multi-species prose. `CODE`
+  is a 5-character uppercase UniProt mnemonic (e.g. `ARATH`, `9INFA`) or one of the
+  lowercase model-organism dirs (`human`, `mouse`, `rat`, `worm`, `yeast`). It links
+  only when `genes/CODE/symbol/` exists; a known species with a missing symbol warns.
+- **`<gene species="…" symbol="…">label</gene>`** tags are for cases where the visible
+  text differs from the symbol (e.g. `E/P00720`).
+- Set `autolink_gene_symbols: false` in frontmatter for paper-like pages where prose
+  symbols should not become links.
+
 ### Browser app
 ```bash
 just deploy-browser    # update data.js + index.html for the interactive browser

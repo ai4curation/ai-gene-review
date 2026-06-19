@@ -372,6 +372,93 @@ def replace_gene_tags(
     return tag_regex.sub(replace_tag, content), warnings
 
 
+# UniProt-style species mnemonics are five uppercase alphanumerics (e.g. ARATH,
+# POPTR, 9INFA). A few model organisms use lowercase common-name directories
+# instead; keep that an explicit small allowlist so the regex stays precise.
+SPECIES_CODE_EXCEPTIONS = ("human", "mouse", "rat", "worm", "yeast")
+
+
+def replace_species_qualified_symbols(
+    content: str,
+    genes_dir: Path,
+    base_path: str = "../../genes",
+) -> Tuple[str, List[str]]:
+    """Replace ``CODE/symbol`` prose references with gene-review links.
+
+    This is the lightweight inline convention for disambiguating gene symbols in
+    multi-species project prose, where a bare symbol (e.g. ``CASPL4C1``) is
+    ambiguous because reviews exist in several species. Writing the species code
+    in front -- ``POPTR/CASPL4C1`` -- links to that species' review explicitly,
+    without hardcoding any path. The rendered link keeps the full ``CODE/symbol``
+    text, which is informative in a cross-species document.
+
+    ``CODE`` must be a five-character uppercase UniProt mnemonic (e.g. ``ARATH``,
+    ``POPTR``, ``9INFA``) or one of a small set of lowercase model-organism
+    directory names (``human``, ``mouse``, ``rat``, ``worm``, ``yeast``). The
+    reference is only linked when ``genes/CODE/symbol/`` actually exists, so the
+    regex can stay permissive while precision comes from the filesystem check. A
+    ``CODE`` that is itself a known species directory but whose ``symbol`` is
+    missing yields a warning (likely a typo); anything else is left untouched.
+
+    >>> from pathlib import Path
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     g = Path(tmp) / "genes"
+    ...     (g / "POPTR" / "CASPL4C1").mkdir(parents=True)
+    ...     out, warns = replace_species_qualified_symbols(
+    ...         "See POPTR/CASPL4C1 for detail.", g)
+    ...     ("[POPTR/CASPL4C1](" in out, warns)
+    (True, [])
+    """
+    warnings: List[str] = []
+
+    code_alt = "|".join(["[A-Z0-9]{5}", *(re.escape(c) for c in SPECIES_CODE_EXCEPTIONS)])
+    # Not preceded by a word char or '/' (so paths like genes/POPTR/CASPL4C1 do
+    # not match), CODE/symbol, not followed by a word char.
+    pattern = re.compile(
+        rf"(?<![A-Za-z0-9_/])"
+        rf"(?P<code>{code_alt})"
+        # Symbols may contain internal '.'/'-' (e.g. NaPMT1.1, lrx-1) but must
+        # start and end on an alphanumeric so trailing punctuation is excluded.
+        rf"/(?P<symbol>[A-Za-z0-9](?:[\w.\-]*[A-Za-z0-9])?)"
+        rf"(?![A-Za-z0-9_])"
+    )
+    preserve_regex = re.compile(
+        r'(?P<fenced>```.*?```)'
+        r'|(?P<code>`[^`]*`)'
+        r'|(?P<link>\[[^\]]*\]\([^)]*\))',
+        flags=re.DOTALL,
+    )
+
+    def replace_match(match: re.Match) -> str:
+        code = match.group("code")
+        symbol = match.group("symbol")
+        if (genes_dir / code / symbol).is_dir():
+            url = f"{base_path}/{code}/{symbol}/{symbol}-ai-review.html"
+            return f"[{code}/{symbol}]({url})"
+        # Only warn when CODE is clearly a species directory we know about, so a
+        # stray "ABOUT/foo" in prose stays silent.
+        if (genes_dir / code).is_dir():
+            warnings.append(
+                f"Species-qualified symbol '{code}/{symbol}' not found "
+                f"(no genes/{code}/{symbol})."
+            )
+        return match.group(0)
+
+    # Do not link inside code spans/blocks or existing markdown links.
+    parts: List[str] = []
+    last_end = 0
+    for match in preserve_regex.finditer(content):
+        if match.start() > last_end:
+            parts.append(pattern.sub(replace_match, content[last_end:match.start()]))
+        parts.append(match.group(0))
+        last_end = match.end()
+    if last_end < len(content):
+        parts.append(pattern.sub(replace_match, content[last_end:]))
+
+    return "".join(parts), warnings
+
+
 def link_uniprot_code_spans(
     content: str,
     base_url: str = "https://www.uniprot.org/uniprotkb/",
@@ -880,6 +967,15 @@ def render_project(
         base_path=genes_base_path,
     )
 
+    # Resolve explicit ``CODE/symbol`` species-qualified references next. These
+    # disambiguate symbols shared across species without hardcoding paths, and
+    # the generated links are preserved by the bare-symbol auto-linker below.
+    content, qualified_warnings = replace_species_qualified_symbols(
+        content,
+        genes_dir=genes_dir,
+        base_path=genes_base_path,
+    )
+
     # Replace prose gene symbols with links unless the page opts out. Explicit
     # <gene> tags above still link because they are intentional, not automatic.
     if should_autolink_gene_symbols(frontmatter):
@@ -891,7 +987,7 @@ def render_project(
         )
     else:
         linked_content, symbol_warnings = content, []
-    warnings = tag_warnings + symbol_warnings
+    warnings = tag_warnings + qualified_warnings + symbol_warnings
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
     # links are already explicit via <gene> tags or ordinary symbol autolinks.
