@@ -1129,6 +1129,33 @@ def render_project_bundle(
     return output_paths, all_warnings
 
 
+def latest_review_status(manual_reviews: Any) -> Optional[str]:
+    """Return the ``status`` of the most recent manual review, if any.
+
+    ``manual_reviews`` is the optional project-frontmatter list of reviewer
+    sign-offs. The "most recent" entry is the one with the greatest ``date``
+    (ISO ``YYYY-MM-DD`` sorts lexicographically); entries without a date sort
+    earliest. Returns ``None`` when there are no reviews or the latest carries
+    no status.
+
+    >>> latest_review_status([
+    ...     {"reviewed_by": "cjm", "date": "2024-01-01", "status": "CHANGES_REQUESTED"},
+    ...     {"reviewed_by": "cjm", "date": "2024-03-02", "status": "READY"},
+    ... ])
+    'READY'
+    >>> latest_review_status([]) is None
+    True
+    """
+    if not isinstance(manual_reviews, list):
+        return None
+    entries = [r for r in manual_reviews if isinstance(r, dict)]
+    if not entries:
+        return None
+    latest = max(entries, key=lambda r: str(r.get("date") or ""))
+    status = latest.get("status")
+    return str(status) if status is not None else None
+
+
 def render_projects_table(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
@@ -1192,6 +1219,12 @@ def render_projects_table(
             len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
         )
 
+        manual_reviews = frontmatter.get("manual_reviews")
+        review_status = latest_review_status(manual_reviews)
+        review_count = (
+            len(manual_reviews) if isinstance(manual_reviews, list) else 0
+        )
+
         rows.append(
             {
                 "slug": md_path.stem,
@@ -1202,6 +1235,8 @@ def render_projects_table(
                 "tags": tags,
                 "maturity": maturity,
                 "support_count": support_count,
+                "review_status": review_status,
+                "review_count": review_count,
             }
         )
 
@@ -1211,9 +1246,13 @@ def render_projects_table(
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
     tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [m for m in maturity_order if any(r["maturity"] == m for r in rows)]
     all_tags = [t for t in tag_order if any(t in r["tags"] for r in rows)]
     all_species = sorted({s for r in rows for s in r["species"]})
+    all_review_statuses = [
+        s for s in review_status_order if any(r["review_status"] == s for r in rows)
+    ]
 
     env = Environment(
         loader=FileSystemLoader(template_path.parent),
@@ -1225,6 +1264,7 @@ def render_projects_table(
         all_maturities=all_maturities,
         all_tags=all_tags,
         all_species=all_species,
+        all_review_statuses=all_review_statuses,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)

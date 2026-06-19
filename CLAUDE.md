@@ -386,6 +386,26 @@ from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the pat
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
 
+**Manual reviews.** A project page may record reviewer sign-offs in frontmatter
+under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if
+given) must be `READY` or `CHANGES_REQUESTED`; `date` is `YYYY-MM-DD`; `notes` is
+free text and `todos` is a list. Unknown keys are rejected by validation.
+
+```yaml
+manual_reviews:
+  - reviewed_by: cjm
+    date: 2024-06-01
+    status: CHANGES_REQUESTED
+    notes: needs stronger evidence for the X claim
+    todos:
+      - cite PMID:12345
+      - drop the speculative pathway diagram
+```
+
+Reviews render as a block on the project page, and the **latest** review's status
+(most recent `date`) surfaces as a filterable "Review" column in the all-projects
+table.
+
 **Gene-symbol auto-linking.** Project pages auto-link prose gene symbols to their
 review pages — never hardcode `genes/...` URLs. Linking is convention + metadata
 driven:

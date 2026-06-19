@@ -885,6 +885,47 @@ class TestRenderProjectsTable:
         # Title falls back to first heading when frontmatter title is absent
         assert "Beta heading only" in html
 
+    def test_table_surfaces_manual_review_status(self, tmp_path):
+        from ai_gene_review.render_projects import render_projects_table
+
+        projects = tmp_path / "projects"
+        projects.mkdir()
+        # Two reviews; latest by date is READY -> that is what surfaces.
+        (projects / "ALPHA.md").write_text(
+            "---\ntitle: Alpha\nmanual_reviews:\n"
+            "  - reviewed_by: cjm\n    date: 2024-01-01\n    status: CHANGES_REQUESTED\n"
+            "  - reviewed_by: cjm\n    date: 2024-05-01\n    status: READY\n---\n# Alpha\n"
+        )
+        (projects / "BETA.md").write_text("---\ntitle: Beta\n---\n# Beta\n")
+
+        out = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out")
+        html = out.read_text()
+
+        assert 'data-filter="review"' in html
+        assert 'data-review="READY"' in html
+        assert "r-READY" in html
+        # Beta has no reviews -> empty review filter value
+        assert 'data-review=""' in html
+
+    def test_render_project_shows_manual_reviews(self, tmp_path):
+        projects = tmp_path / "projects"
+        projects.mkdir()
+        md = projects / "GAMMA.md"
+        md.write_text(
+            "---\ntitle: Gamma\nmanual_reviews:\n"
+            "  - reviewed_by: cjm\n    date: 2024-06-01\n    status: CHANGES_REQUESTED\n"
+            "    notes: needs more evidence\n    todos:\n      - cite PMID:123\n---\n# Gamma\n"
+        )
+        out, _ = render_project(
+            md, output_dir=tmp_path / "out", genes_dir=tmp_path / "genes",
+            projects_dir=projects,
+        )
+        html = out.read_text()
+        assert "Manual reviews" in html
+        assert "r-CHANGES_REQUESTED" in html
+        assert "needs more evidence" in html
+        assert "cite PMID:123" in html
+
 
 class TestIntegration:
     """Integration tests using real-ish data structures."""
