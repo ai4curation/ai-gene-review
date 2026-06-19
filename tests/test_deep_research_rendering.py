@@ -79,3 +79,52 @@ def test_collect_deep_research_sections_exposes_metadata_and_artifacts(tmp_path:
     assert 'src="TEST-deep-research-openscientist_artifacts/evidence.png"' in section[
         "content"
     ]
+
+
+def test_collect_deep_research_sections_includes_hypothesis_reports(
+    tmp_path: Path,
+) -> None:
+    gene_dir = tmp_path / "genes" / "SCHPO" / "pmp20"
+    report_dir = (
+        gene_dir
+        / "pmp20-hypotheses"
+        / "function-hypothesis-go-0008379"
+    )
+    report_dir.mkdir(parents=True)
+    report = report_dir / "openscientist.md"
+    report.write_text(
+        "---\n"
+        "provider: openscientist\n"
+        "model: openscientist-autonomous\n"
+        "citation_count: 13\n"
+        "artifact_count: 1\n"
+        "artifacts:\n"
+        "  - filename: final_report.html\n"
+        "    path: openscientist_artifacts/final_report.html\n"
+        "    media_type: text/html\n"
+        "    description: OpenScientist final report\n"
+        "---\n"
+        "## Output\n"
+        "# Final Report: Evaluation of Thioredoxin Peroxidase Activity\n"
+        "The GO:0008379 annotation should be removed.\n",
+        encoding="utf-8",
+    )
+    Path(f"{report}.citations.md").write_text("citations\n", encoding="utf-8")
+
+    sections = render.collect_deep_research_sections(gene_dir, output_dir=gene_dir)
+
+    assert len(sections) == 1
+    section = sections[0]
+    assert section["provider_label"] == "OpenScientist"
+    assert section["filename"] == (
+        "pmp20-hypotheses/function-hypothesis-go-0008379/openscientist.md"
+    )
+    assert section["citations_href"] == (
+        "pmp20-hypotheses/function-hypothesis-go-0008379/"
+        "openscientist.md.citations.md"
+    )
+    assert section["artifacts"][0]["href"] == (
+        "pmp20-hypotheses/function-hypothesis-go-0008379/"
+        "openscientist_artifacts/final_report.html"
+    )
+    assert "GO:0008379 annotation should be removed" in section["content"]
