@@ -1,5 +1,6 @@
 ---
 title: "CASP-like (CASPL) orthology / phylogeny analysis — poplar vs Arabidopsis"
+species: [ARATH, POPTR]
 ---
 
 # CASP-like (CASPL) orthology / phylogeny analysis — poplar vs Arabidopsis

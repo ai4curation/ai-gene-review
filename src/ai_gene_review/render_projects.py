@@ -206,7 +206,14 @@ def replace_gene_symbols(
     processed_ambiguous: set = set()
 
     def resolve_species(symbol: str) -> Optional[str]:
-        """Resolve which species to link for a symbol."""
+        """Resolve which species to link for a symbol.
+
+        ``species_hints`` is treated as a *priority-ordered* preference list: the
+        first hinted species that actually has a review for the symbol wins. This
+        lets a multi-species project list every species it covers (so the
+        all-projects table is complete) while still disambiguating symbols that
+        exist in more than one of those species.
+        """
         if symbol not in symbol_index:
             return None
 
@@ -215,13 +222,12 @@ def replace_gene_symbols(
         if len(species_list) == 1:
             return species_list[0]
 
-        # Try to resolve using species hints
-        matching = [s for s in species_list if s in species_hints]
+        # Resolve using the priority-ordered species hints: first match wins.
+        for hint in species_hints:
+            if hint in species_list:
+                return hint
 
-        if len(matching) == 1:
-            return matching[0]
-
-        # Still ambiguous
+        # Still ambiguous: no hint matched any species carrying this symbol.
         if symbol not in processed_ambiguous:
             processed_ambiguous.add(symbol)
             warnings.append(
@@ -364,6 +370,93 @@ def replace_gene_tags(
         return f"[{label}]({url})"
 
     return tag_regex.sub(replace_tag, content), warnings
+
+
+# UniProt-style species mnemonics are five uppercase alphanumerics (e.g. ARATH,
+# POPTR, 9INFA). A few model organisms use lowercase common-name directories
+# instead; keep that an explicit small allowlist so the regex stays precise.
+SPECIES_CODE_EXCEPTIONS = ("human", "mouse", "rat", "worm", "yeast")
+
+
+def replace_species_qualified_symbols(
+    content: str,
+    genes_dir: Path,
+    base_path: str = "../../genes",
+) -> Tuple[str, List[str]]:
+    """Replace ``CODE/symbol`` prose references with gene-review links.
+
+    This is the lightweight inline convention for disambiguating gene symbols in
+    multi-species project prose, where a bare symbol (e.g. ``CASPL4C1``) is
+    ambiguous because reviews exist in several species. Writing the species code
+    in front -- ``POPTR/CASPL4C1`` -- links to that species' review explicitly,
+    without hardcoding any path. The rendered link keeps the full ``CODE/symbol``
+    text, which is informative in a cross-species document.
+
+    ``CODE`` must be a five-character uppercase UniProt mnemonic (e.g. ``ARATH``,
+    ``POPTR``, ``9INFA``) or one of a small set of lowercase model-organism
+    directory names (``human``, ``mouse``, ``rat``, ``worm``, ``yeast``). The
+    reference is only linked when ``genes/CODE/symbol/`` actually exists, so the
+    regex can stay permissive while precision comes from the filesystem check. A
+    ``CODE`` that is itself a known species directory but whose ``symbol`` is
+    missing yields a warning (likely a typo); anything else is left untouched.
+
+    >>> from pathlib import Path
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     g = Path(tmp) / "genes"
+    ...     (g / "POPTR" / "CASPL4C1").mkdir(parents=True)
+    ...     out, warns = replace_species_qualified_symbols(
+    ...         "See POPTR/CASPL4C1 for detail.", g)
+    ...     ("[POPTR/CASPL4C1](" in out, warns)
+    (True, [])
+    """
+    warnings: List[str] = []
+
+    code_alt = "|".join(["[A-Z0-9]{5}", *(re.escape(c) for c in SPECIES_CODE_EXCEPTIONS)])
+    # Not preceded by a word char or '/' (so paths like genes/POPTR/CASPL4C1 do
+    # not match), CODE/symbol, not followed by a word char.
+    pattern = re.compile(
+        rf"(?<![A-Za-z0-9_/])"
+        rf"(?P<code>{code_alt})"
+        # Symbols may contain internal '.'/'-' (e.g. NaPMT1.1, lrx-1) but must
+        # start and end on an alphanumeric so trailing punctuation is excluded.
+        rf"/(?P<symbol>[A-Za-z0-9](?:[\w.\-]*[A-Za-z0-9])?)"
+        rf"(?![A-Za-z0-9_])"
+    )
+    preserve_regex = re.compile(
+        r'(?P<fenced>```.*?```)'
+        r'|(?P<code>`[^`]*`)'
+        r'|(?P<link>\[[^\]]*\]\([^)]*\))',
+        flags=re.DOTALL,
+    )
+
+    def replace_match(match: re.Match) -> str:
+        code = match.group("code")
+        symbol = match.group("symbol")
+        if (genes_dir / code / symbol).is_dir():
+            url = f"{base_path}/{code}/{symbol}/{symbol}-ai-review.html"
+            return f"[{code}/{symbol}]({url})"
+        # Only warn when CODE is clearly a species directory we know about, so a
+        # stray "ABOUT/foo" in prose stays silent.
+        if (genes_dir / code).is_dir():
+            warnings.append(
+                f"Species-qualified symbol '{code}/{symbol}' not found "
+                f"(no genes/{code}/{symbol})."
+            )
+        return match.group(0)
+
+    # Do not link inside code spans/blocks or existing markdown links.
+    parts: List[str] = []
+    last_end = 0
+    for match in preserve_regex.finditer(content):
+        if match.start() > last_end:
+            parts.append(pattern.sub(replace_match, content[last_end:match.start()]))
+        parts.append(match.group(0))
+        last_end = match.end()
+    if last_end < len(content):
+        parts.append(pattern.sub(replace_match, content[last_end:]))
+
+    return "".join(parts), warnings
 
 
 def link_uniprot_code_spans(
@@ -874,6 +967,15 @@ def render_project(
         base_path=genes_base_path,
     )
 
+    # Resolve explicit ``CODE/symbol`` species-qualified references next. These
+    # disambiguate symbols shared across species without hardcoding paths, and
+    # the generated links are preserved by the bare-symbol auto-linker below.
+    content, qualified_warnings = replace_species_qualified_symbols(
+        content,
+        genes_dir=genes_dir,
+        base_path=genes_base_path,
+    )
+
     # Replace prose gene symbols with links unless the page opts out. Explicit
     # <gene> tags above still link because they are intentional, not automatic.
     if should_autolink_gene_symbols(frontmatter):
@@ -885,7 +987,7 @@ def render_project(
         )
     else:
         linked_content, symbol_warnings = content, []
-    warnings = tag_warnings + symbol_warnings
+    warnings = tag_warnings + qualified_warnings + symbol_warnings
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
     # links are already explicit via <gene> tags or ordinary symbol autolinks.
@@ -1027,6 +1129,33 @@ def render_project_bundle(
     return output_paths, all_warnings
 
 
+def latest_review_status(manual_reviews: Any) -> Optional[str]:
+    """Return the ``status`` of the most recent manual review, if any.
+
+    ``manual_reviews`` is the optional project-frontmatter list of reviewer
+    sign-offs. The "most recent" entry is the one with the greatest ``date``
+    (ISO ``YYYY-MM-DD`` sorts lexicographically); entries without a date sort
+    earliest. Returns ``None`` when there are no reviews or the latest carries
+    no status.
+
+    >>> latest_review_status([
+    ...     {"reviewed_by": "cjm", "date": "2024-01-01", "status": "CHANGES_REQUESTED"},
+    ...     {"reviewed_by": "cjm", "date": "2024-03-02", "status": "READY"},
+    ... ])
+    'READY'
+    >>> latest_review_status([]) is None
+    True
+    """
+    if not isinstance(manual_reviews, list):
+        return None
+    entries = [r for r in manual_reviews if isinstance(r, dict)]
+    if not entries:
+        return None
+    latest = max(entries, key=lambda r: str(r.get("date") or ""))
+    status = latest.get("status")
+    return str(status) if status is not None else None
+
+
 def render_projects_table(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
@@ -1090,6 +1219,12 @@ def render_projects_table(
             len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
         )
 
+        manual_reviews = frontmatter.get("manual_reviews")
+        review_status = latest_review_status(manual_reviews)
+        review_count = (
+            len(manual_reviews) if isinstance(manual_reviews, list) else 0
+        )
+
         rows.append(
             {
                 "slug": md_path.stem,
@@ -1100,6 +1235,8 @@ def render_projects_table(
                 "tags": tags,
                 "maturity": maturity,
                 "support_count": support_count,
+                "review_status": review_status,
+                "review_count": review_count,
             }
         )
 
@@ -1109,9 +1246,13 @@ def render_projects_table(
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
     tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [m for m in maturity_order if any(r["maturity"] == m for r in rows)]
     all_tags = [t for t in tag_order if any(t in r["tags"] for r in rows)]
     all_species = sorted({s for r in rows for s in r["species"]})
+    all_review_statuses = [
+        s for s in review_status_order if any(r["review_status"] == s for r in rows)
+    ]
 
     env = Environment(
         loader=FileSystemLoader(template_path.parent),
@@ -1123,6 +1264,7 @@ def render_projects_table(
         all_maturities=all_maturities,
         all_tags=all_tags,
         all_species=all_species,
+        all_review_statuses=all_review_statuses,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)
