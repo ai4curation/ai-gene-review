@@ -3012,6 +3012,127 @@ def render_modules(
 
 
 @app.command()
+def render_module_notation(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to project into compact notation"),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Write <stem>-notation.txt per module here; if omitted, print to stdout",
+        ),
+    ] = None,
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Project all module YAML files in modules/"),
+    ] = False,
+):
+    """Project module YAML into a compact, human-readable symbol notation.
+
+    This is a read-only view of the canonical YAML: a legend mapping short symbols
+    to grounded entities (GO/ChEBI), a reactions block, and a regulation block in
+    which the arrow encodes sign (-o activation, -| inhibition) and the bracketed
+    tag encodes the SBO-grounded mechanism (competitive vs allosteric).
+
+    Examples:
+        # Print one module's notation to stdout
+        ai-gene-review render-module-notation modules/methionine_cycle.yaml
+
+        # Write notation files for every module
+        ai-gene-review render-module-notation --all -o pages/modules
+    """
+    from ai_gene_review.module_notation import render_module_notation_file
+    from ai_gene_review.render_modules import iter_module_files
+
+    if all_modules:
+        targets = iter_module_files(modules_dir)
+    elif files:
+        targets = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all", err=True)
+        raise typer.Exit(code=1)
+
+    for module_file in targets:
+        if not module_file.exists():
+            typer.echo(f"Error: File not found: {module_file}", err=True)
+            continue
+        notation = render_module_notation_file(module_file)
+        if output_dir is None:
+            typer.echo(notation)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            out_path = output_dir / f"{module_file.stem}-notation.txt"
+            out_path.write_text(notation)
+            typer.echo(f"Wrote {module_file} -> {out_path}")
+
+
+@app.command()
+def compare_module_regulation(
+    module_file: Annotated[
+        Path, typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)")
+    ],
+    maud_toml: Annotated[
+        Path, typer.Argument(help="Maud model TOML to ingest as a regulatory source")
+    ],
+    mapping: Annotated[
+        Optional[Path],
+        typer.Option("--mapping", "-m", help="Reviewed id-mapping (source ids -> module symbols)"),
+    ] = None,
+    emit_candidates: Annotated[
+        bool,
+        typer.Option(
+            "--emit-candidates",
+            help="Also print source edges as candidate module connections (YAML)",
+        ),
+    ] = False,
+):
+    """Diff a curated module's regulation against a Maud model's regulatory tables.
+
+    Reduces both sides to canonical (effector, enzyme, sign, mechanism) edges and
+    reports agreements, missing/extra edges, and sign/mechanism conflicts. The Maud
+    source is treated as evidence (mediated by the reviewed --mapping), not merged.
+
+    Example:
+        ai-gene-review compare-module-regulation \\
+            modules/methionine_cycle.yaml \\
+            models/methionine/methionine_cycle.regulation.toml \\
+            -m models/methionine/maud_methionine_mapping.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.maud_ingest import candidate_connections, maud_edges_from_files
+    from ai_gene_review.regulation_compare import (
+        diff_edges,
+        format_edge_diff,
+        module_regulatory_edges,
+    )
+
+    if not module_file.exists():
+        typer.echo(f"Error: module file not found: {module_file}", err=True)
+        raise typer.Exit(code=1)
+    if not maud_toml.exists():
+        typer.echo(f"Error: TOML file not found: {maud_toml}", err=True)
+        raise typer.Exit(code=1)
+
+    curated = module_regulatory_edges(_yaml.safe_load(module_file.read_text()))
+    source = maud_edges_from_files(maud_toml, mapping)
+    diff = diff_edges(curated, source)
+    typer.echo(format_edge_diff(diff, module_file.name, maud_toml.name))
+
+    if emit_candidates:
+        candidates = candidate_connections(source, source_id=f"file:{maud_toml}")
+        typer.echo("# candidate connections (review before adding to a module):")
+        typer.echo(_yaml.safe_dump(candidates, sort_keys=False))
+
+
+@app.command()
 def fetch_descriptions(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., human, yeast)")
