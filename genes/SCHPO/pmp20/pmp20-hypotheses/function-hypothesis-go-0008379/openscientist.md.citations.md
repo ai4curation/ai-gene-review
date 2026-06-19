@@ -1,4 +1,6 @@
-# AIGR Gene Hypothesis Deep Research
+# Citations for Research Query
+
+**Query:** # AIGR Gene Hypothesis Deep Research
 
 You are evaluating one focused gene curation hypothesis for AI Gene Review.
 This is not a general gene overview. Use the seed hypothesis and source context
@@ -7,34 +9,41 @@ the proposed curation decision.
 
 ## Target Gene
 
-- **Organism code:** {organism}
-- **Taxon:** {taxon_label} ({taxon_id})
-- **Gene directory:** {gene}
-- **Gene symbol:** {gene_symbol}
+- **Organism code:** SCHPO
+- **Taxon:** Schizosaccharomyces pombe (strain 972 / ATCC 24843) (NCBITaxon:284812)
+- **Gene directory:** pmp20
+- **Gene symbol:** pmp20
 
 ## Focus
 
-- **Focus type:** {focus_type}
-- **Hypothesis slug:** {hypothesis_slug}
-- **Source file:** {source_file}
-- **Source selector:** {source_selector}
+- **Focus type:** function_assignment
+- **Hypothesis slug:** function-hypothesis-go-0008379
+- **Source file:** genes/SCHPO/pmp20/pmp20-ai-review.yaml
+- **Source selector:** existing_annotations[11].function_hypothesis
 
 ## Seed Hypothesis
 
-{hypothesis_text}
+pmp20 has thioredoxin peroxidase activity (GO:0008379).
 
 ## Term and Decision Context
 
-{term_context}
+- Term: thioredoxin peroxidase activity (GO:0008379)
+- Evidence type: IEA
+- Original reference: GO_REF:0000002
 
 ## Reference Context
 
-{reference_context}
+- GO_REF:0000002
+- PMID:20356456
 
 ## Source Context YAML
 
 ```yaml
-{source_context_yaml}
+term:
+  id: GO:0008379
+  label: thioredoxin peroxidase activity
+evidence_type: IEA
+original_reference_id: GO_REF:0000002
 ```
 
 ## Research Objective
@@ -131,3 +140,20 @@ questions, and suggested experiments.
 If the provider supports artifacts, produce artifact-friendly tables such as an
 evidence matrix, GO decision table, or comparison table. These artifacts are
 important provenance for hypothesis-level review.
+
+**Provider:** openscientist
+**Generated:** 2026-06-19T13:58:19.277432
+
+1. PMID:20356456
+2. PMID:25399604
+3. PMID:24521463
+4. PMID:11278957
+5. PMID:10679306
+6. PMID:10514471
+7. PMID:20977338
+8. PMID:17409354
+9. PMID:18162174
+10. PMID:20078128
+11. PMID:35403927
+12. PMID:18084898
+13. PMID:19538506

@@ -228,22 +228,55 @@ gene-hypothesis-list organism gene *args="":
 #   just gene-hypothesis-research openscientist human TP53 --annotation-term-id GO:0003677 --dry-run
 #   just gene-hypothesis-research falcon human TP53 --focus-type core-function --hypothesis "TP53 directly binds DNA"
 gene-hypothesis-research provider organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} {{provider}} {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # Run focused deep research for every core_functions[*] record in one gene
 # Existing provider outputs are skipped unless --overwrite is supplied.
 # Examples:
 #   just gene-hypothesis-research-all-core openscientist human SCO1 --dry-run
-#   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param max_iterations=1 --param use_hypotheses=true
+#   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param use_hypotheses=true
 gene-hypothesis-research-all-core provider organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} {{provider}} {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # Run one synthesis query over all core_functions[*] records in one gene
 # Examples:
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 --dry-run
-#   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param max_iterations=1 --param use_hypotheses=true
+#   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param use_hypotheses=true
 gene-hypothesis-research-combined-core provider organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} {{provider}} {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    provider="{{provider}}"
+    args=( {{args}} )
+    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
+        if [[ " ${args[*]} " == *" -- "* ]]; then
+            args+=(--param max_iterations=3)
+        else
+            args+=(-- --param max_iterations=3)
+        fi
+    fi
+    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 
