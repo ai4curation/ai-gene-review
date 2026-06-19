@@ -15,8 +15,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ai_gene_review.module_notation import (
-    _REGULATORY,
-    _mechanism_tag,
+    REGULATORY,
+    mechanism_tag,
     build_registry,
     iter_connections,
 )
@@ -63,14 +63,14 @@ def module_regulatory_edges(data: dict[str, Any]) -> set[RegEdge]:
     edges: set[RegEdge] = set()
     for connection in iter_connections(module):
         ctype = connection.get("connection_type")
-        if ctype not in _REGULATORY:
+        if ctype not in REGULATORY:
             continue
         edges.add(
             RegEdge(
                 effector=registry.symbol_for(connection.get("source")),
                 enzyme=registry.symbol_for(connection.get("target")),
                 sign=_SIGN[ctype],
-                mechanism=_mechanism_tag(connection.get("predicate")) or "unspecified",
+                mechanism=mechanism_tag(connection.get("predicate")) or "unspecified",
             )
         )
     return edges

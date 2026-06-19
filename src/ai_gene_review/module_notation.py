@@ -33,7 +33,7 @@ from ai_gene_review.render_modules import as_list
 
 
 # Connection types that represent regulation (the layer GO cannot express).
-_REGULATORY = {"POSITIVELY_REGULATES": "-o", "NEGATIVELY_REGULATES": "-|"}
+REGULATORY = {"POSITIVELY_REGULATES": "-o", "NEGATIVELY_REGULATES": "-|"}
 
 # Suffixes stripped from element ids to make short, readable symbols.
 _SUFFIXES = ("_activity", "_pool", "_step", "_route", "_form", "_node", "_pathway")
@@ -264,7 +264,7 @@ def _render_descriptor_list(descriptors: Any, registry: _Registry) -> str:
     return " + ".join(parts)
 
 
-def _mechanism_tag(predicate: Any) -> Optional[str]:
+def mechanism_tag(predicate: Any) -> Optional[str]:
     """Extract a short mechanism tag (e.g. ``competitive``) from a predicate."""
     if not isinstance(predicate, dict):
         return None
@@ -359,9 +359,9 @@ def render_module_notation(data: dict[str, Any]) -> str:
         ctype = connection.get("connection_type")
         source = registry.symbol_for(connection.get("source"))
         target = registry.symbol_for(connection.get("target"))
-        if ctype in _REGULATORY:
-            arrow = _REGULATORY[ctype]
-            mechanism = _mechanism_tag(connection.get("predicate"))
+        if ctype in REGULATORY:
+            arrow = REGULATORY[ctype]
+            mechanism = mechanism_tag(connection.get("predicate"))
             sbo = _term(connection.get("predicate")).get("id")
             tag = f"   [{mechanism}]" if mechanism else ""
             comment = f"   # {sbo}" if sbo else ""

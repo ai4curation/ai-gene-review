@@ -7,6 +7,7 @@ regulation block. It is generated from the canonical YAML (no parse-back).
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
@@ -157,10 +158,9 @@ def test_methionine_isozyme_opposite_regulation_is_visible():
     """The showcase: MAT-I competitively inhibited vs MAT-III allosterically activated by SAM."""
     data = yaml.safe_load(MET_CYCLE.read_text())
     out = render_module_notation(data)
-    assert "amet -| mat1   [competitive]" in out.replace("  ", " ").replace(
-        "  ", " "
-    ) or ("amet -| mat1" in out and "[competitive]" in out)
-    assert "amet -o mat3" in out and "[allosteric]" in out
+    normalized = re.sub(r" {2,}", " ", out)
+    assert "amet -| mat1 [competitive]" in normalized
+    assert "amet -o mat3 [allosteric]" in normalized
     # grounding present
     assert "GO:0004478" in out
     assert "CHEBI:15414" in out
