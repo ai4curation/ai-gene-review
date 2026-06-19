@@ -1,5 +1,7 @@
 ---
 title: "Metabolic Model Analysis Project"
+maturity: COMPLETE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Metabolic Model Analysis Project

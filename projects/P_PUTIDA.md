@@ -1,5 +1,7 @@
 ---
 title: "P. putida Gene Annotation Review Project"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN]
 species: [PSEPK]
 ---
 

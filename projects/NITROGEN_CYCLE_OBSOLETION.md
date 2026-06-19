@@ -1,5 +1,7 @@
 ---
 title: "Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion

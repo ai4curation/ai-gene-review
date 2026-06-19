@@ -1,5 +1,8 @@
 ---
 title: "CAEEL Surveillance Immunity Project - Comprehensive Curation Recommendations"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
 ---
 
 # CAEEL Surveillance Immunity Project - Comprehensive Curation Recommendations

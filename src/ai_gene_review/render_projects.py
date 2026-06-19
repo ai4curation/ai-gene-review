@@ -1036,10 +1036,11 @@ def render_projects_table(
 
     A "project" is a top-level ``projects/FOO.md`` page (``README.md`` and the
     supporting material inside ``FOO/`` folders are excluded). For each project
-    the table surfaces metadata pulled from its YAML frontmatter (title, species,
-    status) plus a count of supporting markdown docs in its ``FOO/`` folder. This
-    complements the hand-curated ``index.html`` by guaranteeing every project is
-    listed.
+    the table surfaces metadata pulled from its YAML frontmatter (title,
+    ``maturity``, ``tags``, ``species``, ``genes``) plus a count of supporting
+    markdown docs in its ``FOO/`` folder. The rendered page provides client-side
+    filtering by tag/maturity/species and a title/slug search. This complements
+    the hand-curated ``index.html`` by guaranteeing every project is listed.
 
     Args:
         projects_dir: Directory containing project markdown files
@@ -1066,13 +1067,22 @@ def render_projects_table(
             heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
             title = heading_match.group(1).strip() if heading_match else md_path.stem
 
-        species = frontmatter.get("species")
-        if isinstance(species, (list, tuple)):
-            species = ", ".join(str(s) for s in species)
-        elif species is not None:
-            species = str(species)
+        def _as_list(value: Any) -> List[str]:
+            if value is None:
+                return []
+            if isinstance(value, (list, tuple)):
+                return [str(v) for v in value]
+            return [str(value)]
 
-        status = frontmatter.get("status")
+        species = _as_list(frontmatter.get("species"))
+        genes = _as_list(frontmatter.get("genes"))
+        tags = _as_list(frontmatter.get("tags"))
+
+        # ``maturity`` is the controlled-vocabulary project lifecycle field;
+        # fall back to the legacy free-text ``status`` if a page predates it.
+        maturity = frontmatter.get("maturity") or frontmatter.get("status")
+        if maturity is not None:
+            maturity = str(maturity)
 
         # Count supporting markdown docs in the project's FOO/ folder, if any.
         support_dir = projects_dir / md_path.stem
@@ -1086,19 +1096,34 @@ def render_projects_table(
                 "title": title,
                 "url": f"{md_path.stem}.html",
                 "species": species,
-                "status": status,
+                "genes": genes,
+                "tags": tags,
+                "maturity": maturity,
                 "support_count": support_count,
             }
         )
 
     rows.sort(key=lambda r: str(r["title"]).casefold())
 
+    # Stable, meaningful ordering for the controlled vocabularies so the
+    # template can render filter chips deterministically.
+    maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
+    tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    all_maturities = [m for m in maturity_order if any(r["maturity"] == m for r in rows)]
+    all_tags = [t for t in tag_order if any(t in r["tags"] for r in rows)]
+    all_species = sorted({s for r in rows for s in r["species"]})
+
     env = Environment(
         loader=FileSystemLoader(template_path.parent),
         autoescape=select_autoescape(["html", "j2"]),
     )
     template = env.get_template(template_path.name)
-    html = template.render(rows=rows)
+    html = template.render(
+        rows=rows,
+        all_maturities=all_maturities,
+        all_tags=all_tags,
+        all_species=all_species,
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "all-projects.html"

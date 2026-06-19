@@ -1,5 +1,7 @@
 ---
 title: "Antimicrobial Resistance (AMR) Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 ---
 
 # Antimicrobial Resistance (AMR) Project

@@ -1,5 +1,7 @@
 ---
 title: "CASP-like (CASPL) family curation"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN]
 ---
 
 # CASP-like (CASPL) family curation

@@ -1,5 +1,7 @@
 ---
 title: "Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion

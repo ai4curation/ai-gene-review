@@ -1,5 +1,7 @@
 ---
 title: "Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
 ---
 
 # Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement

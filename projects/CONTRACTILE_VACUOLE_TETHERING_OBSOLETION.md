@@ -1,5 +1,7 @@
 ---
 title: "Contractile Vacuole Tethering — Obsoletion & Replacement (GO:0140025)"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Contractile Vacuole Tethering — Obsoletion & Replacement (GO:0140025)

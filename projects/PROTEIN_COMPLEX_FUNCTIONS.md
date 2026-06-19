@@ -1,5 +1,7 @@
 ---
 title: "Protein Complex Functions Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 species: [human]
 ---
 

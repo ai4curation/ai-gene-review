@@ -1,5 +1,7 @@
 ---
 title: "Enzyme Specificity Project"
+maturity: COMPLETE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Enzyme Specificity Project

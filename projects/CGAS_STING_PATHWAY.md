@@ -1,5 +1,8 @@
 ---
 title: "cGAS-STING Cytosolic DNA Sensing Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
 ---
 
 # cGAS-STING Cytosolic DNA Sensing Project

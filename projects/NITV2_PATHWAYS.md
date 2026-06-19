@@ -1,5 +1,8 @@
 ---
 title: "Nitratidesulfovibrio vulgaris Pathways Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [DESVH]
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project

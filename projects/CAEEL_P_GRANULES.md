@@ -1,5 +1,8 @@
 ---
 title: "C. elegans P Granule/Germ Granule Dynamics Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
 ---
 
 # C. elegans P Granule/Germ Granule Dynamics Project

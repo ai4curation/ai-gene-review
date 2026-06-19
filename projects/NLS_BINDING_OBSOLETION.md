@@ -1,5 +1,7 @@
 ---
 title: "Nuclear Localization Sequence Binding — Obsoletion & Replacement"
+maturity: MATURE
+tags: [OBSOLETION]
 ---
 
 # Nuclear Localization Sequence Binding — Obsoletion & Replacement

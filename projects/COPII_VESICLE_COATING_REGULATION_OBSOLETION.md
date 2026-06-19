@@ -1,5 +1,7 @@
 ---
 title: "Regulation of COPII Vesicle Coating — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Regulation of COPII Vesicle Coating — Obsoletion & Replacement

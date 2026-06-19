@@ -1,5 +1,7 @@
 ---
 title: "UniPathway Unique Terms Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # UniPathway Unique Terms Project

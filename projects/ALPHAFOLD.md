@@ -1,5 +1,7 @@
 ---
 title: "AlphaFold Database Integration for Gene Annotation Review"
+maturity: IN_PROGRESS
+tags: [PIPELINE]
 ---
 
 # AlphaFold Database Integration for Gene Annotation Review

@@ -1,5 +1,7 @@
 ---
 title: "Structure-Based Function Prediction for Gene Review"
+maturity: MATURE
+tags: [PIPELINE]
 ---
 
 # Structure-Based Function Prediction for Gene Review

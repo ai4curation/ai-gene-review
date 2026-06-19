@@ -1,7 +1,8 @@
 ---
 title: Cephalopod Neuro Gene Reviews
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [OCTVU, OCTBM, DORPE, SEPOF, STHOU, DOROP, EUPSC]
-status: IN_PROGRESS
 ---
 # Project CEPHALOPOD: AI Gene Review for Cephalopod Genes
 

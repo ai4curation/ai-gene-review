@@ -1,5 +1,7 @@
 ---
 title: "Geranylgeranyl Reductase Activity — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Geranylgeranyl Reductase Activity — Obsoletion & Replacement

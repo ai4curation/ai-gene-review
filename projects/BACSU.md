@@ -1,5 +1,8 @@
 ---
 title: "Bacillus subtilis project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [BACSU]
 ---
 
 # Bacillus subtilis project

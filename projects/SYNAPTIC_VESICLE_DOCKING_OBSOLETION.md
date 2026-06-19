@@ -1,5 +1,7 @@
 ---
 title: "Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
 ---
 
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor

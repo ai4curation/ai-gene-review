@@ -1,5 +1,7 @@
 ---
 title: "ICAM-3 Receptor Activity — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # ICAM-3 Receptor Activity — Obsoletion & Replacement

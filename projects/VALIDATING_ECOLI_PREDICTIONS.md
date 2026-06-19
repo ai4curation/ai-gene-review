@@ -1,5 +1,8 @@
 ---
 title: "Validating E. coli ML Predictions"
+maturity: IN_PROGRESS
+tags: [PIPELINE, FLAGSHIP]
+species: [ECOLI]
 ---
 
 # Validating E. coli ML Predictions

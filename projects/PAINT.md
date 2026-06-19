@@ -1,5 +1,8 @@
 ---
 title: "PAINT Human No-IBA Gene Review Project"
+maturity: SCOPING
+tags: [PIPELINE, FLAGSHIP]
+species: [human]
 ---
 
 # PAINT Human No-IBA Gene Review Project

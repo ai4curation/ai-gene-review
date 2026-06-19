@@ -1,5 +1,7 @@
 ---
 title: "Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 ---
 
 # Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation

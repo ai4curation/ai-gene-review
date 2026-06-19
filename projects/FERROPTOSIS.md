@@ -1,5 +1,8 @@
 ---
 title: "Ferroptosis Regulation Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
 ---
 
 # Ferroptosis Regulation Project

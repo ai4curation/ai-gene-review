@@ -1,5 +1,7 @@
 ---
 title: "UniProt CAUTION Note Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # UniProt CAUTION Note Project

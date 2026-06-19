@@ -1,5 +1,7 @@
 ---
 title: "SNIPE: Membrane-Bound Nuclease Anti-Phage Defence"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN]
 ---
 
 # SNIPE: Membrane-Bound Nuclease Anti-Phage Defence

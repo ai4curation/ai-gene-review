@@ -1,5 +1,7 @@
 ---
 title: "BIOINFORMATICS Case Studies"
+maturity: SCOPING
+tags: [PIPELINE]
 ---
 
 # BIOINFORMATICS Case Studies

@@ -36,6 +36,43 @@ Guidelines:
   defining at least a `title:` (enforced by `tests/test_project_frontmatter.py`).
   Auto-generated `*-deep-research-*.md` and `*.citations.md` artifacts are exempt.
 
+## Frontmatter metadata
+
+Top-level project pages (`projects/FOO.md`) carry controlled-vocabulary metadata
+so the auto-generated [all-projects index](../pages/projects/all-projects.html) is
+transparent about each project's coverage and state. Example:
+
+```yaml
+---
+title: "Ferroptosis Regulation Project"
+maturity: IN_PROGRESS          # project lifecycle stage (see below)
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]               # organism scope (genes/ dir labels, e.g. human, worm, SCHPO)
+genes: [GPX4, ACSL4]           # OPTIONAL: only when the gene set is small + explicit
+---
+```
+
+- **`maturity`** — single value from the lifecycle ladder
+  `SCOPING → IN_PROGRESS → MATURE → COMPLETE → ARCHIVED`. Replaces the old
+  free-text `status:` field (which must no longer be used). The vocabulary is
+  enforced by `tests/test_project_frontmatter.py`.
+  - `SCOPING` — scoped/seeding, little curation done yet
+  - `IN_PROGRESS` — active curation
+  - `MATURE` — substantial, stable body of work
+  - `COMPLETE` — finished; no further changes expected
+  - `ARCHIVED` — superseded or no longer maintained
+- **`tags`** — list drawn from a controlled set (also test-enforced):
+  - `FLAGSHIP` — showcase projects surfaced on the curated `index.html`
+  - `BIOLOGY_DOMAIN` — gene/pathway biology collections (organism or theme)
+  - `PIPELINE` — cross-cutting tooling / methodology / annotation-process work
+  - `OBSOLETION` — GO term obsoletion & replacement tracking
+- **`species`** — list of organism scope using the same labels as the `genes/`
+  directory (`human`, `mouse`, `worm`, `yeast`, or UniProt species codes like
+  `SCHPO`, `ARATH`). Omit for genuinely organism-agnostic methodology projects.
+- **`genes`** — optional; include only when the set is small and clearly bounded
+  (or backed by a `FOO/genes.csv` sidecar). Large/open-ended gene lists belong in
+  the project body or a sidecar, not in frontmatter.
+
 ### Known exceptions
 
 A few folders predate this convention and do not yet have a matching top-level

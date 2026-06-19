@@ -1,5 +1,8 @@
 ---
 title: "C. elegans Unfolded Protein Response & Stress Integration Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
 ---
 
 # C. elegans Unfolded Protein Response & Stress Integration Project

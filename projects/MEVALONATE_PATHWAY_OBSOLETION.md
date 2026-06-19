@@ -1,5 +1,7 @@
 ---
 title: "Mevalonate Pathway Term Cleanup — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Mevalonate Pathway Term Cleanup — Obsoletion & Replacement

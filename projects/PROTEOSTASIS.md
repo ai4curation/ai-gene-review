@@ -1,7 +1,8 @@
 ---
 title: Human Proteostasis Network
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
-status: SCOPING
 priority: high
 scope: Full Proteostasis Consortium workbook and manuscripts; unfolded protein binding is a sub-use case
 sidecars:
