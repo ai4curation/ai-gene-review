@@ -1,4 +1,4 @@
-# ARGO139 CAFA-style retrospective GOA agreement
+# ARGO95 CAFA-style retrospective GOA agreement
 
 This is a retrospective CAFA-style score, not a true CAFA benchmark.
 Predictions are treated as an unranked single-threshold set because the

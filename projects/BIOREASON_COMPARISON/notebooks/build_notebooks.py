@@ -158,7 +158,7 @@ print(pd.DataFrame([summarise(rl, "RL"), summarise(sft, "SFT")]).to_string(index
 # --------------------------------------------------------------------------
 nb2 = new_notebook(cells=[
     md(r"""
-# BioReason-Pro SFT term-prediction assessments on ARGO139
+# BioReason-Pro SFT term-prediction assessments on ARGO95
 
 This notebook checks the per-term prediction assessments stored in
 `genes/<species>/<gene>/<gene>-sft-predictions.yaml`. Each predicted GO term
@@ -166,13 +166,13 @@ carries a `review.assessment` using the Expert Synthetic Review taxonomy
 (COR / CNN / LSP / UNC / PLI / NPI / REP), the same scheme used in
 `ESR-ECOLI-DET-Mini` and in the SFT results of the manuscript.
 
-The primary paired benchmark is **ARGO139** (Annotation Review GO), the fixed
-139-gene biological benchmark used for the paired BioReason-Pro analyses in the
-paper. SFT terms for ARGO139 genes come from the HuggingFace
-`wanglab/protein_catalogue` snapshot where available (95 genes) and from the
-BioReason-Pro SFT web export for the 44 ARGO139 genes absent from the HF
-catalogue. The larger 184-gene union (ARGO139 + 45 HF-only genes) is retained as
-a supplemental availability view. The cohort membership is enumerated in
+The primary SFT term benchmark is **ARGO95**, the 95-gene ARGO139 subset with
+HuggingFace `wanglab/protein_catalogue` SFT GO-term predictions. ARGO139 remains
+the 139-gene RL narrative benchmark. The 44 ARGO139 genes absent from the HF
+catalogue have BioReason-Pro SFT web exports, but those exports expose a much
+larger ancestor-rich GO-term panel and are retained only as a supplemental
+source-diagnostic view. The all-source SFT union (ARGO139 plus HF-only genes)
+is also retained as a supplemental availability view. The cohort membership is enumerated in
 `projects/BIOREASON_COMPARISON/benchmark-cohorts.csv` and
 `projects/BIOREASON_COMPARISON/benchmark-genes.csv`.
 """),
@@ -201,13 +201,17 @@ print("\nsource versions:")
 print(preds.source_version.value_counts().to_string())
 preds.head()
 """),
-    md("## Primary paired benchmark: ARGO139\n\nThis is the main denominator for comparing SFT terms to RL narratives. It keeps the fixed 139-gene biological benchmark while retaining source labels because HF and web exports expose different pruning levels."),
+    md("## Primary SFT benchmark: ARGO95\n\nThis is the main denominator for SFT term review. ARGO95 is the HF-catalogue subset nested inside the ARGO139 RL narrative benchmark."),
     code(r"""
 primary = preds[preds.in_rl_benchmark].copy()
 primary_hf = primary[primary.source_version == "wanglab/protein_catalogue"].copy()
 primary_web = primary[primary.source_version != "wanglab/protein_catalogue"].copy()
+argo95 = primary_hf.copy()
 
-print("Primary SFT benchmark:")
+print("ARGO95 primary SFT benchmark:")
+print(f"  genes: {argo95[['species', 'gene']].drop_duplicates().shape[0]}")
+print(f"  terms: {len(argo95)}")
+print("\nSupplemental mixed-source ARGO139 diagnostic:")
 print(f"  genes: {primary[['species', 'gene']].drop_duplicates().shape[0]}")
 print(f"  terms: {len(primary)}")
 print(f"  HF genes: {primary_hf[['species', 'gene']].drop_duplicates().shape[0]} "
@@ -218,10 +222,10 @@ print("\nCoverage check:")
 hf_gene_keys = set(zip(primary_hf.species, primary_hf.gene))
 web_gene_keys = set(zip(primary_web.species, primary_web.gene))
 print(f"  ARGO139 genes with HF SFT terms: {len(hf_gene_keys)}")
-print(f"  ARGO139 genes absent from HF, filled by web export: {len(web_gene_keys)}")
+print(f"  ARGO139 genes absent from HF, diagnostic web export only: {len(web_gene_keys)}")
 print(f"  web set equals ARGO139 minus HF: {web_gene_keys == (rl_keys - hf_gene_keys)}")
 """),
-    md("## Assessment Distribution\n\nOrdered by the Expert Synthetic Review taxonomy, with glosses. The first table is ARGO139. Because web exports include many ancestor terms, the source-stratified tables are the most interpretable."),
+    md("## Assessment Distribution\n\nOrdered by the Expert Synthetic Review taxonomy, with glosses. The first table is ARGO95. The mixed-source ARGO139 and web-export tables are diagnostic because the web export includes many ancestor terms."),
     code(r"""
 def assessment_table(frame):
     counts = frame.assessment.value_counts()
@@ -232,7 +236,7 @@ def assessment_table(frame):
         "pct": [round(100 * counts[a] / len(frame), 1) for a in order],
         "meaning": [bs.ASSESSMENT_GLOSS.get(a, "?") for a in order],
     }, index=order)
-    table.index.name = "assessment"
+    table.index.name = None
     return table
 
 def print_distribution(label, frame):
@@ -247,29 +251,29 @@ def print_distribution(label, frame):
         print(assessment_table(non_unc).to_string())
     return table
 
-primary_table = print_distribution("ARGO139 SFT benchmark, all sources", primary)
-primary_hf_table = print_distribution("ARGO139, HF catalogue source", primary_hf)
+argo95_table = print_distribution("ARGO95 SFT benchmark, HF catalogue source", argo95)
+primary_table = print_distribution("Supplemental mixed-source ARGO139", primary)
 primary_web_table = print_distribution("ARGO139, web-export source", primary_web)
 """),
     md("## Terms per gene\n\nThis shows why the source label matters: HF catalogue entries are leaf-ish, while web-export entries include much of the ancestor hierarchy."),
     code(r"""
 for label, frame in [
-    ("ARGO139, all sources", primary),
-    ("ARGO139, HF source", primary_hf),
+    ("ARGO95, HF source", argo95),
     ("ARGO139, web-export source", primary_web),
+    ("Supplemental mixed-source ARGO139", primary),
 ]:
     per_gene = frame.groupby(["species", "gene"]).size().rename("n_terms")
     print("\n" + label)
     print(per_gene.describe().round(1).to_string())
 """),
-    md("## Supplemental Views\n\nThese retain the older availability-driven denominators for reproducibility: all 184 SFT genes, and the full 140-gene HF catalogue subset used in the earlier draft."),
+    md("## Supplemental Views\n\nThese retain the availability-driven denominators for reproducibility: all current SFT genes, and the full HF catalogue subset."),
     code(r"""
 hf = preds[preds.source_version == "wanglab/protein_catalogue"].copy()
 web = preds[preds.source_version != "wanglab/protein_catalogue"].copy()
 hf_only = hf[~hf.in_rl_benchmark].copy()
 
-print_distribution("Supplemental 184-gene union, all SFT predictions", preds)
-print_distribution("Supplemental HF catalogue subset, all 140 genes", hf)
+print_distribution("Supplemental all-source union, all SFT predictions", preds)
+print_distribution("Supplemental HF catalogue subset, all current genes", hf)
 print(f"\nHF-only genes outside ARGO139: "
       f"{hf_only[['species', 'gene']].drop_duplicates().shape[0]} "
       f"({len(hf_only)} terms)")
@@ -278,13 +282,13 @@ print(f"\nHF-only genes outside ARGO139: "
 fig, ax = plt.subplots(figsize=(9, 4.5))
 colors = {"COR": "#1a7f37", "CNN": "#16527a", "LSP": "#7fb2d6",
           "UNC": "#bbbbbb", "PLI": "#e0902a", "NPI": "#b3261e", "REP": "#7a4ea3"}
-ax.bar(primary_hf_table.index, primary_hf_table["count"],
-       color=[colors.get(a, "#888") for a in primary_hf_table.index])
-for i, (a, row) in enumerate(primary_hf_table.iterrows()):
+ax.bar(argo95_table.index, argo95_table["count"],
+       color=[colors.get(a, "#888") for a in argo95_table.index])
+for i, (a, row) in enumerate(argo95_table.iterrows()):
     ax.text(i, row["count"], f"{row['pct']}%", ha="center", va="bottom", fontsize=9)
 ax.set_ylabel("predicted terms")
 ax.set_title(f"Assessment distribution of {len(primary_hf)} BioReason-Pro SFT HF terms "
-             f"({primary_hf[['species', 'gene']].drop_duplicates().shape[0]} ARGO139 genes)")
+             f"(ARGO95)")
 fig.tight_layout()
 outdir = Path("figures"); outdir.mkdir(exist_ok=True)
 fig.savefig(outdir / "assessment_distribution.repro.png", dpi=120)
@@ -297,10 +301,10 @@ plt.show()
     md(r"""
 ### Interpreting the result
 
-The primary denominator is ARGO139. The HF and web-export source partitions
-should be read separately because the web export includes the full GO ancestor
-hierarchy. The 184-gene union and 140-gene HF catalogue views are retained as
-supplemental review views, not as the primary BioReason-Pro paired benchmark.
+The primary SFT denominator is ARGO95. The mixed-source ARGO139 and web-export
+views should be read as diagnostics because the web export includes the full GO
+ancestor hierarchy. The all-source union and all-HF catalogue views are retained
+as supplemental review views, not as primary BioReason-Pro benchmarks.
 """),
 ])
 

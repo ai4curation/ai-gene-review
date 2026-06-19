@@ -28,7 +28,7 @@ Annotation databases face a practical deployment question — *when is a new fun
 
 ## Evidence base
 
-- **ARGO139 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): fixed 139-gene benchmark used for both RL narrative review and SFT GO-term review, with overall RL correctness 3.7/5, completeness 2.9/5, a seven-mode failure-mode taxonomy, and source-stratified SFT term assessments.
+- **ARGO139/ARGO95 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): fixed 139-gene ARGO139 benchmark for RL narrative review, plus the 95-gene ARGO95 HF-catalogue subset for SFT GO-term review, with overall RL correctness 3.7/5, completeness 2.9/5, a seven-mode failure-mode taxonomy, and SFT term assessments.
 - **`ESR-ECOLI-DET-Mini` 7-gene *E. coli* positive control and recap** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md` and `../recapitulation-experiment/claude-expt-1/`; dataset ID `10.5281/zenodo.20751016`): AI-AUGR reproduces all 7 classes when labels/rationales are present as a positive control. An answer-key-withheld, literature/bioinformatics-assisted recapitulation recovers 4/7 exact labels, enough for useful triage but not expert-equivalent.
 - **Supplemental SFT source checks** on the public HuggingFace `wanglab/protein_catalogue` dataset: retained for reproducibility in `supplemental-benchmark-details.md`.
 

@@ -1,9 +1,10 @@
-"""Retrospective CAFA-style scoring for ARGO139 SFT GO-term predictions.
+"""Retrospective CAFA-style scoring for BioReason-Pro SFT GO-term predictions.
 
-This is not a true CAFA benchmark: ARGO139 is retrospective, the predictions
-are not a timestamped pre-holdout submission, and BioReason-Pro SFT files do
-not carry model confidence scores. The script therefore computes a single
-threshold, CAFA-style GOA agreement score over propagated GO term sets.
+This is not a true CAFA benchmark: ARGO95 is retrospective, the predictions are
+not a timestamped pre-holdout submission, and BioReason-Pro SFT files do not
+carry model confidence scores. The script therefore computes a single-threshold,
+CAFA-style GOA agreement score over propagated GO term sets. Mixed-source
+ARGO139 rows are emitted as source diagnostics, not as the primary SFT score.
 
 Outputs are written under projects/BIOREASON_COMPARISON/cafa-style/.
 """
@@ -504,7 +505,7 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
     exp_rows = exp_rows.set_index("source_group").loc[["hf_catalogue", "web_export", "all_sources"]]
 
     lines = [
-        "# ARGO139 CAFA-style retrospective GOA agreement",
+        "# ARGO95 CAFA-style retrospective GOA agreement",
         "",
         "This is a retrospective CAFA-style score, not a true CAFA benchmark.",
         "Predictions are treated as an unranked single-threshold set because the",
@@ -615,7 +616,7 @@ def write_figure(summary: pd.DataFrame) -> None:
             if not math.isnan(value):
                 ax.text(i, value + 0.02, f"{value:.2f}", ha="center", va="bottom", fontsize=9)
     axes[0].set_ylabel("propagated F1 vs current GOA")
-    fig.suptitle("Retrospective CAFA-style GOA agreement for ARGO139 SFT terms", y=1.04)
+    fig.suptitle("Retrospective CAFA-style GOA agreement for SFT terms", y=1.04)
     fig.tight_layout()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
