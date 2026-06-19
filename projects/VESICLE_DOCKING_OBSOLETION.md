@@ -1,5 +1,7 @@
 ---
 title: "Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)

@@ -1,5 +1,7 @@
 ---
 title: "Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
 ---
 
 # Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)

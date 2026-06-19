@@ -1,5 +1,7 @@
 ---
 title: "Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)

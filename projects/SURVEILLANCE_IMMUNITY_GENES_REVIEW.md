@@ -1,5 +1,8 @@
 ---
 title: "Comprehensive GO Annotation Review: C. elegans Surveillance Immunity Genes (Priority 2)"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN]
+species: [worm]
 ---
 
 # Comprehensive GO Annotation Review: C. elegans Surveillance Immunity Genes (Priority 2)

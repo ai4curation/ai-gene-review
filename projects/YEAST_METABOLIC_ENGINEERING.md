@@ -1,5 +1,8 @@
 ---
 title: "Yeast Metabolic Engineering & Bioproduction"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [yeast]
 ---
 
 # Yeast Metabolic Engineering & Bioproduction

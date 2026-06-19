@@ -1,5 +1,7 @@
 ---
 title: "Anti-CRISPR Proteins Project"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 ---
 
 # Anti-CRISPR Proteins Project

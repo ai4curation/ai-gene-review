@@ -1,5 +1,8 @@
 ---
 title: "Methylorubrum extorquens MLL Cluster Curation Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [METEA]
 ---
 
 # Methylorubrum extorquens MLL Cluster Curation Project

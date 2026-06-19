@@ -1,5 +1,7 @@
 ---
 title: "Phosphorylation Annotation Refactor Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Phosphorylation Annotation Refactor Project

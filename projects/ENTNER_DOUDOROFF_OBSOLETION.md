@@ -1,5 +1,7 @@
 ---
 title: "Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)

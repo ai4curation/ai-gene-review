@@ -1,5 +1,7 @@
 ---
 title: "Human BBSome Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [BBS1, BBS2, ARL6, BBS4, BBS5, MKKS, BBS7, TTC8, BBS9, BBS10, BBS12, LZTFL1, BBIP1, CCDC28B]
 ---

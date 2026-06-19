@@ -1,5 +1,7 @@
 ---
 title: "VAMPIROME"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN]
 ---
 
 # VAMPIROME

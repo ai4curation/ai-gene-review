@@ -1,5 +1,7 @@
 ---
 title: "BioReason-Pro Comparison Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv

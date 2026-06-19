@@ -1,5 +1,8 @@
 ---
 title: "C. elegans Surveillance Immunity Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
 ---
 
 # C. elegans Surveillance Immunity Project

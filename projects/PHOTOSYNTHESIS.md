@@ -1,5 +1,7 @@
 ---
 title: "Photosynthesis Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
 ---
 
 # Photosynthesis Project

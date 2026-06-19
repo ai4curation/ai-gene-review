@@ -1,5 +1,8 @@
 ---
 title: "Yeast Replicative Aging & mRNA Processing"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [yeast]
 ---
 
 # Yeast Replicative Aging & mRNA Processing

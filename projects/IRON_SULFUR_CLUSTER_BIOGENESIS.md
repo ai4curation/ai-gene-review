@@ -1,5 +1,8 @@
 ---
 title: "Iron-Sulfur Cluster Biogenesis Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
 ---
 
 # Iron-Sulfur Cluster Biogenesis Project

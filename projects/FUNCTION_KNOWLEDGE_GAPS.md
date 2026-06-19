@@ -1,5 +1,7 @@
 ---
 title: "Function Knowledge Gaps"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Function Knowledge Gaps

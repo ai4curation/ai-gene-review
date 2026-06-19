@@ -1,5 +1,7 @@
 ---
 title: "Protein Localization to ER Exit Site — Obsoletion"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
 ---
 
 # Protein Localization to ER Exit Site — Obsoletion

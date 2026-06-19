@@ -1,5 +1,8 @@
 ---
 title: "C. elegans Ciliopathy/IFT Pathway Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [worm]
 ---
 
 # C. elegans Ciliopathy/IFT Pathway Project

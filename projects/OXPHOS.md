@@ -1,5 +1,7 @@
 ---
 title: "Oxidative Phosphorylation (OXPHOS) Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
 species: [human]
 ---
 

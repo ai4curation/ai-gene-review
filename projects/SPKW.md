@@ -1,5 +1,7 @@
 ---
 title: "SwissProt Keywords (SPKW) Unique Terms Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # SwissProt Keywords (SPKW) Unique Terms Project

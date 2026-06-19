@@ -1,5 +1,7 @@
 ---
 title: "Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION, FLAGSHIP]
 ---
 
 # Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement

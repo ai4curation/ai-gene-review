@@ -1,5 +1,7 @@
 ---
 title: "Rare Earth Element (REE) Extraction Pathways (Biological Systems)"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
 ---
 
 # Rare Earth Element (REE) Extraction Pathways (Biological Systems)

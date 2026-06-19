@@ -1,5 +1,7 @@
 ---
 title: "PDB: Deposited Structures as Functional-Insight Evidence"
+maturity: MATURE
+tags: [PIPELINE]
 ---
 # PDB: Deposited Structures as Functional-Insight Evidence
 

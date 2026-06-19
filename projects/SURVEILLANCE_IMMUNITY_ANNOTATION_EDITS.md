@@ -1,5 +1,8 @@
 ---
 title: "Specific Annotation Edit Recommendations"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN]
+species: [worm]
 ---
 
 # Specific Annotation Edit Recommendations

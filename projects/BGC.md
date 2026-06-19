@@ -1,5 +1,7 @@
 ---
 title: "Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 ---
 
 # Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project

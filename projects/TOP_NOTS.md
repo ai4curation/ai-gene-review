@@ -1,5 +1,7 @@
 ---
 title: "Top-Nots: Candidate NOT Annotations from Existing Reviews"
+maturity: MATURE
+tags: [PIPELINE]
 species: [human, mouse, yeast, SCHPO, DROME, ANOGA, ACET2, BACSU, DESVH, ECOLI, METEA, METTP, PSEAE, PSEPK, SALTY, CANGA, CLOCL, ARATH, worm]
 ---
 # Top-Nots: Candidate NOT Annotations from Existing Reviews

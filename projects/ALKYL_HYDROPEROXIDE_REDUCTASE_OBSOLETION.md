@@ -1,5 +1,7 @@
 ---
 title: "Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement

@@ -1,5 +1,8 @@
 ---
 title: "Yeast Epigenetics & Histone Inheritance"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [yeast]
 ---
 
 # Yeast Epigenetics & Histone Inheritance

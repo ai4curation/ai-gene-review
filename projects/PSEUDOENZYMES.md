@@ -1,5 +1,7 @@
 ---
 title: "Pseudoenzymes Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Pseudoenzymes Project

@@ -1,5 +1,8 @@
 ---
 title: "PINK1-Parkin Mitophagy Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
 ---
 
 # PINK1-Parkin Mitophagy Project

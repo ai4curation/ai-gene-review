@@ -743,7 +743,9 @@ class TestRenderProjectsTable:
         (projects / "ALPHA").mkdir(parents=True)
         (projects / "ALPHA" / "alpha-pathway.md").write_text("# Alpha pathway")
         (projects / "ALPHA.md").write_text(
-            "---\ntitle: Alpha Project\nspecies: [human, mouse]\nstatus: active\n---\n# Alpha\n"
+            "---\ntitle: Alpha Project\nmaturity: MATURE\n"
+            "tags: [BIOLOGY_DOMAIN, FLAGSHIP]\nspecies: [human, mouse]\n"
+            "genes: [GPX4, ACSL4]\n---\n# Alpha\n"
         )
         (projects / "BETA.md").write_text("# Beta heading only\n")
         # README and supporting subfolder files must be excluded as projects
@@ -758,11 +760,21 @@ class TestRenderProjectsTable:
         assert 'href="ALPHA.html"' in html
         assert 'href="BETA.html"' in html
         assert 'href="README.html"' not in html  # README not a project row
-        # Metadata surfaced from frontmatter
-        assert "human, mouse" in html
-        assert "active" in html
-        # Supporting-doc count from ALPHA/ folder
-        assert "1 file" in html
+        # Maturity surfaced as a badge
+        assert "m-MATURE" in html
+        # Tags surfaced as chips and exposed as row filter data
+        assert "t-FLAGSHIP" in html
+        assert "t-BIOLOGY_DOMAIN" in html
+        assert 'data-tags="BIOLOGY_DOMAIN FLAGSHIP"' in html
+        # Species surfaced as chips
+        assert 'class="sp">human<' in html
+        assert 'class="sp">mouse<' in html
+        # Gene count surfaced (2 genes) with the full list in the tooltip
+        assert 'title="GPX4, ACSL4"' in html
+        # Filter controls present for tag/maturity/species
+        assert 'data-filter="tag"' in html
+        assert 'data-filter="maturity"' in html
+        assert 'data-filter="species"' in html
         # Title falls back to first heading when frontmatter title is absent
         assert "Beta heading only" in html
 

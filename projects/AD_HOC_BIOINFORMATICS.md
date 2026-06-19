@@ -1,5 +1,7 @@
 ---
 title: "Ad-Hoc Bioinformatics Analysis Project"
+maturity: SCOPING
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Ad-Hoc Bioinformatics Analysis Project

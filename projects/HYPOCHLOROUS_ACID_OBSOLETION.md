@@ -1,5 +1,7 @@
 ---
 title: "Hypochlorous Acid Metabolic Process Terms — Obsoletion"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
 ---
 
 # Hypochlorous Acid Metabolic Process Terms — Obsoletion

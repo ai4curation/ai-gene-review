@@ -1,5 +1,7 @@
 ---
 title: "Contested Function Project"
+maturity: IN_PROGRESS
+tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Contested Function Project

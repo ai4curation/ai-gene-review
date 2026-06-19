@@ -1,5 +1,8 @@
 ---
 title: "GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN]
+species: [worm]
 ---
 
 # GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes
