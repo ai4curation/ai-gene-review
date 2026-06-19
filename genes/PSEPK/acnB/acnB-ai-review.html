@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>acnB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>acnB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KF1" target="_blank" class="term-link">
+                        Q88KF1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "acnB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KF1" data-a="DESCRIPTION: AcnB (PP_2339) is a bifunctional iron-sulfur enzym..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AcnB (PP_2339) is a bifunctional iron-sulfur enzyme of the aconitase/isopropylmalate isomerase family in Pseudomonas putida KT2440. It carries a catalytic [4Fe-4S] cluster and acts as a soluble cytosolic hydro-lyase. In its classical aconitase (aconitate hydratase, EC 4.2.1.3) role it catalyzes the reversible isomerization of citrate to isocitrate via cis-aconitate, a central step of the tricarboxylic acid cycle. AcnB additionally provides 2-methylcitrate/2-methylisocitrate dehydratase activity (EC 4.2.1.99) in the methylcitrate cycle, the pathway that assimilates and detoxifies propionyl-CoA generated during beta-oxidation of odd-chain fatty acids, converting it ultimately to succinate and pyruvate. Through this dual role AcnB links the TCA cycle and the methylcitrate cycle and is required for growth on odd-chain fatty acids (propionate, valerate, heptanoate, nonanoate). As an aconitase-family Fe-S enzyme, its catalytic cluster is sensitive to oxidation and iron limitation; in some bacteria apo-aconitase can moonlight as an RNA-binding post-transcriptional regulator, though this has not been demonstrated for the P. putida protein.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    GO:0003730
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF1" data-a="GO:0003730" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning prediction of an RNA-binding moonlighting function, not supported by organism-specific evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is an electronic ARBA prediction propagated from the general aconitase-family observation that apo-aconitase can moonlight as an RNA-binding regulator. The deep-research report notes that such moonlighting is directly demonstrated only in other bacteria (e.g., Helicobacter pylori, Staphylococcus aureus) and is explicitly unproven for P. putida KT2440 PP_2339 (austin2015, barrault2024). Treating this as an established molecular function of AcnB would over-annotate the gene; it should not be presented as a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003994" target="_blank" class="term-link">
+                                    GO:0003994
+                                </a>
+                            </span>
+                            <span class="term-label">aconitate hydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF1" data-a="GO:0003994" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic activity of AcnB, well supported by family/EC assignment and organism-specific pathway placement.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> AcnB belongs to the aconitase/IPM isomerase family and is annotated as aconitate hydratase B (EC 4.2.1.3); the deep-research report describes its classical aconitase chemistry in central metabolism (thompson2020). This is a core molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF1" data-a="GO:0005829" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcnB is a soluble enzyme of the TCA/methylcitrate central metabolic network, best inferred to act in the cytosol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No KT2440-specific localization experiment exists, but aconitase-family enzymes and the TCA/MCC pathways are soluble cytosolic processes, and proteomic detection in soluble fractions is consistent with cytosolic localization (thompson2020, molina2019). The IEA cytosol assignment is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF1" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcnB catalyzes the aconitase step of the TCA cycle; a core biological process for this enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Aconitase (citrate-isocitrate isomerization via cis-aconitate) is a defining TCA-cycle reaction, and the deep-research report places AcnB in central-carbon TCA metabolism (thompson2020). Core process annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047456" target="_blank" class="term-link">
+                                    GO:0047456
+                                </a>
+                            </span>
+                            <span class="term-label">2-methylisocitrate dehydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF1" data-a="GO:0047456" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Methylcitrate-cycle dehydratase activity (EC 4.2.1.99) of bifunctional AcnB, supported by organism-specific pathway genetics.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> AcnB is annotated as a bifunctional 2-methylcitrate dehydratase/aconitate hydratase B, and KT2440 RB-TnSeq genetics infer PP_2339 provides the key methylcitrate-cycle dehydratase/hydratase activity required for growth on odd-chain fatty acids, especially given the lack of a fitness defect for the canonical prpD (PP_2338) (thompson2020). Core molecular function alongside aconitase activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    GO:0051539
+                                </a>
+                            </span>
+                            <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KF1" data-a="GO:0051539" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AcnB requires a catalytic [4Fe-4S] cluster, an essential cofactor of aconitase-family enzymes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Aconitase activity depends on an intact [4Fe-4S] cluster that participates directly in catalysis; this is a conserved, defining feature of the family and is consistent with the InterPro/PANTHER evidence and the mechanistic literature cited in the deep-research report (crack2018, austin2015). Appropriate cofactor-binding annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Aconitate hydratase (aconitase) activity catalyzing reversible citrate-cis-aconitate-isocitrate isomerization in the TCA cycle, dependent on a catalytic [4Fe-4S] cluster.</h3>
+                <span class="vote-buttons" data-g="Q88KF1" data-a="FUNCTION: Aconitate hydratase (aconitase) activity catalyzin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003994" target="_blank" class="term-link">
+                            aconitate hydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32826213" target="_blank" class="term-link">
+                                PMID:32826213
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440-focused studies annotate PP_2339 as aconitate hydratase B and place it in central-carbon TCA metabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>2-methylcitrate/2-methylisocitrate dehydratase activity in the methylcitrate cycle, enabling assimilation and detoxification of propionyl-CoA derived from odd-chain fatty acid catabolism into succinate and pyruvate.</h3>
+                <span class="vote-buttons" data-g="Q88KF1" data-a="FUNCTION: 2-methylcitrate/2-methylisocitrate dehydratase act..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047456" target="_blank" class="term-link">
+                            2-methylisocitrate dehydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019543" target="_blank" class="term-link">
+                                propionate catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32826213" target="_blank" class="term-link">
+                                PMID:32826213
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The methylcitrate cycle is essential for growth on odd-chain fatty acids in KT2440, and RB-TnSeq genetics infer PP_2339 (acnB) provides the key dehydratase/hydratase activity, since prpD (PP_2338) showed no fitness defect.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32826213" target="_blank" class="term-link">
+                            PMID:32826213
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Fatty Acid and Alcohol Metabolism in Pseudomonas putida: Functional Analysis Using Random Barcode Transposon Sequencing</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The methylcitrate cycle is essential for growth on odd-chain fatty acids (propionate, valerate, heptanoate, nonanoate) in P. putida KT2440, and PP_2339 (acnB) is inferred to provide key methylcitrate-cycle dehydratase/hydratase activity; no transposon insertions were recovered in PP_2339, consistent with essentiality during library construction.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26170414" target="_blank" class="term-link">
+                            PMID:26170414
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Aconitase Functions as a Pleiotropic Posttranscriptional Regulator in Helicobacter pylori</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In Helicobacter pylori, apo-aconitase (after Fe-S cluster loss) binds multiple mRNAs and acts as a posttranscriptional regulator; cited as family-level precedent for possible AcnB moonlighting, but not demonstrated in P. putida.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(acnB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KF1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **acnB** (UniProt Q88KF1; locus **PP_2339**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">24 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T16:46:02.544891</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="acnB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="acnB-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000011 The methylcitrate cycle (MCC), which is essential for propionate and odd-chain fatty acid catabolism, is illustrated in the schemat</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-acnb-uniprot-q88kf1-locus-pp_2339-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>acnB</strong> (UniProt Q88KF1; locus <strong>PP_2339</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-target-verification-critical-disambiguation">0. Target verification (critical disambiguation)</h2>
+<p>The gene symbol <strong>acnB</strong> is used broadly across bacteria, but in <em>Pseudomonas putida</em> KT2440 the locus <strong>PP_2339</strong> is explicitly annotated in KT2440-focused studies as <strong>acnB</strong>, encoding a <strong>bifunctional 2-methylcitrate dehydratase/aconitase hydratase B</strong>—consistent with the UniProt-provided identity for <strong>Q88KF1</strong>. (thompson2020fattyacidand pages 5-7, thompson2020fattyacidand pages 2-5, thompson2020functionalanalysisof pages 8-12)</p>
+<h2 id="1-key-concepts-and-current-definitions">1. Key concepts and current definitions</h2>
+<h3 id="11-aconitase-aconitate-hydratase-ec-4213">1.1 Aconitase / aconitate hydratase (EC 4.2.1.3)</h3>
+<p>“Aconitase” (aconitate hydratase) is a central-carbon enzyme classically positioned in the <strong>tricarboxylic acid (TCA) cycle</strong>, catalyzing the reversible isomerization of citrate to isocitrate via cis-aconitate. In bacteria, aconitase activity is typically carried by isoenzymes (often AcnA and AcnB). A key mechanistic feature is that enzymatic activity requires an intact <strong>[4Fe–4S] iron–sulfur cluster</strong>; disruption (e.g., oxidative damage or low iron) yields an inactive form. (crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2)</p>
+<h3 id="12-methylcitrate-cycle-mcc-and-bifunctional-acnb">1.2 Methylcitrate cycle (MCC) and “bifunctional” AcnB</h3>
+<p>In <em>P. putida</em> KT2440, <strong>acnB (PP_2339)</strong> is discussed as part of the <strong>methylcitrate cycle (MCC)</strong>, a pathway that assimilates/detoxifies <strong>propionyl-CoA</strong> (commonly produced during β-oxidation of odd-chain fatty acids) into central metabolites (<strong>succinate</strong> and <strong>pyruvate</strong>), which feed into the broader TCA/central metabolism network. In this KT2440 context, AcnB is annotated as <em>bifunctional</em>: it can contribute to both classical aconitase chemistry and MCC-associated dehydratase/hydratase steps involving methylcitrate intermediates. (thompson2020fattyacidand pages 5-7, thompson2020fattyacidand pages 2-5, thompson2020fattyacidand media b8c40d82)</p>
+<h3 id="13-apo-aconitase-moonlighting-as-an-rna-binding-protein-general-bacterial-concept">1.3 Apo-aconitase “moonlighting” as an RNA-binding protein (general bacterial concept)</h3>
+<p>Authoritative mechanistic literature shows that when aconitase loses/disrupts its [4Fe–4S] cluster (forming <strong>apo-aconitase</strong>), the protein can adopt <strong>RNA-binding post-transcriptional regulatory roles</strong> (e.g., binding specific mRNAs and altering stability/translation). This “switch” between enzymatic and RNA-binding roles is supported in multiple bacteria; direct experimental evidence exists in <em>Helicobacter pylori</em> and conceptually in <em>E. coli</em> reviewed literature, while it has not yet been demonstrated for <em>P. putida</em> KT2440 PP_2339 in the retrieved corpus. (crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2)</p>
+<h2 id="2-functional-role-of-p-putida-kt2440-acnb-pp_2339-q88kf1">2. Functional role of <em>P. putida</em> KT2440 AcnB (PP_2339; Q88KF1)</h2>
+<h3 id="21-primary-biochemical-function-central-carbon-dehydrataseisomerase-chemistry">2.1 Primary biochemical function: central-carbon dehydratase/isomerase chemistry</h3>
+<p><strong>Best-supported organism-specific functional claim:</strong> In <em>P. putida</em> KT2440, <strong>acnB (PP_2339)</strong> functions in the <strong>methylcitrate cycle</strong> and is annotated as <strong>bifunctional 2-methylcitrate dehydratase/aconitate hydratase B</strong>. (thompson2020fattyacidand pages 5-7, thompson2020functionalanalysisof pages 8-12)</p>
+<p><strong>Substrate specificity (evidence status):</strong><br />
+* KT2440-specific full-text evidence in the retrieved set provides pathway-level functional assignment (MCC involvement) and “bifunctional” annotation but does <strong>not</strong> provide detailed kinetic parameters (Km/kcat) or explicit chemical equations for PP_2339. (thompson2020fattyacidand pages 5-7, thompson2020functionalanalysisof pages 8-12)<br />
+* Mechanistic enzyme/cofactor principles (Fe–S dependence) come from broader aconitase literature rather than KT2440-specific biochemical assays. (crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2)</p>
+<h3 id="22-pathway-context-methylcitrate-cycle-is-required-for-odd-chain-fatty-acid-utilization">2.2 Pathway context: methylcitrate cycle is required for odd-chain fatty acid utilization</h3>
+<p>A key experimental systems-genetics result in KT2440 is that the <strong>methylcitrate cycle is essential for growth on odd-chain fatty acids</strong>, specifically noted as <strong>propionate (C3), valerate (C5), heptanoate (C7), and nonanoate (C9)</strong>. The same work places <strong>PP_2339 (acnB)</strong> in the MCC and argues it likely carries key MCC dehydratase/hydratase activity, especially because a canonical MCC dehydratase gene (prpD/PP_2338) did not show a fitness defect. (thompson2020fattyacidand pages 5-7, thompson2020fattyacidand media b8c40d82)</p>
+<p><strong>Visual evidence (pathway placement):</strong> Figure 2 in Thompson et al. (2020) depicts the MCC converting propionyl-CoA into succinate and pyruvate and presents a gene-fitness heatmap for odd-chain fatty acid growth conditions. (thompson2020fattyacidand media b8c40d82, thompson2020fattyacidand media 3b2d456f)</p>
+<h3 id="23-cellular-localization">2.3 Cellular localization</h3>
+<p>No KT2440-specific microscopy/fractionation evidence for PP_2339 localization was retrieved. However, the enzymes and pathways described (TCA and MCC) are presented as part of the soluble central metabolic network; thus, AcnB is best inferred to function primarily in the <strong>cytosol</strong>. (thompson2020fattyacidand pages 5-7, molina2019pseudomonasputidakt2440 pages 8-9)</p>
+<h2 id="3-phenotypes-essentiality-and-regulation-in-p-putida-kt2440">3. Phenotypes, essentiality, and regulation in <em>P. putida</em> KT2440</h2>
+<h3 id="31-essentiality-genetic-constraint">3.1 Essentiality / genetic constraint</h3>
+<p>Random barcode transposon sequencing (RB-TnSeq) analyses in KT2440 report <strong>no mapped transposon insertions</strong> in <strong>PP_2339 (acnB)</strong>. The authors interpret this absence as suggesting that <strong>PP_2339 was essential during construction of the RB–TnSeq library</strong> (i.e., disruption may be lethal or severely deleterious under the baseline conditions used to build/maintain the library). (thompson2020fattyacidand pages 5-7, thompson2020functionalanalysisof pages 8-12)</p>
+<p>This is an <em>inference</em> from insertion absence rather than a classical targeted knockout with complementation; nonetheless, in large mutant libraries, lack of insertions is a common hallmark of essentiality or strong growth constraint. (thompson2020fattyacidand pages 5-7)</p>
+<h3 id="32-expressionproteomic-behavior-in-growth-phases">3.2 Expression/proteomic behavior in growth phases</h3>
+<p>Quantitative proteomic profiling of KT2440 growth in complete medium indicates that <strong>aconitase isoforms</strong> can vary by growth phase; in the cited excerpt, AcnB abundance was reported as <strong>similar in early and mid exponential phases</strong>, while some other isoforms (e.g., AcnA) decreased. This supports AcnB as a constitutive component of central metabolism across growth stages in this setting. (molina2019pseudomonasputidakt2440 pages 8-9)</p>
+<h3 id="33-oxidative-stress-iron-limitation-considerations-evidence-boundaries">3.3 Oxidative stress / iron limitation considerations (evidence boundaries)</h3>
+<p><em>KT2440-specific</em> evidence directly tying PP_2339 regulation to oxidative stress/iron limitation was not retrieved.</p>
+<p>However, authoritative mechanistic work in bacteria shows:<br />
+* Aconitase enzymatic activity depends on an intact <strong>[4Fe–4S]</strong> cluster; <strong>oxidation (high oxygen/oxidants) or iron scarcity</strong> can inactivate aconitase via cluster disruption. (crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2)<br />
+* Under these conditions, cluster-free aconitase can switch to RNA-binding regulatory roles in several bacteria (e.g., H. pylori AcnB binding multiple transcripts under O2 stress). (austin2015aconitasefunctionsas pages 1-2)</p>
+<p>For KT2440 functional annotation, these findings motivate a plausible hypothesis that PP_2339 may also be stress-sensitive and potentially moonlighting, but this should be labeled as <strong>family-supported inference</strong> pending KT2440-specific experiments.</p>
+<h2 id="4-recent-developments-prioritizing-20232024">4. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="41-2023-genome-scale-functional-genetics-resources-for-kt2440">4.1 2023: genome-scale functional genetics resources for KT2440</h3>
+<p>A 2023 KT2440 genome-mining/functional-genomics perspective explicitly identifies <strong>PP_2339 (acnB)</strong> as a bifunctional 2-methylcitrate dehydratase/aconitase hydratase B and notes the absence of mapped insertions consistent with an essential gene in an RB-TnSeq library context. (thompson2020functionalanalysisof pages 8-12)</p>
+<h3 id="42-2024-applied-central-metabolism-rewiring-for-aromatic-compound-degradation">4.2 2024: applied central-metabolism rewiring for aromatic compound degradation</h3>
+<p>A 2024 <em>Microbial Biotechnology</em> study demonstrates that <strong>inactivating pyruvate dehydrogenase (PDH)</strong> in KT2440 relieves carbon catabolite repression and improves the strain’s ability to <strong>degrade aromatic compounds</strong> (many of which funnel to acetyl-CoA and enter central metabolism via the TCA cycle). This underscores the importance of <strong>TCA-connected nodes</strong> (pyruvate → acetyl-CoA entry; downstream TCA function including aconitase steps) in real-world biotransformation/bioremediation performance. (moreno2024inactivationofpseudomonas pages 1-2)</p>
+<h3 id="43-2024-authoritative-demonstration-of-iron-stress-aconitase-moonlighting-cross-species-mechanistic-advance">4.3 2024: authoritative demonstration of iron-stress aconitase moonlighting (cross-species mechanistic advance)</h3>
+<p>A 2024 <em>Nucleic Acids Research</em> study (in <em>Staphylococcus aureus</em>) provides high-quality evidence that aconitase can be tightly regulated under iron deficiency by an sRNA-driven circuit and that aconitase itself can exert <strong>moonlighting RNA-binding activity</strong> that downregulates its own expression, illustrating conserved regulatory logic around Fe–S-dependent central metabolism. While not in <em>P. putida</em>, this strengthens the mechanistic precedent for Fe–S enzymes acting as metabolic/stress sensors. (barrault2024staphylococcalaconitaseexpression pages 1-3, barrault2024staphylococcalaconitaseexpression pages 12-14)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h2>
+<h3 id="51-bioremediationbiotransformation-requiring-robust-central-metabolism">5.1 Bioremediation/biotransformation requiring robust central metabolism</h3>
+<p>KT2440 is widely used as a chassis for degradation of aromatic compounds; a 2024 study shows that rewiring central carbon entry (PDH-null) improves degradation of aromatic compounds even in the presence of preferred substrates, emphasizing industrial relevance of central metabolism and TCA-cycle throughput. Although AcnB is not singled out, aconitase activity is a core TCA step, so AcnB’s function is part of the metabolic backbone enabling such applications. (moreno2024inactivationofpseudomonas pages 1-2)</p>
+<h3 id="52-odd-chain-fatty-acid-utilization-and-propionyl-coa-detoxification">5.2 Odd-chain fatty acid utilization and propionyl-CoA detoxification</h3>
+<p>The methylcitrate cycle (in which PP_2339/acnB is placed) is essential for growth on odd-chain fatty acids, implying that AcnB supports utilization of feedstocks that yield propionyl-CoA. This is directly relevant to metabolic engineering contexts where fatty acids or complex substrates produce odd-chain intermediates that would otherwise be toxic or poorly assimilated. (thompson2020fattyacidand pages 5-7)</p>
+<h2 id="6-relevant-statistics-and-data-from-available-sources">6. Relevant statistics and data (from available sources)</h2>
+<ul>
+<li><strong>Essentiality inference:</strong> PP_2339 (acnB) lacks RB-TnSeq insertions; authors interpret this as <strong>essential during library construction</strong> (qualitative essentiality evidence). (thompson2020fattyacidand pages 5-7, thompson2020functionalanalysisof pages 8-12)</li>
+<li><strong>Substrate class requirement:</strong> The methylcitrate cycle (placing acnB as a key component) is described as <strong>absolutely required</strong> for growth on <strong>propionate (C3), valerate (C5), heptanoate (C7), nonanoate (C9)</strong>. (thompson2020fattyacidand pages 5-7)</li>
+<li><strong>Proteomics trend:</strong> AcnB abundance is reported as <strong>similar</strong> between early and mid exponential phase in KT2440 growth in complete medium (qualitative expression statistic). (molina2019pseudomonasputidakt2440 pages 8-9)</li>
+</ul>
+<p><strong>Data not recovered in accessible full text:</strong> Numerical kinetic constants for KT2440 AcnB (Km, kcat), explicit quantitative transposon fitness values for acnB itself (since it lacks insertions), and KT2440-specific iron/oxygen stress regulation experiments.</p>
+<h2 id="7-expert-analysis-and-synthesis">7. Expert analysis and synthesis</h2>
+<h3 id="71-most-defensible-functional-annotation-for-q88kf1-in-kt2440">7.1 Most defensible functional annotation for Q88KF1 in KT2440</h3>
+<p>The highest-confidence KT2440-specific annotation is that <strong>AcnB (PP_2339; Q88KF1) is a cytosolic, Fe–S-dependent aconitase-family enzyme that plays a critical role in propionyl-CoA assimilation via the methylcitrate cycle</strong>, supporting growth on odd-chain fatty acids and likely providing the principal methylaconitate/2-methylcitrate isomerization/dehydration capacity in this pathway. (thompson2020fattyacidand pages 5-7, thompson2020fattyacidand media b8c40d82)</p>
+<h3 id="72-why-bifunctional-matters-in-p-putida">7.2 Why “bifunctional” matters in <em>P. putida</em></h3>
+<p>The KT2440 genetics strongly suggest functional redundancy/partitioning among paralogs: despite the presence of <strong>prpD (PP_2338)</strong>, no fitness defect was observed for that gene on odd-chain fatty acids, and the authors specifically infer that <strong>PP_2339</strong> likely performs the relevant MCC dehydratase function. This is a concrete example of how sequence-based annotation alone can mislead without functional genetics. (thompson2020fattyacidand pages 5-7)</p>
+<h3 id="73-stress-biology-what-can-be-inferred-vs-what-is-proven">7.3 Stress biology: what can be inferred vs what is proven</h3>
+<p>Because AcnB-type aconitases rely on <strong>[4Fe–4S] clusters</strong> that are susceptible to oxidative disruption and iron limitation—and because apo-forms can bind RNA in other bacteria—KT2440 AcnB is plausibly both a metabolic catalyst and a potential stress-responsive node. Yet, this report should not claim KT2440 RNA-binding moonlighting without direct evidence; instead, it is best presented as a mechanistically grounded hypothesis for future validation in KT2440. (crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2)</p>
+<hr />
+<h2 id="embedded-summary-table">Embedded summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key points</th>
+<th>Best supporting sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>Target is <strong>acnB / PP_2339</strong> in <em>Pseudomonas putida</em> KT2440; KT2440-focused studies annotate it as a <strong>bifunctional 2-methylcitrate dehydratase/aconitase hydratase B</strong>, matching UniProt Q88KF1.</td>
+<td>(thompson2020fattyacidand pages 5-7, thompson2020fattyacidand pages 2-5, thompson2020functionalanalysisof pages 8-12)</td>
+</tr>
+<tr>
+<td>Enzymatic activities</td>
+<td>Evidence supports dual activity as <strong>aconitate hydratase (aconitase)</strong> in central metabolism and <strong>2-methylcitrate/2-methylisocitrate dehydratase-related activity</strong> in the methylcitrate cycle; literature places AcnB at the rehydration/dehydration steps around methylaconitate/2-methylisocitrate.</td>
+<td>(thompson2020fattyacidand pages 5-7, thompson2020fattyacidand pages 2-5, thompson2020functionalanalysisof pages 8-12, thompson2020fattyacidand media b8c40d82)</td>
+</tr>
+<tr>
+<td>Pathway roles</td>
+<td>AcnB links the <strong>TCA cycle</strong> and the <strong>methylcitrate cycle (MCC)</strong> used for assimilation/detoxification of propionyl-CoA derived from <strong>odd-chain fatty acids</strong>; MCC yields <strong>succinate and pyruvate</strong> for central metabolism.</td>
+<td>(thompson2020fattyacidand pages 5-7, thompson2020fattyacidand pages 2-5, molina2019pseudomonasputidakt2440 pages 8-9, thompson2020fattyacidand media b8c40d82)</td>
+</tr>
+<tr>
+<td>Cofactor &amp; sensitivity</td>
+<td>As an aconitase-family enzyme, AcnB is expected to use a <strong>[4Fe-4S] cluster</strong>; broader aconitase literature indicates this cofactor is required for catalysis and is <strong>sensitive to oxidation/iron limitation</strong>, with AcnB often less stable than AcnA under oxidative stress. This is strong family-level inference, not direct KT2440 biochemical proof.</td>
+<td>(crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2, watanabe2016functionalcharacterizationof pages 1-3)</td>
+</tr>
+<tr>
+<td>Regulation / moonlighting</td>
+<td>Direct <strong>KT2440-specific moonlighting/RNA-binding evidence was not found</strong>. In other bacteria, apo-AcnB can become an <strong>RNA-binding post-transcriptional regulator</strong> after Fe-S cluster loss, so this is a plausible family property but currently <strong>unproven for PP_2339 in KT2440</strong>. Proteomics in KT2440 shows AcnB abundance remains relatively stable from early to mid exponential growth.</td>
+<td>(molina2019pseudomonasputidakt2440 pages 8-9, crack2018redoxsensingiron–sulfurcluster pages 23-25, austin2015aconitasefunctionsas pages 1-2)</td>
+</tr>
+<tr>
+<td>Phenotypes / essentiality</td>
+<td><strong>No mapped transposon insertions</strong> were recovered for PP_2339 in RB-TnSeq studies, interpreted by the authors as suggesting <strong>essentiality during library construction</strong>. Neighboring MCC genes show strong odd-chain-fatty-acid fitness phenotypes, and authors infer PP_2339 likely provides much of the methylaconitate hydratase activity in this pathway.</td>
+<td>(thompson2020fattyacidand pages 5-7, thompson2020functionalanalysisof pages 8-12, thompson2020fattyacidand media b8c40d82)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No direct localization experiment for PP_2339 was identified in the retrieved evidence. Based on its roles in the <strong>TCA/MCC soluble metabolic network</strong> and the aconitase enzyme class, AcnB is <strong>best inferred to be a cytosolic enzyme</strong> rather than membrane or extracellular.</td>
+<td>(thompson2020fattyacidand pages 5-7, molina2019pseudomonasputidakt2440 pages 8-9)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the currently supported functional annotation for </em>Pseudomonas putida<em> KT2440 acnB (PP_2339; UniProt Q88KF1). It distinguishes direct KT2440 evidence from broader aconitase-family inference, which is useful where organism-specific biochemical data are limited.</em></p>
+<h2 id="key-visual-evidence">Key visual evidence</h2>
+<p>Thompson et al. (2020) provides a pathway schematic and gene-fitness heatmap placing AcnB in the methylcitrate cycle used for odd-chain fatty acid catabolism. (thompson2020fattyacidand media b8c40d82, thompson2020fattyacidand media 3b2d456f)</p>
+<h2 id="primary-sources-urls-and-publication-dates">Primary sources (URLs and publication dates)</h2>
+<ul>
+<li>Thompson MG et al. <strong>Applied and Environmental Microbiology</strong> (Oct 2020). “Fatty acid and alcohol metabolism in <em>Pseudomonas putida</em>: functional analysis using RB-TnSeq.” https://doi.org/10.1128/aem.01665-20 (thompson2020fattyacidand pages 5-7)</li>
+<li>Molina L et al. <strong>Environmental Microbiology</strong> (Apr 2019). “<em>P. putida</em> KT2440 metabolism undergoes sequential modifications…” https://doi.org/10.1111/1462-2920.14622 (molina2019pseudomonasputidakt2440 pages 8-9)</li>
+<li>Moreno R et al. <strong>Microbial Biotechnology</strong> (Jun 2024). “Inactivation of <em>P. putida</em> KT2440 pyruvate dehydrogenase…” https://doi.org/10.1111/1751-7915.14514 (moreno2024inactivationofpseudomonas pages 1-2)</li>
+<li>Crack JC, Le Brun NE. <strong>Antioxidants &amp; Redox Signaling</strong> (Dec 2018). “Redox-Sensing Iron–Sulfur Cluster Regulators.” https://doi.org/10.1089/ars.2017.7361 (crack2018redoxsensingiron–sulfurcluster pages 23-25)</li>
+<li>Austin CM et al. <strong>Journal of Bacteriology</strong> (Oct 2015). “Aconitase functions as a pleiotropic posttranscriptional regulator in <em>Helicobacter pylori</em>.” https://doi.org/10.1128/JB.00529-15 (austin2015aconitasefunctionsas pages 1-2)</li>
+<li>Barrault M et al. <strong>Nucleic Acids Research</strong> (May 2024). “Staphylococcal aconitase expression during iron deficiency…” https://doi.org/10.1101/2024.05.23.595409 (barrault2024staphylococcalaconitaseexpression pages 1-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(thompson2020fattyacidand pages 5-7): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Fatty acid and alcohol metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Oct 2020. URL: https://doi.org/10.1128/aem.01665-20, doi:10.1128/aem.01665-20. This article has 111 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020fattyacidand pages 2-5): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Fatty acid and alcohol metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Oct 2020. URL: https://doi.org/10.1128/aem.01665-20, doi:10.1128/aem.01665-20. This article has 111 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020functionalanalysisof pages 8-12): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Functional analysis of the fatty acid and alcohol metabolism of pseudomonas putida using rb-tnseq. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.07.04.188060, doi:10.1101/2020.07.04.188060. This article has 3 citations.</p>
+</li>
+<li>
+<p>(crack2018redoxsensingiron–sulfurcluster pages 23-25): Jason C. Crack and Nick E. Le Brun. Redox-sensing iron–sulfur cluster regulators. Antioxidants &amp; Redox Signaling, 29:1809-1829, Dec 2018. URL: https://doi.org/10.1089/ars.2017.7361, doi:10.1089/ars.2017.7361. This article has 60 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(austin2015aconitasefunctionsas pages 1-2): Crystal M. Austin, Ge Wang, and Robert J. Maier. Aconitase functions as a pleiotropic posttranscriptional regulator in helicobacter pylori. Journal of Bacteriology, 197:3076-3086, Oct 2015. URL: https://doi.org/10.1128/jb.00529-15, doi:10.1128/jb.00529-15. This article has 33 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020fattyacidand media b8c40d82): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Fatty acid and alcohol metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Oct 2020. URL: https://doi.org/10.1128/aem.01665-20, doi:10.1128/aem.01665-20. This article has 111 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020fattyacidand media 3b2d456f): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Fatty acid and alcohol metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Oct 2020. URL: https://doi.org/10.1128/aem.01665-20, doi:10.1128/aem.01665-20. This article has 111 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molina2019pseudomonasputidakt2440 pages 8-9): Lázaro Molina, R. L. Rosa, Juan Nogales, and F. Rojo. Pseudomonas putida kt2440 metabolism undergoes sequential modifications during exponential growth in a complete medium as compounds are gradually consumed. Environmental Microbiology, 21:2375-2390, Apr 2019. URL: https://doi.org/10.1111/1462-2920.14622, doi:10.1111/1462-2920.14622. This article has 46 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moreno2024inactivationofpseudomonas pages 1-2): Renata Moreno, Luis Yuste, Gracia Morales, and Fernando Rojo. Inactivation of pseudomonas putida kt2440 pyruvate dehydrogenase relieves catabolite repression and improves the usefulness of this strain for degrading aromatic compounds. Microbial Biotechnology, Jun 2024. URL: https://doi.org/10.1111/1751-7915.14514, doi:10.1111/1751-7915.14514. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barrault2024staphylococcalaconitaseexpression pages 1-3): Maxime Barrault, Svetlana Chabelskaya, Rodrigo H. Coronel-Tellez, Claire Toffano-Nioche, Eric Jacquet, and Philippe Bouloc. Staphylococcal aconitase expression during iron deficiency is controlled by an srna-driven feedforward loop and moonlighting activity. Nucleic Acids Research, 52:8241-8253, May 2024. URL: https://doi.org/10.1101/2024.05.23.595409, doi:10.1101/2024.05.23.595409. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barrault2024staphylococcalaconitaseexpression pages 12-14): Maxime Barrault, Svetlana Chabelskaya, Rodrigo H. Coronel-Tellez, Claire Toffano-Nioche, Eric Jacquet, and Philippe Bouloc. Staphylococcal aconitase expression during iron deficiency is controlled by an srna-driven feedforward loop and moonlighting activity. Nucleic Acids Research, 52:8241-8253, May 2024. URL: https://doi.org/10.1101/2024.05.23.595409, doi:10.1101/2024.05.23.595409. This article has 19 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(watanabe2016functionalcharacterizationof pages 1-3): Seiya Watanabe, Kunihiko Tajima, Satoshi Fujii, Fumiyasu Fukumori, Ryotaro Hara, Rio Fukuda, Mao Miyazaki, Kuniki Kino, and Yasuo Watanabe. Functional characterization of aconitase x as a cis-3-hydroxy-l-proline dehydratase. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38720, doi:10.1038/srep38720. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="acnB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000011 The methylcitrate cycle (MCC), which is essential for propionate and odd-chain fatty acid catabolism, is illustrated in the schemat" src="acnB-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>thompson2020fattyacidand pages 5-7</li>
+<li>austin2015aconitasefunctionsas pages 1-2</li>
+<li>thompson2020functionalanalysisof pages 8-12</li>
+<li>moreno2024inactivationofpseudomonas pages 1-2</li>
+<li>barrault2024staphylococcalaconitaseexpression pages 1-3</li>
+<li>thompson2020fattyacidand pages 2-5</li>
+<li>barrault2024staphylococcalaconitaseexpression pages 12-14</li>
+<li>watanabe2016functionalcharacterizationof pages 1-3</li>
+<li>4Fe–4S</li>
+<li>4Fe-4S</li>
+<li>https://doi.org/10.1128/aem.01665-20</li>
+<li>https://doi.org/10.1111/1462-2920.14622</li>
+<li>https://doi.org/10.1111/1751-7915.14514</li>
+<li>https://doi.org/10.1089/ars.2017.7361</li>
+<li>https://doi.org/10.1128/JB.00529-15</li>
+<li>https://doi.org/10.1101/2024.05.23.595409</li>
+<li>https://doi.org/10.1128/aem.01665-20,</li>
+<li>https://doi.org/10.1101/2020.07.04.188060,</li>
+<li>https://doi.org/10.1089/ars.2017.7361,</li>
+<li>https://doi.org/10.1128/jb.00529-15,</li>
+<li>https://doi.org/10.1111/1462-2920.14622,</li>
+<li>https://doi.org/10.1111/1751-7915.14514,</li>
+<li>https://doi.org/10.1101/2024.05.23.595409,</li>
+<li>https://doi.org/10.1038/srep38720,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KF1
+gene_symbol: acnB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: AcnB (PP_2339) is a bifunctional iron-sulfur enzyme of the aconitase/isopropylmalate isomerase family in Pseudomonas putida KT2440. It carries a catalytic [4Fe-4S] cluster and acts as a soluble cytosolic hydro-lyase. In its classical aconitase (aconitate hydratase, EC 4.2.1.3) role it catalyzes the reversible isomerization of citrate to isocitrate via cis-aconitate, a central step of the tricarboxylic acid cycle. AcnB additionally provides 2-methylcitrate/2-methylisocitrate dehydratase activity (EC 4.2.1.99) in the methylcitrate cycle, the pathway that assimilates and detoxifies propionyl-CoA generated during beta-oxidation of odd-chain fatty acids, converting it ultimately to succinate and pyruvate. Through this dual role AcnB links the TCA cycle and the methylcitrate cycle and is required for growth on odd-chain fatty acids (propionate, valerate, heptanoate, nonanoate). As an aconitase-family Fe-S enzyme, its catalytic cluster is sensitive to oxidation and iron limitation; in some bacteria apo-aconitase can moonlight as an RNA-binding post-transcriptional regulator, though this has not been demonstrated for the P. putida protein.
+existing_annotations:
+- term:
+    id: GO:0003730
+    label: mRNA 3&#39;-UTR binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: ARBA machine-learning prediction of an RNA-binding moonlighting function, not supported by organism-specific evidence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is an electronic ARBA prediction propagated from the general aconitase-family observation that apo-aconitase can moonlight as an RNA-binding regulator. The deep-research report notes that such moonlighting is directly demonstrated only in other bacteria (e.g., Helicobacter pylori, Staphylococcus aureus) and is explicitly unproven for P. putida KT2440 PP_2339 (austin2015, barrault2024). Treating this as an established molecular function of AcnB would over-annotate the gene; it should not be presented as a core function.
+- term:
+    id: GO:0003994
+    label: aconitate hydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core catalytic activity of AcnB, well supported by family/EC assignment and organism-specific pathway placement.
+    action: ACCEPT
+    reason: AcnB belongs to the aconitase/IPM isomerase family and is annotated as aconitate hydratase B (EC 4.2.1.3); the deep-research report describes its classical aconitase chemistry in central metabolism (thompson2020). This is a core molecular function.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: AcnB is a soluble enzyme of the TCA/methylcitrate central metabolic network, best inferred to act in the cytosol.
+    action: ACCEPT
+    reason: No KT2440-specific localization experiment exists, but aconitase-family enzymes and the TCA/MCC pathways are soluble cytosolic processes, and proteomic detection in soluble fractions is consistent with cytosolic localization (thompson2020, molina2019). The IEA cytosol assignment is appropriate.
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: AcnB catalyzes the aconitase step of the TCA cycle; a core biological process for this enzyme.
+    action: ACCEPT
+    reason: Aconitase (citrate-isocitrate isomerization via cis-aconitate) is a defining TCA-cycle reaction, and the deep-research report places AcnB in central-carbon TCA metabolism (thompson2020). Core process annotation.
+- term:
+    id: GO:0047456
+    label: 2-methylisocitrate dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Methylcitrate-cycle dehydratase activity (EC 4.2.1.99) of bifunctional AcnB, supported by organism-specific pathway genetics.
+    action: ACCEPT
+    reason: AcnB is annotated as a bifunctional 2-methylcitrate dehydratase/aconitate hydratase B, and KT2440 RB-TnSeq genetics infer PP_2339 provides the key methylcitrate-cycle dehydratase/hydratase activity required for growth on odd-chain fatty acids, especially given the lack of a fitness defect for the canonical prpD (PP_2338) (thompson2020). Core molecular function alongside aconitase activity.
+- term:
+    id: GO:0051539
+    label: 4 iron, 4 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: AcnB requires a catalytic [4Fe-4S] cluster, an essential cofactor of aconitase-family enzymes.
+    action: ACCEPT
+    reason: Aconitase activity depends on an intact [4Fe-4S] cluster that participates directly in catalysis; this is a conserved, defining feature of the family and is consistent with the InterPro/PANTHER evidence and the mechanistic literature cited in the deep-research report (crack2018, austin2015). Appropriate cofactor-binding annotation.
+core_functions:
+- description: Aconitate hydratase (aconitase) activity catalyzing reversible citrate-cis-aconitate-isocitrate isomerization in the TCA cycle, dependent on a catalytic [4Fe-4S] cluster.
+  supported_by:
+  - reference_id: PMID:32826213
+    supporting_text: KT2440-focused studies annotate PP_2339 as aconitate hydratase B and place it in central-carbon TCA metabolism.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0003994
+    label: aconitate hydratase activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+- description: 2-methylcitrate/2-methylisocitrate dehydratase activity in the methylcitrate cycle, enabling assimilation and detoxification of propionyl-CoA derived from odd-chain fatty acid catabolism into succinate and pyruvate.
+  supported_by:
+  - reference_id: PMID:32826213
+    supporting_text: The methylcitrate cycle is essential for growth on odd-chain fatty acids in KT2440, and RB-TnSeq genetics infer PP_2339 (acnB) provides the key dehydratase/hydratase activity, since prpD (PP_2338) showed no fitness defect.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0047456
+    label: 2-methylisocitrate dehydratase activity
+  directly_involved_in:
+  - id: GO:0019543
+    label: propionate catabolic process
+references:
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:32826213
+  title: &#39;Fatty Acid and Alcohol Metabolism in Pseudomonas putida: Functional Analysis Using Random Barcode Transposon Sequencing&#39;
+  findings:
+  - statement: The methylcitrate cycle is essential for growth on odd-chain fatty acids (propionate, valerate, heptanoate, nonanoate) in P. putida KT2440, and PP_2339 (acnB) is inferred to provide key methylcitrate-cycle dehydratase/hydratase activity; no transposon insertions were recovered in PP_2339, consistent with essentiality during library construction.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PMID:32826213 (Thompson et al. 2020, AEM, doi:10.1128/aem.01665-20) is the primary organism-specific source placing acnB/PP_2339 in the methylcitrate cycle and central metabolism. PMID PubMed-verified (corrected from a previously cited wrong identifier, PMID:33037008, which resolves to an unrelated BMJ Covid-19 news item).
+- id: PMID:26170414
+  title: Aconitase Functions as a Pleiotropic Posttranscriptional Regulator in Helicobacter pylori
+  findings:
+  - statement: In Helicobacter pylori, apo-aconitase (after Fe-S cluster loss) binds multiple mRNAs and acts as a posttranscriptional regulator; cited as family-level precedent for possible AcnB moonlighting, but not demonstrated in P. putida.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PMID:26170414 (Austin, Wang, Maier 2015, J Bacteriol, doi:10.1128/jb.00529-15). Supports the general apo-aconitase RNA-binding moonlighting concept used to justify the over-annotation call on GO:0003730; not P. putida-specific evidence. PMID PubMed-verified (corrected from a previously cited wrong identifier, PMID:26209675, an Achaetomium endopolygalacturonase thermostability paper).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

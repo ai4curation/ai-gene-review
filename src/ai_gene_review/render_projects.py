@@ -198,12 +198,62 @@ def replace_gene_symbols(
     >>> content, warnings = replace_gene_symbols("ATG7 is ambiguous", index)
     >>> "ATG7" in warnings[0]
     True
+
+    Case variants of the canonical symbol still link (the link text keeps the
+    author's casing, the URL uses the directory casing). Rule B handles
+    capitalized camelCase protein names; Rule A handles digit/hyphen genes:
+
+    >>> idx = {'pqsB': ['PSEAE'], 'che-2': ['worm'], 'manY': ['ECOLI']}
+    >>> out, _ = replace_gene_symbols("The PqsB subunit", idx)
+    >>> "[PqsB](../../genes/PSEAE/pqsB/pqsB-ai-review.html)" in out
+    True
+    >>> out, _ = replace_gene_symbols("worm CHE-2 mutant", idx)
+    >>> "[CHE-2](../../genes/worm/che-2/che-2-ai-review.html)" in out
+    True
+
+    Ordinary words that merely share a symbol's letters are never linked:
+
+    >>> out, _ = replace_gene_symbols("Many results", idx)
+    >>> out
+    'Many results'
     """
     warnings: List[str] = []
     species_hints = species_hints or []
 
     # Track which symbols we've already processed to avoid duplicate warnings
     processed_ambiguous: set = set()
+
+    # --- Case-variant matching ---------------------------------------------
+    # Gene directories are named with the *gene symbol* (e.g. ``pqsB``,
+    # ``eryCIII``, ``che-2``), but prose often uses the *protein* name or an
+    # upper-cased convention (``PqsB``, ``EryCIII``, ``CHE-2``). Two targeted
+    # rules let those forms link without the blanket case-insensitivity that
+    # would wrongly turn ordinary words such as "many"/"app"/"alga" into links
+    # (they collide with the genes ``manY``/``App``/``algA``):
+    #
+    #   Rule A (digit/hyphen genes): a symbol containing a digit or a hyphen
+    #     (``che-2``, ``daf-16``, ``TP53``, ``MCR-1``) is distinctively
+    #     gene-like and is matched fully case-insensitively. English words
+    #     contain neither digits nor hyphens, so this is collision-free.
+    #
+    #   Rule B (gene/protein capitalization): a camelCase symbol that starts
+    #     lowercase and has an internal capital (``pqsB``, ``eryCIII``,
+    #     ``ftsZ``, ``mxaF``) is also matched with only its first letter
+    #     capitalized (``PqsB``, ``EryCIII``), the rest kept exact. Because the
+    #     tail case is preserved, ``manY`` only also matches ``ManY`` (the real
+    #     gene reference), never the word "many".
+    #
+    # The displayed text is always whatever the author wrote; only the link
+    # URL uses the canonical directory casing.
+    def _rule_a(symbol: str) -> bool:
+        return ('-' in symbol) or any(ch.isdigit() for ch in symbol)
+
+    def _rule_b(symbol: str) -> bool:
+        return (
+            symbol[0].islower()
+            and any(ch.isupper() for ch in symbol)
+            and not _rule_a(symbol)
+        )
 
     def resolve_species(symbol: str) -> Optional[str]:
         """Resolve which species to link for a symbol.
@@ -237,22 +287,41 @@ def replace_gene_symbols(
 
         return None
 
-    def make_link(symbol: str, species: str) -> str:
-        """Create a markdown link to the gene review page."""
+    def make_link(display: str, symbol: str, species: str) -> str:
+        """Create a markdown link to the gene review page.
+
+        ``display`` is the text the author wrote (possibly a case variant such
+        as ``PqsB``); ``symbol`` is the canonical directory name used in the URL.
+        """
         url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
-        return f"[{symbol}]({url})"
+        return f"[{display}]({url})"
+
+    def canonical_symbol(matched: str) -> Optional[str]:
+        """Resolve a matched token to its canonical gene-directory symbol."""
+        if matched in symbol_index:
+            return matched
+        # Rule B: the author capitalized the first letter of a camelCase symbol.
+        first_lower = matched[0].lower() + matched[1:]
+        if first_lower in rule_b_symbols:
+            return first_lower
+        # Rule A: digit/hyphen symbols match case-insensitively.
+        return rule_a_lower.get(matched.lower())
 
     def replace_match(match: re.Match) -> str:
         """Replace a matched symbol with a link if resolvable."""
         full_match = match.group(0)
-        symbol = match.group('symbol')
+        matched = match.group('symbol')
+
+        symbol = canonical_symbol(matched)
+        if symbol is None:
+            return full_match
 
         species = resolve_species(symbol)
 
         if species is None:
             return full_match
 
-        link = make_link(symbol, species)
+        link = make_link(matched, symbol, species)
 
         # Preserve bold markers if present
         if full_match.startswith('**') and full_match.endswith('**'):
@@ -275,9 +344,33 @@ def replace_gene_symbols(
     if not symbols:
         return content, warnings
 
-    # Escape special regex characters in symbols
-    escaped_symbols = [re.escape(s) for s in symbols]
-    symbols_pattern = '|'.join(escaped_symbols)
+    # Lookup tables for the two case-variant rules (see comments above).
+    rule_b_symbols = {s for s in symbols if _rule_b(s)}
+    rule_a_lower: Dict[str, str] = {}
+    rule_a_ambiguous: set = set()
+    for s in symbols:
+        if _rule_a(s):
+            lowered = s.lower()
+            if lowered in rule_a_lower and rule_a_lower[lowered] != s:
+                rule_a_ambiguous.add(lowered)
+            else:
+                rule_a_lower[lowered] = s
+    for lowered in rule_a_ambiguous:
+        rule_a_lower.pop(lowered, None)
+
+    # Build the alternation. Each symbol contributes its exact form; Rule A
+    # symbols are wrapped in an inline case-insensitive group, and Rule B
+    # symbols additionally contribute their first-letter-capitalized variant.
+    alternatives: List[str] = []
+    for s in symbols:
+        escaped = re.escape(s)
+        if _rule_a(s):
+            alternatives.append(f"(?i:{escaped})")
+        else:
+            alternatives.append(escaped)
+            if _rule_b(s):
+                alternatives.append(re.escape(s[0].upper() + s[1:]))
+    symbols_pattern = '|'.join(alternatives)
 
     # Pattern to match:
     # 1. Bold symbols: **SYMBOL**

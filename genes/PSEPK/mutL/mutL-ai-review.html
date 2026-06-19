@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mutL - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mutL</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DD1" target="_blank" class="term-link">
+                        Q88DD1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mutL";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DD1" data-a="DESCRIPTION: DNA mismatch repair protein MutL, a 632-residue me..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DNA mismatch repair protein MutL, a 632-residue member of the MutL/HexB family that functions in post-replicative DNA mismatch repair (MMR). MutL acts together with MutS to correct base-base mismatches and small insertion/deletion loops that escape replicative proofreading. It is a molecular matchmaker that couples mismatch recognition by MutS to downstream strand processing in an ATP-dependent manner via its N-terminal GHKL-type ATPase domain, and it dimerizes through its C-terminal domain. In Pseudomonas putida, which encodes MutS and MutL but lacks MutH and Dam methylation, MMR operates by a MutH-independent (methylation-independent) mechanism; MutL homologs in such systems typically carry a metal-dependent endonuclease motif and are positioned/activated by the replication beta-clamp (DnaN) to nick the error-containing strand. MutL acts in the cytoplasm, associated with the nucleoid and replisome. Loss or dominant-negative inhibition of MutL strongly elevates spontaneous mutation rates, establishing its role as a central determinant of genome fidelity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutL contains an N-terminal GHKL/HATPase ATPase domain (IPR036890) and binds ATP, which drives the conformational changes underlying its matchmaker function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a well-established and conserved property of the MutL N-terminal GHKL ATPase domain, consistent with the InterPro domain architecture of this protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006259" target="_blank" class="term-link">
+                                    GO:0006259
+                                </a>
+                            </span>
+                            <span class="term-label">DNA metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0006259" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic parent term for DNA metabolism. MutL participates in DNA mismatch repair, which is a more specific child of DNA metabolic process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term is too general and is subsumed by the more specific and informative annotation GO:0006298 (mismatch repair), which is also present. It adds no specific functional information.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006298" target="_blank" class="term-link">
+                                    GO:0006298
+                                </a>
+                            </span>
+                            <span class="term-label">mismatch repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0006298" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutL is a core component of the post-replicative mismatch repair pathway, acting downstream of mismatch recognition by MutS. This is the central biological process for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by family/domain conservation and by genetic evidence in P. putida, where ssDNA recombineering and dominant-negative mutL E36K experiments show MutL is required for correcting replication mismatches and controlling mutation rate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0016887" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The N-terminal GHKL ATPase domain hydrolyzes ATP; ATP binding and hydrolysis cycle the protein through conformational states required for MMR.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP hydrolysis by the conserved GHKL domain is a defining catalytic feature of the MutL family, consistent with the domain architecture of this protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030983" target="_blank" class="term-link">
+                                    GO:0030983
+                                </a>
+                            </span>
+                            <span class="term-label">mismatched DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0030983" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutL associates with mismatch-containing DNA in the MutS-MutL complex as part of mismatch repair.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved MutL function in the MMR pathway; MutL contacts the mismatched DNA substrate within the ternary repair complex. Retained as supporting the core MMR function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032300" target="_blank" class="term-link">
+                                    GO:0032300
+                                </a>
+                            </span>
+                            <span class="term-label">mismatch repair complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0032300" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MutL functions as a dimer and assembles with MutS (and the beta-clamp in MutH-less systems) on mismatched DNA, forming the mismatch repair complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Appropriate cellular component for a MutL-family protein; MutL is a defining component of the MutS-MutL mismatch repair complex.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140664" target="_blank" class="term-link">
+                                    GO:0140664
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent DNA damage sensor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD1" data-a="GO:0140664" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term describes ATP-dependent sensing/transduction of DNA lesions. MutL couples ATP binding/hydrolysis to recognition of MutS-bound mismatches and transduces the signal to downstream strand-processing steps. MutL does not itself recognize the mismatch (that is the role of MutS); it acts downstream as a matchmaker.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The activity is consistent with the established mechanism of MutL as an ATP-driven coordinator within MMR, but it is secondary to the core mismatch repair, ATPase, and mismatched-DNA-binding annotations. Retained as non-core rather than removed.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as an ATP-dependent molecular matchmaker in post-replicative DNA mismatch repair, coupling MutS-mediated recognition of base-base mismatches and small indels to downstream strand-discrimination and incision/excision steps.</h3>
+                <span class="vote-buttons" data-g="Q88DD1" data-a="FUNCTION: Acts as an ATP-dependent molecular matchmaker in p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006298" target="_blank" class="term-link">
+                                mismatch repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31599106" target="_blank" class="term-link">
+                                PMID:31599106
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Transient suppression of MutL via dominant-negative mutL E36K allows ssDNA-recombineering-introduced mismatches to escape repair and become inherited, and permanent deletion of mutS elevates the mutational regime, demonstrating MutL&#39;s central role in MMR in P. putida KT2440.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds ATP and mismatched DNA within the MutS-MutL repair complex; in P. putida, which lacks MutH and Dam methylation, MMR proceeds by a methylation-independent mechanism in which MutL-family endonuclease activity coupled to the beta-clamp is inferred to direct strand-specific incision.</h3>
+                <span class="vote-buttons" data-g="Q88DD1" data-a="FUNCTION: Binds ATP and mismatched DNA within the MutS-MutL ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030983" target="_blank" class="term-link">
+                            mismatched DNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006298" target="_blank" class="term-link">
+                                mismatch repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35210609" target="_blank" class="term-link">
+                                PMID:35210609
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In bacteria lacking MutH/Dam, many MutL homologs contain a conserved metal-dependent endonuclease motif and are stimulated by the replication beta-clamp (DnaN) to incise the error-containing strand.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31599106" target="_blank" class="term-link">
+                            PMID:31599106
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mismatch repair hierarchy of Pseudomonas putida revealed by mutagenic ssDNA recombineering of the pyrF gene</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida KT2440 encodes MutS and MutL but lacks MutH and Dam methylation; MutL (PP_4896) shares ~44% identity with E. coli MutL. Dominant-negative mutL E36K transiently inhibits MMR, and deltamutS abolishes it, demonstrating MutL&#39;s central role in repairing replication mismatches.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35210609" target="_blank" class="term-link">
+                            PMID:35210609
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bacterial DNA excision repair pathways.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In MutH-independent (methylation-independent) bacterial MMR, many MutL homologs carry a conserved metal-dependent endonuclease motif (DQHA(X)2E(X)4E) and are activated/positioned by the replication beta-clamp (DnaN) to incise the error-containing strand.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida MutL (PP_4896) possess intrinsic metal-dependent endonuclease activity, and is it stimulated by the beta-clamp (DnaN) as in other MutH-less bacteria?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD1" data-a="Q: Does P. putida MutL (PP_4896) possess intrinsic me..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is strand discrimination achieved in P. putida MMR in the absence of MutH and Dam methylation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD1" data-a="Q: How is strand discrimination achieved in P. putida..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Biochemical reconstitution of P. putida MutL to test ATPase activity, mismatched-DNA binding, and DnaN-stimulated endonuclease (strand-incision) activity in vitro.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD1" data-a="EXPERIMENT: Biochemical reconstitution of P. putida MutL to te..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Subcellular localization (e.g., fluorescent fusions) to test replisome/nucleoid association of MutL during replication and after mismatch induction.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD1" data-a="EXPERIMENT: Subcellular localization (e.g., fluorescent fusion..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mutL-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DD1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: *Pseudomonas putida* KT2440 **mutL** (PP_4896; UniProt Q88DD1) — Functional Annotation and Evidence</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">23 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:28:50.312519</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mutL-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="mutL-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000013 I have extracted Figure 3 and the relevant panel from Figure 4. Figure 3 (from page 4) shows the mutation frequencies for RifR and </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-pseudomonas-putida-kt2440-mutl-pp_4896-uniprot-q88dd1-functional-annotation-and-evidence">Research Report: <em>Pseudomonas putida</em> KT2440 <strong>mutL</strong> (PP_4896; UniProt Q88DD1) — Functional Annotation and Evidence</h1>
+<h2 id="0-executive-summary">0. Executive summary</h2>
+<p>The target protein <strong>MutL</strong> (gene <strong>mutL</strong>, locus <strong>PP_4896</strong>, UniProt <strong>Q88DD1</strong>) in <em>Pseudomonas putida</em> KT2440 is a canonical bacterial mismatch-repair factor required for post-replicative correction of base–base mismatches and small insertion/deletion loops, operating in a <strong>MutH-less</strong> context (KT2440 encodes <strong>MutS</strong> and <strong>MutL</strong>, and lacks <strong>MutH</strong> and Dam methylation). <em>P. putida</em> MutL is experimentally validated as the key controllable “lever” for tuning mismatch repair (MMR): a dominant-negative allele (<strong>mutL E36K</strong>) transiently inhibits endogenous MMR, producing up to <strong>438-fold</strong> increases in selectable mutation frequencies and enabling efficient genome engineering with <strong>low off-target burden (0–3 SNPs)</strong> by whole-genome sequencing (WGS). Mechanistically, while direct biochemical measurements of <em>P. putida</em> MutL enzymatic activities were not found in the retrieved organism-specific literature, authoritative bacterial DNA repair reviews support inference that many MutH-less bacterial MutL homologs contain a <strong>metal-dependent endonuclease motif</strong> and are activated/positioned by interaction with the replication <strong>β-clamp (DnaN)</strong>.</p>
+<h2 id="1-mandatory-verification-correct-geneprotein-identity">1. Mandatory verification: correct gene/protein identity</h2>
+<h3 id="11-mapping-uniprot-context-to-primary-literature">1.1 Mapping UniProt context to primary literature</h3>
+<p>The UniProt target (Q88DD1) is annotated as <strong>DNA mismatch repair protein MutL</strong>, gene <strong>mutL</strong>, ordered locus <strong>PP_4896</strong>, in <em>Pseudomonas putida</em> KT2440. In <em>P. putida</em> KT2440-focused work, MutL is explicitly referenced as <strong>PP_4896</strong> and described as a MutL homolog with ~<strong>44% amino-acid identity</strong> to <em>E. coli</em> MutL (greater conservation in the N-terminal half). (aparicio2020mismatchrepairhierarchy pages 2-3, aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h3 id="12-avoiding-ambiguity-with-the-symbol-mutl">1.2 Avoiding ambiguity with the symbol “mutL”</h3>
+<p>“mutL” is a widely conserved bacterial gene symbol. The evidence cited below is restricted to:<br />
+- <strong>MutL/MutS mismatch repair</strong> studies in <em>Pseudomonas putida</em> KT2440 derivatives (notably EM42, a KT2440 derivative) (aparicio2020mismatchrepairhierarchy pages 3-5, fernandezcabezon2021spatiotemporalmanipulationof pages 4-5)<br />
+- General bacterial mismatch repair reviews used only for <strong>mechanistic inference</strong> about MutL family function (wozniak2022bacterialdnaexcision pages 10-11, wozniak2022bacterialdnaexcision pages 18-19)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-dna-mismatch-repair-mmr">2.1 DNA mismatch repair (MMR)</h3>
+<p>Bacteria reduce replication error rates via (i) base selection, (ii) proofreading, and (iii) <strong>mismatch repair</strong>. In MMR, mismatches remaining after replication are recognized and corrected, preventing fixation of point mutations and some small indels. (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)</p>
+<h3 id="22-canonical-players-and-pathway-architectures">2.2 Canonical players and pathway architectures</h3>
+<ul>
+<li><strong>MutS</strong>: mismatch recognition factor.</li>
+<li><strong>MutL</strong>: matchmaker/coordinator and (in many organisms) the nuclease that initiates strand incision.</li>
+<li><strong>MutH</strong>: endonuclease used in <em>E. coli</em> methyl-directed MMR; not universal.</li>
+</ul>
+<p>A defining feature for <em>P. putida</em> KT2440 is that it encodes <strong>mutS and mutL but lacks mutH and dam methylation</strong>, implying a methylation-independent, MutH-less MMR mechanism with different strand-discrimination logic than <em>E. coli</em>. (aparicio2020mismatchrepairhierarchy pages 2-3, aparicio2020mismatchrepairhierarchy pages 1-2)</p>
+<h2 id="3-mutl-pp_4896-molecular-function-and-mechanism">3. MutL (PP_4896) molecular function and mechanism</h2>
+<h3 id="31-primary-biological-role-in-p-putida-kt2440">3.1 Primary biological role in <em>P. putida</em> KT2440</h3>
+<p><strong>Primary function:</strong> MutL maintains genome fidelity by participating in MMR to recognize/resolve base–base mismatches introduced during replication or during recombineering-mediated introduction of mismatches.</p>
+<p>Functional evidence in <em>P. putida</em> is strongest from genetic/engineering perturbations:<br />
+- <strong>Permanent</strong> MMR disruption via <strong>ΔmutS</strong> strongly elevates mutational regime and removes mismatch-type bias, consistent with MutS–MutL dependence. (aparicio2020mismatchrepairhierarchy pages 2-3, aparicio2020mismatchrepairhierarchy pages 3-5)<br />
+- <strong>Transient</strong> suppression of MutL via dominant-negative <strong>mutL E36K</strong> makes mismatches introduced by ssDNA recombineering escape repair and become inherited. (aparicio2020mismatchrepairhierarchy pages 3-5, aparicio2020mismatchrepairhierarchy pages 5-6)</p>
+<h3 id="32-interaction-partners-and-pathway-placement">3.2 Interaction partners and pathway placement</h3>
+<p>Organism-specific interaction mapping (e.g., co-immunoprecipitation) was not retrieved; however, the <em>P. putida</em> functional data and broader MMR models support that MutL operates downstream of mismatch recognition by MutS.</p>
+<p>In an MMR hierarchy study, <em>P. putida</em> strains were engineered in three MMR states: wild-type, <strong>ΔmutS</strong> (MMR-null), and wild-type with <strong>MutL E36K</strong> transiently inhibiting MMR. Convergence of recombineering efficiencies between mismatch types upon MutL suppression demonstrates MutL’s functional centrality in the pathway. (aparicio2020mismatchrepairhierarchy pages 3-5)</p>
+<h3 id="33-enzymatic-activities-what-is-known-vs-inferred">3.3 Enzymatic activities: what is known vs inferred</h3>
+<h4 id="331-evidence-supported-inferences-for-muth-less-systems">3.3.1 Evidence-supported inferences for MutH-less systems</h4>
+<p>A high-authority bacterial DNA repair review reports:<br />
+- Many MutL homologs in methylation-independent bacteria contain a conserved <strong>metal-dependent endonuclease motif</strong>: <strong>DQHA(X)2E(X)4E</strong>.<br />
+- The replication <strong>β-clamp (DnaN)</strong> binds MutL and can <strong>stimulate MutL incision activity</strong>; mutating either the endonuclease motif or DnaN-binding motif abolishes MMR in vivo (demonstrated in <em>Bacillus subtilis</em>). (wozniak2022bacterialdnaexcision pages 10-11)</p>
+<p>This supports annotation of <em>P. putida</em> MutL as a likely <strong>endonuclease-enabled MMR coordinator</strong> in a MutH-less setting, but the report explicitly distinguishes this as <strong>inference</strong> rather than direct biochemical proof for PP_4896. (wozniak2022bacterialdnaexcision pages 10-11)</p>
+<h4 id="332-atpaseclamp-behaviors-and-action-at-a-distance-models-recent-mechanistic-synthesis">3.3.2 ATPase/clamp behaviors and “action-at-a-distance” models (recent mechanistic synthesis)</h4>
+<p>A 2024 review focused on long-range communication in MMR highlights that mismatch repair can involve clamp-like states and long-distance signaling between mismatch sites and distant incision sites, including models involving sliding clamps, DNA looping, and MutL-family oligomerization/assemblies (largely eukaryotic context, but conceptually informative). (collingwood2024actionatadistanceindna pages 4-6, collingwood2024actionatadistanceindna pages 1-3)</p>
+<p><strong>Relevance to bacterial MutL annotation:</strong> These models provide an expert framework for how MutL-family proteins could coordinate incision and excision at distances from the mismatch, consistent with clamp-coupled recruitment concepts also emphasized in bacterial reviews. (wozniak2022bacterialdnaexcision pages 10-11, collingwood2024actionatadistanceindna pages 4-6)</p>
+<h2 id="4-cellular-localization-where-mutl-acts">4. Cellular localization: where MutL acts</h2>
+<p>Direct subcellular localization microscopy of <em>P. putida</em> MutL (PP_4896) was not identified in the retrieved KT2440-specific sources. However, mechanistic evidence suggests MutL’s effective localization is <strong>nucleoid-associated and replisome-coupled</strong>, mediated through interaction with the <strong>β-clamp (DnaN)</strong> in methylation-independent MMR pathways. (wozniak2022bacterialdnaexcision pages 10-11)</p>
+<h2 id="5-p-putida-kt2440-specific-functional-phenotypes-and-quantitative-data">5. <em>P. putida</em> KT2440-specific functional phenotypes and quantitative data</h2>
+<h3 id="51-dominant-negative-mutl-e36k-as-a-conditional-mutator-system">5.1 Dominant-negative <strong>mutL E36K</strong> as a conditional mutator system</h3>
+<h4 id="511-concept-and-construction">5.1.1 Concept and construction</h4>
+<p>A key engineering strategy in <em>P. putida</em> uses a dominant-negative MutL allele, <strong>mutL E36K</strong>, designed by analogy to a dominant-negative <em>E. coli</em> MutL variant (equivalent residue position differs: <em>P. putida</em> E36). In <em>P. putida</em>, regulated overexpression of <strong>mutL E36K</strong> transiently inhibits endogenous MMR, allowing mismatches to become fixed as mutations. (aparicio2020mismatchrepairhierarchy pages 2-3, fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)</p>
+<h4 id="512-mutation-frequency-increases-and-selectable-phenotypes">5.1.2 Mutation-frequency increases and selectable phenotypes</h4>
+<p>In <em>P. putida</em>, inducible mutator devices driving <strong>mutL E36K</strong> expression produced:<br />
+- Up to <strong>438-fold</strong> increased DNA mutation frequencies (as reported in the study abstract). (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)<br />
+- Accelerated evolution of: (i) streptomycin resistance, (ii) rifampicin resistance, (iii) combined resistance, and (iv) reversion of a synthetic uracil auxotrophy. (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)</p>
+<p>Figure-level quantitative support (mutation frequency assays) is provided in the paper’s mutation-frequency plots. (fernandezcabezon2021spatiotemporalmanipulationof media 4d80bb01)</p>
+<h4 id="513-statistics-for-auxotrophy-reversion">5.1.3 Statistics for auxotrophy reversion</h4>
+<p>For a synthetic uracil auxotrophy reversion assay, conditional mutator systems yielded approximately:<br />
+- <strong>750 Ura+ mutants per 1 × 10^9 viable cells</strong> (cyclohexanone-inducible system)<br />
+- <strong>860 Ura+ mutants per 1 × 10^9 viable cells</strong> (thermoinducible system)<br />
+Controls yielded only <strong>0–4</strong> spontaneous Ura+ mutants under the tested conditions. (fernandezcabezon2021spatiotemporalmanipulationof pages 5-6)</p>
+<p>A figure panel documenting these mutation frequencies was retrieved. (fernandezcabezon2021spatiotemporalmanipulationof media 1d27dc75)</p>
+<h3 id="52-mismatch-recognition-hierarchy-in-p-putida-mmr-functional-specificity">5.2 Mismatch recognition hierarchy in <em>P. putida</em> MMR (functional “specificity”)</h3>
+<p>A <em>P. putida</em> MMR hierarchy was experimentally derived using ssDNA recombineering into <strong>pyrF</strong> and deep sequencing, yielding a mismatch sensitivity ordering (less to more sensitive):<br />
+<strong>A:G &lt; C:C &lt; G:A &lt; C:A, A:A, G:G, T:T, T:G, A:C, C:T &lt; G:T, T:C</strong>. (aparicio2020mismatchrepairhierarchy pages 5-6)</p>
+<p>This hierarchy is a key organism-specific functional insight: it indicates that certain mismatch types (notably <strong>G:T and T:C</strong>) are strongly corrected by <em>P. putida</em> MMR, which directly impacts editing strategies and expected mutational spectra under MMR suppression. (aparicio2020mismatchrepairhierarchy pages 5-6)</p>
+<h3 id="53-genome-engineering-application-and-off-target-burden">5.3 Genome engineering application and off-target burden</h3>
+<p>To test whether transient MutL suppression introduces widespread off-target mutations, whole-genome sequencing was performed on clones generated during transient MMR inactivation with <strong>mutL E36K</strong>.</p>
+<p>Result:<br />
+- <strong>0–3 SNPs</strong> detected in strains transiently expressing <strong>mutL E36K</strong>.<br />
+- <strong>0 mutations</strong> detected in the MMR-proficient control strain analyzed. (aparicio2020mismatchrepairhierarchy pages 8-9)</p>
+<p>This supports real-world implementation of MutL suppression as a practical genome-editing enabler in <em>P. putida</em> with relatively low background mutation accumulation when used transiently. (aparicio2020mismatchrepairhierarchy pages 8-9)</p>
+<h2 id="6-recent-developments-prioritizing-20232024">6. Recent developments (prioritizing 2023–2024)</h2>
+<p>Direct 2023–2024 <em>P. putida</em> KT2440 MutL primary studies were not retrieved in the tool results; the key organism-specific experimental sources available here are 2020–2021. However, two recent mechanistic syntheses that inform interpretation and annotation are:<br />
+- <strong>Collingwood et al., 2024-11-xx (Biomolecules)</strong>: review of long-range communication and clamp/assembly models in mismatch repair, including MutL-family clamp-like states and oligomerization concepts. URL: https://doi.org/10.3390/biom14111442 (collingwood2024actionatadistanceindna pages 4-6)<br />
+- Additional authoritative review evidence on MutH-less bacterial MutL endonuclease/clamp coupling from <strong>Wozniak &amp; Simmons, 2022-02-xx (Nature Reviews Microbiology)</strong>, which remains a widely cited up-to-date synthesis for bacterial excision repair pathways. URL: https://doi.org/10.1038/s41579-022-00694-0 (wozniak2022bacterialdnaexcision pages 10-11)</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<h3 id="71-adaptive-laboratory-evolution-ale-and-phenotype-emergence">7.1 Adaptive laboratory evolution (ALE) and phenotype emergence</h3>
+<p>Because <em>P. putida</em> has a highly efficient MMR system, controlled transient inhibition via <strong>mutL E36K</strong> is used as an “accelerator” for evolution-based optimization. In practice, inducible devices allow alternating cycles of mutagenesis and selection, enabling faster emergence of useful phenotypes (antibiotic resistance as a proxy, auxotrophy reversion as a calibration case). (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2, fernandezcabezon2021spatiotemporalmanipulationof pages 5-6)</p>
+<h3 id="72-genome-editing-and-recombineering">7.2 Genome editing and recombineering</h3>
+<p>MMR is a major barrier to ssDNA recombineering because it removes introduced mismatches. In <em>P. putida</em>, co-expression of a recombinase (Rec2) with <strong>mutL E36K</strong> creates a window in which mismatches can be incorporated across mismatch classes more uniformly, mitigating mismatch-type bias that otherwise differs by ~<strong>two orders of magnitude</strong> in recombineering outcomes. (aparicio2020mismatchrepairhierarchy pages 3-5)</p>
+<p>The low WGS off-target burden (0–3 SNPs) under transient MutL inhibition supports its use in strain engineering where maintaining general genomic integrity is important. (aparicio2020mismatchrepairhierarchy pages 8-9)</p>
+<h2 id="8-expert-opinions-and-analysis-authoritative-interpretations">8. Expert opinions and analysis (authoritative interpretations)</h2>
+<p>Two high-level expert interpretations supported by review and primary evidence:<br />
+1. <strong>MutH-less bacteria rely on MutL endonuclease activity and replisome coupling</strong>: review evidence supports that MutL homologs in methylation-independent systems frequently encode an intrinsic nuclease motif and are activated/positioned by β-clamp binding, providing a plausible basis for strand discrimination and incision initiation without MutH/Dam. (wozniak2022bacterialdnaexcision pages 10-11)<br />
+2. <strong>Mismatch repair requires long-range communication mechanisms</strong>: mechanistic reviews emphasize that mismatch repair must coordinate recognition at a mismatch with strand incision/excision at potentially distant sites, and propose models including sliding clamps, looping, and MutL-family assemblies—conceptually consistent with clamp-centered bacterial recruitment logic. (collingwood2024actionatadistanceindna pages 4-6, collingwood2024actionatadistanceindna pages 1-3)</p>
+<h2 id="9-data-highlights-recent-statistics-and-quantitative-results">9. Data highlights (recent statistics and quantitative results)</h2>
+<p>Key quantitative outputs for functional annotation:<br />
+- <strong>Up to 438-fold</strong> increase in DNA mutation frequency using <em>P. putida</em> mutL E36K conditional mutator devices. (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)<br />
+- <strong>~750–860 Ura+ mutants per 10^9 cells</strong> under mutator-device conditions vs <strong>0–4</strong> in controls (auxotrophy reversion). (fernandezcabezon2021spatiotemporalmanipulationof pages 5-6)<br />
+- <strong>0–3 SNPs</strong> detected by WGS after transient mutL E36K expression vs <strong>0</strong> in the MMR+ control. (aparicio2020mismatchrepairhierarchy pages 8-9)<br />
+- Mismatch-type sensitivity hierarchy: <strong>A:G</strong> and <strong>C:C</strong> least corrected; <strong>G:T</strong> and <strong>T:C</strong> most corrected. (aparicio2020mismatchrepairhierarchy pages 5-6)</p>
+<p>Figure evidence showing mutation-frequency shifts and Ura+ frequencies is available from the mutator-device paper. (fernandezcabezon2021spatiotemporalmanipulationof media 4d80bb01, fernandezcabezon2021spatiotemporalmanipulationof media 1d27dc75)</p>
+<h2 id="10-evidence-based-functional-annotation-proposed">10. Evidence-based functional annotation (proposed)</h2>
+<h3 id="101-molecular-function-go-style-narrative">10.1 Molecular function (GO-style narrative)</h3>
+<p>MutL (PP_4896; Q88DD1) is a mismatch-repair factor that coordinates repair of replication errors in <em>P. putida</em> KT2440, functioning with MutS and acting in a MutH-independent pathway. Genetic perturbation (dominant-negative E36K) demonstrates MutL is essential for suppressing fixation of mismatches and controlling mutation rates. (aparicio2020mismatchrepairhierarchy pages 3-5, fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)</p>
+<h3 id="102-reactionbiochemical-activity-and-substrate-specificity">10.2 Reaction/biochemical activity and substrate specificity</h3>
+<ul>
+<li><strong>Directly evidenced in <em>P. putida</em>:</strong> MutL activity suppresses fixation of a broad set of mismatch classes, with mismatch-type dependent efficiencies summarized by a hierarchy derived experimentally. (aparicio2020mismatchrepairhierarchy pages 5-6)</li>
+<li><strong>Inferred (not directly shown for PP_4896 in retrieved sources):</strong> MutH-less bacterial MutL homologs often provide a <strong>metal-dependent endonuclease incision</strong> activity via the conserved DQHA(X)2E(X)4E motif and are stimulated by β-clamp binding. (wozniak2022bacterialdnaexcision pages 10-11)</li>
+</ul>
+<h3 id="103-cellular-localization">10.3 Cellular localization</h3>
+<p>Likely cytosolic/nucleoid-associated with functional recruitment to replication forks via β-clamp interactions (inference from MutH-less bacterial systems; <em>P. putida</em>-specific imaging evidence not retrieved). (wozniak2022bacterialdnaexcision pages 10-11)</p>
+<h2 id="11-limitations-and-evidence-gaps">11. Limitations and evidence gaps</h2>
+<ul>
+<li>No <em>P. putida</em> KT2440-specific biochemical assays confirming PP_4896 ATPase or endonuclease catalytic activity were retrieved; enzymatic-function statements beyond genetics are <strong>inferred from authoritative reviews</strong>. (wozniak2022bacterialdnaexcision pages 10-11)</li>
+<li>No direct microscopy-based localization of <em>P. putida</em> MutL was retrieved; localization is inferred via clamp-coupling models in MutH-less bacteria. (wozniak2022bacterialdnaexcision pages 10-11)</li>
+</ul>
+<h2 id="12-summary-table">12. Summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key points</th>
+<th>Best supporting citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>- Target matches <strong>mutL / PP_4896 / UniProt Q88DD1</strong> in <em>Pseudomonas putida</em> KT2440, annotated as a DNA mismatch repair protein MutL.<br>- <em>P. putida</em> KT2440 carries <strong>mutS</strong> and <strong>mutL</strong> homologues but lacks <strong>mutH</strong> and Dam methylation, so it uses a MutH-independent MMR pathway.<br>- PP_4896 shares ~<strong>44% amino-acid identity</strong> with <em>E. coli</em> MutL, with stronger conservation in the N-terminal region.</td>
+<td>Aparicio et al., 2020, <em>Environmental Microbiology</em>, Nov 2020, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 2-3, aparicio2020mismatchrepairhierarchy pages 1-2)</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>- MutL functions in post-replicative <strong>DNA mismatch repair (MMR)</strong>, helping correct replication errors after base selection and proofreading.<br>- In <em>P. putida</em>, active MMR clearly depends at least on <strong>MutS and MutL</strong> and suppresses inheritance of ssDNA recombineering-generated mismatches.<br>- Transient inhibition of MutL allows mismatches to escape repair and become fixed as chromosomal mutations.</td>
+<td>Fernández-Cabezón et al., 2021, <em>ACS Synthetic Biology</em>, Apr 2021, https://doi.org/10.1021/acssynbio.1c00031 (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2); Aparicio et al., 2020, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 3-5, aparicio2020mismatchrepairhierarchy pages 8-9)</td>
+</tr>
+<tr>
+<td>Activities/domains</td>
+<td>- Direct <em>P. putida</em>-specific biochemical assays were not provided in the retrieved papers, so ATPase/endonuclease activities are inferred from conserved bacterial MutL biology rather than demonstrated here.<br>- Authoritative review evidence indicates many MutL homologues in methylation-independent systems carry a <strong>metal-dependent endonuclease motif</strong> [DQHA(X)2E(X)4E].<br>- The same review indicates MutL activity is linked to the replication clamp <strong>DnaN</strong>, whose binding can stimulate MutL endonuclease activity in MutH-independent bacteria.</td>
+<td>Wozniak &amp; Simmons, 2022, <em>Nature Reviews Microbiology</em>, Feb 2022, https://doi.org/10.1038/s41579-022-00694-0 (wozniak2022bacterialdnaexcision pages 10-11); Aparicio et al., 2020 discussion/citations, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 12-13)</td>
+</tr>
+<tr>
+<td>Mismatch recognition hierarchy findings</td>
+<td>- Using pyrF-targeted mutagenic ssDNA recombineering, the <em>P. putida</em> MMR hierarchy was reported as <strong>A:G &lt; C:C &lt; G:A &lt; C:A, A:A, G:G, T:T, T:G, A:C, C:T &lt; G:T, T:C</strong> from less to more sensitive to repair.<br>- Wild-type MMR therefore tolerates some mismatches much more than others; <strong>G:T and T:C</strong> are among the most strongly repaired.<br>- Transient expression of dominant-negative <strong>mutL E36K</strong> or permanent <strong>ΔmutS</strong> largely collapses this bias.</td>
+<td>Aparicio et al., 2020, <em>Environmental Microbiology</em>, Nov 2020, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 1-2, aparicio2020mismatchrepairhierarchy pages 5-6, aparicio2020mismatchrepairhierarchy pages 8-9)</td>
+</tr>
+<tr>
+<td>Mutator devices and phenotypes</td>
+<td>- A dominant-negative <strong>mutL<sub>E36K</sub></strong> allele was engineered in <em>P. putida</em> based on the equivalent inactive/dominant-negative <em>E. coli</em> allele; in KT2440 the homologous residue is <strong>E36</strong>.<br>- Regulated overexpression of <strong>mutL<sub>E36K</sub></strong> on broad-host-range plasmids created conditional mutator devices that transiently inhibit endogenous MMR.<br>- These devices accelerated emergence of <strong>streptomycin resistance, rifampicin resistance, dual antibiotic resistance, and reversion of a synthetic uracil auxotrophy</strong>.</td>
+<td>Aparicio et al., 2020, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 2-3, aparicio2020mismatchrepairhierarchy pages 3-5); Fernández-Cabezón et al., 2021, https://doi.org/10.1021/acssynbio.1c00031 (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2, fernandezcabezon2021spatiotemporalmanipulationof pages 4-5, fernandezcabezon2021spatiotemporalmanipulationof pages 5-6)</td>
+</tr>
+<tr>
+<td>Quantitative mutation frequencies</td>
+<td>- In the 2021 mutator-device study, inducible <strong>mutL<sub>E36K</sub></strong> increased DNA mutation frequencies by <strong>up to 438-fold</strong> relative to controls.<br>- For uracil prototroph reversion, conditional mutator systems yielded about <strong>750</strong> and <strong>860 Ura+ mutants per 1 × 10^9 viable cells</strong> (cyclohexanone- and thermoinducible systems, respectively), whereas controls produced only <strong>0–4</strong> spontaneous Ura+ mutants under the tested conditions.<br>- In recombineering assays, wild-type MMR caused about a <strong>two-orders-of-magnitude</strong> difference between low-sensitivity (SR; A:G) and high-sensitivity (NR; G:T/C:A) oligos; this gap disappeared with <strong>ΔmutS</strong> or <strong>mutL<sub>E36K</sub></strong> expression.</td>
+<td>Fernández-Cabezón et al., 2021, <em>ACS Synthetic Biology</em>, Apr 2021, https://doi.org/10.1021/acssynbio.1c00031 (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2, fernandezcabezon2021spatiotemporalmanipulationof pages 4-5, fernandezcabezon2021spatiotemporalmanipulationof pages 5-6, fernandezcabezon2021spatiotemporalmanipulationof media 4d80bb01, fernandezcabezon2021spatiotemporalmanipulationof media 1d27dc75); Aparicio et al., 2020, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 3-5, aparicio2020mismatchrepairhierarchy pages 9-10)</td>
+</tr>
+<tr>
+<td>Genome-wide off-target mutations</td>
+<td>- Whole-genome sequencing of clones generated after transient <strong>mutL<sub>E36K</sub></strong> expression found <strong>0–3 SNPs</strong> in edited strains.<br>- A control MMR-proficient strain analyzed in parallel showed <strong>no detectable mutations</strong>.<br>- These data support transient MutL inhibition as a practical genome-engineering strategy with relatively low off-target burden in <em>P. putida</em>.</td>
+<td>Aparicio et al., 2020, <em>Environmental Microbiology</em>, Nov 2020, https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 8-9)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most relevant functional annotation evidence for Pseudomonas putida KT2440 MutL, including pathway role, inferred activities, mismatch-recognition behavior, and engineering phenotypes. It is useful for distinguishing organism-specific findings from broader bacterial MutL inferences.</em></p>
+<h2 id="13-key-primary-sources-publication-date-and-url">13. Key primary sources (publication date and URL)</h2>
+<ul>
+<li>Aparicio T. et al. <strong>(Nov 2020)</strong>. <em>Environmental Microbiology</em>. “Mismatch repair hierarchy of <em>Pseudomonas putida</em> revealed by mutagenic ssDNA recombineering of the pyrF gene”. https://doi.org/10.1111/1462-2920.14814 (aparicio2020mismatchrepairhierarchy pages 1-2)</li>
+<li>Fernández-Cabezón L. et al. <strong>(Apr 2021)</strong>. <em>ACS Synthetic Biology</em>. “Spatiotemporal Manipulation of the Mismatch Repair System of <em>Pseudomonas putida</em> Accelerates Phenotype Emergence”. https://doi.org/10.1021/acssynbio.1c00031 (fernandezcabezon2021spatiotemporalmanipulationof pages 1-2)</li>
+<li>Wozniak KJ, Simmons LA. <strong>(Feb 2022)</strong>. <em>Nature Reviews Microbiology</em>. “Bacterial DNA excision repair pathways”. https://doi.org/10.1038/s41579-022-00694-0 (wozniak2022bacterialdnaexcision pages 10-11)</li>
+<li>Collingwood BW. et al. <strong>(Nov 2024)</strong>. <em>Biomolecules</em>. “Action-At-A-Distance in DNA Mismatch Repair: Mechanistic Insights and Models for How DNA and Repair Proteins Facilitate Long-Range Communication”. https://doi.org/10.3390/biom14111442 (collingwood2024actionatadistanceindna pages 4-6)</li>
+</ul>
+<h2 id="14-figure-evidence-from-retrieved-images">14. Figure evidence (from retrieved images)</h2>
+<ul>
+<li>Mutation frequencies and relative fold-changes for RifR and StrR under conditional mutator devices (Figure 3 crop). (fernandezcabezon2021spatiotemporalmanipulationof media 4d80bb01)</li>
+<li>Ura+ mutation frequencies under conditional mutator devices (Figure 4a crop). (fernandezcabezon2021spatiotemporalmanipulationof media 1d27dc75)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 2-3): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 1-2): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 3-5): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 4-5): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wozniak2022bacterialdnaexcision pages 10-11): Katherine J. Wozniak and Lyle A. Simmons. Bacterial dna excision repair pathways. Nature Reviews Microbiology, 20:465-477, Feb 2022. URL: https://doi.org/10.1038/s41579-022-00694-0, doi:10.1038/s41579-022-00694-0. This article has 102 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wozniak2022bacterialdnaexcision pages 18-19): Katherine J. Wozniak and Lyle A. Simmons. Bacterial dna excision repair pathways. Nature Reviews Microbiology, 20:465-477, Feb 2022. URL: https://doi.org/10.1038/s41579-022-00694-0, doi:10.1038/s41579-022-00694-0. This article has 102 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 1-2): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 5-6): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(collingwood2024actionatadistanceindna pages 4-6): Bryce W. Collingwood, Scott J. Witte, and Carol M. Manhart. Action-at-a-distance in dna mismatch repair: mechanistic insights and models for how dna and repair proteins facilitate long-range communication. Biomolecules, 14:1442, Nov 2024. URL: https://doi.org/10.3390/biom14111442, doi:10.3390/biom14111442. This article has 1 citations.</p>
+</li>
+<li>
+<p>(collingwood2024actionatadistanceindna pages 1-3): Bryce W. Collingwood, Scott J. Witte, and Carol M. Manhart. Action-at-a-distance in dna mismatch repair: mechanistic insights and models for how dna and repair proteins facilitate long-range communication. Biomolecules, 14:1442, Nov 2024. URL: https://doi.org/10.3390/biom14111442, doi:10.3390/biom14111442. This article has 1 citations.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof media 4d80bb01): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof pages 5-6): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandezcabezon2021spatiotemporalmanipulationof media 1d27dc75): Lorena Fernández-Cabezón, Antonin Cros, and Pablo I. Nikel. Spatiotemporal manipulation of the mismatch repair system of <i>pseudomonas putida</i> accelerates phenotype emergence. Apr 2021. URL: https://doi.org/10.1021/acssynbio.1c00031, doi:10.1021/acssynbio.1c00031. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 8-9): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 12-13): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aparicio2020mismatchrepairhierarchy pages 9-10): Tomas Aparicio, Akos Nyerges, István Nagy, Csaba Pal, Esteban Martínez‐García, and Víctor de Lorenzo. Mismatch repair hierarchy of <i>pseudomonas putida</i> revealed by mutagenic ssdna recombineering of the <i>pyrf</i> gene. Environmental Microbiology, 22:45-58, Nov 2020. URL: https://doi.org/10.1111/1462-2920.14814, doi:10.1111/1462-2920.14814. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mutL-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000013 I have extracted Figure 3 and the relevant panel from Figure 4. Figure 3 (from page 4) shows the mutation frequencies for RifR and " src="mutL-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 1-2</li>
+<li>aparicio2020mismatchrepairhierarchy pages 3-5</li>
+<li>wozniak2022bacterialdnaexcision pages 10-11</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 5-6</li>
+<li>aparicio2020mismatchrepairhierarchy pages 5-6</li>
+<li>aparicio2020mismatchrepairhierarchy pages 8-9</li>
+<li>collingwood2024actionatadistanceindna pages 4-6</li>
+<li>aparicio2020mismatchrepairhierarchy pages 12-13</li>
+<li>aparicio2020mismatchrepairhierarchy pages 1-2</li>
+<li>aparicio2020mismatchrepairhierarchy pages 2-3</li>
+<li>fernandezcabezon2021spatiotemporalmanipulationof pages 4-5</li>
+<li>wozniak2022bacterialdnaexcision pages 18-19</li>
+<li>collingwood2024actionatadistanceindna pages 1-3</li>
+<li>aparicio2020mismatchrepairhierarchy pages 9-10</li>
+<li>DQHA(X)2E(X)4E</li>
+<li>https://doi.org/10.3390/biom14111442</li>
+<li>https://doi.org/10.1038/s41579-022-00694-0</li>
+<li>https://doi.org/10.1111/1462-2920.14814</li>
+<li>https://doi.org/10.1021/acssynbio.1c00031</li>
+<li>https://doi.org/10.1111/1462-2920.14814,</li>
+<li>https://doi.org/10.1021/acssynbio.1c00031,</li>
+<li>https://doi.org/10.1038/s41579-022-00694-0,</li>
+<li>https://doi.org/10.3390/biom14111442,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DD1
+gene_symbol: mutL
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: DNA mismatch repair protein MutL, a 632-residue member of the MutL/HexB family that functions in post-replicative DNA mismatch repair (MMR). MutL acts together with MutS to correct base-base mismatches and small insertion/deletion loops that escape replicative proofreading. It is a molecular matchmaker that couples mismatch recognition by MutS to downstream strand processing in an ATP-dependent manner via its N-terminal GHKL-type ATPase domain, and it dimerizes through its C-terminal domain. In Pseudomonas putida, which encodes MutS and MutL but lacks MutH and Dam methylation, MMR operates by a MutH-independent (methylation-independent) mechanism; MutL homologs in such systems typically carry a metal-dependent endonuclease motif and are positioned/activated by the replication beta-clamp (DnaN) to nick the error-containing strand. MutL acts in the cytoplasm, associated with the nucleoid and replisome. Loss or dominant-negative inhibition of MutL strongly elevates spontaneous mutation rates, establishing its role as a central determinant of genome fidelity.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: MutL contains an N-terminal GHKL/HATPase ATPase domain (IPR036890) and binds ATP, which drives the conformational changes underlying its matchmaker function.
+    action: ACCEPT
+    reason: ATP binding is a well-established and conserved property of the MutL N-terminal GHKL ATPase domain, consistent with the InterPro domain architecture of this protein.
+- term:
+    id: GO:0006259
+    label: DNA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Generic parent term for DNA metabolism. MutL participates in DNA mismatch repair, which is a more specific child of DNA metabolic process.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This term is too general and is subsumed by the more specific and informative annotation GO:0006298 (mismatch repair), which is also present. It adds no specific functional information.
+- term:
+    id: GO:0006298
+    label: mismatch repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: MutL is a core component of the post-replicative mismatch repair pathway, acting downstream of mismatch recognition by MutS. This is the central biological process for the gene.
+    action: ACCEPT
+    reason: Strongly supported by family/domain conservation and by genetic evidence in P. putida, where ssDNA recombineering and dominant-negative mutL E36K experiments show MutL is required for correcting replication mismatches and controlling mutation rate.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The N-terminal GHKL ATPase domain hydrolyzes ATP; ATP binding and hydrolysis cycle the protein through conformational states required for MMR.
+    action: ACCEPT
+    reason: ATP hydrolysis by the conserved GHKL domain is a defining catalytic feature of the MutL family, consistent with the domain architecture of this protein.
+- term:
+    id: GO:0030983
+    label: mismatched DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: MutL associates with mismatch-containing DNA in the MutS-MutL complex as part of mismatch repair.
+    action: ACCEPT
+    reason: Consistent with the conserved MutL function in the MMR pathway; MutL contacts the mismatched DNA substrate within the ternary repair complex. Retained as supporting the core MMR function.
+- term:
+    id: GO:0032300
+    label: mismatch repair complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: part_of
+  review:
+    summary: MutL functions as a dimer and assembles with MutS (and the beta-clamp in MutH-less systems) on mismatched DNA, forming the mismatch repair complex.
+    action: ACCEPT
+    reason: Appropriate cellular component for a MutL-family protein; MutL is a defining component of the MutS-MutL mismatch repair complex.
+- term:
+    id: GO:0140664
+    label: ATP-dependent DNA damage sensor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This term describes ATP-dependent sensing/transduction of DNA lesions. MutL couples ATP binding/hydrolysis to recognition of MutS-bound mismatches and transduces the signal to downstream strand-processing steps. MutL does not itself recognize the mismatch (that is the role of MutS); it acts downstream as a matchmaker.
+    action: KEEP_AS_NON_CORE
+    reason: The activity is consistent with the established mechanism of MutL as an ATP-driven coordinator within MMR, but it is secondary to the core mismatch repair, ATPase, and mismatched-DNA-binding annotations. Retained as non-core rather than removed.
+core_functions:
+- description: Acts as an ATP-dependent molecular matchmaker in post-replicative DNA mismatch repair, coupling MutS-mediated recognition of base-base mismatches and small indels to downstream strand-discrimination and incision/excision steps.
+  supported_by:
+  - reference_id: PMID:31599106
+    supporting_text: Transient suppression of MutL via dominant-negative mutL E36K allows ssDNA-recombineering-introduced mismatches to escape repair and become inherited, and permanent deletion of mutS elevates the mutational regime, demonstrating MutL&#39;s central role in MMR in P. putida KT2440.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  directly_involved_in:
+  - id: GO:0006298
+    label: mismatch repair
+- description: Binds ATP and mismatched DNA within the MutS-MutL repair complex; in P. putida, which lacks MutH and Dam methylation, MMR proceeds by a methylation-independent mechanism in which MutL-family endonuclease activity coupled to the beta-clamp is inferred to direct strand-specific incision.
+  supported_by:
+  - reference_id: PMID:35210609
+    supporting_text: In bacteria lacking MutH/Dam, many MutL homologs contain a conserved metal-dependent endonuclease motif and are stimulated by the replication beta-clamp (DnaN) to incise the error-containing strand.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0030983
+    label: mismatched DNA binding
+  directly_involved_in:
+  - id: GO:0006298
+    label: mismatch repair
+proposed_new_terms: []
+suggested_questions:
+- question: Does P. putida MutL (PP_4896) possess intrinsic metal-dependent endonuclease activity, and is it stimulated by the beta-clamp (DnaN) as in other MutH-less bacteria?
+- question: How is strand discrimination achieved in P. putida MMR in the absence of MutH and Dam methylation?
+suggested_experiments:
+- description: Biochemical reconstitution of P. putida MutL to test ATPase activity, mismatched-DNA binding, and DnaN-stimulated endonuclease (strand-incision) activity in vitro.
+- description: Subcellular localization (e.g., fluorescent fusions) to test replisome/nucleoid association of MutL during replication and after mismatch induction.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31599106
+  title: Mismatch repair hierarchy of Pseudomonas putida revealed by mutagenic ssDNA recombineering of the pyrF gene
+  findings:
+  - statement: P. putida KT2440 encodes MutS and MutL but lacks MutH and Dam methylation; MutL (PP_4896) shares ~44% identity with E. coli MutL. Dominant-negative mutL E36K transiently inhibits MMR, and deltamutS abolishes it, demonstrating MutL&#39;s central role in repairing replication mismatches.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#39;Recovered from doi:10.1111/1462-2920.14814 via doi_to_pmid and PubMed title-verified (Aparicio et al. 2020, Environ Microbiol): KT2440 mismatch-repair hierarchy.&#39;
+- id: PMID:35210609
+  title: Bacterial DNA excision repair pathways.
+  findings:
+  - statement: In MutH-independent (methylation-independent) bacterial MMR, many MutL homologs carry a conserved metal-dependent endonuclease motif (DQHA(X)2E(X)4E) and are activated/positioned by the replication beta-clamp (DnaN) to incise the error-containing strand.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Recovered from doi:10.1038/s41579-022-00694-0 via doi_to_pmid and PubMed title-verified (Bacterial DNA excision repair pathways review).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

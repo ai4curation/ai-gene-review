@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASPL1B2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CASPL1B2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9SUP0" target="_blank" class="term-link">
+                        Q9SUP0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CASPL1B2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9SUP0" data-a="DESCRIPTION: CASP-like protein 1B2 (AtCASPL1B2, At4g20390) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CASP-like protein 1B2 (AtCASPL1B2, At4g20390) is a small tetraspan (four-transmembrane) plasma-membrane protein of the CASP-like (CASPL) subfamily of the MARVEL-related Casparian strip membrane domain protein family (CASPL1 clade). It is exclusively expressed in suberized endodermal cells and is one of four CASPLs (with CASPL1B1, CASPL1D1, CASPL1D2) that interact with the aquaporin PIP2;1, consistent with a membrane scaffold/adaptor role in the suberizing endodermis. Its experimentally determined location is the plasma membrane; no specific molecular function has been characterized, and CASPL loss of function does not detectably alter whole-root hydraulic conductivity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SUP0" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct, well-supported plasma-membrane localization for this multi-pass CASP-like protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates a multi-pass cell-membrane protein and the localization is independently confirmed experimentally (IDA, PMID:24920445).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000015
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SUP0" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder reflecting that no specific molecular function has been characterized.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> No catalytic or transport activity is known for this CASP-like scaffold protein; the ND root annotation accurately reflects the absence of molecular-function data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/CASPL1B2/CASPL1B2-goa.tsv
+                                    
+                                </span>
+                                
+                                <div class="support-text">molecular_function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24920445
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional and evolutionary analysis of the CASPARIAN STRIP ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SUP0" data-a="GO:0005886" data-r="PMID:24920445" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally determined plasma-membrane localization; the core, well-grounded annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct assay in the family-defining study localizes this CASPL to the plasma membrane, consistent with the UniProt multi-pass topology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Plasma-membrane CASP-like (CASPL) scaffold protein of uncharacterized specific molecular function.</h3>
+                <span class="vote-buttons" data-g="Q9SUP0" data-a="FUNCTION: Plasma-membrane CASP-like (CASPL) scaffold protein..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">SUBCELLULAR LOCATION: Cell membrane</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for CASPL1B2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASPL1B2 is a multi-pass cell-membrane CASP-like protein of the Casparian strip membrane proteins family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CASPL1B2/CASPL1B2-goa.tsv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">QuickGO GOA annotations for CASPL1B2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GOA supplied the existing annotations reviewed in this file.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link">
+                            PMID:24920445
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional and evolutionary analysis of the CASPARIAN STRIP MEMBRANE DOMAIN PROTEIN family.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the CASP/CASPL family and unified nomenclature; places CASPL1B2 in the divergent CASP-like subfamily of plasma-membrane tetraspan scaffolds.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Supplied the IEA plasma membrane annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Supplied the ND root-level molecular_function/cellular_component placeholders.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30767240" target="_blank" class="term-link">
+                            PMID:30767240
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of a plant aquaporin by a Casparian strip membrane domain protein-like.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASPL1B2 is exclusively expressed in suberized endodermal cells and interacts with PIP2;1.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CASPL1B2/CASPL1B2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon (Edison) deep-research report for CASPL1B2</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deep-research synthesis of CASPL1B2: a CASPL1-clade plasma-membrane protein of the suberized endodermis that interacts with PIP2;1, with no established enzymatic function.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CASPL1B2 contribute, redundantly with CASPL1B1, to PIP2;1 regulation in the suberizing endodermis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9SUP0" data-a="Q: Does CASPL1B2 contribute, redundantly with CASPL1B..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test CASPL1B2-PIP2;1 interaction and aquaporin regulation, and profile expression across endodermal differentiation zones.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein interaction and expression profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9SUP0" data-a="EXPERIMENT: Test CASPL1B2-PIP2;1 interaction and aquaporin reg..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CASPL1B2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9SUP0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">28 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-14T16:47:21.786937</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CASPL1B2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CASPL1B2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000023 The requested visual content can be found in Figures 1, 5, and 8 of the document. - **CASP1-5 localization to the Casparian strip d</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-arabidopsis-thaliana-atcaspl1b2-uniprot-q9sup0-locus-at4g20390">Research report: <em>Arabidopsis thaliana</em> AtCASPL1B2 (UniProt Q9SUP0; locus At4g20390)</h2>
+<h3 id="executive-summary-evidence-weighted">Executive summary (evidence-weighted)</h3>
+<p>AtCASPL1B2 (UniProt Q9SUP0; locus At4g20390) is an <em>Arabidopsis thaliana</em> member of the CASP-like (CASPL) protein family related to Casparian strip membrane domain proteins (CASPs). The strongest gene-specific experimental evidence currently retrieved is that an AtCASPL1B2–mCherry fusion, when expressed from the <strong>endodermis CASP1 promoter</strong>, can <strong>localize to the Casparian strip membrane domain (CSD)</strong> in at least two independent transgenic lines; many other lines lacked detectable signal, suggesting variable expression/stability in that assay. (roppolo2014functionalandevolutionary pages 32-37)</p>
+<p>No direct mutant phenotype or biochemical activity for AtCASPL1B2 was retrieved in this run. Therefore, functional annotation must rely on a cautious inference that AtCASPL1B2 is a <strong>four-transmembrane, MARVEL-like scaffold/microdomain protein</strong> with the <em>capacity</em> to partition into CSD-like microdomains, consistent with broader CASP/CASPL family properties demonstrated experimentally in <em>Arabidopsis</em>. (roppolo2014functionalandevolutionary pages 32-37, pfister2014areceptorlikekinase pages 2-3, roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 1-1)</p>
+<h3 id="1-target-verification-mandatory-geneprotein-identification">1) Target verification (mandatory gene/protein identification)</h3>
+<p><strong>Verified identity and organism.</strong> A primary family-analysis paper explicitly lists <strong>AtCASPL1B2</strong> as <strong>UniProt Q9SUP0</strong> in <em>Arabidopsis thaliana</em>, placing it among CASPL proteins (CASP-like) and mapping it within a CASPL group classification. This directly matches the provided UniProt context (Q9SUP0; AtCASPL1B2; <em>A. thaliana</em>; CASP/CASPL domain family). (roppolo2014functionalandevolutionary pages 32-37)</p>
+<p><strong>Ambiguity check.</strong> The symbol “CASPL” is used in multiple species (e.g., crop comparative genomics), but the direct mention of AtCASPL1B2 = Q9SUP0 in a focused <em>Arabidopsis</em> CASP/CASPL study resolves identity for the target here. (roppolo2014functionalandevolutionary pages 32-37)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-casparian-strip-cs-and-casparian-strip-membrane-domain-csd">2.1 Casparian strip (CS) and Casparian strip membrane domain (CSD)</h4>
+<p>The <strong>Casparian strip (CS)</strong> is a lignin-impregnated cell-wall band in root endodermal cells that forms a major extracellular (apoplastic) diffusion barrier. A key organizing feature is the <strong>Casparian strip membrane domain (CSD)</strong>, a specialized plasma-membrane domain aligned with the CS that functions as a <strong>lateral diffusion barrier</strong> and polarizes the endodermal plasma membrane. (pfister2014areceptorlikekinase pages 2-3, roppolo2014functionalandevolutionary pages 1-2)</p>
+<p>Developmentally, CS lignification is detected at approximately <strong>~12 endodermal cells after the onset of elongation</strong>, while <strong>suberin lamellae</strong> are detected much later (<strong>~38 cells after onset of elongation</strong>), highlighting that lignin-based CS establishment and later suberization are temporally distinct processes in the endodermis. (nawrath2013apoplasticdiffusionbarriers pages 9-10)</p>
+<h4 id="22-casp-vs-caspl-proteins">2.2 CASP vs CASPL proteins</h4>
+<p><strong>CASPs (CASP1–CASP5)</strong> are small, four-transmembrane proteins (MARVEL superfamily-related) that assemble into stable microdomains at the CSD in endodermal cells, functioning as a membrane scaffold and “fence” that contributes to barrier organization. (pfister2014areceptorlikekinase pages 2-3, roppolo2014functionalandevolutionary pages 1-2, barbosa2023directedgrowthand pages 1-2)</p>
+<p><strong>CASPLs (CASP-like proteins)</strong> are a larger related family. In <em>Arabidopsis</em>, many CASPLs show cell-type-specific expression (e.g., multiple non-endodermal types), and when ectopically expressed in the endodermis, many CASPL proteins can integrate into the CASP membrane domain, supporting the concept that CASPLs share a propensity to form transmembrane scaffolds/microdomains. (roppolo2014functionalandevolutionary pages 1-1)</p>
+<h3 id="3-direct-evidence-for-atcaspl1b2-q9sup0">3) Direct evidence for AtCASPL1B2 (Q9SUP0)</h3>
+<h4 id="31-subcellular-localization-direct-experimental-evidence">3.1 Subcellular localization (direct experimental evidence)</h4>
+<p>In a systematic CASPL characterization study, AtCASPL1B2 (Q9SUP0) was tested as an <strong>mCherry fusion expressed under the AtCASP1 promoter</strong> (i.e., driven in an endodermal/CSD-forming context). Under these conditions, <strong>AtCASPL1B2 localized to the CSD in 2 independent lines</strong>, whereas <strong>13 other transgenic lines showed no fluorescence</strong>, indicating that detectable accumulation was variable in that experimental setup. This provides direct evidence that AtCASPL1B2 has the intrinsic capacity to target/partition into CSD microdomains in endodermal cells, but it does not establish endogenous expression or function. (roppolo2014functionalandevolutionary pages 32-37)</p>
+<h4 id="32-function-pathway-placement-phenotype-limitations">3.2 Function, pathway placement, phenotype (limitations)</h4>
+<p>No AtCASPL1B2-specific loss-of-function phenotype, biochemical activity, or endogenous expression pattern was retrieved among the available texts. Consequently, claims about AtCASPL1B2’s physiological function must be labeled as <strong>inferred</strong> from family behavior rather than directly demonstrated for AtCASPL1B2. (roppolo2014functionalandevolutionary pages 32-37)</p>
+<h3 id="4-functional-inference-from-caspcaspl-family-biology-clearly-labeled-inference">4) Functional inference from CASP/CASPL family biology (clearly labeled inference)</h3>
+<h4 id="41-most-plausible-molecular-function-class">4.1 Most plausible molecular function class</h4>
+<p><strong>Inference (not directly shown for AtCASPL1B2):</strong> AtCASPL1B2 is most plausibly a <strong>structural membrane scaffold/microdomain-forming protein</strong> rather than an enzyme or transporter, consistent with CASP/CASPL family membership and four-transmembrane MARVEL-like architecture. CASPs form stable microdomains and are proposed to spatially organize lignin-polymerizing machinery at the CS site. (pfister2014areceptorlikekinase pages 2-3, roppolo2014functionalandevolutionary pages 1-2, barbosa2023directedgrowthand pages 1-2)</p>
+<h4 id="42-likely-cellular-location-and-tissue-context">4.2 Likely cellular location and tissue context</h4>
+<p><strong>Direct evidence supports</strong> AtCASPL1B2’s ability to localize to the <strong>CSD</strong> when expressed in endodermal cells. (roppolo2014functionalandevolutionary pages 32-37)</p>
+<p><strong>Inference:</strong> If AtCASPL1B2 is expressed in endodermis in vivo (not established here), it could participate in CSD-associated microdomain architecture or barrier maturation, similar to other CASPLs that can integrate into CASP domains. However, CASPLs also show diverse expression in non-endodermal cells, so AtCASPL1B2 could also function in other cell types as a MARVEL-like microdomain protein. (roppolo2014functionalandevolutionary pages 1-1)</p>
+<h3 id="5-recent-developments-and-latest-research-prioritizing-20232024">5) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="51-2023-refined-mechanistic-model-for-casp-microdomain-function">5.1 2023: refined mechanistic model for CASP microdomain function</h4>
+<p>A 2023 study using a <strong>full CASP quintuple knock-out (caspQ)</strong> reframed CASP function: <strong>localized lignification foci can still form without CASPs</strong>, but the resulting structures are <strong>ultrastructurally disorganized</strong> and fail to mature into a sealing, continuous band. CASPs are therefore critical for <strong>proper microdomain organization, membrane–wall adhesion, exclusion zones, and controlled wall growth</strong> rather than being strictly required to initiate lignification. (barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 3-4)</p>
+<p>Mechanistically, CASPs were proposed to enforce the <strong>directed growth and fusion</strong> of membrane–wall microdomains by <strong>displacing exocyst landmarks (EXO70A1)</strong> from occupied sites, thereby moving secretory foci and promoting fusion into a continuous strip; proximity labeling implicated <strong>RabA GTPases</strong> as candidate CASP-proximal components involved in trafficking/exocyst dynamics. (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 2-3)</p>
+<p>Supporting visual evidence for CASP localization and caspQ phenotypes, as well as a conceptual model of EXO70A1 displacement, is contained in retrieved figure panels. (barbosa2023directedgrowthand media 5173c757, barbosa2023directedgrowthand media 132a71e3, barbosa2023directedgrowthand media ed2b6d7c)</p>
+<p><strong>Relevance to AtCASPL1B2:</strong> Because AtCASPL1B2 can localize to CSD under an endodermal promoter, these mechanistic insights provide the best current framework for hypothesizing what a CSD-localized CASPL might contribute (scaffold/microdomain organization and trafficking exclusion), while recognizing that gene-specific roles remain unproven. (roppolo2014functionalandevolutionary pages 32-37, barbosa2023directedgrowthand pages 12-13)</p>
+<h4 id="52-2024-comparative-genomics-and-expression-context-for-arabidopsis-caspcaspl-repertoires">5.2 2024: comparative genomics and expression context for Arabidopsis CASP/CASPL repertoires</h4>
+<p>A 2024 comparative analysis reported <strong>39 Arabidopsis CASP/CASP_like genes</strong> identified by domain-based HMM methods and grouped into six subfamilies. Transcriptomic analysis in this work indicated that many AtCASP/CASP_like genes are <strong>root enriched</strong> and that several show <strong>endodermis-enriched expression</strong>, highlighting <strong>AtCASP_like1</strong> and <strong>AtCASP_like31</strong> as particularly pronounced in endodermis and candidate CS-related genes. (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 7-11, xue2024comparativeanalysisof pages 15-17)</p>
+<p>While this 2024 analysis does not provide AtCASPL1B2-specific expression in the excerpts retrieved here, it supports a current community view that many CASP_like/CASPL proteins may have barrier-associated roles, motivating targeted functional genetics for specific family members such as AtCASPL1B2. (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 7-11)</p>
+<h3 id="6-quantitative-data-and-statistics-from-relevant-studies-barrier-assays-and-physiology">6) Quantitative data and statistics from relevant studies (barrier assays and physiology)</h3>
+<p>Although gene-specific quantitative data for AtCASPL1B2 were not retrieved, quantitative CS/CSD barrier measurements provide context for interpreting potential phenotypes of barrier-related genes.</p>
+<h4 id="61-standard-barrier-assay-propidium-iodide-pi-penetration">6.1 Standard barrier assay: Propidium iodide (PI) penetration</h4>
+<p>A widely used CS diffusion-barrier assay incubates seedlings in <strong>15 mM propidium iodide (PI; 10 mg/mL) for 10 minutes</strong>; quantification is performed by counting endodermal cells from the <strong>onset of elongation</strong> (defined as cell length &gt;2× width) until PI penetration is blocked. (pfister2014areceptorlikekinase pages 16-17)</p>
+<h4 id="62-barrier-breakdown-consequences-ionomics-and-nutrient-homeostasis">6.2 Barrier breakdown consequences: ionomics and nutrient homeostasis</h4>
+<p>In the <strong>sgn3</strong> mutant (defective in proper CASP localization and CSD integrity), ionomic profiling of rosette leaves across multiple labs and growth conditions reported a consistent <strong>potassium (K) decrease of ~1.4–3.0-fold</strong>, along with <strong>magnesium increase ~1.5–2.1-fold</strong> and <strong>cesium increase ~1.3–1.4-fold</strong>, illustrating that severe endodermal barrier defects can yield selective nutrient-homeostasis phenotypes rather than uniform dysregulation. (pfister2014areceptorlikekinase pages 10-11)</p>
+<p>Experimental design and statistics included (examples): qRT-PCR with <strong>n=3 biological replicates</strong> and genotype differences assessed by ANOVA with Tukey post hoc (p &lt; 0.05), and potassium-deficiency phenotyping summarized as percentages across <strong>≥50 plants total</strong> from two independent experiments. (pfister2014areceptorlikekinase pages 11-13)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<p><strong>Agronomic relevance of apoplastic barriers:</strong> Mechanistic understanding of CS/CSD formation is increasingly treated as a route to engineer root selectivity for <strong>mineral nutrient uptake</strong> and <strong>stress resilience</strong> (e.g., salt/drought) by tuning apoplastic bypass and endodermal barrier properties. This translational framing is reflected by recent comparative genomics studies linking CASP/CASPL gene families to stress responsiveness and mineral element uptake in crops, and by mechanistic work clarifying which molecular features control barrier sealing vs. initiation. (xue2024comparativeanalysisof pages 1-2, xue2024genomewideidentificationand pages 2-4, barbosa2023directedgrowthand pages 1-2)</p>
+<p>For <em>Arabidopsis</em> specifically, the sgn3 barrier mutant’s selective K defects (rather than global failure of homeostasis) highlight that barrier manipulation could have element-specific outcomes, which is important for rational crop engineering. (pfister2014areceptorlikekinase pages 10-11)</p>
+<h3 id="8-expert-interpretation-authoritative-synthesis-with-explicit-uncertainty">8) Expert interpretation / authoritative synthesis (with explicit uncertainty)</h3>
+<p><strong>What can be stated with high confidence for AtCASPL1B2/Q9SUP0:</strong><br />
+- It is a CASPL family protein in <em>Arabidopsis</em> and has been experimentally tested as a tagged construct. (roppolo2014functionalandevolutionary pages 32-37)<br />
+- It can localize to the CSD in an endodermal expression context (AtCASP1 promoter), supporting a microdomain-targeting propensity consistent with CASP/CASPL biology. (roppolo2014functionalandevolutionary pages 32-37)</p>
+<p><strong>What is likely but not proven for AtCASPL1B2 specifically:</strong><br />
+- A role as a membrane scaffold influencing microdomain organization/trafficking exclusion analogous to CASPs, which are known to organize microdomains, exocyst dynamics, and membrane–wall attachment during CS maturation. (barbosa2023directedgrowthand pages 12-13, pfister2014areceptorlikekinase pages 2-3, barbosa2023directedgrowthand pages 1-2)</p>
+<p><strong>What remains open for AtCASPL1B2 and would be required for a strong functional annotation:</strong><br />
+- Endogenous expression (cell type, developmental stage, stress responsiveness), confirmed by promoter reporters or single-cell datasets tied directly to At4g20390.<br />
+- Loss- and gain-of-function phenotypes (CS permeability assays, ionomics, developmental traits) and genetic interactions with CASP pathway components.<br />
+- Protein–protein proximity/interaction tests in vivo to determine whether AtCASPL1B2 associates with known CSD machinery (e.g., exocyst landmarks, Rab GTPases, peroxidases).</p>
+<h3 id="key-visual-evidence-from-retrieved-figures">Key visual evidence (from retrieved figures)</h3>
+<ul>
+<li>CASP1–CASP5 microdomain localization patterns and disruption in caspQ, plus a model for EXO70A1 displacement and microdomain fusion, are shown in figure panels retrieved from Barbosa et al. 2023. (barbosa2023directedgrowthand media 5173c757, barbosa2023directedgrowthand media 132a71e3, barbosa2023directedgrowthand media ed2b6d7c)</li>
+</ul>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Evidence level</th>
+<th>Claim</th>
+<th>Key details/assay</th>
+<th>Source (authors, year, journal)</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Direct (AtCASPL1B2)</td>
+<td><strong>Target identity:</strong> AtCASPL1B2 corresponds to <strong>UniProt Q9SUP0 / At4g20390</strong> and is a <strong>Group 1 CASPL</strong> family member in <em>Arabidopsis thaliana</em></td>
+<td>Primary family analysis explicitly identifies AtCASPL1B2/Q9SUP0; belongs to CASPL/CASP-related MARVEL-like 4TM family (roppolo2014functionalandevolutionary pages 32-37)</td>
+<td>Roppolo et al., 2014, <em>Plant Physiology</em></td>
+<td>https://doi.org/10.1104/pp.114.239137</td>
+</tr>
+<tr>
+<td>Direct (AtCASPL1B2)</td>
+<td><strong>Localization inference with direct construct evidence:</strong> AtCASPL1B2 can localize to the <strong>Casparian strip membrane domain (CSD)</strong> when expressed under the <strong>AtCASP1 promoter</strong></td>
+<td>mCherry-tagged AtCASPL1B2 showed CSD localization in <strong>2 independent lines</strong>; <strong>13 lines</strong> had no detectable fluorescence under this assay, indicating limited/variable detectable expression or stability in this context (roppolo2014functionalandevolutionary pages 32-37)</td>
+<td>Roppolo et al., 2014, <em>Plant Physiology</em></td>
+<td>https://doi.org/10.1104/pp.114.239137</td>
+</tr>
+<tr>
+<td>Family-level</td>
+<td><strong>CASP proteins are membrane scaffolds that define the CSD and organize localized lignification</strong></td>
+<td>Four-transmembrane proteins; stable ring-like CSD; proposed recruitment/organization of lignin-polymerization machinery including PER64-associated processes; multiple CASP knockouts disrupt strip continuity (pfister2014areceptorlikekinase pages 2-3, roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 1-1)</td>
+<td>Pfister et al., 2014, <em>eLife</em>; Roppolo et al., 2014, <em>Plant Physiology</em></td>
+<td>https://doi.org/10.7554/eLife.03115 ; https://doi.org/10.1104/pp.114.239137</td>
+</tr>
+<tr>
+<td>Family-level</td>
+<td><strong>Barrier-function consequence of defective CSD/CASP organization:</strong> loss of strip integrity causes strong apoplastic bypass and selective ion-homeostasis defects</td>
+<td>PI tracer assay used <strong>15 mM PI (10 mg/mL), 10 min</strong>; ionomics across multiple labs/growth systems found <strong>K decreased 1.4–3.0-fold</strong>, <strong>Mg increased 1.5–2.1-fold</strong>, <strong>Cs increased 1.3–1.4-fold</strong> in <em>sgn3</em>; low-K hypersensitivity observed (pfister2014areceptorlikekinase pages 10-11, pfister2014areceptorlikekinase pages 16-17, pfister2014areceptorlikekinase pages 11-13, pfister2014areceptorlikekinase pages 13-14)</td>
+<td>Pfister et al., 2014, <em>eLife</em></td>
+<td>https://doi.org/10.7554/eLife.03115</td>
+</tr>
+<tr>
+<td>Family-level, recent (2023)</td>
+<td><strong>Updated mechanism:</strong> CASPs are not strictly required to initiate localized lignification, but are required to organize/fuse microdomains and displace secretory foci for a sealed barrier</td>
+<td>In <strong>caspQ</strong> quintuple mutants, lignin forms disorganized microdomains; CASPs mediate <strong>EXO70A1</strong> eviction and promote microdomain fusion into a continuous band; proximity labeling implicated <strong>RabA GTPases</strong> (barbosa2023directedgrowthand pages 12-13, barbosa2023directedgrowthand pages 1-2, barbosa2023directedgrowthand pages 3-4, barbosa2023directedgrowthand pages 2-3)</td>
+<td>Barbosa et al., 2023, <em>Nature Communications</em></td>
+<td>https://doi.org/10.1038/s41467-023-37265-7</td>
+</tr>
+<tr>
+<td>Family-level, recent (2024)</td>
+<td><strong>Arabidopsis CASP/CASPL family context:</strong> Arabidopsis has a large CASP/CASPL repertoire with root/endodermis-enriched members</td>
+<td>Bioinformatic survey identified <strong>39 Arabidopsis CASP genes</strong>; most are root enriched; <strong>AtCASP_like1</strong> and <strong>AtCASP_like31</strong> were highlighted as strongly endodermis-enriched candidates linked to CS formation (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 7-11, xue2024comparativeanalysisof pages 15-17)</td>
+<td>Xue et al., 2024, <em>International Journal of Molecular Sciences</em></td>
+<td>https://doi.org/10.3390/ijms25189858</td>
+</tr>
+<tr>
+<td>Family-level review</td>
+<td><strong>Developmental timing benchmark for CS vs suberin deposition</strong></td>
+<td>Review summarizes that detectable <strong>Casparian strip lignification appears ~12 cells after onset of elongation</strong>, whereas detectable <strong>suberin lamellae appear ~38 cells after onset</strong>; supports distinct timing of barrier components (nawrath2013apoplasticdiffusionbarriers pages 9-10)</td>
+<td>Nawrath et al., 2013, <em>The Arabidopsis Book</em></td>
+<td>https://doi.org/10.1199/tab.0167</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the strongest direct and family-level evidence relevant to AtCASPL1B2/Q9SUP0, separating gene-specific observations from broader CASP/CASPL functional inferences. It is useful for building a cautious annotation when direct experimental data on this specific Arabidopsis protein are limited.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 32-37): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 136 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pfister2014areceptorlikekinase pages 2-3): Alexandre Pfister, Marie Barberon, Julien Alassimone, Lothar Kalmbach, Yuree Lee, Joop EM Vermeer, Misako Yamazaki, Guowei Li, Christophe Maurel, Junpei Takano, Takehiro Kamiya, David E Salt, Daniele Roppolo, and Niko Geldner. A receptor-like kinase mutant with absent endodermal diffusion barrier displays selective nutrient homeostasis defects. Sep 2014. URL: https://doi.org/10.7554/elife.03115, doi:10.7554/elife.03115. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 1-2): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 136 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 1-1): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 136 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nawrath2013apoplasticdiffusionbarriers pages 9-10): Christiane Nawrath, Lukas Schreiber, Rochus Benni Franke, Niko Geldner, José J. Reina-Pinto, and Ljerka Kunst. Apoplastic diffusion barriers in arabidopsis. The Arabidopsis Book, 2013:e0167, Dec 2013. URL: https://doi.org/10.1199/tab.0167, doi:10.1199/tab.0167. This article has 216 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand pages 1-2): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand pages 3-4): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand pages 12-13): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand pages 2-3): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand media 5173c757): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand media 132a71e3): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barbosa2023directedgrowthand media ed2b6d7c): Inês Catarina Ramos Barbosa, D. De Bellis, Isabelle Flückiger, E. Bellani, Mathieu Grangé-Guerment, Kian Hématy, and N. Geldner. Directed growth and fusion of membrane-wall microdomains requires casp-mediated inhibition and displacement of secretory foci. Nature Communications, Jul 2023. URL: https://doi.org/10.1038/s41467-023-37265-7, doi:10.1038/s41467-023-37265-7. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 1-2): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 7-11): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 15-17): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(pfister2014areceptorlikekinase pages 16-17): Alexandre Pfister, Marie Barberon, Julien Alassimone, Lothar Kalmbach, Yuree Lee, Joop EM Vermeer, Misako Yamazaki, Guowei Li, Christophe Maurel, Junpei Takano, Takehiro Kamiya, David E Salt, Daniele Roppolo, and Niko Geldner. A receptor-like kinase mutant with absent endodermal diffusion barrier displays selective nutrient homeostasis defects. Sep 2014. URL: https://doi.org/10.7554/elife.03115, doi:10.7554/elife.03115. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pfister2014areceptorlikekinase pages 10-11): Alexandre Pfister, Marie Barberon, Julien Alassimone, Lothar Kalmbach, Yuree Lee, Joop EM Vermeer, Misako Yamazaki, Guowei Li, Christophe Maurel, Junpei Takano, Takehiro Kamiya, David E Salt, Daniele Roppolo, and Niko Geldner. A receptor-like kinase mutant with absent endodermal diffusion barrier displays selective nutrient homeostasis defects. Sep 2014. URL: https://doi.org/10.7554/elife.03115, doi:10.7554/elife.03115. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pfister2014areceptorlikekinase pages 11-13): Alexandre Pfister, Marie Barberon, Julien Alassimone, Lothar Kalmbach, Yuree Lee, Joop EM Vermeer, Misako Yamazaki, Guowei Li, Christophe Maurel, Junpei Takano, Takehiro Kamiya, David E Salt, Daniele Roppolo, and Niko Geldner. A receptor-like kinase mutant with absent endodermal diffusion barrier displays selective nutrient homeostasis defects. Sep 2014. URL: https://doi.org/10.7554/elife.03115, doi:10.7554/elife.03115. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xue2024genomewideidentificationand pages 2-4): Baoping Xue, Zicong Liang, Dongyang Li, Yue Liu, and Chang Liu. Genome-wide identification and expression analysis of caspl gene family in zea mays (l.). Frontiers in Plant Science, Oct 2024. URL: https://doi.org/10.3389/fpls.2024.1477383, doi:10.3389/fpls.2024.1477383. This article has 4 citations.</p>
+</li>
+<li>
+<p>(pfister2014areceptorlikekinase pages 13-14): Alexandre Pfister, Marie Barberon, Julien Alassimone, Lothar Kalmbach, Yuree Lee, Joop EM Vermeer, Misako Yamazaki, Guowei Li, Christophe Maurel, Junpei Takano, Takehiro Kamiya, David E Salt, Daniele Roppolo, and Niko Geldner. A receptor-like kinase mutant with absent endodermal diffusion barrier displays selective nutrient homeostasis defects. Sep 2014. URL: https://doi.org/10.7554/elife.03115, doi:10.7554/elife.03115. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CASPL1B2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000023 The requested visual content can be found in Figures 1, 5, and 8 of the document. - **CASP1-5 localization to the Casparian strip d" src="CASPL1B2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>roppolo2014functionalandevolutionary pages 32-37</li>
+<li>nawrath2013apoplasticdiffusionbarriers pages 9-10</li>
+<li>roppolo2014functionalandevolutionary pages 1-1</li>
+<li>pfister2014areceptorlikekinase pages 16-17</li>
+<li>pfister2014areceptorlikekinase pages 10-11</li>
+<li>pfister2014areceptorlikekinase pages 11-13</li>
+<li>pfister2014areceptorlikekinase pages 2-3</li>
+<li>roppolo2014functionalandevolutionary pages 1-2</li>
+<li>barbosa2023directedgrowthand pages 1-2</li>
+<li>barbosa2023directedgrowthand pages 3-4</li>
+<li>barbosa2023directedgrowthand pages 12-13</li>
+<li>barbosa2023directedgrowthand pages 2-3</li>
+<li>xue2024comparativeanalysisof pages 1-2</li>
+<li>xue2024comparativeanalysisof pages 7-11</li>
+<li>xue2024comparativeanalysisof pages 15-17</li>
+<li>xue2024genomewideidentificationand pages 2-4</li>
+<li>pfister2014areceptorlikekinase pages 13-14</li>
+<li>https://doi.org/10.1104/pp.114.239137</li>
+<li>https://doi.org/10.7554/eLife.03115</li>
+<li>https://doi.org/10.1038/s41467-023-37265-7</li>
+<li>https://doi.org/10.3390/ijms25189858</li>
+<li>https://doi.org/10.1199/tab.0167</li>
+<li>https://doi.org/10.1104/pp.114.239137,</li>
+<li>https://doi.org/10.7554/elife.03115,</li>
+<li>https://doi.org/10.1199/tab.0167,</li>
+<li>https://doi.org/10.1038/s41467-023-37265-7,</li>
+<li>https://doi.org/10.3390/ijms25189858,</li>
+<li>https://doi.org/10.3389/fpls.2024.1477383,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9SUP0
+gene_symbol: CASPL1B2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: CASP-like protein 1B2 (AtCASPL1B2, At4g20390) is a small tetraspan (four-transmembrane) plasma-membrane
+  protein of the CASP-like (CASPL) subfamily of the MARVEL-related Casparian strip membrane domain protein
+  family (CASPL1 clade). It is exclusively expressed in suberized endodermal cells and is one of four
+  CASPLs (with CASPL1B1, CASPL1D1, CASPL1D2) that interact with the aquaporin PIP2;1, consistent with
+  a membrane scaffold/adaptor role in the suberizing endodermis. Its experimentally determined location
+  is the plasma membrane; no specific molecular function has been characterized, and CASPL loss of function
+  does not detectably alter whole-root hydraulic conductivity.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Correct, well-supported plasma-membrane localization for this multi-pass CASP-like protein.
+    action: ACCEPT
+    reason: UniProt annotates a multi-pass cell-membrane protein and the localization is independently
+      confirmed experimentally (IDA, PMID:24920445).
+    supported_by:
+    - reference_id: file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: Root-level placeholder reflecting that no specific molecular function has been characterized.
+    action: ACCEPT
+    reason: No catalytic or transport activity is known for this CASP-like scaffold protein; the ND root
+      annotation accurately reflects the absence of molecular-function data.
+    supported_by:
+    - reference_id: file:ARATH/CASPL1B2/CASPL1B2-goa.tsv
+      supporting_text: molecular_function
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:24920445
+  qualifier: located_in
+  review:
+    summary: Experimentally determined plasma-membrane localization; the core, well-grounded annotation.
+    action: ACCEPT
+    reason: Direct assay in the family-defining study localizes this CASPL to the plasma membrane, consistent
+      with the UniProt multi-pass topology.
+    supported_by:
+    - reference_id: file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+references:
+- id: file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+  title: UniProtKB reviewed entry for CASPL1B2
+  findings:
+  - statement: CASPL1B2 is a multi-pass cell-membrane CASP-like protein of the Casparian strip membrane
+      proteins family.
+- id: file:ARATH/CASPL1B2/CASPL1B2-goa.tsv
+  title: QuickGO GOA annotations for CASPL1B2
+  findings:
+  - statement: GOA supplied the existing annotations reviewed in this file.
+- id: PMID:24920445
+  title: Functional and evolutionary analysis of the CASPARIAN STRIP MEMBRANE DOMAIN PROTEIN family.
+  findings:
+  - statement: Defines the CASP/CASPL family and unified nomenclature; places CASPL1B2 in the divergent
+      CASP-like subfamily of plasma-membrane tetraspan scaffolds.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified family-defining paper.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Supplied the IEA plasma membrane annotation.
+- id: GO_REF:0000015
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: Supplied the ND root-level molecular_function/cellular_component placeholders.
+- id: PMID:30767240
+  title: Regulation of a plant aquaporin by a Casparian strip membrane domain protein-like.
+  findings:
+  - statement: CASPL1B2 is exclusively expressed in suberized endodermal cells and interacts with PIP2;1.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified (abstract cached). Primary functional study of the CASPL1B/1D clade.
+- id: file:ARATH/CASPL1B2/CASPL1B2-deep-research-falcon.md
+  title: Falcon (Edison) deep-research report for CASPL1B2
+  findings:
+  - statement: &#39;Deep-research synthesis of CASPL1B2: a CASPL1-clade plasma-membrane protein of the suberized
+      endodermis that interacts with PIP2;1, with no established enzymatic function.&#39;
+core_functions:
+- description: Plasma-membrane CASP-like (CASPL) scaffold protein of uncharacterized specific molecular
+    function.
+  supported_by:
+  - reference_id: file:ARATH/CASPL1B2/CASPL1B2-uniprot.txt
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+proposed_new_terms: []
+suggested_questions:
+- question: Does CASPL1B2 contribute, redundantly with CASPL1B1, to PIP2;1 regulation in the suberizing
+    endodermis?
+suggested_experiments:
+- description: Test CASPL1B2-PIP2;1 interaction and aquaporin regulation, and profile expression across
+    endodermal differentiation zones.
+  experiment_type: protein interaction and expression profiling
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

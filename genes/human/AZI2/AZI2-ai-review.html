@@ -1,0 +1,3117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZI2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AZI2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H6S1" target="_blank" class="term-link">
+                        Q9H6S1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "AZI2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H6S1" data-a="DESCRIPTION: AZI2 (5-azacytidine-induced protein 2), better kno..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AZI2 (5-azacytidine-induced protein 2), better known as NAP1 (NAK-associated protein 1; also TBKBP2, TILP), is a cytoplasmic adapter protein that binds and positively regulates the IkappaB kinase (IKK)-related serine/threonine kinases TBK1 (NAK) and IKBKE (IKKepsilon). The protein has an N-terminal homodimerization region and two coiled-coil segments, and a C-terminal TBK1/IKBKE-binding domain (the Pfam TBD module, residues ~216-257) shared with the related adapters TANK and TBKBP1/SINTBAD. By binding TBK1, NAP1 promotes TBK1 activation and oligomerization and thereby couples upstream innate-immune signals to TBK1 kinase output. NAP1 functions as a shared adaptor in type I interferon induction downstream of both the endosomal Toll-like receptor 3 (via the TRIF/TICAM1 adaptor) and the cytoplasmic RIG-I/MDA5 RNA-sensing pathway, driving IRF3 activation and IFN-beta production, and it also potentiates NF-kappaB activation, including TBK1-dependent phosphorylation of the p65/RELA subunit. NAP1 is a constituent of the TBK1-IKKepsilon-NAP1 complex. Structurally, its N-terminal region binds the SKICH domains of the selective-autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1, allowing NAP1 (with its paralog SINTBAD) to bridge these receptors to TBK1 and recruit/ activate TBK1 at autophagic cargo. NAP1 is itself a phosphoprotein and is subject to TRIM38-mediated K48-linked polyubiquitination and degradation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO) inference that NAP1 is active in the cytoplasm, consistent with experimental localization and its cytoplasmic adaptor role for TBK1/IKBKE.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core compartment; NAP1 acts as a cytoplasmic adaptor that binds and activates TBK1, consistent with the experimental cytoplasmic localization (PMID:14560022).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:14560022}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of cytoplasmic localization (UniProt subcellular location / mouse ortholog), redundant with but consistent with the experimental and IBA cytoplasm annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core cytoplasmic localization; redundant electronic assignment that agrees with the EXP (PMID:14560022) and IBA evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:14560022}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14743216" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14743216
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A physical and functional map of the human TNF-alpha/NF-kapp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005515" data-r="PMID:14743216" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with TBK1 (Q9UHD2) from a TNF-alpha/NF-kappaB pathway interaction map. Records the functionally central TBK1 interaction but bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Captures the key NAP1-TBK1 interaction underlying its adaptor function, but bare protein binding (GO:0005515) is uninformative per curation guidelines; the functional MF/CC is better captured by the kinase-complex and IFN annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21903422" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21903422
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mapping a dynamic innate immunity protein interaction networ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005515" data-r="PMID:21903422" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with TBK1 (Q9UHD2) from a dynamic innate-immunity (type I IFN) interaction network. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the real NAP1-TBK1 interaction in the type I IFN network but bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21931555" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21931555
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Vaccinia virus protein C6 is a virulence factor that binds T...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005515" data-r="PMID:21931555" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interactions from the vaccinia virus C6 study (NAP1 binds vaccinia C6/OPG029 and TBK1). C6 is a viral antagonist that targets TBK1 adaptors to block IRF3/IRF7. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records a real host-virus interaction (vaccinia C6 targeting NAP1 as a TBK1 adaptor) and the TBK1 interaction, but bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9H6S1; P17362: OPG029; Xeno; NbExp=2; IntAct=EBI-359973, EBI-9519257;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22014111" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22014111
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Flavivirus NS3 and NS5 proteins interaction network: a high-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005515" data-r="PMID:22014111" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with a flavivirus protein (Q9E7P0) from a flavivirus NS3/NS5 yeast two-hybrid screen. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput host-virus Y2H interaction; bare protein binding is uninformative and the interaction is not central to the core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9H6S1; Q9E7P0; Xeno; NbExp=2; IntAct=EBI-359973, EBI-11361108;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29251827" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29251827
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative Proteomics Identified TTC4 as a TBK1 Interactor...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005515" data-r="PMID:29251827" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with TBK1 (Q9UHD2) from the TBK1/STING/MDA5 interactome (TTC4 study). Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the NAP1-TBK1 interaction in the antiviral innate-immune interactome but bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32707033" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32707033
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kinase Interaction Network Expands Functional and Disease Ro...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005515" data-r="PMID:32707033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct interaction with TBK1 (Q9UHD2) from a human kinase interaction network. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records the NAP1-TBK1 interaction but bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043124" target="_blank" class="term-link">
+                                    GO:0043124
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of canonical NF-kappaB signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0043124" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl Compara transfer from the mouse ortholog (Q9QYP6) of a negative regulation of canonical NF-kappaB role. The human-characterized role of NAP1 is predominantly to potentiate NF-kappaB (PMID:14560022), so this orthology-based term is at best context-specific and conflicts with the dominant positive-regulatory role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Orthology-transferred (mouse) annotation; not contradicted by clearly identified human evidence so retained, but the dominant, experimentally characterized human role is positive regulation/potentiation of NF-kappaB, so this negative-regulation term is non-core and possibly context-specific.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Promotes TBK1-induced as well as TNF or PMA-induced activation of NF-kappa-B</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14560022" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14560022
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of NAP1, a regulatory subunit of IkappaB kina...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0005737" data-r="PMID:14560022" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence that NAP1 localizes to the cytoplasm (foundational identification paper). Core localization where NAP1 binds and activates TBK1/IKBKE.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported core cytoplasmic localization, the compartment in which NAP1 acts as a TBK1/IKBKE adaptor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:14560022}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051607" target="_blank" class="term-link">
+                                    GO:0051607
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to virus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17142768
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAK-associated protein 1 participates in both the TLR3 and t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0051607" data-r="PMID:17142768" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal author-statement (TBK1-IKKepsilon-NAP1 complex, CPX-6038) that NAP1 participates in antiviral defense. NAP1 acts as a shared adaptor downstream of TLR3 and the cytoplasmic RIG-I/MDA5 pathway in type I IFN induction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process; NAP1 is an established adaptor in antiviral innate immunity feeding IRF3 activation and IFN-beta induction via both TLR3/TRIF and the cytoplasmic RNA-sensing pathways.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Adapter protein which binds TBK1 and IKBKE playing a role in antiviral innate immunity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link">
+                                        PMID:17142768
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060337" target="_blank" class="term-link">
+                                    GO:0060337
+                                </a>
+                            </span>
+                            <span class="term-label">type I interferon-mediated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17142768
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAK-associated protein 1 participates in both the TLR3 and t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:0060337" data-r="PMID:17142768" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal author-statement that NAP1 (in the TBK1-IKKepsilon-NAP1 complex) participates in type I interferon signaling/induction. NAP1 couples TLR3 and cytoplasmic RNA sensing to IRF3/type I IFN.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NAP1&#39;s documented role is in type I IFN induction (driving IRF3 activation and IFN-beta production upstream), rather than in the downstream IFN-receptor (JAK/STAT) signaling that GO:0060337 (type I interferon-mediated signaling pathway) most precisely denotes; retained as a correct but imprecise pathway-context annotation. The defense-response-to-virus and IFN-beta-production-related roles are the core capture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link">
+                                        PMID:17142768
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902554" target="_blank" class="term-link">
+                                    GO:1902554
+                                </a>
+                            </span>
+                            <span class="term-label">serine/threonine protein kinase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17142768
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NAK-associated protein 1 participates in both the TLR3 and t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H6S1" data-a="GO:1902554" data-r="PMID:17142768" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal author-statement that NAP1 is part of a serine/threonine protein kinase complex (the TBK1-IKKepsilon-NAP1 complex, CPX-6038). Core cellular component capturing NAP1&#39;s defining role as a subunit of the TBK1/IKBKE kinase complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core cellular component; NAP1 is a constituent/regulatory subunit of the TBK1-IKKepsilon kinase complex, which is the structural basis of its adaptor and kinase-activating function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/AZI2/AZI2-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Activates serine/threonine-protein kinase TBK1 and facilitates its oligomerization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as an adapter and positive regulator of the IKK-related serine/threonine kinases TBK1 and IKBKE, binding them via its C-terminal TBK1-binding domain to promote TBK1 activation and oligomerization as a subunit of the TBK1-IKKepsilon-NAP1 kinase complex.</h3>
+                <span class="vote-buttons" data-g="Q9H6S1" data-a="FUNCTION: Acts as an adapter and positive regulator of the I..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/AZI2/AZI2-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Adapter protein which binds TBK1 and IKBKE playing a role in antiviral innate immunity. Activates serine/threonine-protein kinase TBK1 and facilitates its oligomerization.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14560022" target="_blank" class="term-link">
+                                PMID:14560022
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">NAP1 activates NAK and facilitates its oligomerization</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functions as a shared adaptor in innate antiviral immunity, coupling TLR3 (via TRIF/TICAM1) and the cytoplasmic RIG-I/MDA5 RNA-sensing pathway to TBK1-driven IRF3 activation and type I interferon (IFN-beta) induction, and potentiating NF-kappaB activation including TBK1-dependent phosphorylation of p65/RELA.</h3>
+                <span class="vote-buttons" data-g="Q9H6S1" data-a="FUNCTION: Functions as a shared adaptor in innate antiviral ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051607" target="_blank" class="term-link">
+                                defense response to virus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link">
+                                PMID:17142768
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14560022" target="_blank" class="term-link">
+                                PMID:14560022
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the NAK-NAP1 complex itself effectively phosphorylated serine 536 of the p65/RelA subunit of NF-kappaB</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14560022" target="_blank" class="term-link">
+                            PMID:14560022
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of NAP1, a regulatory subunit of IkappaB kinase-related kinases that potentiates NF-kappaB signaling.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NAP1 interacts with the IKK-related kinases NAK/TBK1 and IKBKE/IKKepsilon, activates TBK1 and facilitates its oligomerization, and the NAK-NAP1 complex phosphorylates Ser536 of p65/RELA; NAP1 potentiates NF-kappaB-dependent gene expression and localizes to the cytoplasm.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14743216" target="_blank" class="term-link">
+                            PMID:14743216
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A physical and functional map of the human TNF-alpha/NF-kappa B signal transduction pathway.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17142768" target="_blank" class="term-link">
+                            PMID:17142768
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NAP1 acts as a shared adaptor downstream of TLR3 (via TRIF/TICAM1) and the cytoplasmic RIG-I/MDA5 dsRNA-sensing pathway to drive IRF3 activation and type I interferon induction.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21903422" target="_blank" class="term-link">
+                            PMID:21903422
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mapping a dynamic innate immunity protein interaction network regulating type I interferon production.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21931555" target="_blank" class="term-link">
+                            PMID:21931555
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Vaccinia virus protein C6 is a virulence factor that binds TBK-1 adaptor proteins and inhibits activation of IRF3 and IRF7.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Vaccinia virus C6 binds the TBK1 adaptor proteins (NAP1, TANK, SINTBAD) and inhibits IRF3/IRF7 activation, identifying NAP1 as a TBK1 adaptor targeted by a viral immune antagonist.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22014111" target="_blank" class="term-link">
+                            PMID:22014111
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Flavivirus NS3 and NS5 proteins interaction network: a high-throughput yeast two-hybrid screen.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29251827" target="_blank" class="term-link">
+                            PMID:29251827
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative Proteomics Identified TTC4 as a TBK1 Interactor and a Positive Regulator of SeV-Induced Innate Immunity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30459273" target="_blank" class="term-link">
+                            PMID:30459273
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mechanistic insights into the interactions of NAP1 with the SKICH domains of NDP52 and TAX1BP1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structures define how the N-terminal region of NAP1 binds the SKICH domains of the selective-autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1, allowing NAP1 to bridge these receptors to TBK1.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32707033" target="_blank" class="term-link">
+                            PMID:32707033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Kinase Interaction Network Expands Functional and Disease Roles of Human Kinases.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does human NAP1 have a genuine negative-regulatory role in canonical NF-kappaB signaling (as inferred by orthology from mouse), or is the IEA GO:0043124 annotation context-specific given that the foundational human study shows NAP1 potentiates NF-kappaB?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H6S1" data-a="Q: Does human NAP1 have a genuine negative-regulatory..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is NAP1&#39;s adaptor activity partitioned between TBK1 activation in antiviral type I IFN induction and TBK1 recruitment to NDP52/TAX1BP1 in selective autophagy, and do its four isoforms (which differ in the TBK1-binding region) have distinct functions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H6S1" data-a="Q: How is NAP1&#39;s adaptor activity partitioned between..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute TBK1 activation in vitro with purified TBK1 and wild-type versus TBK1-binding-domain (residues 216-257) mutant NAP1 to quantify how NAP1 promotes TBK1 trans-autophosphorylation and oligomerization, and test substrate phosphorylation (IRF3, p65/RELA).</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H6S1" data-a="EXPERIMENT: Reconstitute TBK1 activation in vitro with purifie..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use NAP1 (AZI2) knockout cells reconstituted with isoform-specific or domain-mutant constructs to dissect NAP1&#39;s contribution to TLR3- versus RIG-I/MDA5-driven IFN-beta induction and to NDP52/TAX1BP1-dependent selective autophagy/xenophagy.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H6S1" data-a="EXPERIMENT: Use NAP1 (AZI2) knockout cells reconstituted with ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AZI2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H6S1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="azi2-nap1-review-notes">AZI2 (NAP1) review notes</h1>
+<p>UniProt: Q9H6S1. Gene: AZI2 (5-azacytidine-induced protein 2); synonyms NAP1 (NAK-associated<br />
+protein 1), TBKBP2, TILP. 392 aa. Two coiled-coil regions (40-76, 102-196), a homodimerization<br />
+region (1-197), and a TBK1/IKKε-binding region (216-257; the "TBD" Pfam PF12845 TBK1-binding<br />
+domain). Cytoplasmic. Subject to K48-linked polyubiquitination by TRIM38 (by similarity, mouse).</p>
+<h2 id="core-function-adapterpositive-regulator-of-tbk1-and-ikk">Core function: adapter/positive regulator of TBK1 and IKKε</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/14560022" title="we identify NAP1 (for NAK-associated protein 1), a protein that interacts with NAK and its relative IKK epsilon (also known as IKKi). NAP1 activates NAK and facilitates its oligomerization.">PMID:14560022</a> — This is the foundational identification. NAP1 binds TBK1 (NAK) and IKBKE<br />
+(IKKε), activates TBK1, facilitates its oligomerization, and the NAK-NAP1 complex phosphorylates<br />
+Ser536 of p65/RELA. NAP1 enhances NF-κB-dependent reporter activation; depletion reduces it.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/14560022" title="Depletion of NAP1 reduced NF-kappaB-dependent reporter gene expression">PMID:14560022</a>.<br />
+UniProt FUNCTION: "Adapter protein which binds TBK1 and IKBKE playing a role in antiviral innate<br />
+immunity. Activates serine/threonine-protein kinase TBK1 and facilitates its oligomerization.<br />
+Enhances the phosphorylation of NF-kappa-B p65 subunit RELA by TBK1."</p>
+<h2 id="innate-antiviral-immunity-type-i-ifn">Innate antiviral immunity / type I IFN</h2>
+<p>[PMID:17142768 (Sasai et al., abstract-only in cache) "NAK-associated protein 1 participates in<br />
+both the TLR3 and the cytoplasmic pathways in type I IFN induction"] — NAP1 is a shared adaptor<br />
+downstream of TLR3 (via TICAM1/TRIF) and the cytoplasmic RIG-I/MDA5 pathway feeding IRF3<br />
+activation and type I IFN (IFN-β). This paper is the ComplexPortal source for the NAS annotations:<br />
+defense response to virus (GO:0051607), type I IFN-mediated signaling (GO:0060337), and<br />
+serine/threonine protein kinase complex (GO:1902554, the TBK1/IKKε-NAP1 complex CPX-6038).</p>
+<p>NAP1 also participates in IFN-β promoter activation via TICAM1/TRIF (UniProt FUNCTION,<br />
+PubMed:15611223 — not in cache, abstract elsewhere). <a href="https://pubmed.ncbi.nlm.nih.gov/21931631" title="Functional dissection of the TBK1 molecular network">PMID:21931631</a> confirms NAP1 in the TBK1 interactome and functional network.</p>
+<h2 id="selective-autophagy-adaptor-link">Selective autophagy adaptor link</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/30459273" title="Mechanistic insights into the interactions of NAP1 with the SKICH domains of NDP52 and TAX1BP1">PMID:30459273</a> — Crystal structures (5Z7G, 5Z7L) of NAP1 33-75 bound to the SKICH domains of the<br />
+autophagy receptors NDP52 (CALCOCO2) and TAX1BP1 (TAXBP1). NAP1 (and its paralog SINTBAD) bridge<br />
+these cargo receptors to TBK1, recruiting/activating TBK1 at autophagic cargo. This places NAP1 in<br />
+the selective-autophagy axis as a TBK1-recruiting adaptor.</p>
+<h2 id="interactions-basis-for-ipi-protein-binding-annotations">Interactions (basis for IPI protein binding annotations)</h2>
+<ul>
+<li>PMID:14743216 — TNF-α/NF-κB pathway physical+functional map: interaction with TBK1 (Q9UHD2).</li>
+<li>PMID:21903422 — dynamic innate-immunity interaction network (type I IFN): TBK1 (Q9UHD2).</li>
+<li>PMID:21931555 — vaccinia virus C6 binds TBK1 adaptors (NAP1/TANK/SINTBAD); IPI with C6<br />
+  (OPG029/P17362) and TBK1 (Q9UHD2). C6 is a viral antagonist of IRF3/IRF7 activation.</li>
+<li>PMID:22014111 — flavivirus NS3/NS5 Y2H screen: interaction with a flavivirus protein (Q9E7P0).</li>
+<li>PMID:29251827 — TBK1 interactome (TTC4 study): TBK1 (Q9UHD2).</li>
+<li>PMID:32707033 — kinase interaction network: TBK1 (Q9UHD2).<br />
+Most IPI "protein binding" annotations record the central TBK1 interaction (functionally important<br />
+but uninformative as bare GO:0005515).</li>
+</ul>
+<h2 id="negative-regulation-of-nf-b-iea-from-mouse-ortholog">Negative regulation of NF-κB (IEA from mouse ortholog)</h2>
+<p>GO:0043124 (negative regulation of canonical NF-κB signaling), IEA via Ensembl Compara from mouse<br />
+ortholog Q9QYP6 (ECO:0000265, GO_REF:0000107). This is interesting because the human characterization<br />
+(PMID:14560022) shows NAP1 <em>potentiates</em> NF-κB. The mouse-derived "negative regulation" may reflect a<br />
+context-specific role. Keep as non-core given the dominant positive/adaptor role and the<br />
+ortholog-transfer basis; do not remove an Ensembl orthology-based annotation without contradicting<br />
+evidence (the human paper shows positive regulation, which is a different assay context).</p>
+<h2 id="summary-of-action-plan">Summary of action plan</h2>
+<ul>
+<li>Core: TBK1/IKKε adaptor and positive regulator (no clean MF GO term for "kinase activator/adaptor";<br />
+  the best capture is the kinase complex CC + the IFN/antiviral BP). Bare protein binding -&gt; KEEP_AS_NON_CORE.</li>
+<li>Cytoplasm (EXP, IBA) -&gt; ACCEPT (core localization where the complex acts) / IBA is_active_in ACCEPT.</li>
+<li>IEA cytoplasm -&gt; KEEP_AS_NON_CORE (redundant electronic).</li>
+<li>defense response to virus, type I IFN signaling, kinase complex (NAS, ComplexPortal) -&gt; ACCEPT (core).</li>
+<li>negative regulation of canonical NF-κB (IEA ortholog) -&gt; KEEP_AS_NON_CORE.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Pn Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(AZI2-pn-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H6S1" data-a="DOC: Pn Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="azi2-pn-consistency-notes">AZI2 PN Consistency Notes</h1>
+<ul>
+<li>Generated: 2026-06-18</li>
+<li>Project: PROTEOSTASIS</li>
+<li>Scope: PN consistency rereview against local AIGR review and available deep-research artifacts</li>
+<li>UniProt: Q9H6S1</li>
+<li>AIGR review status: COMPLETE</li>
+<li>Review batch: proteostasis-batch-2026-06-14</li>
+<li>Batch change status: added</li>
+</ul>
+<h2 id="source-files-checked">Source Files Checked</h2>
+<ul>
+<li>AIGR review YAML: present - <a href="AZI2-ai-review.yaml">genes/human/AZI2/AZI2-ai-review.yaml</a></li>
+<li>AIGR review HTML: missing - genes/human/AZI2/AZI2-ai-review.html</li>
+<li>Gene notes: present - <a href="AZI2-notes.md">genes/human/AZI2/AZI2-notes.md</a></li>
+<li>GOA TSV: present - <a href="AZI2-goa.tsv">genes/human/AZI2/AZI2-goa.tsv</a></li>
+<li>UniProt record: present - <a href="AZI2-uniprot.txt">genes/human/AZI2/AZI2-uniprot.txt</a></li>
+<li>PN dossier: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/AZI2.md">projects/PROTEOSTASIS/reports/phase1_dossiers/AZI2.md</a></li>
+<li>PN consistency section: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/AZI2.md">projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/AZI2.md</a></li>
+<li>PN projection report: <a href="../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv">projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv</a></li>
+<li>PN mapping audit: <a href="../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv">projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv</a></li>
+</ul>
+<h3 id="deep-research-files">Deep Research Files</h3>
+<ul>
+<li>No <code>*-deep-research*.md</code> file found in this gene directory.</li>
+</ul>
+<h2 id="aigr-review-snapshot">AIGR Review Snapshot</h2>
+<ul>
+<li>Description: AZI2 (5-azacytidine-induced protein 2), better known as NAP1 (NAK-associated protein 1; also TBKBP2, TILP), is a cytoplasmic adapter protein that binds and positively regulates the IkappaB kinase (IKK)-related serine/threonine kinases TBK1 (NAK) and IKBKE (IKKepsilon). The protein has an N-terminal homodimerization region and two coiled-coil segments, and a C-terminal TBK1/IKBKE-binding domain (the Pfam TBD module, residues ~216-257) shared with the related adapters TANK and TBKBP1/SINTBAD. By binding TBK1, NAP1 promotes TBK1 activation and oligomerization and thereby couples upstream innate-immune signals to TBK1 kinase output. NAP1 functions as a shared adaptor in type I interferon induction downstream of both the endosomal Toll-like receptor 3 (via the TRIF/TICAM1 adaptor) and the cytoplasmic RIG-I/MDA5 RNA-sensing pathway, driving IRF3 activation and IFN-beta production, and it also potentiates NF-kappaB activation, including TBK1-dependent phosphorylation of the p65/RELA subunit. NAP1 is a constituent of the TBK1-IKKepsilon-NAP1 complex. Structurally, its N-terminal region binds the SKICH domains of the selective-autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1, allowing NAP1 (with its paralog SINTBAD) to bridge these receptors to TBK1 and recruit/ activate TBK1 at autophagic cargo. NAP1 is itself a phosphoprotein and is subject to TRIM38-mediated K48-linked polyubiquitination and degradation.</li>
+<li>Existing/core annotation action counts: ACCEPT: 5; KEEP_AS_NON_CORE: 8</li>
+</ul>
+<h2 id="pn-consistency-summary">PN Consistency Summary</h2>
+<ul>
+<li><strong>Consistency:</strong> Mostly consistent, with one framing mismatch. The review, notes and UniProt all cast NAP1 as a cytoplasmic TBK1/IKBKE adaptor and positive regulator (PMID:14560022), a shared antiviral type-I-IFN adaptor (PMID:17142768), and — structurally — a TBK1-recruiting adaptor for the autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1 (PMID:30459273). The PN row is keyed off exactly that NDP52/TAX1BP1-bridging literature ("recruiting the ULK complex"; CALCOCO2 in PN Notes). So the PN's xenophagy placement and the review's structural-adaptor finding agree on the underlying biology. The mismatch is in altitude/role: PN places AZI2 under "Autophagy receptor <strong>regulation</strong>" and projects the xenophagy <strong>process</strong> onto it, whereas the review treats autophagy as a peripheral structural role and assigns no autophagy term at all.</li>
+<li><strong>PN story / NEW pressure:</strong> PN asserts a xenophagy role absent from GOA (confirmed: AZI2 GOA has no autophagy term). GO:0098792 xenophagy is verified real. But NAP1 is a TBK1-recruiting <strong>adaptor/regulator</strong>, not itself a cargo receptor or a demonstrated xenophagy effector in human cells — evidence is structural (bridges receptors to TBK1) rather than a loss-of-function xenophagy phenotype. Conclusion: a direct <code>involved_in xenophagy</code> over-reaches; <code>GO:1904415 regulation of xenophagy</code> (verified real) or leaving it as the TBK1-adaptor capture is more defensible than the bare process projection.</li>
+<li><strong>Evidence alignment:</strong> Partial. PN titles are the NDP52/CALCOCO2 ULK/TBK1 recruitment papers; the review's autophagy anchor is the NAP1-SKICH structural paper PMID:30459273 (HIGH relevance) plus the TBK1/IFN refs. The specific NDP52-ULK papers named in the PN dossier are not cited by PMID in the review.</li>
+<li><strong>Verdict:</strong> Consistent biology, but PN xenophagy projection over-reaches for a TBK1-adaptor/regulator. <strong>Recommended edits:</strong> [MAP] downgrade AZI2's contribution to the Xenophagy node from <code>xenophagy</code> (GO:0098792, involved_in) to <code>regulation of xenophagy</code> (GO:1904415) — AZI2 is a TBK1-recruiting adaptor, not a cargo receptor. [YAML] optionally add GO:1904415 regulation of xenophagy (involved_in) supported by PMID:30459273 to reflect the NDP52/TAX1BP1-TBK1 bridging role; do not add bare GO:0098792.</li>
+</ul>
+<h2 id="full-consistency-review">Full Consistency Review</h2>
+<ul>
+<li><strong>UniProt:</strong> Q9H6S1 (NAP1/TBKBP2) · <strong>batch:</strong> proteostasis-batch-2026-06-14 · <strong>review status:</strong> COMPLETE</li>
+<li><strong>PN placement:</strong> <code>ALP|Autophagy substrate selection|Autophagy receptor regulation|Xenophagy</code> (1 row) ; <strong>PN-node mapping:</strong> Xenophagy type → mapped/ok_for_propagation_to_go GO:0098792 xenophagy (goa_status=new_to_goa); all ancestors (group/class/branch) = no_mapping.</li>
+<li><strong>Consistency:</strong> Mostly consistent, with one framing mismatch. The review, notes and UniProt all cast NAP1 as a cytoplasmic TBK1/IKBKE adaptor and positive regulator (PMID:14560022), a shared antiviral type-I-IFN adaptor (PMID:17142768), and — structurally — a TBK1-recruiting adaptor for the autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1 (PMID:30459273). The PN row is keyed off exactly that NDP52/TAX1BP1-bridging literature ("recruiting the ULK complex"; CALCOCO2 in PN Notes). So the PN's xenophagy placement and the review's structural-adaptor finding agree on the underlying biology. The mismatch is in altitude/role: PN places AZI2 under "Autophagy receptor <strong>regulation</strong>" and projects the xenophagy <strong>process</strong> onto it, whereas the review treats autophagy as a peripheral structural role and assigns no autophagy term at all.</li>
+<li><strong>PN story / NEW pressure:</strong> PN asserts a xenophagy role absent from GOA (confirmed: AZI2 GOA has no autophagy term). GO:0098792 xenophagy is verified real. But NAP1 is a TBK1-recruiting <strong>adaptor/regulator</strong>, not itself a cargo receptor or a demonstrated xenophagy effector in human cells — evidence is structural (bridges receptors to TBK1) rather than a loss-of-function xenophagy phenotype. Conclusion: a direct <code>involved_in xenophagy</code> over-reaches; <code>GO:1904415 regulation of xenophagy</code> (verified real) or leaving it as the TBK1-adaptor capture is more defensible than the bare process projection.</li>
+<li><strong>Mapping strategy:</strong> Node need not change for this gene, but the projection is too strong: AZI2 supports the xenophagy node only as a TBK1-recruiting regulator. Prefer the regulation-of-xenophagy framing over <code>xenophagy</code> for this member.</li>
+<li><strong>Evidence alignment:</strong> Partial. PN titles are the NDP52/CALCOCO2 ULK/TBK1 recruitment papers; the review's autophagy anchor is the NAP1-SKICH structural paper PMID:30459273 (HIGH relevance) plus the TBK1/IFN refs. The specific NDP52-ULK papers named in the PN dossier are not cited by PMID in the review.</li>
+<li><strong>Verdict:</strong> Consistent biology, but PN xenophagy projection over-reaches for a TBK1-adaptor/regulator. <strong>Recommended edits:</strong> [MAP] downgrade AZI2's contribution to the Xenophagy node from <code>xenophagy</code> (GO:0098792, involved_in) to <code>regulation of xenophagy</code> (GO:1904415) — AZI2 is a TBK1-recruiting adaptor, not a cargo receptor. [YAML] optionally add GO:1904415 regulation of xenophagy (involved_in) supported by PMID:30459273 to reflect the NDP52/TAX1BP1-TBK1 bridging role; do not add bare GO:0098792.</li>
+</ul>
+<h2 id="pn-dossier-context">PN Dossier Context</h2>
+<ul>
+<li>review_batch: proteostasis-batch-2026-06-14</li>
+<li>review_yaml: genes/human/AZI2/AZI2-ai-review.yaml</li>
+<li>PN workbook rows: 1</li>
+</ul>
+<h2 id="pn-row-1-autophagy-lysosome-pathway-autophagy-substrate-selection-autophagy-receptor-regulation-xenophagy">PN row 1: Autophagy-Lysosome Pathway | Autophagy substrate selection | Autophagy receptor regulation | Xenophagy</h2>
+<ul>
+<li>UniProt: Q9H6S1</li>
+<li>In branches: ALP</li>
+<li>Notes: Adapter protein for TBK1 complex, essential for xenophagy. Binds to CALCOCO2.</li>
+<li>PN references (titles):<ul>
+<li>The Cargo Receptor NDP52 Initiates Selective Autophagy by Recruiting the ULK Complex to Cytosol-Invading Bacteria - ScienceDirect</li>
+<li>Full article: CALCOCO2/NDP52 initiates selective autophagy through recruitment of ULK and TBK1 kinase complexes (tandfonline.com)</li>
+</ul>
+</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[type] Autophagy-Lysosome Pathway|Autophagy substrate selection|Autophagy receptor regulation|Xenophagy<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0098792 xenophagy]<br />
+    rationale: This PN type groups receptor-regulatory factors assigned to xenophagy. The source category sits inside the xenophagy mechanism rather than being equivalent to the full process.</li>
+<li>[group] Autophagy-Lysosome Pathway|Autophagy substrate selection|Autophagy receptor regulation<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad PN taxonomy container. The descendants mix components, regulators, context labels, and mechanistic leaves, so propagation should come only from narrower curated nodes.</li>
+<li>[class] Autophagy-Lysosome Pathway|Autophagy substrate selection<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad substrate-selection container. GO has useful targets for specific receptor, cargo-adaptor, and selective-autophagy leaves, but this class mixes marking, recognition, receptor regulation, and unknown roles and should not propagate as one term.</li>
+<li>[branch] Autophagy-Lysosome Pathway<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as the top-level PN branch. It is a project taxonomy umbrella rather than a direct GO assertion; all propagation must come from manually curated child nodes.</li>
+</ul>
+</li>
+</ul>
+<h2 id="projected-go-annotations-1">Projected GO annotations (1)</h2>
+<ul>
+<li>GO:0098792 xenophagy | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=Autophagy-Lysosome Pathway|Autophagy substrate selection|Autophagy receptor regulation|Xenophagy</li>
+</ul>
+<h2 id="note">Note</h2>
+<p>This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H6S1
+gene_symbol: AZI2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  AZI2 (5-azacytidine-induced protein 2), better known as NAP1 (NAK-associated
+  protein 1; also TBKBP2, TILP), is a cytoplasmic adapter protein that binds and
+  positively regulates the IkappaB kinase (IKK)-related serine/threonine kinases
+  TBK1 (NAK) and IKBKE (IKKepsilon). The protein has an N-terminal
+  homodimerization region and two coiled-coil segments, and a C-terminal
+  TBK1/IKBKE-binding domain (the Pfam TBD module, residues ~216-257) shared with
+  the related adapters TANK and TBKBP1/SINTBAD. By binding TBK1, NAP1 promotes
+  TBK1 activation and oligomerization and thereby couples upstream innate-immune
+  signals to TBK1 kinase output. NAP1 functions as a shared adaptor in type I
+  interferon induction downstream of both the endosomal Toll-like receptor 3
+  (via the TRIF/TICAM1 adaptor) and the cytoplasmic RIG-I/MDA5 RNA-sensing
+  pathway, driving IRF3 activation and IFN-beta production, and it also
+  potentiates NF-kappaB activation, including TBK1-dependent phosphorylation of
+  the p65/RELA subunit. NAP1 is a constituent of the TBK1-IKKepsilon-NAP1
+  complex. Structurally, its N-terminal region binds the SKICH domains of the
+  selective-autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1, allowing NAP1
+  (with its paralog SINTBAD) to bridge these receptors to TBK1 and recruit/
+  activate TBK1 at autophagic cargo. NAP1 is itself a phosphoprotein and is
+  subject to TRIM38-mediated K48-linked polyubiquitination and degradation.
+alternative_products:
+- name: 1 (Long)
+  id: Q9H6S1-1
+- name: 2 (Short)
+  id: Q9H6S1-3
+  sequence_note: VSP_023817, VSP_023818
+- name: &#39;3&#39;
+  id: Q9H6S1-4
+  sequence_note: VSP_047087, VSP_047090
+- name: &#39;4&#39;
+  id: Q9H6S1-5
+  sequence_note: VSP_047088, VSP_047089
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (PAN-GO) inference that NAP1 is active in the cytoplasm, consistent with experimental localization and its cytoplasmic adaptor role for TBK1/IKBKE.
+    action: ACCEPT
+    reason: Correct core compartment; NAP1 acts as a cytoplasmic adaptor that binds and activates TBK1, consistent with the experimental cytoplasmic localization (PMID:14560022).
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:14560022}.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Electronic transfer of cytoplasmic localization (UniProt subcellular location / mouse ortholog), redundant with but consistent with the experimental and IBA cytoplasm annotations.
+    action: ACCEPT
+    reason: Correct core cytoplasmic localization; redundant electronic assignment that agrees with the EXP (PMID:14560022) and IBA evidence.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:14560022}.&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:14743216
+  qualifier: enables
+  review:
+    summary: IntAct interaction with TBK1 (Q9UHD2) from a TNF-alpha/NF-kappaB pathway interaction map. Records the functionally central TBK1 interaction but bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Captures the key NAP1-TBK1 interaction underlying its adaptor function, but bare protein binding (GO:0005515) is uninformative per curation guidelines; the functional MF/CC is better captured by the kinase-complex and IFN annotations.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21903422
+  qualifier: enables
+  review:
+    summary: IntAct interaction with TBK1 (Q9UHD2) from a dynamic innate-immunity (type I IFN) interaction network. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Records the real NAP1-TBK1 interaction in the type I IFN network but bare protein binding is uninformative.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21931555
+  qualifier: enables
+  review:
+    summary: IntAct interactions from the vaccinia virus C6 study (NAP1 binds vaccinia C6/OPG029 and TBK1). C6 is a viral antagonist that targets TBK1 adaptors to block IRF3/IRF7. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Records a real host-virus interaction (vaccinia C6 targeting NAP1 as a TBK1 adaptor) and the TBK1 interaction, but bare protein binding is uninformative.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;Q9H6S1; P17362: OPG029; Xeno; NbExp=2; IntAct=EBI-359973, EBI-9519257;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22014111
+  qualifier: enables
+  review:
+    summary: IntAct interaction with a flavivirus protein (Q9E7P0) from a flavivirus NS3/NS5 yeast two-hybrid screen. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: High-throughput host-virus Y2H interaction; bare protein binding is uninformative and the interaction is not central to the core function.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;Q9H6S1; Q9E7P0; Xeno; NbExp=2; IntAct=EBI-359973, EBI-11361108;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:29251827
+  qualifier: enables
+  review:
+    summary: IntAct interaction with TBK1 (Q9UHD2) from the TBK1/STING/MDA5 interactome (TTC4 study). Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Records the NAP1-TBK1 interaction in the antiviral innate-immune interactome but bare protein binding is uninformative.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32707033
+  qualifier: enables
+  review:
+    summary: IntAct interaction with TBK1 (Q9UHD2) from a human kinase interaction network. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Records the NAP1-TBK1 interaction but bare protein binding is uninformative.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;Q9H6S1; Q9UHD2: TBK1; NbExp=7; IntAct=EBI-359973, EBI-356402;&#39;
+- term:
+    id: GO:0043124
+    label: negative regulation of canonical NF-kappaB signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Ensembl Compara transfer from the mouse ortholog (Q9QYP6) of a negative regulation of canonical NF-kappaB role. The human-characterized role of NAP1 is predominantly to potentiate NF-kappaB (PMID:14560022), so this orthology-based term is at best context-specific and conflicts with the dominant positive-regulatory role.
+    action: KEEP_AS_NON_CORE
+    reason: Orthology-transferred (mouse) annotation; not contradicted by clearly identified human evidence so retained, but the dominant, experimentally characterized human role is positive regulation/potentiation of NF-kappaB, so this negative-regulation term is non-core and possibly context-specific.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: Promotes TBK1-induced as well as TNF or PMA-induced activation of NF-kappa-B
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: EXP
+  original_reference_id: PMID:14560022
+  qualifier: located_in
+  review:
+    summary: Experimental evidence that NAP1 localizes to the cytoplasm (foundational identification paper). Core localization where NAP1 binds and activates TBK1/IKBKE.
+    action: ACCEPT
+    reason: Experimentally supported core cytoplasmic localization, the compartment in which NAP1 acts as a TBK1/IKBKE adaptor.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:14560022}.&#39;
+- term:
+    id: GO:0051607
+    label: defense response to virus
+  evidence_type: NAS
+  original_reference_id: PMID:17142768
+  qualifier: involved_in
+  review:
+    summary: ComplexPortal author-statement (TBK1-IKKepsilon-NAP1 complex, CPX-6038) that NAP1 participates in antiviral defense. NAP1 acts as a shared adaptor downstream of TLR3 and the cytoplasmic RIG-I/MDA5 pathway in type I IFN induction.
+    action: ACCEPT
+    reason: Core biological process; NAP1 is an established adaptor in antiviral innate immunity feeding IRF3 activation and IFN-beta induction via both TLR3/TRIF and the cytoplasmic RNA-sensing pathways.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: Adapter protein which binds TBK1 and IKBKE playing a role in antiviral innate immunity
+    - reference_id: PMID:17142768
+      supporting_text: NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction
+- term:
+    id: GO:0060337
+    label: type I interferon-mediated signaling pathway
+  evidence_type: NAS
+  original_reference_id: PMID:17142768
+  qualifier: involved_in
+  review:
+    summary: ComplexPortal author-statement that NAP1 (in the TBK1-IKKepsilon-NAP1 complex) participates in type I interferon signaling/induction. NAP1 couples TLR3 and cytoplasmic RNA sensing to IRF3/type I IFN.
+    action: KEEP_AS_NON_CORE
+    reason: NAP1&#39;s documented role is in type I IFN induction (driving IRF3 activation and IFN-beta production upstream), rather than in the downstream IFN-receptor (JAK/STAT) signaling that GO:0060337 (type I interferon-mediated signaling pathway) most precisely denotes; retained as a correct but imprecise pathway-context annotation. The defense-response-to-virus and IFN-beta-production-related roles are the core capture.
+    supported_by:
+    - reference_id: PMID:17142768
+      supporting_text: NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction
+- term:
+    id: GO:1902554
+    label: serine/threonine protein kinase complex
+  evidence_type: NAS
+  original_reference_id: PMID:17142768
+  qualifier: part_of
+  review:
+    summary: ComplexPortal author-statement that NAP1 is part of a serine/threonine protein kinase complex (the TBK1-IKKepsilon-NAP1 complex, CPX-6038). Core cellular component capturing NAP1&#39;s defining role as a subunit of the TBK1/IKBKE kinase complex.
+    action: ACCEPT
+    reason: Core cellular component; NAP1 is a constituent/regulatory subunit of the TBK1-IKKepsilon kinase complex, which is the structural basis of its adaptor and kinase-activating function.
+    supported_by:
+    - reference_id: file:human/AZI2/AZI2-uniprot.txt
+      supporting_text: Activates serine/threonine-protein kinase TBK1 and facilitates its oligomerization
+core_functions:
+- description: Acts as an adapter and positive regulator of the IKK-related serine/threonine kinases TBK1 and IKBKE, binding them via its C-terminal TBK1-binding domain to promote TBK1 activation and oligomerization as a subunit of the TBK1-IKKepsilon-NAP1 kinase complex.
+  supported_by:
+  - reference_id: file:human/AZI2/AZI2-uniprot.txt
+    supporting_text: Adapter protein which binds TBK1 and IKBKE playing a role in antiviral innate immunity. Activates serine/threonine-protein kinase TBK1 and facilitates its oligomerization.
+  - reference_id: PMID:14560022
+    supporting_text: NAP1 activates NAK and facilitates its oligomerization
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+- description: Functions as a shared adaptor in innate antiviral immunity, coupling TLR3 (via TRIF/TICAM1) and the cytoplasmic RIG-I/MDA5 RNA-sensing pathway to TBK1-driven IRF3 activation and type I interferon (IFN-beta) induction, and potentiating NF-kappaB activation including TBK1-dependent phosphorylation of p65/RELA.
+  supported_by:
+  - reference_id: PMID:17142768
+    supporting_text: NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic pathways in type I IFN induction
+  - reference_id: PMID:14560022
+    supporting_text: the NAK-NAP1 complex itself effectively phosphorylated serine 536 of the p65/RelA subunit of NF-kappaB
+  directly_involved_in:
+  - id: GO:0051607
+    label: defense response to virus
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:14560022
+  title: Identification of NAP1, a regulatory subunit of IkappaB kinase-related kinases
+    that potentiates NF-kappaB signaling.
+  findings:
+  - statement: NAP1 interacts with the IKK-related kinases NAK/TBK1 and IKBKE/IKKepsilon, activates TBK1 and facilitates its oligomerization, and the NAK-NAP1 complex phosphorylates Ser536 of p65/RELA; NAP1 potentiates NF-kappaB-dependent gene expression and localizes to the cytoplasm.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available. Foundational identification of NAP1 as a TBK1/IKBKE adaptor and activator; source of the core adaptor function and cytoplasmic localization (EXP).
+- id: PMID:14743216
+  title: A physical and functional map of the human TNF-alpha/NF-kappa B signal transduction
+    pathway.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Pathway-scale interaction map; source of an IntAct NAP1-TBK1 protein binding annotation.
+- id: PMID:17142768
+  title: NAK-associated protein 1 participates in both the TLR3 and the cytoplasmic
+    pathways in type I IFN induction.
+  findings:
+  - statement: NAP1 acts as a shared adaptor downstream of TLR3 (via TRIF/TICAM1) and the cytoplasmic RIG-I/MDA5 dsRNA-sensing pathway to drive IRF3 activation and type I interferon induction.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only in cache (full_text_available false). Source of the ComplexPortal NAS annotations (defense response to virus, type I IFN signaling, ser/thr kinase complex) for the TBK1-IKKepsilon-NAP1 complex.
+- id: PMID:21903422
+  title: Mapping a dynamic innate immunity protein interaction network regulating
+    type I interferon production.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Innate-immunity interaction network; source of an IntAct NAP1-TBK1 protein binding annotation.
+- id: PMID:21931555
+  title: Vaccinia virus protein C6 is a virulence factor that binds TBK-1 adaptor
+    proteins and inhibits activation of IRF3 and IRF7.
+  findings:
+  - statement: Vaccinia virus C6 binds the TBK1 adaptor proteins (NAP1, TANK, SINTBAD) and inhibits IRF3/IRF7 activation, identifying NAP1 as a TBK1 adaptor targeted by a viral immune antagonist.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full text available. Source of host-virus IntAct protein binding annotations (vaccinia C6, TBK1); corroborates NAP1 as a bona fide TBK1 adaptor in antiviral signaling.
+- id: PMID:22014111
+  title: &#39;Flavivirus NS3 and NS5 proteins interaction network: a high-throughput yeast
+    two-hybrid screen.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput host-virus Y2H screen; source of a bare protein binding annotation with a flavivirus protein.
+- id: PMID:29251827
+  title: Quantitative Proteomics Identified TTC4 as a TBK1 Interactor and a Positive
+    Regulator of SeV-Induced Innate Immunity.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: TBK1/STING/MDA5 interactome study; source of an IntAct NAP1-TBK1 protein binding annotation.
+- id: PMID:30459273
+  title: Mechanistic insights into the interactions of NAP1 with the SKICH domains
+    of NDP52 and TAX1BP1.
+  findings:
+  - statement: Crystal structures define how the N-terminal region of NAP1 binds the SKICH domains of the selective-autophagy cargo receptors NDP52/CALCOCO2 and TAX1BP1, allowing NAP1 to bridge these receptors to TBK1.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available. Structural basis for NAP1 acting as a TBK1-recruiting adaptor for autophagy cargo receptors NDP52 and TAX1BP1.
+- id: PMID:32707033
+  title: Kinase Interaction Network Expands Functional and Disease Roles of Human
+    Kinases.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Kinase interaction network; source of an IntAct NAP1-TBK1 protein binding annotation.
+suggested_questions:
+- question: Does human NAP1 have a genuine negative-regulatory role in canonical NF-kappaB signaling (as inferred by orthology from mouse), or is the IEA GO:0043124 annotation context-specific given that the foundational human study shows NAP1 potentiates NF-kappaB?
+- question: How is NAP1&#39;s adaptor activity partitioned between TBK1 activation in antiviral type I IFN induction and TBK1 recruitment to NDP52/TAX1BP1 in selective autophagy, and do its four isoforms (which differ in the TBK1-binding region) have distinct functions?
+suggested_experiments:
+- description: Reconstitute TBK1 activation in vitro with purified TBK1 and wild-type versus TBK1-binding-domain (residues 216-257) mutant NAP1 to quantify how NAP1 promotes TBK1 trans-autophosphorylation and oligomerization, and test substrate phosphorylation (IRF3, p65/RELA).
+- description: Use NAP1 (AZI2) knockout cells reconstituted with isoform-specific or domain-mutant constructs to dissect NAP1&#39;s contribution to TLR3- versus RIG-I/MDA5-driven IFN-beta induction and to NDP52/TAX1BP1-dependent selective autophagy/xenophagy.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

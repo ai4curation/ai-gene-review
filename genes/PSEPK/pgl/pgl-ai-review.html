@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pgl - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pgl</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P30" target="_blank" class="term-link">
+                        Q88P30
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pgl";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P30" data-a="DESCRIPTION: 6-phosphogluconolactonase (6PGL; EC 3.1.1.31) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>6-phosphogluconolactonase (6PGL; EC 3.1.1.31) is a cytoplasmic hydrolase that catalyzes the hydrolysis of 6-phospho-D-glucono-1,5-lactone to 6-phospho-D-gluconate. This reaction is the second step of the oxidative branch of glucose-6-phosphate catabolism, following the glucose-6-phosphate dehydrogenase (Zwf) reaction. The 6-phosphogluconate product is the central branch-point metabolite that feeds both the Entner-Doudoroff pathway and the pentose phosphate pathway. In Pseudomonas putida KT2440 the gene (PP_1023) is part of a conserved zwf-pgl-eda operon dedicated to upper glucose catabolism. The protein belongs to the glucosamine/galactosamine-6-phosphate isomerase family, 6-phosphogluconolactonase subfamily.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P30" data-a="GO:0005975" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General carbohydrate metabolic process term; correct but superseded by the more specific pentose-phosphate shunt annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a high-level grouping term. It is not incorrect, but the more specific child term GO:0006098 (pentose-phosphate shunt) is also annotated and better captures the precise biological process for 6-phosphogluconolactonase. Retain as non-core/over-annotated background.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                    GO:0006098
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P30" data-a="GO:0006098" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> 6-phosphogluconolactonase catalyzes step 2 of the oxidative stage of the pentose phosphate pathway (D-ribulose 5-phosphate from D-glucose 6-phosphate), consistent with UniPathway UPA00115 and the enzyme&#39;s established role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well-supported by enzyme function and pathway membership (UniPathway UER00409, oxidative PPP step 2/3). This is a core biological process for the gene. Note that in P. putida the 6-phosphogluconate product predominantly feeds the Entner-Doudoroff pathway, but the PPP oxidative-stage annotation accurately reflects the enzymatic step.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017057" target="_blank" class="term-link">
+                                    GO:0017057
+                                </a>
+                            </span>
+                            <span class="term-label">6-phosphogluconolactonase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P30" data-a="GO:0017057" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalyzes hydrolysis of 6-phospho-D-glucono-1,5-lactone to 6-phospho-D-gluconate (EC 3.1.1.31; RHEA:12556). This is the precise, defining molecular function of the gene product.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. Supported by UniRule/ARBA annotation, RHEA reaction mapping, EC 3.1.1.31, and family/domain assignment (TIGR01198 pgl; PANTHER PTHR11054; CDD cd01400 6PGL). The protein is a clear member of the 6-phosphogluconolactonase subfamily.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes 6-phospho-D-glucono-1,5-lactone to 6-phospho-D-gluconate, the second step of the oxidative branch of glucose-6-phosphate catabolism, supplying 6-phosphogluconate to the Entner-Doudoroff and pentose phosphate pathways.</h3>
+                <span class="vote-buttons" data-g="Q88P30" data-a="FUNCTION: Hydrolyzes 6-phospho-D-glucono-1,5-lactone to 6-ph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017057" target="_blank" class="term-link">
+                            6-phosphogluconolactonase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                pentose-phosphate shunt
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">6-phosphogluconolactonase activity (GO:0017057), EC 3.1.1.31, RHEA:12556; oxidative pentose phosphate pathway step 2/3 (UniPathway UER00409).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26913973" target="_blank" class="term-link">
+                            PMID:26913973
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The revisited genome of Pseudomonas putida KT2440 enlightens its value as a robust metabolic chassis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29607620" target="_blank" class="term-link">
+                            PMID:29607620
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of carbohydrate degradation pathways in Pseudomonas involves a versatile set of transcriptional regulators.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pgl-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P30" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">16 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:45:32.292032</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pgl-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pgl-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000005 In the provided document, Figure 1 presents a schematic of glucose metabolism in Pseudomonas and Escherichia coli, highlighting the</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-functional-annotation-report-pgl-pp_1023-uniprot-q88p30-in-pseudomonas-putida-kt2440">Comprehensive functional annotation report: <strong>pgl</strong> (PP_1023; UniProt <strong>Q88P30</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-geneprotein-identity-verification-critical-disambiguation">1) Gene/protein identity verification (critical disambiguation)</h3>
+<p>The UniProt target <strong>Q88P30</strong> corresponds to <em>Pseudomonas putida</em> strain KT2440 locus <strong>PP_1023</strong>, gene <strong>pgl</strong>, annotated as <strong>6-phosphogluconolactonase (6PGL)</strong>. In <em>P. putida</em> KT2440, <strong>pgl is genomically and transcriptionally linked to zwfA and eda</strong> in a conserved <strong>zwfA–pgl–eda</strong> operon, placing it unambiguously in upper glucose catabolism (oxidative PPP / ED entry) rather than any unrelated “pgl” symbol used in other organisms (volke2021cofactorspecificityof pages 9-11, udaondo2018regulationofcarbohydrate pages 5-6).</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-enzymatic-function-and-reaction">2.1 Enzymatic function and reaction</h4>
+<p><strong>6-Phosphogluconolactonase (Pgl; EC 3.1.1.31)</strong> catalyzes hydrolysis of the cyclic ester <strong>6-phosphoglucono-δ-lactone (6PGLac)</strong> to <strong>6-phosphogluconate (6PG; also written 6P-Gluc)</strong>. In the canonical cytosolic phosphorylative route, <strong>Zwf (glucose-6-phosphate dehydrogenase)</strong> converts glucose-6-phosphate (G6P) to 6-phosphogluconolactone, and <strong>Pgl performs the subsequent lactonase step to yield 6PG</strong>, which is the branch-point metabolite feeding the Entner–Doudoroff (ED) pathway and pentose phosphate pathway (PPP) (chen2024gnurrepressesthe pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6).</p>
+<h4 id="22-pathway-context-in-pseudomonas-putida-the-6pg-node-and-the-three-pronged-glucose-system">2.2 Pathway context in <em>Pseudomonas putida</em>: the 6PG node and the “three-pronged” glucose system</h4>
+<p>A defining feature of glucose assimilation in <em>Pseudomonas</em> (including KT2440) is that glucose can be converted to <strong>6PG via multiple routes</strong>, yielding a “three-pronged” system converging on the 6PG node (udaondo2018regulationofcarbohydrate pages 1-5). One major route involves periplasmic oxidation of glucose to gluconate/2-ketogluconate and subsequent cytosolic steps; another involves cytosolic uptake and phosphorylation to G6P followed by <strong>Zwf + Pgl</strong> to reach 6PG (udaondo2018regulationofcarbohydrate pages 5-6, udaondo2018regulationofcarbohydrate pages 1-5). The 6PG node then links ED, PPP, and broader central metabolism (chen2024gnurrepressesthe pages 1-3).</p>
+<h3 id="3-molecularpathway-role-of-pgl-in-kt2440">3) Molecular/pathway role of <strong>Pgl</strong> in KT2440</h3>
+<h4 id="31-placement-in-the-zwfapgleda-operon">3.1 Placement in the zwfA–pgl–eda operon</h4>
+<p>In KT2440, <strong>pgl is co-transcribed with zwfA and eda</strong> (zwfA–pgl–eda operon). This arrangement couples the first oxidative step (Zwf), the lactone hydrolysis step (Pgl), and the downstream ED cleavage step (Eda), consistent with coordinated control of upper glucose catabolism (volke2021cofactorspecificityof pages 9-11, udaondo2018regulationofcarbohydrate pages 5-6). The operon organization and its role in glucose metabolism are schematized in the Udaondo et al. review figures (udaondo2018regulationofcarbohydrate media 6481cb1b, udaondo2018regulationofcarbohydrate media 52940a6c).</p>
+<h4 id="32-quantitative-pathway-usage-around-the-pgl-controlled-node-recently-used-statistics">3.2 Quantitative pathway usage around the Pgl-controlled node (recently used statistics)</h4>
+<p>Evidence available in this run provides quantitative context at/around the <strong>6PG</strong> branch point (rather than purified Pgl kinetics in KT2440):</p>
+<ul>
+<li>A 2024 synthesis/summary focused on <em>Pseudomonas</em> glucose metabolism describes that in <em>P. putida</em> KT2440 <strong>&gt;90% of consumed sugar is converted to 6PG</strong> and is <strong>predominantly routed through the ED pathway</strong>, with <strong>&lt;10%</strong> entering the PPP (sun2024thefunctionalcharacterization pages 1-3).</li>
+<li>A classic ^13C metabolic flux analysis in KT2440 reported that <strong>~91% of the 6PG pool</strong> was funneled into the <strong>ED pathway</strong>, with the remaining fraction entering the PP pathway through Gnd; and that only <strong>~14–17% of total 6PG originated from G6P via Zwf</strong> under the analyzed glucose condition—highlighting the dominance of peripheral oxidation routes to 6PG relative to the Zwf/Pgl cytosolic route under those conditions (nikel2015pseudomonasputidakt2440 pages 7-8).</li>
+</ul>
+<p>These quantitative constraints are important for interpreting the physiological impact of pgl: even if the Zwf/Pgl route contributes a minority of 6PG flux under some conditions, <strong>Pgl is part of a regulated, conserved operon that enables the intracellular phosphorylative entry route and contributes to redox and carbon partitioning</strong> (volke2021cofactorspecificityof pages 9-11, nikel2015pseudomonasputidakt2440 pages 7-8).</p>
+<h3 id="4-regulation-and-control-of-pgl-expression-expert-model-and-recent-developments">4) Regulation and control of <strong>pgl</strong> expression (expert model and recent developments)</h3>
+<h4 id="41-hexr-regulation-authoritative-regulatory-model">4.1 HexR regulation (authoritative regulatory model)</h4>
+<p>A widely cited model for KT2440 places the zwf/pgl/eda operon under control of <strong>HexR</strong>, an <strong>RpiR-family</strong> transcriptional regulator divergently oriented relative to the operon (udaondo2018regulationofcarbohydrate pages 5-6, udaondo2018regulationofcarbohydrate pages 6-8). HexR binds an operator motif reported as <strong>5′-TTGT–N7/8–ACAA-3′</strong> in target promoters (e.g., zwf), functioning primarily as a <strong>repressor</strong>; binding of the ED intermediate <strong>KDPG (2-keto-3-deoxy-6-phosphogluconate)</strong> acts as an effector that triggers derepression (HexR dissociation) and increased transcription of the operon (udaondo2018regulationofcarbohydrate pages 6-8). The operon architecture and HexR-centered network are shown in Udaondo et al. figures (udaondo2018regulationofcarbohydrate media 52940a6c, udaondo2018regulationofcarbohydrate media 5a64ace2).</p>
+<p>In KT2440 reporter experiments (from a systems-level study of glucose catabolism), deletion of hexR increased activity from a <strong>PzwfA reporter by ~2.5-fold</strong>, consistent with HexR-mediated repression of the operon under tested conditions (volke2021cofactorspecificityof pages 9-11).</p>
+<h4 id="42-2024-additional-regulatory-integration-around-glucosegluconate-catabolism">4.2 2024: additional regulatory integration around glucose/gluconate catabolism</h4>
+<p>A 2024 multi-omics and physiology study emphasized that <strong>pgl (with zwfA) contributes to conversion of G6P to 6P-Gluc (6PG)</strong> and framed 6PG as a central intermediate connecting ED/EMP/PP pathways in KT2440; the authors reported that glucose-catabolic genes and multiple related TF genes were induced by glucose and gluconate and that regulatory differentiation could be probed using a <strong>gcd deletion mutant</strong> (chen2024gnurrepressesthe pages 1-3). While the extracted sections do not provide pgl-specific fold-changes, the study supports the modern view that <strong>glucose and gluconate catabolism in KT2440 is controlled by multiple TFs and is best interpreted as an integrated, multi-route network converging on 6PG</strong> (chen2024gnurrepressesthe pages 1-3).</p>
+<h3 id="5-cellular-localization-and-where-the-gene-product-acts">5) Cellular localization and where the gene product acts</h3>
+<p>Direct experimental localization of KT2440 Pgl (e.g., fluorescence localization) was not retrieved in this run. However, multiple sources consistently place Pgl function in the <strong>cytosolic phosphorylative route</strong>: glucose transported into the cytoplasm is phosphorylated by Glk to G6P and then processed by <strong>Zwf and Pgl</strong> to 6PG (sun2024thefunctionalcharacterization pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6). This provides strong inference that the catalysis occurs in the <strong>cytoplasm</strong>, in contrast to <strong>periplasmic</strong> glucose oxidation steps (Gcd/Gad) upstream of alternative 6PG-generating routes (udaondo2018regulationofcarbohydrate pages 5-6, udaondo2018regulationofcarbohydrate pages 1-5).</p>
+<h3 id="6-recent-developments-and-latest-research-20232024-prioritized">6) Recent developments and latest research (2023–2024 prioritized)</h3>
+<h4 id="61-2024-systems-regulation-inducible-glucosegluconate-program">6.1 2024 systems regulation: inducible glucose/gluconate program</h4>
+<p>The 2024 study of KT2440 glucose/gluconate regulation positions <strong>zwfA and pgl</strong> as key enzymatic steps in producing 6PG and emphasizes the induction of glucose catabolism genes under glucose and gluconate, alongside regulon definition for a glucose/gluconate-associated TF (chen2024gnurrepressesthe pages 1-3, chen2024gnurrepressesthe pages 12-13). This represents a contemporary shift toward <strong>multi-omics + physiology</strong> approaches for reconstructing condition-specific catabolic regulation.</p>
+<h4 id="62-2024-metabolic-engineering-contexts-highlight-the-practical-importance-of-the-zwfpgl-entry-route">6.2 2024 metabolic engineering contexts highlight the practical importance of the Zwf/Pgl entry route</h4>
+<p>Two 2024 works in applied contexts underscore that the Zwf/Pgl steps are considered a manipulable entry point for carbon/redox control in <em>Pseudomonas</em> metabolism:</p>
+<ul>
+<li>In an industrial <em>Pseudomonas</em> strain context, an ED/PPP-focused study reiterates that in KT2440 glucose is phosphorylated to G6P and converted to 6PG via <strong>Zwf + Pgl</strong>, and that ED routing dominates downstream (sun2024thefunctionalcharacterization pages 1-3).</li>
+<li>A 2024 metabolic engineering report aiming to improve biopolymer (mcl-PHA) synthesis explicitly references the Zwf/Pgl conversion of G6P toward 6PG in <em>P. putida</em> glucose metabolism and uses regulatory interventions (e.g., hexR inactivation) to reshape flux from glucose to acetyl-CoA in an applied production setting (sun2024thefunctionalcharacterization pages 1-3).</li>
+</ul>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-p-putida-as-a-biotechnology-chassis-engineering-glucose-catabolism">7.1 P. putida as a biotechnology chassis: engineering glucose catabolism</h4>
+<p><em>P. putida</em> KT2440 is widely used as a chassis for bioproduction and bioconversion. In such designs, the <strong>upper glucose assimilation nodes</strong> (including the <strong>Zwf/Pgl step producing 6PG</strong>) are central because they influence entry into ED/PPP and impact redox cofactor generation (NAD(P)H) and precursor supply. Engineering studies targeting glucose catabolism and its regulators (notably HexR) demonstrate that <strong>modulating repression/derepression of the zwf-pgl-eda module</strong> is a practical route to adjust metabolic flux (volke2021cofactorspecificityof pages 9-11, udaondo2018regulationofcarbohydrate pages 6-8).</p>
+<h4 id="72-regulatory-design-principles-expert-analysis">7.2 Regulatory design principles (expert analysis)</h4>
+<p>The regulatory architecture reviewed by Udaondo et al. highlights a recurrent design principle in <em>Pseudomonas</em>: transcription factors respond to <strong>pathway intermediates</strong> (e.g., <strong>KDPG</strong>) and regulate operons that define route choice and catabolite repression. In that framework, the zwf/pgl/eda module is not only a metabolic unit but also part of a signaling-controlled logic circuit coordinating glucose, gluconate, and related sugar catabolism (udaondo2018regulationofcarbohydrate pages 6-8, udaondo2018regulationofcarbohydrate media 5a64ace2).</p>
+<h3 id="8-evidence-based-statistics-and-data-highlights">8) Evidence-based statistics and data highlights</h3>
+<ul>
+<li><strong>HexR repression strength (reporter):</strong> ΔhexR increases <strong>PzwfA</strong> promoter activity ~<strong>2.5-fold</strong> in KT2440, supporting HexR repression of the zwfA–pgl–eda operon under tested conditions (Volke et al., 2021; https://doi.org/10.1128/msystems.00014-21; published <strong>Apr 2021</strong>) (volke2021cofactorspecificityof pages 9-11).</li>
+<li><strong>Flux partitioning at 6PG node (glucose growth):</strong> <strong>~91% of 6PG</strong> is funneled into the <strong>ED pathway</strong>, and only <strong>~14–17% of total 6PG</strong> originates from the G6P→(Zwf/Pgl) route (Nikel et al., 2015; https://doi.org/10.1074/jbc.M115.687749; published <strong>Oct 2015</strong>) (nikel2015pseudomonasputidakt2440 pages 7-8).</li>
+<li><strong>Route dominance summary:</strong> in KT2440, glucose metabolism can be described as converging to 6PG, with ED dominance downstream and relatively smaller PPP routing (Udaondo et al., 2018; https://doi.org/10.1111/1751-7915.13263; published <strong>Apr 2018</strong>) (udaondo2018regulationofcarbohydrate pages 1-5, udaondo2018regulationofcarbohydrate pages 5-6).</li>
+</ul>
+<h3 id="9-visual-evidence-figures-supporting-operonpathway-placement">9) Visual evidence (figures) supporting operon/pathway placement</h3>
+<p>Udaondo et al. provide schematics that directly support pgl’s pathway placement and regulation: (i) a glucose metabolism map highlighting Zwf/Pgl/Eda; (ii) the conserved <strong>hexR-zwf-pgl-eda</strong> genomic arrangement; and (iii) a regulatory network with <strong>HexR</strong> and the <strong>KDPG effector</strong> (udaondo2018regulationofcarbohydrate media 6481cb1b, udaondo2018regulationofcarbohydrate media 52940a6c, udaondo2018regulationofcarbohydrate media 5a64ace2).</p>
+<h3 id="10-limitations-and-gaps-identified-in-this-run">10) Limitations and gaps identified in this run</h3>
+<ul>
+<li><strong>Purified-enzyme biochemistry for KT2440 Pgl</strong> (e.g., kinetic constants, substrate specificity beyond the canonical lactone, structural mechanism) was not recovered in the retrieved corpus. Therefore, substrate specificity is reported at the level supported by pathway evidence (6-phosphogluconolactone → 6-phosphogluconate) and UniProt-provided EC annotation, rather than KT2440-specific kinetic measurements.</li>
+<li><strong>Direct experimental localization</strong> (e.g., subcellular fractionation of Pgl) was not retrieved; localization is inferred strongly from pathway placement in the cytosolic phosphorylative route (sun2024thefunctionalcharacterization pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6).</li>
+</ul>
+<h3 id="summary-table">Summary table</h3>
+<p>The following table condenses the evidence-backed functional annotation for quick reference.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>identity</td>
+<td><strong>Gene/protein verified as the requested target:</strong> <em>Pseudomonas putida</em> KT2440 <strong>pgl</strong> = <strong>PP_1023</strong>, annotated as <strong>6-phosphogluconolactonase / 6-phosphogluconate lactonase (6PGL)</strong> in the <strong>zwfA-pgl-eda</strong> operon; literature context matches UniProt Q88P30 and not an unrelated pgl gene from another organism/system (volke2021cofactorspecificityof pages 9-11, chen2024gnurrepressesthe pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6)</td>
+</tr>
+<tr>
+<td>reaction/EC</td>
+<td>Catalyzes the <strong>lactonase step</strong> between Zwf and downstream 6-phosphogluconate metabolism: Zwf generates <strong>6-phosphogluconolactone</strong> from glucose-6-phosphate, and <strong>Pgl hydrolyzes this intermediate to 6-phosphogluconate</strong>; consistent with <strong>EC 3.1.1.31</strong> and the enzyme name 6-phosphogluconolactonase (sun2024thefunctionalcharacterization pages 1-3, chen2024gnurrepressesthe pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6)</td>
+</tr>
+<tr>
+<td>substrate/product</td>
+<td><strong>Substrate:</strong> 6-phosphogluconolactone (the Zwf product from G6P). <strong>Product:</strong> 6-phosphogluconate (6PG, also denoted 6P-Gluc), the central branch-point metabolite linking ED, PPP, and EDEMP glucose catabolism in KT2440 (sun2024thefunctionalcharacterization pages 1-3, chen2024gnurrepressesthe pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6)</td>
+</tr>
+<tr>
+<td>pathway role</td>
+<td>Pgl functions in the <strong>cytosolic phosphorylative branch</strong> of glucose assimilation and feeds the <strong>6PG node</strong>, which then predominantly enters the <strong>Entner-Doudoroff (ED) pathway</strong> while a smaller fraction enters the <strong>pentose phosphate pathway (PPP)</strong>. Reviews and flux papers place Pgl as a key upper-pathway step in the three-pronged glucose-to-6PG network of <em>Pseudomonas</em> (sun2024thefunctionalcharacterization pages 1-3, nikel2015pseudomonasputidakt2440 pages 7-8, udaondo2018regulationofcarbohydrate pages 1-5)</td>
+</tr>
+<tr>
+<td>operon context</td>
+<td><strong>Operon:</strong> <strong>zwfA-pgl-eda</strong>. This genomic arrangement couples the first oxidative PPP/ED step (<strong>Zwf</strong>), the lactonase step (<strong>Pgl</strong>), and KDPG aldol cleavage (<strong>Eda</strong>), reflecting coordinated function in upper glucose catabolism (volke2021cofactorspecificityof pages 9-11, udaondo2018regulationofcarbohydrate pages 5-6, udaondo2018regulationofcarbohydrate media 6481cb1b)</td>
+</tr>
+<tr>
+<td>regulation</td>
+<td><strong>HexR-dependent repression/derepression:</strong> HexR is an <strong>RpiR-family</strong> regulator divergently transcribed from the operon and binds a consensus <strong>TTGT-N7/8-ACAA</strong> operator in target promoters such as <strong>zwf</strong>; the ED intermediate <strong>KDPG</strong> acts as the effector that causes HexR dissociation and transcriptional activation. In reporter assays, <strong>ΔhexR increased PzwfA activity ~2.5-fold</strong>, supporting repression of the operon under tested conditions (volke2021cofactorspecificityof pages 9-11, udaondo2018regulationofcarbohydrate pages 6-8, udaondo2018regulationofcarbohydrate media 52940a6c)</td>
+</tr>
+<tr>
+<td>localization inference</td>
+<td>Available evidence supports <strong>cytoplasmic/cytosolic localization</strong> for Pgl activity: it acts in the intracellular branch where glucose imported into the cytoplasm is phosphorylated by <strong>Glk</strong>, oxidized by <strong>Zwf</strong>, and then processed by <strong>Pgl</strong> to 6PG. This contrasts with <strong>periplasmic</strong> oxidation steps catalyzed by <strong>Gcd/Gad</strong> upstream of alternative routes (sun2024thefunctionalcharacterization pages 1-3, udaondo2018regulationofcarbohydrate pages 5-6, bujdos2021inženýrstvípseudomonasputida pages 40-43)</td>
+</tr>
+<tr>
+<td>quantitative data/statistics</td>
+<td>Recent and foundational studies provide pathway-level numbers rather than purified Pgl kinetics in KT2440: <strong>&gt;90%</strong> of consumed sugar was reported to be converted to <strong>6PG</strong> and then <strong>predominantly routed through ED</strong>, with <strong>&lt;10%</strong> entering PPP in one recent summary; ^13C flux analysis estimated <strong>91% of the 6PG pool</strong> was funneled into <strong>ED</strong>, while only <strong>~14-17% of total 6PG</strong> originated from <strong>G6P via Zwf</strong> under the analyzed glucose condition; another source summarized glucose uptake as roughly <strong>~67% periplasmic oxidation</strong> vs <strong>~33% direct cytoplasmic transport/phosphorylation</strong> (sun2024thefunctionalcharacterization pages 1-3, nikel2015pseudomonasputidakt2440 pages 7-8, bujdos2021inženýrstvípseudomonasputida pages 40-43)</td>
+</tr>
+<tr>
+<td>key references w/ year and URL</td>
+<td><strong>Chen et al., 2024</strong>, <em>Microbial Biotechnology</em> — https://doi.org/10.1111/1751-7915.70059; <strong>Volke et al., 2021</strong>, <em>mSystems</em> — https://doi.org/10.1128/msystems.00014-21; <strong>Udaondo et al., 2018</strong>, <em>Microbial Biotechnology</em> — https://doi.org/10.1111/1751-7915.13263; <strong>Nikel et al., 2015</strong>, <em>J. Biol. Chem.</em> — https://doi.org/10.1074/jbc.M115.687749; pathway/operon schematics in Udaondo review Figures 1-3 (volke2021cofactorspecificityof pages 9-11, nikel2015pseudomonasputidakt2440 pages 7-8, udaondo2018regulationofcarbohydrate media 6481cb1b, udaondo2018regulationofcarbohydrate media 52940a6c)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, enzymatic role, pathway placement, regulation, localization inference, and quantitative pathway data for </em>Pseudomonas putida<em> KT2440 pgl (PP_1023; UniProt Q88P30). It is useful as a compact evidence-backed functional annotation reference for the gene.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(volke2021cofactorspecificityof pages 9-11): Daniel Christoph Volke, Karel Olavarría, and Pablo Iván Nikel. Cofactor specificity of glucose-6-phosphate dehydrogenase isozymes in pseudomonas putida reveals a general principle underlying glycolytic strategies in bacteria. mSystems, Apr 2021. URL: https://doi.org/10.1128/msystems.00014-21, doi:10.1128/msystems.00014-21. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2018regulationofcarbohydrate pages 5-6): Zulema Udaondo, Juan‐Luis Ramos, Ana Segura, Tino Krell, and Abdelali Daddaoua. Regulation of carbohydrate degradation pathways in pseudomonas involves a versatile set of transcriptional regulators. Microbial Biotechnology, 11:442-454, Apr 2018. URL: https://doi.org/10.1111/1751-7915.13263, doi:10.1111/1751-7915.13263. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024gnurrepressesthe pages 1-3): Wenbo Chen, Rao Ma, Yong Feng, Yunzhu Xiao, Agnieszka Sekowska, Antoine Danchin, and Conghui You. Gnur represses the expression of glucose and gluconate catabolism in pseudomonas putida kt2440. Microbial Biotechnology, Nov 2024. URL: https://doi.org/10.1111/1751-7915.70059, doi:10.1111/1751-7915.70059. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2018regulationofcarbohydrate pages 1-5): Zulema Udaondo, Juan‐Luis Ramos, Ana Segura, Tino Krell, and Abdelali Daddaoua. Regulation of carbohydrate degradation pathways in pseudomonas involves a versatile set of transcriptional regulators. Microbial Biotechnology, 11:442-454, Apr 2018. URL: https://doi.org/10.1111/1751-7915.13263, doi:10.1111/1751-7915.13263. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2018regulationofcarbohydrate media 6481cb1b): Zulema Udaondo, Juan‐Luis Ramos, Ana Segura, Tino Krell, and Abdelali Daddaoua. Regulation of carbohydrate degradation pathways in pseudomonas involves a versatile set of transcriptional regulators. Microbial Biotechnology, 11:442-454, Apr 2018. URL: https://doi.org/10.1111/1751-7915.13263, doi:10.1111/1751-7915.13263. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2018regulationofcarbohydrate media 52940a6c): Zulema Udaondo, Juan‐Luis Ramos, Ana Segura, Tino Krell, and Abdelali Daddaoua. Regulation of carbohydrate degradation pathways in pseudomonas involves a versatile set of transcriptional regulators. Microbial Biotechnology, 11:442-454, Apr 2018. URL: https://doi.org/10.1111/1751-7915.13263, doi:10.1111/1751-7915.13263. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sun2024thefunctionalcharacterization pages 1-3): Wen-Jing Sun, Qian-Nan Zhang, Lu-Lu Li, Meng-Xin Qu, Xin-Yi Zan, Feng-Jie Cui, Qiang Zhou, Da-Ming Wang, and Lei Sun. The functional characterization of the 6-phosphogluconate dehydratase operon in 2-ketogluconic acid industrial producing strain pseudomonas plecoglossicida juim01. Foods, 13:3444, Oct 2024. URL: https://doi.org/10.3390/foods13213444, doi:10.3390/foods13213444. This article has 3 citations.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 7-8): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 440 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2018regulationofcarbohydrate pages 6-8): Zulema Udaondo, Juan‐Luis Ramos, Ana Segura, Tino Krell, and Abdelali Daddaoua. Regulation of carbohydrate degradation pathways in pseudomonas involves a versatile set of transcriptional regulators. Microbial Biotechnology, 11:442-454, Apr 2018. URL: https://doi.org/10.1111/1751-7915.13263, doi:10.1111/1751-7915.13263. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(udaondo2018regulationofcarbohydrate media 5a64ace2): Zulema Udaondo, Juan‐Luis Ramos, Ana Segura, Tino Krell, and Abdelali Daddaoua. Regulation of carbohydrate degradation pathways in pseudomonas involves a versatile set of transcriptional regulators. Microbial Biotechnology, 11:442-454, Apr 2018. URL: https://doi.org/10.1111/1751-7915.13263, doi:10.1111/1751-7915.13263. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024gnurrepressesthe pages 12-13): Wenbo Chen, Rao Ma, Yong Feng, Yunzhu Xiao, Agnieszka Sekowska, Antoine Danchin, and Conghui You. Gnur represses the expression of glucose and gluconate catabolism in pseudomonas putida kt2440. Microbial Biotechnology, Nov 2024. URL: https://doi.org/10.1111/1751-7915.70059, doi:10.1111/1751-7915.70059. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bujdos2021inženýrstvípseudomonasputida pages 40-43): D Bujdoš. Inženýrství pseudomonas putida pro ko-utilizaci a zužitkování celobiózy s glukózou. Unknown journal, 2021.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pgl-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000005 In the provided document, Figure 1 presents a schematic of glucose metabolism in Pseudomonas and Escherichia coli, highlighting the" src="pgl-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>udaondo2018regulationofcarbohydrate pages 1-5</li>
+<li>chen2024gnurrepressesthe pages 1-3</li>
+<li>sun2024thefunctionalcharacterization pages 1-3</li>
+<li>udaondo2018regulationofcarbohydrate pages 6-8</li>
+<li>volke2021cofactorspecificityof pages 9-11</li>
+<li>udaondo2018regulationofcarbohydrate pages 5-6</li>
+<li>chen2024gnurrepressesthe pages 12-13</li>
+<li>https://doi.org/10.1128/msystems.00014-21;</li>
+<li>https://doi.org/10.1074/jbc.M115.687749;</li>
+<li>https://doi.org/10.1111/1751-7915.13263;</li>
+<li>https://doi.org/10.1111/1751-7915.70059;</li>
+<li>https://doi.org/10.1128/msystems.00014-21,</li>
+<li>https://doi.org/10.1111/1751-7915.13263,</li>
+<li>https://doi.org/10.1111/1751-7915.70059,</li>
+<li>https://doi.org/10.3390/foods13213444,</li>
+<li>https://doi.org/10.1074/jbc.m115.687749,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P30
+gene_symbol: pgl
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: 6-phosphogluconolactonase (6PGL; EC 3.1.1.31) is a cytoplasmic hydrolase that catalyzes the hydrolysis of 6-phospho-D-glucono-1,5-lactone to 6-phospho-D-gluconate. This reaction is the second step of the oxidative branch of glucose-6-phosphate catabolism, following the glucose-6-phosphate dehydrogenase (Zwf) reaction. The 6-phosphogluconate product is the central branch-point metabolite that feeds both the Entner-Doudoroff pathway and the pentose phosphate pathway. In Pseudomonas putida KT2440 the gene (PP_1023) is part of a conserved zwf-pgl-eda operon dedicated to upper glucose catabolism. The protein belongs to the glucosamine/galactosamine-6-phosphate isomerase family, 6-phosphogluconolactonase subfamily.
+existing_annotations:
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: General carbohydrate metabolic process term; correct but superseded by the more specific pentose-phosphate shunt annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is a high-level grouping term. It is not incorrect, but the more specific child term GO:0006098 (pentose-phosphate shunt) is also annotated and better captures the precise biological process for 6-phosphogluconolactonase. Retain as non-core/over-annotated background.
+- term:
+    id: GO:0006098
+    label: pentose-phosphate shunt
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: 6-phosphogluconolactonase catalyzes step 2 of the oxidative stage of the pentose phosphate pathway (D-ribulose 5-phosphate from D-glucose 6-phosphate), consistent with UniPathway UPA00115 and the enzyme&#39;s established role.
+    action: ACCEPT
+    reason: Well-supported by enzyme function and pathway membership (UniPathway UER00409, oxidative PPP step 2/3). This is a core biological process for the gene. Note that in P. putida the 6-phosphogluconate product predominantly feeds the Entner-Doudoroff pathway, but the PPP oxidative-stage annotation accurately reflects the enzymatic step.
+- term:
+    id: GO:0017057
+    label: 6-phosphogluconolactonase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Catalyzes hydrolysis of 6-phospho-D-glucono-1,5-lactone to 6-phospho-D-gluconate (EC 3.1.1.31; RHEA:12556). This is the precise, defining molecular function of the gene product.
+    action: ACCEPT
+    reason: Core molecular function. Supported by UniRule/ARBA annotation, RHEA reaction mapping, EC 3.1.1.31, and family/domain assignment (TIGR01198 pgl; PANTHER PTHR11054; CDD cd01400 6PGL). The protein is a clear member of the 6-phosphogluconolactonase subfamily.
+core_functions:
+- description: Hydrolyzes 6-phospho-D-glucono-1,5-lactone to 6-phospho-D-gluconate, the second step of the oxidative branch of glucose-6-phosphate catabolism, supplying 6-phosphogluconate to the Entner-Doudoroff and pentose phosphate pathways.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: 6-phosphogluconolactonase activity (GO:0017057), EC 3.1.1.31, RHEA:12556; oxidative pentose phosphate pathway step 2/3 (UniPathway UER00409).
+  molecular_function:
+    id: GO:0017057
+    label: 6-phosphogluconolactonase activity
+  directly_involved_in:
+  - id: GO:0006098
+    label: pentose-phosphate shunt
+references:
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:26913973
+  title: The revisited genome of Pseudomonas putida KT2440 enlightens its value as a robust metabolic chassis.
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: Genome reannotation reference for KT2440 (cited in the UniProt entry for Q88P30 / PP_1023). Supports gene/locus identity; not manually PubMed-verified in this review.
+- id: PMID:29607620
+  title: Regulation of carbohydrate degradation pathways in Pseudomonas involves a versatile set of transcriptional regulators.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Udaondo et al. 2018 (Microb Biotechnol 11:442-454). PMID confirmed via PubMed search (29607620). Describes the zwf-pgl-eda operon and HexR regulation, placing pgl in upper glucose catabolism in P. putida KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

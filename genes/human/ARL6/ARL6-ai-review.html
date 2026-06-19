@@ -1,0 +1,4543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARL6 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ARL6</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H0F7" target="_blank" class="term-link">
+                        Q9H0F7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ARL6";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H0F7" data-a="DESCRIPTION: ARL6 (BBS3) is a 186-residue ADP-ribosylation fact..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ARL6 (BBS3) is a 186-residue ADP-ribosylation factor-like small GTPase of the Arf family within the Ras superfamily. Like canonical Arf/Sar1 GTPases it cycles between an inactive GDP-bound and an active GTP-bound state; GTP loading exposes an N-terminal amphipathic helix that inserts into membranes, so the GTP-bound form is peripherally associated with the cytoplasmic face of the ciliary membrane. The defining activity of ARL6 is to act as the membrane-targeting switch for the BBSome, an octameric Bardet-Biedl syndrome protein complex that functions as a coat sorting membrane proteins into and out of primary cilia. ARL6 is not itself a structural subunit of the BBSome; rather, GTP-bound ARL6 binds the BBS1 beta-propeller and recruits the BBSome onto the ciliary membrane, where it nucleates polymerization of the BBSome coat. Through this activity ARL6 controls ciliary trafficking of signaling receptors (e.g. SSTR3, MCHR1, Smoothened) and contributes to Hedgehog and Wnt signaling. ARL6 localizes to the primary cilium, concentrating in a ring at the distal basal body near the ciliary gate and in membrane-associated patches flanking the axoneme. The intraflagellar transport protein IFT27/RABL4 binds nucleotide-free ARL6 to promote its activation and BBSome exit from cilia. Loss-of-function mutations that impair GTP binding cause Bardet-Biedl syndrome type 3 and retinitis pigmentosa 55.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0006886" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General phylogenetic annotation. ARL6 functions in ciliary membrane protein trafficking, so intracellular protein transport is correct but high-level and not the most informative description of its role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with ARL6&#39;s role recruiting the BBSome coat to traffic membrane proteins to cilia, but too general to represent the core function. The specific child term protein localization to cilium is the more informative process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005525" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 is an Arf-family small GTPase whose GTP-bound state is the active, membrane-binding, BBSome-recruiting form. GTP binding is a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported experimentally (crystal structure of GTP-bound ARL6, PDB 2H57; BBS variants abrogate GTP binding) and is a core molecular function of this GTPase.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005930" target="_blank" class="term-link">
+                                    GO:0005930
+                                </a>
+                            </span>
+                            <span class="term-label">axoneme</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005930" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 appears in punctae/membrane patches flanking the microtubule axoneme and in the ciliary membrane, but it is a peripheral membrane GTPase, not a structural axonemal component.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ARL6 is detected near the axoneme as membrane-associated patches (PMID:20603001), but its activity is at the ciliary membrane; axoneme is acceptable as a localization but not core and risks over-specifying a structural axonemal role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Overproduction of GDP- or GTP-locked ARL6 alters cilium length and abundance, and loss causes ciliary trafficking defects, but cilia still form without ARL6; its role is modulatory rather than core ciliogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported as a modulator of ciliary length/abundance (PMID:20207729) but ARL6 is a membrane-cargo trafficking switch, not a core axoneme-assembly factor.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                    GO:0061512
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0061512" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 recruits the BBSome to traffic membrane proteins to/from cilia; protein localization to cilium is a core downstream biological process for ARL6.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported (PMID:20603001, PMID:22139371). This is the central biological process ARL6 enables via BBSome recruitment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0003924" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 is a small GTPase; nucleotide cycling (GTP binding and hydrolysis) underlies its switch function. GTPase activity is a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the Arf-family GTPase identity (UniProt; PDB 2H57). The Q73L hydrolysis-deficient variant studies confirm a hydrolyzable GTPase. Core MF.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005525" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation duplicating the experimentally supported GTP binding function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, independently supported by structure and biochemistry.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                    GO:0061512
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0061512" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation duplicating the experimentally supported protein localization to cilium process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process, independently supported by experimental evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20603001" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20603001
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The conserved Bardet-Biedl syndrome proteins assemble a coat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005515" data-r="PMID:20603001" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI with BBS1 (Q8NFJ9). GTP-bound ARL6 binds the N-terminus of BBS1, recruiting the BBSome. The interaction is real and central, but the bare term protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Verified interaction with BBS1, but per curation guidance protein binding is not informative as a molecular function; the BBSome-recruitment role is captured by the trafficking process terms. A more informative MF (e.g. molecular adaptor/effector of the BBSome) is not currently in the ontology annotation set.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22139371" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22139371
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bardet-Biedl syndrome 3 (Bbs3) knockout mouse model reveals ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005515" data-r="PMID:22139371" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI with BBS1 (Q8NFJ9). Endogenous BBS3 and the BBSome physically interact and depend on each other for ciliary localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Verified interaction supporting BBSome recruitment, but protein binding is uninformative as a standalone MF.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005737" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 cycles between a soluble cytosolic GDP-bound form and a membrane-bound GTP-bound form, so cytoplasmic localization is expected.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with a peripheral membrane GTPase that has a cytosolic pool; not the functionally salient compartment (cilium/cilium membrane is).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005829" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic (GDP-bound) pool of ARL6 consistent with its nucleotide-dependent membrane cycling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Reasonable for the inactive soluble pool; not the core functional location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0016020" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTP-bound ARL6 is a peripheral membrane protein that inserts an N-terminal amphipathic helix into the (ciliary) membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but high-level; the specific cilium/cilium membrane localization is more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045444" target="_blank" class="term-link">
+                                    GO:0045444
+                                </a>
+                            </span>
+                            <span class="term-label">fat cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0045444" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer from mouse ortholog. Obesity/adiposity is a BBS phenotype, but a direct role of ARL6 in adipocyte differentiation is indirect and unestablished.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Reflects a systemic ciliopathy phenotype rather than a demonstrated molecular/cellular role of ARL6 in fat cell differentiation; weak electronic ortholog transfer.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097499" target="_blank" class="term-link">
+                                    GO:0097499
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to non-motile cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0097499" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 traffics membrane proteins to primary (non-motile) cilia, so this specific child of protein localization to cilium is appropriate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with ARL6/BBSome trafficking in primary cilia (PMID:20603001); redundant with the more frequently supported protein localization to cilium.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005929" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence localization of ARL6 to the cilium (HPA). Endogenous ARL6 stains cilia and staining is lost on depletion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported by multiple direct localization studies (PMID:20603001, PMID:22139371) plus HPA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097542" target="_blank" class="term-link">
+                                    GO:0097542
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary tip</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0097542" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA direct immunofluorescence places ARL6 at the ciliary tip, consistent with BBSome turnaround/exit at the tip and IFT-coupled trafficking.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental localization; consistent with BBSome trafficking dynamics along the cilium.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624127
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005929" data-r="Reactome:R-HSA-5624127" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion of ciliary localization, consistent with experimental data.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with direct localization evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25443296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25443296
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The intraflagellar transport protein IFT27 promotes BBSome e...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005515" data-r="PMID:25443296" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI with IFT27/RABL4 (Q9BW83). IFT27 directly binds nucleotide-free ARL6, preventing its aggregation and promoting its activation and BBSome exit from cilia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Verified, biologically important interaction (PMID:25443296), but the bare protein binding term is uninformative as a molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624126
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005886" data-r="Reactome:R-HSA-5624126" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome assertion. ARL6 acts at the plasma/ciliary membrane interface; GTP-bound ARL6 binds the (ciliary) membrane where it recruits the BBSome and cargo.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Defensible given membrane association at the ciliary base/gate; the ciliary membrane is the more precise compartment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5624127
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005886" data-r="Reactome:R-HSA-5624127" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate Reactome plasma membrane assertion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> As above; cilium membrane is the more precise location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22139371" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22139371
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bardet-Biedl syndrome 3 (Bbs3) knockout mouse model reveals ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005929" data-r="PMID:22139371" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MGI direct localization of ARL6 to cilium (mouse Bbs3 study). Endogenous BBS3 localizes to cilia and depends on the BBSome for this localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence supporting ciliary localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                    GO:0061512
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22139371" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22139371
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bardet-Biedl syndrome 3 (Bbs3) knockout mouse model reveals ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0061512" data-r="PMID:22139371" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In Bbs3-/- mice, ARL6 loss disrupts ciliary localization of MCHR1 and affects Smoothened retrograde transport, demonstrating ARL6 is required for protein localization to cilium.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental IMP directly supporting the core biological process of ARL6.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17646400" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17646400
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional dissection of Rab GTPases involved in primary cil...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005929" data-r="PMID:17646400" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT located_in cilium from a Rab/Arf GTPase overexpression screen (Yoshimura et al.) in which only Rab8a was enriched at cilia; ARL6 was not enriched in that specific assay. This negative result is assay-context-specific and is contradicted by multiple direct endogenous localization studies showing ARL6 in cilia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain the curator-recorded negated annotation as a faithful record of that overexpression screen; it does not overturn the consensus that endogenous ARL6 localizes to cilia.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17646400" target="_blank" class="term-link">
+                                        PMID:17646400
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that the Rab GTPase membrane trafficking regulators Rab8a, -17, and -23, and their cognate GTPase-activating proteins (GAPs), XM_037557, TBC1D7, and EVI5like, are involved in primary cilia formation. However, other human Rabs and GAPs are not.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detected in a large-scale urinary exosome proteomics study. This is a high-throughput proteomic catch-all not reflecting a defined biological localization of ARL6.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput exosome proteomics frequently captures cytosolic/membrane proteins nonspecifically; not a functionally meaningful localization for ARL6.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005879" target="_blank" class="term-link">
+                                    GO:0005879
+                                </a>
+                            </span>
+                            <span class="term-label">axonemal microtubule</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005879" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 is a peripheral membrane GTPase associated with patches near the axoneme; it is not a structural component of axonemal microtubules.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Over-specific structural localization by ortholog ISS transfer; ARL6 acts at the ciliary membrane, not as an axonemal microtubule component.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016055" target="_blank" class="term-link">
+                                    GO:0016055
+                                </a>
+                            </span>
+                            <span class="term-label">Wnt signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20207729" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20207729
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bardet-Biedl syndrome-associated small GTPase ARL6 (BBS3) fu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0016055" data-r="PMID:20207729" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6/BBS3 modulates Wnt signaling and this function is lost in BBS-associated point mutants. A pleiotropic, cilium-dependent signaling role rather than a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported (PMID:20207729) but pleiotropic/downstream of the core BBSome-trafficking activity; not a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030117" target="_blank" class="term-link">
+                                    GO:0030117
+                                </a>
+                            </span>
+                            <span class="term-label">membrane coat</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0030117" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The membrane coat assembled at the ciliary membrane is the polymerized BBSome. ARL6 recruits and nucleates this coat but is not itself a structural subunit of the coat.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ARL6 is the recruiting GTPase, not a structural coat component; part_of membrane coat mischaracterizes its role (PMID:20603001 explicitly states Arl6 is not part of the BBSome).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20207729" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20207729
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bardet-Biedl syndrome-associated small GTPase ARL6 (BBS3) fu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0060271" data-r="PMID:20207729" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Overproduction of GDP-/GTP-locked ARL6 influences cilium length and abundance, supporting a modulatory role in ciliogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported modulation of cilium length/number (PMID:20207729), but secondary to the core BBSome-cargo trafficking switch role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                                    GO:0005543
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005543" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTP-bound ARL6 binds membranes via an N-terminal amphipathic helix and synergizes with acidic phospholipids/multi-phosphorylated PIPs to recruit the BBSome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by liposome reconstitution showing acidic phospholipid/PIP dependence (PMID:20603001); a real but ancillary molecular property supporting membrane targeting.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005930" target="_blank" class="term-link">
+                                    GO:0005930
+                                </a>
+                            </span>
+                            <span class="term-label">axoneme</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005930" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 localizes to membrane patches flanking the axoneme; acceptable as a broad localization but not a structural axonemal role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with punctae flanking the axoneme (PMID:20603001); cilium/cilium membrane is the more accurate compartment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006612" target="_blank" class="term-link">
+                                    GO:0006612
+                                </a>
+                            </span>
+                            <span class="term-label">protein targeting to membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0006612" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARL6 directs membrane cargo proteins to the ciliary membrane via BBSome recruitment, consistent with the general process of protein targeting to membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General but consistent with ARL6&#39;s role in targeting membrane proteins to the cilium; protein localization to cilium is the more specific and informative term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051258" target="_blank" class="term-link">
+                                    GO:0051258
+                                </a>
+                            </span>
+                            <span class="term-label">protein polymerization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0051258" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GTP-bound ARL6 nucleates polymerization of the BBSome into a membrane-apposed coat. ARL6 drives the polymerization although it does not itself polymerize.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Defensible as involved_in BBSome coat polymerization (PMID:20603001 shows Arl6GTP-mediated formation of polymerized coat patches); not a core function term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007368" target="_blank" class="term-link">
+                                    GO:0007368
+                                </a>
+                            </span>
+                            <span class="term-label">determination of left/right symmetry</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0007368" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A plausible ciliopathy-associated developmental phenotype but no direct evidence that ARL6 itself acts in left/right axis determination; transferred by ISS from an ortholog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Indirect, phenotype-level inference via ortholog transfer; not supported by direct experimental evidence for human ARL6.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032402" target="_blank" class="term-link">
+                                    GO:0032402
+                                </a>
+                            </span>
+                            <span class="term-label">melanosome transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0032402" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer suggesting a melanosome transport role; no experimental support links human ARL6 to melanosome transport, and this is outside its established ciliary trafficking function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Questionable ortholog-based transfer with no supporting evidence for ARL6; not part of its characterized BBSome/ciliary function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0060271" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS duplicate of the cilium assembly annotation; modulatory role in cilium length/abundance.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with a modulatory ciliogenesis role; non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS duplicate of cytoplasmic localization; consistent with the soluble GDP-bound pool.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Reasonable for the cytosolic pool; not the core functional location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H0F7" data-a="GO:0016020" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS duplicate of membrane localization; GTP-bound ARL6 is a peripheral membrane protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but high-level; cilium membrane is more informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GTP-dependent molecular switch (Arf-family small GTPase) that, in its GTP-bound state, associates with the ciliary membrane and recruits the BBSome coat.</h3>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="FUNCTION: GTP-dependent molecular switch (Arf-family small G..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                            GTP binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20603001" target="_blank" class="term-link">
+                                PMID:20603001
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The BBSome is the major effector of the Arf-like GTPase Arl6/BBS3, and the BBSome and GTP-bound Arl6 colocalize at ciliary punctae in an interdependent manner.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzable small GTPase; nucleotide cycling between GTP- and GDP-bound states governs membrane association and BBSome recruitment.</h3>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="FUNCTION: Hydrolyzable small GTPase; nucleotide cycling betw..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                            GTPase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20207729" target="_blank" class="term-link">
+                                PMID:20207729
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">By determining the structure of GTP-bound ARL6/BBS3, coupled with functional assays, we provide a mechanistic explanation for such pathogenic alterations, namely altered nucleotide binding.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Recruits and nucleates polymerization of the BBSome coat on the ciliary membrane to sort membrane proteins into and out of primary cilia (protein localization to cilium).</h3>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="FUNCTION: Recruits and nucleates polymerization of the BBSom..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                            GTP binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                protein localization to cilium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20603001" target="_blank" class="term-link">
+                                PMID:20603001
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Arl6(GTP)-mediated recruitment of the BBSome to synthetic liposomes produces distinct patches of polymerized coat apposed onto the lipid bilayer.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22139371" target="_blank" class="term-link">
+                                PMID:22139371
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Loss of Bbs3 does not affect BBSome formation but disrupts normal localization of melanin concentrating hormone receptor 1 to ciliary membranes and affects retrograde transport of Smoothened inside cilia.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17646400" target="_blank" class="term-link">
+                            PMID:17646400
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional dissection of Rab GTPases involved in primary cilium formation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20207729" target="_blank" class="term-link">
+                            PMID:20207729
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bardet-Biedl syndrome-associated small GTPase ARL6 (BBS3) functions at or near the ciliary gate and modulates Wnt signaling.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20603001" target="_blank" class="term-link">
+                            PMID:20603001
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The conserved Bardet-Biedl syndrome proteins assemble a coat that traffics membrane proteins to cilia.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22072986" target="_blank" class="term-link">
+                            PMID:22072986
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel protein LZTFL1 regulates ciliary trafficking of the BBSome and Smoothened.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22139371" target="_blank" class="term-link">
+                            PMID:22139371
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bardet-Biedl syndrome 3 (Bbs3) knockout mouse model reveals common BBS-associated phenotypes and Bbs3 unique phenotypes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25443296" target="_blank" class="term-link">
+                            PMID:25443296
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The intraflagellar transport protein IFT27 promotes BBSome exit from cilia through the GTPase ARL6/BBS3.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5624126
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ARL6:GTP and the BBSome bind ciliary cargo</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5624127
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ARL6:GTP and the BBSome target cargo to the primary cilium</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ARL6 have a dedicated guanine nucleotide exchange factor (GEF) at the ciliary gate, and is IFT27 acting as part of (or upstream of) that activation step?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="Q: Does ARL6 have a dedicated guanine nucleotide exch..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is human ARL6 N-myristoylated in vivo (UniProt annotates N-myristoyl glycine by similarity), and how does this reconcile with reports that recombinant ARL6 binds membranes via an amphipathic helix independently of myristoylation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="Q: Is human ARL6 N-myristoylated in vivo (UniProt ann..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> To what extent are the Wnt- and Hedgehog-signaling phenotypes direct ARL6 functions versus indirect consequences of disrupted BBSome cargo trafficking?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="Q: To what extent are the Wnt- and Hedgehog-signaling..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Structure-function dissection of the ARL6 nucleotide cycle in cilia using live-cell imaging of GTP-/GDP-locked and myristoylation-deficient variants to quantify BBSome recruitment kinetics and cargo entry/exit.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="EXPERIMENT: Structure-function dissection of the ARL6 nucleoti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Proximity-labeling (BioID/TurboID) from GTP-locked vs nucleotide-free ARL6 in ciliated cells to define the full effector/regulator interactome (beyond BBS1 and IFT27) and identify a candidate ARL6 GEF/GAP.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="EXPERIMENT: Proximity-labeling (BioID/TurboID) from GTP-locked..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute ARL6-driven BBSome coat polymerization on supported lipid bilayers with cryo-EM to determine the molecular architecture of the ARL6-nucleated BBSome coat and how BBS variants disrupt it.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9H0F7" data-a="EXPERIMENT: Reconstitute ARL6-driven BBSome coat polymerizatio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ARL6-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H0F7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="arl6-bbs3-review-notes">ARL6 (BBS3) review notes</h1>
+<p>UniProt: Q9H0F7. ADP-ribosylation factor-like protein 6 / Bardet-Biedl syndrome 3 protein.<br />
+186 aa, small GTPase, Arf family (Ras superfamily). Gene on chr 3. HGNC:13210.</p>
+<h2 id="core-identity">Core identity</h2>
+<ul>
+<li>Arf-like small GTPase. Belongs to small GTPase superfamily, Arf family (UniProt SIMILARITY).</li>
+<li>GTP/GDP nucleotide switch. Crystal structure of GTP-bound ARL6 (PDB 2H57) solved<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20207729" title="we present the crystal structure of ARL6 ... structure of GTP-bound ARL6/BBS3">PMID:20207729</a>.</li>
+<li>P-loop / nucleotide binding residues mapped (UniProt BINDING 24-31, 50, 69-73, 130-133, 164;<br />
+  Mg2+ at 31, 50). BBS variants T31M/T31R, G169A, L170W abrogate or alter GTP binding and<br />
+  increase proteasomal degradation [PMID:19236846; PMID:20207729; PMID:15314642].</li>
+<li>Core MF: GTP binding (GO:0005525) and GTPase activity (GO:0003924). Both are core for this gene.</li>
+</ul>
+<h2 id="central-function-membrane-targeting-switch-for-the-bbsome">Central function: membrane-targeting switch for the BBSome</h2>
+<ul>
+<li>ARL6/BBS3 is NOT a structural subunit of the BBSome<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20603001" title="the small Arf-like GTPase Arl6 which is not part of the BBSome">PMID:20603001</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22139371" title="BBS3 (ARL6) ... is not part of the BBSome complex">PMID:22139371</a>.</li>
+<li>The BBSome is the major effector of GTP-bound Arl6<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20603001" title="The BBSome is the major effector of the Arf-like GTPase Arl6/BBS3">PMID:20603001</a>.</li>
+<li>GTP-bound Arl6 recruits the BBSome to ciliary membrane; Arl6 and BBSome colocalize at ciliary<br />
+  punctae interdependently <a href="https://pubmed.ncbi.nlm.nih.gov/20603001" title="the BBSome and GTP-bound Arl6 colocalize at ciliary   punctae in an interdependent manner">PMID:20603001</a>. Arl6 binds the N-terminus of BBS1<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20603001" title="BBS1 was the BBSome subunit most efficiently captured by Arl6GTP ... mapping the   interaction domain to the N-terminus of BBS1">PMID:20603001</a>.</li>
+<li>Arl6 GTP loading nucleates BBSome polymerization into a coat on membranes<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20603001" title="Arl6(GTP)-mediated recruitment of the BBSome to synthetic liposomes produces   distinct patches of polymerized coat apposed onto the lipid bilayer">PMID:20603001</a>. Reconstituted from purified<br />
+  components: only GTP-bound Arl6 needed to recruit BBSome to liposomes.</li>
+<li>Arl6 binds membranes via an N-terminal amphipathic helix exposed upon GTP binding (Arf/Sar1-like)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20603001" title="Arl6 conforms to the Arf1/Sar1 paradigm and interacts with membranes through its   N-terminal amphipathic helix when GTP-bound">PMID:20603001</a>; multi-phosphorylated PIPs (e.g. PI(3,4)P2) and acidic<br />
+  phospholipids synergize for BBSome recruitment (basis for phospholipid binding annotation).<br />
+  Note: in this study Arl6 was reported NOT myristoylated for the recombinant prep, but UniProt LIPID<br />
+  feature annotates N-myristoyl glycine at residue 2 (ECO:0000255, by similarity).</li>
+<li>Targeting requires GTP binding but not GTP hydrolysis: T31R (GTP-deficient) absent from cilia;<br />
+  Q73L (hydrolysis-deficient) recruits MORE BBSome <a href="https://pubmed.ncbi.nlm.nih.gov/20603001">PMID:20603001</a>.</li>
+<li>BBSome recognizes ciliary targeting signal (CTS) of cargo e.g. SSTR3; ARL6 depletion removes SSTR3<br />
+  from cilia <a href="https://pubmed.ncbi.nlm.nih.gov/20603001">PMID:20603001</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cilium / cilium membrane (peripheral membrane protein, cytoplasmic side). Endogenous Arl6 stains<br />
+  cilia; lost on siRNA <a href="https://pubmed.ncbi.nlm.nih.gov/20603001">PMID:20603001</a>. IDA cilium also from MGI <a href="https://pubmed.ncbi.nlm.nih.gov/22139371">PMID:22139371</a> and HPA.</li>
+<li>Ring-like localization at distal end of basal bodies / ciliary gate<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20207729" title="unique ring-like localization at the distal end of basal bodies, in proximity to the   so-called ciliary gate">PMID:20207729</a>. Supports basal body / ciliary gate localization.</li>
+<li>Punctae flanking the axoneme (membrane-associated patches) <a href="https://pubmed.ncbi.nlm.nih.gov/20603001">PMID:20603001</a>. Basis for axoneme-area<br />
+  annotations, though Arl6 is membrane-associated, not a structural axoneme/axonemal-microtubule component.</li>
+<li>NOT cilium (GO:0005929) IDA, PMID:17646400: this is a Rab-GTPase overexpression screen (Yoshimura<br />
+  et al.) where only Rab8a was enriched at cilia; ARL6 was tested and not enriched in that particular<br />
+  assay. This negative result is in a specific overexpression context and is contradicted by multiple<br />
+  direct endogenous-localization studies. Keep the NOT as recorded by the curator (assay-specific) but<br />
+  it does not reflect the consensus biology.</li>
+</ul>
+<h2 id="biological-processes">Biological processes</h2>
+<ul>
+<li>Protein localization to cilium / BBSome-mediated cargo trafficking to cilia (core downstream role).<br />
+  IMP in mouse Bbs3-/- : disrupts ciliary localization of MCHR1 and Smoothened retrograde transport<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22139371">PMID:22139371</a>.</li>
+<li>Cilium assembly / length: GDP- or GTP-locked ARL6 over-expression influences cilium length and<br />
+  abundance <a href="https://pubmed.ncbi.nlm.nih.gov/20207729" title="Overproduction of GDP- or GTP-locked variants of ARL6/BBS3 in vivo   influences primary cilium length and abundance">PMID:20207729</a>. ARL6 is a trafficking switch rather than a core<br />
+  ciliogenesis/axoneme-assembly factor; cilia still form in its absence (BBSome cargo defects dominate).</li>
+<li>Wnt signaling: ARL6/BBS3 modulates Wnt; signaling function lost in BBS point mutants<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/20207729" title="ARL6/BBS3 also modulates Wnt signaling ... this signaling function is lost in ARL6   variants containing BBS-associated point mutations">PMID:20207729</a>. IMP-supported but pleiotropic / non-core.</li>
+<li>Hedgehog (Smoothened) trafficking: with BBSome and LZTFL1 controls SMO ciliary trafficking<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22072986">PMID:22072986</a>; affects SMO retrograde transport <a href="https://pubmed.ncbi.nlm.nih.gov/22139371">PMID:22139371</a>. (No SHH GO term currently annotated.)</li>
+</ul>
+<h2 id="ift27-bbsome-exit">IFT27 / BBSome exit</h2>
+<ul>
+<li>IFT27/RABL4 binds nucleotide-free ARL6 and prevents its aggregation; promotes ARL6 activation,<br />
+  BBSome coat assembly and BBSome+cargo EXIT from cilia<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25443296" title="IFT27 directly interacts with the nucleotide-free form of ARL6 ... IFT27 prevents   aggregation of nucleotide-free ARL6 ... promote ARL6 activation, BBSome coat assembly, and   subsequent ciliary exit">PMID:25443296</a>. Basis for the GOA IPI protein-binding annotation (WITH IFT27, Q9BW83).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Bardet-Biedl syndrome 3 (BBS3, MIM 600151), autosomal recessive [PMID:15258860; PMID:15314642].</li>
+<li>Retinitis pigmentosa 55 (RP55, MIM 613575), variant A89V <a href="https://pubmed.ncbi.nlm.nih.gov/19956407">PMID:19956407</a>.</li>
+<li>Isoform 2 (BBS3L) is vision-specific / required for proper retinal function (UniProt; PMID:20333246).</li>
+</ul>
+<h2 id="goa-ipi-withfrom-cross-checks-citation-correctness">GOA IPI WITH/FROM cross-checks (citation correctness)</h2>
+<ul>
+<li>PMID:20603001 IPI WITH BBS1 (Q8NFJ9): correct — Arl6GTP binds BBS1 N-terminus. VERIFIED.</li>
+<li>PMID:22139371 IPI WITH BBS1 (Q8NFJ9): correct — endogenous BBS3-BBSome physical interaction. VERIFIED.</li>
+<li>PMID:25443296 IPI WITH IFT27 (Q9BW83): correct — ARL6 binds nucleotide-free IFT27. VERIFIED.</li>
+</ul>
+<h2 id="term-by-term-reasoning-summary">Term-by-term reasoning summary</h2>
+<ul>
+<li>GTP binding (GO:0005525), GTPase activity (GO:0003924): ACCEPT, core MF.</li>
+<li>protein binding (GO:0005515) IPI x3: uninformative bare term; KEEP_AS_NON_CORE (real interactions,<br />
+  but "protein binding" not informative; effector/BBSome-recruitment captured elsewhere).</li>
+<li>protein localization to cilium (GO:0061512): core BP. ACCEPT the experimental IMP (PMID:22139371);<br />
+  IBA/IEA duplicates ACCEPT/KEEP_AS_NON_CORE.</li>
+<li>cilium (GO:0005929) IDA x2: ACCEPT. ciliary tip (GO:0097542) IDA: ACCEPT (HPA).</li>
+<li>cilium membrane is the most accurate compartment but not currently in GOA list.</li>
+<li>axoneme (GO:0005930) / axonemal microtubule (GO:0005879): ARL6 is membrane-patch associated near the<br />
+  axoneme, not a structural axoneme component. KEEP_AS_NON_CORE / MARK_AS_OVER_ANNOTATED.</li>
+<li>membrane coat (GO:0030117) part_of, ISS: the coat is the BBSome; ARL6 recruits it but is not itself a<br />
+  structural coat subunit. MARK_AS_OVER_ANNOTATED.</li>
+<li>protein polymerization (GO:0051258) ISS: ARL6 nucleates BBSome coat polymerization (it does not itself<br />
+  polymerize). KEEP_AS_NON_CORE (defensible as "involved_in" the polymerization of the coat).</li>
+<li>phospholipid binding (GO:0005543) ISS: supported — GTP-Arl6 + acidic PIPs synergize. KEEP_AS_NON_CORE.</li>
+<li>protein targeting to membrane (GO:0006612) ISS: GO:0006612 is SRP-dependent targeting to ER membrane;<br />
+  WRONG specific term for ARL6's role (it recruits BBSome to ciliary membrane). MARK_AS_OVER_ANNOTATED.</li>
+<li>cilium assembly (GO:0060271): pleiotropic/modulatory, not core ciliogenesis. KEEP_AS_NON_CORE.</li>
+<li>Wnt signaling (GO:0016055) IMP: pleiotropic, KEEP_AS_NON_CORE.</li>
+<li>intracellular protein transport (GO:0006886) IBA, vesicle-mediated transport: general but consistent;<br />
+  KEEP_AS_NON_CORE.</li>
+<li>determination of left/right symmetry (GO:0007368) ISS, melanosome transport (GO:0032402) ISS,<br />
+  fat cell differentiation (GO:0045444) IEA, protein localization to non-motile cilium (GO:0097499) IEA:<br />
+  weak electronic/ISS transfers; KEEP_AS_NON_CORE or MARK_AS_OVER_ANNOTATED (melanosome transport is a<br />
+  questionable ortholog transfer; left/right symmetry plausible ciliopathy phenotype but indirect).</li>
+<li>cytoplasm/cytosol/membrane (GO:0005737/0005829/0016020): ACCEPT/KEEP_AS_NON_CORE (ARL6 cycles between<br />
+  cytosol and membrane).</li>
+<li>extracellular exosome (GO:0070062) HDA: high-throughput proteomics catch-all; MARK_AS_OVER_ANNOTATED.</li>
+<li>plasma membrane (GO:0005886) TAS Reactome x2: ARL6 acts at ciliary/plasma membrane interface; the<br />
+  GTP-bound form is on membranes. KEEP_AS_NON_CORE.</li>
+<li>NOT cilium (GO:0005929) PMID:17646400: keep negated annotation (assay-specific); ACCEPT as recorded.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H0F7
+gene_symbol: ARL6
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: ARL6 (BBS3) is a 186-residue ADP-ribosylation factor-like small GTPase
+  of the Arf family within the Ras superfamily. Like canonical Arf/Sar1 GTPases it
+  cycles between an inactive GDP-bound and an active GTP-bound state; GTP loading exposes
+  an N-terminal amphipathic helix that inserts into membranes, so the GTP-bound form
+  is peripherally associated with the cytoplasmic face of the ciliary membrane. The
+  defining activity of ARL6 is to act as the membrane-targeting switch for the BBSome,
+  an octameric Bardet-Biedl syndrome protein complex that functions as a coat sorting
+  membrane proteins into and out of primary cilia. ARL6 is not itself a structural
+  subunit of the BBSome; rather, GTP-bound ARL6 binds the BBS1 beta-propeller and recruits
+  the BBSome onto the ciliary membrane, where it nucleates polymerization of the BBSome
+  coat. Through this activity ARL6 controls ciliary trafficking of signaling receptors
+  (e.g. SSTR3, MCHR1, Smoothened) and contributes to Hedgehog and Wnt signaling. ARL6
+  localizes to the primary cilium, concentrating in a ring at the distal basal body
+  near the ciliary gate and in membrane-associated patches flanking the axoneme. The
+  intraflagellar transport protein IFT27/RABL4 binds nucleotide-free ARL6 to promote
+  its activation and BBSome exit from cilia. Loss-of-function mutations that impair GTP
+  binding cause Bardet-Biedl syndrome type 3 and retinitis pigmentosa 55.
+alternative_products:
+- name: 1 (BBS3)
+  id: Q9H0F7-1
+- name: 2 (BBS3L)
+  id: Q9H0F7-2
+  sequence_note: VSP_040511
+existing_annotations:
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: General phylogenetic annotation. ARL6 functions in ciliary membrane protein
+      trafficking, so intracellular protein transport is correct but high-level and
+      not the most informative description of its role.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with ARL6&#39;s role recruiting the BBSome coat to traffic membrane
+      proteins to cilia, but too general to represent the core function. The specific
+      child term protein localization to cilium is the more informative process.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: ARL6 is an Arf-family small GTPase whose GTP-bound state is the active,
+      membrane-binding, BBSome-recruiting form. GTP binding is a core molecular function.
+    action: ACCEPT
+    reason: Strongly supported experimentally (crystal structure of GTP-bound ARL6,
+      PDB 2H57; BBS variants abrogate GTP binding) and is a core molecular function
+      of this GTPase.
+- term:
+    id: GO:0005930
+    label: axoneme
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: ARL6 appears in punctae/membrane patches flanking the microtubule axoneme
+      and in the ciliary membrane, but it is a peripheral membrane GTPase, not a structural
+      axonemal component.
+    action: KEEP_AS_NON_CORE
+    reason: ARL6 is detected near the axoneme as membrane-associated patches (PMID:20603001),
+      but its activity is at the ciliary membrane; axoneme is acceptable as a localization
+      but not core and risks over-specifying a structural axonemal role.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Overproduction of GDP- or GTP-locked ARL6 alters cilium length and abundance,
+      and loss causes ciliary trafficking defects, but cilia still form without ARL6;
+      its role is modulatory rather than core ciliogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: Supported as a modulator of ciliary length/abundance (PMID:20207729) but
+      ARL6 is a membrane-cargo trafficking switch, not a core axoneme-assembly factor.
+- term:
+    id: GO:0061512
+    label: protein localization to cilium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: ARL6 recruits the BBSome to traffic membrane proteins to/from cilia; protein
+      localization to cilium is a core downstream biological process for ARL6.
+    action: ACCEPT
+    reason: Well supported (PMID:20603001, PMID:22139371). This is the central biological
+      process ARL6 enables via BBSome recruitment.
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: ARL6 is a small GTPase; nucleotide cycling (GTP binding and hydrolysis)
+      underlies its switch function. GTPase activity is a core molecular function.
+    action: ACCEPT
+    reason: Consistent with the Arf-family GTPase identity (UniProt; PDB 2H57). The
+      Q73L hydrolysis-deficient variant studies confirm a hydrolyzable GTPase. Core MF.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic annotation duplicating the experimentally supported
+      GTP binding function.
+    action: ACCEPT
+    reason: Core molecular function, independently supported by structure and biochemistry.
+- term:
+    id: GO:0061512
+    label: protein localization to cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: ARBA electronic annotation duplicating the experimentally supported protein
+      localization to cilium process.
+    action: ACCEPT
+    reason: Core biological process, independently supported by experimental evidence.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20603001
+  qualifier: enables
+  review:
+    summary: IPI with BBS1 (Q8NFJ9). GTP-bound ARL6 binds the N-terminus of BBS1, recruiting
+      the BBSome. The interaction is real and central, but the bare term protein binding
+      is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Verified interaction with BBS1, but per curation guidance protein binding
+      is not informative as a molecular function; the BBSome-recruitment role is captured
+      by the trafficking process terms. A more informative MF (e.g. molecular adaptor/effector
+      of the BBSome) is not currently in the ontology annotation set.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22139371
+  qualifier: enables
+  review:
+    summary: IPI with BBS1 (Q8NFJ9). Endogenous BBS3 and the BBSome physically interact
+      and depend on each other for ciliary localization.
+    action: KEEP_AS_NON_CORE
+    reason: Verified interaction supporting BBSome recruitment, but protein binding
+      is uninformative as a standalone MF.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: ARL6 cycles between a soluble cytosolic GDP-bound form and a membrane-bound
+      GTP-bound form, so cytoplasmic localization is expected.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with a peripheral membrane GTPase that has a cytosolic pool;
+      not the functionally salient compartment (cilium/cilium membrane is).
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: Cytosolic (GDP-bound) pool of ARL6 consistent with its nucleotide-dependent
+      membrane cycling.
+    action: KEEP_AS_NON_CORE
+    reason: Reasonable for the inactive soluble pool; not the core functional location.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: GTP-bound ARL6 is a peripheral membrane protein that inserts an N-terminal
+      amphipathic helix into the (ciliary) membrane.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but high-level; the specific cilium/cilium membrane localization
+      is more informative.
+- term:
+    id: GO:0045444
+    label: fat cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Electronic transfer from mouse ortholog. Obesity/adiposity is a BBS phenotype,
+      but a direct role of ARL6 in adipocyte differentiation is indirect and unestablished.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Reflects a systemic ciliopathy phenotype rather than a demonstrated molecular/cellular
+      role of ARL6 in fat cell differentiation; weak electronic ortholog transfer.
+- term:
+    id: GO:0097499
+    label: protein localization to non-motile cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: ARL6 traffics membrane proteins to primary (non-motile) cilia, so this
+      specific child of protein localization to cilium is appropriate.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with ARL6/BBSome trafficking in primary cilia (PMID:20603001);
+      redundant with the more frequently supported protein localization to cilium.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence localization of ARL6 to the cilium (HPA). Endogenous
+      ARL6 stains cilia and staining is lost on depletion.
+    action: ACCEPT
+    reason: Well supported by multiple direct localization studies (PMID:20603001,
+      PMID:22139371) plus HPA.
+- term:
+    id: GO:0097542
+    label: ciliary tip
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: HPA direct immunofluorescence places ARL6 at the ciliary tip, consistent
+      with BBSome turnaround/exit at the tip and IFT-coupled trafficking.
+    action: ACCEPT
+    reason: Direct experimental localization; consistent with BBSome trafficking dynamics
+      along the cilium.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624127
+  qualifier: located_in
+  review:
+    summary: Reactome traceable assertion of ciliary localization, consistent with experimental
+      data.
+    action: ACCEPT
+    reason: Consistent with direct localization evidence.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25443296
+  qualifier: enables
+  review:
+    summary: IPI with IFT27/RABL4 (Q9BW83). IFT27 directly binds nucleotide-free ARL6,
+      preventing its aggregation and promoting its activation and BBSome exit from cilia.
+    action: KEEP_AS_NON_CORE
+    reason: Verified, biologically important interaction (PMID:25443296), but the bare
+      protein binding term is uninformative as a molecular function.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624126
+  qualifier: located_in
+  review:
+    summary: Reactome assertion. ARL6 acts at the plasma/ciliary membrane interface;
+      GTP-bound ARL6 binds the (ciliary) membrane where it recruits the BBSome and cargo.
+    action: KEEP_AS_NON_CORE
+    reason: Defensible given membrane association at the ciliary base/gate; the ciliary
+      membrane is the more precise compartment.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5624127
+  qualifier: located_in
+  review:
+    summary: Duplicate Reactome plasma membrane assertion.
+    action: KEEP_AS_NON_CORE
+    reason: As above; cilium membrane is the more precise location.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IDA
+  original_reference_id: PMID:22139371
+  qualifier: located_in
+  review:
+    summary: MGI direct localization of ARL6 to cilium (mouse Bbs3 study). Endogenous
+      BBS3 localizes to cilia and depends on the BBSome for this localization.
+    action: ACCEPT
+    reason: Direct experimental evidence supporting ciliary localization.
+- term:
+    id: GO:0061512
+    label: protein localization to cilium
+  evidence_type: IMP
+  original_reference_id: PMID:22139371
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: In Bbs3-/- mice, ARL6 loss disrupts ciliary localization of MCHR1 and affects
+      Smoothened retrograde transport, demonstrating ARL6 is required for protein localization
+      to cilium.
+    action: ACCEPT
+    reason: Experimental IMP directly supporting the core biological process of ARL6.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IDA
+  original_reference_id: PMID:17646400
+  qualifier: located_in
+  negated: true
+  review:
+    summary: NOT located_in cilium from a Rab/Arf GTPase overexpression screen (Yoshimura
+      et al.) in which only Rab8a was enriched at cilia; ARL6 was not enriched in that
+      specific assay. This negative result is assay-context-specific and is contradicted
+      by multiple direct endogenous localization studies showing ARL6 in cilia.
+    action: ACCEPT
+    reason: Retain the curator-recorded negated annotation as a faithful record of that
+      overexpression screen; it does not overturn the consensus that endogenous ARL6
+      localizes to cilia.
+    supported_by:
+    - reference_id: PMID:17646400
+      supporting_text: We show that the Rab GTPase membrane trafficking regulators Rab8a,
+        -17, and -23, and their cognate GTPase-activating proteins (GAPs), XM_037557,
+        TBC1D7, and EVI5like, are involved in primary cilia formation. However, other
+        human Rabs and GAPs are not.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: Detected in a large-scale urinary exosome proteomics study. This is a high-throughput
+      proteomic catch-all not reflecting a defined biological localization of ARL6.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: High-throughput exosome proteomics frequently captures cytosolic/membrane
+      proteins nonspecifically; not a functionally meaningful localization for ARL6.
+- term:
+    id: GO:0005879
+    label: axonemal microtubule
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ARL6 is a peripheral membrane GTPase associated with patches near the axoneme;
+      it is not a structural component of axonemal microtubules.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Over-specific structural localization by ortholog ISS transfer; ARL6 acts
+      at the ciliary membrane, not as an axonemal microtubule component.
+- term:
+    id: GO:0016055
+    label: Wnt signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:20207729
+  qualifier: involved_in
+  review:
+    summary: ARL6/BBS3 modulates Wnt signaling and this function is lost in BBS-associated
+      point mutants. A pleiotropic, cilium-dependent signaling role rather than a core
+      molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Experimentally supported (PMID:20207729) but pleiotropic/downstream of the
+      core BBSome-trafficking activity; not a core function.
+- term:
+    id: GO:0030117
+    label: membrane coat
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: The membrane coat assembled at the ciliary membrane is the polymerized BBSome.
+      ARL6 recruits and nucleates this coat but is not itself a structural subunit of
+      the coat.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: ARL6 is the recruiting GTPase, not a structural coat component; part_of membrane
+      coat mischaracterizes its role (PMID:20603001 explicitly states Arl6 is not part
+      of the BBSome).
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IMP
+  original_reference_id: PMID:20207729
+  qualifier: involved_in
+  review:
+    summary: Overproduction of GDP-/GTP-locked ARL6 influences cilium length and abundance,
+      supporting a modulatory role in ciliogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: Experimentally supported modulation of cilium length/number (PMID:20207729),
+      but secondary to the core BBSome-cargo trafficking switch role.
+- term:
+    id: GO:0005543
+    label: phospholipid binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: GTP-bound ARL6 binds membranes via an N-terminal amphipathic helix and
+      synergizes with acidic phospholipids/multi-phosphorylated PIPs to recruit the BBSome.
+    action: KEEP_AS_NON_CORE
+    reason: Supported by liposome reconstitution showing acidic phospholipid/PIP dependence
+      (PMID:20603001); a real but ancillary molecular property supporting membrane targeting.
+- term:
+    id: GO:0005930
+    label: axoneme
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ARL6 localizes to membrane patches flanking the axoneme; acceptable as
+      a broad localization but not a structural axonemal role.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with punctae flanking the axoneme (PMID:20603001); cilium/cilium
+      membrane is the more accurate compartment.
+- term:
+    id: GO:0006612
+    label: protein targeting to membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: ARL6 directs membrane cargo proteins to the ciliary membrane via BBSome
+      recruitment, consistent with the general process of protein targeting to membrane.
+    action: KEEP_AS_NON_CORE
+    reason: General but consistent with ARL6&#39;s role in targeting membrane proteins to
+      the cilium; protein localization to cilium is the more specific and informative term.
+- term:
+    id: GO:0051258
+    label: protein polymerization
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: GTP-bound ARL6 nucleates polymerization of the BBSome into a membrane-apposed
+      coat. ARL6 drives the polymerization although it does not itself polymerize.
+    action: KEEP_AS_NON_CORE
+    reason: Defensible as involved_in BBSome coat polymerization (PMID:20603001 shows
+      Arl6GTP-mediated formation of polymerized coat patches); not a core function term.
+- term:
+    id: GO:0007368
+    label: determination of left/right symmetry
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: A plausible ciliopathy-associated developmental phenotype but no direct
+      evidence that ARL6 itself acts in left/right axis determination; transferred by
+      ISS from an ortholog.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Indirect, phenotype-level inference via ortholog transfer; not supported
+      by direct experimental evidence for human ARL6.
+- term:
+    id: GO:0032402
+    label: melanosome transport
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: ISS transfer suggesting a melanosome transport role; no experimental support
+      links human ARL6 to melanosome transport, and this is outside its established ciliary
+      trafficking function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Questionable ortholog-based transfer with no supporting evidence for ARL6;
+      not part of its characterized BBSome/ciliary function.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: ISS duplicate of the cilium assembly annotation; modulatory role in cilium
+      length/abundance.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with a modulatory ciliogenesis role; non-core.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ISS duplicate of cytoplasmic localization; consistent with the soluble GDP-bound
+      pool.
+    action: KEEP_AS_NON_CORE
+    reason: Reasonable for the cytosolic pool; not the core functional location.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ISS duplicate of membrane localization; GTP-bound ARL6 is a peripheral membrane
+      protein.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but high-level; cilium membrane is more informative.
+core_functions:
+- description: GTP-dependent molecular switch (Arf-family small GTPase) that, in its
+    GTP-bound state, associates with the ciliary membrane and recruits the BBSome coat.
+  supported_by:
+  - reference_id: PMID:20603001
+    supporting_text: The BBSome is the major effector of the Arf-like GTPase Arl6/BBS3,
+      and the BBSome and GTP-bound Arl6 colocalize at ciliary punctae in an interdependent
+      manner.
+  molecular_function:
+    id: GO:0005525
+    label: GTP binding
+- description: Hydrolyzable small GTPase; nucleotide cycling between GTP- and GDP-bound
+    states governs membrane association and BBSome recruitment.
+  supported_by:
+  - reference_id: PMID:20207729
+    supporting_text: By determining the structure of GTP-bound ARL6/BBS3, coupled with
+      functional assays, we provide a mechanistic explanation for such pathogenic alterations,
+      namely altered nucleotide binding.
+  molecular_function:
+    id: GO:0003924
+    label: GTPase activity
+- description: Recruits and nucleates polymerization of the BBSome coat on the ciliary
+    membrane to sort membrane proteins into and out of primary cilia (protein localization
+    to cilium).
+  supported_by:
+  - reference_id: PMID:20603001
+    supporting_text: Arl6(GTP)-mediated recruitment of the BBSome to synthetic liposomes
+      produces distinct patches of polymerized coat apposed onto the lipid bilayer.
+  - reference_id: PMID:22139371
+    supporting_text: Loss of Bbs3 does not affect BBSome formation but disrupts normal
+      localization of melanin concentrating hormone receptor 1 to ciliary membranes
+      and affects retrograde transport of Smoothened inside cilia.
+  molecular_function:
+    id: GO:0005525
+    label: GTP binding
+  directly_involved_in:
+  - id: GO:0061512
+    label: protein localization to cilium
+proposed_new_terms: []
+suggested_questions:
+- question: Does ARL6 have a dedicated guanine nucleotide exchange factor (GEF) at the
+    ciliary gate, and is IFT27 acting as part of (or upstream of) that activation step?
+- question: Is human ARL6 N-myristoylated in vivo (UniProt annotates N-myristoyl glycine
+    by similarity), and how does this reconcile with reports that recombinant ARL6 binds
+    membranes via an amphipathic helix independently of myristoylation?
+- question: To what extent are the Wnt- and Hedgehog-signaling phenotypes direct ARL6
+    functions versus indirect consequences of disrupted BBSome cargo trafficking?
+suggested_experiments:
+- description: Structure-function dissection of the ARL6 nucleotide cycle in cilia using
+    live-cell imaging of GTP-/GDP-locked and myristoylation-deficient variants to quantify
+    BBSome recruitment kinetics and cargo entry/exit.
+- description: Proximity-labeling (BioID/TurboID) from GTP-locked vs nucleotide-free
+    ARL6 in ciliated cells to define the full effector/regulator interactome (beyond
+    BBS1 and IFT27) and identify a candidate ARL6 GEF/GAP.
+- description: Reconstitute ARL6-driven BBSome coat polymerization on supported lipid
+    bilayers with cryo-EM to determine the molecular architecture of the ARL6-nucleated
+    BBSome coat and how BBS variants disrupt it.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:17646400
+  title: Functional dissection of Rab GTPases involved in primary cilium formation.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Rab/Arf GTPase overexpression screen in which only Rab8a was enriched
+      at cilia; ARL6 was a negative result in this specific assay. Basis for the curator&#39;s
+      NOT located_in cilium annotation. Does not reflect endogenous ARL6 biology.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput urinary exosome proteomics; basis for extracellular
+      exosome annotation. Not functionally informative for ARL6.
+- id: PMID:20207729
+  title: Bardet-Biedl syndrome-associated small GTPase ARL6 (BBS3) functions at or near
+    the ciliary gate and modulates Wnt signaling.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Crystal structure of GTP-bound ARL6 (PDB 2H57); ring-like localization
+      at distal basal body/ciliary gate; modulates Wnt and cilium length; BBS point
+      mutants characterized. Directly establishes core MF and localization.
+- id: PMID:20603001
+  title: The conserved Bardet-Biedl syndrome proteins assemble a coat that traffics
+    membrane proteins to cilia.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Defines ARL6 as the membrane switch whose GTP-bound form recruits the
+      BBSome (binding BBS1 N-terminus) and nucleates coat polymerization; ARL6 explicitly
+      not part of the BBSome. Central reference for ARL6 function.
+- id: PMID:22072986
+  title: A novel protein LZTFL1 regulates ciliary trafficking of the BBSome and Smoothened.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Shows BBS3/ARL6 (with the BBSome and LZTFL1) is required for BBSome
+      ciliary entry and SMO trafficking; supports ciliary trafficking/Hedgehog role.
+- id: PMID:22139371
+  title: Bardet-Biedl syndrome 3 (Bbs3) knockout mouse model reveals common BBS-associated
+    phenotypes and Bbs3 unique phenotypes.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Mouse Bbs3 knockout; BBS3-BBSome interdependent ciliary localization;
+      loss disrupts MCHR1 ciliary localization and SMO retrograde transport. Supports
+      IDA cilium and IMP protein localization to cilium.
+- id: PMID:25443296
+  title: The intraflagellar transport protein IFT27 promotes BBSome exit from cilia
+    through the GTPase ARL6/BBS3.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: IFT27/RABL4 binds nucleotide-free ARL6 (WITH Q9BW83), preventing aggregation
+      and promoting ARL6 activation, BBSome coat assembly and ciliary exit. Verifies
+      the IPI interaction.
+- id: Reactome:R-HSA-5624126
+  title: ARL6:GTP and the BBSome bind ciliary cargo
+  findings: []
+- id: Reactome:R-HSA-5624127
+  title: ARL6:GTP and the BBSome target cargo to the primary cilium
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROR1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ROR1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q01973" target="_blank" class="term-link">
+                        Q01973
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">NTRKR1</span>
+                    
+                    <span class="badge">Inactive tyrosine-protein kinase transmembrane receptor ROR1</span>
+                    
+                    <span class="badge">Neurotrophic tyrosine kinase receptor-related 1</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ROR1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q01973" data-a="DESCRIPTION: ROR1 (inactive tyrosine-protein kinase transmembra..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ROR1 (inactive tyrosine-protein kinase transmembrane receptor ROR1) is a single-pass receptor of the ROR family with an extracellular cysteine-rich (Frizzled-like) and kringle domain and an intracellular pseudokinase domain. Its tyrosine-kinase domain is catalytically inactive (very low activity in vitro; it does not bind ATP), so ROR1 signals non-catalytically as a receptor/coreceptor for Wnt ligands (notably Wnt5a) in non-canonical Wnt signaling, regulating cell polarity, migration and proliferation. It is an oncofetal antigen, re-expressed in many cancers (e.g. CLL), making it a prominent immunotherapy target.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004714" target="_blank" class="term-link">
+                                    GO:0004714
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane receptor protein tyrosine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0004714" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT: ROR1 does not have transmembrane receptor tyrosine kinase activity. Its kinase domain is degenerate (very low activity in vitro; does not bind ATP) - an inactive/pseudokinase RTK.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct, important negation. Retain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ROR1/ROR1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">The kinase domain has very low catalytic activity in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> plasma membrane: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007169" target="_blank" class="term-link">
+                                    GO:0007169
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface receptor protein tyrosine kinase signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0007169" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT: ROR1 is not involved in cell-surface receptor protein tyrosine kinase signaling (as a catalytic RTK).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct negation, consistent with the inactive kinase domain. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043235" target="_blank" class="term-link">
+                                    GO:0043235
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0043235" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> signaling receptor complex: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0030424" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> axon: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043123" target="_blank" class="term-link">
+                                    GO:0043123
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of canonical NF-kappaB signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0043123" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> positive regulation of canonical NF-kappaB signal transduction: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with ROR1&#39;s established function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017147" target="_blank" class="term-link">
+                                    GO:0017147
+                                </a>
+                            </span>
+                            <span class="term-label">Wnt-protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0017147" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wnt-protein binding: ROR1 binds Wnt ligands via its extracellular CRD, central to its coreceptor role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, ligand-binding function. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004672" target="_blank" class="term-link">
+                                    GO:0004672
+                                </a>
+                            </span>
+                            <span class="term-label">protein kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0004672" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Positive &#39;protein kinase activity&#39; (IEA) from the protein-kinase-superfamily signature. ROR1 is an inactive/pseudokinase receptor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Electronic over-propagation contradicted by the curated NOTs and the CAUTION (degenerate kinase, no ATP binding). Remove.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ROR1/ROR1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">The kinase domain has very low catalytic activity in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> plasma membrane: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015026" target="_blank" class="term-link">
+                                    GO:0015026
+                                </a>
+                            </span>
+                            <span class="term-label">coreceptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0015026" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Coreceptor activity: ROR1 functions as a Wnt coreceptor in non-canonical Wnt signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function consistent with the Wnt-receptor role. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016055" target="_blank" class="term-link">
+                                    GO:0016055
+                                </a>
+                            </span>
+                            <span class="term-label">Wnt signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0016055" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wnt signaling pathway: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with ROR1&#39;s established function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017147" target="_blank" class="term-link">
+                                    GO:0017147
+                                </a>
+                            </span>
+                            <span class="term-label">Wnt-protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0017147" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wnt-protein binding: ROR1 binds Wnt ligands via its extracellular CRD, central to its coreceptor role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, ligand-binding function. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0030424" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> axon: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22439932" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22439932
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NKX2-1/TITF1/TTF-1-Induced ROR1 is required to sustain EGFR ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005515" data-r="PMID:22439932" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific protein interaction (PMID:22439932) consistent with ROR1&#39;s scaffold/adapter role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Real interaction kept as non-core supporting evidence; the generic &#39;protein binding&#39; term is itself uninformative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043679" target="_blank" class="term-link">
+                                    GO:0043679
+                                </a>
+                            </span>
+                            <span class="term-label">axon terminus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0043679" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> axon terminus: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048839" target="_blank" class="term-link">
+                                    GO:0048839
+                                </a>
+                            </span>
+                            <span class="term-label">inner ear development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0048839" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> inner ear development: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with ROR1&#39;s established function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24107129" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24107129
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A robust methodology to subclassify pseudokinases based on t...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005524" data-r="PMID:24107129" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT: ROR1 does not bind ATP (IDA) - its degenerate kinase domain lacks nucleotide binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct negation with direct evidence; underpins the pseudokinase classification. Retain.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ROR1/ROR1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Does not bind ATP</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27162350" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27162350
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROR1 is essential for proper innervation of auditory hair ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0016020" data-r="PMID:27162350" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> membrane: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008283" target="_blank" class="term-link">
+                                    GO:0008283
+                                </a>
+                            </span>
+                            <span class="term-label">cell population proliferation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36949068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36949068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    IGFBP5 is an ROR1 ligand promoting glioblastoma invasion via...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0008283" data-r="PMID:36949068" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cell population proliferation: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell population proliferation is a downstream physiological/oncogenic phenotype of ROR1 signaling rather than its core molecular role; kept as non-core for consistency with how the same phenotype is treated elsewhere (e.g. RHBDF1).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0038023" target="_blank" class="term-link">
+                                    GO:0038023
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36949068" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36949068
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    IGFBP5 is an ROR1 ligand promoting glioblastoma invasion via...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0038023" data-r="PMID:36949068" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Signaling receptor activity (IDA): ROR1 transduces signals as a cell-surface receptor independent of catalytic activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core receptor function. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015026" target="_blank" class="term-link">
+                                    GO:0015026
+                                </a>
+                            </span>
+                            <span class="term-label">coreceptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24431302" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24431302
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Wnt signaling in midbrain dopaminergic neuron development an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0015026" data-r="PMID:24431302" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Coreceptor activity: ROR1 functions as a Wnt coreceptor in non-canonical Wnt signaling.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function consistent with the Wnt-receptor role. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27162350" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27162350
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROR1 is essential for proper innervation of auditory hair ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005886" data-r="PMID:27162350" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> plasma membrane: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007605" target="_blank" class="term-link">
+                                    GO:0007605
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of sound</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27162350" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27162350
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROR1 is essential for proper innervation of auditory hair ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0007605" data-r="PMID:27162350" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> sensory perception of sound: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with ROR1&#39;s established function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042813" target="_blank" class="term-link">
+                                    GO:0042813
+                                </a>
+                            </span>
+                            <span class="term-label">Wnt receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27162350" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27162350
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROR1 is essential for proper innervation of auditory hair ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0042813" data-r="PMID:27162350" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wnt receptor activity (IMP): ROR1 acts as a receptor/coreceptor for Wnt ligands (notably Wnt5a) - its real signaling function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function for ROR1 as a (non-catalytic) Wnt receptor. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043123" target="_blank" class="term-link">
+                                    GO:0043123
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of canonical NF-kappaB signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27162350" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27162350
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROR1 is essential for proper innervation of auditory hair ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0043123" data-r="PMID:27162350" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> positive regulation of canonical NF-kappaB signal transduction: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with ROR1&#39;s established function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043679" target="_blank" class="term-link">
+                                    GO:0043679
+                                </a>
+                            </span>
+                            <span class="term-label">axon terminus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0043679" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> axon terminus: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048839" target="_blank" class="term-link">
+                                    GO:0048839
+                                </a>
+                            </span>
+                            <span class="term-label">inner ear development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0048839" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> inner ear development: a core biological process for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core process consistent with ROR1&#39;s established function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043235" target="_blank" class="term-link">
+                                    GO:0043235
+                                </a>
+                            </span>
+                            <span class="term-label">signaling receptor complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23382219" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23382219
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for endosomal trafficking of diverse transm...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0043235" data-r="PMID:23382219" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> signaling receptor complex: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0017147" target="_blank" class="term-link">
+                                    GO:0017147
+                                </a>
+                            </span>
+                            <span class="term-label">Wnt-protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18287027" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18287027
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Antisera induced by infusions of autologous Ad-CD154-leukemi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0017147" data-r="PMID:18287027" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wnt-protein binding: ROR1 binds Wnt ligands via its extracellular CRD, central to its coreceptor role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, ligand-binding function. Retain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004714" target="_blank" class="term-link">
+                                    GO:0004714
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane receptor protein tyrosine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8875995" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8875995
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human neural tissues express a truncated Ror1 receptor tyros...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0004714" data-r="PMID:8875995" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Legacy positive transmembrane RTK activity (TAS, PMID:8875995) from the original cloning report, superseded by the demonstration that the kinase domain is inactive.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Outdated enzymatic claim, contradicted by the curated NOT|RTK activity and the CAUTION. Remove.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/ROR1/ROR1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">The kinase domain has very low catalytic activity in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8875995" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8875995
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human neural tissues express a truncated Ror1 receptor tyros...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005737" data-r="PMID:8875995" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytoplasm: a secondary/broad localization for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plausible but non-core (broad term or context-specific).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1334494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1334494
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel family of cell surface receptors with tyrosine kinas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005886" data-r="PMID:1334494" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> plasma membrane: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8875995" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8875995
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human neural tissues express a truncated Ror1 receptor tyros...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0005886" data-r="PMID:8875995" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> plasma membrane: a core subcellular location for ROR1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007169" target="_blank" class="term-link">
+                                    GO:0007169
+                                </a>
+                            </span>
+                            <span class="term-label">cell surface receptor protein tyrosine kinase signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1334494" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1334494
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel family of cell surface receptors with tyrosine kinas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01973" data-a="GO:0007169" data-r="PMID:1334494" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Legacy positive cell-surface RTK signaling (TAS) tied to the now-refuted catalytic-receptor model.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Superseded process annotation, contradicted by the curated NOT. Remove.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalytically inactive (pseudokinase) receptor tyrosine kinase that functions as a Wnt (Wnt5a) receptor/coreceptor in non-canonical Wnt signaling, transducing signals non-catalytically.</h3>
+                <span class="vote-buttons" data-g="Q01973" data-a="FUNCTION: Catalytically inactive (pseudokinase) receptor tyr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042813" target="_blank" class="term-link">
+                            Wnt receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016055" target="_blank" class="term-link">
+                                Wnt signaling pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/ROR1/ROR1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">The kinase domain has very low catalytic activity in vitro</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">GO annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified annotations to orthologs by curator judgment</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">GO annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">GO annotation based on curation of immunofluorescence data (HPA)</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic GO annotation from UniProtKB-KW mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/ROR1/ROR1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for ROR1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1334494" target="_blank" class="term-link">
+                            PMID:1334494
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel family of cell surface receptors with tyrosine kinase-like domain.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Early characterization placing ROR1 as a cell-surface receptor tyrosine kinase (legacy classification).</div>
+                        
+                        <div class="finding-text">"receptor tyrosine kinase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18287027" target="_blank" class="term-link">
+                            PMID:18287027
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Antisera induced by infusions of autologous Ad-CD154-leukemia B cells identify ROR1 as an oncofetal antigen and receptor for Wnt5a.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ROR1 is an oncofetal antigen and a receptor for Wnt5a, supporting its Wnt-protein binding / Wnt receptor function.</div>
+                        
+                        <div class="finding-text">"identify ROR1 as an oncofetal antigen and receptor for Wnt5a"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22439932" target="_blank" class="term-link">
+                            PMID:22439932
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NKX2-1/TITF1/TTF-1-Induced ROR1 is required to sustain EGFR survival signaling in lung adenocarcinoma.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ROR1 sustains EGFR survival signaling in lung adenocarcinoma (a protein-interaction / signaling context).</div>
+                        
+                        <div class="finding-text">"ROR1 is required to sustain EGFR survival signaling in lung adenocarcinoma"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23382219" target="_blank" class="term-link">
+                            PMID:23382219
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural basis for endosomal trafficking of diverse transmembrane cargos by PX-FERM proteins.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ROR1 is an endosomal-trafficking cargo of PX-FERM proteins (membrane/localization context).</div>
+                        
+                        <div class="finding-text">"endosomal trafficking of diverse transmembrane cargos by PX-FERM proteins"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24107129" target="_blank" class="term-link">
+                            PMID:24107129
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A robust methodology to subclassify pseudokinases based on their nucleotide-binding properties.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ROR1 is classified as a pseudokinase that does not bind nucleotide, supporting the NOT ATP binding annotation.</div>
+                        
+                        <div class="finding-text">"A robust methodology to subclassify pseudokinases based on their nucleotide-binding properties"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24431302" target="_blank" class="term-link">
+                            PMID:24431302
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Wnt signaling in midbrain dopaminergic neuron development and regenerative medicine for Parkinson&#39;s disease.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Review of Wnt signaling in dopaminergic neuron development; cited for ROR1 coreceptor activity.</div>
+                        
+                        <div class="finding-text">"Wnt signaling in midbrain dopaminergic neuron development"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27162350" target="_blank" class="term-link">
+                            PMID:27162350
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ROR1 is essential for proper innervation of auditory hair cells and hearing in humans and mice.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ROR1 is essential for innervation of auditory hair cells and hearing, and acts as a Wnt receptor (supports Wnt receptor activity and sensory perception of sound).</div>
+                        
+                        <div class="finding-text">"ROR1 is essential for proper innervation of auditory hair cells and hearing"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36949068" target="_blank" class="term-link">
+                            PMID:36949068
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">IGFBP5 is an ROR1 ligand promoting glioblastoma invasion via ROR1/HER2-CREB signaling axis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IGFBP5 is a ROR1 ligand; ROR1 functions as a signaling receptor promoting invasion via a ROR1/HER2-CREB axis (supports signaling receptor activity).</div>
+                        
+                        <div class="finding-text">"IGFBP5 is an ROR1 ligand promoting glioblastoma invasion via ROR1/HER2-CREB signaling axis"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8875995" target="_blank" class="term-link">
+                            PMID:8875995
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human neural tissues express a truncated Ror1 receptor tyrosine kinase, lacking both extracellular and transmembrane domains.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Original report describing Ror1 as a receptor tyrosine kinase family member (the legacy RTK classification later superseded by the pseudokinase finding).</div>
+                        
+                        <div class="finding-text">"a member of the receptor tyrosine kinase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ROR1 signaling require heterodimerization with a catalytically active partner (e.g. ROR2, RYK, or MuSK) to compensate for its dead kinase domain?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01973" data-a="Q: Does ROR1 signaling require heterodimerization wit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare Wnt5a-dependent signaling/migration in cells expressing wild-type ROR1 vs an extracellular-CRD mutant that cannot bind Wnt.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ROR1 transduces Wnt5a signals independently of any kinase activity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q01973" data-a="EXPERIMENT: Compare Wnt5a-dependent signaling/migration in cel..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code># yaml-language-server: $schema=../../../src/ai_gene_review/schema/gene_review.yaml
+id: Q01973
+gene_symbol: ROR1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: ROR1 (inactive tyrosine-protein kinase transmembrane receptor ROR1) is a single-pass receptor
+  of the ROR family with an extracellular cysteine-rich (Frizzled-like) and kringle domain and an intracellular
+  pseudokinase domain. Its tyrosine-kinase domain is catalytically inactive (very low activity in vitro;
+  it does not bind ATP), so ROR1 signals non-catalytically as a receptor/coreceptor for Wnt ligands (notably
+  Wnt5a) in non-canonical Wnt signaling, regulating cell polarity, migration and proliferation. It is
+  an oncofetal antigen, re-expressed in many cancers (e.g. CLL), making it a prominent immunotherapy target.
+alternative_products:
+- name: Long
+  id: Q01973-1
+- name: Short (T-ROR1)
+  id: Q01973-2
+  sequence_note: VSP_005008
+- name: &#39;3&#39;
+  id: Q01973-3
+  sequence_note: VSP_043663, VSP_043664
+existing_annotations:
+- term:
+    id: GO:0004714
+    label: transmembrane receptor protein tyrosine kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  negated: true
+  review:
+    summary: &#39;NOT: ROR1 does not have transmembrane receptor tyrosine kinase activity. Its kinase domain
+      is degenerate (very low activity in vitro; does not bind ATP) - an inactive/pseudokinase RTK.&#39;
+    action: ACCEPT
+    reason: Correct, important negation. Retain.
+    supported_by:
+    - reference_id: file:human/ROR1/ROR1-uniprot.txt
+      supporting_text: The kinase domain has very low catalytic activity in vitro
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &#39;plasma membrane: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0007169
+    label: cell surface receptor protein tyrosine kinase signaling pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  negated: true
+  review:
+    summary: &#39;NOT: ROR1 is not involved in cell-surface receptor protein tyrosine kinase signaling (as
+      a catalytic RTK).&#39;
+    action: ACCEPT
+    reason: Correct negation, consistent with the inactive kinase domain. Retain.
+- term:
+    id: GO:0043235
+    label: signaling receptor complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &#39;signaling receptor complex: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &#39;axon: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0043123
+    label: positive regulation of canonical NF-kappaB signal transduction
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &#39;positive regulation of canonical NF-kappaB signal transduction: a core biological process
+      for ROR1.&#39;
+    action: ACCEPT
+    reason: Core process consistent with ROR1&#39;s established function.
+- term:
+    id: GO:0017147
+    label: Wnt-protein binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &#39;Wnt-protein binding: ROR1 binds Wnt ligands via its extracellular CRD, central to its coreceptor
+      role.&#39;
+    action: ACCEPT
+    reason: Core, ligand-binding function. Retain.
+- term:
+    id: GO:0004672
+    label: protein kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Positive &#39;protein kinase activity&#39; (IEA) from the protein-kinase-superfamily signature. ROR1
+      is an inactive/pseudokinase receptor.
+    action: REMOVE
+    reason: Electronic over-propagation contradicted by the curated NOTs and the CAUTION (degenerate kinase,
+      no ATP binding). Remove.
+    supported_by:
+    - reference_id: file:human/ROR1/ROR1-uniprot.txt
+      supporting_text: The kinase domain has very low catalytic activity in vitro
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &#39;plasma membrane: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0015026
+    label: coreceptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &#39;Coreceptor activity: ROR1 functions as a Wnt coreceptor in non-canonical Wnt signaling.&#39;
+    action: ACCEPT
+    reason: Core function consistent with the Wnt-receptor role. Retain.
+- term:
+    id: GO:0016055
+    label: Wnt signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &#39;Wnt signaling pathway: a core biological process for ROR1.&#39;
+    action: ACCEPT
+    reason: Core process consistent with ROR1&#39;s established function.
+- term:
+    id: GO:0017147
+    label: Wnt-protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &#39;Wnt-protein binding: ROR1 binds Wnt ligands via its extracellular CRD, central to its coreceptor
+      role.&#39;
+    action: ACCEPT
+    reason: Core, ligand-binding function. Retain.
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &#39;axon: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:22439932
+  qualifier: enables
+  review:
+    summary: Specific protein interaction (PMID:22439932) consistent with ROR1&#39;s scaffold/adapter role.
+    action: KEEP_AS_NON_CORE
+    reason: Real interaction kept as non-core supporting evidence; the generic &#39;protein binding&#39; term
+      is itself uninformative.
+- term:
+    id: GO:0043679
+    label: axon terminus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &#39;axon terminus: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0048839
+    label: inner ear development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &#39;inner ear development: a core biological process for ROR1.&#39;
+    action: ACCEPT
+    reason: Core process consistent with ROR1&#39;s established function.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:24107129
+  qualifier: enables
+  negated: true
+  review:
+    summary: &#39;NOT: ROR1 does not bind ATP (IDA) - its degenerate kinase domain lacks nucleotide binding.&#39;
+    action: ACCEPT
+    reason: Correct negation with direct evidence; underpins the pseudokinase classification. Retain.
+    supported_by:
+    - reference_id: file:human/ROR1/ROR1-uniprot.txt
+      supporting_text: Does not bind ATP
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: EXP
+  original_reference_id: PMID:27162350
+  qualifier: located_in
+  review:
+    summary: &#39;membrane: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0008283
+    label: cell population proliferation
+  evidence_type: IDA
+  original_reference_id: PMID:36949068
+  qualifier: involved_in
+  review:
+    summary: &#39;cell population proliferation: a core biological process for ROR1.&#39;
+    action: KEEP_AS_NON_CORE
+    reason: Cell population proliferation is a downstream physiological/oncogenic phenotype of ROR1 signaling
+      rather than its core molecular role; kept as non-core for consistency with how the same phenotype
+      is treated elsewhere (e.g. RHBDF1).
+- term:
+    id: GO:0038023
+    label: signaling receptor activity
+  evidence_type: IDA
+  original_reference_id: PMID:36949068
+  qualifier: enables
+  review:
+    summary: &#39;Signaling receptor activity (IDA): ROR1 transduces signals as a cell-surface receptor independent
+      of catalytic activity.&#39;
+    action: ACCEPT
+    reason: Core receptor function. Retain.
+- term:
+    id: GO:0015026
+    label: coreceptor activity
+  evidence_type: TAS
+  original_reference_id: PMID:24431302
+  qualifier: enables
+  review:
+    summary: &#39;Coreceptor activity: ROR1 functions as a Wnt coreceptor in non-canonical Wnt signaling.&#39;
+    action: ACCEPT
+    reason: Core function consistent with the Wnt-receptor role. Retain.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:27162350
+  qualifier: located_in
+  review:
+    summary: &#39;plasma membrane: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0007605
+    label: sensory perception of sound
+  evidence_type: IMP
+  original_reference_id: PMID:27162350
+  qualifier: involved_in
+  review:
+    summary: &#39;sensory perception of sound: a core biological process for ROR1.&#39;
+    action: ACCEPT
+    reason: Core process consistent with ROR1&#39;s established function.
+- term:
+    id: GO:0042813
+    label: Wnt receptor activity
+  evidence_type: IMP
+  original_reference_id: PMID:27162350
+  qualifier: enables
+  review:
+    summary: &#39;Wnt receptor activity (IMP): ROR1 acts as a receptor/coreceptor for Wnt ligands (notably
+      Wnt5a) - its real signaling function.&#39;
+    action: ACCEPT
+    reason: Core molecular function for ROR1 as a (non-catalytic) Wnt receptor. Retain.
+- term:
+    id: GO:0043123
+    label: positive regulation of canonical NF-kappaB signal transduction
+  evidence_type: IMP
+  original_reference_id: PMID:27162350
+  qualifier: involved_in
+  review:
+    summary: &#39;positive regulation of canonical NF-kappaB signal transduction: a core biological process
+      for ROR1.&#39;
+    action: ACCEPT
+    reason: Core process consistent with ROR1&#39;s established function.
+- term:
+    id: GO:0043679
+    label: axon terminus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &#39;axon terminus: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0048839
+    label: inner ear development
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &#39;inner ear development: a core biological process for ROR1.&#39;
+    action: ACCEPT
+    reason: Core process consistent with ROR1&#39;s established function.
+- term:
+    id: GO:0043235
+    label: signaling receptor complex
+  evidence_type: IDA
+  original_reference_id: PMID:23382219
+  qualifier: part_of
+  review:
+    summary: &#39;signaling receptor complex: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0017147
+    label: Wnt-protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18287027
+  qualifier: enables
+  review:
+    summary: &#39;Wnt-protein binding: ROR1 binds Wnt ligands via its extracellular CRD, central to its coreceptor
+      role.&#39;
+    action: ACCEPT
+    reason: Core, ligand-binding function. Retain.
+- term:
+    id: GO:0004714
+    label: transmembrane receptor protein tyrosine kinase activity
+  evidence_type: TAS
+  original_reference_id: PMID:8875995
+  qualifier: enables
+  review:
+    summary: Legacy positive transmembrane RTK activity (TAS, PMID:8875995) from the original cloning
+      report, superseded by the demonstration that the kinase domain is inactive.
+    action: REMOVE
+    reason: Outdated enzymatic claim, contradicted by the curated NOT|RTK activity and the CAUTION. Remove.
+    supported_by:
+    - reference_id: file:human/ROR1/ROR1-uniprot.txt
+      supporting_text: The kinase domain has very low catalytic activity in vitro
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: TAS
+  original_reference_id: PMID:8875995
+  qualifier: located_in
+  review:
+    summary: &#39;cytoplasm: a secondary/broad localization for ROR1.&#39;
+    action: KEEP_AS_NON_CORE
+    reason: Plausible but non-core (broad term or context-specific).
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: PMID:1334494
+  qualifier: located_in
+  review:
+    summary: &#39;plasma membrane: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8875995
+  qualifier: located_in
+  review:
+    summary: &#39;plasma membrane: a core subcellular location for ROR1.&#39;
+    action: ACCEPT
+    reason: Correct core localization.
+- term:
+    id: GO:0007169
+    label: cell surface receptor protein tyrosine kinase signaling pathway
+  evidence_type: TAS
+  original_reference_id: PMID:1334494
+  qualifier: involved_in
+  review:
+    summary: Legacy positive cell-surface RTK signaling (TAS) tied to the now-refuted catalytic-receptor
+      model.
+    action: REMOVE
+    reason: Superseded process annotation, contradicted by the curated NOT. Remove.
+references:
+- id: GO_REF:0000002
+  title: GO annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified annotations to orthologs by curator judgment
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: GO annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings: []
+- id: GO_REF:0000052
+  title: GO annotation based on curation of immunofluorescence data (HPA)
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl
+    Compara
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings: []
+- id: GO_REF:0000117
+  title: Automatic GO annotation from UniProtKB-KW mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/ROR1/ROR1-uniprot.txt
+  title: UniProt entry for ROR1
+  findings: []
+- id: PMID:1334494
+  title: A novel family of cell surface receptors with tyrosine kinase-like domain.
+  findings:
+  - statement: Early characterization placing ROR1 as a cell-surface receptor tyrosine kinase (legacy
+      classification).
+    supporting_text: receptor tyrosine kinase
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Legacy RTK reference; basis of a TAS PTK-signaling annotation now REMOVEd.
+- id: PMID:18287027
+  title: Antisera induced by infusions of autologous Ad-CD154-leukemia B cells identify ROR1 as an oncofetal
+    antigen and receptor for Wnt5a.
+  findings:
+  - statement: ROR1 is an oncofetal antigen and a receptor for Wnt5a, supporting its Wnt-protein binding
+      / Wnt receptor function.
+    supporting_text: identify ROR1 as an oncofetal antigen and receptor for Wnt5a
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary evidence for ROR1 as a Wnt5a receptor.
+- id: PMID:22439932
+  title: NKX2-1/TITF1/TTF-1-Induced ROR1 is required to sustain EGFR survival signaling in lung adenocarcinoma.
+  findings:
+  - statement: ROR1 sustains EGFR survival signaling in lung adenocarcinoma (a protein-interaction / signaling
+      context).
+    supporting_text: ROR1 is required to sustain EGFR survival signaling in lung adenocarcinoma
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Disease/interaction context; supports protein binding only.
+- id: PMID:23382219
+  title: Structural basis for endosomal trafficking of diverse transmembrane cargos by PX-FERM proteins.
+  findings:
+  - statement: ROR1 is an endosomal-trafficking cargo of PX-FERM proteins (membrane/localization context).
+    supporting_text: endosomal trafficking of diverse transmembrane cargos by PX-FERM proteins
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Trafficking/localization context (signaling receptor complex).
+- id: PMID:24107129
+  title: A robust methodology to subclassify pseudokinases based on their nucleotide-binding properties.
+  findings:
+  - statement: ROR1 is classified as a pseudokinase that does not bind nucleotide, supporting the NOT
+      ATP binding annotation.
+    supporting_text: A robust methodology to subclassify pseudokinases based on their nucleotide-binding
+      properties
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Supports the pseudokinase classification and the curated NOT|ATP binding.
+- id: PMID:24431302
+  title: Wnt signaling in midbrain dopaminergic neuron development and regenerative medicine for Parkinson&#39;s
+    disease.
+  findings:
+  - statement: Review of Wnt signaling in dopaminergic neuron development; cited for ROR1 coreceptor activity.
+    supporting_text: Wnt signaling in midbrain dopaminergic neuron development
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Review supporting the coreceptor-activity TAS annotation.
+- id: PMID:27162350
+  title: ROR1 is essential for proper innervation of auditory hair cells and hearing in humans and mice.
+  findings:
+  - statement: ROR1 is essential for innervation of auditory hair cells and hearing, and acts as a Wnt
+      receptor (supports Wnt receptor activity and sensory perception of sound).
+    supporting_text: ROR1 is essential for proper innervation of auditory hair cells and hearing
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Source of the IMP Wnt receptor activity and inner-ear/hearing annotations.
+- id: PMID:36949068
+  title: IGFBP5 is an ROR1 ligand promoting glioblastoma invasion via ROR1/HER2-CREB signaling axis.
+  findings:
+  - statement: IGFBP5 is a ROR1 ligand; ROR1 functions as a signaling receptor promoting invasion via
+      a ROR1/HER2-CREB axis (supports signaling receptor activity).
+    supporting_text: IGFBP5 is an ROR1 ligand promoting glioblastoma invasion via ROR1/HER2-CREB signaling
+      axis
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Supports signaling-receptor activity and a proliferation/invasion phenotype.
+- id: PMID:8875995
+  title: Human neural tissues express a truncated Ror1 receptor tyrosine kinase, lacking both extracellular
+    and transmembrane domains.
+  findings:
+  - statement: Original report describing Ror1 as a receptor tyrosine kinase family member (the legacy
+      RTK classification later superseded by the pseudokinase finding).
+    supporting_text: a member of the receptor tyrosine kinase
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Basis of the legacy TAS &#39;transmembrane RTK activity&#39; annotation now REMOVEd as superseded.
+aliases:
+- NTRKR1
+- Inactive tyrosine-protein kinase transmembrane receptor ROR1
+- Neurotrophic tyrosine kinase receptor-related 1
+core_functions:
+- description: Catalytically inactive (pseudokinase) receptor tyrosine kinase that functions as a Wnt
+    (Wnt5a) receptor/coreceptor in non-canonical Wnt signaling, transducing signals non-catalytically.
+  molecular_function:
+    id: GO:0042813
+    label: Wnt receptor activity
+  directly_involved_in:
+  - id: GO:0016055
+    label: Wnt signaling pathway
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:human/ROR1/ROR1-uniprot.txt
+    supporting_text: The kinase domain has very low catalytic activity in vitro
+suggested_questions:
+- question: Does ROR1 signaling require heterodimerization with a catalytically active partner (e.g. ROR2,
+    RYK, or MuSK) to compensate for its dead kinase domain?
+suggested_experiments:
+- hypothesis: ROR1 transduces Wnt5a signals independently of any kinase activity.
+  description: Compare Wnt5a-dependent signaling/migration in cells expressing wild-type ROR1 vs an extracellular-CRD
+    mutant that cannot bind Wnt.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
