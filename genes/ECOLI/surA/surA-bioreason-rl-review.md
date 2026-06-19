@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: surA (E. coli)
 
-Source: surA-deep-research-bioreason-rl.md
+Source: surA-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

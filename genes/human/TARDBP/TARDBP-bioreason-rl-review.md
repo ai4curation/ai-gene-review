@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: TARDBP (human)
 
-Source: TARDBP-deep-research-bioreason-rl.md
+Source: TARDBP-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

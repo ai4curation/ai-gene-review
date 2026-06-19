@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: alo1 (S. pombe)
 
-Source: alo1-deep-research-bioreason-rl.md
+Source: alo1-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

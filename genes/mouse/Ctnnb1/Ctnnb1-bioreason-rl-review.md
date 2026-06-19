@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Ctnnb1 (mouse)
 
-Source: Ctnnb1-deep-research-bioreason-rl.md
+Source: Ctnnb1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

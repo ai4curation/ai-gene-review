@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pedH (P. putida)
 
-Source: pedH-deep-research-bioreason-rl.md
+Source: pedH-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

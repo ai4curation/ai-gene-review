@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: SSA1 (S. cerevisiae)
 
-Source: SSA1-deep-research-bioreason-rl.md
+Source: SSA1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 2/5

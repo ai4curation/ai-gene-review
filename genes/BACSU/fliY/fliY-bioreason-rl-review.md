@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: fliY (B. subtilis)
 
-Source: fliY-deep-research-bioreason-rl.md
+Source: fliY-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

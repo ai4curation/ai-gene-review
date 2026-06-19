@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: bst1 (S. pombe)
 
-Source: bst1-deep-research-bioreason-rl.md
+Source: bst1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

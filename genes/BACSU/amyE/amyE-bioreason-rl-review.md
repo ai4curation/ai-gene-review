@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: amyE (B. subtilis)
 
-Source: amyE-deep-research-bioreason-rl.md
+Source: amyE-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

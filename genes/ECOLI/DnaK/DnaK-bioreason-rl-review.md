@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: DnaK (E. coli)
 
-Source: DnaK-deep-research-bioreason-rl.md
+Source: DnaK-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

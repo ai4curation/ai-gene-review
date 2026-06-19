@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: tpx1 (S. pombe)
 
-Source: tpx1-deep-research-bioreason-rl.md
+Source: tpx1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: NOTCH1 (human)
 
-Source: NOTCH1-deep-research-bioreason-rl.md
+Source: NOTCH1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

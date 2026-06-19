@@ -67,7 +67,7 @@ Per gene, the following files are available (example: [ECOLI/SlyD](https://githu
 
 | File | Description |
 |------|-------------|
-| `{GENE}-deep-research-bioreason-rl.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
+| `{GENE}-bioreason-rl-predictions.md` | Raw BioReason-Pro RL web export (reasoning trace, functional summary, InterPro, GO-GPT terms) |
 | `{GENE}-bioreason-rl-review.md` | Evaluation of reasoning trace vs curated review (correctness/completeness scores + interpro2go comparison) |
 | `{GENE}-gogpt-leaf-predictions.yaml` | GO-GPT leaf terms as PredictionReview YAML |
 | `{GENE}-sft-predictions.yaml` | BioReason-Pro SFT GO terms as PredictionReview YAML |
@@ -305,10 +305,10 @@ The HF catalogue's structured GO section (at the end of the `generation` column)
 
 We compared GO terms for SlyD across three sources to understand the relationship between them:
 
-**Website SFT scrape** (`SlyD-deep-research-bioreason.md`, 9 terms -- leaf-pruned):
+**Legacy website SFT scrape** (deleted unsuffixed raw export; 9 terms -- leaf-pruned):
 GO:0003755 (PPIase activity), GO:0016859, GO:0140096, GO:0016853, GO:0003824, GO:0006457, GO:0005737, GO:0005829, GO:0005622
 
-**Website RL scrape** (`SlyD-deep-research-bioreason-rl.md`, 58 terms -- full GO-GPT with all ancestors):
+**Website RL scrape** (`SlyD-bioreason-rl-predictions.md`, 58 terms -- full GO-GPT with all ancestors):
 Includes the above plus metal binding (GO:0008270, GO:0005507, GO:0016151, GO:0050897), unfolded protein binding (GO:0051082), heat response (GO:0009408), refolding (GO:0042026), stabilization (GO:0050821), and all ancestor terms up to root.
 
 **HF SFT catalogue** (structured section, 13 terms):
