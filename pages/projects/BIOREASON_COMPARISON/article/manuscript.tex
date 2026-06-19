@@ -90,41 +90,30 @@ insights into systematic errors}
 \maketitle
 
 \begin{abstract}
-New protein function prediction methods appear monthly, but annotation
-databases lack a scalable way to decide which ones are good enough to
-deploy. Aggregate metrics like CAFA's \(F_{\max}\) track field-level
-progress, yet they reward predictions that match a biased ground truth,
-hide systematic errors behind averages, and cannot evaluate the
-free-text reasoning that modern agentic predictors now produce alongside
-their GO terms. We describe AI Gene Review (AIGR), an agentic curation
-pipeline in which LLM-based curator-agents synthesise literature, domain
-architecture, and existing annotations to evaluate predictions gene by
-gene, producing structured, human-readable assessments.
+Determining the function of all genes across the tree of life is a
+fundamental challenge in molecular biology. Only a fraction of these
+genes have been experimentally characterized, necessitating the use of
+computational inference to assign function to the others. New protein
+function prediction methods appear monthly, presenting challenges for
+manual assessment. Existing automated assessment methods reward
+predictions that match a biased ground truth, and hide systematic
+errors behind averages. Additionally, newer generate artificial
+intelligence methods produce narrative summaries rather than labels,
+presenting additional challenges. Expert reviews utilizing multiple
+lines of evidence have been shown to reveal systematic errors, but
+these reviews are expensive and time consuming to perform.
 
-We apply AIGR to BioReason-Pro, a recent agentic function predictor,
-using a single paired BioReason-Pro benchmark: \textbf{ARGO139}
-(Annotation Review GO), a manually selected 139-gene set spanning
-proteins from eukaryotes, bacteria, and a phage, with edge cases such as
-a snake-venom metalloproteinase. On ARGO139, BioReason-Pro mostly tells
-databases what they already know. Its RL narratives largely restate
-InterPro2GO and show seven reproducible failure modes, while its SFT GO
-terms are dominated by existing GOA annotations. In the cleaner
-HuggingFace SFT source subset (95 ARGO139 genes, 955 terms), 67.5\% of
-terms were correct-but-not-novel, 10.6\% were incorrect, and 5.4\% were
-correct novel annotations already known from the literature but absent
-from GOA. The model's narrative and GO-term outputs can also disagree,
-with each sometimes correct when the other is wrong.
+We describe AI-AUGR (Assessment via Unified Gene-evidence
+Review), an agentic curation pipeline that synthesizes literature,
+domain architecture, and existing annotations to evaluate predictions
+gene by gene, producing structured, human-readable qualitative
+assessments.
 
-These findings required a richer evaluation layer than aggregate metrics
-provide. We propose a three-tier framework --- aggregate scoring, expert
-or agentic review, and prospective experiment --- and argue that the
-middle tier, partially automated, is the most practical basis for
-deployment decisions. A retrospective reproduction of a published expert
-error taxonomy provides a positive-control check that AIGR can represent
-the same biological error classes. A follow-on answer-key-withheld
-recapitulation recovered 4/7 exact expert labels: useful as a smell test
-for sequence-AI outputs, but not a substitute for expert nuance. All
-data and code are publicly available.
+We apply AI-AUGR to BioReason-Pro, a recent protein-function reasoner,
+which tops performance on existing benchmarks.
+
+TODO
+
 \end{abstract}
 
 \hypertarget{introduction}{%
@@ -132,96 +121,51 @@ data and code are publicly available.
 
 Functional annotation of gene products --- determining, recording, and
 structuring what a protein does, where in the cell it does it, and in
-what biological process it participates --- is one of the central tasks
-of modern molecular biology. Downstream analyses in genomics, systems
-biology, and biomedicine, from gene-set enrichment and pathway
-reconstruction to therapeutic target identification and biomarker
-discovery, all inherit the assumptions encoded in the Gene Ontology (GO)
-annotation graph. %% CJM: CITE
-At the scale of modern sequence data, purely
-experimental characterisation is not tractable; functional knowledge is
-instead assembled from two complementary sources: \textbf{(i)
+what biological process it participates --- is one of the central
+tasks of modern molecular biology, underpinning high-throughput
+analyses of molecular data. The Gene Ontology (GO) project organizes
+these annotations, and coordinated both manual curation efforts and
+the assessment and application of annotation
+pipelines\cite{goconsortium2023}.
+
+Annotations in GO can be classified in two categories: \textbf{(i)
 literature-based expert curation}, in which professional curators read
-papers on experimentally tractable model organisms and encode the
+papers on experimentally tractable model systems and encode the
 findings as structured, evidence-coded annotations; and \textbf{(ii)
-computational prediction}, which propagates function across the long
-tail of uncharacterised proteins.
+computational inference}, which propagates function across the long tail of
+uncharacterised proteins.
 
-%% CJM: I think I prefer "computational inference";
-%% prediction feels like ML methods whereas inference encompasses
-%% things like propagation
+Traditional production pipelines such as InterPro2GO, PANTHER/PAINT,
+and orthology transfer are attractive because their inferences are
+transparent: annotations can be traced back to a family, domain
+signature, phylogenetic node, or orthology assertion. Over-prediction
+can usually be easily corrected, for example by weaking a mapping
+between a domain/family and a GO term. Newer
+machine-learning predictors and protein language-model systems are
+less rule-like. They may consume sequence, structure, organism
+context, or model-derived embeddings directly, and some now emit
+free-text rationales or functional summaries alongside term
+lists. This makes evaluation harder: the prediction is no longer only
+a set of GO terms, and the provenance chain is often less explicit.
 
-For most of the last two decades the dominant production pipelines for
-computational annotation have been conservative: HMM- and family-based
-methods such as InterPro2GO (domain → GO term mappings), PANTHER
-phylogenetic inference (PAINT-curated ancestral-node → descendant GO
-terms \cite{gaudet2011}), and orthology-transfer tools (GOA electronic, Ensembl
-Compara, Reactome inference). These methods are attractive precisely
-because their outputs are interpretable and traceable: a hit to a
-well-defined protein family lands in a hand-curated mapping, producing a
-deterministic chain from the sequence evidence to the resulting
-annotation. A curator receiving one of these annotations can explain in
-seconds where it came from and what would have had to be true for it to
-be wrong.
+This presents a challenge for assessing whether predictions should be
+included alongside trusted methods in the main annotation corpus. The
+community's standard yardstick for answering this question has been
+the Critical Assessment of Functional Annotation (CAFA)
+series \cite{radivojac2013,jiang2016,zhou2019}, which applies temporal
+holdout against GOA snapshots and reports aggregate GOA-agreement
+scores.
 
-%% CJM: Cite interpro2go. Cite functionome paper
-%% CJM: don't belabor history. But give a bit more detail on the 2-step nature of things like interpro2go
-%% you can mention and cite interproscan
-%% CJM: Actually see my notes in the next section, maybe we trim this part?
-
-In the past five years this landscape has changed rapidly. Protein
-language models (ESM1/2, ProtT5, ESM3, AlphaMissense) \cite{lin2023,hayes2025},
-generative models, and now agentic reasoning LLMs
-
-
-%% CJM: bringing in agents too soon, complicates the story, and people are not using agents for prediction yet
-%% note bioreason is NOT agentic. However, reasoner is fine
-
-have been repurposed
-for function prediction. These methods are qualitatively different from
-their HMM-based predecessors in three ways that matter for evaluation.
-First, they consume sequence directly rather than matching to a curated
-family, so their provenance chain is opaque. Second, they are extremely
-productive: new methods are released monthly, faster than any annotation
-team can review them. Third, and most importantly for this paper,
-\textbf{they no longer emit only GO terms}. Modern agentic predictors
-such as BioReason-Pro \cite{fallahpour2026} output a free-text functional summary and
-a chain-of-thought reasoning trace in addition to a predicted term list.
-Most of the scientific content of the prediction --- the proposed
-mechanism, the cited domain evidence, the identification of a
-pseudoenzyme, the placement in a pathway --- lives in the narrative, not
-in the term list.
-
-%% CJM: this is bringing in the narrative output part too soon. I think the section above
-%% should be shortened
-
-This creates a concrete, recurring question for resources like GO:
-\textbf{when is a new, less-rule-like method good enough to trust in
-production?} The community's standard yardstick for answering this
-question has been the Critical Assessment of Functional Annotation
-(CAFA) series \cite{radivojac2013,jiang2016,zhou2019}, which applies temporal holdout against GOA
-snapshots and reports aggregate GOA-agreement scores (most prominently
-\(F_{\max}\) and \(S_{\min}\)).
-
-%% CJM: define these
-
-
-CAFA has been indispensable for tracking
-aggregate progress of the field, but there is a growing recognition that
-two problems make it insufficient as a deployment decision-support tool.
-
-%% CJM: too strong. Just say challenges
-
-First, \textbf{GOA itself is not ground truth}: it contains known
-over-annotations, paralog-inherited errors, and IEA/IBA annotations that
-the curation community already knows to be unreliable
-\cite{gaudet2017,goconsortium2023,skunca2012,haynes2018,schnoes2013}. 58\% of human GO annotations cover only 16\% of
-genes \cite{haynes2018}, creating an ascertainment bias that rewards predictors
+CAFA has been indispensable for tracking aggregate progress of the
+field, but two challenges limit its use as a deployment decision-support
+tool. First, is known biases and over-annotations in the corpus of existing GO annotations
+\cite{gaudet2017,goconsortium2023,skunca2012,haynes2018,schnoes2013}. This rewards predictors
 for learning the annotation distribution rather than the underlying
-biology. Second, and more acute with the advent of agentic predictors,
-CAFA-style metrics operate on the bag-of-GO-terms projection of the
-prediction, while much of the scientific content now appears in
-free-text narrative and reasoning.
+biology. Second, CAFA-style metrics operate on the bag-of-GO-terms
+projection of the prediction. They cannot directly assess whether a
+model's biological rationale is mechanistically plausible, whether it
+has ignored organism context, or whether it has merely restated an
+existing domain-based inference.
 
 The most systematic recent illustration of the gap between aggregate
 scoring and biological validity comes from de Crécy-Lagard \emph{et al.}
@@ -238,42 +182,22 @@ Each rejection in the de Crécy-Lagard analysis required the reviewer to
 subfamily context, pathway presence/absence in the organism, genetic
 evidence, and orthogonal primary literature.
 
-%% CJM: this is really good ^^
-
 This is the
-\textbf{synthesis bottleneck}. Human experts can do it, but with new
-methods appearing monthly and prediction sets in the hundreds to
-thousands, exhaustive spot-checking by hand is no longer a scalable
-quality-control workflow.
+\textbf{synthesis bottleneck}. Human experts can do it, but it becomes a
+serious review burden as prediction sets and method submissions grow.
+This motivates a scalable intermediate layer between aggregate metric
+evaluation and prospective experiment. We present \textbf{AI-AUGR
+(Assessment via Unified Gene-evidence Review)}, an evidence-grounded
+review framework that produces structured, human-readable assessments
+of existing and predicted annotations. AI-AUGR is designed as
+a \emph{complement} to CAFA-style benchmarks rather than a
+replacement: it reviews biological rationales outside aggregate term
+metrics, surfaces systematic failure modes that metric aggregation
+hides, and distinguishes genuinely novel insight from restatement of
+existing domain-based annotation.
 
-%% CJM: this is a bit over-egged. I think you can just mention
-%% the number of participants/teams in CAFA5 and say this is  a challenge
-
-Here we ask whether the synthesis step itself can be partially
-automated. We present the \textbf{AI Gene Review (AIGR)} framework,
-
-%% CJM: "here we ask" is a bit... I dunno, don't like it
-%% CJM: Let's call the framework AI-AUGR — Assessment via Unified Gene-evidence Review
-
-an
-agentic curation pipeline in which LLM curator-agents, grounded in a
-per-gene evidence package (UniProt record, the full GO annotation table,
-InterPro domain architecture, cached full-text publications, an
-orthogonal deep-research report, and a LinkML-defined review schema with
-GO best-practice constraints), produce structured, human-readable
-reviews of existing and predicted annotations. AIGR is explicitly
-designed as a \emph{complement} to CAFA-style benchmarks rather than a
-replacement: it reviews narrative and reasoning content outside
-aggregate term metrics, surfaces systematic failure modes that metric
-aggregation hides, and distinguishes genuinely novel insight from a
-restatement of existing domain-based annotation.
-
-%% CJM: dont need to bring LinkML in here as this isn't the paper for
-%% the full framework we are focused on evaluating pipelines
-
-We make five contributions: (1) the AIGR pipeline and its review schema,
-with a LinkML-based validation layer enforcing that every claim traces
-to a verbatim quote from a cached publication; (2)
+We make five contributions: (1) the AI-AUGR review workflow and schema for
+evidence-grounded evaluation of function-prediction outputs; (2)
 \texttt{ESR-ECOLI-DET-Mini}, a 7-gene Expert Synthetic Review recap of
 the de Crécy-Lagard \emph{et al.} \cite{decrecylagard2025} \emph{E. coli} error taxonomy
 as a positive control, plus an answer-key-withheld recapitulation that
@@ -293,40 +217,39 @@ work}\label{background-and-related-work}}
 \subsection{Protein function prediction and its production
 pipelines}\label{protein-function-prediction-and-its-production-pipelines}}
 
-Large-scale protein function annotation has been dominated for over a
-decade by a small set of family- and homology-based production
-pipelines. InterPro \cite{paysanlafosse2023} aggregates HMMs and signature databases
-(Pfam, SMART, PANTHER, CDD, ProSite, TIGRFAM) into protein families and
-domains, and InterPro2GO provides manually curated mappings from these
-signatures to GO terms; the result is a deterministic annotation that
-can be traced back to a specific domain signature and a specific
-curator-authored mapping. The PANTHER/PAINT pipeline \cite{gaudet2011} takes this
-one step further: a trained curator inspects a phylogenetic tree of a
-family, annotates ancestral nodes with GO terms, and propagates those
-annotations to descendants via the IBA (Inferred from Biological
-ancestor) evidence code. Orthology-based pipelines (GOA electronic,
-Ensembl Compara, Reactome inference) operate similarly. These methods
-have a distinctive and valuable property for database deployment:
-\textbf{their failure modes are legible} --- a curator who disagrees
-with an annotation can point to a specific upstream decision and fix it.
+For production annotation, the key property of family- and
+homology-based pipelines is auditability. InterPro
+\cite{paysanlafosse2023} first aggregates signatures from resources such
+as Pfam, SMART, PANTHER, CDD, ProSite, and TIGRFAM into protein families
+and domains. InterPro2GO then applies manually curated signature-to-GO
+mappings, so an electronic annotation can be traced from a sequence hit
+to a signature and then to a specific curator-authored mapping. The
+PANTHER/PAINT pipeline \cite{gaudet2011} is similarly inspectable but
+phylogenetic: an expert curator reviews a family tree, annotates
+ancestral nodes with GO terms, and propagates those annotations to
+descendants via the IBA (Inferred from Biological ancestor) evidence
+code. Orthology-based pipelines (GOA electronic, Ensembl Compara,
+Reactome inference) operate through related transfer assumptions.
 
-%% CJM: we covered this albeit more briefly. I get we want to
-%% introduce problem briefly then go into details but maybe the balance isn't right?
+A key characteristic of these pipelines is their transparency and
+relative ease with which propagation errors can be corrected at source. A
+curator who disagrees with an annotation can usually identify the
+upstream signature, mapping, tree node, or orthology assertion that
+would need to change.
 
-More recent methods have moved in the opposite direction. Deep-learning
-predictors such as DeepGO(Plus) \cite{kulmanov2020}, DeepFRI, NetGO3, and PFmulDL
-\cite{yuan2023} consume sequence, structure, or network context directly and
-emit GO terms without an explicit provenance trail. Protein language
-models (ESM1/2/3 \cite{lin2023}, ProtT5, ProstT5) provide unsupervised
-representations that outperform family-based features on several
-downstream tasks. Most recently, a wave of generative and agentic
-LLM-based systems has emerged: GO-GPT (ESM2 embeddings + organism → GO
-terms), BioReason-Pro \cite{fallahpour2026}, and related systems that wrap an LLM
-around a bioinformatics toolkit and emit reasoning traces together with
-predicted terms. These methods are often impressive on aggregate
-benchmarks but present a particular challenge for annotation databases,
-because their outputs are not straightforwardly traceable and they carry
-narrative content that is poorly represented by bag-of-GO-terms metrics.
+More recent methods have moved toward direct statistical prediction.
+Deep-learning predictors such as DeepGO(Plus) \cite{kulmanov2020},
+DeepFRI, NetGO3, and PFmulDL \cite{yuan2023} consume sequence,
+structure, or network context and emit GO terms without the same
+explicit provenance trail. Protein language models (ESM1/2/3
+\cite{lin2023}, ProtT5, ProstT5) provide unsupervised representations
+that outperform family-based features on several downstream tasks. A
+newer layer of reasoner-style systems, including GO-GPT and
+BioReason-Pro \cite{fallahpour2026}, adds generated rationales or
+functional summaries to predicted or upstream-provided term lists. These
+outputs are useful to read, but they make evaluation harder because
+their biological claims are only partly captured by bag-of-GO-terms
+metrics.
 
 \hypertarget{cafa-and-the-evaluation-of-function-prediction}{%
 \subsection{CAFA and the evaluation of function
@@ -350,7 +273,7 @@ CAFA has unambiguously shaped the field: performance has improved round
 over round, method development is empirically grounded, and the
 community has a shared vocabulary for comparing approaches. But a
 growing body of work identifies structural limitations in CAFA-style
-evaluation that the rise of agentic predictors is making increasingly
+evaluation that the rise of reasoner-style predictors is making increasingly
 acute. We group these into three categories: metric-level, ground-truth,
 and holdout-set biases.
 
@@ -408,7 +331,7 @@ their own term-distribution biases tied to the phenotypes assayed.
 \textbf{Narrative and reasoning output require a different evaluation
 layer.} For classical family-based predictors this limitation was
 academic: there was nothing outside the term list to evaluate. For
-modern agentic predictors it is central. A prediction's narrative
+reasoner-style predictors it is central. A prediction's narrative
 summary, its cited domain evidence, its mechanistic reasoning, and its
 identification (or non-identification) of edge cases such as
 pseudoenzymes are all outside the bag-of-GO-terms projection used by
@@ -422,17 +345,13 @@ operationalised as a scalable, reusable pipeline. The de Crécy-Lagard
 it relies on exhaustive manual review, which does not scale with the
 rate at which new methods are released.
 
-\hypertarget{bioreason-pro-an-agentic-protein-function-reasoner}{%
-\subsection{BioReason-Pro: an agentic protein-function
-reasoner}\label{bioreason-pro-an-agentic-protein-function-reasoner}}
+\hypertarget{bioreason-pro-a-protein-function-reasoner}{%
+\subsection{BioReason-Pro: a protein-function
+reasoner}\label{bioreason-pro-a-protein-function-reasoner}}
 
-BioReason-Pro \cite{fallahpour2026} is the current flagship of the agentic-reasoner
-generation of function predictors. Architecturally, it is a narrow
-
-
-%% CJM: not agentic
-
-fine-tune of the Qwen3-4B foundation LLM, exposed in two variants:
+BioReason-Pro \cite{fallahpour2026} is a representative member of the
+reasoning-output generation of function predictors. Architecturally, it
+is a narrow fine-tune of the Qwen3-4B foundation LLM, exposed in two variants:
 \textbf{BioReason-Pro SFT}, trained on \textasciitilde124K reasoning
 traces synthesised by GPT-5, and \textbf{BioReason-Pro RL}, further
 trained from the SFT checkpoint with GRPO on \textasciitilde9.2K curated
@@ -465,13 +384,10 @@ studies, including correct de novo identification of SBP2 as an eEFSec
 binding partner (later validated by cryo-EM), correct pseudoenzyme
 identification for CFAP61, and biologically coherent predictions for
 synthetic anti-CRISPR proteins. These case studies are promising. But
-they are individually chosen, they are not a basis for deployment
-decisions across tens of thousands of proteins, and as we show below,
-pseudoenzyme identification in particular does not generalise to a
-broader test set.
-
-%% CJM: this is mildly accusing them of cherry picking... it's true
-%% but maybe tone down
+as case studies, they do not by themselves establish deployment
+performance across large protein sets. As we show below, pseudoenzyme
+identification in particular does not generalise to every broader test
+case.
 
 \hypertarget{expert-synthetic-review-precedent}{%
 \subsection{Expert Synthetic Review
@@ -498,7 +414,7 @@ frequency-biased default labels, and cases where the available evidence
 does not justify a confident call.
 
 \textbf{Table 1.} Expert Synthetic Review prediction-review taxonomy
-adapted from de Crécy-Lagard \emph{et al.} \cite{decrecylagard2025} and used for AIGR
+adapted from de Crécy-Lagard \emph{et al.} \cite{decrecylagard2025} and used for AI-AUGR
 prediction assessment.
 
 \begin{longtable}[]{@{}llll@{}}
@@ -606,15 +522,15 @@ Wzz-family O-antigen chain-length regulator, so the histidine-kinase
 prediction is best understood as a high-frequency default rather than a
 plausible mechanistic hypothesis. This taxonomy provides both a
 motivation for the agentic-review approach and a positive-control target
-for checking whether AIGR can encode the same expert error classes.
+for checking whether AI-AUGR can encode the same expert error classes.
 
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
 
-\hypertarget{the-aigr-pipeline}{%
-\subsection{The AIGR pipeline}\label{the-aigr-pipeline}}
+\hypertarget{the-ai-augr-pipeline}{%
+\subsection{The AI-AUGR pipeline}\label{the-ai-augr-pipeline}}
 
-AIGR is an agentic curation pipeline in which an LLM curator-agent
+AI-AUGR is an agentic curation pipeline in which an LLM curator-agent
 processes a per-gene evidence package and emits a structured review
 validated against a LinkML schema. The pipeline has four stages:
 evidence assembly, review, validation, and, when applicable, prediction
@@ -629,8 +545,7 @@ deep-research report generated by a separate literature-retrieval agent
 with web access. The deep-research step is treated as a preliminary
 research summary by the reviewing agent, not as a primary source. All
 evidence is cached locally, so that reviews are reproducible and
-verifiable. The \texttt{just\ fetch-gene} command encapsulates the
-assembly workflow for a single gene.
+verifiable.
 
 \textbf{Curator-agent review.} The curator-agent proceeds through three
 sequential phases. In the \textbf{annotation-level review} phase, the
@@ -661,16 +576,14 @@ best-practice rules: every GO term identifier must exist in the current
 ontology, every supporting-text quote must appear literally in one of
 the cached publications for that gene, and every action with type
 \texttt{MODIFY} or \texttt{REMOVE} must carry a justification paragraph.
-Invalid reviews are returned to the agent for repair. The
-\texttt{just\ validate} and \texttt{just\ validate-all} commands provide
-single-gene and whole-corpus validation.
+Invalid reviews are returned to the agent for repair. The same
+validation rules are applied to individual reviews and to the full
+review corpus.
 
-\textbf{Implementation.} AIGR is implemented as a Python package
-(\texttt{ai-gene-review}) with a Typer-based CLI, \texttt{uv}-managed
-dependencies, and a set of \texttt{just} targets for common operations.
-Gene reviews, the schema, the validator, and all evaluation data are
-released at \texttt{github.com/ai4curation/ai-gene-review} under an open
-licence. A public browser at
+\textbf{Implementation.} AI-AUGR is implemented as a Python package
+(\texttt{ai-gene-review}). Gene reviews, the schema, the validator, and
+all evaluation data are released at
+\texttt{github.com/ai4curation/ai-gene-review} under an open licence. A public browser at
 \texttt{https://ai4curation.io/ai-gene-review/} renders individual
 reviews as HTML for human inspection.
 
@@ -680,7 +593,7 @@ evaluation}\label{argo139-construction-and-bioreason-pro-evaluation}}
 
 For the BioReason-Pro analyses we use a single paired benchmark,
 \textbf{ARGO139} (Annotation Review GO). ARGO139 contains 139 proteins
-selected manually from genes for which we could assemble an AIGR
+selected manually from genes for which we could assemble an AI-AUGR
 evidence package and a BioReason-Pro RL output. The selection was not
 intended to approximate a random UniProt sample. Instead, it was
 designed to test deployment-relevant biology: well-characterised
@@ -748,10 +661,10 @@ less-specialized species.}
 
 For each ARGO139 gene we obtained the BioReason-Pro RL functional
 summary and reasoning trace from the public BioReason-Pro web
-application (\texttt{app.bioreason.net}). We also ran the AIGR pipeline
+application (\texttt{app.bioreason.net}). We also ran the AI-AUGR pipeline
 to produce a curated gene review, treated as local ground truth. A
 dedicated \textbf{comparison agent} then scored each BioReason-Pro RL
-output against the AIGR review along two axes, each on a 1--5 scale:
+output against the AI-AUGR review along two axes, each on a 1--5 scale:
 
 \begin{itemize}
 \tightlist
@@ -766,7 +679,7 @@ output against the AIGR review along two axes, each on a 1--5 scale:
 \end{itemize}
 
 The comparison agent was required to cite supporting-text quotes from
-the AIGR review or cached literature for each score, and was instructed
+the AI-AUGR review or cached literature for each score, and was instructed
 to additionally write a qualitative comparison against the InterPro2GO
 pipeline (\texttt{GO\_REF:0000002}) as a domain-based baseline: does
 BioReason-Pro add biological insight beyond what InterPro2GO already
@@ -802,9 +715,9 @@ repository artifacts are therefore not blinded: the project file lists
 the paper's verdicts, the gene reviews can cite PMID:40703034, and the
 structured prediction-review files quote the de Crécy-Lagard rationale
 directly. We treat this exercise as a positive-control reproduction of
-the taxonomy, not as an independent validation of AIGR accuracy.
+the taxonomy, not as an independent validation of AI-AUGR accuracy.
 
-For each gene we ran the full AIGR pipeline to produce a gene review,
+For each gene we ran the full AI-AUGR pipeline to produce a gene review,
 and separately produced a \texttt{predictions-review.yaml} for the
 DeepECTransformer prediction itself, using the same COR, CNN, LSP, PLI,
 NPI, REP, and UNC taxonomy and structured error-type tags described in
@@ -841,22 +754,22 @@ ARGO139 member list; \texttt{argo139-species-counts.csv},
 enumerate the cohort composition and source provenance. The
 \texttt{ESR-ECOLI-DET-Mini} result bundle is archived on Zenodo
 \cite{mungall2026esrecolidetmini}. Supplemental source-availability
-details are in \url{supplemental-benchmark-details.md}. \texttt{just}
-targets are provided for reproducing each stage. The full corpus of 139
-BioReason-Pro reviews and 7 \emph{E. coli} prediction reviews is also
-browsable at the public site.
+details are in \url{supplemental-benchmark-details.md}. The repository
+contains the scripts and configuration needed to reproduce each stage.
+The full corpus of 139 BioReason-Pro reviews and 7 \emph{E. coli}
+prediction reviews is also browsable at the public site.
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
-\hypertarget{aigr-recapitulates-major-expert-failure-calls-but-not-all-nuance}{%
-\subsection{AIGR recapitulates major expert failure calls but not
+\hypertarget{the-ai-augr-recapitulates-major-expert-failure-calls-but-not-all-nuance}{%
+\subsection{AI-AUGR recapitulates major expert failure calls but not
 all
-nuance}\label{aigr-recapitulates-major-expert-failure-calls-but-not-all-nuance}}
+nuance}\label{the-ai-augr-recapitulates-major-expert-failure-calls-but-not-all-nuance}}
 
-We first asked whether AIGR can represent and apply an existing expert
+We first asked whether AI-AUGR can represent and apply an existing expert
 biological-validity taxonomy before using it to evaluate BioReason-Pro.
-In the original \texttt{ESR-ECOLI-DET-Mini} artifacts, all 7 AIGR
+In the original \texttt{ESR-ECOLI-DET-Mini} artifacts, all 7 AI-AUGR
 prediction-review classifications matched the published de Crécy-Lagard
 classifications and recorded substantially the same mechanistic
 rationale (\textbf{Table 3}). Because the paper's labels and rationales
@@ -886,7 +799,7 @@ Gene\strut
 \end{minipage} & \begin{minipage}[b]{0.17\columnwidth}\raggedright
 Paper class\strut
 \end{minipage} & \begin{minipage}[b]{0.17\columnwidth}\raggedright
-Positive-control AIGR class\strut
+Positive-control AI-AUGR class\strut
 \end{minipage} & \begin{minipage}[b]{0.17\columnwidth}\raggedright
 Answer-key-withheld class\strut
 \end{minipage} & \begin{minipage}[b]{0.17\columnwidth}\raggedright
@@ -992,11 +905,11 @@ curator-equivalent.
 review}\label{argo139-sft-go-term-review}}
 
 We next reviewed BioReason-Pro SFT GO-term predictions on ARGO139. Each
-predicted term was classified against GOA and the AIGR review using the
+predicted term was classified against GOA and the AI-AUGR review using the
 Expert Synthetic Review taxonomy: terms already in GOA were assigned
-CNN; terms absent from GOA but supported by AIGR core functions or
+CNN; terms absent from GOA but supported by AI-AUGR core functions or
 accepted annotations were reviewed as COR candidates; terms contradicted
-by the AIGR review were reviewed as NPI candidates; less precise terms
+by the AI-AUGR review were reviewed as NPI candidates; less precise terms
 were assigned LSP; high-frequency generic terms were assigned REP; and
 terms not supported or refuted by available evidence were assigned UNC.
 
@@ -1111,6 +1024,20 @@ adenylate cyclase, CYCS activation of caspase signalling through the
 apoptosome, KEAP1 negative regulation of NRF2, and more precise
 peptidase or methyltransferase activities.
 
+As a Tier-1 baseline, we also computed a retrospective CAFA-style
+GOA-agreement score for the same SFT terms. Because BioReason-Pro SFT
+terms are unranked, this is a single-threshold \(F_1\) rather than
+\(F_{\max}\). After propagating predictions and current GOA annotations
+over GO \texttt{is\_a} and \texttt{part\_of} ancestors, the HF subset
+scored precision \(0.864\), recall \(0.476\), and \(F_1=0.614\) against
+current GOA; exact-term \(F_1\) was \(0.418\). This makes the prediction
+set look reasonably concordant with GOA, but the biological review shows
+why agreement is not enough: 37/122 HF terms labelled NPI or REP were
+exact matches to current GOA, and 92/122 had propagated overlap with
+current GOA. A CAFA-style score can therefore be a useful Tier-1
+baseline, but it cannot distinguish restatement from novelty or current
+database agreement from biological validity.
+
 The web-export subset makes a different point. Because it includes many
 ancestor terms, most web-export predictions are UNC and structurally
 uninformative for deployment review. This is why ARGO139 keeps the 44
@@ -1133,7 +1060,7 @@ trusted without reviewing the other.
 review}\label{argo139-rl-narrative-review}}
 
 Across ARGO139, BioReason-Pro RL achieved a mean correctness of
-\textbf{3.7/5} and a mean completeness of \textbf{2.9/5} against AIGR
+\textbf{3.7/5} and a mean completeness of \textbf{2.9/5} against AI-AUGR
 ground truth. The two axes are weakly correlated: predictions that state
 something correct are not necessarily complete. The score distribution
 is shown in \textbf{Table 5}.
@@ -1305,7 +1232,7 @@ decisions.
 
 First, it can read the narrative. BioReason-Pro emits free-text
 summaries and reasoning traces whose scientific content cannot be
-projected onto a bag of GO terms. AIGR can grade those claims directly
+projected onto a bag of GO terms. AI-AUGR can grade those claims directly
 against cached literature and existing annotation.
 
 Second, it surfaces reproducible failure modes. In ARGO139, the RL mean
@@ -1354,7 +1281,7 @@ test}\label{esr-as-a-positive-control-and-recapitulation-stress-test}}
 A natural concern is that an LLM curator-agent might share failure modes
 with the predictor it evaluates. The \texttt{ESR-ECOLI-DET-Mini}
 positive-control exercise does not eliminate that concern, because it
-was not blinded. Its value is narrower: it shows that AIGR can encode
+was not blinded. Its value is narrower: it shows that AI-AUGR can encode
 the same expert taxonomy and assemble the same kinds of mechanistic
 rationale for pathway-presence reasoning, paralog-subfamily reasoning,
 in-vitro/in-vivo distinction, and training-label-frequency-bias
@@ -1387,7 +1314,7 @@ terms, and do not directly grade narratives.
 \textbf{Tier 2: expert or agentic biological-validity review.} A domain
 expert, or an LLM curator-agent grounded in primary evidence, reads the
 prediction and classifies it using a biological taxonomy such as
-COR/CNN/LSP/NPI/REP/UNC. This is the tier AIGR partially automates. It
+COR/CNN/LSP/NPI/REP/UNC. This is the tier AI-AUGR partially automates. It
 is the right level for deployment decisions.
 
 \textbf{Tier 3: prospective experimental validation.} This is the
@@ -1418,7 +1345,7 @@ be reviewed independently, because they can disagree.
 \hypertarget{limitations}{%
 \section{Limitations}\label{limitations}}
 
-\textbf{Agent bias.} AIGR itself depends on an LLM curator-agent. We
+\textbf{Agent bias.} AI-AUGR itself depends on an LLM curator-agent. We
 mitigate this through cached evidence, literal-quote checking, and
 schema validation, but shared blind spots remain possible. The current
 \texttt{ESR-ECOLI-DET-Mini} reproduction is useful as a positive
@@ -1444,7 +1371,7 @@ reliability remains future work.
 \textbf{Single predictor in depth.} We evaluate BioReason-Pro in detail,
 plus DeepECTransformer through the \texttt{ESR-ECOLI-DET-Mini}
 positive-control reproduction. Comparative evaluation across multiple
-agentic reasoners is out of scope.
+reasoner-style systems is out of scope.
 
 \textbf{Label leakage and small recapitulation set.} The original 7-gene
 \texttt{ESR-ECOLI-DET-Mini} exercise was selected from the published
@@ -1458,7 +1385,7 @@ the expert labels, remove PMID:40703034 from the per-gene evidence
 package, pre-register the evidence mode, and score the agent's
 classifications before unblinding.
 
-\textbf{Curator-ground-truth staleness.} AIGR reviews can become stale
+\textbf{Curator-ground-truth staleness.} AI-AUGR reviews can become stale
 as literature and curation standards evolve. The pipeline is
 reproducible, and the browse site exposes generated review files for
 future reruns.
@@ -1466,12 +1393,12 @@ future reruns.
 \hypertarget{conclusions}{%
 \section{Conclusions}\label{conclusions}}
 
-AIGR reproduces the Expert Synthetic Review taxonomy on the 7-gene
+AI-AUGR reproduces the Expert Synthetic Review taxonomy on the 7-gene
 \texttt{ESR-ECOLI-DET-Mini} positive-control set, showing that the
 schema and review workflow can encode biologically meaningful error
 classes. In an answer-key-withheld recapitulation, it recovered 4/7
 exact expert labels and the main high-value incorrect-call patterns, but
-not all expert boundary judgments. Applying AIGR to ARGO139 shows that
+not all expert boundary judgments. Applying AI-AUGR to ARGO139 shows that
 BioReason-Pro mostly restates existing annotation pipelines,
 occasionally names known biology missing from GOA, and makes systematic
 errors that aggregate metrics would hide.
@@ -1494,7 +1421,7 @@ submission:
 \begin{itemize}
 \tightlist
 \item
-  \textbf{AIGR pipeline diagram.} Evidence assembly (UniProt, GOA,
+  \textbf{AI-AUGR pipeline diagram.} Evidence assembly (UniProt, GOA,
   InterPro, cached literature, deep-research report) → curator-agent
   three-phase review → LinkML validation → structured output. \emph{(To
   be created as a schematic.)}
@@ -1516,7 +1443,7 @@ ARGO139 BioReason-Pro RL narrative and SFT GO-term reviews,
 \texttt{ESR-ECOLI-DET-Mini} 7-gene \emph{E. coli} positive-control
 reproduction and archived answer-key-withheld recapitulation results in
 \texttt{projects/BIOREASON\_COMPARISON/recapitulation-experiment/claude-expt-1/},
-archived on Zenodo \cite{mungall2026esrecolidetmini}, AIGR pipeline,
+archived on Zenodo \cite{mungall2026esrecolidetmini}, AI-AUGR pipeline,
 LinkML schema, and validator.
 
 \emph{Browsable reviews:}

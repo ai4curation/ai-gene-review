@@ -70,15 +70,33 @@ The older 184-gene union is the broadest source-availability view, but it combin
 | LSP | 437 | 4.0 |
 | REP | 26 | 0.2 |
 
-## S3. SFT narrative cross-check
+## S3. CAFA-style retrospective GOA agreement
+
+We computed a retrospective CAFA-style agreement score for ARGO139 SFT GO-term predictions using current local GOA as the reference. This is not a true CAFA benchmark: ARGO139 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from `go-basic.obo`, excluding the three GO aspect roots.
+
+**Table S6.** Propagated all-aspect agreement against current GOA.
+
+| Source | Genes | Scored direct predictions | Direct GOA terms | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|
+| HF catalogue | 95 | 952 | 2,382 | 0.864 | 0.476 | 0.614 |
+| Web export | 44 | 9,730 | 3,885 | 0.777 | 0.533 | 0.632 |
+| ARGO139 total | 139 | 10,682 | 6,267 | 0.808 | 0.510 | 0.625 |
+
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 37/122 terms classified by AI-AUGR as NPI or REP are exact matches to current GOA, and 92/122 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+
+![CAFA-style propagated F1 by aspect for ARGO139 SFT terms.](figures/cafa_style_argo139_sft.png)
+
+Full derived tables are in `../cafa-style/`.
+
+## S4. SFT narrative cross-check
 
 The HuggingFace SFT narrative sample contains 45 proteins, 44 of which have parseable 1-5 correctness/completeness scores. It is not paired to ARGO139 and is not used as a main result. It remains a useful cross-check: SFT narrative scores are lower than RL (correctness 2.9/5 vs. 3.7/5; completeness 2.7/5 vs. 2.9/5), and 7/45 SFT outputs contained fabricated "UniProt Summary" prose for proteins that UniProt describes only as uncharacterized.
 
-## S4. GO-GPT overlap review
+## S5. GO-GPT overlap review
 
 The main paper removes the GO-GPT section because it is a separate 300-gene synthetic review of the upstream GO-GPT predictor, not a paired ARGO139 BioReason-Pro result. The review remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
-**Table S6.** GO-GPT prediction overlap at three reference levels (300 genes).
+**Table S7.** GO-GPT prediction overlap at three reference levels (300 genes).
 
 | Reference level | Terms in reference | Predictions overlapping | % of 8,910 predictions |
 |---|---:|---:|---:|
@@ -90,11 +108,15 @@ The main paper removes the GO-GPT section because it is a separate 300-gene synt
 
 GO-GPT emitted 8,910 predictions across 300 genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; agreement with AIGR core functions was only 2.4%. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
-## S5. Reproducibility files
+## S6. Reproducibility files
 
 - `../genes.csv`: ARGO139 member list.
 - `../argo139-species-counts.csv`: ARGO139 species distribution.
 - `../argo139-curation-context-counts.csv`: ARGO139 curation-context summary.
 - `../benchmark-cohorts.csv`: cohort-level provenance and sizes.
 - `../benchmark-genes.csv`: gene-level benchmark/source provenance.
+- `../cafa_style_argo139.py`: retrospective CAFA-style ARGO139 SFT scorer.
+- `../cafa-style/argo139_cafa_style_summary.csv`: propagated and exact precision/recall/F1 summary.
+- `../cafa-style/argo139_cafa_style_per_gene_aspect.csv`: per-gene/per-aspect score components.
+- `../cafa-style/argo139_prediction_goa_overlap.csv`: per-prediction exact and propagated GOA-overlap diagnostics.
 - `../notebooks/02_prediction_assessments.ipynb`: executable SFT term-assessment notebook.

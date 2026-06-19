@@ -4,7 +4,7 @@ title: "BIOREASON_COMPARISON / article"
 
 # BIOREASON_COMPARISON / article
 
-Paper drafts and supporting material for the **BioReason-Pro / AIGR** manuscript, intended for **ISMB 2026 Function-COSI**.
+Paper drafts and supporting material for the **BioReason-Pro / AI-AUGR** manuscript, intended for **ISMB 2026 Function-COSI**.
 
 ## Files
 
@@ -20,7 +20,7 @@ Paper drafts and supporting material for the **BioReason-Pro / AIGR** manuscript
 
 ## Thesis
 
-Annotation databases face a practical deployment question — *when is a new function-prediction method good enough to trust in production?* — that CAFA-style aggregate metrics ($F_{\max}$, $S_{\min}$) cannot fully answer. AIGR (AI Gene Review) is an agentic curation pipeline that complements CAFA-style evaluation by:
+Annotation databases face a practical deployment question — *when is a new function-prediction method good enough to trust in production?* — that CAFA-style aggregate metrics ($F_{\max}$, $S_{\min}$) cannot fully answer. AI-AUGR (Assessment via Unified Gene-evidence Review) is an agentic curation pipeline that complements CAFA-style evaluation by:
 
 1. **Reading the narrative.** Modern agentic predictors such as BioReason-Pro emit free-text functional summaries and chain-of-thought reasoning traces that sit outside bag-of-GO-terms scoring.
 2. **Surfacing systematic failure modes.** Pseudoenzyme blind spots, localisation defaults, paralog indistinguishability, missing organism-specific biology, neo-functionalisation, narrative–GO disconnect, and cross-kingdom fold bias — not visible in aggregate scores, decisive for deployment.
@@ -29,7 +29,7 @@ Annotation databases face a practical deployment question — *when is a new fun
 ## Evidence base
 
 - **ARGO139 BioReason-Pro evaluation** (see `../BIOREASON_COMPARISON.md`): fixed 139-gene benchmark used for both RL narrative review and SFT GO-term review, with overall RL correctness 3.7/5, completeness 2.9/5, a seven-mode failure-mode taxonomy, and source-stratified SFT term assessments.
-- **`ESR-ECOLI-DET-Mini` 7-gene *E. coli* positive control and recap** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md` and `../recapitulation-experiment/claude-expt-1/`; dataset ID `10.5281/zenodo.20751016`): AIGR reproduces all 7 classes when labels/rationales are present as a positive control. An answer-key-withheld, literature/bioinformatics-assisted recapitulation recovers 4/7 exact labels, enough for useful triage but not expert-equivalent.
+- **`ESR-ECOLI-DET-Mini` 7-gene *E. coli* positive control and recap** against de Crécy-Lagard *et al.* (2025, *G3*) expert error taxonomy (see `../../VALIDATING_ECOLI_PREDICTIONS.md` and `../recapitulation-experiment/claude-expt-1/`; dataset ID `10.5281/zenodo.20751016`): AI-AUGR reproduces all 7 classes when labels/rationales are present as a positive control. An answer-key-withheld, literature/bioinformatics-assisted recapitulation recovers 4/7 exact labels, enough for useful triage but not expert-equivalent.
 - **Supplemental SFT source checks** on the public HuggingFace `wanglab/protein_catalogue` dataset: retained for reproducibility in `supplemental-benchmark-details.md`.
 
 ## How to read this directory

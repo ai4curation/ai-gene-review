@@ -1,8 +1,8 @@
 ---
-title: "BioReason-Pro / AIGR manuscript"
+title: "BioReason-Pro / AI-AUGR manuscript"
 ---
 
-# BioReason-Pro / AIGR manuscript
+# BioReason-Pro / AI-AUGR manuscript
 
 The canonical source for the full article is [`manuscript.tex`](manuscript.tex),
 with citations maintained in [`references.bib`](references.bib).
