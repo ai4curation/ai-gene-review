@@ -1,0 +1,2297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uvrC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>uvrC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FJ7" target="_blank" class="term-link">
+                        Q88FJ7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "uvrC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FJ7" data-a="DESCRIPTION: UvrABC system protein C (UvrC, excinuclease ABC su..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UvrABC system protein C (UvrC, excinuclease ABC subunit C) is the catalytic endonuclease subunit of the bacterial UvrABC excinuclease that performs nucleotide excision repair (NER), the pathway that removes a broad range of bulky, helix-distorting DNA lesions. After UvrA and UvrB recognize damage and load UvrB onto the lesion site, UvrC is recruited to the UvrB-DNA pre-incision complex and makes the dual incision that brackets the lesion on the damaged strand: an N-terminal GIY-YIG nuclease domain catalyzes the 3&#39; incision and a C-terminal RNase H-like nuclease domain catalyzes the 5&#39; incision, releasing a short damage-containing oligonucleotide that is subsequently removed and the gap filled and ligated. UvrC carries a GIY-YIG endonuclease domain, a central UVR domain that mediates interaction with UvrB, and helix-hairpin-helix (HhH) DNA-binding motifs. It acts on chromosomal DNA in the cytoplasm. The protein is 607 residues, highly conserved across bacteria, and in P. putida KT2440 is encoded by PP_4098.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UvrC binds DNA at the lesion site via its helix-hairpin-helix (HhH) motifs to position the strand for dual incision. The annotation is correct but generic; DNA binding is a means to the catalytic endonuclease function rather than a core molecular function on its own.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA binding is correct and consistent with the HhH DNA-binding motifs (IPR003583) but is a non-informative parent supporting the more specific excinuclease activity, which captures the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UvrC acts on chromosomal DNA in the cytoplasm/nucleoid. Cytoplasmic localization is consistent with UniProt subcellular location and the role of NER in repairing the bacterial chromosome.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization for a soluble DNA-repair endonuclease; no evidence of membrane, secreted, or extracellular localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0006281" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UvrC is a core DNA repair enzyme. This high-level term is correct but subsumed by the more specific nucleotide-excision repair annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> True but general; the specific child term GO:0006289 (nucleotide-excision repair) better captures the biological process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006289" target="_blank" class="term-link">
+                                    GO:0006289
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide-excision repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0006289" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UvrC is the dual-incision endonuclease of the bacterial UvrABC NER system, performing the strand incisions that excise lesion-containing oligonucleotides. This is the core biological process for this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the conserved UvrC family role, domain architecture (GIY-YIG plus RNase H-like nuclease), and UniProt FUNCTION annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006974" target="_blank" class="term-link">
+                                    GO:0006974
+                                </a>
+                            </span>
+                            <span class="term-label">DNA damage response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0006974" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a DNA repair enzyme UvrC participates in the cellular response to DNA damage. This is a broad parent term subsumed by the more specific NER and DNA repair annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but high-level/generic; the specific NER role is the informative annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009380" target="_blank" class="term-link">
+                                    GO:0009380
+                                </a>
+                            </span>
+                            <span class="term-label">excinuclease repair complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0009380" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UvrC is recruited to and acts within the UvrABC excinuclease (pre-incision) complex, interacting with UvrB at the lesion. Membership in this complex is consistent with the UVR domain (UniProt SUBUNIT note) that mediates UvrB interaction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct cellular component for the catalytic subunit of the UvrABC excinuclease.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009381" target="_blank" class="term-link">
+                                    GO:0009381
+                                </a>
+                            </span>
+                            <span class="term-label">excinuclease ABC activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0009381" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of UvrC, the catalytic subunit that performs the 3&#39; and 5&#39; dual incisions of the UvrABC excinuclease in NER.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the conserved UvrC family role and domain architecture; represents the central function of the gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009432" target="_blank" class="term-link">
+                                    GO:0009432
+                                </a>
+                            </span>
+                            <span class="term-label">SOS response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ7" data-a="GO:0009432" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> uvrA, uvrB, and uvrC are members of the LexA-controlled SOS regulon in E. coli and other bacteria, with uvr expression induced upon DNA damage. Annotation by homology transfer is plausible for P. putida UvrC, though participation in the SOS response is regulatory/contextual rather than a direct molecular activity, and KT2440-specific induction has not been verified here.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plausible regulon membership inherited by homology; reflects induction/regulatory context rather than the core enzymatic function. Retained as non-core given it is a generic IEA transfer not experimentally confirmed in this organism.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalytic endonuclease subunit of the bacterial UvrABC excinuclease that performs the dual incision of nucleotide excision repair, cleaving the damaged DNA strand on both the 3&#39; and 5&#39; sides of a lesion to excise a short damage-containing oligonucleotide.</h3>
+                <span class="vote-buttons" data-g="Q88FJ7" data-a="FUNCTION: Catalytic endonuclease subunit of the bacterial Uv..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009381" target="_blank" class="term-link">
+                            excinuclease ABC activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006289" target="_blank" class="term-link">
+                                nucleotide-excision repair
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009380" target="_blank" class="term-link">
+                            excinuclease repair complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36869664" target="_blank" class="term-link">
+                                PMID:36869664
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">UvrC is the dual-incision endonuclease of bacterial NER; its N-terminal GIY-YIG domain performs the 3&#39; incision and the C-terminal RNase H-like domain performs the 5&#39; incision (structural/mechanistic study of UvrC).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36869664" target="_blank" class="term-link">
+                            PMID:36869664
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural and functional insights into the activation of the dual incision activity of UvrC, a key player in bacterial NER</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length UvrC is the dual-incision endonuclease of bacterial NER; its GIY-YIG (N-terminal) and RNase H-like (C-terminal) nuclease domains perform the 3&#39; and 5&#39; incisions respectively, and UvrC must transition from a closed inactive to an open active state to execute dual incision.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33477956" target="_blank" class="term-link">
+                            PMID:33477956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A Peek Inside the Machines of Bacterial Nucleotide Excision Repair</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Review of bacterial NER describing UvrC recruitment to the UvrB-DNA pre-incision complex and dual incision at defined positions 3&#39; and 5&#39; of the lesion, releasing a short damaged oligonucleotide.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is uvrC in P. putida KT2440 transcriptionally induced as part of the LexA/SOS regulon upon DNA damage, and is it co-regulated within the predicted pp4100-gacA-uvrC-pgsA operon context?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ7" data-a="Q: Is uvrC in P. putida KT2440 transcriptionally indu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a P. putida KT2440 uvrC deletion mutant and measure UV and bulky-adduct (e.g., mitomycin C, formaldehyde) sensitivity to confirm the NER incision role in this organism.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ7" data-a="EXPERIMENT: Construct a P. putida KT2440 uvrC deletion mutant ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(uvrC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FJ7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **uvrC** (UniProt Q88FJ7; PP_4098) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">25 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:56:20.735758</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="uvrC-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="uvrC-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 The document contains several figures that address your request. Figure 1A provides a schematic diagram of the domain organization </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-uvrc-uniprot-q88fj7-pp_4098-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>uvrC</strong> (UniProt Q88FJ7; PP_4098) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-geneprotein-identity">1) Target verification (gene/protein identity)</h2>
+<p>The requested target is <strong>UvrABC system protein C (UvrC; excinuclease ABC subunit C)</strong> from <em>Pseudomonas putida</em> KT2440 (ordered locus name <strong>PP_4098</strong>) with UniProt accession <strong>Q88FJ7</strong>. The available literature retrieved here contains <em>P. putida</em> operon-level references to <strong>gacA–uvrC</strong> genomic linkage and, separately, extensive mechanistic evidence for bacterial UvrC proteins as conserved dual endonucleases in nucleotide excision repair (NER), consistent with the UniProt-described UvrC family and GIY‑YIG / helix–hairpin–helix (HhH) DNA-binding features. Direct biochemical characterization of <strong>the specific KT2440 UvrC protein (Q88FJ7)</strong> was not found in the retrieved corpus; therefore, organism-specific conclusions are explicitly labeled as <strong>direct evidence</strong> (from <em>P. putida</em> studies) or <strong>inference by homology</strong> (from conserved UvrC/NER literature). (seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5, jimenezfernandez2016complexinterplaybetween pages 20-22)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h2>
+<h3 id="21-nucleotide-excision-repair-ner-in-bacteria">2.1 Nucleotide excision repair (NER) in bacteria</h3>
+<p>Bacterial NER is a multi-step, ATP-dependent DNA repair pathway that removes a <strong>broad range of bulky, helix-distorting DNA lesions</strong>. In the canonical bacterial pathway, UvrA and UvrB mediate lesion detection and pre-incision complex formation; <strong>UvrC performs the incision reactions</strong> that flank the lesion and create a short excised oligonucleotide; and downstream steps include removal of the damaged oligonucleotide and gap filling/ligation. (kraithong2021apeekinside pages 3-5, taylor2011evolutionaryrelationshipsdesign pages 16-20)</p>
+<h3 id="22-role-of-uvrc-excinuclease-abc-subunit-c">2.2 Role of UvrC (excinuclease ABC subunit C)</h3>
+<p><strong>UvrC is the nuclease that executes the dual incision reaction</strong> during bacterial NER. It is recruited to the lesion-containing pre-incision complex and cuts the damaged strand on both sides of the lesion to release a short single-stranded DNA segment containing the damage. (seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5)</p>
+<h3 id="23-dual-incision-positions-functional-definition">2.3 Dual incision positions (functional definition)</h3>
+<p>The incision pattern is position-defined relative to the lesion on the damaged strand:<br />
+- A <strong>3′-side cut</strong> occurs around the <strong>4th or 5th phosphodiester bond</strong> from the lesion.<br />
+- A <strong>5′-side cut</strong> occurs around the <strong>8th phosphodiester bond</strong> from the lesion.<br />
+These two nicks bracket the lesion and enable removal of a short damaged oligonucleotide. (kraithong2021apeekinside pages 3-5)</p>
+<h2 id="3-molecular-function-of-p-putida-uvrc-q88fj7">3) Molecular function of <em>P. putida</em> UvrC (Q88FJ7)</h2>
+<h3 id="31-primary-biochemical-activity-reaction-and-substrate-context">3.1 Primary biochemical activity (reaction and substrate context)</h3>
+<p><strong>Primary function (inferred for Q88FJ7 by homology):</strong> structure-specific endonuclease activity that cleaves the <strong>damaged DNA strand</strong> at defined positions <strong>3′ and 5′ to a lesion</strong> within the UvrB–DNA pre-incision complex, enabling excision of the lesion-containing oligonucleotide. This function is strongly conserved across bacterial UvrC proteins and is supported by mechanistic/structural work on UvrC homologs. (seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5)</p>
+<p><strong>Substrate specificity (current understanding):</strong> UvrC acts within a pathway that is notable for exceptionally broad lesion scope (chemically/structurally diverse DNA damage), with incision specificity determined by the architecture of the UvrB–DNA complex and UvrC conformational activation rather than by a single lesion chemistry. (seck2023structuralandfunctional pages 1-2)</p>
+<h3 id="32-domain-architecture-and-mechanistic-mapping-to-function">3.2 Domain architecture and mechanistic mapping to function</h3>
+<p>Mechanistic literature supports a modular architecture that aligns with the domain expectations provided in the UniProt prompt:</p>
+<ul>
+<li><strong>N-terminal GIY‑YIG endonuclease module</strong>: associated with the <strong>3′ incision</strong> in NER. (kraithong2021apeekinside pages 3-5, seck2023structuralandfunctional pages 1-2)</li>
+<li><strong>C-terminal nuclease region with RNase H-like features</strong>: linked to the <strong>5′ incision</strong> activity in NER. (kraithong2021apeekinside pages 3-5, kraithong2021apeekinside pages 15-16)</li>
+<li><strong>(HhH)2 / helix–hairpin–helix DNA-binding motif(s)</strong>: contributes to binding/stabilization at DNA junctions in the pre-incision complex. (seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5)</li>
+<li><strong>Cys-rich/metal cluster-associated region</strong>: implicated in structural integrity and/or regulation; a study on <em>Deinococcus radiodurans</em> UvrC reports Fe–S cluster variations across species (oxygen-insensitive [3Fe–4S] vs oxygen-sensitive [4Fe–4S] in <em>E. coli</em>), highlighting that while the motif is conserved, cofactor specifics can differ by lineage. (seck2023structuralandfunctional pages 17-18)</li>
+</ul>
+<h3 id="33-conformational-activation-model-major-recent-advance">3.3 Conformational activation model (major recent advance)</h3>
+<p>A 2023 structural/mechanistic study assembled the <strong>first full-length UvrC model</strong> (in <em>D. radiodurans</em>) and proposed that UvrC is maintained in a <strong>“closed”, inactive</strong> state that must undergo a <strong>major rearrangement to an “open”, active</strong> state to execute the dual incision reaction. This provides a modern framework for interpreting how UvrC integrates multiple domains (GIY‑YIG nuclease, DNA-binding motifs, RNase H-like regions) into a coordinated dual-cut mechanism. (seck2023structuralandfunctional pages 1-2)</p>
+<p><strong>Figure evidence:</strong> The domain organization schematic and activation model are shown in Seck et al. (2023) figures (domain map; full-length model; closed-to-open activation proposals). (seck2023structuralandfunctional media 140d0c6a, seck2023structuralandfunctional media 1f54ebd4, seck2023structuralandfunctional media 96b45139)</p>
+<h2 id="4-cellular-localization-and-where-uvrc-acts">4) Cellular localization and where UvrC acts</h2>
+<p><strong>Most likely localization for Q88FJ7 (inference):</strong> intracellular, associated with the bacterial chromosome in the <strong>cytoplasm/nucleoid region</strong>, because UvrC operates on DNA as part of NER and no evidence suggests secretion or membrane localization in the retrieved sources. (seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5)</p>
+<h2 id="5-pathways-and-interaction-network">5) Pathways and interaction network</h2>
+<h3 id="51-core-pathway-placement">5.1 Core pathway placement</h3>
+<p>UvrC functions in the canonical <strong>UvrABC</strong> bacterial NER pathway:<br />
+1. Damage recognition and verification by UvrA/UvrB.<br />
+2. <strong>Recruitment of UvrC</strong> to UvrB–DNA pre-incision complex.<br />
+3. <strong>Dual incision</strong> 3′ and 5′ of the lesion by UvrC.<br />
+4. Downstream removal of the cut fragment and completion of repair by additional factors (e.g., helicase-driven excision and gap filling/ligation, as described in the mechanistic overview). (kraithong2021apeekinside pages 3-5, taylor2011evolutionaryrelationshipsdesign pages 16-20)</p>
+<h3 id="52-proteinprotein-dependencies">5.2 Protein–protein dependencies</h3>
+<p>Mechanistic literature emphasizes that <strong>UvrB–UvrC interaction</strong> helps ensure proper incision activity and specificity; in the 2023 mechanistic model, UvrC activation is tied to conformational switching that is consistent with partner-assisted activation in the pre-incision complex. (seck2023structuralandfunctional pages 1-2)</p>
+<h2 id="6-pseudomonas-putida-kt2440-specific-evidence-direct-relevant-to-uvrc-functional-annotation">6) <em>Pseudomonas putida</em> KT2440-specific evidence (direct) relevant to uvrC functional annotation</h2>
+<h3 id="61-genomicoperon-context-in-p-putida">6.1 Genomic/operon context in <em>P. putida</em></h3>
+<p>A promoter/operon analysis in <em>P. putida</em> KT2440 reports a <strong>predicted pp4100–gacA–uvrC–pgsA operon</strong> context, providing direct evidence that <strong>uvrC is genomically linked to gacA</strong> in this species/strain background (KT2440/closely related KT2442 used in that study). This supports species-specific regulatory context relevant to functional annotation (e.g., potential co-regulation with the GacS/GacA network). (jimenezfernandez2016complexinterplaybetween pages 20-22)</p>
+<h3 id="62-dna-damage-phenotypes-support-importance-of-ner-in-kt2440">6.2 DNA-damage phenotypes support importance of NER in KT2440</h3>
+<p>Although KT2440-specific uvrC knockout phenotypes were not retrieved here, a KT2440 study of formaldehyde stress found that a <strong>uvrB mutant</strong> (another core UvrABC NER component) was <strong>hypersensitive to 10 mM formaldehyde</strong>, with killing rates <strong>3–4 orders of magnitude higher than wild type</strong>. This directly supports that <strong>UvrABC-type NER is physiologically important in <em>P. putida</em> KT2440</strong> under certain DNA-damaging conditions; by pathway logic, UvrC is expected to be required for completing the incision/excision step of the same pathway. (roca2008physiologicalresponsesof pages 1-3)</p>
+<h3 id="63-uv-resistance-and-genome-stability-in-kt2440-background-context-for-applications">6.3 UV resistance and genome stability in KT2440 background (context for applications)</h3>
+<p>A KT2440 study showed that removal of endogenous prophage elements increased endurance to environmental stresses, with a <strong>remarkable improvement in UV tolerance and other DNA insults</strong> in a prophage-free derivative; the same work notes that the TOL plasmid pWW0 (encoding <strong>rulAB</strong>, an error-prone Pol V) can increase UV tolerance, indicating that <strong>DNA damage processing/repair capacity is a key determinant of strain robustness</strong> in this chassis. While this is not uvrC-specific, it provides KT2440-context evidence that DNA damage resistance is a selectable and engineerable trait in this organism. (martinez‐garcia2015freeingpseudomonasputida pages 1-4, martinez‐garcia2015freeingpseudomonasputida pages 12-15, martinez‐garcia2015freeingpseudomonasputida pages 18-21)</p>
+<h2 id="7-recent-developments-and-latest-research-emphasis-20232024">7) Recent developments and latest research (emphasis 2023–2024)</h2>
+<h3 id="71-2023-full-length-uvrc-structural-model-and-activation-mechanism">7.1 2023: Full-length UvrC structural model and activation mechanism</h3>
+<p>The most directly relevant 2023 advance retrieved is the full-length UvrC modeling and activation framework that proposes <strong>closed-to-open conformational rearrangement</strong> and identifies a <strong>central inactive RNase H-like platform</strong> coordinating surrounding domains, clarifying how dual incision might be regulated and activated in the UvrB–DNA complex. (seck2023structuralandfunctional pages 1-2, seck2023structuralandfunctional media 96b45139)</p>
+<h3 id="72-2024-methods-oriented-work-reflects-continued-focus-on-uvrc-biochemistrystructural-challenges">7.2 2024: Methods-oriented work reflects continued focus on UvrC biochemistry/structural challenges</h3>
+<p>A 2024 report focused on recombinant expression/purification of UvrC (in <em>Mycobacterium tuberculosis</em>) summarizes canonical mechanistic features (dual incisions flanking a lesion; domain partitioning into GIY‑YIG and C-terminal DNA-binding/nuclease elements). While not <em>Pseudomonas</em>-specific, it reflects active ongoing work to enable deeper biochemical/structural study of UvrC proteins. (covizzi2024recombinantexpressionand pages 20-24)</p>
+<h2 id="8-current-applications-and-real-world-implementations-supported-by-retrieved-evidence">8) Current applications and real-world implementations (supported by retrieved evidence)</h2>
+<h3 id="81-engineering-robust-p-putida-chassis-under-genotoxic-stress">8.1 Engineering robust <em>P. putida</em> chassis under genotoxic stress</h3>
+<p>KT2440 is used as an industrial/biotechnology chassis, and stress endurance—including tolerance to UV and DNA-damaging conditions—can be improved by large-scale genomic changes (e.g., prophage removal) and plasmid-borne damage tolerance factors (rulAB). In practical terms, this positions DNA repair pathways (including NER components such as UvrC) as <strong>relevant to maintaining genome stability and survivability</strong> during environmental or process stresses. (martinez‐garcia2015freeingpseudomonasputida pages 1-4, martinez‐garcia2015freeingpseudomonasputida pages 12-15)</p>
+<h3 id="82-detoxification-contexts-that-generate-dna-damage">8.2 Detoxification contexts that generate DNA damage</h3>
+<p>Formaldehyde exposure in KT2440 triggers transcriptional responses consistent with DNA damage management; the observed hypersensitivity of a <strong>uvrB</strong> mutant to high formaldehyde indicates that NER contributes to survival under chemical stress. This is relevant to bioremediation and industrial processes where aldehydes can be present or generated. (roca2008physiologicalresponsesof pages 1-3)</p>
+<h2 id="9-expert-synthesis-authoritative-interpretation">9) Expert synthesis / authoritative interpretation</h2>
+<h3 id="91-what-can-be-stated-with-high-confidence-for-q88fj7-evidence-based-inference">9.1 What can be stated with high confidence for Q88FJ7 (evidence-based inference)</h3>
+<p>Because UvrC is a highly conserved core enzyme of bacterial NER and the retrieved 2021–2023 mechanistic literature provides clear mapping between UvrC domains and the dual incision reaction, the most defensible functional annotation for <strong>Q88FJ7 (PP_4098)</strong> is:<br />
+- <strong>DNA repair endonuclease</strong> in the <strong>UvrABC NER</strong> pathway,<br />
+- catalyzing <strong>dual incision</strong> on the damaged strand at the canonical positions, and<br />
+- operating as a partner-dependent nuclease recruited/activated in the <strong>UvrB–DNA pre-incision complex</strong>. (seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5)</p>
+<h3 id="92-what-remains-uncertain-or-not-directly-evidenced-for-q88fj7-in-kt2440">9.2 What remains uncertain or not directly evidenced for Q88FJ7 in KT2440</h3>
+<ul>
+<li>No KT2440-specific biochemical kinetics, lesion preference measurements, or uvrC deletion UV-survival curves were retrieved here; therefore, <strong>quantitative KT2440 uvrC phenotypes</strong> cannot be reported from this corpus.</li>
+<li>Any claims about regulation of uvrC expression by global regulators (e.g., GacA) should be treated as <strong>hypotheses</strong> guided by operon context, until validated by transcriptomics/ChIP/genetic perturbation in KT2440. (jimenezfernandez2016complexinterplaybetween pages 20-22)</li>
+</ul>
+<h2 id="10-evidence-map-concise">10) Evidence map (concise)</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key points</th>
+<th>Best supporting citations</th>
+<th>Key sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Function</td>
+<td>• UvrC is the endonuclease component of the bacterial UvrABC excinuclease in nucleotide excision repair (NER).<br>• It performs dual incision on the damaged DNA strand to release a short lesion-containing oligonucleotide.<br>• The excised fragment is typically ~12–13 nt long in bacterial NER.</td>
+<td>(seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5, taylor2011evolutionaryrelationshipsdesign pages 16-20)</td>
+<td>Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108; Kraithong et al. 2021 — https://doi.org/10.3390/ijms22020952; Taylor 2011 — source in context</td>
+</tr>
+<tr>
+<td>Pathway step</td>
+<td>• In global-genome NER, UvrA/UvrB detect damage and load UvrB at the lesion; UvrC is then recruited to the pre-incision complex.<br>• After UvrC cuts 3′ and 5′ to the lesion, UvrD removes the damaged oligonucleotide and downstream gap filling/ligation complete repair.<br>• UvrB interaction is important for proper incision activity and specificity.</td>
+<td>(seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5, taylor2011evolutionaryrelationshipsdesign pages 16-20)</td>
+<td>Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108; Kraithong et al. 2021 — https://doi.org/10.3390/ijms22020952</td>
+</tr>
+<tr>
+<td>Catalytic activities/incision positions</td>
+<td>• UvrC carries two nuclease activities that cut on both sides of the lesion.<br>• The 3′ cut occurs at about the 4th or 5th phosphodiester bond from the lesion.<br>• The 5′ cut occurs at about the 8th phosphodiester bond from the lesion.<br>• In the 2023 mechanistic study, dual incision could occur in either order in the tested homolog, indicating flexibility in activation.</td>
+<td>(kraithong2021apeekinside pages 3-5, seck2023structuralandfunctional pages 17-18, kraithong2021apeekinside pages 15-16)</td>
+<td>Kraithong et al. 2021 — https://doi.org/10.3390/ijms22020952; Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108</td>
+</tr>
+<tr>
+<td>Domains/motifs</td>
+<td>• The N-terminus contains a GIY-YIG endonuclease domain associated with the 3′ incision activity.<br>• UvrC also contains a C-terminal RNase H-like nuclease region linked to 5′ incision activity.<br>• An (HhH)2 DNA-binding motif helps bind DNA/ssDNA-dsDNA junctions.<br>• A Cys-rich region is proposed to coordinate an Fe-S cluster; the provided UniProt domain set (GIY-YIG, HHH/SAM-like, Hlx-hairpin-Hlx DNA-binding motif) is consistent with literature-derived architecture.</td>
+<td>(seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5, seck2023structuralandfunctional pages 17-18, seck2023structuralandfunctional media 140d0c6a)</td>
+<td>Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108; Kraithong et al. 2021 — https://doi.org/10.3390/ijms22020952</td>
+</tr>
+<tr>
+<td>Interaction partners</td>
+<td>• UvrC acts with UvrA and UvrB in the UvrABC excinuclease pathway.<br>• UvrB directly recruits/positions UvrC at the lesion-containing pre-incision complex.<br>• After incision, UvrD helicase removes the cut fragment and helps disassemble the complex.</td>
+<td>(seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5, taylor2011evolutionaryrelationshipsdesign pages 16-20)</td>
+<td>Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108; Kraithong et al. 2021 — https://doi.org/10.3390/ijms22020952</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>• UvrC functions on chromosomal DNA in the bacterial cytoplasm/nucleoid as part of the DNA repair machinery.<br>• No evidence in the retrieved context supports secretion, membrane localization, or extracellular function.<br>• For Q88FJ7 in P. putida KT2440, localization is therefore inferred as intracellular DNA repair-associated.</td>
+<td>(seck2023structuralandfunctional pages 1-2, kraithong2021apeekinside pages 3-5)</td>
+<td>Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108; Kraithong et al. 2021 — https://doi.org/10.3390/ijms22020952</td>
+</tr>
+<tr>
+<td>P. putida-specific evidence</td>
+<td>• Direct: retrieved context did not provide a KT2440-specific uvrC knockout/biochemical study for Q88FJ7 itself.<br>• Direct: a P. putida promoter-library study notes a predicted pp4100-gacA-uvrC-pgsA operon context, supporting genomic linkage/regulatory context in this species.<br>• Direct: in P. putida KT2440, other NER components are functionally important under genotoxic stress; a uvrB mutant was hypersensitive to 10 mM formaldehyde, with killing 3–4 orders of magnitude above wild type, supporting pathway relevance in this organism.<br>• Inferred: Q88FJ7/PP_4098 likely performs canonical UvrC dual-incision repair in KT2440 because its annotation and domain architecture match conserved UvrC family proteins.</td>
+<td>(jimenezfernandez2016complexinterplaybetween pages 20-22, roca2008physiologicalresponsesof pages 1-3, seck2023structuralandfunctional pages 1-2)</td>
+<td>Jiménez-Fernández et al. 2016 — https://doi.org/10.1371/journal.pone.0163142; Roca et al. 2008 — https://doi.org/10.1111/j.1751-7915.2007.00014.x; Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108</td>
+</tr>
+<tr>
+<td>Recent advances 2023-2024</td>
+<td>• A 2023 NAR study produced the first complete model of full-length UvrC and proposed a closed inactive state that must rearrange into an open active state for dual incision.<br>• That work identified a central inactive RNase H-like platform and clarified how surrounding catalytic/DNA-binding modules may be coordinated.<br>• A 2023 review of prokaryotic NER highlighted updated understanding of global-genome and transcription-coupled NER steps involving UvrC.</td>
+<td>(seck2023structuralandfunctional pages 1-2, seck2023structuralandfunctional pages 17-18)</td>
+<td>Seck et al. 2023 — https://doi.org/10.1093/nar/gkad108; Thakur &amp; Muniyappa 2023 — https://doi.org/10.1007/s12038-023-00378-8</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the supported functional annotation for UvrC Q88FJ7 in Pseudomonas putida KT2440, separating direct organism-specific evidence from broader mechanistic inference. It is useful as a concise evidence map linking domain architecture, catalytic role, pathway placement, and recent structural advances.</em></p>
+<h2 id="key-figure-excerpts-visual-evidence">Key figure excerpts (visual evidence)</h2>
+<ul>
+<li>Seck et al. (2023) <strong>UvrC domain organization</strong> and <strong>closed-to-open activation model</strong> (Figures showing UvrC architecture and activation proposals). (seck2023structuralandfunctional media 140d0c6a, seck2023structuralandfunctional media 1f54ebd4, seck2023structuralandfunctional media 96b45139)</li>
+</ul>
+<h2 id="references-urls-and-publication-dates-as-available">References (URLs and publication dates as available)</h2>
+<ul>
+<li>Seck A. et al. <strong>Structural and functional insights into the activation of the dual incision activity of UvrC, a key player in bacterial NER</strong>. <em>Nucleic Acids Research</em>. <strong>Mar 2023</strong>. https://doi.org/10.1093/nar/gkad108 (seck2023structuralandfunctional pages 1-2)</li>
+<li>Kraithong T. et al. <strong>A Peek Inside the Machines of Bacterial Nucleotide Excision Repair</strong>. <em>Int J Mol Sci</em>. <strong>Jan 2021</strong>. https://doi.org/10.3390/ijms22020952 (kraithong2021apeekinside pages 3-5)</li>
+<li>Roca A. et al. <strong>Physiological responses of Pseudomonas putida to formaldehyde during detoxification</strong>. <em>Microbial Biotechnology</em>. <strong>Dec 2008</strong>. https://doi.org/10.1111/j.1751-7915.2007.00014.x (roca2008physiologicalresponsesof pages 1-3)</li>
+<li>Martínez-García E. et al. <strong>Freeing Pseudomonas putida KT2440 of its proviral load strengthens endurance to environmental stresses</strong>. <em>Environmental Microbiology</em>. <strong>Jun 2015</strong>. https://doi.org/10.1111/1462-2920.12492 (martinez‐garcia2015freeingpseudomonasputida pages 1-4)</li>
+<li>Jiménez-Fernández A. et al. <strong>Complex interplay between FleQ, cyclic diguanylate and multiple σ factors… in Pseudomonas putida</strong>. <em>PLOS ONE</em>. <strong>Sep 2016</strong>. https://doi.org/10.1371/journal.pone.0163142 (jimenezfernandez2016complexinterplaybetween pages 20-22)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(seck2023structuralandfunctional pages 1-2): Anna Seck, Salvatore De Bonis, Meike Stelter, Mats Ökvist, Müge Senarisoy, Mohammad Rida Hayek, Aline Le Roy, Lydie Martin, Christine Saint-Pierre, Célia M Silveira, Didier Gasparutto, Smilja Todorovic, Jean-Luc Ravanat, and Joanna Timmins. Structural and functional insights into the activation of the dual incision activity of uvrc, a key player in bacterial ner. Nucleic Acids Research, 51:2931-2949, Mar 2023. URL: https://doi.org/10.1093/nar/gkad108, doi:10.1093/nar/gkad108. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kraithong2021apeekinside pages 3-5): Thanyalak Kraithong, Silas Hartley, David Jeruzalmi, and Danaya Pakotiprapha. A peek inside the machines of bacterial nucleotide excision repair. International Journal of Molecular Sciences, 22:952, Jan 2021. URL: https://doi.org/10.3390/ijms22020952, doi:10.3390/ijms22020952. This article has 36 citations.</p>
+</li>
+<li>
+<p>(jimenezfernandez2016complexinterplaybetween pages 20-22): Alicia Jiménez-Fernández, Aroa López-Sánchez, Lorena Jiménez-Díaz, Blanca Navarrete, Patricia Calero, Ana Isabel Platero, and Fernando Govantes. Complex interplay between fleq, cyclic diguanylate and multiple σ factors coordinately regulates flagellar motility and biofilm development in pseudomonas putida. PLOS ONE, 11:e0163142, Sep 2016. URL: https://doi.org/10.1371/journal.pone.0163142, doi:10.1371/journal.pone.0163142. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taylor2011evolutionaryrelationshipsdesign pages 16-20): GK Taylor. Evolutionary relationships, design, and biochemical characterization of homing endonucleases. Unknown journal, 2011.</p>
+</li>
+<li>
+<p>(kraithong2021apeekinside pages 15-16): Thanyalak Kraithong, Silas Hartley, David Jeruzalmi, and Danaya Pakotiprapha. A peek inside the machines of bacterial nucleotide excision repair. International Journal of Molecular Sciences, 22:952, Jan 2021. URL: https://doi.org/10.3390/ijms22020952, doi:10.3390/ijms22020952. This article has 36 citations.</p>
+</li>
+<li>
+<p>(seck2023structuralandfunctional pages 17-18): Anna Seck, Salvatore De Bonis, Meike Stelter, Mats Ökvist, Müge Senarisoy, Mohammad Rida Hayek, Aline Le Roy, Lydie Martin, Christine Saint-Pierre, Célia M Silveira, Didier Gasparutto, Smilja Todorovic, Jean-Luc Ravanat, and Joanna Timmins. Structural and functional insights into the activation of the dual incision activity of uvrc, a key player in bacterial ner. Nucleic Acids Research, 51:2931-2949, Mar 2023. URL: https://doi.org/10.1093/nar/gkad108, doi:10.1093/nar/gkad108. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seck2023structuralandfunctional media 140d0c6a): Anna Seck, Salvatore De Bonis, Meike Stelter, Mats Ökvist, Müge Senarisoy, Mohammad Rida Hayek, Aline Le Roy, Lydie Martin, Christine Saint-Pierre, Célia M Silveira, Didier Gasparutto, Smilja Todorovic, Jean-Luc Ravanat, and Joanna Timmins. Structural and functional insights into the activation of the dual incision activity of uvrc, a key player in bacterial ner. Nucleic Acids Research, 51:2931-2949, Mar 2023. URL: https://doi.org/10.1093/nar/gkad108, doi:10.1093/nar/gkad108. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seck2023structuralandfunctional media 1f54ebd4): Anna Seck, Salvatore De Bonis, Meike Stelter, Mats Ökvist, Müge Senarisoy, Mohammad Rida Hayek, Aline Le Roy, Lydie Martin, Christine Saint-Pierre, Célia M Silveira, Didier Gasparutto, Smilja Todorovic, Jean-Luc Ravanat, and Joanna Timmins. Structural and functional insights into the activation of the dual incision activity of uvrc, a key player in bacterial ner. Nucleic Acids Research, 51:2931-2949, Mar 2023. URL: https://doi.org/10.1093/nar/gkad108, doi:10.1093/nar/gkad108. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seck2023structuralandfunctional media 96b45139): Anna Seck, Salvatore De Bonis, Meike Stelter, Mats Ökvist, Müge Senarisoy, Mohammad Rida Hayek, Aline Le Roy, Lydie Martin, Christine Saint-Pierre, Célia M Silveira, Didier Gasparutto, Smilja Todorovic, Jean-Luc Ravanat, and Joanna Timmins. Structural and functional insights into the activation of the dual incision activity of uvrc, a key player in bacterial ner. Nucleic Acids Research, 51:2931-2949, Mar 2023. URL: https://doi.org/10.1093/nar/gkad108, doi:10.1093/nar/gkad108. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roca2008physiologicalresponsesof pages 1-3): Amalia Roca, José‐Juan Rodríguez‐Herva, Estrella Duque, and Juan L. Ramos. Physiological responses of pseudomonas putida to formaldehyde during detoxification. Microbial Biotechnology, 1:158-169, Dec 2008. URL: https://doi.org/10.1111/j.1751-7915.2007.00014.x, doi:10.1111/j.1751-7915.2007.00014.x. This article has 96 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2015freeingpseudomonasputida pages 1-4): Esteban Martínez‐García, Tatjana Jatsenko, Maia Kivisaar, and Víctor de Lorenzo. Freeing pseudomonas putida kt2440 of its proviral load strengthens endurance to environmental stresses. Environmental microbiology, 17 1:76-90, Jun 2015. URL: https://doi.org/10.1111/1462-2920.12492, doi:10.1111/1462-2920.12492. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2015freeingpseudomonasputida pages 12-15): Esteban Martínez‐García, Tatjana Jatsenko, Maia Kivisaar, and Víctor de Lorenzo. Freeing pseudomonas putida kt2440 of its proviral load strengthens endurance to environmental stresses. Environmental microbiology, 17 1:76-90, Jun 2015. URL: https://doi.org/10.1111/1462-2920.12492, doi:10.1111/1462-2920.12492. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2015freeingpseudomonasputida pages 18-21): Esteban Martínez‐García, Tatjana Jatsenko, Maia Kivisaar, and Víctor de Lorenzo. Freeing pseudomonas putida kt2440 of its proviral load strengthens endurance to environmental stresses. Environmental microbiology, 17 1:76-90, Jun 2015. URL: https://doi.org/10.1111/1462-2920.12492, doi:10.1111/1462-2920.12492. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(covizzi2024recombinantexpressionand pages 20-24): J COVIZZI. Recombinant expression and purification trials of mycobacterium tuberculosis uvrc: a key protein of the nucleotide excision repair pathway. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="uvrC-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 The document contains several figures that address your request. Figure 1A provides a schematic diagram of the domain organization " src="uvrC-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kraithong2021apeekinside pages 3-5</li>
+<li>seck2023structuralandfunctional pages 1-2</li>
+<li>seck2023structuralandfunctional pages 17-18</li>
+<li>jimenezfernandez2016complexinterplaybetween pages 20-22</li>
+<li>roca2008physiologicalresponsesof pages 1-3</li>
+<li>covizzi2024recombinantexpressionand pages 20-24</li>
+<li>taylor2011evolutionaryrelationshipsdesign pages 16-20</li>
+<li>kraithong2021apeekinside pages 15-16</li>
+<li>3Fe–4S</li>
+<li>4Fe–4S</li>
+<li>https://doi.org/10.1093/nar/gkad108;</li>
+<li>https://doi.org/10.3390/ijms22020952;</li>
+<li>https://doi.org/10.3390/ijms22020952</li>
+<li>https://doi.org/10.1093/nar/gkad108</li>
+<li>https://doi.org/10.1371/journal.pone.0163142;</li>
+<li>https://doi.org/10.1111/j.1751-7915.2007.00014.x;</li>
+<li>https://doi.org/10.1007/s12038-023-00378-8</li>
+<li>https://doi.org/10.1111/j.1751-7915.2007.00014.x</li>
+<li>https://doi.org/10.1111/1462-2920.12492</li>
+<li>https://doi.org/10.1371/journal.pone.0163142</li>
+<li>https://doi.org/10.1093/nar/gkad108,</li>
+<li>https://doi.org/10.3390/ijms22020952,</li>
+<li>https://doi.org/10.1371/journal.pone.0163142,</li>
+<li>https://doi.org/10.1111/j.1751-7915.2007.00014.x,</li>
+<li>https://doi.org/10.1111/1462-2920.12492,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FJ7
+gene_symbol: uvrC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  UvrABC system protein C (UvrC, excinuclease ABC subunit C) is the catalytic
+  endonuclease subunit of the bacterial UvrABC excinuclease that performs
+  nucleotide excision repair (NER), the pathway that removes a broad range of
+  bulky, helix-distorting DNA lesions. After UvrA and UvrB recognize damage and
+  load UvrB onto the lesion site, UvrC is recruited to the UvrB-DNA pre-incision
+  complex and makes the dual incision that brackets the lesion on the damaged
+  strand: an N-terminal GIY-YIG nuclease domain catalyzes the 3&#39; incision and a
+  C-terminal RNase H-like nuclease domain catalyzes the 5&#39; incision, releasing a
+  short damage-containing oligonucleotide that is subsequently removed and the
+  gap filled and ligated. UvrC carries a GIY-YIG endonuclease domain, a central
+  UVR domain that mediates interaction with UvrB, and helix-hairpin-helix (HhH)
+  DNA-binding motifs. It acts on chromosomal DNA in the cytoplasm. The protein
+  is 607 residues, highly conserved across bacteria, and in P. putida KT2440 is
+  encoded by PP_4098.
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      UvrC binds DNA at the lesion site via its helix-hairpin-helix (HhH) motifs
+      to position the strand for dual incision. The annotation is correct but
+      generic; DNA binding is a means to the catalytic endonuclease function
+      rather than a core molecular function on its own.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      DNA binding is correct and consistent with the HhH DNA-binding motifs
+      (IPR003583) but is a non-informative parent supporting the more specific
+      excinuclease activity, which captures the core function.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UvrC acts on chromosomal DNA in the cytoplasm/nucleoid. Cytoplasmic
+      localization is consistent with UniProt subcellular location and the role
+      of NER in repairing the bacterial chromosome.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization for a soluble DNA-repair endonuclease; no evidence of
+      membrane, secreted, or extracellular localization.
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UvrC is a core DNA repair enzyme. This high-level term is correct but
+      subsumed by the more specific nucleotide-excision repair annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but general; the specific child term GO:0006289
+      (nucleotide-excision repair) better captures the biological process.
+- term:
+    id: GO:0006289
+    label: nucleotide-excision repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UvrC is the dual-incision endonuclease of the bacterial UvrABC NER system,
+      performing the strand incisions that excise lesion-containing
+      oligonucleotides. This is the core biological process for this protein.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by the conserved UvrC family role, domain architecture
+      (GIY-YIG plus RNase H-like nuclease), and UniProt FUNCTION annotation.
+- term:
+    id: GO:0006974
+    label: DNA damage response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      As a DNA repair enzyme UvrC participates in the cellular response to DNA
+      damage. This is a broad parent term subsumed by the more specific NER and
+      DNA repair annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but high-level/generic; the specific NER role is the informative
+      annotation.
+- term:
+    id: GO:0009380
+    label: excinuclease repair complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      UvrC is recruited to and acts within the UvrABC excinuclease (pre-incision)
+      complex, interacting with UvrB at the lesion. Membership in this complex is
+      consistent with the UVR domain (UniProt SUBUNIT note) that mediates UvrB
+      interaction.
+    action: ACCEPT
+    reason: &gt;-
+      Correct cellular component for the catalytic subunit of the UvrABC
+      excinuclease.
+- term:
+    id: GO:0009381
+    label: excinuclease ABC activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is the core molecular function of UvrC, the catalytic subunit that
+      performs the 3&#39; and 5&#39; dual incisions of the UvrABC excinuclease in NER.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by the conserved UvrC family role and domain
+      architecture; represents the central function of the gene.
+- term:
+    id: GO:0009432
+    label: SOS response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      uvrA, uvrB, and uvrC are members of the LexA-controlled SOS regulon in
+      E. coli and other bacteria, with uvr expression induced upon DNA damage.
+      Annotation by homology transfer is plausible for P. putida UvrC, though
+      participation in the SOS response is regulatory/contextual rather than a
+      direct molecular activity, and KT2440-specific induction has not been
+      verified here.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Plausible regulon membership inherited by homology; reflects
+      induction/regulatory context rather than the core enzymatic function.
+      Retained as non-core given it is a generic IEA transfer not experimentally
+      confirmed in this organism.
+core_functions:
+- description: &gt;-
+    Catalytic endonuclease subunit of the bacterial UvrABC excinuclease that
+    performs the dual incision of nucleotide excision repair, cleaving the
+    damaged DNA strand on both the 3&#39; and 5&#39; sides of a lesion to excise a short
+    damage-containing oligonucleotide.
+  supported_by:
+  - reference_id: PMID:36869664
+    full_text_unavailable: true
+    supporting_text: &gt;-
+      UvrC is the dual-incision endonuclease of bacterial NER; its N-terminal
+      GIY-YIG domain performs the 3&#39; incision and the C-terminal RNase H-like
+      domain performs the 5&#39; incision (structural/mechanistic study of UvrC).
+  molecular_function:
+    id: GO:0009381
+    label: excinuclease ABC activity
+  directly_involved_in:
+  - id: GO:0006289
+    label: nucleotide-excision repair
+  in_complex:
+    id: GO:0009380
+    label: excinuclease repair complex
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:36869664
+  title: Structural and functional insights into the activation of the dual incision activity of UvrC, a key player in bacterial NER
+  findings:
+  - statement: &gt;-
+      Full-length UvrC is the dual-incision endonuclease of bacterial NER; its
+      GIY-YIG (N-terminal) and RNase H-like (C-terminal) nuclease domains
+      perform the 3&#39; and 5&#39; incisions respectively, and UvrC must transition
+      from a closed inactive to an open active state to execute dual incision.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Seck et al., Nucleic Acids Research 2023, doi:10.1093/nar/gkad108. The
+      deep-research report (uvrC-deep-research-falcon.md) originally carried a
+      wrong/hallucinated PMID (PMID:36744437, which actually resolves to an
+      unrelated LINE-1 retrotransposon paper). PMID recovered from the DOI and
+      PubMed-verified: PMID:36869664 resolves to the correct Seck et al. 2023
+      UvrC NER paper with the matching title and abstract. Abstract-only here.
+- id: PMID:33477956
+  title: A Peek Inside the Machines of Bacterial Nucleotide Excision Repair
+  findings:
+  - statement: &gt;-
+      Review of bacterial NER describing UvrC recruitment to the UvrB-DNA
+      pre-incision complex and dual incision at defined positions 3&#39; and 5&#39; of
+      the lesion, releasing a short damaged oligonucleotide.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Kraithong et al., Int J Mol Sci 2021, doi:10.3390/ijms22020952, cited in
+      deep-research report as a NER mechanism review. PMID inferred from
+      DOI/citation; not independently PubMed-verified here.
+suggested_questions:
+- question: &gt;-
+    Is uvrC in P. putida KT2440 transcriptionally induced as part of the
+    LexA/SOS regulon upon DNA damage, and is it co-regulated within the predicted
+    pp4100-gacA-uvrC-pgsA operon context?
+suggested_experiments:
+- description: &gt;-
+    Construct a P. putida KT2440 uvrC deletion mutant and measure UV and
+    bulky-adduct (e.g., mitomycin C, formaldehyde) sensitivity to confirm the
+    NER incision role in this organism.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

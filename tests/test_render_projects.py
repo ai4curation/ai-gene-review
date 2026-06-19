@@ -326,6 +326,52 @@ class TestReplaceGeneSymbols:
 
         assert "../../genes/human/GPX4/GPX4-ai-review.html" in result
 
+    def test_rule_b_capitalized_protein_name_links(self):
+        """A camelCase gene symbol also links from its capitalized protein form.
+
+        The directory/symbol is ``pqsB`` (gene nomenclature); prose typically
+        uses ``PqsB`` (protein nomenclature). The link text keeps the author's
+        casing but the URL uses the canonical directory casing.
+        """
+        index = {"pqsB": ["PSEAE"], "eryCIII": ["SACEN"]}
+        result, warnings = replace_gene_symbols("The PqsB / EryCIII pair", index)
+
+        assert "[PqsB](../../genes/PSEAE/pqsB/pqsB-ai-review.html)" in result
+        assert "[EryCIII](../../genes/SACEN/eryCIII/eryCIII-ai-review.html)" in result
+        assert warnings == []
+
+    def test_rule_a_digit_hyphen_symbol_case_insensitive(self):
+        """Digit/hyphen gene symbols match case-insensitively (e.g. worm CHE-2)."""
+        index = {"che-2": ["worm"], "daf-16": ["worm"]}
+        result, warnings = replace_gene_symbols("CHE-2 and DAF-16 mutants", index)
+
+        assert "[CHE-2](../../genes/worm/che-2/che-2-ai-review.html)" in result
+        assert "[DAF-16](../../genes/worm/daf-16/daf-16-ai-review.html)" in result
+        assert warnings == []
+
+    def test_case_variants_do_not_link_common_words(self):
+        """Words that share a symbol's letters must not be auto-linked.
+
+        ``manY``/``App``/``algA`` are real genes, but the words "many"/"app"/
+        "alga" must never become links. Rule B keeps the symbol tail case-exact
+        (so ``manY`` only also matches ``ManY``), and Rule A only applies to
+        digit/hyphen symbols (which words never are).
+        """
+        index = {"manY": ["ECOLI"], "App": ["mouse"], "algA": ["PSEPK"]}
+        content = "Many results: the app shows alga blooms."
+        result, warnings = replace_gene_symbols(content, index)
+
+        assert result == content
+        assert warnings == []
+
+    def test_canonical_operon_genes_still_link(self):
+        """The real ``ManY`` gene reference (e.g. in an operon) still links."""
+        index = {"manX": ["ECOLI"], "manY": ["ECOLI"], "manZ": ["ECOLI"]}
+        result, warnings = replace_gene_symbols("operon: ManX, ManY, ManZ", index)
+
+        assert "[ManY](../../genes/ECOLI/manY/manY-ai-review.html)" in result
+        assert warnings == []
+
 
 class TestReplaceGeneTags:
     """Tests for explicit gene tags in project markdown."""

@@ -1,0 +1,2642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCDC50 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CCDC50</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8IVM0" target="_blank" class="term-link">
+                        Q8IVM0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CCDC50";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8IVM0" data-a="DESCRIPTION: CCDC50 (Coiled-coil domain-containing protein 50),..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CCDC50 (Coiled-coil domain-containing protein 50), also known as Ymer, is a soluble, predominantly cytoplasmic/cytosolic protein with an N-terminal coiled-coil region and a large disordered, basic C-terminal region. It is a ubiquitin-binding adapter that recognizes lysine-63-linked polyubiquitin chains and functions in ubiquitin-dependent signaling and receptor trafficking. CCDC50/Ymer is rapidly tyrosine-phosphorylated upon epidermal growth factor (EGF) stimulation and modulates EGF receptor (EGFR) signaling; it associates with the RING E3 ubiquitin ligase RNF126 and participates in ubiquitin-dependent endosomal sorting of activated EGFR. Through its interaction with the deubiquitinase/ubiquitin-editing enzyme A20 (TNFAIP3) and binding to K63-linked polyubiquitin on RIPK1, CCDC50/Ymer negatively regulates NF-kB signaling. It has additionally been reported (in literature beyond the current annotation set) to act as a TBK1-binding selective autophagy receptor that links K63-polyubiquitinated cargo to LC3 in aggrephagy/reticulophagy and in restraint of antiviral innate immunity. CCDC50 is associated with microtubules of the cytoskeleton and mitotic apparatus. It is broadly expressed, with isoform 1 (the major isoform) detected in most tissues; in the adult inner ear its expression is restricted to cochlear pillar cells, the stria vascularis, and the vestibular sensory epithelia. Mutations in CCDC50 cause autosomal dominant progressive non-syndromic hearing loss (DFNA44).</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>K63-linked polyubiquitin selective autophagy receptor activity</h3>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="K63-linked polyubiquitin selective autophagy receptor activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> An autophagy cargo adaptor activity in which the adaptor recognizes K63-linked-polyubiquitinated cargo and bridges it to a phagophore-conjugated ATG8-family protein, targeting the cargo for selective autophagic degradation.</p>
+            
+
+            
+            <p><strong>Justification:</strong> CCDC50/Ymer has been reported in the literature (beyond the current GOA annotation set) to act as a TBK1-binding selective autophagy receptor that links K63-polyubiquitinated cargo to LC3 in aggrephagy/reticulophagy. Its experimentally demonstrated K63-polyubiquitin binding (PMID:18029035) is consistent with this role, which is not represented by any current annotation.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160247" target="_blank" class="term-link">
+                    autophagy cargo adaptor activity
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/18029035" target="_blank" class="term-link">
+                        PMID:18029035
+                    </a>
+                    
+                    
+                    : bound to lysine (K)-63-linked
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO) inference that CCDC50 is active in the cytoplasm, its established compartment as a soluble ubiquitin-binding adapter.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization; CCDC50/Ymer is a soluble cytoplasmic protein, but this generic cytoplasm term is subsumed by the more specific cytosol (IDA) annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17503326" target="_blank" class="term-link">
+                                        PMID:17503326
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ymer is a soluble, cytoplasmic protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    GO:0031625
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0031625" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of ubiquitin-protein-ligase binding, consistent with CCDC50/Ymer&#39;s experimentally demonstrated interaction with the E3 ligase RNF126.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported molecular function; CCDC50 binds the RING E3 ligase RNF126 and functions in ubiquitin-dependent EGFR sorting, redundant with the IPI annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CCDC50/CCDC50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with RNF126</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of cytoplasmic localization from the UniProt subcellular location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but generic; the specific cytosol annotation better captures the localization, and this is redundant with the IBA cytoplasm annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CCDC50/CCDC50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18029035" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18029035
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Involvement of Ymer in suppression of NF-kappaB activation b...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0005515" data-r="PMID:18029035" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interactions with A20/TNFAIP3 and K63-linked polyubiquitin on RIPK1 in the NF-kB-regulation study. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records functionally important interactions (A20, K63-polyubiquitin/RIPK1) underlying CCDC50&#39;s role as a negative regulator of NF-kB signaling, but bare protein binding is uninformative per curation guidelines.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18029035" target="_blank" class="term-link">
+                                        PMID:18029035
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">bound to lysine (K)-63-linked</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput binary (HuRI) interactome interaction. Bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome; bare protein binding is uninformative.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A reference map of the human binary protein interactome</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Immunofluorescence-curated (HPA) cytosolic localization, the core compartment of CCDC50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization directly supported by imaging data.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17503326" target="_blank" class="term-link">
+                                        PMID:17503326
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Ymer is a soluble, cytoplasmic protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007605" target="_blank" class="term-link">
+                                    GO:0007605
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of sound</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17503326" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17503326
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A mutation in CCDC50, a gene encoding an effector of epiderm...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0007605" data-r="PMID:17503326" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype evidence that CCDC50 mutation causes autosomal dominant progressive hearing loss (DFNA44); CCDC50/Ymer is expressed in cochlear pillar cells, stria vascularis and vestibular sensory epithelia.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Genuine, experimentally supported disease/phenotype association (DFNA44), but a tissue-specific physiological outcome rather than the molecular core function of the ubiquitin-binding adapter; appropriately retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17503326" target="_blank" class="term-link">
+                                        PMID:17503326
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">causes progressive hearing loss</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    GO:0031625
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23418353" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23418353
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The E3 ubiquitin ligases RNF126 and Rabring7 regulate endoso...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IVM0" data-a="GO:0031625" data-r="PMID:23418353" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct interaction with the RING E3 ubiquitin ligase RNF126, which functions in ubiquitin-dependent endosomal sorting of EGFR.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Informative molecular function directly supported by experiment; CCDC50/Ymer binds the E3 ligase RNF126, linking it to ubiquitin-dependent receptor sorting. This is the core molecular-function annotation (preferred over bare protein binding).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/CCDC50/CCDC50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with RNF126</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functions as a K63-linked-polyubiquitin-binding adapter in ubiquitin-dependent signaling. Through interaction with the ubiquitin-editing enzyme A20/TNFAIP3 and binding to K63-polyubiquitin on RIPK1, CCDC50/Ymer negatively regulates NF-kB signaling.</h3>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="FUNCTION: Functions as a K63-linked-polyubiquitin-binding ad..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                            ubiquitin protein ligase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18029035" target="_blank" class="term-link">
+                                PMID:18029035
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">bound to lysine (K)-63-linked</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23418353" target="_blank" class="term-link">
+                                PMID:23418353
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">regulate endosomal sorting of</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts in EGF receptor signaling and ubiquitin-dependent endosomal sorting of activated EGFR, associating with the RING E3 ubiquitin ligase RNF126; CCDC50/Ymer is itself EGF-induced tyrosine-phosphorylated.</h3>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="FUNCTION: Acts in EGF receptor signaling and ubiquitin-depen..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                            ubiquitin protein ligase binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/CCDC50/CCDC50-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Involved in EGFR signaling</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/CCDC50/CCDC50-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Interacts with RNF126</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15314609" target="_blank" class="term-link">
+                            PMID:15314609
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Temporal analysis of phosphotyrosine-dependent signaling networks by quantitative proteomics.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ymer (CCDC50) is an EGF-induced tyrosine-phosphorylated protein involved in EGFR signaling.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17503326" target="_blank" class="term-link">
+                            PMID:17503326
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A mutation in CCDC50, a gene encoding an effector of epidermal growth factor-mediated cell signaling, causes progressive hearing loss.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A CCDC50 mutation causes DFNA44 autosomal dominant progressive hearing loss; Ymer is a soluble cytoplasmic protein expressed in cochlear pillar cells, stria vascularis and vestibular sensory epithelia, and colocalizes with microtubules of the mitotic apparatus.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18029035" target="_blank" class="term-link">
+                            PMID:18029035
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Involvement of Ymer in suppression of NF-kappaB activation by regulated interaction with lysine-63-linked polyubiquitin chain.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ymer interacts with A20 and binds K63-linked polyubiquitin on RIPK1; overexpression down-regulates NF-kB signaling and knockdown up-regulates it, establishing Ymer as a negative regulator of NF-kB signaling and a K63-polyubiquitin-binding protein.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23418353" target="_blank" class="term-link">
+                            PMID:23418353
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The E3 ubiquitin ligases RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth factor receptor.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNF126 (a CCDC50/Ymer interactor) functions in ubiquitin-dependent endosomal sorting and degradation of EGFR downstream of c-Cbl.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is CCDC50/Ymer&#39;s reported selective-autophagy-receptor function (TBK1-binding, K63-polyubiquitin to LC3) mediated by the same K63-polyubiquitin-binding module used in NF-kB and EGFR regulation, and which cargo classes (aggregates, ER, RIG-I/innate-immune signaling components) does it serve?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="Q: Is CCDC50/Ymer&#39;s reported selective-autophagy-rece..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does the DFNA44 hearing-loss mutation mechanistically perturb CCDC50 function (ubiquitin binding, EGFR sorting, microtubule/cytoskeletal association) in cochlear pillar cells and stria vascularis?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="Q: How does the DFNA44 hearing-loss mutation mechanis..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Define the CCDC50 ubiquitin-binding determinant (e.g. the reported MIU-type motif) by mutagenesis and test, in CCDC50-knockout cells reconstituted with wild-type versus ubiquitin-binding-dead CCDC50, its requirement for K63-polyubiquitin binding, NF-kB suppression, EGFR endosomal sorting, and any LC3/autophagy-flux readouts.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="EXPERIMENT: Define the CCDC50 ubiquitin-binding determinant (e..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use quantitative interactome/proximity profiling (AP-MS, BioID with TBK1, A20, RNF126, RIG-I, LC3 baits) under resting versus EGF-, TNF-, and virus-stimulated conditions to determine whether the NF-kB, EGFR-sorting, and reported autophagy-receptor activities reflect distinct complexes.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8IVM0" data-a="EXPERIMENT: Use quantitative interactome/proximity profiling (..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CCDC50-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IVM0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ccdc50-coiled-coil-domain-containing-protein-50-ymer-review-notes">CCDC50 (Coiled-coil domain-containing protein 50 / Ymer) — review notes</h1>
+<p>UniProt: Q8IVM0 (CCD50_HUMAN), 306 aa (isoform 1, major). HGNC:18111. Synonyms: C3orf6, Ymer.</p>
+<h2 id="domain-architecture-uniprot">Domain architecture (UniProt)</h2>
+<ul>
+<li>Coiled-coil (63–130).</li>
+<li>Large disordered C-terminal region (215–306).</li>
+<li>N-terminal acetylated (Ala-2), phosphorylated on Ser-5 and on tyrosine residues (EGF-induced).</li>
+<li>A short crystallized peptide (170–178, PDB 6LAN).<br />
+Note: Ymer harbors a "MIU"-type ubiquitin-interacting motif (reported in the literature) that binds K63-linked polyubiquitin; this is the molecular basis of its ubiquitin-binding behavior in NF-kB regulation and EGFR sorting.</li>
+</ul>
+<h2 id="egfr-signaling-ymer">EGFR signaling / Ymer</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15314609" title="Temporal analysis of phosphotyrosine-dependent signaling networks">PMID:15314609</a> — Ymer (CCDC50) identified as an EGF-induced tyrosine-phosphorylated protein involved in EGFR signaling. Basis of the UniProt FUNCTION "Involved in EGFR signaling" and the original "effector of EGF-mediated cell signaling" description. (Not cached; verified via UniProt reference list.)</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17503326" title="CCDC50 encodes Ymer, an effector of epidermal growth factor (EGF)-mediated cell signaling... suggested to inhibit down-regulation of the EGF receptor... Ymer is a soluble, cytoplasmic protein... colocalizes with microtubules of the mitotic apparatus">PMID:17503326</a> — DFNA44 progressive hearing-loss mutation; expression restricted to cochlear pillar cells, stria vascularis, vestibular sensory epithelia. Supports cytoplasm/cytosol localization and the sensory perception of sound (GO:0007605) phenotype annotation (IMP, deafness).</li>
+</ul>
+<h2 id="nf-kb-k63-polyubiquitin-innate-immune-signaling">NF-kB / K63-polyubiquitin / innate immune signaling</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18029035" title="Involvement of Ymer in suppression of NF-kappaB activation by regulated interaction with lysine-63-linked polyubiquitin chain">PMID:18029035</a> — Ymer interacts with A20 (TNFAIP3) and binds K63-linked polyubiquitin chains on RIP1/RIPK1; overexpression down-regulates NF-kB signaling, knockdown up-regulates it. Establishes K63-polyUb binding and a negative-regulator role in NF-kB signaling. Interactome (UniProt) includes OTUD7B, RIPK1, RNF8, ARRDC3, UBB — consistent with a ubiquitin-pathway scaffold.</li>
+</ul>
+<h2 id="egfr-endosomal-sorting-ubiquitin-ligase-binding">EGFR endosomal sorting / ubiquitin ligase binding</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/23418353" title="The E3 ubiquitin ligases RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth factor receptor">PMID:23418353</a> — CCDC50/Ymer interacts with RNF126 (source of the IPI ubiquitin protein ligase binding GO:0031625 annotation). RNF126 functions in EGFR endosomal sorting downstream of c-Cbl. Connects Ymer to ubiquitin-dependent receptor sorting.</li>
+</ul>
+<h2 id="selective-autophagy-receptor-literature-beyond-cached-set-context-for-review">Selective autophagy receptor (literature beyond cached set; context for review)</h2>
+<p>CCDC50/Ymer has been reported as a TBK1-binding selective autophagy receptor that recognizes K63-polyubiquitinated cargo and links it to LC3 — implicated in aggrephagy/reticulophagy and in negative regulation of antiviral innate immunity (RIG-I/MAVS) by delivering activated RIG-I/aggregated signaling components for autophagic degradation (e.g., Hou et al., Autophagy 2021). These roles are consistent with its K63-polyUb binding (PMID:18029035) and ubiquitin-ligase binding (PMID:23418353) but are not represented in the current GOA annotation set, so no existing annotation captures the autophagy-receptor MF directly. Recorded as a proposed gap / question.</p>
+<h2 id="localization">Localization</h2>
+<p>Cytoplasm / cytosol (HPA IDA; PMID:17503326). Associated with microtubules of cytoskeleton and mitotic apparatus (by similarity / PMID:17503326). No nuclear core role.</p>
+<h2 id="disease">Disease</h2>
+<p>DFNA44 autosomal dominant progressive hearing loss [MIM:607453] caused by CCDC50 variants <a href="https://pubmed.ncbi.nlm.nih.gov/17503326">PMID:17503326</a>.</p>
+<h2 id="annotation-set-goa-8-annotations">Annotation set (GOA): 8 annotations</h2>
+<ol>
+<li>GO:0005737 cytoplasm IBA (is_active_in) — localization OK; "is_active_in" qualifier unusual for a CC but reflects PAN-GO.</li>
+<li>GO:0031625 ubiquitin protein ligase binding IBA — supported (RNF126 binding, PMID:23418353); enables.</li>
+<li>GO:0005737 cytoplasm IEA (located_in) — OK.</li>
+<li>GO:0005515 protein binding IPI (PMID:18029035) — A20/RIP1 K63-polyUb context; bare protein binding uninformative.</li>
+<li>GO:0005515 protein binding IPI (PMID:32296183) — HuRI binary interactome.</li>
+<li>GO:0005829 cytosol IDA (HPA, GO_REF:0000052) — OK core localization.</li>
+<li>GO:0007605 sensory perception of sound IMP (PMID:17503326) — DFNA44 deafness phenotype; acts_upstream_of_or_within. Pleiotropic/tissue-specific.</li>
+<li>GO:0031625 ubiquitin protein ligase binding IPI (PMID:23418353) — RNF126; supported.</li>
+</ol>
+<h2 id="key-go-terms-verified-via-quickgo-api">Key GO terms verified via QuickGO API</h2>
+<ul>
+<li>GO:0031625 ubiquitin protein ligase binding (existing label correct).</li>
+<li>GO:0035973 aggrephagy; GO:0061709 reticulophagy; GO:0160247 autophagy cargo adaptor activity; GO:0032480 negative regulation of type I interferon production (candidate proposed terms / questions).</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Pn Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CCDC50-pn-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IVM0" data-a="DOC: Pn Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ccdc50-pn-consistency-notes">CCDC50 PN Consistency Notes</h1>
+<ul>
+<li>Generated: 2026-06-18</li>
+<li>Project: PROTEOSTASIS</li>
+<li>Scope: PN consistency rereview against local AIGR review and available deep-research artifacts</li>
+<li>UniProt: Q8IVM0</li>
+<li>AIGR review status: COMPLETE</li>
+<li>Review batch: proteostasis-batch-2026-06-14</li>
+<li>Batch change status: added</li>
+</ul>
+<h2 id="source-files-checked">Source Files Checked</h2>
+<ul>
+<li>AIGR review YAML: present - <a href="CCDC50-ai-review.yaml">genes/human/CCDC50/CCDC50-ai-review.yaml</a></li>
+<li>AIGR review HTML: missing - genes/human/CCDC50/CCDC50-ai-review.html</li>
+<li>Gene notes: present - <a href="CCDC50-notes.md">genes/human/CCDC50/CCDC50-notes.md</a></li>
+<li>GOA TSV: present - <a href="CCDC50-goa.tsv">genes/human/CCDC50/CCDC50-goa.tsv</a></li>
+<li>UniProt record: present - <a href="CCDC50-uniprot.txt">genes/human/CCDC50/CCDC50-uniprot.txt</a></li>
+<li>PN dossier: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/CCDC50.md">projects/PROTEOSTASIS/reports/phase1_dossiers/CCDC50.md</a></li>
+<li>PN consistency section: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/CCDC50.md">projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/CCDC50.md</a></li>
+<li>PN projection report: <a href="../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv">projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv</a></li>
+<li>PN mapping audit: <a href="../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv">projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv</a></li>
+</ul>
+<h3 id="deep-research-files">Deep Research Files</h3>
+<ul>
+<li>No <code>*-deep-research*.md</code> file found in this gene directory.</li>
+</ul>
+<h2 id="aigr-review-snapshot">AIGR Review Snapshot</h2>
+<ul>
+<li>Description: CCDC50 (Coiled-coil domain-containing protein 50), also known as Ymer, is a soluble, predominantly cytoplasmic/cytosolic protein with an N-terminal coiled-coil region and a large disordered, basic C-terminal region. It is a ubiquitin-binding adapter that recognizes lysine-63-linked polyubiquitin chains and functions in ubiquitin-dependent signaling and receptor trafficking. CCDC50/Ymer is rapidly tyrosine-phosphorylated upon epidermal growth factor (EGF) stimulation and modulates EGF receptor (EGFR) signaling; it associates with the RING E3 ubiquitin ligase RNF126 and participates in ubiquitin-dependent endosomal sorting of activated EGFR. Through its interaction with the deubiquitinase/ubiquitin-editing enzyme A20 (TNFAIP3) and binding to K63-linked polyubiquitin on RIPK1, CCDC50/Ymer negatively regulates NF-kB signaling. It has additionally been reported (in literature beyond the current annotation set) to act as a TBK1-binding selective autophagy receptor that links K63-polyubiquitinated cargo to LC3 in aggrephagy/reticulophagy and in restraint of antiviral innate immunity. CCDC50 is associated with microtubules of the cytoskeleton and mitotic apparatus. It is broadly expressed, with isoform 1 (the major isoform) detected in most tissues; in the adult inner ear its expression is restricted to cochlear pillar cells, the stria vascularis, and the vestibular sensory epithelia. Mutations in CCDC50 cause autosomal dominant progressive non-syndromic hearing loss (DFNA44).</li>
+<li>Existing/core annotation action counts: ACCEPT: 3; KEEP_AS_NON_CORE: 5</li>
+</ul>
+<h2 id="pn-consistency-summary">PN Consistency Summary</h2>
+<ul>
+<li><strong>Consistency:</strong> Consistent at the conclusion level but with an evidence-source divergence. PN row 1 rests on ONE paper — "CCDC50 suppresses NLRP3 inflammasome... autophagic degradation of NLRP3" (EMBO reports) — delivering ubiquitinated NLRP3 to autophagosomes. The review/notes do NOT cite that EMBO paper; instead the autophagy-receptor role is built from K63-polyUb binding (PMID:18029035), RNF126/EGFR sorting (PMID:23418353), and a literature-level "TBK1-binding SLR in aggrephagy/reticulophagy / RIG-I-MAVS turnover" framing (Hou et al. Autophagy 2021, not cached). Both routes converge on the same MF.</li>
+<li><strong>PN story / NEW pressure:</strong> PN and review AGREE on the new MF: GO:0160247 autophagy cargo adaptor activity (verified real) is <strong>new_to_goa</strong> in PN and <strong>proposed_new_terms</strong> in the review (proposed child "K63-linked polyubiquitin selective autophagy receptor activity" under GO:0160247, supported_by PMID:18029035). Clear ADD, well-justified — current GOA has only ubiquitin-ligase binding (GO:0031625) and bare protein binding.</li>
+<li><strong>Evidence alignment:</strong> DIVERGENT references — PN cites the EMBO NLRP3 paper; review cites NF-kB/EGFR/K63 papers. Same destination, different supporting literature; the EMBO NLRP3 paper would strengthen the review's NEW-term justification.</li>
+<li><strong>Verdict:</strong> CONSISTENT conclusion (GO:0160247 ADD agreed by both); evidence sources diverge. <strong>Recommended edits:</strong> [REF] add the CCDC50/NLRP3 autophagic-degradation EMBO reports paper to the review references and as supporting_text for the proposed GO:0160247 receptor MF.</li>
+</ul>
+<h2 id="full-consistency-review">Full Consistency Review</h2>
+<ul>
+<li><strong>UniProt:</strong> Q8IVM0 (Ymer) · <strong>batch:</strong> proteostasis-batch-2026-06-14 · <strong>review status:</strong> COMPLETE (~239 lines, small)</li>
+<li><strong>PN placement:</strong> ALP <code>Autophagy substrate selection|Selective autophagy receptor|Individual substrates</code> + UPS <code>Ubiquitin and UBL binding|trafficking|macroautophagy|MIU</code> ; <strong>PN-node mapping:</strong> Individual substrates→GO:0160247 cargo adaptor (new_to_goa); UPS macroautophagy type→GO:0016236 context_only; ancestors no_mapping/context_only.</li>
+<li><strong>Consistency:</strong> Consistent at the conclusion level but with an evidence-source divergence. PN row 1 rests on ONE paper — "CCDC50 suppresses NLRP3 inflammasome... autophagic degradation of NLRP3" (EMBO reports) — delivering ubiquitinated NLRP3 to autophagosomes. The review/notes do NOT cite that EMBO paper; instead the autophagy-receptor role is built from K63-polyUb binding (PMID:18029035), RNF126/EGFR sorting (PMID:23418353), and a literature-level "TBK1-binding SLR in aggrephagy/reticulophagy / RIG-I-MAVS turnover" framing (Hou et al. Autophagy 2021, not cached). Both routes converge on the same MF.</li>
+<li><strong>PN story / NEW pressure:</strong> PN and review AGREE on the new MF: GO:0160247 autophagy cargo adaptor activity (verified real) is <strong>new_to_goa</strong> in PN and <strong>proposed_new_terms</strong> in the review (proposed child "K63-linked polyubiquitin selective autophagy receptor activity" under GO:0160247, supported_by PMID:18029035). Clear ADD, well-justified — current GOA has only ubiquitin-ligase binding (GO:0031625) and bare protein binding.</li>
+<li><strong>Mapping strategy:</strong> Mapping is correct (KEY PATTERN: elevate cargo-adaptor MF over bare protein binding, ~2 IPI kept non-core). PN GO:0160247 = review proposed parent. Sound, not an over-reach.</li>
+<li><strong>Evidence alignment:</strong> DIVERGENT references — PN cites the EMBO NLRP3 paper; review cites NF-kB/EGFR/K63 papers. Same destination, different supporting literature; the EMBO NLRP3 paper would strengthen the review's NEW-term justification.</li>
+<li><strong>Verdict:</strong> CONSISTENT conclusion (GO:0160247 ADD agreed by both); evidence sources diverge. <strong>Recommended edits:</strong> [REF] add the CCDC50/NLRP3 autophagic-degradation EMBO reports paper to the review references and as supporting_text for the proposed GO:0160247 receptor MF.</li>
+</ul>
+<h2 id="pn-dossier-context">PN Dossier Context</h2>
+<ul>
+<li>review_batch: proteostasis-batch-2026-06-14</li>
+<li>review_yaml: genes/human/CCDC50/CCDC50-ai-review.yaml</li>
+<li>PN workbook rows: 2</li>
+</ul>
+<h2 id="pn-row-1-autophagy-lysosome-pathway-autophagy-substrate-selection-selective-autophagy-receptor-individual-substrates">PN row 1: Autophagy-Lysosome Pathway | Autophagy substrate selection | Selective autophagy receptor | Individual substrates</h2>
+<ul>
+<li>UniProt: Q8IVM0</li>
+<li>In branches: ALP, UPS</li>
+<li>Notes: Delivers ubiquitinated NLRP3 inflammasome to autophagosome for degradation</li>
+<li>PN references (titles):<ul>
+<li>CCDC50 suppresses NLRP3 inflammasome activity by mediating autophagic degradation of NLRP3 | EMBO reports (embopress.org)</li>
+</ul>
+</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[type] Autophagy-Lysosome Pathway|Autophagy substrate selection|Selective autophagy receptor|Individual substrates<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0160247 autophagy cargo adaptor activity]<br />
+    rationale: This PN category groups receptors such as TRIM-family factors that bind specific substrates and recruit autophagy components for their turnover. That aligns best with autophagy cargo adaptor activity rather than with a single selective-autophagy process term.</li>
+<li>[group] Autophagy-Lysosome Pathway|Autophagy substrate selection|Selective autophagy receptor<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad PN taxonomy container. The descendants mix components, regulators, context labels, and mechanistic leaves, so propagation should come only from narrower curated nodes.</li>
+<li>[class] Autophagy-Lysosome Pathway|Autophagy substrate selection<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad substrate-selection container. GO has useful targets for specific receptor, cargo-adaptor, and selective-autophagy leaves, but this class mixes marking, recognition, receptor regulation, and unknown roles and should not propagate as one term.</li>
+<li>[branch] Autophagy-Lysosome Pathway<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as the top-level PN branch. It is a project taxonomy umbrella rather than a direct GO assertion; all propagation must come from manually curated child nodes.</li>
+</ul>
+</li>
+</ul>
+<h2 id="pn-row-2-ubiquitin-proteasome-system-ubiquitin-and-ubl-binding-trafficking-macroautophagy-miu">PN row 2: Ubiquitin Proteasome System | Ubiquitin and UBL binding | trafficking | macroautophagy | MIU</h2>
+<ul>
+<li>UniProt: Q8IVM0</li>
+<li>In branches: ALP, UPS</li>
+<li>Signature domains: PMID: 16499958</li>
+<li>Auxiliary domains: (none)</li>
+<li>PN references (titles):<ul>
+<li>16499958</li>
+</ul>
+</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[subtype] Ubiquitin Proteasome System|Ubiquitin and UBL binding|trafficking|macroautophagy|MIU<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a selective-autophagy or trafficking subdivision under a UPS binding context. The autophagy context is real, but this node is too indirect for automatic GO propagation.</li>
+<li>[type] Ubiquitin Proteasome System|Ubiquitin and UBL binding|trafficking|macroautophagy<br />
+    status=context_only scope=too_broad_to_propagate GO=[GO:0016236 macroautophagy]<br />
+    rationale: This PN type is an autophagy-related trafficking context, but the earlier TRAPP review showed that generic autophagy propagation from component or binding-context buckets can be too strong. Keep as context unless gene-level evidence supports macroautophagy.</li>
+<li>[group] Ubiquitin Proteasome System|Ubiquitin and UBL binding|trafficking<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a UPS taxonomy container. Its descendants mix catalytic roles, complex membership, binding domains, regulators, adaptors, and substrate-context labels, so a single propagating GO assertion would overstate the shared biology.</li>
+<li>[class] Ubiquitin Proteasome System|Ubiquitin and UBL binding<br />
+    status=context_only scope=too_broad_to_propagate GO=[GO:0140036 ubiquitin-modified protein reader activity]<br />
+    rationale: This class records ubiquitin/UBL-reader context, but the subtree mixes ubiquitin, SUMO, UBL-domain, domain-architecture, catalytic, signaling, trafficking, and nucleic-acid process buckets. It is useful context, not a safe direct propagation.</li>
+<li>[branch] Ubiquitin Proteasome System<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as the top-level UPS branch. It is a project taxonomy umbrella rather than a direct GO assertion; UPS propagation must come from manually curated child nodes.</li>
+</ul>
+</li>
+</ul>
+<h2 id="projected-go-annotations-1">Projected GO annotations (1)</h2>
+<ul>
+<li>GO:0160247 autophagy cargo adaptor activity | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=Autophagy-Lysosome Pathway|Autophagy substrate selection|Selective autophagy receptor|Individual substrates</li>
+</ul>
+<h2 id="note">Note</h2>
+<p>This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8IVM0
+gene_symbol: CCDC50
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  CCDC50 (Coiled-coil domain-containing protein 50), also known as Ymer, is a
+  soluble, predominantly cytoplasmic/cytosolic protein with an N-terminal
+  coiled-coil region and a large disordered, basic C-terminal region. It is a
+  ubiquitin-binding adapter that recognizes lysine-63-linked polyubiquitin
+  chains and functions in ubiquitin-dependent signaling and receptor trafficking.
+  CCDC50/Ymer is rapidly tyrosine-phosphorylated upon epidermal growth factor
+  (EGF) stimulation and modulates EGF receptor (EGFR) signaling; it associates
+  with the RING E3 ubiquitin ligase RNF126 and participates in ubiquitin-dependent
+  endosomal sorting of activated EGFR. Through its interaction with the
+  deubiquitinase/ubiquitin-editing enzyme A20 (TNFAIP3) and binding to K63-linked
+  polyubiquitin on RIPK1, CCDC50/Ymer negatively regulates NF-kB signaling. It has
+  additionally been reported (in literature beyond the current annotation set) to
+  act as a TBK1-binding selective autophagy receptor that links K63-polyubiquitinated
+  cargo to LC3 in aggrephagy/reticulophagy and in restraint of antiviral innate
+  immunity. CCDC50 is associated with microtubules of the cytoskeleton and mitotic
+  apparatus. It is broadly expressed, with isoform 1 (the major isoform) detected
+  in most tissues; in the adult inner ear its expression is restricted to cochlear
+  pillar cells, the stria vascularis, and the vestibular sensory epithelia.
+  Mutations in CCDC50 cause autosomal dominant progressive non-syndromic hearing
+  loss (DFNA44).
+alternative_products:
+- name: 1 (Short)
+  id: Q8IVM0-1
+- name: 2 (Long)
+  id: Q8IVM0-2
+  sequence_note: VSP_014985
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (PAN-GO) inference that CCDC50 is active in the cytoplasm, its established compartment as a soluble ubiquitin-binding adapter.
+    action: KEEP_AS_NON_CORE
+    reason: Correct localization; CCDC50/Ymer is a soluble cytoplasmic protein, but this generic cytoplasm term is subsumed by the more specific cytosol (IDA) annotation.
+    supported_by:
+    - reference_id: PMID:17503326
+      supporting_text: Ymer is a soluble, cytoplasmic protein
+- term:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic inference of ubiquitin-protein-ligase binding, consistent with CCDC50/Ymer&#39;s experimentally demonstrated interaction with the E3 ligase RNF126.
+    action: ACCEPT
+    reason: Supported molecular function; CCDC50 binds the RING E3 ligase RNF126 and functions in ubiquitin-dependent EGFR sorting, redundant with the IPI annotation.
+    supported_by:
+    - reference_id: file:human/CCDC50/CCDC50-uniprot.txt
+      supporting_text: Interacts with RNF126
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic transfer of cytoplasmic localization from the UniProt subcellular location.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but generic; the specific cytosol annotation better captures the localization, and this is redundant with the IBA cytoplasm annotation.
+    supported_by:
+    - reference_id: file:human/CCDC50/CCDC50-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18029035
+  qualifier: enables
+  review:
+    summary: Interactions with A20/TNFAIP3 and K63-linked polyubiquitin on RIPK1 in the NF-kB-regulation study. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: Records functionally important interactions (A20, K63-polyubiquitin/RIPK1) underlying CCDC50&#39;s role as a negative regulator of NF-kB signaling, but bare protein binding is uninformative per curation guidelines.
+    supported_by:
+    - reference_id: PMID:18029035
+      supporting_text: bound to lysine (K)-63-linked
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: High-throughput binary (HuRI) interactome interaction. Bare protein binding is uninformative.
+    action: KEEP_AS_NON_CORE
+    reason: High-throughput interactome; bare protein binding is uninformative.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: A reference map of the human binary protein interactome
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Immunofluorescence-curated (HPA) cytosolic localization, the core compartment of CCDC50.
+    action: ACCEPT
+    reason: Correct core localization directly supported by imaging data.
+    supported_by:
+    - reference_id: PMID:17503326
+      supporting_text: Ymer is a soluble, cytoplasmic protein
+- term:
+    id: GO:0007605
+    label: sensory perception of sound
+  evidence_type: IMP
+  original_reference_id: PMID:17503326
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Mutant-phenotype evidence that CCDC50 mutation causes autosomal dominant progressive hearing loss (DFNA44); CCDC50/Ymer is expressed in cochlear pillar cells, stria vascularis and vestibular sensory epithelia.
+    action: KEEP_AS_NON_CORE
+    reason: Genuine, experimentally supported disease/phenotype association (DFNA44), but a tissue-specific physiological outcome rather than the molecular core function of the ubiquitin-binding adapter; appropriately retained as non-core.
+    supported_by:
+    - reference_id: PMID:17503326
+      supporting_text: causes progressive hearing loss
+- term:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  evidence_type: IPI
+  original_reference_id: PMID:23418353
+  qualifier: enables
+  review:
+    summary: Direct interaction with the RING E3 ubiquitin ligase RNF126, which functions in ubiquitin-dependent endosomal sorting of EGFR.
+    action: ACCEPT
+    reason: Informative molecular function directly supported by experiment; CCDC50/Ymer binds the E3 ligase RNF126, linking it to ubiquitin-dependent receptor sorting. This is the core molecular-function annotation (preferred over bare protein binding).
+    supported_by:
+    - reference_id: file:human/CCDC50/CCDC50-uniprot.txt
+      supporting_text: Interacts with RNF126
+core_functions:
+- description: Functions as a K63-linked-polyubiquitin-binding adapter in ubiquitin-dependent signaling. Through interaction with the ubiquitin-editing enzyme A20/TNFAIP3 and binding to K63-polyubiquitin on RIPK1, CCDC50/Ymer negatively regulates NF-kB signaling.
+  molecular_function:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:18029035
+    supporting_text: bound to lysine (K)-63-linked
+  - reference_id: PMID:23418353
+    supporting_text: regulate endosomal sorting of
+- description: Acts in EGF receptor signaling and ubiquitin-dependent endosomal sorting of activated EGFR, associating with the RING E3 ubiquitin ligase RNF126; CCDC50/Ymer is itself EGF-induced tyrosine-phosphorylated.
+  molecular_function:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/CCDC50/CCDC50-uniprot.txt
+    supporting_text: Involved in EGFR signaling
+  - reference_id: file:human/CCDC50/CCDC50-uniprot.txt
+    supporting_text: Interacts with RNF126
+proposed_new_terms:
+- proposed_name: K63-linked polyubiquitin selective autophagy receptor activity
+  proposed_definition: An autophagy cargo adaptor activity in which the adaptor recognizes
+    K63-linked-polyubiquitinated cargo and bridges it to a phagophore-conjugated ATG8-family
+    protein, targeting the cargo for selective autophagic degradation.
+  justification: CCDC50/Ymer has been reported in the literature (beyond the current GOA
+    annotation set) to act as a TBK1-binding selective autophagy receptor that links
+    K63-polyubiquitinated cargo to LC3 in aggrephagy/reticulophagy. Its experimentally
+    demonstrated K63-polyubiquitin binding (PMID:18029035) is consistent with this role,
+    which is not represented by any current annotation.
+  proposed_parent:
+    id: GO:0160247
+    label: autophagy cargo adaptor activity
+  supported_by:
+  - reference_id: PMID:18029035
+    supporting_text: bound to lysine (K)-63-linked
+suggested_questions:
+- question: Is CCDC50/Ymer&#39;s reported selective-autophagy-receptor function (TBK1-binding, K63-polyubiquitin to LC3) mediated by the same K63-polyubiquitin-binding module used in NF-kB and EGFR regulation, and which cargo classes (aggregates, ER, RIG-I/innate-immune signaling components) does it serve?
+- question: How does the DFNA44 hearing-loss mutation mechanistically perturb CCDC50 function (ubiquitin binding, EGFR sorting, microtubule/cytoskeletal association) in cochlear pillar cells and stria vascularis?
+suggested_experiments:
+- description: Define the CCDC50 ubiquitin-binding determinant (e.g. the reported MIU-type motif) by mutagenesis and test, in CCDC50-knockout cells reconstituted with wild-type versus ubiquitin-binding-dead CCDC50, its requirement for K63-polyubiquitin binding, NF-kB suppression, EGFR endosomal sorting, and any LC3/autophagy-flux readouts.
+- description: Use quantitative interactome/proximity profiling (AP-MS, BioID with TBK1, A20, RNF126, RIG-I, LC3 baits) under resting versus EGF-, TNF-, and virus-stimulated conditions to determine whether the NF-kB, EGFR-sorting, and reported autophagy-receptor activities reflect distinct complexes.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:15314609
+  title: Temporal analysis of phosphotyrosine-dependent signaling networks by quantitative proteomics.
+  findings:
+  - statement: Ymer (CCDC50) is an EGF-induced tyrosine-phosphorylated protein involved in EGFR signaling.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Basis of the UniProt FUNCTION &#39;Involved in EGFR signaling&#39;. Not in publications cache; verified via the UniProt reference list and the DFNA44 paper&#39;s description of Ymer as an EGF-signaling effector.
+- id: PMID:17503326
+  title: A mutation in CCDC50, a gene encoding an effector of epidermal growth factor-mediated cell signaling, causes progressive hearing loss.
+  findings:
+  - statement: A CCDC50 mutation causes DFNA44 autosomal dominant progressive hearing loss; Ymer is a soluble cytoplasmic protein expressed in cochlear pillar cells, stria vascularis and vestibular sensory epithelia, and colocalizes with microtubules of the mitotic apparatus.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Source of the DFNA44 phenotype (sensory perception of sound IMP) and cytoplasmic/microtubule localization. Abstract in cache.
+- id: PMID:18029035
+  title: Involvement of Ymer in suppression of NF-kappaB activation by regulated interaction with lysine-63-linked polyubiquitin chain.
+  findings:
+  - statement: Ymer interacts with A20 and binds K63-linked polyubiquitin on RIPK1; overexpression down-regulates NF-kB signaling and knockdown up-regulates it, establishing Ymer as a negative regulator of NF-kB signaling and a K63-polyubiquitin-binding protein.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes K63-polyubiquitin binding and the NF-kB-suppression role. Abstract in cache.
+- id: PMID:23418353
+  title: The E3 ubiquitin ligases RNF126 and Rabring7 regulate endosomal sorting of the epidermal growth factor receptor.
+  findings:
+  - statement: RNF126 (a CCDC50/Ymer interactor) functions in ubiquitin-dependent endosomal sorting and degradation of EGFR downstream of c-Cbl.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Source of the ubiquitin-protein-ligase-binding (RNF126) IPI annotation; links CCDC50 to ubiquitin-dependent EGFR sorting. Abstract in cache.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput binary interactome (HuRI); source of a bare protein binding annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

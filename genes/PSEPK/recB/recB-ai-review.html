@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>recB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>recB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DZ5" target="_blank" class="term-link">
+                        Q88DZ5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "recB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DZ5" data-a="DESCRIPTION: RecB is the helicase-nuclease subunit of the heter..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RecB is the helicase-nuclease subunit of the heterotrimeric RecBCD enzyme (RecB-RecC-RecD; also called Exonuclease V), the major bacterial machine that initiates processing of double-strand DNA ends for homologous recombination and double-strand break repair. RecB is a bipartite, ATP-dependent enzyme. Its N-terminal motor domain is a single-strand-DNA-dependent ATPase with 3&#39;-5&#39; helicase activity that, together with RecD (a 5&#39;-3&#39; motor) and RecC, drives rapid, processive unwinding of duplex DNA from a blunt or near-blunt end. Its C-terminal domain carries a Mg2+-dependent nuclease center that degrades the unwound strands and, after recognition of a Chi recombination hotspot, nicks the 3&#39;-ended strand and loads the RecA recombinase onto the resulting 3&#39; single-stranded tail. The product of this reaction is a recombinogenic 3&#39; overhang coated with RecA, committing the broken end to RecA-mediated strand invasion and downstream RuvABC-dependent resolution. RecBCD also rescues collapsed or broken replication forks. The enzyme acts on chromosomal DNA in the cytoplasm and nucleoid. Chi recognition is species-specific, and the cognate octamer differs among pseudomonads from the E. coli consensus.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB is an ATP-binding/ATP-hydrolyzing motor protein, so nucleotide binding is correct but it is a broad parent of the more specific ATP binding annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformative; subsumed by the specific GO:0005524 ATP binding annotation, which captures the relevant nucleotide-binding activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The RecB C-terminal nuclease center requires a divalent metal (Mg2+/Mn2+) for exodeoxyribonuclease V activity, consistent with this annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mg2+ dependence of the RecB PD-(D/E)XK nuclease center is well established for RecBCD/Exonuclease V and supported by the UvrD/AddAB-type nuclease domain.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000724" target="_blank" class="term-link">
+                                    GO:0000724
+                                </a>
+                            </span>
+                            <span class="term-label">double-strand break repair via homologous recombination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0000724" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecBCD initiates double-strand break repair by homologous recombination; this is the central biological process for RecB.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by conserved RecBCD biology and by pseudomonad genetics (recB null mutants are UV/mitomycin C sensitive and accumulate fragmented chromosomal DNA); a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/recB/recB-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000725" target="_blank" class="term-link">
+                                    GO:0000725
+                                </a>
+                            </span>
+                            <span class="term-label">recombinational repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0000725" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB participates in recombinational repair; this is a broader parent of GO:0000724 double-strand break repair via homologous recombination.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but more general than the specific DSB-via-HR term, which better represents the core process; retain as supporting/non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB binds duplex and single-stranded DNA as part of its helicase/nuclease activity; a true but general molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct supporting activity, but subsumed by the more informative helicase and exonuclease V molecular-function annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003678" target="_blank" class="term-link">
+                                    GO:0003678
+                                </a>
+                            </span>
+                            <span class="term-label">DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0003678" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB has ATP-dependent DNA helicase activity; this is captured more precisely by GO:0043138 (3&#39;-5&#39; DNA helicase activity).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but a parent of the more specific 3&#39;-5&#39; DNA helicase activity term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004386" target="_blank" class="term-link">
+                                    GO:0004386
+                                </a>
+                            </span>
+                            <span class="term-label">helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0004386" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General helicase activity; a broad parent of the DNA-specific and directionally specific helicase terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Uninformative high-level term subsumed by GO:0003678 and GO:0043138.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB has a P-loop/Walker A motif and binds ATP to power its motor activity; correct and informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding by the RecB helicase motor is well supported by domain architecture and conserved RecBCD biochemistry.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecBCD acts on chromosomal DNA ends in the cytoplasm/nucleoid; a cytosolic localization is consistent.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Reasonable localization for a DNA-repair enzyme but inferred (TreeGrafter); the functionally relevant compartment is the nucleoid-associated cytoplasm.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0006281" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB functions in DNA repair; a broad parent of the more specific DSB repair via HR term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but general; subsumed by GO:0000724.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008854" target="_blank" class="term-link">
+                                    GO:0008854
+                                </a>
+                            </span>
+                            <span class="term-label">exodeoxyribonuclease V activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0008854" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB carries the nuclease activity of Exonuclease V (EC 3.1.11.5), the defining enzymatic function of the RecBCD complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; supported by the RecB C-terminal PD-(D/E)XK nuclease domain and EC mapping, consistent across RecBCD enzymes.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009338" target="_blank" class="term-link">
+                                    GO:0009338
+                                </a>
+                            </span>
+                            <span class="term-label">exodeoxyribonuclease V complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0009338" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB is a subunit of the RecBCD (Exonuclease V) complex together with RecC and RecD; correct cellular-component/complex assignment.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RecB is an obligate subunit of the heterotrimeric RecBCD/ExoV complex; a core part_of annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general hydrolase parent term; RecB hydrolyzes both ATP and phosphodiester bonds, but this term is uninformative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Root-level molecular function subsumed by specific nuclease and ATP hydrolysis annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0016887" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB couples ATP hydrolysis to DNA unwinding/translocation (Rhea:13065); correct and informative for the motor function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATPase activity driving the RecB helicase motor is well established and supported by Rhea mapping.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043138" target="_blank" class="term-link">
+                                    GO:0043138
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;-5&#39; DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DZ5" data-a="GO:0043138" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RecB is the 3&#39;-5&#39; helicase motor of RecBCD, translocating along the 3&#39;-ended strand; the most specific and correct helicase term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; the 3&#39;-5&#39; directionality of the RecB motor is a defining mechanistic feature of RecBCD.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent 3&#39;-5&#39; DNA helicase/translocase motor of the RecBCD complex that unwinds duplex DNA from a double-strand end.</h3>
+                <span class="vote-buttons" data-g="Q88DZ5" data-a="FUNCTION: ATP-dependent 3&#39;-5&#39; DNA helicase/translocase motor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043138" target="_blank" class="term-link">
+                            3&#39;-5&#39; DNA helicase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000724" target="_blank" class="term-link">
+                                double-strand break repair via homologous recombination
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38047637" target="_blank" class="term-link">
+                                PMID:38047637
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mg2+-dependent exodeoxyribonuclease V (Exonuclease V) nuclease that degrades unwound DNA strands and, upon Chi recognition, nicks the 3&#39;-ended strand and loads RecA, generating a recombinogenic 3&#39; single-stranded overhang.</h3>
+                <span class="vote-buttons" data-g="Q88DZ5" data-a="FUNCTION: Mg2+-dependent exodeoxyribonuclease V (Exonuclease..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008854" target="_blank" class="term-link">
+                            exodeoxyribonuclease V activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000724" target="_blank" class="term-link">
+                                double-strand break repair via homologous recombination
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38047637" target="_blank" class="term-link">
+                                PMID:38047637
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functions as an obligate subunit of the heterotrimeric RecBCD (Exonuclease V) complex.</h3>
+                <span class="vote-buttons" data-g="Q88DZ5" data-a="FUNCTION: Functions as an obligate subunit of the heterotrim..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009338" target="_blank" class="term-link">
+                            exodeoxyribonuclease V complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20195537" target="_blank" class="term-link">
+                                PMID:20195537
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/recB/recB-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (Falcon/Edison) on P. putida KT2440 recB (Q88DZ5)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Conserved RecBCD biology supports RecB as the ATP-dependent helicase-nuclease subunit that processes dsDNA ends into recombinogenic 3&#39; ssDNA and loads RecA; pseudomonad genetics (P. syringae recB mutants UV/MMC-sensitive, accumulate fragmented DNA) corroborate the DSB-repair role. No KT2440-specific recB mutant phenotype was recovered, so organism-specific claims are inferred.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38047637" target="_blank" class="term-link">
+                            PMID:38047637
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RecBCD enzyme: mechanistic insights from mutants of a complex helicase-nuclease</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RecBCD is a fast, processive ATP-dependent helicase-nuclease; RecB contributes the 3&#39;-5&#39; motor and a tethered Mg2+-dependent nuclease domain, and Chi recognition switches the enzyme to nick near Chi and load RecA.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20195537" target="_blank" class="term-link">
+                            PMID:20195537
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">All three subunits of RecBCD enzyme are essential for DNA repair and low-temperature growth in the Antarctic Pseudomonas syringae Lz4W</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In a pseudomonad, recB/recC/recD null mutants are UV- and mitomycin C-sensitive and accumulate linear/fragmented chromosomal DNA; RecB ATPase/helicase activity is essential in vivo while the nuclease center is partly dispensable.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the cognate Chi (recombination hotspot) sequence recognized by P. putida KT2440 RecBCD, and does it differ from the E. coli consensus and the P. syringae ChiPs octamer?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DZ5" data-a="Q: What is the cognate Chi (recombination hotspot) se..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a P. putida KT2440 recB (PP_4673) deletion and complement with wild-type and motor-dead/nuclease-dead alleles to test sensitivity to UV and mitomycin C and quantify homologous recombination capacity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DZ5" data-a="EXPERIMENT: Construct a P. putida KT2440 recB (PP_4673) deleti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(recB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DZ5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **recB (UniProt Q88DZ5)** — RecBCD enzyme subunit RecB in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">38 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:15:27.415963</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="recB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-recb-uniprot-q88dz5-recbcd-enzyme-subunit-recb-in-pseudomonas-putida-kt2440">Research report: <strong>recB (UniProt Q88DZ5)</strong> — RecBCD enzyme subunit RecB in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-geneprotein-identity-verification-critical">0. Gene/protein identity verification (critical)</h2>
+<p>The user-specified target is UniProt <strong>Q88DZ5</strong>, annotated as <strong>RecBCD enzyme subunit RecB (Exonuclease V / DNA 3′→5′ helicase subunit RecB)</strong> from <em>Pseudomonas putida</em> KT2440. Within the retrieved literature corpus, I did <strong>not</strong> find a primary source that explicitly maps <strong>UniProt Q88DZ5</strong> (or locus <strong>PP_4673</strong>) to a specific experimental construct or phenotype in <em>P. putida</em> KT2440; therefore, organism-specific interpretation for KT2440 necessarily relies on (i) general RecBCD/RecB mechanistic literature and (ii) <em>Pseudomonas</em> (non-KT2440) RecBCD studies plus KT2440 pathway-context studies. This report <strong>does not</strong> reassign the gene to another identity.</p>
+<h2 id="1-key-concepts-and-current-understanding">1. Key concepts and current understanding</h2>
+<h3 id="11-what-recb-is-definition">1.1 What RecB is (definition)</h3>
+<p><strong>RecB</strong> is the multifunctional helicase–nuclease subunit of the <strong>RecBCD</strong> complex (RecB–RecC–RecD), historically called <strong>Exonuclease V</strong>. RecBCD initiates the major bacterial pathway for processing DNA double-strand ends (DSEs) into recombinogenic substrates for homologous recombination (HR) and double-strand break (DSB) repair. (Dec 2023 review: Amundsen &amp; Smith, <em>Microbiology and Molecular Biology Reviews</em>, 2023-12-20, https://doi.org/10.1128/mmbr.00041-23) (amundsen2023recbcdenzymemechanistic pages 1-2)</p>
+<h3 id="12-biochemical-activities-attributed-to-recb-within-recbcd">1.2 Biochemical activities attributed to RecB within RecBCD</h3>
+<p>RecBCD is an <strong>ATP-dependent helicase–nuclease</strong> that binds blunt or nearly blunt dsDNA ends, unwinds DNA extremely rapidly and processively, and degrades DNA strands during unwinding. The complex can unwind at ~<strong>1 kb/s</strong> and can be highly processive (≥100 kb), with RecB contributing the <strong>3′→5′ motor/translocase</strong> activity and a <strong>Mg2+-dependent nuclease domain</strong> responsible for end-processing. (Amundsen &amp; Smith 2023, https://doi.org/10.1128/mmbr.00041-23) (amundsen2023recbcdenzymemechanistic pages 4-6)</p>
+<p>Mechanistically, RecBCD’s coordinated motors drive strand separation: RecB translocates along the 3′-ended strand while RecD translocates along the 5′-ended strand, creating asymmetric intermediates (ssDNA tails/loops) and enabling coupled nuclease processing. (Amundsen &amp; Smith 2023, https://doi.org/10.1128/mmbr.00041-23) (amundsen2023recbcdenzymemechanistic pages 2-4)</p>
+<h3 id="13-chi-sites-and-the-recbcd-activity-switch">1.3 Chi (χ) sites and the RecBCD “activity switch”</h3>
+<p>A defining concept for RecBCD-mediated repair is <strong>Chi (χ)</strong>: short, oriented recombination hotspot sequences that regulate RecBCD’s nuclease and recombination-promoting activities. In <em>E. coli</em>, Chi is the octamer <strong>5′-GCTGGTGG-3′</strong> and is recognized when present in the correct orientation relative to the DNA end at which RecBCD loaded. Chi recognition triggers a switch in RecBCD behavior such that RecB nicks the 3′-ended strand ~<strong>5 nt</strong> to the 3′ side of Chi and RecBCD then promotes <strong>RecA loading</strong> on the emergent 3′ ssDNA tail. (Amundsen &amp; Smith 2023, https://doi.org/10.1128/mmbr.00041-23; Smith 2012, <em>MMBR</em>, 2012-06-01, https://doi.org/10.1128/mmbr.05026-11) (amundsen2023recbcdenzymemechanistic pages 4-6, smith2012howrecbcdenzyme pages 2-4)</p>
+<p>Chi recognition is <strong>species-specific</strong> in many bacteria. In <em>Pseudomonas syringae</em> Lz4W, a cognate Chi-like octamer (<strong>ChiPs</strong>) was identified as <strong>5′-GCTGGCGC-3′</strong>, illustrating that pseudomonads can use a different regulatory octamer than <em>E. coli</em>. (Pavankumar et al., <em>PLOS ONE</em>, 2018-05-16, https://doi.org/10.1371/journal.pone.0197476) (pavankumar2018biochemicalcharacterizationof pages 1-2)</p>
+<h3 id="14-domain-architecture-and-reca-loading-function-of-recb">1.4 Domain architecture and RecA-loading function of RecB</h3>
+<p>RecB is functionally bipartite (helicase/translocase + nuclease/RecA-loading functions), and interdomain connectivity is mechanistically important. RecB’s nuclease domain is connected to the helicase domain via a short tether in models synthesized from genetics/structures, and Chi-triggered control involves conformational communication between RecC (Chi recognition tunnel) and RecB (nuclease/RecA loading). (Amundsen &amp; Smith 2023, https://doi.org/10.1128/mmbr.00041-23) (amundsen2023recbcdenzymemechanistic pages 4-6)</p>
+<p>A 2024 mechanistic study further refined the model of Chi-dependent RecA loading by showing that the <strong>RecB nuclease domain</strong> can <strong>trans-complement</strong> a truncated RecBCD complex lacking that domain, supporting a Chi-induced rearrangement that exposes the RecA-loading surface rather than requiring a strictly tethered “swing-out” action. (Pavankumar et al., <em>Nucleic Acids Research</em>, 2024-01-16, https://doi.org/10.1093/nar/gkae007) (pavankumar2024transcomplementationbythe pages 1-2)</p>
+<h3 id="15-pathway-placement-biological-process-context">1.5 Pathway placement (biological process context)</h3>
+<p>RecBCD-mediated processing is central to bacterial DSB repair and also to replication-fork rescue: RecBCD acts on DSEs produced by collapsed forks (one-ended DSBs) and other replication stress events, generating the 3′ ssDNA substrate for RecA-mediated strand invasion, with downstream branch migration/resolution involving RuvABC. (Sinha et al., <em>FEMS Microbiology Reviews</em>, 2020-04-01, https://doi.org/10.1093/femsre/fuaa009) (sinha2020therolesof pages 2-3)</p>
+<h3 id="16-subcellular-localization-where-recb-acts">1.6 Subcellular localization (where RecB acts)</h3>
+<p>No KT2440-specific localization imaging for RecB was retrieved. Functionally, RecBCD acts on chromosomal DNA ends and replication-associated DNA structures; thus, the relevant localization is <strong>cytoplasmic/nucleoid-associated</strong>, not membrane-embedded or secreted. (Amundsen &amp; Smith 2023; Sinha et al. 2020) (amundsen2023recbcdenzymemechanistic pages 4-6, sinha2020therolesof pages 2-3)</p>
+<h2 id="2-pseudomonas-specific-evidence-relevant-to-interpreting-p-putida-recb">2. Pseudomonas-specific evidence relevant to interpreting <em>P. putida</em> recB</h2>
+<h3 id="21-genetic-evidence-in-a-pseudomonad-recb-is-required-for-dna-repair-and-stress-growth-with-motor-activity-prioritized">2.1 Genetic evidence in a pseudomonad: RecB is required for DNA repair and stress growth, with motor activity prioritized</h3>
+<p>In the Antarctic pseudomonad <em>Pseudomonas syringae</em> Lz4W, <strong>null mutations</strong> of <strong>recB</strong>, <strong>recC</strong>, or <strong>recD</strong> (or deletion of the full recCBD operon) cause sensitivity to <strong>UV</strong> and <strong>mitomycin C</strong> and a strong <strong>growth/viability defect at 4°C</strong>, with accumulation of <strong>linear chromosomal DNA</strong> and short DNA fragments—phenotypes consistent with defective DSB processing/repair. (Pavankumar et al., <em>PLOS ONE</em>, 2010-02-17, https://doi.org/10.1371/journal.pone.0009412) (pavankumar2010allthreesubunits pages 1-2, pavankumar2010allthreesubunits pages 4-7)</p>
+<p>Crucially, targeted active-site mutants separated RecB functions:<br />
+- <strong>ATPase/helicase motor</strong> mutants in RecB (RecB K28Q/K29Q in that study’s notation) and RecD (RecD K229Q) were defective in DNA repair phenotypes and cold growth, indicating ATP-dependent motor functions are essential in vivo. (pavankumar2010allthreesubunits pages 1-2, pavankumar2010allthreesubunits pages 7-8)<br />
+- By contrast, a <strong>RecB nuclease-center</strong> mutant (D1118A) was highly deficient for exonuclease activity yet could still support UV/MMC resistance and near-wild-type low-temperature growth in that system, implying that under some conditions the nuclease contribution is less critical than the ATP-dependent unwinding/translocation functions. (pavankumar2010allthreesubunits pages 7-8)</p>
+<p>Complementation data also support conservation of core RecBCD function: plasmid-borne <strong>E. coli recBCD</strong> could complement defects of a <em>P. syringae</em> ΔrecCBD strain. (pavankumar2010allthreesubunits pages 1-2)</p>
+<h3 id="22-species-specific-chi-recognition-within-pseudomonas">2.2 Species-specific Chi recognition within Pseudomonas</h3>
+<p>Biochemical characterization of RecBCD from <em>P. syringae</em> Lz4W identified the species-specific Chi-like octamer <strong>5′-GCTGGCGC-3′</strong> (ChiPs) and noted functional differences relative to <em>E. coli</em> RecBCD (e.g., RecD indispensability for specific Chi-like fragment production). (Pavankumar et al., <em>PLOS ONE</em>, 2018-05-16, https://doi.org/10.1371/journal.pone.0197476) (pavankumar2018biochemicalcharacterizationof pages 1-2)</p>
+<p>This matters for <em>P. putida</em> KT2440 annotation: even if RecB is homologous, the <strong>exact Chi sequence and switching kinetics</strong> may differ across pseudomonads and should not be assumed to match <em>E. coli</em> without direct evidence.</p>
+<h2 id="3-pseudomonas-putida-kt2440-specific-evidence-available-in-retrieved-corpus">3. <em>Pseudomonas putida</em> KT2440-specific evidence (available in retrieved corpus)</h2>
+<h3 id="31-dna-damage-tolerance-in-kt2440-is-strongly-influenced-by-prophage-load-recombination-capacity-appears-unchanged">3.1 DNA-damage tolerance in KT2440 is strongly influenced by prophage load; recombination capacity appears unchanged</h3>
+<p>A high-citation study in <em>Environmental Microbiology</em> examined the “proviral load” of <em>P. putida</em> KT2440 and created a prophage-free derivative (Δall-Φ). In UV assays, KT2440 was reported to be extraordinarily UV sensitive relative to <em>E. coli</em> (30 J/m² leaving <em>E. coli</em> “virtually intact” but reducing KT2440 survival by &gt;4 orders of magnitude), and deleting all prophages increased UV tolerance—especially at 15–30 J/m². (Martínez-García et al., <em>Environmental Microbiology</em>, 2015-06-01, https://doi.org/10.1111/1462-2920.12492) (martinez‐garcia2015freeingpseudomonasputida pages 7-10)</p>
+<p>Importantly for functional annotation: the same work reports that measures of <strong>RecA-mediated homologous recombination</strong> showed <strong>no significant difference</strong> between wild type KT2440 and Δall-Φ, and spontaneous mutation rates (rifampicin resistance) were comparable, suggesting that increased DNA-damage tolerance in Δall-Φ is not due to a global increase in HR capacity but likely due to eliminating SOS-triggered lethal prophage induction. (martinez‐garcia2015freeingpseudomonasputida pages 7-10, martinez‐garcia2015freeingpseudomonasputida pages 10-12)</p>
+<p>Although this study mentions directed <strong>recA</strong> and <strong>recB</strong> mutants in its experimental framing, the retrieved text segments did not provide direct, quantitative recB-mutant phenotype readouts. Therefore, it provides <strong>pathway context</strong> for DNA damage and SOS induction in KT2440, but not a direct functional dissection of PP_4673/Q88DZ5.</p>
+<h2 id="4-recent-developments-prioritizing-20232024">4. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="41-authoritative-synthesis-of-recbrecbcd-mechanism-dec-2023">4.1 Authoritative synthesis of RecB/RecBCD mechanism (Dec 2023)</h3>
+<p>A 2023 <em>MMBR</em> review consolidated structural/genetic/biochemical evidence that RecBCD is an exceptionally fast and processive helicase–nuclease and emphasized RecB’s tethered nuclease domain and Chi-dependent switching that yields a nick near Chi and subsequent RecA loading. (Amundsen &amp; Smith, 2023-12-20, https://doi.org/10.1128/mmbr.00041-23) (amundsen2023recbcdenzymemechanistic pages 4-6, amundsen2023recbcdenzymemechanistic pages 1-2)</p>
+<h3 id="42-new-mechanistic-insight-into-chi-dependent-reca-loading-jan-2024">4.2 New mechanistic insight into Chi-dependent RecA loading (Jan 2024)</h3>
+<p>A 2024 paper in <em>Nucleic Acids Research</em> tested the long-discussed model that Chi recognition undocks the RecB nuclease domain to reveal a RecA-loading interface. Reconstitution experiments showed that a severed RecB nuclease domain can still functionally enable RecA loading when paired with a truncated RecBCD lacking that domain, supporting a Chi-induced rearrangement mechanism in which the RecA-loading surface is exposed by conformational change rather than a purely tether-constrained “swing-out.” (Pavankumar et al., 2024-01-16, https://doi.org/10.1093/nar/gkae007) (pavankumar2024transcomplementationbythe pages 1-2)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h2>
+<h3 id="51-genome-editing-and-recombineering-in-pseudomonas-recbcd-is-a-barrier-andor-modulator">5.1 Genome editing and recombineering in Pseudomonas: RecBCD is a barrier and/or modulator</h3>
+<p>While not an assay of KT2440 RecB function per se, modern Pseudomonas genome engineering often contends with host nucleases that degrade linear DNA substrates; RecBCD is frequently a key factor in this context.</p>
+<p>A 2023 study demonstrating improved CRISPR/Cas9 editing in <em>E. coli</em> and <em>Pseudomonas</em> showed that DSB repair outcomes in bacterial genome editing can occur independently of RecA and RecBCD under certain engineered conditions (SSB-mediated effects), illustrating how host DSB-repair factors are relevant design variables in applied editing workflows. (Chai et al., <em>Microorganisms</em>, 2023-03-30, https://doi.org/10.3390/microorganisms11040850) (pavankumar2018biochemicalcharacterizationof pages 1-2)</p>
+<p>KT2440 is also an active platform for recombineering-based engineering (e.g., integration/deletion of large genomic regions), underscoring the practical importance of understanding DNA repair and end-processing systems in this chassis even when individual studies do not isolate recB phenotypes. (Martínez-García et al. 2015 discusses extensive phenotyping under &gt;1000 conditions and DNA-damage assays in KT2440 backgrounds.) (martinez‐garcia2015freeingpseudomonasputida pages 7-10)</p>
+<h2 id="6-expert-opinions-authoritative-interpretations">6. Expert opinions / authoritative interpretations</h2>
+<h3 id="61-consensus-view-recbcd-recb-sits-at-the-initiation-of-dsb-repair-and-recombination">6.1 Consensus view: RecBCD (RecB) sits at the initiation of DSB repair and recombination</h3>
+<p>Highly cited authoritative reviews describe RecBCD as the entry point to DSB repair by HR, combining end binding, unwinding, regulated nucleolysis, and RecA loading controlled by Chi sequences. (Smith 2012, https://doi.org/10.1128/mmbr.05026-11; Sinha et al. 2020, https://doi.org/10.1093/femsre/fuaa009; Amundsen &amp; Smith 2023, https://doi.org/10.1128/mmbr.00041-23) (smith2012howrecbcdenzyme pages 2-4, sinha2020therolesof pages 2-3, amundsen2023recbcdenzymemechanistic pages 4-6)</p>
+<h3 id="62-nuanced-view-nuclease-vs-motor-importance-can-be-context-dependent">6.2 Nuanced view: “nuclease” vs “motor” importance can be context-dependent</h3>
+<p>The <em>Pseudomonas syringae</em> genetic dissection provides an expert-relevant nuance: in that organism’s cold-stress context, ATP-dependent motor function of RecB/RecD is essential, while the RecB nuclease center can be partially bypassed/compensated (e.g., by RecJ), highlighting that <strong>in vivo criticality of RecB subfunctions can vary with physiology and redundant pathways</strong>. (Pavankumar et al. 2010, https://doi.org/10.1371/journal.pone.0009412) (pavankumar2010allthreesubunits pages 7-8, pavankumar2010allthreesubunits pages 8-9)</p>
+<h2 id="7-relevant-statistics-and-quantitative-data">7. Relevant statistics and quantitative data</h2>
+<h3 id="71-enzyme-kineticsbehavior">7.1 Enzyme kinetics/behavior</h3>
+<ul>
+<li>RecBCD unwinding can reach ~<strong>1 kb/s</strong> and be highly processive (≥100 kb) under conditions summarized in recent review literature. (Amundsen &amp; Smith 2023) (amundsen2023recbcdenzymemechanistic pages 4-6)</li>
+</ul>
+<h3 id="72-sequence-features">7.2 Sequence features</h3>
+<ul>
+<li><em>E. coli</em> Chi: <strong>5′-GCTGGTGG-3′</strong> (Smith 2012; Amundsen &amp; Smith 2023). (smith2012howrecbcdenzyme pages 2-4, amundsen2023recbcdenzymemechanistic pages 4-6)</li>
+<li><em>P. syringae</em> ChiPs: <strong>5′-GCTGGCGC-3′</strong> (Pavankumar et al. 2018). (pavankumar2018biochemicalcharacterizationof pages 1-2)</li>
+</ul>
+<h3 id="73-cellular-abundance-mostly-from-e-coli-single-cellsynthesis-measurements">7.3 Cellular abundance (mostly from <em>E. coli</em> single-cell/synthesis measurements)</h3>
+<p>RecB is repeatedly described as a <strong>low-copy</strong> DNA repair protein, on the order of only a few molecules per cell in <em>E. coli</em>. A synthesis review cites ~<strong>5 RecB molecules/cell</strong>, and a later single-cell study measured ~<strong>3.9 ± 0.6 molecules/cell</strong> (with recB mRNA mean ~0.62 molecules/cell). While these values are not from <em>P. putida</em>, they underscore that RecB is tightly regulated due to its potent DNA-processing activity. (Vincent &amp; Uphoff, <em>Biochemical Society Transactions</em>, 2020-03-23, https://doi.org/10.1042/bst20190364; Kalita et al., <em>eLife</em>, 2025-08-21, https://doi.org/10.7554/elife.94918) (vincent2020bacterialphenotypicheterogeneity pages 2-4, kalita2025anhfqdependentposttranscriptional pages 2-3)</p>
+<h2 id="8-structured-functional-annotation-summary">8. Structured functional annotation summary</h2>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/Complex</td>
+<td>UniProt Q88DZ5 is annotated as RecBCD enzyme subunit RecB from <em>Pseudomonas putida</em> KT2440; available mechanistic literature supports RecB as the helicase–nuclease subunit of the heterotrimeric RecBCD complex (RecB/RecC/RecD), also called Exonuclease V, with RecB carrying helicase/ATPase and nuclease-linked functions (amundsen2023recbcdenzymemechanistic pages 4-6, amundsen2023recbcdenzymemechanistic pages 1-2, amundsen2023recbcdenzymemechanistic pages 2-4).</td>
+</tr>
+<tr>
+<td>Enzymatic activities</td>
+<td>RecB contributes ATP-dependent 3′→5′ translocation/helicase activity, while its C-terminal nuclease domain cleaves DNA in a Mg2+-dependent manner; after Chi recognition, RecBCD nicks the 3′-ended strand and promotes RecA loading onto the resulting 3′ ssDNA tail (amundsen2023recbcdenzymemechanistic pages 4-6, sinha2020therolesof pages 2-3, pavankumar2024transcomplementationbythe pages 1-2, smith2012howrecbcdenzyme pages 2-4).</td>
+</tr>
+<tr>
+<td>Substrates</td>
+<td>RecBCD acts primarily on blunt or nearly blunt dsDNA ends, including two-ended DSBs and one-ended broken replication forks; during processing it unwinds duplex DNA and degrades emerging ssDNA to short oligonucleotides, ultimately generating recombinogenic 3′-tailed DNA (amundsen2023recbcdenzymemechanistic pages 4-6, pavankumar2018biochemicalcharacterizationof pages 1-2, sinha2020therolesof pages 2-3, amundsen2023recbcdenzymemechanistic pages 2-4).</td>
+</tr>
+<tr>
+<td>Chi regulation</td>
+<td>Canonical <em>E. coli</em> Chi is 5′-GCTGGTGG-3′ and triggers a switch from degradative to recombination-promoting processing; in <em>Pseudomonas syringae</em> Lz4W the cognate octamer is ChiPs 5′-GCTGGCGC-3′, showing that Chi recognition is species-specific within pseudomonads (amundsen2023recbcdenzymemechanistic pages 4-6, pavankumar2018biochemicalcharacterizationof pages 1-2, amundsen2023recbcdenzymemechanistic pages 8-11, smith2012howrecbcdenzyme pages 2-4).</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>RecB functions in the major bacterial homologous recombination pathway for DSB repair, replication-fork rescue, and genome maintenance by helping RecBCD create a 3′ overhang and load RecA, followed by downstream RuvABC-mediated branch migration/resolution (pavankumar2018biochemicalcharacterizationof pages 1-2, sinha2020therolesof pages 2-3, amundsen2023recbcdenzymemechanistic pages 1-2, amundsen2023recbcdenzymemechanistic pages 2-4).</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No direct localization study for Q88DZ5 in KT2440 was retrieved, but RecBCD acts on chromosomal DNA ends and stalled/broken replication forks; this supports a cytoplasmic, nucleoid-associated functional location rather than membrane or extracellular localization (amundsen2023recbcdenzymemechanistic pages 4-6, sinha2020therolesof pages 2-3, amundsen2023recbcdenzymemechanistic pages 2-4).</td>
+</tr>
+<tr>
+<td>Pseudomonas-specific evidence</td>
+<td>In <em>P. syringae</em> Lz4W, recB/recC/recD mutants are UV- and mitomycin C-sensitive, fail to grow at 4°C, and accumulate linear/fragmented chromosomal DNA; RecB and RecD ATPase/helicase activities are essential in vivo, whereas RecB nuclease activity is partly dispensable and can be compensated by RecJ in some contexts (pavankumar2010allthreesubunits pages 1-2, pavankumar2010allthreesubunits pages 7-8, pavankumar2010allthreesubunits pages 8-9, pavankumar2010allthreesubunits pages 10-13).</td>
+</tr>
+<tr>
+<td>KT2440-specific evidence</td>
+<td>Direct experimental evidence for PP_4673/Q88DZ5 in <em>P. putida</em> KT2440 is limited in the retrieved corpus. KT2440 studies instead show that DNA-damage tolerance and SOS-linked phenotypes can be assayed genetically in this strain, and that prophage-free KT2440 is more UV-tolerant without detectable change in RecA-mediated homologous recombination; these data provide pathway context but not a direct recB functional test (martinez‐garcia2015freeingpseudomonasputida pages 7-10, martinez‐garcia2015freeingpseudomonasputida pages 12-15, martinez‐garcia2015freeingpseudomonasputida pages 10-12).</td>
+</tr>
+<tr>
+<td>Recent (2023-2024) advances</td>
+<td>Recent work refined RecB-centered mechanism: a 2023 review synthesized mutant/structural evidence for RecB tethering, Chi-triggered conformational control, and inter-subunit signaling; a 2024 study showed the RecB nuclease domain can trans-complement truncated RecBCD, supporting a Chi-induced rearrangement that exposes the RecA-loading surface rather than a simple tethered “swing-out” model (amundsen2023recbcdenzymemechanistic pages 4-6, amundsen2023recbcdenzymemechanistic pages 1-2, pavankumar2024transcomplementationbythe pages 1-2).</td>
+</tr>
+<tr>
+<td>Quantitative stats</td>
+<td>RecBCD is among the fastest/processive bacterial helicase–nucleases, reported at ~1 kb/s and ≥100 kb processivity in recent review literature; older review values cite ~300 bp/s depending on assay conditions. In <em>E. coli</em>, RecB is low abundance (~5 molecules/cell in one synthesis; ~3.9 ± 0.6 molecules/cell in a later single-cell study), indicating tight expression control for this potentially DNA-destructive activity (amundsen2023recbcdenzymemechanistic pages 4-6, smith2012howrecbcdenzyme pages 2-4, kalita2025anhfqdependentposttranscriptional pages 2-3, vincent2020bacterialphenotypicheterogeneity pages 2-4).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the evidence-supported functional annotation of RecB/RecBCD for </em>Pseudomonas putida<em> KT2440, while clearly separating broad conserved RecBCD biology from the more limited KT2440-specific evidence. It is useful for identifying what can be stated confidently for Q88DZ5 and where inference relies on pseudomonad or model-organism studies.</em></p>
+<h2 id="9-practical-conclusions-for-functional-annotation-of-recb-q88dz5-in-p-putida-kt2440">9. Practical conclusions for functional annotation of <strong>recB (Q88DZ5) in <em>P. putida</em> KT2440</strong></h2>
+<ol>
+<li><strong>Primary molecular function (high confidence, conserved):</strong> RecB is the ATP-dependent helicase–nuclease subunit of RecBCD that initiates processing of blunt/nearly blunt dsDNA ends into a recombinogenic 3′ ssDNA substrate and enables RecA loading in a Chi-regulated manner. (amundsen2023recbcdenzymemechanistic pages 4-6, sinha2020therolesof pages 2-3, pavankumar2024transcomplementationbythe pages 1-2)</li>
+<li><strong>Biological processes:</strong> DSB repair by homologous recombination and replication-fork rescue are core processes supported by RecBCD/RecB. (sinha2020therolesof pages 2-3, amundsen2023recbcdenzymemechanistic pages 4-6)</li>
+<li><strong>Cellular location:</strong> Cytoplasm/nucleoid-associated DNA repair context (functional inference from substrate and pathway). (sinha2020therolesof pages 2-3, amundsen2023recbcdenzymemechanistic pages 4-6)</li>
+<li><strong>Organism-specific caution for KT2440:</strong> Chi sequence(s) and relative importance of nuclease vs motor functions may differ across pseudomonads; direct KT2440 recB mutant phenotypes were not recovered in the retrieved corpus, so KT2440-specific statements should be treated as <strong>inferred from conserved RecBCD biology</strong> plus limited KT2440 DNA-damage pathway context. (pavankumar2018biochemicalcharacterizationof pages 1-2, martinez‐garcia2015freeingpseudomonasputida pages 7-10)</li>
+</ol>
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>Amundsen SK, Smith GR. <strong>RecBCD enzyme: mechanistic insights from mutants of a complex helicase-nuclease</strong>. <em>Microbiology and Molecular Biology Reviews</em>. <strong>2023-12-20</strong>. https://doi.org/10.1128/mmbr.00041-23 (amundsen2023recbcdenzymemechanistic pages 4-6)</li>
+<li>Pavankumar TL, Wong CJ, Wong YK, Spies M, Kowalczykowski SC. <strong>Trans-complementation by the RecB nuclease domain of RecBCD enzyme reveals new insight into RecA loading upon χ recognition</strong>. <em>Nucleic Acids Research</em>. <strong>2024-01-16</strong>. https://doi.org/10.1093/nar/gkae007 (pavankumar2024transcomplementationbythe pages 1-2)</li>
+<li>Sinha AK, Possoz C, Leach DRF. <strong>The roles of bacterial DNA double-strand break repair proteins in chromosomal DNA replication</strong>. <em>FEMS Microbiology Reviews</em>. <strong>2020-04-01</strong>. https://doi.org/10.1093/femsre/fuaa009 (sinha2020therolesof pages 2-3)</li>
+<li>Smith GR. <strong>How RecBCD Enzyme and Chi Promote DNA Break Repair and Recombination: a Molecular Biologist's View</strong>. <em>Microbiology and Molecular Biology Reviews</em>. <strong>2012-06-01</strong>. https://doi.org/10.1128/mmbr.05026-11 (smith2012howrecbcdenzyme pages 2-4)</li>
+<li>Pavankumar TL, Sinha AK, Ray MK. <strong>All Three Subunits of RecBCD Enzyme Are Essential for DNA Repair and Low-Temperature Growth in the Antarctic Pseudomonas syringae Lz4W</strong>. <em>PLOS ONE</em>. <strong>2010-02-17</strong>. https://doi.org/10.1371/journal.pone.0009412 (pavankumar2010allthreesubunits pages 1-2)</li>
+<li>Pavankumar TL, Sinha AK, Ray MK. <strong>Biochemical characterization of RecBCD enzyme from an Antarctic Pseudomonas species and identification of its cognate Chi (χ) sequence</strong>. <em>PLOS ONE</em>. <strong>2018-05-16</strong>. https://doi.org/10.1371/journal.pone.0197476 (pavankumar2018biochemicalcharacterizationof pages 1-2)</li>
+<li>Martínez-García E, Jatsenko T, Kivisaar M, de Lorenzo V. <strong>Freeing Pseudomonas putida KT2440 of its proviral load strengthens endurance to environmental stresses</strong>. <em>Environmental Microbiology</em>. <strong>2015-06-01</strong>. https://doi.org/10.1111/1462-2920.12492 (martinez‐garcia2015freeingpseudomonasputida pages 7-10)</li>
+<li>Chai R, Zhang Q, Wu J, et al. <strong>Single-Stranded DNA-Binding Proteins Mediate DSB Repair and Effectively Improve CRISPR/Cas9 Genome Editing in Escherichia coli and Pseudomonas</strong>. <em>Microorganisms</em>. <strong>2023-03-30</strong>. https://doi.org/10.3390/microorganisms11040850 (pavankumar2018biochemicalcharacterizationof pages 1-2)</li>
+<li>Vincent MS, Uphoff S. <strong>Bacterial phenotypic heterogeneity in DNA repair and mutagenesis</strong>. <em>Biochemical Society Transactions</em>. <strong>2020-03-23</strong>. https://doi.org/10.1042/bst20190364 (vincent2020bacterialphenotypicheterogeneity pages 2-4)</li>
+<li>Kalita I, Iosub IA, McLaren L, et al. <strong>An Hfq-dependent post-transcriptional mechanism fine tunes RecB expression in Escherichia coli</strong>. <em>eLife</em>. <strong>2025-08-21</strong>. https://doi.org/10.7554/elife.94918 (kalita2025anhfqdependentposttranscriptional pages 2-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(amundsen2023recbcdenzymemechanistic pages 1-2): Susan K. Amundsen and Gerald R. Smith. Recbcd enzyme: mechanistic insights from mutants of a complex helicase-nuclease. Microbiology and Molecular Biology Reviews, Dec 2023. URL: https://doi.org/10.1128/mmbr.00041-23, doi:10.1128/mmbr.00041-23. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(amundsen2023recbcdenzymemechanistic pages 4-6): Susan K. Amundsen and Gerald R. Smith. Recbcd enzyme: mechanistic insights from mutants of a complex helicase-nuclease. Microbiology and Molecular Biology Reviews, Dec 2023. URL: https://doi.org/10.1128/mmbr.00041-23, doi:10.1128/mmbr.00041-23. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(amundsen2023recbcdenzymemechanistic pages 2-4): Susan K. Amundsen and Gerald R. Smith. Recbcd enzyme: mechanistic insights from mutants of a complex helicase-nuclease. Microbiology and Molecular Biology Reviews, Dec 2023. URL: https://doi.org/10.1128/mmbr.00041-23, doi:10.1128/mmbr.00041-23. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(smith2012howrecbcdenzyme pages 2-4): Gerald R. Smith. How recbcd enzyme and chi promote dna break repair and recombination: a molecular biologist's view. Microbiology and Molecular Biology Reviews, 76:217-228, Jun 2012. URL: https://doi.org/10.1128/mmbr.05026-11, doi:10.1128/mmbr.05026-11. This article has 219 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2018biochemicalcharacterizationof pages 1-2): Theetha L. Pavankumar, Anurag K. Sinha, and Malay K. Ray. Biochemical characterization of recbcd enzyme from an antarctic pseudomonas species and identification of its cognate chi (χ) sequence. PLOS ONE, 13:e0197476, May 2018. URL: https://doi.org/10.1371/journal.pone.0197476, doi:10.1371/journal.pone.0197476. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2024transcomplementationbythe pages 1-2): Theetha L Pavankumar, C Jason Wong, Yun Ka Wong, Maria Spies, and Stephen C Kowalczykowski. Trans-complementation by the recb nuclease domain of recbcd enzyme reveals new insight into reca loading upon χ recognition. Nucleic Acids Research, 52:2578-2589, Jan 2024. URL: https://doi.org/10.1093/nar/gkae007, doi:10.1093/nar/gkae007. This article has 10 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sinha2020therolesof pages 2-3): Anurag Kumar Sinha, Christophe Possoz, and David R F Leach. The roles of bacterial dna double-strand break repair proteins in chromosomal dna replication. FEMS Microbiology Reviews, 44:351-368, Apr 2020. URL: https://doi.org/10.1093/femsre/fuaa009, doi:10.1093/femsre/fuaa009. This article has 46 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2010allthreesubunits pages 1-2): Theetha L. Pavankumar, Anurag K. Sinha, and Malay K. Ray. All three subunits of recbcd enzyme are essential for dna repair and low-temperature growth in the antarctic pseudomonas syringae lz4w. PLoS ONE, 5:e9412, Feb 2010. URL: https://doi.org/10.1371/journal.pone.0009412, doi:10.1371/journal.pone.0009412. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2010allthreesubunits pages 4-7): Theetha L. Pavankumar, Anurag K. Sinha, and Malay K. Ray. All three subunits of recbcd enzyme are essential for dna repair and low-temperature growth in the antarctic pseudomonas syringae lz4w. PLoS ONE, 5:e9412, Feb 2010. URL: https://doi.org/10.1371/journal.pone.0009412, doi:10.1371/journal.pone.0009412. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2010allthreesubunits pages 7-8): Theetha L. Pavankumar, Anurag K. Sinha, and Malay K. Ray. All three subunits of recbcd enzyme are essential for dna repair and low-temperature growth in the antarctic pseudomonas syringae lz4w. PLoS ONE, 5:e9412, Feb 2010. URL: https://doi.org/10.1371/journal.pone.0009412, doi:10.1371/journal.pone.0009412. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2015freeingpseudomonasputida pages 7-10): Esteban Martínez‐García, Tatjana Jatsenko, Maia Kivisaar, and Víctor de Lorenzo. Freeing pseudomonas putida kt2440 of its proviral load strengthens endurance to environmental stresses. Environmental microbiology, 17 1:76-90, Jun 2015. URL: https://doi.org/10.1111/1462-2920.12492, doi:10.1111/1462-2920.12492. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2015freeingpseudomonasputida pages 10-12): Esteban Martínez‐García, Tatjana Jatsenko, Maia Kivisaar, and Víctor de Lorenzo. Freeing pseudomonas putida kt2440 of its proviral load strengthens endurance to environmental stresses. Environmental microbiology, 17 1:76-90, Jun 2015. URL: https://doi.org/10.1111/1462-2920.12492, doi:10.1111/1462-2920.12492. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2010allthreesubunits pages 8-9): Theetha L. Pavankumar, Anurag K. Sinha, and Malay K. Ray. All three subunits of recbcd enzyme are essential for dna repair and low-temperature growth in the antarctic pseudomonas syringae lz4w. PLoS ONE, 5:e9412, Feb 2010. URL: https://doi.org/10.1371/journal.pone.0009412, doi:10.1371/journal.pone.0009412. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vincent2020bacterialphenotypicheterogeneity pages 2-4): Maxence S. Vincent and Stephan Uphoff. Bacterial phenotypic heterogeneity in dna repair and mutagenesis. Biochemical Society Transactions, 48:451-462, Mar 2020. URL: https://doi.org/10.1042/bst20190364, doi:10.1042/bst20190364. This article has 43 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kalita2025anhfqdependentposttranscriptional pages 2-3): Irina Kalita, Ira Alexandra Iosub, Lorna McLaren, Louise Goossens, Sander Granneman, and Meriem El Karoui. An hfq-dependent post-transcriptional mechanism fine tunes recb expression in escherichia coli. eLife, Aug 2025. URL: https://doi.org/10.7554/elife.94918, doi:10.7554/elife.94918. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(amundsen2023recbcdenzymemechanistic pages 8-11): Susan K. Amundsen and Gerald R. Smith. Recbcd enzyme: mechanistic insights from mutants of a complex helicase-nuclease. Microbiology and Molecular Biology Reviews, Dec 2023. URL: https://doi.org/10.1128/mmbr.00041-23, doi:10.1128/mmbr.00041-23. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pavankumar2010allthreesubunits pages 10-13): Theetha L. Pavankumar, Anurag K. Sinha, and Malay K. Ray. All three subunits of recbcd enzyme are essential for dna repair and low-temperature growth in the antarctic pseudomonas syringae lz4w. PLoS ONE, 5:e9412, Feb 2010. URL: https://doi.org/10.1371/journal.pone.0009412, doi:10.1371/journal.pone.0009412. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2015freeingpseudomonasputida pages 12-15): Esteban Martínez‐García, Tatjana Jatsenko, Maia Kivisaar, and Víctor de Lorenzo. Freeing pseudomonas putida kt2440 of its proviral load strengthens endurance to environmental stresses. Environmental microbiology, 17 1:76-90, Jun 2015. URL: https://doi.org/10.1111/1462-2920.12492, doi:10.1111/1462-2920.12492. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="recB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>amundsen2023recbcdenzymemechanistic pages 1-2</li>
+<li>amundsen2023recbcdenzymemechanistic pages 4-6</li>
+<li>amundsen2023recbcdenzymemechanistic pages 2-4</li>
+<li>pavankumar2018biochemicalcharacterizationof pages 1-2</li>
+<li>pavankumar2024transcomplementationbythe pages 1-2</li>
+<li>sinha2020therolesof pages 2-3</li>
+<li>pavankumar2010allthreesubunits pages 7-8</li>
+<li>pavankumar2010allthreesubunits pages 1-2</li>
+<li>smith2012howrecbcdenzyme pages 2-4</li>
+<li>vincent2020bacterialphenotypicheterogeneity pages 2-4</li>
+<li>kalita2025anhfqdependentposttranscriptional pages 2-3</li>
+<li>pavankumar2010allthreesubunits pages 4-7</li>
+<li>pavankumar2010allthreesubunits pages 8-9</li>
+<li>amundsen2023recbcdenzymemechanistic pages 8-11</li>
+<li>pavankumar2010allthreesubunits pages 10-13</li>
+<li>https://doi.org/10.1128/mmbr.00041-23</li>
+<li>https://doi.org/10.1128/mmbr.00041-23;</li>
+<li>https://doi.org/10.1128/mmbr.05026-11</li>
+<li>https://doi.org/10.1371/journal.pone.0197476</li>
+<li>https://doi.org/10.1093/nar/gkae007</li>
+<li>https://doi.org/10.1093/femsre/fuaa009</li>
+<li>https://doi.org/10.1371/journal.pone.0009412</li>
+<li>https://doi.org/10.1111/1462-2920.12492</li>
+<li>https://doi.org/10.3390/microorganisms11040850</li>
+<li>https://doi.org/10.1128/mmbr.05026-11;</li>
+<li>https://doi.org/10.1093/femsre/fuaa009;</li>
+<li>https://doi.org/10.1042/bst20190364;</li>
+<li>https://doi.org/10.7554/elife.94918</li>
+<li>https://doi.org/10.1042/bst20190364</li>
+<li>https://doi.org/10.1128/mmbr.00041-23,</li>
+<li>https://doi.org/10.1128/mmbr.05026-11,</li>
+<li>https://doi.org/10.1371/journal.pone.0197476,</li>
+<li>https://doi.org/10.1093/nar/gkae007,</li>
+<li>https://doi.org/10.1093/femsre/fuaa009,</li>
+<li>https://doi.org/10.1371/journal.pone.0009412,</li>
+<li>https://doi.org/10.1111/1462-2920.12492,</li>
+<li>https://doi.org/10.1042/bst20190364,</li>
+<li>https://doi.org/10.7554/elife.94918,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DZ5
+gene_symbol: recB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  RecB is the helicase-nuclease subunit of the heterotrimeric RecBCD enzyme
+  (RecB-RecC-RecD; also called Exonuclease V), the major bacterial machine that
+  initiates processing of double-strand DNA ends for homologous recombination
+  and double-strand break repair. RecB is a bipartite, ATP-dependent enzyme. Its
+  N-terminal motor domain is a single-strand-DNA-dependent ATPase with 3&#39;-5&#39;
+  helicase activity that, together with RecD (a 5&#39;-3&#39; motor) and RecC, drives
+  rapid, processive unwinding of duplex DNA from a blunt or near-blunt end. Its
+  C-terminal domain carries a Mg2+-dependent nuclease center that degrades the
+  unwound strands and, after recognition of a Chi recombination hotspot, nicks
+  the 3&#39;-ended strand and loads the RecA recombinase onto the resulting 3&#39;
+  single-stranded tail. The product of this reaction is a recombinogenic 3&#39;
+  overhang coated with RecA, committing the broken end to RecA-mediated strand
+  invasion and downstream RuvABC-dependent resolution. RecBCD also rescues
+  collapsed or broken replication forks. The enzyme acts on chromosomal DNA in
+  the cytoplasm and nucleoid. Chi recognition is species-specific, and the
+  cognate octamer differs among pseudomonads from the E. coli consensus.
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: RecB is an ATP-binding/ATP-hydrolyzing motor protein, so nucleotide binding is correct but it is a broad parent of the more specific ATP binding annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Correct but uninformative; subsumed by the specific GO:0005524 ATP binding annotation, which captures the relevant nucleotide-binding activity.
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: The RecB C-terminal nuclease center requires a divalent metal (Mg2+/Mn2+) for exodeoxyribonuclease V activity, consistent with this annotation.
+    action: ACCEPT
+    reason: Mg2+ dependence of the RecB PD-(D/E)XK nuclease center is well established for RecBCD/Exonuclease V and supported by the UvrD/AddAB-type nuclease domain.
+- term:
+    id: GO:0000724
+    label: double-strand break repair via homologous recombination
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: RecBCD initiates double-strand break repair by homologous recombination; this is the central biological process for RecB.
+    action: ACCEPT
+    reason: Strongly supported by conserved RecBCD biology and by pseudomonad genetics (recB null mutants are UV/mitomycin C sensitive and accumulate fragmented chromosomal DNA); a core function.
+    supported_by:
+    - reference_id: file:PSEPK/recB/recB-deep-research-falcon.md
+- term:
+    id: GO:0000725
+    label: recombinational repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: RecB participates in recombinational repair; this is a broader parent of GO:0000724 double-strand break repair via homologous recombination.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate but more general than the specific DSB-via-HR term, which better represents the core process; retain as supporting/non-core.
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RecB binds duplex and single-stranded DNA as part of its helicase/nuclease activity; a true but general molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: Correct supporting activity, but subsumed by the more informative helicase and exonuclease V molecular-function annotations.
+- term:
+    id: GO:0003678
+    label: DNA helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RecB has ATP-dependent DNA helicase activity; this is captured more precisely by GO:0043138 (3&#39;-5&#39; DNA helicase activity).
+    action: KEEP_AS_NON_CORE
+    reason: Correct but a parent of the more specific 3&#39;-5&#39; DNA helicase activity term.
+- term:
+    id: GO:0004386
+    label: helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: General helicase activity; a broad parent of the DNA-specific and directionally specific helicase terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Uninformative high-level term subsumed by GO:0003678 and GO:0043138.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RecB has a P-loop/Walker A motif and binds ATP to power its motor activity; correct and informative.
+    action: ACCEPT
+    reason: ATP binding by the RecB helicase motor is well supported by domain architecture and conserved RecBCD biochemistry.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: RecBCD acts on chromosomal DNA ends in the cytoplasm/nucleoid; a cytosolic localization is consistent.
+    action: KEEP_AS_NON_CORE
+    reason: Reasonable localization for a DNA-repair enzyme but inferred (TreeGrafter); the functionally relevant compartment is the nucleoid-associated cytoplasm.
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: RecB functions in DNA repair; a broad parent of the more specific DSB repair via HR term.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but general; subsumed by GO:0000724.
+- term:
+    id: GO:0008854
+    label: exodeoxyribonuclease V activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RecB carries the nuclease activity of Exonuclease V (EC 3.1.11.5), the defining enzymatic function of the RecBCD complex.
+    action: ACCEPT
+    reason: Core molecular function; supported by the RecB C-terminal PD-(D/E)XK nuclease domain and EC mapping, consistent across RecBCD enzymes.
+- term:
+    id: GO:0009338
+    label: exodeoxyribonuclease V complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: RecB is a subunit of the RecBCD (Exonuclease V) complex together with RecC and RecD; correct cellular-component/complex assignment.
+    action: ACCEPT
+    reason: RecB is an obligate subunit of the heterotrimeric RecBCD/ExoV complex; a core part_of annotation.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Very general hydrolase parent term; RecB hydrolyzes both ATP and phosphodiester bonds, but this term is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Root-level molecular function subsumed by specific nuclease and ATP hydrolysis annotations.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: RecB couples ATP hydrolysis to DNA unwinding/translocation (Rhea:13065); correct and informative for the motor function.
+    action: ACCEPT
+    reason: ATPase activity driving the RecB helicase motor is well established and supported by Rhea mapping.
+- term:
+    id: GO:0043138
+    label: 3&#39;-5&#39; DNA helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RecB is the 3&#39;-5&#39; helicase motor of RecBCD, translocating along the 3&#39;-ended strand; the most specific and correct helicase term.
+    action: ACCEPT
+    reason: Core molecular function; the 3&#39;-5&#39; directionality of the RecB motor is a defining mechanistic feature of RecBCD.
+core_functions:
+- description: ATP-dependent 3&#39;-5&#39; DNA helicase/translocase motor of the RecBCD complex that unwinds duplex DNA from a double-strand end.
+  supported_by:
+  - reference_id: PMID:38047637
+  molecular_function:
+    id: GO:0043138
+    label: 3&#39;-5&#39; DNA helicase activity
+  directly_involved_in:
+  - id: GO:0000724
+    label: double-strand break repair via homologous recombination
+- description: Mg2+-dependent exodeoxyribonuclease V (Exonuclease V) nuclease that degrades unwound DNA strands and, upon Chi recognition, nicks the 3&#39;-ended strand and loads RecA, generating a recombinogenic 3&#39; single-stranded overhang.
+  supported_by:
+  - reference_id: PMID:38047637
+  molecular_function:
+    id: GO:0008854
+    label: exodeoxyribonuclease V activity
+  directly_involved_in:
+  - id: GO:0000724
+    label: double-strand break repair via homologous recombination
+- description: Functions as an obligate subunit of the heterotrimeric RecBCD (Exonuclease V) complex.
+  supported_by:
+  - reference_id: PMID:20195537
+  in_complex:
+    id: GO:0009338
+    label: exodeoxyribonuclease V complex
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/recB/recB-deep-research-falcon.md
+  title: Deep research report (Falcon/Edison) on P. putida KT2440 recB (Q88DZ5)
+  findings:
+  - statement: Conserved RecBCD biology supports RecB as the ATP-dependent helicase-nuclease subunit that processes dsDNA ends into recombinogenic 3&#39; ssDNA and loads RecA; pseudomonad genetics (P. syringae recB mutants UV/MMC-sensitive, accumulate fragmented DNA) corroborate the DSB-repair role. No KT2440-specific recB mutant phenotype was recovered, so organism-specific claims are inferred.
+    reference_section_type: RESULTS
+- id: PMID:38047637
+  title: &#39;RecBCD enzyme: mechanistic insights from mutants of a complex helicase-nuclease&#39;
+  findings:
+  - statement: RecBCD is a fast, processive ATP-dependent helicase-nuclease; RecB contributes the 3&#39;-5&#39; motor and a tethered Mg2+-dependent nuclease domain, and Chi recognition switches the enzyme to nick near Chi and load RecA.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Citation-integrity fix: this reference was originally entered as PMID:38000388,
+      which actually resolves to an unrelated RNA paper (&#34;Co-transcriptional folding
+      of the glmS ribozyme enables a rapid response to metabolite&#34;, Nucleic Acids Res
+      2024) and was a wrong identifier. The intended source is Amundsen &amp; Smith 2023
+      MMBR review &#34;RecBCD enzyme: mechanistic insights from mutants of a complex
+      helicase-nuclease&#34; (doi:10.1128/mmbr.00041-23). The correct PMID was recovered
+      from the DOI via doi_to_pmid and confirmed against PubMed (PMID:38047637 -&gt;
+      matching title/DOI), on-topic for RecB helicase/nuclease/RecA-loading mechanism.
+      The replacement PMID:38047637 is VERIFIED on-topic.
+- id: PMID:20195537
+  title: All three subunits of RecBCD enzyme are essential for DNA repair and low-temperature growth in the Antarctic Pseudomonas syringae Lz4W
+  findings:
+  - statement: In a pseudomonad, recB/recC/recD null mutants are UV- and mitomycin C-sensitive and accumulate linear/fragmented chromosomal DNA; RecB ATPase/helicase activity is essential in vivo while the nuclease center is partly dispensable.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Pavankumar et al. 2010 PLoS ONE; closest Pseudomonas genetic evidence for RecBCD function. PMID from deep-research summary, not independently PubMed-verified.
+suggested_questions:
+- question: What is the cognate Chi (recombination hotspot) sequence recognized by P. putida KT2440 RecBCD, and does it differ from the E. coli consensus and the P. syringae ChiPs octamer?
+suggested_experiments:
+- description: Construct a P. putida KT2440 recB (PP_4673) deletion and complement with wild-type and motor-dead/nuclease-dead alleles to test sensitivity to UV and mitomycin C and quantify homologous recombination capacity.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

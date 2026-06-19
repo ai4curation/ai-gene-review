@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dnaK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dnaK</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DU2" target="_blank" class="term-link">
+                        Q88DU2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dnaK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DU2" data-a="DESCRIPTION: DnaK is the canonical bacterial Hsp70-family ATP-d..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DnaK is the canonical bacterial Hsp70-family ATP-dependent molecular chaperone. It binds exposed hydrophobic segments of non-native polypeptides and, through repeated ATP-driven cycles of substrate binding and release, prevents aggregation and assists the (re)folding of proteins both co-translationally and post-translationally. The protein has the conserved Hsp70 architecture, comprising an N-terminal nucleotide-binding domain (NBD) that binds and hydrolyzes ATP, a substrate-binding domain (SBDbeta) that binds short peptide segments of client proteins, an alpha-helical lid (SBDalpha) that regulates substrate capture and release, and a short intrinsically disordered C-terminal tail. In the ATP-bound state DnaK has low substrate affinity and fast exchange, and ATP hydrolysis switches it to a high-affinity ADP state that stabilizes client binding. DnaK operates as part of the bacterial KJE chaperone system together with the J-domain co-chaperone DnaJ (Hsp40), which stimulates DnaK ATPase activity and delivers substrates, and the nucleotide-exchange factor GrpE, which promotes ADP release and substrate cycling. DnaK functions primarily in the cytoplasm and is a central component of the heat-shock and protein quality-control (proteostasis) network, with its expression induced by heat and other stresses.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU2" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DnaK is an ATP-dependent Hsp70 chaperone whose N-terminal nucleotide-binding domain binds ATP; ATP binding and hydrolysis drive the chaperone cycle. ATP binding is well established for the Hsp70 family and supported by the conserved actin-like ASKHA nucleotide-binding domain fold of this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of an Hsp70 chaperone, strongly supported by family membership, conserved nucleotide-binding domain, and the canonical DnaK mechanism. The IEA evidence is appropriate and consistent with the biology.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU2" data-a="GO:0006457" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DnaK assists folding of non-native polypeptides and prevents aggregation through ATP-driven cycles of substrate binding and release, acting in the cytoplasm as part of the DnaK-DnaJ-GrpE system. This is the central biological process for bacterial Hsp70.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for DnaK, well supported by family function and conserved domain architecture. Appropriately captured by an IEA annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU2" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The DnaK nucleotide-binding domain catalyzes ATP hydrolysis, which is allosterically coupled to substrate binding in the substrate-binding domain; ATP hydrolysis (stimulated by DnaJ) switches DnaK to the high-affinity client-binding state. This ATPase activity is intrinsic to and definitional for the Hsp70 family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of DnaK that powers the chaperone cycle. Strongly supported by family membership and conserved catalytic NBD; the IEA annotation is appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DU2" data-a="GO:0051082" data-r="GO_REF:0000002" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The substrate-binding domain (SBD) of DnaK binds exposed hydrophobic segments of non-native/unfolded client proteins; this chaperone (holdase) binding activity is the basis for preventing aggregation and promoting folding. The UniProt InterPro cross-references include GO:0051082 (unfolded protein binding) for this protein, though it is not present in the current GOA export.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function of DnaK as an Hsp70 chaperone, capturing the direct binding of unfolded/non-native client proteins by the substrate-binding domain. Supported by family membership, the conserved peptide-binding domain, and the InterPro2GO mapping in UniProt; complements the protein folding (BP) annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent Hsp70 molecular chaperone that binds non-native polypeptides and, through ATP-binding and ATP-hydrolysis-driven cycles of substrate capture and release, prevents aggregation and assists protein folding as part of the DnaK-DnaJ-GrpE (KJE) system in the cytoplasm.</h3>
+                <span class="vote-buttons" data-g="Q88DU2" data-a="FUNCTION: ATP-dependent Hsp70 molecular chaperone that binds..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                            unfolded protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/dnaK/dnaK-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">DnaK is the canonical bacterial Hsp70-family ATP-dependent molecular chaperone that supports proteostasis by binding non-native polypeptides and preventing aggregation, assisting folding through repeated ATP-driven binding/release cycles, operating with co-chaperones DnaJ and GrpE.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATPase activity of the nucleotide-binding domain, allosterically coupled to substrate binding, that powers the chaperone cycle.</h3>
+                <span class="vote-buttons" data-g="Q88DU2" data-a="FUNCTION: ATPase activity of the nucleotide-binding domain, ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/dnaK/dnaK-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">ATP-state DnaK has low substrate affinity, whereas after ATP hydrolysis substrate affinity rises and association/dissociation rates drop, stabilizing client binding; DnaJ stimulates the ATPase activity and GrpE promotes ADP release.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/dnaK/dnaK-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for dnaK in Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dnaK-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DU2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **dnaK** (UniProt **Q88DU2**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">31 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:03:36.445247</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="dnaK-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="dnaK-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000023 The DnaK chaperone cycle is depicted in Figure 1a, showing the interaction between DnaK, DnaJ, and GrpE during protein folding. The</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-dnak-uniprot-q88du2-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>dnaK</strong> (UniProt <strong>Q88DU2</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-target-verification-critical-identity-check">0. Target verification (critical identity check)</h2>
+<h3 id="verified-target">Verified target</h3>
+<p>The protein described by UniProt accession <strong>Q88DU2</strong> corresponds to <strong>DnaK (bacterial Hsp70)</strong> in <em>Pseudomonas putida</em> <strong>KT2440</strong>, and it is explicitly identified as <strong>DnaK (Q88DU2)</strong> in a KT2440 PHA-granule–associated proteomics study. (tarazona2020phasininteractomereveals pages 9-10)</p>
+<h3 id="avoiding-symbol-ambiguity">Avoiding symbol ambiguity</h3>
+<p>The gene symbol <strong>dnaK</strong> is used broadly across bacteria for Hsp70-family chaperones; therefore, organism-anchored evidence is required. The proteomics identification of <strong>DnaK (Q88DU2)</strong> in <em>P. putida</em> KT2440 provides this anchor, ensuring we are not conflating results from other bacteria. (tarazona2020phasininteractomereveals pages 9-10)</p>
+<h2 id="1-key-concepts-and-current-understanding-definitions-and-mechanisms">1. Key concepts and current understanding (definitions and mechanisms)</h2>
+<h3 id="11-what-is-dnak">1.1 What is DnaK?</h3>
+<p><strong>DnaK</strong> is the canonical bacterial <strong>Hsp70-family</strong> ATP-dependent molecular chaperone that supports <strong>proteostasis</strong> by binding non-native polypeptides and preventing aggregation, assisting folding through repeated ATP-driven binding/release cycles. (rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<h3 id="12-domain-architecture-structure-function-mapping">1.2 Domain architecture (structure-function mapping)</h3>
+<p>A widely supported, current bacterial DnaK architecture comprises:<br />
+- an N-terminal <strong>nucleotide-binding domain (NBD)</strong> (~45 kDa) that binds/hydrolyzes ATP,<br />
+- a <strong>substrate-binding β-domain (SBDβ)</strong> (~15 kDa) that binds peptide segments,<br />
+- an <strong>α-helical lid (SBDα)</strong> (~10 kDa) that regulates substrate capture/release,<br />
+- and commonly a <strong>short/disordered C-terminal tail</strong> that can modulate substrate/cofactor interactions. (pan2024dnakduplicationand pages 1-2, rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<h3 id="13-atp-driven-chaperone-cycle-canonical-mechanism">1.3 ATP-driven chaperone cycle (canonical mechanism)</h3>
+<p>The DnaK cycle is controlled by allosteric communication between NBD and SBD:<br />
+- In the <strong>ATP-bound</strong> state, substrate affinity is low and substrate exchange is fast.<br />
+- After <strong>ATP hydrolysis</strong>, substrate affinity increases markedly (reported <strong>~10–50-fold</strong>), while association/dissociation kinetics slow (<strong>~100–1000-fold decreases</strong> in association/dissociation rates), stabilizing client binding.<br />
+- Nucleotide exchange (ADP→ATP) promotes substrate release and cycling. (xiao2024structureofthe pages 1-2)</p>
+<h3 id="14-the-kje-system-dnakdnajgrpe">1.4 The KJE system (DnaK–DnaJ–GrpE)</h3>
+<p>In bacteria, DnaK typically functions with:<br />
+- <strong>DnaJ (Hsp40/J-domain protein)</strong>, which accelerates DnaK ATP hydrolysis and promotes productive client engagement,<br />
+- <strong>GrpE</strong>, a nucleotide exchange factor (NEF) that promotes ADP release and thereby coordinates substrate release and continuation of the cycle. (pan2024dnakduplicationand pages 1-2, rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<h2 id="2-recent-developments-prioritizing-20232024">2. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="21-2024-cryo-em-how-grpe-couples-nucleotide-exchange-and-substrate-release">2.1 2024 cryo-EM: how GrpE couples nucleotide exchange and substrate release</h3>
+<p>A 2024 cryo-EM study resolved an <strong>asymmetric 1:2 DnaK–GrpE complex</strong> (Mycobacterium tuberculosis system), in which the <strong>GrpE dimer “ratchets”</strong> to modulate both DnaK NBD and SBD. The study reports that:<br />
+- the <strong>disordered GrpE N-terminus</strong> is critical for substrate release,<br />
+- the <strong>DnaK–GrpE interface</strong> is essential for folding activity in vitro and in vivo,<br />
+- and GrpE can allosterically couple <strong>ADP release (NBD)</strong> with <strong>peptide release (SBD)</strong>. (xiao2024structureofthe pages 1-2, xiao2024structureofthe pages 5-7)</p>
+<p>Visual support for this cycle/complex is provided in the same paper’s figures (DnaK cycle and complex depictions). (xiao2024structureofthe media 2a623946, xiao2024structureofthe media b1aedc95)</p>
+<h3 id="22-2024-systems-biologygenomics-prevalence-and-diversification-of-dnak">2.2 2024 systems biology/genomics: prevalence and diversification of dnaK</h3>
+<p>A 2024 mSystems study reports genome-scale statistics:<br />
+- <strong>dnaK is present in 98.9% of bacterial genomes</strong>,<br />
+- <strong>6.4%</strong> of bacterial genomes encode <strong>≥2 DnaK paralogs</strong>.<br />
+The same work links dnaK duplication to increased proteome complexity and shows how DnaK paralogs can specialize toward different client subsets (e.g., cytosolic vs membrane-enriched interactomes in a model organism). (pan2024dnakduplicationand pages 1-2)</p>
+<h3 id="23-2024-discovery-dnak-can-regulate-translation-under-specific-stress">2.3 2024 discovery: DnaK can regulate translation under specific stress</h3>
+<p>A 2024 PLOS Biology study in <em>Salmonella</em> reports a non-canonical role: DnaK can <strong>reduce protein synthesis</strong> during infection-relevant Mg2+ starvation, with quantitative findings including:<br />
+- <strong>~3-fold increase</strong> in DnaK ribosome association,<br />
+- <strong>~30-fold decrease</strong> in trigger factor ribosome association,<br />
+- and a dramatic survival phenotype: C-terminal truncation caused <strong>~10,000-fold loss in viability</strong> under that stress, which could be bypassed by translation inhibition. (chan2024chaperonehsp70helps pages 1-2, chan2024chaperonehsp70helps pages 12-15)</p>
+<p>While not <em>P. putida</em>-specific, this result is a recent authoritative example of expanded DnaK functional repertoire, relevant to annotation discussions about DnaK’s roles beyond folding.</p>
+<h2 id="3-functional-annotation-for-pseudomonas-putida-kt2440-dnak-q88du2">3. Functional annotation for <em>Pseudomonas putida</em> KT2440 DnaK (Q88DU2)</h2>
+<h3 id="31-molecular-function-what-it-does">3.1 Molecular function (what it does)</h3>
+<p>In <em>P. putida</em>, DnaK is described as an ATP-dependent chaperone whose substrate binding is controlled by ATP binding/hydrolysis, acting via repeated cycles of binding/release of unfolded proteins; it operates with co-chaperones <strong>DnaJ</strong> and <strong>GrpE</strong>. (rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<h3 id="32-biological-processes-and-pathways">3.2 Biological processes and pathways</h3>
+<p><strong>Protein quality control / stress response</strong>: DnaK participates in the bacterial heat-shock/proteostasis network, helping refold or remodel damaged proteins; heat stress increases the demand for chaperone activity and can titrate DnaK away from other interactions. (rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<p><strong>Toxin–antitoxin/translation-linked phenotypes</strong> (GraTA system): In <em>Pseudomonas putida</em>, DnaK interacts with the toxin <strong>GraT</strong> and can enhance GraT-associated phenotypes; the proposed interpretation is that DnaK may remodel GraT (which has intrinsically disordered elements) to a functionally active state, linking DnaK chaperoning to toxin-mediated growth phenotypes. (rosendahl2021thedisorderedcterminus pages 6-8, rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<h3 id="33-cellular-localization-where-it-acts">3.3 Cellular localization (where it acts)</h3>
+<p><strong>Primary localization expectation</strong>: DnaK is fundamentally a <strong>cytosolic</strong> chaperone consistent with its folding and proteostasis roles. (rosendahl2021thedisorderedcterminus pages 1-2)</p>
+<p><strong>Evidence for association with PHA granules/carbonosomes in KT2440</strong>: In KT2440, <strong>DnaK (Q88DU2)</strong> was detected on the <strong>surface of isolated PHA granules</strong>, alongside other chaperones (e.g., GroL) and folding-related proteins. The authors note this may represent true granule association or contamination during preparation; however, DnaK presence at granules is repeatedly observed in related contexts (e.g., nitrogen-limited/PHA-producing conditions) and is hypothesized to support roles such as enhancing protein folding in the granule milieu. (tarazona2020phasininteractomereveals pages 9-10)</p>
+<h3 id="34-phenotypes-in-pseudomonas-putida-experimental-evidence">3.4 Phenotypes in <em>Pseudomonas putida</em> (experimental evidence)</h3>
+<p><strong>Essentiality</strong>: Attempts to delete <strong>dnaK</strong> in <em>P. putida</em> were unsuccessful, consistent with <strong>essential function</strong> in this organism/strain background. (rosendahl2021thedisorderedcterminus pages 6-8)</p>
+<p><strong>C-terminal motif and fitness</strong>: The DnaK C-terminus is intrinsically disordered and contains a conserved negatively charged motif (e.g., including <strong>DAEFEE</strong>). Mutations in this motif reduce competitive fitness and alter stress-related phenotypes; for example, a motif mutant strain was strongly outcompeted in long-term competition (notably at elevated temperature conditions). (rosendahl2021thedisorderedcterminus pages 10-12, rosendahl2021thedisorderedcterminus pages 14-15)</p>
+<p><strong>GraT-related growth effects and quantitative expression change</strong>: Induced dnaK overexpression increased dnaK mRNA <strong>~2.7-fold</strong> (25°C) and slightly exacerbated GraT-linked growth defects in a GraT-producing background. (rosendahl2021thedisorderedcterminus pages 6-8)</p>
+<p><strong>Salt stress interaction evidence (genetic interaction)</strong>: In a secB-defective background, combining secB deficiency with a DnaK C-terminal motif mutant increased sensitivity to NaCl stress, supporting that DnaK contributes to stress robustness in concert with other chaperone/targeting pathways. (rosendahl2021thedisorderedcterminus pages 10-12)</p>
+<h2 id="4-current-applications-and-real-world-implementations-20232024-emphasis">4. Current applications and real-world implementations (2023–2024 emphasis)</h2>
+<h3 id="41-high-salinity-bioremediation-engineering-in-kt2440-2024">4.1 High-salinity bioremediation engineering in KT2440 (2024)</h3>
+<p>A 2024 study engineered <em>P. putida</em> KT2440 for improved salt tolerance and pollutant degradation in saline conditions. Key quantitative outcomes include:<br />
+- Wild-type KT2440 tolerated a maximum of <strong>4% (w/v) NaCl</strong> in minimal salts medium.<br />
+- Engineered co-expression increased tolerance to <strong>5% (w/v) NaCl</strong>, and adding compatible solutes increased tolerance to <strong>6% (w/v) NaCl</strong>.<br />
+- Under <strong>4% NaCl</strong>, the engineered strain degraded <strong>56.70% benzoic acid</strong> and <strong>95.64% protocatechuic acid</strong> within <strong>48 h</strong>, whereas the normal strain showed no biodegradation under the same conditions. (fan2024improvementinsalt pages 1-2, fan2024improvementinsalt pages 10-12)</p>
+<p>While this paper’s engineering targets include osmoprotection and ion transport, it explicitly frames <strong>molecular chaperones (including dnaK)</strong> as part of stress-response logic for survival under harsh conditions, consistent with DnaK’s proteostasis role in real-world deployment scenarios (high salinity bioremediation). (fan2024improvementinsalt pages 1-2)</p>
+<h3 id="42-industrial-bioproduction-under-anoxic-electrogenic-conditions-bio-electrochemical-systems-2024">4.2 Industrial bioproduction under anoxic-electrogenic conditions (bio-electrochemical systems; 2024)</h3>
+<p>A 2024 Microbial Cell Factories study demonstrates <em>P. putida</em> KT2440 can sustain long-duration, non-growth production in an anoxic bio-electrochemical system (anode as terminal electron acceptor). Implementation-relevant quantitative points include:<br />
+- Glucose conversion lasting <strong>~380 h</strong> and maintenance of metabolic activity for <strong>weeks</strong>.<br />
+- A best-performing mutant accumulated 2-ketogluconate (2KG) <strong>at twice the rate</strong> of wild type and achieved yield <strong>0.96 mol/mol</strong> (i.e., up to ~96% conversion). (weimer2024systemsbiologyof pages 1-2, weimer2024systemsbiologyof pages 14-15)</p>
+<p>These studies emphasize global adaptation including shutdown of translation/motility, making recent DnaK-linked insights about translation coordination under stress (even if discovered in other bacteria) particularly relevant for interpreting KT2440’s stress physiology and robustness engineering potential. (chan2024chaperonehsp70helps pages 1-2, weimer2024systemsbiologyof pages 1-2)</p>
+<h3 id="43-dnak-as-a-therapeuticdiagnostic-handle-2024-translational-example">4.3 DnaK as a therapeutic/diagnostic handle (2024 translational example)</h3>
+<p>A 2024 Journal of Translational Medicine study reports that bacterial DnaKs can reduce effectiveness of p53-dependent chemotherapies (cisplatin, 5-FU), and that a <strong>DnaK-binding peptide inhibitor (ARV-1502)</strong> can restore drug efficacy in the tested systems, illustrating that bacterial DnaK is actively being explored as a targetable factor in host–microbiome–therapy interactions. ()</p>
+<h2 id="5-expert-synthesis-and-analysis-authoritative-interpretation">5. Expert synthesis and analysis (authoritative interpretation)</h2>
+<h3 id="51-most-defensible-primary-function-for-kt2440-dnak-q88du2">5.1 Most defensible primary function for KT2440 DnaK (Q88DU2)</h3>
+<p>The weight of evidence supports <strong>ATP-dependent chaperone activity as the primary function</strong>, in the canonical KJE system, enabling folding/maintenance of proteome integrity under normal and stress conditions. This is supported by mechanistic descriptions in <em>Pseudomonas</em> DnaK studies and by high-resolution, 2024 structural work clarifying how GrpE couples nucleotide exchange to substrate release (a key step in the foldase cycle). (rosendahl2021thedisorderedcterminus pages 1-2, xiao2024structureofthe pages 1-2)</p>
+<h3 id="52-what-the-kt2440-specific-literature-adds-beyond-generic-hsp70">5.2 What the KT2440-specific literature adds beyond “generic Hsp70”</h3>
+<p>KT2440-adjacent experimental work highlights that <strong>DnaK’s C-terminal disordered region is not merely decorative</strong>: it measurably impacts competitive fitness, toxin-linked phenotypes, and stress interactions, indicating that strain-level robustness traits can hinge on this region. (rosendahl2021thedisorderedcterminus pages 14-15, rosendahl2021thedisorderedcterminus pages 10-12)</p>
+<h3 id="53-localization-nuance-cytosolic-core-function-with-condition-dependent-association-to-inclusions">5.3 Localization nuance: cytosolic core function with condition-dependent association to inclusions</h3>
+<p>Detection of DnaK (Q88DU2) on isolated PHA granules suggests either:<br />
+- a functional association where local chaperoning supports granule proteome integrity under nutrient imbalance, or<br />
+- experimental carryover from other compartments.<br />
+Because the authors explicitly acknowledge both possibilities, the conservative annotation is: <strong>cytosolic DnaK with reported condition-dependent enrichment/association in PHA granule preparations</strong> under nitrogen limitation. (tarazona2020phasininteractomereveals pages 9-10, kelly2024comprehensiveproteomicsanalysis pages 1-3)</p>
+<h2 id="6-quantitative-statistics-and-data-highlights-recent">6. Quantitative statistics and data highlights (recent)</h2>
+<ul>
+<li><strong>Prevalence</strong>: dnaK in <strong>98.9%</strong> of bacterial genomes; <strong>6.4%</strong> with ≥2 paralogs. (pan2024dnakduplicationand pages 1-2)</li>
+<li><strong>Mechanistic kinetics</strong>: ATP→ADP transition yields <strong>~10–50×</strong> higher substrate affinity and <strong>~100–1000×</strong> slower association/dissociation rates. (xiao2024structureofthe pages 1-2)</li>
+<li><strong>KT2440 salt bioremediation performance</strong>: engineered strain degraded <strong>56.70%</strong> benzoic acid and <strong>95.64%</strong> protocatechuic acid in <strong>48 h</strong> at <strong>4% NaCl</strong>, with tolerance improved to <strong>6% NaCl</strong> with solutes. (fan2024improvementinsalt pages 10-12)</li>
+<li><strong>KT2440 anoxic-electrogenic production</strong>: <strong>0.96 mol/mol</strong> yield and <strong>2×</strong> rate improvement for best mutant; run length <strong>~380 h</strong>. (weimer2024systemsbiologyof pages 1-2, weimer2024systemsbiologyof pages 14-15)</li>
+<li><strong>DnaK regulation under stress (2024 example in pathogen)</strong>: DnaK ribosome association <strong>~3×</strong> higher, TF association <strong>~30×</strong> lower; truncation caused <strong>~10,000×</strong> viability loss in Mg2+ starvation stress. (chan2024chaperonehsp70helps pages 1-2, chan2024chaperonehsp70helps pages 12-15)</li>
+</ul>
+<h2 id="7-visual-evidence-mechanism">7. Visual evidence (mechanism)</h2>
+<p>A 2024 Nature Communications paper provides visual depictions of (i) the DnaK–DnaJ–GrpE chaperone cycle and (ii) the DnaK–GrpE complex structure. These figures support mechanistic statements about allosteric cycling and GrpE-mediated coupling of nucleotide/substrate release. (xiao2024structureofthe media 2a623946, xiao2024structureofthe media b1aedc95)</p>
+<h2 id="8-summary-table-for-functional-annotation">8. Summary table for functional annotation</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Functional annotation summary</th>
+<th>Supporting citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>UniProt Q88DU2 is DnaK, the canonical bacterial Hsp70 chaperone, in <em>Pseudomonas putida</em> KT2440; it was directly identified as DnaK (Q88DU2) in a KT2440 proteomics study.</td>
+<td>(tarazona2020phasininteractomereveals pages 9-10)</td>
+</tr>
+<tr>
+<td>Domains/architecture</td>
+<td>DnaK/Hsp70 has the expected bacterial architecture: N-terminal ~45 kDa nucleotide-binding domain (NBD), substrate-binding β-domain (SBDβ), α-helical lid (SBDα), and a short intrinsically disordered C-terminal tail; ATP binding occurs at the NBD and peptide substrates bind the SBD.</td>
+<td>(pan2024dnakduplicationand pages 1-2, rosendahl2021thedisorderedcterminus pages 1-2)</td>
+</tr>
+<tr>
+<td>Mechanism</td>
+<td>DnaK is an ATP-dependent molecular chaperone that binds and releases non-native polypeptides through allosterically coupled ATP hydrolysis cycles; ATP-state DnaK has low substrate affinity, whereas after ATP hydrolysis substrate affinity rises ~10–50-fold and association/dissociation rates drop ~100–1000-fold.</td>
+<td>(xiao2024structureofthe pages 1-2, rosendahl2021thedisorderedcterminus pages 1-2)</td>
+</tr>
+<tr>
+<td>Co-chaperones</td>
+<td>The core bacterial KJE system comprises DnaK with the J-domain cochaperone DnaJ and nucleotide-exchange factor GrpE; DnaJ stimulates Hsp70 ATPase activity by &gt;1,000-fold, and GrpE promotes ADP release and substrate release.</td>
+<td>(chan2024chaperonehsp70helps pages 1-2, pan2024dnakduplicationand pages 1-2, rosendahl2021thedisorderedcterminus pages 1-2)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>The primary functional localization is cytosolic, consistent with proteostasis and folding roles; in KT2440, DnaK (Q88DU2) was also detected on the surface of isolated PHA granules/carbonosomes under nitrogen-limiting PHA-producing conditions, though authors note this may reflect true association or preparation carryover.</td>
+<td>(tarazona2020phasininteractomereveals pages 9-10, kelly2024comprehensiveproteomicsanalysis pages 1-3)</td>
+</tr>
+<tr>
+<td>Pathways/biological processes</td>
+<td>DnaK participates in the bacterial heat-shock/protein quality-control network, assists co- and post-translational folding, helps prevent aggregation/remodel damaged proteins, and is connected to nutrient-stress responses such as nitrogen limitation/PHA accumulation and osmotic stress adaptation.</td>
+<td>(craig2021leveragingpseudomonasstress pages 5-6, rosendahl2021thedisorderedcterminus pages 1-2, tarazona2020phasininteractomereveals pages 9-10, kelly2024comprehensiveproteomicsanalysis pages 1-3)</td>
+</tr>
+<tr>
+<td>Phenotypes in <em>P. putida</em></td>
+<td>In <em>P. putida</em>, DnaK appears essential because deletion attempts failed; its disordered C-terminus and especially a negatively charged terminal motif contribute to competitive fitness and facilitate toxicity of the GraT toxin. Overexpression increased dnaK mRNA ~2.7-fold, and C-terminal motif mutants were outcompeted in long-term competition, especially at 34 °C.</td>
+<td>(rosendahl2021thedisorderedcterminus pages 6-8, rosendahl2021thedisorderedcterminus pages 10-12, rosendahl2021thedisorderedcterminus pages 1-2)</td>
+</tr>
+<tr>
+<td>Recent 2024 structural/regulatory insights</td>
+<td>Recent 2024 work sharpened DnaK annotation beyond classical folding: bacterial DnaK is present in 98.9% of bacterial genomes, and 6.4% encode ≥2 paralogs; cryo-EM of DnaK–GrpE showed an asymmetric 1:2 complex where GrpE ratchets to couple ADP release and substrate release; a 2024 stress study showed DnaK can also reduce translation independently of J-domain cochaperones under specific stress.</td>
+<td>(pan2024dnakduplicationand pages 1-2, xiao2024structureofthe pages 1-2, chan2024chaperonehsp70helps pages 1-2, chan2024chaperonehsp70helps pages 12-15)</td>
+</tr>
+<tr>
+<td>Applications/implementations</td>
+<td>DnaK-related knowledge is being leveraged for biotechnology and stress engineering: KT2440 salt-tolerance engineering identified dnaK/dnaJ/clpB/htpG among stress-responsive chaperones; engineered KT2440 strains tolerated up to 5% NaCl, and up to 6% with compatible solutes, enabling aromatic degradation under 4% NaCl. In broader bacterial engineering, chaperone systems are used to improve robustness under industrial stresses.</td>
+<td>(fan2024improvementinsalt pages 1-2, fan2024improvementinsalt pages 10-12, craig2021leveragingpseudomonasstress pages 5-6)</td>
+</tr>
+<tr>
+<td>Key quantitative data</td>
+<td>Representative quantitative findings relevant to annotation: 98.9% of bacterial genomes encode dnaK and 6.4% have multiple paralogs; ATP hydrolysis shifts DnaK substrate affinity by ~10–50-fold; under Mg2+ starvation DnaK-ribosome association increased ~3-fold while Trigger Factor association fell ~30-fold; C-terminal DnaK truncation caused ~10,000-fold viability loss in that stress model; KT2440 salt-tolerance engineering enabled 56.70% benzoic acid and 95.64% protocatechuic acid degradation at 4% NaCl in 48 h.</td>
+<td>(pan2024dnakduplicationand pages 1-2, xiao2024structureofthe pages 1-2, chan2024chaperonehsp70helps pages 1-2, chan2024chaperonehsp70helps pages 12-15, fan2024improvementinsalt pages 1-2, fan2024improvementinsalt pages 10-12)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most relevant identity, mechanistic, localization, pathway, phenotype, and application evidence for </em>Pseudomonas putida<em> KT2440 DnaK (UniProt Q88DU2). It is designed as a compact annotation aid with direct citation IDs for each major claim.</em></p>
+<h2 id="9-key-references-with-urls-and-publication-dates-most-relevant">9. Key references with URLs and publication dates (most relevant)</h2>
+<ul>
+<li>Tarazona NA et al. <strong>Aug 2020</strong>. <em>Environmental Microbiology</em>. “Phasin interactome…” (KT2440; identifies <strong>DnaK Q88DU2</strong> on PHA granules). https://doi.org/10.1111/1462-2920.15175 (tarazona2020phasininteractomereveals pages 9-10)</li>
+<li>Rosendahl S et al. <strong>Feb 2021</strong>. <em>Microorganisms</em>. “Disordered C-terminus of DnaK…” (KT2440-isogenic background; essentiality; fitness; GraT interaction; C-terminal motif). https://doi.org/10.3390/microorganisms9020375 (rosendahl2021thedisorderedcterminus pages 6-8, rosendahl2021thedisorderedcterminus pages 10-12, rosendahl2021thedisorderedcterminus pages 1-2)</li>
+<li>Fan M et al. <strong>Published 1 Jun 2024</strong>. <em>Biology</em> (MDPI). “Improvement in Salt Tolerance Ability of <em>P. putida</em> KT2440” (NaCl tolerance to 6%; pollutant degradation metrics). https://doi.org/10.3390/biology13060404 (fan2024improvementinsalt pages 1-2, fan2024improvementinsalt pages 10-12)</li>
+<li>Kelly S et al. <strong>May 2024</strong>. <em>Molecular &amp; Cellular Proteomics</em>. “Comprehensive Proteomics Analysis of PHA Biology…” (nitrogen limitation; carbonosome proteome/network). https://doi.org/10.1016/j.mcpro.2024.100765 (kelly2024comprehensiveproteomicsanalysis pages 1-3)</li>
+<li>Xiao X et al. <strong>Jan 2024</strong>. <em>Nature Communications</em>. “Structure of the M. tuberculosis DnaK–GrpE complex…” (cryo-EM; allostery; substrate release). https://doi.org/10.1038/s41467-024-44933-9 (xiao2024structureofthe pages 1-2, xiao2024structureofthe pages 5-7, xiao2024structureofthe media 2a623946)</li>
+<li>Pan Z et al. <strong>Apr 2024</strong>. <em>mSystems</em>. “DnaK duplication and specialization…” (genome prevalence 98.9%; paralogs 6.4%; domain mapping). https://doi.org/10.1128/msystems.01154-23 (pan2024dnakduplicationand pages 1-2)</li>
+<li>Chan C, Groisman EA. <strong>Apr 2024</strong>. <em>PLOS Biology</em>. “Chaperone Hsp70 helps Salmonella survive…” (quantitative stress/translation regulation). https://doi.org/10.1371/journal.pbio.3002560 (chan2024chaperonehsp70helps pages 1-2, chan2024chaperonehsp70helps pages 12-15)</li>
+<li>Weimer A et al. <strong>Sep 2024</strong>. <em>Microbial Cell Factories</em>. “Systems biology of electrogenic <em>P. putida</em>…” (BES; 2KG yield 0.96 mol/mol; 2× rate; ~380 h runs). https://doi.org/10.1186/s12934-024-02509-8 (weimer2024systemsbiologyof pages 1-2, weimer2024systemsbiologyof pages 14-15)</li>
+</ul>
+<h2 id="10-limitations-and-evidence-gaps">10. Limitations and evidence gaps</h2>
+<ul>
+<li>Direct biochemical substrate/client specificity for <strong>KT2440 DnaK (Q88DU2)</strong> (i.e., defined endogenous client set in KT2440) is not explicitly resolved in the gathered KT2440 papers; recent mechanistic studies provide general bacterial parameters and structural principles but not KT2440-specific client lists. (pan2024dnakduplicationand pages 1-2, xiao2024structureofthe pages 1-2)</li>
+<li>Granule association evidence is proteomics-based and explicitly flagged by authors as potentially contaminated; careful fractionation/orthogonal microscopy would be required for definitive localization beyond cytosol. (tarazona2020phasininteractomereveals pages 9-10)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(tarazona2020phasininteractomereveals pages 9-10): Natalia A. Tarazona, Ana M. Hernández‐Arriaga, Ryan Kniewel, and M. Auxiliadora Prieto. Phasin interactome reveals the interplay of<scp>phaf</scp>with the polyhydroxyalkanoate transcriptional regulatory protein<scp>phad</scp>in<i>pseudomonas putida</i>. Environmental Microbiology, 22:3922-3936, Aug 2020. URL: https://doi.org/10.1111/1462-2920.15175, doi:10.1111/1462-2920.15175. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rosendahl2021thedisorderedcterminus pages 1-2): Sirli Rosendahl, Andres Ainelo, and Rita Hõrak. The disordered c-terminus of the chaperone dnak increases the competitive fitness of pseudomonas putida and facilitates the toxicity of grat. Microorganisms, 9:375, Feb 2021. URL: https://doi.org/10.3390/microorganisms9020375, doi:10.3390/microorganisms9020375. This article has 8 citations.</p>
+</li>
+<li>
+<p>(pan2024dnakduplicationand pages 1-2): Zhuo Pan, Li Zhuo, Tian-yu Wan, Rui-yun Chen, and Yue-zhong Li. Dnak duplication and specialization in bacteria correlates with increased proteome complexity. Apr 2024. URL: https://doi.org/10.1128/msystems.01154-23, doi:10.1128/msystems.01154-23. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe pages 1-2): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe pages 5-7): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe media 2a623946): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xiao2024structureofthe media b1aedc95): Xiansha Xiao, Allison Fay, Pablo Santos Molina, Amanda Kovach, Michael S. Glickman, and Huilin Li. Structure of the m. tuberculosis dnak−grpe complex reveals how key dnak roles are controlled. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-44933-9, doi:10.1038/s41467-024-44933-9. This article has 31 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chan2024chaperonehsp70helps pages 1-2): Carissa Chan and Eduardo A. Groisman. Chaperone hsp70 helps salmonella survive infection-relevant stress by reducing protein synthesis. PLOS Biology, 22:e3002560, Apr 2024. URL: https://doi.org/10.1371/journal.pbio.3002560, doi:10.1371/journal.pbio.3002560. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chan2024chaperonehsp70helps pages 12-15): Carissa Chan and Eduardo A. Groisman. Chaperone hsp70 helps salmonella survive infection-relevant stress by reducing protein synthesis. PLOS Biology, 22:e3002560, Apr 2024. URL: https://doi.org/10.1371/journal.pbio.3002560, doi:10.1371/journal.pbio.3002560. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rosendahl2021thedisorderedcterminus pages 6-8): Sirli Rosendahl, Andres Ainelo, and Rita Hõrak. The disordered c-terminus of the chaperone dnak increases the competitive fitness of pseudomonas putida and facilitates the toxicity of grat. Microorganisms, 9:375, Feb 2021. URL: https://doi.org/10.3390/microorganisms9020375, doi:10.3390/microorganisms9020375. This article has 8 citations.</p>
+</li>
+<li>
+<p>(rosendahl2021thedisorderedcterminus pages 10-12): Sirli Rosendahl, Andres Ainelo, and Rita Hõrak. The disordered c-terminus of the chaperone dnak increases the competitive fitness of pseudomonas putida and facilitates the toxicity of grat. Microorganisms, 9:375, Feb 2021. URL: https://doi.org/10.3390/microorganisms9020375, doi:10.3390/microorganisms9020375. This article has 8 citations.</p>
+</li>
+<li>
+<p>(rosendahl2021thedisorderedcterminus pages 14-15): Sirli Rosendahl, Andres Ainelo, and Rita Hõrak. The disordered c-terminus of the chaperone dnak increases the competitive fitness of pseudomonas putida and facilitates the toxicity of grat. Microorganisms, 9:375, Feb 2021. URL: https://doi.org/10.3390/microorganisms9020375, doi:10.3390/microorganisms9020375. This article has 8 citations.</p>
+</li>
+<li>
+<p>(fan2024improvementinsalt pages 1-2): Min Fan, Shuyu Tan, Wei Wang, and Xuehong Zhang. Improvement in salt tolerance ability of pseudomonas putida kt2440. Biology, 13:404, Jun 2024. URL: https://doi.org/10.3390/biology13060404, doi:10.3390/biology13060404. This article has 25 citations.</p>
+</li>
+<li>
+<p>(fan2024improvementinsalt pages 10-12): Min Fan, Shuyu Tan, Wei Wang, and Xuehong Zhang. Improvement in salt tolerance ability of pseudomonas putida kt2440. Biology, 13:404, Jun 2024. URL: https://doi.org/10.3390/biology13060404, doi:10.3390/biology13060404. This article has 25 citations.</p>
+</li>
+<li>
+<p>(weimer2024systemsbiologyof pages 1-2): Anna Weimer, Laura Pause, Fabian Ries, Michael Kohlstedt, Lorenz Adrian, Jens Krömer, Bin Lai, and Christoph Wittmann. Systems biology of electrogenic pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. Microbial Cell Factories, Sep 2024. URL: https://doi.org/10.1186/s12934-024-02509-8, doi:10.1186/s12934-024-02509-8. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsbiologyof pages 14-15): Anna Weimer, Laura Pause, Fabian Ries, Michael Kohlstedt, Lorenz Adrian, Jens Krömer, Bin Lai, and Christoph Wittmann. Systems biology of electrogenic pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. Microbial Cell Factories, Sep 2024. URL: https://doi.org/10.1186/s12934-024-02509-8, doi:10.1186/s12934-024-02509-8. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kelly2024comprehensiveproteomicsanalysis pages 1-3): Siobhán Kelly, Jia-Lynn Tham, Kate McKeever, Eugène Dillon, David J. O’Connell, Dimitri Scholz, Jeremy C. Simpson, Kevin E O'Connor, T. Narančić, and Gerard Cagney. Comprehensive proteomics analysis of polyhydroxyalkanoate (pha) biology in pseudomonas putida kt2440: the outer membrane lipoprotein oprl is a newly identified phasin. Molecular &amp; Cellular Proteomics, 23:100765, May 2024. URL: https://doi.org/10.1016/j.mcpro.2024.100765, doi:10.1016/j.mcpro.2024.100765. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(craig2021leveragingpseudomonasstress pages 5-6): Kelly Craig, Brant R. Johnson, and Amy Grunden. Leveraging pseudomonas stress response mechanisms for industrial applications. Frontiers in Microbiology, May 2021. URL: https://doi.org/10.3389/fmicb.2021.660134, doi:10.3389/fmicb.2021.660134. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dnaK-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000023 The DnaK chaperone cycle is depicted in Figure 1a, showing the interaction between DnaK, DnaJ, and GrpE during protein folding. The" src="dnaK-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tarazona2020phasininteractomereveals pages 9-10</li>
+<li>rosendahl2021thedisorderedcterminus pages 1-2</li>
+<li>xiao2024structureofthe pages 1-2</li>
+<li>pan2024dnakduplicationand pages 1-2</li>
+<li>rosendahl2021thedisorderedcterminus pages 6-8</li>
+<li>rosendahl2021thedisorderedcterminus pages 10-12</li>
+<li>fan2024improvementinsalt pages 1-2</li>
+<li>fan2024improvementinsalt pages 10-12</li>
+<li>kelly2024comprehensiveproteomicsanalysis pages 1-3</li>
+<li>xiao2024structureofthe pages 5-7</li>
+<li>rosendahl2021thedisorderedcterminus pages 14-15</li>
+<li>weimer2024systemsbiologyof pages 1-2</li>
+<li>weimer2024systemsbiologyof pages 14-15</li>
+<li>craig2021leveragingpseudomonasstress pages 5-6</li>
+<li>https://doi.org/10.1111/1462-2920.15175</li>
+<li>https://doi.org/10.3390/microorganisms9020375</li>
+<li>https://doi.org/10.3390/biology13060404</li>
+<li>https://doi.org/10.1016/j.mcpro.2024.100765</li>
+<li>https://doi.org/10.1038/s41467-024-44933-9</li>
+<li>https://doi.org/10.1128/msystems.01154-23</li>
+<li>https://doi.org/10.1371/journal.pbio.3002560</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8</li>
+<li>https://doi.org/10.1111/1462-2920.15175,</li>
+<li>https://doi.org/10.3390/microorganisms9020375,</li>
+<li>https://doi.org/10.1128/msystems.01154-23,</li>
+<li>https://doi.org/10.1038/s41467-024-44933-9,</li>
+<li>https://doi.org/10.1371/journal.pbio.3002560,</li>
+<li>https://doi.org/10.3390/biology13060404,</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8,</li>
+<li>https://doi.org/10.1016/j.mcpro.2024.100765,</li>
+<li>https://doi.org/10.3389/fmicb.2021.660134,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DU2
+gene_symbol: dnaK
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  DnaK is the canonical bacterial Hsp70-family ATP-dependent molecular chaperone.
+  It binds exposed hydrophobic segments of non-native polypeptides and, through repeated
+  ATP-driven cycles of substrate binding and release, prevents aggregation and assists
+  the (re)folding of proteins both co-translationally and post-translationally. The
+  protein has the conserved Hsp70 architecture, comprising an N-terminal nucleotide-binding
+  domain (NBD) that binds and hydrolyzes ATP, a substrate-binding domain (SBDbeta)
+  that binds short peptide segments of client proteins, an alpha-helical lid (SBDalpha)
+  that regulates substrate capture and release, and a short intrinsically disordered
+  C-terminal tail. In the ATP-bound state DnaK has low substrate affinity and fast
+  exchange, and ATP hydrolysis switches it to a high-affinity ADP state that stabilizes
+  client binding. DnaK operates as part of the bacterial KJE chaperone system together
+  with the J-domain co-chaperone DnaJ (Hsp40), which stimulates DnaK ATPase activity
+  and delivers substrates, and the nucleotide-exchange factor GrpE, which promotes
+  ADP release and substrate cycling. DnaK functions primarily in the cytoplasm and
+  is a central component of the heat-shock and protein quality-control (proteostasis)
+  network, with its expression induced by heat and other stresses.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      DnaK is an ATP-dependent Hsp70 chaperone whose N-terminal nucleotide-binding
+      domain binds ATP; ATP binding and hydrolysis drive the chaperone cycle. ATP binding
+      is well established for the Hsp70 family and supported by the conserved actin-like
+      ASKHA nucleotide-binding domain fold of this protein.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function of an Hsp70 chaperone, strongly supported by family membership,
+      conserved nucleotide-binding domain, and the canonical DnaK mechanism. The IEA
+      evidence is appropriate and consistent with the biology.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      DnaK assists folding of non-native polypeptides and prevents aggregation through
+      ATP-driven cycles of substrate binding and release, acting in the cytoplasm as
+      part of the DnaK-DnaJ-GrpE system. This is the central biological process for
+      bacterial Hsp70.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for DnaK, well supported by family function and conserved
+      domain architecture. Appropriately captured by an IEA annotation.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The DnaK nucleotide-binding domain catalyzes ATP hydrolysis, which is allosterically
+      coupled to substrate binding in the substrate-binding domain; ATP hydrolysis
+      (stimulated by DnaJ) switches DnaK to the high-affinity client-binding state.
+      This ATPase activity is intrinsic to and definitional for the Hsp70 family.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function of DnaK that powers the chaperone cycle. Strongly supported
+      by family membership and conserved catalytic NBD; the IEA annotation is appropriate.
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The substrate-binding domain (SBD) of DnaK binds exposed hydrophobic segments
+      of non-native/unfolded client proteins; this chaperone (holdase) binding activity
+      is the basis for preventing aggregation and promoting folding. The UniProt InterPro
+      cross-references include GO:0051082 (unfolded protein binding) for this protein,
+      though it is not present in the current GOA export.
+    action: NEW
+    reason: &gt;-
+      Core molecular function of DnaK as an Hsp70 chaperone, capturing the direct binding
+      of unfolded/non-native client proteins by the substrate-binding domain. Supported
+      by family membership, the conserved peptide-binding domain, and the InterPro2GO
+      mapping in UniProt; complements the protein folding (BP) annotation.
+core_functions:
+- description: &gt;-
+    ATP-dependent Hsp70 molecular chaperone that binds non-native polypeptides and,
+    through ATP-binding and ATP-hydrolysis-driven cycles of substrate capture and release,
+    prevents aggregation and assists protein folding as part of the DnaK-DnaJ-GrpE
+    (KJE) system in the cytoplasm.
+  molecular_function:
+    id: GO:0051082
+    label: unfolded protein binding
+  directly_involved_in:
+  - id: GO:0006457
+    label: protein folding
+  supported_by:
+  - reference_id: file:PSEPK/dnaK/dnaK-deep-research-falcon.md
+    supporting_text: &gt;-
+      DnaK is the canonical bacterial Hsp70-family ATP-dependent molecular chaperone
+      that supports proteostasis by binding non-native polypeptides and preventing
+      aggregation, assisting folding through repeated ATP-driven binding/release cycles,
+      operating with co-chaperones DnaJ and GrpE.
+- description: &gt;-
+    ATPase activity of the nucleotide-binding domain, allosterically coupled to substrate
+    binding, that powers the chaperone cycle.
+  molecular_function:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  supported_by:
+  - reference_id: file:PSEPK/dnaK/dnaK-deep-research-falcon.md
+    supporting_text: &gt;-
+      ATP-state DnaK has low substrate affinity, whereas after ATP hydrolysis substrate
+      affinity rises and association/dissociation rates drop, stabilizing client binding;
+      DnaJ stimulates the ATPase activity and GrpE promotes ADP release.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome sequencing report for P. putida KT2440 (source of the dnaK/PP_4727 locus);
+      background and genomic context only, does not directly characterize DnaK function.
+- id: file:PSEPK/dnaK/dnaK-deep-research-falcon.md
+  title: Falcon deep research report for dnaK in Pseudomonas putida KT2440
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

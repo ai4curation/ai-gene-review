@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fcs - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fcs</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HK0" target="_blank" class="term-link">
+                        Q88HK0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fcs";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HK0" data-a="DESCRIPTION: Feruloyl-CoA synthetase (Fcs; EC 6.2.1.34), the AT..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Feruloyl-CoA synthetase (Fcs; EC 6.2.1.34), the ATP-dependent acid-thiol ligase that initiates catabolism of hydroxycinnamic acids in Pseudomonas putida KT2440. Fcs is a member of the ANL/AMP-binding (acyl-CoA synthetase) enzyme superfamily and activates ferulate (and other hydroxycinnamates such as p-coumarate) to the corresponding coenzyme A thioester, e.g. ferulate + ATP + CoA -&gt; feruloyl-CoA + AMP + diphosphate (with feruloyl-CoA being the first committed intermediate). The feruloyl-CoA produced is subsequently cleaved by the enoyl-CoA hydratase/aldolase Ech (PP_3358) to yield vanillin, which is oxidised by the vanillin dehydrogenase Vdh (PP_3357) to vanillate, funnelling the carbon through protocatechuate into the beta-ketoadipate pathway and central metabolism. The fcs gene is encoded adjacent to vdh and ech in a hydroxycinnamate catabolic gene cluster and acts in the cytoplasm. Fcs is the committed entry (activation) step of the peripheral hydroxycinnamate funnelling pathway, making it central to the ability of P. putida to grow on lignin-derived aromatic monomers.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HK0" data-a="GO:0006631" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Over-broad and substrate-incorrect process term derived from a tree-graft over the AMP-binding/acyl-CoA synthetase superfamily.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fcs acts on ferulate, a hydroxycinnamic (aromatic) acid, not a fatty acid, and the supporting molecular function is feruloyl-CoA synthetase activity for hydroxycinnamate catabolism rather than fatty acid metabolism. The enzyme is the committed entry step of the ferulate/hydroxycinnamate catabolic funnel into the beta-ketoadipate pathway. The correct biological process is ferulate catabolic process (GO:1901067).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901067" target="_blank" class="term-link">
+                                    ferulate catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031956" target="_blank" class="term-link">
+                                    GO:0031956
+                                </a>
+                            </span>
+                            <span class="term-label">medium-chain fatty acid-CoA ligase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HK0" data-a="GO:0031956" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Imprecise molecular function inherited from the broad acyl-CoA synthetase tree-graft; the physiological substrate is a hydroxycinnamate, not a medium-chain fatty acid.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although Fcs is correctly placed in the AMP-binding/acyl-CoA synthetase superfamily, the medium-chain fatty acid-CoA ligase term (GO:0031956) does not describe its substrate. Fcs activates ferulate (and other hydroxycinnamates) to their CoA thioesters; the precise, EC-supported term trans-feruloyl-CoA synthase activity (GO:0050563) is already annotated and is the appropriate replacement.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050563" target="_blank" class="term-link">
+                                    trans-feruloyl-CoA synthase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050563" target="_blank" class="term-link">
+                                    GO:0050563
+                                </a>
+                            </span>
+                            <span class="term-label">trans-feruloyl-CoA synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HK0" data-a="GO:0050563" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function, mapped from EC 6.2.1.34, matching the UniProt name and the gene&#39;s role in ferulate activation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the precise, EC-based annotation for feruloyl-CoA synthetase (ATP + CoA + trans-ferulate -&gt; feruloyl-CoA + ADP/AMP + phosphate). It is consistent with the protein name, the AMP-binding/ANL domain architecture, and pathway evidence placing Fcs (PP_3356) at the ferulate -&gt; feruloyl-CoA activation step in P. putida KT2440. Represents the core function of the gene.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent feruloyl-CoA synthetase (acid-thiol ligase) that activates ferulate to feruloyl-CoA, the committed first step of hydroxycinnamate catabolism</h3>
+                <span class="vote-buttons" data-g="Q88HK0" data-a="FUNCTION: ATP-dependent feruloyl-CoA synthetase (acid-thiol ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050563" target="_blank" class="term-link">
+                            trans-feruloyl-CoA synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901067" target="_blank" class="term-link">
+                                ferulate catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC 6.2.1.34 mapping to trans-feruloyl-CoA synthase activity (GO:0050563), consistent with the UniProt protein name Feruloyl-CoA-synthetase.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fcs-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HK0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">42 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:05:04.138913</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fcs-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fcs-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000014 The requested pathway figure is part of Figure 6 on page 11. It illustrates the conversion of ferulic acid to feruloyl-CoA (catalyz</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-fcs-pp_3356-uniprot-q88hk0-in-pseudomonas-putida-kt2440">Research Report: <em>fcs</em> (PP_3356; UniProt Q88HK0) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-mandatory-identity-verification-avoid-fcs-ambiguity">1) Mandatory identity verification (avoid “fcs” ambiguity)</h3>
+<p>The UniProt-provided target (Q88HK0) is annotated as <strong>feruloyl-CoA synthetase</strong> (EC <strong>6.2.1.34</strong>) encoded by <strong>fcs</strong> with ordered locus name <strong>PP_3356</strong> in <em>Pseudomonas putida</em> KT2440. Primary literature pathway mapping in <em>P. putida</em> KT2440 explicitly labels <strong>fcs (PP_3356)</strong> at the <strong>ferulic acid → feruloyl-CoA</strong> step and places it alongside neighboring pathway genes (including <strong>vdh (PP_3357)</strong> and <strong>PP_3358</strong>) in the same ferulate/coumarate catabolic branch, matching the intended identity (garciahidalgo2020vanillinproductionin media cfb4b31e, garciahidalgo2020vanillinproductionin pages 10-11). </p>
+<h3 id="2-key-concepts-definitions-and-current-understanding-20232024-prioritized">2) Key concepts, definitions, and current understanding (2023–2024 prioritized)</h3>
+<h4 id="21-feruloyl-coa-synthetase-fcs-biochemical-role">2.1 Feruloyl-CoA synthetase (Fcs): biochemical role</h4>
+<p>Feruloyl-CoA synthetase (Fcs) is an <strong>acid-thiol ligase / acyl-CoA synthetase</strong> in the AMP-binding/ANL enzyme superfamily that catalyzes <strong>ATP-dependent CoA thioesterification</strong> of hydroxycinnamic acids, including <strong>ferulate</strong> and <strong>p-coumarate</strong>, yielding the corresponding <strong>CoA thioesters</strong> that are required for downstream catabolism and for some engineered biosyntheses (tramontina2023sustainablebiosyntheticpathways pages 4-6, incha2020leveraginghostmetabolism pages 3-4). In <em>P. putida</em> KT2440 specifically, functional work supports that Fcs activates <strong>p-coumarate to coumaroyl-CoA</strong> (coumaroyl-CoA detected in cells expressing <em>fcs</em>) (incha2023excavatingthegenome pages 86-90, incha2023excavatingthegenomea pages 86-90) and that <strong>ferulate is converted to vanillin via Fcs + Ech</strong> (ruhl2025productionofvanillin pages 1-3).</p>
+<p><em>Note on reaction stoichiometry:</em> The retrieved excerpts consistently describe <strong>ATP-dependent CoA thioesterification</strong> but do <strong>not</strong> provide an explicit balanced equation specifying whether ATP is converted to AMP + PPi vs ADP + Pi for <em>P. putida</em> Fcs (tramontina2023sustainablebiosyntheticpathways pages 4-6, goncalves2022applyingbiochemicaland pages 2-4). Therefore, the canonical EC 6.2.1.34 stoichiometry is not quoted verbatim from the retrieved full-text evidence here.</p>
+<h4 id="22-pathway-context-in-kt2440-hydroxycinnamate-peripheral-branch-into-the-ketoadipate-funnel">2.2 Pathway context in KT2440: hydroxycinnamate “peripheral” branch into the β-ketoadipate funnel</h4>
+<p>A KT2440 pathway map places <strong>Fcs (PP_3356)</strong> as the entry step for <strong>ferulate and p-coumarate</strong> catabolism: hydroxycinnamate → CoA-thioester → aromatic aldehyde (vanillin or 4-hydroxybenzaldehyde) → aromatic acid (vanillic acid or 4-hydroxybenzoic acid) → <strong>protocatechuate</strong> → β-ketoadipate pathway (garciahidalgo2020vanillinproductionin media cfb4b31e). More recent systems/engineering studies describe that native KT2440 converts ferulic acid onward toward <strong>protocatechuate</strong> and ultimately central metabolism via the <strong>β-ketoadipate pathway</strong>, and they identify Fcs and Ech as the two key enzymes mediating ferulate-to-vanillin conversion (ruhl2025productionofvanillin pages 1-3).</p>
+<h4 id="23-genomic-neighborhood-and-pathway-gene-set">2.3 Genomic neighborhood and pathway gene set</h4>
+<p>In <em>P. putida</em> KT2440, <strong>fcs (PP_3356)</strong> is shown in close association with <strong>vdh (PP_3357)</strong> and <strong>PP_3358</strong> in the ferulate catabolic branch on a gene/pathway map, supporting a local gene neighborhood for hydroxycinnamate utilization (garciahidalgo2020vanillinproductionin media cfb4b31e, garciahidalgo2020vanillinproductionin pages 10-11). </p>
+<h3 id="3-evidence-based-functional-annotation-of-fcs-q88hk0">3) Evidence-based functional annotation of Fcs (Q88HK0)</h3>
+<h4 id="31-supported-substrates-and-substrate-scope">3.1 Supported substrates and substrate scope</h4>
+<p><strong>Organism-specific evidence (KT2440):</strong><br />
+- <strong>p-Coumarate → coumaroyl-CoA:</strong> Coumaroyl-CoA is directly detected by LC–MS/MS (MRM transition 914.16→407.16) from intracellular extracts of <em>P. putida</em> expressing pBADT-<em>fcs</em>, providing in vivo evidence that Fcs activates p-coumarate to the CoA ester (incha2023excavatingthegenome pages 86-90, incha2023excavatingthegenomea pages 86-90).<br />
+- <strong>Ferulate entry into the ferulate → vanillin route:</strong> Multiple studies place Fcs as the initiating activation step for ferulate metabolism toward vanillin in KT2440 (ruhl2025productionofvanillin pages 1-3, garciahidalgo2020vanillinproductionin media cfb4b31e).</p>
+<p><strong>Broader homolog evidence (supporting inference, not KT2440-specific):</strong> Metagenome-derived Fcs homologs experimentally accept <strong>ferulic, p-coumaric, caffeic, and sinapic acids</strong> as substrates, indicating that bacterial Fcs enzymes can exhibit broad hydroxycinnamate specificity (goncalves2022applyingbiochemicaland pages 2-4, goncalves2022applyingbiochemicaland pages 6-9). This supports plausibility of broader substrate scope for Q88HK0 but does not itself prove it in KT2440.</p>
+<h4 id="32-functional-genomics-and-phenotypes-why-fcs-matters-physiologically">3.2 Functional genomics and phenotypes: why Fcs matters physiologically</h4>
+<p>RB-TnSeq/fitness analyses and targeted experiments support Fcs as a key determinant of hydroxycinnamate utilization and stress phenotypes:<br />
+- A 2024 machine-learning analysis of RB-TnSeq fitness data (ICA) identified a hydroxycinnamate catabolism module (<strong>fModule_14</strong>) that explicitly groups <strong>Fcs:Ech:Vdh</strong> and links hydroxycinnamate utilization to assimilation of <strong>acetyl-CoA</strong> output and glyoxylate shunt dependence (glcB/malate synthase) (borchert2024machinelearninganalysis pages 6-7, borchert2024machinelearninganalysis pages 2-4). <br />
+- Accumulation of the activated CoA intermediate can be inhibitory: engineering work reports that <strong>coumaroyl-CoA production inhibits growth</strong> (increased lag when <em>fcs</em> is expressed with coumarate present) and that coumaroyl-CoA peaks transiently after substrate addition, consistent with toxicity if downstream consumption is limiting (incha2020leveraginghostmetabolism pages 3-4, incha2023excavatingthegenomea pages 8-13).</p>
+<h3 id="4-localization-where-fcs-carries-out-its-function">4) Localization: where Fcs carries out its function</h3>
+<h4 id="41-intracellularcytosolic-activity-best-supported">4.1 Intracellular/cytosolic activity (best-supported)</h4>
+<p>Fcs produces CoA-thioesters that were extracted and quantified from <strong>cell pellets/intracellular extracts</strong> in KT2440 expressing <em>fcs</em> (incha2023excavatingthegenome pages 86-90, incha2023excavatingthegenomea pages 86-90). This supports the conclusion that the primary catalytic activity relevant to hydroxycinnamate activation is <strong>cell-associated (likely cytosolic)</strong>, consistent with CoA metabolism and canonical bacterial acyl-CoA synthetases.</p>
+<h4 id="42-outer-membrane-vesicles-omvs-emerging-spatial-biology-uncertain-for-fcs-specifically">4.2 Outer membrane vesicles (OMVs): emerging spatial biology (uncertain for Fcs specifically)</h4>
+<p>A 2020 PNAS study showed <em>P. putida</em> secretes <strong>outer membrane vesicles (OMVs)</strong> during growth on lignin-rich media; OMV proteomics and functional assays support that OMVs can harbor enzymatically active aromatic catabolic proteins (salvachua2020outermembranevesicles pages 1-2, salvachua2020outermembranevesicles pages 4-6). The study’s β-ketoadipate-pathway heat map/legend lists <strong>Fcs, Ech, and Vdh</strong> among pathway enzymes detected in extracellular fractions/OMV-related analyses (salvachua2020outermembranevesicles pages 6-7). However, the retrieved excerpts do not provide unambiguous protein-by-protein enrichment values for Fcs in OMVs versus vesicle-free supernatant, so <strong>direct OMV localization of Fcs remains unresolved from the currently retrieved text</strong> (salvachua2020outermembranevesicles pages 6-7, salvachua2020outermembranevesicles pages 2-4).</p>
+<h3 id="5-regulation-and-pathway-control-recent-evidence">5) Regulation and pathway control (recent evidence)</h3>
+<p>A key 2023 development is experimental evidence that carbon catabolite repression influences the hydroxycinnamate entry branch. In engineered KT2440 derivatives, deleting the global regulator <strong>Crc</strong> increased utilization rates of p-coumarate and ferulate, and this was attributed to <strong>derepression of fcs, ech, and vdh</strong>, which were reported to have putative Crc binding sites near their initiation codons (werner2023ligninconversionto pages 2-4). This connects <em>fcs</em> function to a broader regulatory program controlling aromatic assimilation.</p>
+<h3 id="6-current-applications-and-real-world-implementations-20232024-prioritized">6) Current applications and real-world implementations (2023–2024 prioritized)</h3>
+<h4 id="61-lignin-to-ketoadipate-funneling-science-advances-2023">6.1 Lignin-to-β-ketoadipate funneling (Science Advances, 2023)</h4>
+<p>Werner et al. (published <strong>Sep 2023</strong>) engineered <em>P. putida</em> KT2440 to funnel lignin-related aromatics (including hydroxycinnamates) to <strong>β-ketoadipic acid</strong>. They report high, industrially relevant metrics, including <strong>44.5 ± 1.85 g/L</strong> β-ketoadipate at <strong>0.85 ± 0.04 g/L/h</strong> in optimized fed-batch and <strong>25 g/L</strong> at <strong>0.66 g/L/h</strong> from corn stover–derived lignin streams, corresponding to <strong>0.10 g product/g lignin</strong> (https://doi.org/10.1126/sciadv.adj0053) (werner2023ligninconversionto pages 2-4, werner2023ligninconversionto pages 1-2). Because <em>fcs/ech/vdh</em> mediate the initial hydroxycinnamate breakdown, pathway derepression via <strong>∆crc</strong> is mechanistically tied to improved conversion of ferulate/p-coumarate into the β-ketoadipate funnel (werner2023ligninconversionto pages 2-4).</p>
+<h4 id="62-hydrolysate-valorization-to-protocatechuate-molecules-2024">6.2 Hydrolysate valorization to protocatechuate (Molecules, 2024)</h4>
+<p>Jin et al. (published <strong>Mar 2024</strong>) quantified lignin-derived aromatics in corncob hydrolysates, reporting <strong>ferulic acid</strong> and <strong>p-coumaric acid</strong> levels exceeding <strong>160/120 mg/L</strong> and <strong>530/250 mg/L</strong>, respectively, in two hydrolysates. They engineered KT2440 to accumulate protocatechuate by blocking its cleavage and reported PCA titers up to <strong>433.72 mg/L</strong> (https://doi.org/10.3390/molecules29071555) (jin2024biologicalvalorizationof pages 1-2, jin2024biologicalvalorizationof pages 2-4). In degradation assays, KT2440 degraded phenolics (including ferulate and p-coumarate) largely within <strong>24 h</strong>, with H-type aromatics consumed within <strong>12 h</strong> (jin2024biologicalvalorizationof pages 2-4). They also report strong co-substrate effects on p-coumarate consumption (e.g., at 6 h p-CA consumption falling from 73.62% to 41.19% with glucose) (jin2024biologicalvalorizationof pages 4-7). These data are directly relevant to deploying the <em>fcs</em> branch in realistic lignocellulosic streams.</p>
+<h4 id="63-functional-genomics-for-strain-engineering-msystems-2024">6.3 Functional genomics for strain engineering (mSystems, 2024)</h4>
+<p>Borchert et al. (published <strong>Mar 2024</strong>) provide a data-driven approach to improve hydroxycinnamate processing by identifying functional modules and tolerance genes from RB-TnSeq data. Their hydroxycinnamate module (fModule_14) groups <strong>Fcs:Ech:Vdh</strong>, supporting a systems-level rationale for cofactor/anaplerotic engineering (e.g., glyoxylate shunt via glcB) to improve growth and conversion on ferulate/p-coumarate (https://doi.org/10.1128/msystems.00942-23) (borchert2024machinelearninganalysis pages 6-7, borchert2024machinelearninganalysis pages 2-4).</p>
+<h3 id="7-expert-interpretation-and-authoritative-synthesis">7) Expert interpretation and authoritative synthesis</h3>
+<p>Recent synthesis of hydroxycinnamate bioconversion highlights Fcs (EC 6.2.1.34) as the <strong>activation gate</strong> for CoA-dependent microbial hydroxycinnamate pathways and as a common starting point for producing value-added compounds such as vanillin (Tramontina et al., <strong>May 2023</strong>, https://doi.org/10.1007/s00253-023-12571-8) (tramontina2023sustainablebiosyntheticpathways pages 4-6). The <em>P. putida</em> KT2440 literature further suggests that a major constraint is not merely enzyme presence but <strong>flux balancing</strong> and avoidance of toxic intermediate accumulation (e.g., coumaroyl-CoA), motivating engineering strategies that coordinate Fcs with downstream consumption (incha2020leveraginghostmetabolism pages 3-4).</p>
+<h3 id="8-summary-evidence-map-structured">8) Summary evidence map (structured)</h3>
+<p>The following table consolidates key functional claims, pathway placement, regulation, localization, and application metrics with evidence pointers.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Specific claim for Q88HK0/Fcs</th>
+<th>Evidence type</th>
+<th>Key sources with year + URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td>In <em>Pseudomonas putida</em> KT2440, <strong>fcs = PP_3356</strong> and encodes the feruloyl-CoA synthetase in the ferulate/coumarate catabolic branch; this matches UniProt Q88HK0.</td>
+<td>Pathway mapping; gene annotation in primary literature</td>
+<td>García-Hidalgo et al., 2020, https://doi.org/10.1128/AEM.02442-19 (garciahidalgo2020vanillinproductionin pages 10-11, garciahidalgo2020vanillinproductionin media cfb4b31e)</td>
+</tr>
+<tr>
+<td>Enzyme class / family</td>
+<td>Fcs is an <strong>acid-thiol ligase / acyl-CoA synthetase</strong> of the <strong>ANL/AMP-binding</strong> enzyme superfamily; UniProt domain architecture (AMP-binding / ANL_N) is consistent with this class.</td>
+<td>Curated database annotation + review synthesis</td>
+<td>UniProt Q88HK0 (provided by user); Tramontina et al., 2023, https://doi.org/10.1007/s00253-023-12571-8 (tramontina2023sustainablebiosyntheticpathways pages 4-6)</td>
+</tr>
+<tr>
+<td>Reaction description</td>
+<td>Fcs catalyzes the <strong>ATP-dependent CoA thioesterification</strong> of hydroxycinnamates, especially <strong>ferulate</strong> and <strong>p-coumarate</strong>, yielding the corresponding CoA esters (feruloyl-CoA or coumaroyl-CoA) as the activation step for downstream catabolism.</td>
+<td>Review synthesis + in vivo product detection</td>
+<td>Tramontina et al., 2023, https://doi.org/10.1007/s00253-023-12571-8 (tramontina2023sustainablebiosyntheticpathways pages 4-6); Incha et al., 2020, https://doi.org/10.1016/j.mec.2019.e00119 (incha2020leveraginghostmetabolism pages 3-4); Incha, 2023, coumaroyl-CoA LC-MS/MS detection (incha2023excavatingthegenome pages 86-90, incha2023excavatingthegenomea pages 86-90)</td>
+</tr>
+<tr>
+<td>Substrate scope</td>
+<td>For KT2440, literature supports activity in catabolism of both <strong>ferulate</strong> and <strong>p-coumarate</strong>; broader FCS homolog literature supports hydroxycinnamate activation more generally, including caffeate/sinapate in related enzymes, but that broader scope is not directly proven here for Q88HK0.</td>
+<td>Direct organism-specific pathway evidence + homolog biochemical inference</td>
+<td>García-Hidalgo et al., 2020, https://doi.org/10.1128/AEM.02442-19 (garciahidalgo2020vanillinproductionin pages 10-11, garciahidalgo2020vanillinproductionin media cfb4b31e); Tramontina et al., 2023, https://doi.org/10.1007/s00253-023-12571-8 (tramontina2023sustainablebiosyntheticpathways pages 4-6); Gonçalves et al., 2022, https://doi.org/10.1007/s00253-022-11885-3 (goncalves2022applyingbiochemicaland pages 2-4, goncalves2022applyingbiochemicaland pages 6-9)</td>
+</tr>
+<tr>
+<td>Pathway position</td>
+<td>Fcs is the <strong>entry activation step</strong> in the hydroxycinnamate funnel: <strong>ferulate / p-coumarate → feruloyl-/coumaroyl-CoA → vanillin / 4-hydroxybenzaldehyde → vanillic / 4-hydroxybenzoic acid → protocatechuate → β-ketoadipate pathway</strong>.</td>
+<td>Pathway diagrams; systems biology; reviews</td>
+<td>García-Hidalgo et al., 2020, https://doi.org/10.1128/AEM.02442-19 (garciahidalgo2020vanillinproductionin media cfb4b31e); Ruhl et al., 2025, https://doi.org/10.1111/1751-7915.70152 (ruhl2025productionofvanillin pages 1-3); Zhou et al., 2025 preprint, https://doi.org/10.1101/2025.03.24.645021 (zhou2025quantitativeanalysisof pages 5-8)</td>
+</tr>
+<tr>
+<td>Genomic neighborhood</td>
+<td>The pathway map places <strong>fcs (PP_3356)</strong> adjacent to <strong>vdh (PP_3357)</strong> and <strong>PP_3358</strong> (the enzyme converting CoA-thioesters toward aromatic aldehydes), supporting a local ferulate catabolic gene neighborhood.</td>
+<td>Genomic pathway mapping</td>
+<td>García-Hidalgo et al., 2020, https://doi.org/10.1128/AEM.02442-19 (garciahidalgo2020vanillinproductionin pages 10-11, garciahidalgo2020vanillinproductionin media cfb4b31e)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>The global carbon catabolite repression regulator <strong>Crc</strong> likely represses <strong>fcs, ech, and vdh</strong>; deleting <strong>crc</strong> accelerated ferulate and p-coumarate utilization, consistent with <strong>derepression</strong> of this branch.</td>
+<td>Genetic perturbation / regulatory inference in engineered strains</td>
+<td>Werner et al., 2023, https://doi.org/10.1126/sciadv.adj0053 (werner2023ligninconversionto pages 2-4)</td>
+</tr>
+<tr>
+<td>Functional module evidence</td>
+<td>Machine-learning analysis of RB-TnSeq fitness data grouped <strong>Fcs:Ech:Vdh</strong> into a hydroxycinnamate catabolism module (<strong>fModule_14</strong>), linking this branch to <strong>acetyl-CoA production</strong> and glyoxylate-shunt dependence.</td>
+<td>Functional genomics + machine learning + mutant validation</td>
+<td>Borchert et al., 2024, https://doi.org/10.1128/msystems.00942-23 (borchert2024machinelearninganalysis pages 6-7, borchert2024machinelearninganalysis pages 2-4)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>The best-supported interpretation is that Fcs is <strong>primarily intracellular/cell-associated</strong> because its CoA-ester products were measured from intracellular extracts; however, aromatic-catabolic enzymes as a class can appear in <strong>outer membrane vesicles (OMVs)</strong> during lignin growth, and β-ketoadipate-pathway proteins are OMV-enriched, so extracellular packaging of some pathway enzymes is possible. <strong>Direct OMV-specific evidence for Fcs itself remains uncertain in the retrieved text.</strong></td>
+<td>Intracellular metabolite extraction; OMV proteomics; cautious inference</td>
+<td>Incha, 2023 (intracellular CoA-esters), (incha2023excavatingthegenomea pages 86-90); Salvachúa et al., 2020, https://doi.org/10.1073/pnas.1921073117 (salvachua2020outermembranevesicles pages 6-7, salvachua2020outermembranevesicles pages 2-4, salvachua2020outermembranevesicles pages 4-6, salvachua2020outermembranevesicles pages 1-2)</td>
+</tr>
+<tr>
+<td>Phenotype / toxicity</td>
+<td>Overexpression or increased flux through Fcs in the presence of coumarate causes <strong>coumaroyl-CoA accumulation</strong> and <strong>growth inhibition / lag</strong>, indicating the activated CoA-thioester can be toxic when downstream consumption is limiting.</td>
+<td>In vivo metabolic engineering phenotype + metabolite measurement</td>
+<td>Incha et al., 2020, https://doi.org/10.1016/j.mec.2019.e00119 (incha2020leveraginghostmetabolism pages 3-4); Incha, 2023 (incha2023excavatingthegenome pages 8-13, incha2023excavatingthegenome pages 86-90, incha2023excavatingthegenomea pages 8-13)</td>
+</tr>
+<tr>
+<td>Engineering relevance</td>
+<td>Fcs is repeatedly leveraged for <strong>lignin-derived aromatic valorization</strong>: vanillin accumulation from ferulate, β-ketoadipate production from lignin monomers, and precursor supply for non-native products such as bisdemethoxycurcumin.</td>
+<td>Metabolic engineering and bioprocess studies</td>
+<td>Werner et al., 2023, https://doi.org/10.1126/sciadv.adj0053 (werner2023ligninconversionto pages 2-4); Jin et al., 2024, https://doi.org/10.3390/molecules29071555 (jin2024biologicalvalorizationof pages 2-4); Incha et al., 2020, https://doi.org/10.1016/j.mec.2019.e00119 (incha2020leveraginghostmetabolism pages 3-4); Ruhl et al., 2025, https://doi.org/10.1111/1751-7915.70152 (ruhl2025productionofvanillin pages 1-3)</td>
+</tr>
+<tr>
+<td>Quantitative application notes</td>
+<td>Recent pathway-centered applications report: <strong>β-ketoadipate up to 44.5 ± 1.85 g/L</strong> and <strong>0.85 ± 0.04 g/L/h</strong> from lignin-related aromatics after pathway/regulatory engineering; engineered KT2440 also accumulated <strong>0.64 g/L vanillin</strong>, increased to <strong>3.35 g/L apparent total recovery</strong> with in situ resin recovery.</td>
+<td>Bioprocess performance data</td>
+<td>Werner et al., 2023, https://doi.org/10.1126/sciadv.adj0053 (werner2023ligninconversionto pages 2-4); Ruhl et al., 2025, https://doi.org/10.1111/1751-7915.70152 (ruhl2025productionofvanillin pages 1-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the functional annotation of Pseudomonas putida KT2440 fcs (PP_3356; UniProt Q88HK0), including its enzymatic role, pathway placement, regulation, localization, and engineering relevance. It is useful as a compact evidence map linking gene identity to experimentally supported function and recent applications.</em></p>
+<h3 id="9-gaps-and-recommendations-for-annotation-confidence">9) Gaps and recommendations for annotation confidence</h3>
+<ol>
+<li><strong>Explicit balanced reaction stoichiometry</strong> (AMP + PPi) was not found verbatim in the retrieved KT2440 full-text excerpts; if required for strict annotation, it should be extracted from a primary enzymology paper or curated enzyme database entry that explicitly states the stoichiometry for EC 6.2.1.34 in <em>Pseudomonas</em> Fcs.</li>
+<li><strong>OMV localization of Fcs</strong> is plausible but not definitively established from the retrieved excerpts; confirming whether PP_3356 is enriched in OMVs versus other fractions would require consulting the deposited proteomics datasets and/or the full figure tables from Salvachúa et al. (PXD016114 / MassIVE MSV000084524, MSV000084506) (salvachua2020outermembranevesicles pages 1-2).</li>
+</ol>
+<h3 id="key-urls-with-publication-dates">Key URLs (with publication dates)</h3>
+<ul>
+<li>Werner et al., <strong>Sep 2023</strong>, <em>Science Advances</em>: https://doi.org/10.1126/sciadv.adj0053 (werner2023ligninconversionto pages 2-4)</li>
+<li>Borchert et al., <strong>Mar 2024</strong>, <em>mSystems</em>: https://doi.org/10.1128/msystems.00942-23 (borchert2024machinelearninganalysis pages 6-7)</li>
+<li>Jin et al., <strong>Mar 2024</strong>, <em>Molecules</em>: https://doi.org/10.3390/molecules29071555 (jin2024biologicalvalorizationof pages 1-2)</li>
+<li>Tramontina et al., <strong>May 2023</strong>, <em>Applied Microbiology and Biotechnology</em>: https://doi.org/10.1007/s00253-023-12571-8 (tramontina2023sustainablebiosyntheticpathways pages 4-6)</li>
+<li>Salvachúa et al., <strong>Apr 2020</strong>, <em>PNAS</em>: https://doi.org/10.1073/pnas.1921073117 (salvachua2020outermembranevesicles pages 1-2)</li>
+<li>García-Hidalgo et al., <strong>Mar 2020</strong>, <em>Applied and Environmental Microbiology</em>: https://doi.org/10.1128/AEM.02442-19 (garciahidalgo2020vanillinproductionin pages 10-11)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(garciahidalgo2020vanillinproductionin media cfb4b31e): Javier García-Hidalgo, Daniel P. Brink, Krithika Ravi, Catherine J. Paul, Gunnar Lidén, and Marie F. Gorwa-Grauslund. Vanillin production in <i>pseudomonas</i> : whole-genome sequencing of <i>pseudomonas</i> sp. strain 9.1 and reannotation of pseudomonas putida cala as a vanillin reductase. Mar 2020. URL: https://doi.org/10.1128/aem.02442-19, doi:10.1128/aem.02442-19. This article has 43 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciahidalgo2020vanillinproductionin pages 10-11): Javier García-Hidalgo, Daniel P. Brink, Krithika Ravi, Catherine J. Paul, Gunnar Lidén, and Marie F. Gorwa-Grauslund. Vanillin production in <i>pseudomonas</i> : whole-genome sequencing of <i>pseudomonas</i> sp. strain 9.1 and reannotation of pseudomonas putida cala as a vanillin reductase. Mar 2020. URL: https://doi.org/10.1128/aem.02442-19, doi:10.1128/aem.02442-19. This article has 43 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tramontina2023sustainablebiosyntheticpathways pages 4-6): Robson Tramontina, Iara Ciancaglini, Ellen K. B. Roman, Micaela G. Chacón, Thamy L. R. Corrêa, Neil Dixon, Timothy D. H. Bugg, and Fabio Marcio Squina. Sustainable biosynthetic pathways to value-added bioproducts from hydroxycinnamic acids. Applied Microbiology and Biotechnology, 107:4165-4185, May 2023. URL: https://doi.org/10.1007/s00253-023-12571-8, doi:10.1007/s00253-023-12571-8. This article has 20 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(incha2020leveraginghostmetabolism pages 3-4): Matthew R. Incha, Mitchell G. Thompson, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Allison N. Pearson, Matthias Schmidt, Jennifer W. Gin, Christopher J. Petzold, Adam M. Deutschbauer, and Jay D. Keasling. Leveraging host metabolism for bisdemethoxycurcumin production in pseudomonas putida. Jun 2020. URL: https://doi.org/10.1016/j.mec.2019.e00119, doi:10.1016/j.mec.2019.e00119. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(incha2023excavatingthegenome pages 86-90): MR Incha. Excavating the genome mine of pseudomonas putida kt2440. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(incha2023excavatingthegenomea pages 86-90): MR Incha. Excavating the genome mine of pseudomonas putida kt2440. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(ruhl2025productionofvanillin pages 1-3): Ilona A. Ruhl, Sean P. Woodworth, Stefan J. Haugen, Hannah M. Alt, Gregg T. Beckham, and Christopher W. Johnson. Production of vanillin from ferulic acid by pseudomonas putida kt2440 using metabolic engineering and in situ product recovery. Microbial Biotechnology, May 2025. URL: https://doi.org/10.1111/1751-7915.70152, doi:10.1111/1751-7915.70152. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(goncalves2022applyingbiochemicaland pages 2-4): Thiago Augusto Gonçalves, Victoria Sodré, Stephanie Nemesio da Silva, Nathalia Vilela, Geizecler Tomazetto, Juscemácia Nascimento Araujo, João Renato C. Muniz, Taícia Pacheco Fill, André Damasio, Wanius Garcia, and Fabio Marcio Squina. Applying biochemical and structural characterization of hydroxycinnamate catabolic enzymes from soil metagenome for lignin valorization strategies. Applied Microbiology and Biotechnology, 106:2503-2516, Mar 2022. URL: https://doi.org/10.1007/s00253-022-11885-3, doi:10.1007/s00253-022-11885-3. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(goncalves2022applyingbiochemicaland pages 6-9): Thiago Augusto Gonçalves, Victoria Sodré, Stephanie Nemesio da Silva, Nathalia Vilela, Geizecler Tomazetto, Juscemácia Nascimento Araujo, João Renato C. Muniz, Taícia Pacheco Fill, André Damasio, Wanius Garcia, and Fabio Marcio Squina. Applying biochemical and structural characterization of hydroxycinnamate catabolic enzymes from soil metagenome for lignin valorization strategies. Applied Microbiology and Biotechnology, 106:2503-2516, Mar 2022. URL: https://doi.org/10.1007/s00253-022-11885-3, doi:10.1007/s00253-022-11885-3. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 6-7): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. mSystems, Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 2-4): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. mSystems, Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(incha2023excavatingthegenomea pages 8-13): MR Incha. Excavating the genome mine of pseudomonas putida kt2440. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(salvachua2020outermembranevesicles pages 1-2): Davinia Salvachúa, Allison Z. Werner, Isabel Pardo, Martyna Michalska, Brenna A. Black, Bryon S. Donohoe, Stefan J. Haugen, Rui Katahira, Sandra Notonier, Kelsey J. Ramirez, Antonella Amore, Samuel O. Purvine, Erika M. Zink, Paul E. Abraham, Richard J. Giannone, Suresh Poudel, Philip D. Laible, Robert L. Hettich, and Gregg T. Beckham. Outer membrane vesicles catabolize lignin-derived aromatic compounds in pseudomonas putida kt2440. Proceedings of the National Academy of Sciences, 117:9302-9310, Apr 2020. URL: https://doi.org/10.1073/pnas.1921073117, doi:10.1073/pnas.1921073117. This article has 158 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(salvachua2020outermembranevesicles pages 4-6): Davinia Salvachúa, Allison Z. Werner, Isabel Pardo, Martyna Michalska, Brenna A. Black, Bryon S. Donohoe, Stefan J. Haugen, Rui Katahira, Sandra Notonier, Kelsey J. Ramirez, Antonella Amore, Samuel O. Purvine, Erika M. Zink, Paul E. Abraham, Richard J. Giannone, Suresh Poudel, Philip D. Laible, Robert L. Hettich, and Gregg T. Beckham. Outer membrane vesicles catabolize lignin-derived aromatic compounds in pseudomonas putida kt2440. Proceedings of the National Academy of Sciences, 117:9302-9310, Apr 2020. URL: https://doi.org/10.1073/pnas.1921073117, doi:10.1073/pnas.1921073117. This article has 158 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(salvachua2020outermembranevesicles pages 6-7): Davinia Salvachúa, Allison Z. Werner, Isabel Pardo, Martyna Michalska, Brenna A. Black, Bryon S. Donohoe, Stefan J. Haugen, Rui Katahira, Sandra Notonier, Kelsey J. Ramirez, Antonella Amore, Samuel O. Purvine, Erika M. Zink, Paul E. Abraham, Richard J. Giannone, Suresh Poudel, Philip D. Laible, Robert L. Hettich, and Gregg T. Beckham. Outer membrane vesicles catabolize lignin-derived aromatic compounds in pseudomonas putida kt2440. Proceedings of the National Academy of Sciences, 117:9302-9310, Apr 2020. URL: https://doi.org/10.1073/pnas.1921073117, doi:10.1073/pnas.1921073117. This article has 158 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(salvachua2020outermembranevesicles pages 2-4): Davinia Salvachúa, Allison Z. Werner, Isabel Pardo, Martyna Michalska, Brenna A. Black, Bryon S. Donohoe, Stefan J. Haugen, Rui Katahira, Sandra Notonier, Kelsey J. Ramirez, Antonella Amore, Samuel O. Purvine, Erika M. Zink, Paul E. Abraham, Richard J. Giannone, Suresh Poudel, Philip D. Laible, Robert L. Hettich, and Gregg T. Beckham. Outer membrane vesicles catabolize lignin-derived aromatic compounds in pseudomonas putida kt2440. Proceedings of the National Academy of Sciences, 117:9302-9310, Apr 2020. URL: https://doi.org/10.1073/pnas.1921073117, doi:10.1073/pnas.1921073117. This article has 158 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner2023ligninconversionto pages 2-4): Allison Z. Werner, William T. Cordell, Ciaran W. Lahive, Bruno C. Klein, Christine A. Singer, Eric C. D. Tan, Morgan A. Ingraham, Kelsey J. Ramirez, Dong Hyun Kim, Jacob Nedergaard Pedersen, Christopher W. Johnson, Brian F. Pfleger, Gregg T. Beckham, and Davinia Salvachúa. Lignin conversion to β-ketoadipic acid by <i>pseudomonas putida</i> via metabolic engineering and bioprocess development. Science Advances, Sep 2023. URL: https://doi.org/10.1126/sciadv.adj0053, doi:10.1126/sciadv.adj0053. This article has 88 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner2023ligninconversionto pages 1-2): Allison Z. Werner, William T. Cordell, Ciaran W. Lahive, Bruno C. Klein, Christine A. Singer, Eric C. D. Tan, Morgan A. Ingraham, Kelsey J. Ramirez, Dong Hyun Kim, Jacob Nedergaard Pedersen, Christopher W. Johnson, Brian F. Pfleger, Gregg T. Beckham, and Davinia Salvachúa. Lignin conversion to β-ketoadipic acid by <i>pseudomonas putida</i> via metabolic engineering and bioprocess development. Science Advances, Sep 2023. URL: https://doi.org/10.1126/sciadv.adj0053, doi:10.1126/sciadv.adj0053. This article has 88 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jin2024biologicalvalorizationof pages 1-2): Xinzhu Jin, Xiaoxia Li, Lihua Zou, Zhaojuan Zheng, and Jia Ouyang. Biological valorization of lignin-derived aromatics in hydrolysate to protocatechuic acid by engineered pseudomonas putida kt2440. Molecules, 29:1555, Mar 2024. URL: https://doi.org/10.3390/molecules29071555, doi:10.3390/molecules29071555. This article has 15 citations.</p>
+</li>
+<li>
+<p>(jin2024biologicalvalorizationof pages 2-4): Xinzhu Jin, Xiaoxia Li, Lihua Zou, Zhaojuan Zheng, and Jia Ouyang. Biological valorization of lignin-derived aromatics in hydrolysate to protocatechuic acid by engineered pseudomonas putida kt2440. Molecules, 29:1555, Mar 2024. URL: https://doi.org/10.3390/molecules29071555, doi:10.3390/molecules29071555. This article has 15 citations.</p>
+</li>
+<li>
+<p>(jin2024biologicalvalorizationof pages 4-7): Xinzhu Jin, Xiaoxia Li, Lihua Zou, Zhaojuan Zheng, and Jia Ouyang. Biological valorization of lignin-derived aromatics in hydrolysate to protocatechuic acid by engineered pseudomonas putida kt2440. Molecules, 29:1555, Mar 2024. URL: https://doi.org/10.3390/molecules29071555, doi:10.3390/molecules29071555. This article has 15 citations.</p>
+</li>
+<li>
+<p>(zhou2025quantitativeanalysisof pages 5-8): Nanqing Zhou, Rebecca A. Wilkes, Xinyu Chen, Kelly P. Teitel, James A. Belgrave, Gregg T. Beckham, Allison Z. Werner, Yanbao Yu, and Ludmilla Aristilde. Quantitative analysis of coupled carbon and energy metabolism for lignin carbon utilization in pseudomonas putida. bioRxiv, Mar 2025. URL: https://doi.org/10.1101/2025.03.24.645021, doi:10.1101/2025.03.24.645021. This article has 3 citations.</p>
+</li>
+<li>
+<p>(incha2023excavatingthegenome pages 8-13): MR Incha. Excavating the genome mine of pseudomonas putida kt2440. Unknown journal, 2023.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fcs-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000014 The requested pathway figure is part of Figure 6 on page 11. It illustrates the conversion of ferulic acid to feruloyl-CoA (catalyz" src="fcs-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ruhl2025productionofvanillin pages 1-3</li>
+<li>salvachua2020outermembranevesicles pages 6-7</li>
+<li>werner2023ligninconversionto pages 2-4</li>
+<li>jin2024biologicalvalorizationof pages 2-4</li>
+<li>jin2024biologicalvalorizationof pages 4-7</li>
+<li>tramontina2023sustainablebiosyntheticpathways pages 4-6</li>
+<li>incha2020leveraginghostmetabolism pages 3-4</li>
+<li>zhou2025quantitativeanalysisof pages 5-8</li>
+<li>incha2023excavatingthegenomea pages 86-90</li>
+<li>salvachua2020outermembranevesicles pages 1-2</li>
+<li>borchert2024machinelearninganalysis pages 6-7</li>
+<li>jin2024biologicalvalorizationof pages 1-2</li>
+<li>garciahidalgo2020vanillinproductionin pages 10-11</li>
+<li>incha2023excavatingthegenome pages 86-90</li>
+<li>goncalves2022applyingbiochemicaland pages 2-4</li>
+<li>goncalves2022applyingbiochemicaland pages 6-9</li>
+<li>borchert2024machinelearninganalysis pages 2-4</li>
+<li>incha2023excavatingthegenomea pages 8-13</li>
+<li>salvachua2020outermembranevesicles pages 4-6</li>
+<li>salvachua2020outermembranevesicles pages 2-4</li>
+<li>werner2023ligninconversionto pages 1-2</li>
+<li>incha2023excavatingthegenome pages 8-13</li>
+<li>https://doi.org/10.1126/sciadv.adj0053</li>
+<li>https://doi.org/10.3390/molecules29071555</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.1007/s00253-023-12571-8</li>
+<li>https://doi.org/10.1128/AEM.02442-19</li>
+<li>https://doi.org/10.1016/j.mec.2019.e00119</li>
+<li>https://doi.org/10.1007/s00253-022-11885-3</li>
+<li>https://doi.org/10.1111/1751-7915.70152</li>
+<li>https://doi.org/10.1101/2025.03.24.645021</li>
+<li>https://doi.org/10.1073/pnas.1921073117</li>
+<li>https://doi.org/10.1128/aem.02442-19,</li>
+<li>https://doi.org/10.1007/s00253-023-12571-8,</li>
+<li>https://doi.org/10.1016/j.mec.2019.e00119,</li>
+<li>https://doi.org/10.1111/1751-7915.70152,</li>
+<li>https://doi.org/10.1007/s00253-022-11885-3,</li>
+<li>https://doi.org/10.1128/msystems.00942-23,</li>
+<li>https://doi.org/10.1073/pnas.1921073117,</li>
+<li>https://doi.org/10.1126/sciadv.adj0053,</li>
+<li>https://doi.org/10.3390/molecules29071555,</li>
+<li>https://doi.org/10.1101/2025.03.24.645021,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HK0
+gene_symbol: fcs
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Feruloyl-CoA synthetase (Fcs; EC 6.2.1.34), the ATP-dependent acid-thiol ligase that initiates catabolism of hydroxycinnamic acids in Pseudomonas putida KT2440. Fcs is a member of the ANL/AMP-binding (acyl-CoA synthetase) enzyme superfamily and activates ferulate (and other hydroxycinnamates such as p-coumarate) to the corresponding coenzyme A thioester, e.g. ferulate + ATP + CoA -&gt; feruloyl-CoA + AMP + diphosphate (with feruloyl-CoA being the first committed intermediate). The feruloyl-CoA produced is subsequently cleaved by the enoyl-CoA hydratase/aldolase Ech (PP_3358) to yield vanillin, which is oxidised by the vanillin dehydrogenase Vdh (PP_3357) to vanillate, funnelling the carbon through protocatechuate into the beta-ketoadipate pathway and central metabolism. The fcs gene is encoded adjacent to vdh and ech in a hydroxycinnamate catabolic gene cluster and acts in the cytoplasm. Fcs is the committed entry (activation) step of the peripheral hydroxycinnamate funnelling pathway, making it central to the ability of P. putida to grow on lignin-derived aromatic monomers.
+existing_annotations:
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Over-broad and substrate-incorrect process term derived from a tree-graft over the AMP-binding/acyl-CoA synthetase superfamily.
+    action: MODIFY
+    reason: Fcs acts on ferulate, a hydroxycinnamic (aromatic) acid, not a fatty acid, and the supporting molecular function is feruloyl-CoA synthetase activity for hydroxycinnamate catabolism rather than fatty acid metabolism. The enzyme is the committed entry step of the ferulate/hydroxycinnamate catabolic funnel into the beta-ketoadipate pathway. The correct biological process is ferulate catabolic process (GO:1901067).
+    proposed_replacement_terms:
+    - id: GO:1901067
+      label: ferulate catabolic process
+- term:
+    id: GO:0031956
+    label: medium-chain fatty acid-CoA ligase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Imprecise molecular function inherited from the broad acyl-CoA synthetase tree-graft; the physiological substrate is a hydroxycinnamate, not a medium-chain fatty acid.
+    action: MODIFY
+    reason: Although Fcs is correctly placed in the AMP-binding/acyl-CoA synthetase superfamily, the medium-chain fatty acid-CoA ligase term (GO:0031956) does not describe its substrate. Fcs activates ferulate (and other hydroxycinnamates) to their CoA thioesters; the precise, EC-supported term trans-feruloyl-CoA synthase activity (GO:0050563) is already annotated and is the appropriate replacement.
+    proposed_replacement_terms:
+    - id: GO:0050563
+      label: trans-feruloyl-CoA synthase activity
+- term:
+    id: GO:0050563
+    label: trans-feruloyl-CoA synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: Correct core molecular function, mapped from EC 6.2.1.34, matching the UniProt name and the gene&#39;s role in ferulate activation.
+    action: ACCEPT
+    reason: This is the precise, EC-based annotation for feruloyl-CoA synthetase (ATP + CoA + trans-ferulate -&gt; feruloyl-CoA + ADP/AMP + phosphate). It is consistent with the protein name, the AMP-binding/ANL domain architecture, and pathway evidence placing Fcs (PP_3356) at the ferulate -&gt; feruloyl-CoA activation step in P. putida KT2440. Represents the core function of the gene.
+core_functions:
+- description: ATP-dependent feruloyl-CoA synthetase (acid-thiol ligase) that activates ferulate to feruloyl-CoA, the committed first step of hydroxycinnamate catabolism
+  supported_by:
+  - reference_id: GO_REF:0000003
+    supporting_text: EC 6.2.1.34 mapping to trans-feruloyl-CoA synthase activity (GO:0050563), consistent with the UniProt protein name Feruloyl-CoA-synthetase.
+  molecular_function:
+    id: GO:0050563
+    label: trans-feruloyl-CoA synthase activity
+  directly_involved_in:
+  - id: GO:1901067
+    label: ferulate catabolic process
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

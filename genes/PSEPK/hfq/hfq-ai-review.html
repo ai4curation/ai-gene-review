@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hfq - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hfq</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DD3" target="_blank" class="term-link">
+                        Q88DD3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hfq";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DD3" data-a="DESCRIPTION: Hfq is a conserved bacterial RNA-binding protein o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Hfq is a conserved bacterial RNA-binding protein of the Sm/Lsm (Sm-like) family
+that assembles into a homohexameric ring and acts as a global RNA chaperone in
+post-transcriptional gene regulation. It uses distinct RNA-binding surfaces
+(proximal, distal, and rim faces, plus a basic C-terminal region) to bind small
+regulatory RNAs (sRNAs) and mRNAs, accelerating sRNA-mRNA base pairing
+(matchmaking), remodeling RNA structure, protecting sRNAs from degradation, and
+modulating mRNA translation and stability. In Pseudomonas putida KT2440, Hfq is a
+central effector of carbon catabolite repression; together with the co-repressor
+Crc it binds A-rich catabolite-activity motifs near ribosome-binding sites to
+repress translation of catabolic mRNAs, and this repression is antagonized by the
+decoy sRNAs CrcZ and CrcY, which sequester Hfq/Crc. Hfq also contributes to the
+stability and processing of CrcZ. The protein acts in the cytoplasm.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD3" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA binding is the defining and well-established molecular function of Hfq, supported by its Sm/Lsm domain and extensive literature on sRNA/mRNA binding in Pseudomonas and other bacteria.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hfq is a canonical RNA-binding protein; this IEA term is correct and represents a core molecular function. A more specific child term (e.g. sRNA binding) could be added but the general term is accurate and should be retained.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD3" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hfq acts on cytoplasmic sRNAs and mRNAs and is a soluble intracellular RNA chaperone, consistent with cytosolic localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Localization is inferred from function rather than KT2440-specific imaging, but cytosolic localization is well established for Hfq across bacteria and is consistent with its post-transcriptional regulatory role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD3" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hfq is a post-transcriptional regulator acting on RNA, not a direct regulator of DNA-templated transcription. This InterPro2GO mapping mislocates Hfq&#39;s activity at the transcriptional level.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hfq does not bind DNA or directly regulate transcription initiation/elongation; its regulatory role is post-transcriptional (sRNA-mediated effects on translation and RNA stability). The more accurate term is ncRNA-mediated regulation of translation, which is already separately annotated. This generic transcription-regulation term is an over-broad/incorrect propagation and should be replaced.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045974" target="_blank" class="term-link">
+                                    regulation of translation, ncRNA-mediated
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043487" target="_blank" class="term-link">
+                                    GO:0043487
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of RNA stability</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD3" data-a="GO:0043487" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hfq binds and stabilizes sRNAs (protecting them from nucleases) and also promotes targeted decay of mRNAs, directly influencing RNA stability. In KT2440, Hfq increases the stability of the CrcZ sRNA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Regulation of RNA stability is a well-documented function of Hfq and is specifically supported in P. putida KT2440 (Hfq increases CrcZ stability).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045974" target="_blank" class="term-link">
+                                    GO:0045974
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of translation, ncRNA-mediated</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DD3" data-a="GO:0045974" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hfq mediates sRNA-dependent regulation of mRNA translation, the central function of the protein. In KT2440 this includes Crc/Hfq translational repression of catabolic mRNAs and its antagonism by the sRNAs CrcZ/CrcY.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term precisely captures Hfq&#39;s core biological role as an sRNA-mediated post-transcriptional regulator of translation, strongly supported by Pseudomonas literature.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RNA chaperone that binds small regulatory RNAs and mRNAs and accelerates sRNA-mRNA base pairing to mediate post-transcriptional regulation of translation</h3>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="FUNCTION: RNA chaperone that binds small regulatory RNAs and..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045974" target="_blank" class="term-link">
+                                regulation of translation, ncRNA-mediated
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27777366" target="_blank" class="term-link">
+                                PMID:27777366
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Stabilizes small regulatory RNAs and modulates mRNA decay, regulating cellular RNA stability; in P. putida increases stability/processing of the CrcZ sRNA</h3>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="FUNCTION: Stabilizes small regulatory RNAs and modulates mRN..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043487" target="_blank" class="term-link">
+                                regulation of RNA stability
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27777366" target="_blank" class="term-link">
+                                PMID:27777366
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Effector of carbon catabolite repression in P. putida KT2440, acting with the co-repressor Crc to repress translation of catabolic mRNAs bearing A-rich catabolite-activity motifs, antagonized by decoy sRNAs CrcZ/CrcY</h3>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="FUNCTION: Effector of carbon catabolite repression in P. put..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045974" target="_blank" class="term-link">
+                                regulation of translation, ncRNA-mediated
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27777366" target="_blank" class="term-link">
+                                PMID:27777366
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27777366" target="_blank" class="term-link">
+                            PMID:27777366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Effect of Crc and Hfq proteins on the transcription, processing, and stability of the Pseudomonas putida CrcZ sRNA</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida KT2440 Hfq have direct experimental subcellular localization data (microscopy/fractionation) confirming cytosolic distribution?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="Q: Does P. putida KT2440 Hfq have direct experimental..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond the CCR/Crc axis, which sRNA regulons (e.g. stress, iron, quorum sensing) does KT2440 Hfq control?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="Q: Beyond the CCR/Crc axis, which sRNA regulons (e.g...." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CLIP-seq or RIL-seq in P. putida KT2440 to define the genome-wide Hfq-bound sRNA and mRNA interactome</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="EXPERIMENT: CLIP-seq or RIL-seq in P. putida KT2440 to define ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Phenotypic and transcriptomic comparison of an hfq deletion mutant under carbon-source shifts and envelope/oxidative stress to map the Hfq regulon</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88DD3" data-a="EXPERIMENT: Phenotypic and transcriptomic comparison of an hfq..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hfq-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DD3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">31 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:14:17.306203</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="hfq-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="hfq-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000031 I have extracted Figure 7, which details the RNA scanning model, and Figure 2A, which provides a schematic of the Hfq surfaces, spe</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-pseudomonas-putida-kt2440-hfq-uniprot-q88dd3-locus-pp_4894">Research report: <em>Pseudomonas putida</em> KT2440 <strong>hfq</strong> (UniProt Q88DD3; locus PP_4894)</h2>
+<h3 id="1-target-verification-critical-identity-check">1) Target verification (critical identity check)</h3>
+<p>The UniProt accession <strong>Q88DD3</strong> (gene <strong>hfq</strong>, locus <strong>PP_4894</strong>) corresponds to the canonical bacterial <strong>RNA-binding protein Hfq</strong>, a conserved <strong>Sm/LSM-family (Sm-like) RNA-binding protein</strong> that forms a <strong>homohexameric ring</strong> and functions as a global post-transcriptional regulator through interactions with small RNAs (sRNAs) and mRNAs. This identity is consistent with <em>Pseudomonas</em> literature describing Hfq as a conserved <strong>Sm-like</strong> RNA chaperone and with KT2440-specific studies describing Hfq as a <strong>hexameric RNA-binding protein</strong> involved in global regulation and carbon catabolite repression (CCR). (pusic2021specificandglobal pages 20-21, huber2021identificationandfunctional pages 26-29, hernandezarranz2016effectofcrc pages 1-2)</p>
+<h3 id="2-key-concepts-definitions-and-current-understanding-functional-annotation">2) Key concepts, definitions, and current understanding (functional annotation)</h3>
+<h4 id="21-what-hfq-is-definition">2.1 What Hfq is (definition)</h4>
+<p>Hfq is a bacterial RNA chaperone (“host factor for phage Qβ replication” historically) that mediates post-transcriptional gene regulation by binding sRNAs and mRNAs and promoting formation of regulatory RNA–RNA duplexes. Mechanistically, Hfq provides multiple RNA-binding surfaces (commonly summarized as <strong>proximal</strong>, <strong>distal</strong>, <strong>rim</strong>, plus contributions from a <strong>C-terminal region/tail</strong>) that allow it to bind different RNA sequence features and facilitate RNA–RNA pairing, RNA stabilization, and targeted RNA decay. (huber2021identificationandfunctional pages 26-29, pusic2021specificandglobal pages 20-21)</p>
+<h4 id="22-core-molecular-function-in-bacteria-rna-chaperone-matchmaker">2.2 Core molecular function in bacteria (RNA chaperone / “matchmaker”)</h4>
+<p>General mechanistic roles attributed to Hfq (supported by authoritative synthesis in the retrieved sources) include:<br />
+- <strong>Facilitating sRNA–mRNA base pairing</strong> (accelerating annealing, often by bringing RNAs into proximity and remodeling RNA structure). (huber2021identificationandfunctional pages 26-29, rodgers2023smallrnasand pages 1-3)<br />
+- <strong>Stabilizing sRNAs</strong> by protecting them from nucleases and/or forming protective ribonucleoprotein complexes. (huber2021identificationandfunctional pages 26-29, hernandezarranz2016effectofcrc pages 1-2)<br />
+- <strong>Influencing mRNA translation and decay</strong>, including recruitment of RNase activities in some contexts and direct repression by binding near translation initiation regions. (huber2021identificationandfunctional pages 26-29, hernandezarranz2016effectofcrc pages 1-2)</p>
+<p>These concepts form the basis for functional annotation of <em>P. putida</em> KT2440 Hfq as a cytoplasmic RNA-binding post-transcriptional regulator.</p>
+<h3 id="3-p-putida-kt2440-specific-pathways-and-mechanisms">3) <em>P. putida</em> KT2440-specific pathways and mechanisms</h3>
+<h4 id="31-hfq-as-a-central-component-of-ccr-via-the-hfqcrcsrna-axis">3.1 Hfq as a central component of CCR via the Hfq/Crc/sRNA axis</h4>
+<p>A well-characterized, KT2440-relevant primary function of Hfq is its participation in <strong>carbon catabolite repression (CCR)</strong> in <em>Pseudomonas</em>, where Hfq cooperates with the translational co-repressor <strong>Crc</strong>.</p>
+<p><strong>Mechanism (KT2440 evidence):</strong><br />
+- In <em>P. putida</em> KT2440, <strong>Hfq and Crc form complexes</strong> on target RNAs to inhibit translation; these target RNAs often contain A-rich motifs. A commonly cited consensus motif in this system is <strong>AAnAAnAA</strong> (also referred to as a catabolite activity motif in later applied work). (hernandezarranz2016effectofcrc pages 1-2, che2025thelinkof pages 1-2)<br />
+- The repression mediated by Hfq/Crc is <strong>antagonized by sRNAs CrcZ and CrcY</strong>, whose levels vary with growth conditions. These sRNAs act (conceptually) as <strong>decoys/sponges</strong> that sequester the Hfq/Crc complex away from repressed mRNAs, thereby relieving translational repression. (hernandezarranz2016effectofcrc pages 1-2, hernandezarranz2016effectofcrc pages 12-13, bharwad2019rewiringthefunctional pages 4-5)</p>
+<p><strong>Hfq-dependent processing/stability of the decoy sRNA CrcZ (KT2440 evidence):</strong><br />
+- In KT2440, crcZ can be produced from a strong RpoN/CbrB-dependent promoter but can also arise through transcriptional readthrough and <strong>processing</strong> of a cbrB-crcZ transcript into a functional CrcZ-like product (CrcZ<em>). The </em><em>processed form of CrcZ is not observed in the absence of Hfq</em><em>, linking Hfq to the biogenesis/accumulation of the functional antagonist RNA. (hernandezarranz2016effectofcrc pages 1-2)<br />
+- </em><em>Crc and Hfq increase CrcZ stability</em><em>, consistent with formation of protective ribonucleoprotein complexes that reduce RNase-mediated degradation. (hernandezarranz2016effectofcrc pages 1-2)<br />
+- Quantitatively, one KT2440 study reports that after TEX treatment (enriching for primary transcripts by degrading 5′-monophosphate RNAs), crcZ signal decreased by ~</em><em>20%</em><em>, supporting the presence of processed species; and crcZ-containing transcripts were ~</em><em>10-fold</em><em> more abundant than cbrB in wild type (and </em><em>16-fold</em>* in an RpoN-null strain) in qRT-PCR assays. (hernandezarranz2016effectofcrc pages 5-6)</p>
+<p><strong>Dynamic RNA competition and cycling:</strong><br />
+Hfq binds RNA with high affinity and can redistribute among RNAs (“actively cycle” among targets) depending on the abundance of competing RNAs, which is conceptually important in CCR where the regulatory outcome depends on the relative levels of Hfq/Crc, target mRNAs, and the decoy sRNAs CrcZ/CrcY. (hernandezarranz2016effectofcrc pages 12-13)</p>
+<h4 id="32-biological-processes-influenced-scope-in-pseudomonas">3.2 Biological processes influenced (scope in <em>Pseudomonas</em>)</h4>
+<p>Reviews and mechanistic summaries in <em>Pseudomonas</em> emphasize that Hfq functions as a <strong>global post-transcriptional regulator</strong> impacting multiple systems including metabolism, stress tolerance, quorum sensing/virulence-associated behaviors in pathogenic <em>Pseudomonas</em>, and iron-related regulation in the broader Hfq/Crc regulatory context; however, the KT2440-specific primary mechanism most directly supported in the retrieved evidence is CCR via Hfq/Crc and decoy sRNAs. (hernandezarranz2016effectofcrc pages 1-2, pusic2021specificandglobal pages 9-11)</p>
+<h3 id="4-subcellular-localization">4) Subcellular localization</h3>
+<p>The retrieved evidence supports Hfq as an <strong>intracellular RNA-binding protein</strong> acting on sRNAs and mRNAs, i.e., consistent with a <strong>cytoplasmic post-transcriptional regulator</strong>. However, in the evidence retrieved for this report, there is <strong>no KT2440-specific microscopy or biochemical fractionation</strong> that directly assigns Hfq to a specific subcellular compartment beyond its RNA-level function. Thus, localization should be annotated conservatively as <strong>cytoplasmic / RNA-associated</strong> by functional inference, pending KT2440-specific localization experiments. (huber2021identificationandfunctional pages 26-29, hernandezarranz2016effectofcrc pages 1-2)</p>
+<h3 id="5-recent-developments-prioritizing-20232024-refined-mechanism-of-hfq-mediated-target-search">5) Recent developments (prioritizing 2023–2024): refined mechanism of Hfq-mediated target search</h3>
+<p>Although these mechanistic studies are in <em>E. coli</em> (not <em>P. putida</em>), they represent high-confidence, generalizable advances in how Hfq functions and are directly relevant to annotating Hfq’s molecular mechanism.</p>
+<h4 id="51-co-transcriptional-capture-of-transientunfolded-target-sites-2023">5.1 Co-transcriptional capture of transient/unfolded target sites (2023)</h4>
+<p>Rodgers et al. (2023) used a single-molecule co-localization co-transcriptional assembly approach to show that an Hfq•sRNA complex can <strong>sample nascent mRNA during transcription</strong> and often binds in proximity to RNA polymerase, enabling capture of a target site <strong>before it folds</strong>. This provides a mechanistic basis for how sRNA regulation can occur on fast cellular timescales and highlights the coupling between transcription kinetics, RNA folding, and Hfq-dependent regulation. (rodgers2023smallrnasand pages 1-3)</p>
+<p>Publication: Rodgers ML et al., <em>Molecular Cell</em>, May 2023. DOI/URL: https://doi.org/10.1016/j.molcel.2023.04.003 (rodgers2023smallrnasand pages 1-3)</p>
+<h4 id="52-rna-compaction-and-iterative-1d-scanningtransfer-2024">5.2 RNA compaction and iterative 1D scanning/transfer (2024)</h4>
+<p>Małecka &amp; Woodson (2024) provide quantitative single-molecule evidence that Hfq can <strong>compact flexible mRNA segments</strong> and enable an <strong>iterative scanning mechanism</strong> that brings sRNAs to distal target sites, including <strong>transfer (“shuttling”) between sites on a single mRNA without dissociation</strong>.</p>
+<p>Key quantitative findings (selected):<br />
+- For tandem target sites separated by 13 nt, ~<strong>39%</strong> of encounters showed shuttling with <strong>2.8 transitions</strong> per dynamic event on average; with 35 nt spacing, shuttling dropped to <strong>23%</strong> with <strong>1.6 transitions/event</strong>. (małecka2024rnacompactionand pages 8-9)<br />
+- A rim arginine mutant (R16A) caused the sRNA to spend <strong>about half as much time</strong> on a distant site compared with WT Hfq, supporting a role for rim arginines in long-range scanning. (małecka2024rnacompactionand pages 8-9)<br />
+- The authors propose diffusion-limited recruitment of Hfq to (ARN)n motifs (kon ~ <strong>1–10×10^7 M−1 s−1</strong>) as a first step that restricts the search space. (małecka2024rnacompactionand pages 9-10)</p>
+<p>Publication: Małecka EM, Woodson SA. <em>Nature Communications</em>, Mar 2024. DOI/URL: https://doi.org/10.1038/s41467-024-46316-6 (małecka2024rnacompactionand pages 1-2)</p>
+<p><strong>Visual evidence:</strong> Figure model of Hfq-mediated scanning/iterative search and schematic of Hfq surfaces were retrieved from this paper. (małecka2024rnacompactionand media c450eb26, małecka2024rnacompactionand media b5d6895d)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-metabolic-engineering-in-p-putida-kt2440-tuning-ccr-decoy-srnas-to-improve-bioplastic-pha-production">6.1 Metabolic engineering in <em>P. putida</em> KT2440: tuning CCR decoy sRNAs to improve bioplastic (PHA) production</h4>
+<p>Che et al. (2025) demonstrate a concrete KT2440 implementation that leverages the <strong>Hfq/Crc/CrcY/CrcZ</strong> CCR axis to improve <strong>medium-chain-length polyhydroxyalkanoate (mcl-PHA)</strong> production and tune polymer properties.</p>
+<p><strong>Mechanistic framing:</strong> The study explicitly ties outcomes to CCR: Hfq binds CA-motif-containing mRNAs and (with Crc) represses translation, while <strong>CrcY/CrcZ sequester Hfq/Crc</strong> to relieve repression; the authors note that the sRNAs’ role in PHA metabolism requires <strong>Hfq and Crc</strong>. (che2025thelinkof pages 1-2, che2025thelinkof pages 2-5)</p>
+<p><strong>Quantitative outcomes (selected):</strong><br />
+- Under glucose conditions, strains overexpressing CrcY or CrcZ produced <strong>&gt;2×</strong> more PHA in one condition: <strong>0.34 g/L vs 0.15 g/L</strong>. (che2025thelinkof pages 2-5)<br />
+- Under octanoate conditions: control accumulated <strong>0.51 g/L</strong> PHA, while pCrcY and pCrcZ accumulated <strong>0.67 g/L</strong> and <strong>0.77 g/L</strong>, respectively; the study also reports <strong>2.7-fold</strong> higher PHA at 48 h in a comparison. (che2025thelinkof pages 2-5)<br />
+- Under octanoate with nitrogen limitation, pCrcY reached <strong>63% CDW (0.57 g/L)</strong> vs control <strong>33% CDW (0.17 g/L)</strong> (a <strong>3.5-fold</strong> increase), and yields increased (e.g., <strong>0.07 g PHA/g glucose</strong> vs <strong>0.03 g/g</strong> control; and <strong>0.17 g/g</strong> under another condition). (che2025thelinkof pages 5-7)<br />
+- Polymer properties: molecular weight decreased substantially in one overexpression condition (e.g., <strong>Mw</strong> from <strong>2.228×10^5</strong> to <strong>9.468×10^4 g/mol</strong>). (che2025thelinkof pages 5-7)</p>
+<p>Publication: Che Y et al., <em>Biotechnology for Biofuels and Bioproducts</em>, Oct 2025. DOI/URL: https://doi.org/10.1186/s13068-025-02707-5 (che2025thelinkof pages 5-7)</p>
+<h4 id="62-broader-applied-contexts-review-level">6.2 Broader applied contexts (review-level)</h4>
+<p>A review focused on the Crc/Hfq/sRNA network highlights that CCR tuning can influence catabolic pathways relevant to bioremediation and that modifications to crc/hfq can impact antibiotic susceptibility phenotypes in <em>Pseudomonas</em> spp., motivating engineering strategies that modulate this post-transcriptional regulatory layer in applied strains. (bharwad2019rewiringthefunctional pages 7-8, bharwad2019rewiringthefunctional pages 5-7)</p>
+<p>Publication: Bharwad K, Rajkumar S. <em>World Journal of Microbiology and Biotechnology</em>, Aug 2019. DOI/URL: https://doi.org/10.1007/s11274-019-2717-7 (bharwad2019rewiringthefunctional pages 2-4)</p>
+<h3 id="7-expert-opinions-authoritative-synthesis">7) Expert opinions / authoritative synthesis</h3>
+<p>Authoritative synthesis across <em>Pseudomonas</em> emphasizes that:<br />
+- Hfq is a conserved Sm-like chaperone mediating RNA–RNA interactions and global riboregulation, and in <em>Pseudomonas</em> CCR specifically, <strong>Crc acts as a translational co-repressor</strong> that promotes/stabilizes Hfq-mediated repression on target mRNAs, while <strong>CrcZ/Y antagonize</strong> by binding/sequestering Hfq. (pusic2021specificandglobal pages 9-11, pusic2021specificandglobal pages 20-21)<br />
+- Hfq’s multiple binding surfaces and RNA competition for limiting Hfq can shape regulatory outcomes. (huber2021identificationandfunctional pages 26-29, paris2025machinerymechanismand pages 6-8)</p>
+<h3 id="8-summary-of-functional-annotation-what-to-put-in-a-geneprotein-functional-annotation">8) Summary of functional annotation (what to put in a gene/protein functional annotation)</h3>
+<p><strong>Gene/product:</strong> hfq → RNA-binding protein Hfq (Sm-like RNA chaperone).</p>
+<p><strong>Primary molecular function:</strong> RNA chaperone facilitating sRNA–mRNA annealing and post-transcriptional regulation of translation and RNA stability. (huber2021identificationandfunctional pages 26-29, rodgers2023smallrnasand pages 1-3)</p>
+<p><strong>Key KT2440 pathway role:</strong> CCR via cooperative action with Crc on A-rich CA motifs (AAnAAnAA) in target mRNAs; antagonism by decoy sRNAs CrcZ/CrcY; Hfq contributes to CrcZ stability/processing. (hernandezarranz2016effectofcrc pages 1-2, hernandezarranz2016effectofcrc pages 5-6, bharwad2019rewiringthefunctional pages 4-5)</p>
+<p><strong>Cellular localization:</strong> intracellular/cytoplasmic RNA-associated (inferred; no KT2440-specific localization experiment in retrieved evidence). (hernandezarranz2016effectofcrc pages 1-2, huber2021identificationandfunctional pages 26-29)</p>
+<p><strong>Applied relevance:</strong> CCR/Hfq axis can be engineered via CrcY/CrcZ to increase mcl-PHA production and tune polymer molecular weight in KT2440. (che2025thelinkof pages 5-7)</p>
+<h3 id="evidence-table">Evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key takeaways</th>
+<th>Most relevant paper</th>
+<th>DOI URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domains</td>
+<td>UniProt Q88DD3 corresponds to <strong>Hfq</strong> in <em>Pseudomonas putida</em> KT2440 (gene <strong>hfq</strong>, locus <strong>PP_4894</strong>). Hfq is a conserved <strong>bacterial Sm/Lsm-family</strong> RNA-binding protein with a conserved <strong>Sm domain</strong>, typically forming a <strong>homohexameric ring</strong> with proximal, distal, rim, and C-terminal RNA-interaction regions; in <em>Pseudomonas</em>, Hfq is described as a <strong>hexameric RNA-binding protein</strong> central to post-transcriptional regulation. (pusic2021specificandglobal pages 20-21, huber2021identificationandfunctional pages 26-29, hernandezarranz2016effectofcrc pages 1-2)</td>
+<td>Huber, 2021, Dissertation; Pusic et al., 2021, <em>Int. J. Mol. Sci.</em>; Hernández-Arranz et al., 2016, <em>RNA</em></td>
+<td>https://doi.org/10.5282/edoc.27581; https://doi.org/10.3390/ijms22168632; https://doi.org/10.1261/rna.058313.116</td>
+</tr>
+<tr>
+<td>Core molecular function</td>
+<td>Hfq is an <strong>RNA chaperone / molecular matchmaker</strong> that stabilizes sRNAs, accelerates <strong>sRNA–mRNA base pairing</strong>, can directly repress translation near RBSs, and can recruit or facilitate RNase-mediated decay; in <em>Pseudomonas</em>, it is a global post-transcriptional regulator affecting metabolism and stress-related functions. (hernandezarranz2016effectofcrc pages 1-2, pusic2021specificandglobal pages 20-21, huber2021identificationandfunctional pages 26-29)</td>
+<td>Huber, 2021, Dissertation; Hernández-Arranz et al., 2016, <em>RNA</em></td>
+<td>https://doi.org/10.5282/edoc.27581; https://doi.org/10.1261/rna.058313.116</td>
+</tr>
+<tr>
+<td>CCR with Crc/CrcZ/CrcY</td>
+<td>In <em>P. putida</em>, Hfq cooperates with <strong>Crc</strong> to form repressive complexes on target mRNAs carrying <strong>A-rich CA motifs</strong> (consensus <strong>AAnAAnAA</strong>), inhibiting translation of catabolic genes. <strong>CrcZ</strong> and <strong>CrcY</strong> antagonize repression by sequestering Hfq/Crc; <strong>Crc and Hfq increase CrcZ stability</strong>, and processed <strong>CrcZ*</strong> can relieve hyperrepression in a ΔcrcZΔcrcY background. (hernandezarranz2016effectofcrc pages 1-2, hernandezarranz2016effectofcrc pages 12-13, hernandezarranz2016effectofcrc pages 5-6, bharwad2019rewiringthefunctional pages 4-5)</td>
+<td>Hernández-Arranz et al., 2016, <em>RNA</em></td>
+<td>https://doi.org/10.1261/rna.058313.116</td>
+</tr>
+<tr>
+<td>RNA cycling/scanning mechanisms</td>
+<td>Recent mechanistic work (not KT2440-specific, but on conserved Hfq action) shows Hfq binds <strong>(ARN)n</strong> motifs with diffusion-limited on-rates, compacts RNA, and uses <strong>rim arginines</strong> to support iterative <strong>1D scanning/hopping</strong> and transfer of sRNAs between sites without dissociation, enabling kinetic selection of optimal duplexes. This refines current understanding of how Hfq accelerates target search. (małecka2024rnacompactionand pages 8-9, małecka2024rnacompactionand pages 9-10, małecka2024rnacompactionand pages 1-2, rodgers2023smallrnasand pages 1-3)</td>
+<td>Małecka &amp; Woodson, 2024, <em>Nature Communications</em>; Rodgers et al., 2023, <em>Molecular Cell</em></td>
+<td>https://doi.org/10.1038/s41467-024-46316-6; https://doi.org/10.1016/j.molcel.2023.04.003</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>The current evidence snippets support Hfq as a <strong>cytoplasmic RNA-binding/post-transcriptional regulator</strong> acting on mRNAs and sRNAs; however, <strong>no KT2440-specific subcellular localization experiment</strong> is provided in the retrieved evidence. Thus, localization should be annotated conservatively as <strong>intracellular/cytoplasmic RNA-associated</strong>, inferred from mechanism rather than direct KT2440 localization data. (hernandezarranz2016effectofcrc pages 1-2, pusic2021specificandglobal pages 20-21, huber2021identificationandfunctional pages 26-29)</td>
+<td>Huber, 2021, Dissertation; Hernández-Arranz et al., 2016, <em>RNA</em></td>
+<td>https://doi.org/10.5282/edoc.27581; https://doi.org/10.1261/rna.058313.116</td>
+</tr>
+<tr>
+<td>Applications/engineering</td>
+<td>The Hfq-linked CCR network has practical value in <strong>metabolic engineering</strong> of <em>P. putida</em>. Overexpressing <strong>CrcY/CrcZ</strong> in KT2440 boosts <strong>medium-chain-length PHA</strong> production and alters polymer molecular weight, showing that tuning Hfq/Crc decoy sRNAs can reprogram carbon flux for bioproduct formation. Broader reviews also point to impacts on bioremediation-relevant catabolism. (che2025thelinkof pages 1-2, che2025thelinkof pages 2-5, che2025thelinkof pages 5-7, bharwad2019rewiringthefunctional pages 7-8, bharwad2019rewiringthefunctional pages 5-7)</td>
+<td>Che et al., 2025, <em>Biotechnology for Biofuels and Bioproducts</em></td>
+<td>https://doi.org/10.1186/s13068-025-02707-5</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>Reported figures include: Hfq has <strong>~5–20-fold higher affinity for CrcZ than for amiE mRNA</strong>; in WT, ~<strong>20%</strong> of crcZ signal was TEX-sensitive, indicating processed forms; overexpressing CrcY/CrcZ increased PHA titers by <strong>1.3–3.5-fold</strong>, with examples including <strong>0.34 vs 0.15 g/L</strong>, <strong>0.67–0.77 vs 0.51 g/L</strong>, and <strong>63% CDW (0.57 g/L) vs 33% CDW (0.17 g/L)</strong>; deleting both sRNAs caused a <strong>2.5-fold decrease</strong> in PHA; polymer <strong>Mw</strong> decreased from <strong>2.228×10^5 to 9.468×10^4 g/mol</strong> in one overexpression condition. Conserved Hfq mechanism studies measured <strong>39%</strong> shuttling events for N=13 vs <strong>23%</strong> for N=35 spacers and <strong>2.8</strong> vs <strong>1.6</strong> transitions/event. (hernandezarranz2016effectofcrc pages 5-6, pusic2021specificandglobal pages 9-11, che2025thelinkof pages 1-2, che2025thelinkof pages 2-5, che2025thelinkof pages 5-7, małecka2024rnacompactionand pages 8-9)</td>
+<td>Pusic et al., 2021, <em>Int. J. Mol. Sci.</em>; Che et al., 2025, <em>Biotechnology for Biofuels and Bioproducts</em>; Małecka &amp; Woodson, 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.3390/ijms22168632; https://doi.org/10.1186/s13068-025-02707-5; https://doi.org/10.1038/s41467-024-46316-6</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes identity, mechanism, CCR function, localization, applications, and key quantitative findings for </em>Pseudomonas putida<em> KT2440 Hfq (hfq/PP_4894; UniProt Q88DD3). It is designed as a concise evidence-backed insert for the research report.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(pusic2021specificandglobal pages 20-21): Petra Pusic, Elisabeth Sonnleitner, and Udo Bläsi. Specific and global rna regulators in pseudomonas aeruginosa. International Journal of Molecular Sciences, 22:8632, Aug 2021. URL: https://doi.org/10.3390/ijms22168632, doi:10.3390/ijms22168632. This article has 39 citations.</p>
+</li>
+<li>
+<p>(huber2021identificationandfunctional pages 26-29): Identification and functional characterization of bacterial small RNAs associating with the RNA chaperone Hfq This article has 0 citations.</p>
+</li>
+<li>
+<p>(hernandezarranz2016effectofcrc pages 1-2): Sofía Hernández-Arranz, Dione Sánchez-Hevia, Fernando Rojo, and Renata Moreno. Effect of crc and hfq proteins on the transcription, processing, and stability of the pseudomonas putida crcz srna. RNA, 22:1902-1917, Dec 2016. URL: https://doi.org/10.1261/rna.058313.116, doi:10.1261/rna.058313.116. This article has 30 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rodgers2023smallrnasand pages 1-3): Margaret L. Rodgers, Brett O’Brien, and Sarah A. Woodson. Small rnas and hfq capture unfolded rna target sites during transcription. Molecular Cell, 83:1489-1501.e5, May 2023. URL: https://doi.org/10.1016/j.molcel.2023.04.003, doi:10.1016/j.molcel.2023.04.003. This article has 28 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(che2025thelinkof pages 1-2): Yixin Che, Dominic Harris-Jukes, Elizabeth Sitko, Moya Brady, William Casey, Michael P. Shaver, Kevin O’Connor, and Tanja Narancic. The link of carbon catabolite repression elements, small rnas crcy and crcz and polyhydroxyalkanoate metabolism in pseudomonas putida kt2440. Biotechnology for Biofuels and Bioproducts, Oct 2025. URL: https://doi.org/10.1186/s13068-025-02707-5, doi:10.1186/s13068-025-02707-5. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hernandezarranz2016effectofcrc pages 12-13): Sofía Hernández-Arranz, Dione Sánchez-Hevia, Fernando Rojo, and Renata Moreno. Effect of crc and hfq proteins on the transcription, processing, and stability of the pseudomonas putida crcz srna. RNA, 22:1902-1917, Dec 2016. URL: https://doi.org/10.1261/rna.058313.116, doi:10.1261/rna.058313.116. This article has 30 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bharwad2019rewiringthefunctional pages 4-5): Krishna Bharwad and Shalini Rajkumar. Rewiring the functional complexity between crc, hfq and srnas to regulate carbon catabolite repression in pseudomonas. World Journal of Microbiology and Biotechnology, Aug 2019. URL: https://doi.org/10.1007/s11274-019-2717-7, doi:10.1007/s11274-019-2717-7. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hernandezarranz2016effectofcrc pages 5-6): Sofía Hernández-Arranz, Dione Sánchez-Hevia, Fernando Rojo, and Renata Moreno. Effect of crc and hfq proteins on the transcription, processing, and stability of the pseudomonas putida crcz srna. RNA, 22:1902-1917, Dec 2016. URL: https://doi.org/10.1261/rna.058313.116, doi:10.1261/rna.058313.116. This article has 30 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pusic2021specificandglobal pages 9-11): Petra Pusic, Elisabeth Sonnleitner, and Udo Bläsi. Specific and global rna regulators in pseudomonas aeruginosa. International Journal of Molecular Sciences, 22:8632, Aug 2021. URL: https://doi.org/10.3390/ijms22168632, doi:10.3390/ijms22168632. This article has 39 citations.</p>
+</li>
+<li>
+<p>(małecka2024rnacompactionand pages 8-9): Ewelina M. Małecka and Sarah A. Woodson. Rna compaction and iterative scanning for small rna targets by the hfq chaperone. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46316-6, doi:10.1038/s41467-024-46316-6. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(małecka2024rnacompactionand pages 9-10): Ewelina M. Małecka and Sarah A. Woodson. Rna compaction and iterative scanning for small rna targets by the hfq chaperone. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46316-6, doi:10.1038/s41467-024-46316-6. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(małecka2024rnacompactionand pages 1-2): Ewelina M. Małecka and Sarah A. Woodson. Rna compaction and iterative scanning for small rna targets by the hfq chaperone. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46316-6, doi:10.1038/s41467-024-46316-6. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(małecka2024rnacompactionand media c450eb26): Ewelina M. Małecka and Sarah A. Woodson. Rna compaction and iterative scanning for small rna targets by the hfq chaperone. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46316-6, doi:10.1038/s41467-024-46316-6. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(małecka2024rnacompactionand media b5d6895d): Ewelina M. Małecka and Sarah A. Woodson. Rna compaction and iterative scanning for small rna targets by the hfq chaperone. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46316-6, doi:10.1038/s41467-024-46316-6. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(che2025thelinkof pages 2-5): Yixin Che, Dominic Harris-Jukes, Elizabeth Sitko, Moya Brady, William Casey, Michael P. Shaver, Kevin O’Connor, and Tanja Narancic. The link of carbon catabolite repression elements, small rnas crcy and crcz and polyhydroxyalkanoate metabolism in pseudomonas putida kt2440. Biotechnology for Biofuels and Bioproducts, Oct 2025. URL: https://doi.org/10.1186/s13068-025-02707-5, doi:10.1186/s13068-025-02707-5. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(che2025thelinkof pages 5-7): Yixin Che, Dominic Harris-Jukes, Elizabeth Sitko, Moya Brady, William Casey, Michael P. Shaver, Kevin O’Connor, and Tanja Narancic. The link of carbon catabolite repression elements, small rnas crcy and crcz and polyhydroxyalkanoate metabolism in pseudomonas putida kt2440. Biotechnology for Biofuels and Bioproducts, Oct 2025. URL: https://doi.org/10.1186/s13068-025-02707-5, doi:10.1186/s13068-025-02707-5. This article has 0 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bharwad2019rewiringthefunctional pages 7-8): Krishna Bharwad and Shalini Rajkumar. Rewiring the functional complexity between crc, hfq and srnas to regulate carbon catabolite repression in pseudomonas. World Journal of Microbiology and Biotechnology, Aug 2019. URL: https://doi.org/10.1007/s11274-019-2717-7, doi:10.1007/s11274-019-2717-7. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bharwad2019rewiringthefunctional pages 5-7): Krishna Bharwad and Shalini Rajkumar. Rewiring the functional complexity between crc, hfq and srnas to regulate carbon catabolite repression in pseudomonas. World Journal of Microbiology and Biotechnology, Aug 2019. URL: https://doi.org/10.1007/s11274-019-2717-7, doi:10.1007/s11274-019-2717-7. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bharwad2019rewiringthefunctional pages 2-4): Krishna Bharwad and Shalini Rajkumar. Rewiring the functional complexity between crc, hfq and srnas to regulate carbon catabolite repression in pseudomonas. World Journal of Microbiology and Biotechnology, Aug 2019. URL: https://doi.org/10.1007/s11274-019-2717-7, doi:10.1007/s11274-019-2717-7. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(paris2025machinerymechanismand pages 6-8): Giulia Paris, Kai Katsuya-Gaviria, and Ben F. Luisi. Machinery, mechanism, and information in post-transcription control of gene expression, from the perspective of unstable rna. Quarterly Reviews of Biophysics, 58:1-42, Feb 2025. URL: https://doi.org/10.1017/s0033583525000022, doi:10.1017/s0033583525000022. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hfq-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000031 I have extracted Figure 7, which details the RNA scanning model, and Figure 2A, which provides a schematic of the Hfq surfaces, spe" src="hfq-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hernandezarranz2016effectofcrc pages 1-2</li>
+<li>hernandezarranz2016effectofcrc pages 5-6</li>
+<li>hernandezarranz2016effectofcrc pages 12-13</li>
+<li>rodgers2023smallrnasand pages 1-3</li>
+<li>che2025thelinkof pages 2-5</li>
+<li>che2025thelinkof pages 5-7</li>
+<li>bharwad2019rewiringthefunctional pages 2-4</li>
+<li>pusic2021specificandglobal pages 20-21</li>
+<li>huber2021identificationandfunctional pages 26-29</li>
+<li>che2025thelinkof pages 1-2</li>
+<li>bharwad2019rewiringthefunctional pages 4-5</li>
+<li>pusic2021specificandglobal pages 9-11</li>
+<li>bharwad2019rewiringthefunctional pages 7-8</li>
+<li>bharwad2019rewiringthefunctional pages 5-7</li>
+<li>paris2025machinerymechanismand pages 6-8</li>
+<li>https://doi.org/10.1016/j.molcel.2023.04.003</li>
+<li>https://doi.org/10.1038/s41467-024-46316-6</li>
+<li>https://doi.org/10.1186/s13068-025-02707-5</li>
+<li>https://doi.org/10.1007/s11274-019-2717-7</li>
+<li>https://doi.org/10.5282/edoc.27581;</li>
+<li>https://doi.org/10.3390/ijms22168632;</li>
+<li>https://doi.org/10.1261/rna.058313.116</li>
+<li>https://doi.org/10.1038/s41467-024-46316-6;</li>
+<li>https://doi.org/10.1186/s13068-025-02707-5;</li>
+<li>https://doi.org/10.3390/ijms22168632,</li>
+<li>https://doi.org/10.1261/rna.058313.116,</li>
+<li>https://doi.org/10.1016/j.molcel.2023.04.003,</li>
+<li>https://doi.org/10.1186/s13068-025-02707-5,</li>
+<li>https://doi.org/10.1007/s11274-019-2717-7,</li>
+<li>https://doi.org/10.1038/s41467-024-46316-6,</li>
+<li>https://doi.org/10.1017/s0033583525000022,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DD3
+gene_symbol: hfq
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: |-
+  Hfq is a conserved bacterial RNA-binding protein of the Sm/Lsm (Sm-like) family
+  that assembles into a homohexameric ring and acts as a global RNA chaperone in
+  post-transcriptional gene regulation. It uses distinct RNA-binding surfaces
+  (proximal, distal, and rim faces, plus a basic C-terminal region) to bind small
+  regulatory RNAs (sRNAs) and mRNAs, accelerating sRNA-mRNA base pairing
+  (matchmaking), remodeling RNA structure, protecting sRNAs from degradation, and
+  modulating mRNA translation and stability. In Pseudomonas putida KT2440, Hfq is a
+  central effector of carbon catabolite repression; together with the co-repressor
+  Crc it binds A-rich catabolite-activity motifs near ribosome-binding sites to
+  repress translation of catabolic mRNAs, and this repression is antagonized by the
+  decoy sRNAs CrcZ and CrcY, which sequester Hfq/Crc. Hfq also contributes to the
+  stability and processing of CrcZ. The protein acts in the cytoplasm.
+existing_annotations:
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RNA binding is the defining and well-established molecular function of Hfq, supported by its Sm/Lsm domain and extensive literature on sRNA/mRNA binding in Pseudomonas and other bacteria.
+    action: ACCEPT
+    reason: Hfq is a canonical RNA-binding protein; this IEA term is correct and represents a core molecular function. A more specific child term (e.g. sRNA binding) could be added but the general term is accurate and should be retained.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Hfq acts on cytoplasmic sRNAs and mRNAs and is a soluble intracellular RNA chaperone, consistent with cytosolic localization.
+    action: ACCEPT
+    reason: Localization is inferred from function rather than KT2440-specific imaging, but cytosolic localization is well established for Hfq across bacteria and is consistent with its post-transcriptional regulatory role.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Hfq is a post-transcriptional regulator acting on RNA, not a direct regulator of DNA-templated transcription. This InterPro2GO mapping mislocates Hfq&#39;s activity at the transcriptional level.
+    action: MODIFY
+    reason: Hfq does not bind DNA or directly regulate transcription initiation/elongation; its regulatory role is post-transcriptional (sRNA-mediated effects on translation and RNA stability). The more accurate term is ncRNA-mediated regulation of translation, which is already separately annotated. This generic transcription-regulation term is an over-broad/incorrect propagation and should be replaced.
+    proposed_replacement_terms:
+    - id: GO:0045974
+      label: regulation of translation, ncRNA-mediated
+- term:
+    id: GO:0043487
+    label: regulation of RNA stability
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Hfq binds and stabilizes sRNAs (protecting them from nucleases) and also promotes targeted decay of mRNAs, directly influencing RNA stability. In KT2440, Hfq increases the stability of the CrcZ sRNA.
+    action: ACCEPT
+    reason: Regulation of RNA stability is a well-documented function of Hfq and is specifically supported in P. putida KT2440 (Hfq increases CrcZ stability).
+- term:
+    id: GO:0045974
+    label: regulation of translation, ncRNA-mediated
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Hfq mediates sRNA-dependent regulation of mRNA translation, the central function of the protein. In KT2440 this includes Crc/Hfq translational repression of catabolic mRNAs and its antagonism by the sRNAs CrcZ/CrcY.
+    action: ACCEPT
+    reason: This term precisely captures Hfq&#39;s core biological role as an sRNA-mediated post-transcriptional regulator of translation, strongly supported by Pseudomonas literature.
+core_functions:
+- description: RNA chaperone that binds small regulatory RNAs and mRNAs and accelerates sRNA-mRNA base pairing to mediate post-transcriptional regulation of translation
+  supported_by:
+  - reference_id: PMID:27777366
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  directly_involved_in:
+  - id: GO:0045974
+    label: regulation of translation, ncRNA-mediated
+- description: Stabilizes small regulatory RNAs and modulates mRNA decay, regulating cellular RNA stability; in P. putida increases stability/processing of the CrcZ sRNA
+  supported_by:
+  - reference_id: PMID:27777366
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  directly_involved_in:
+  - id: GO:0043487
+    label: regulation of RNA stability
+- description: Effector of carbon catabolite repression in P. putida KT2440, acting with the co-repressor Crc to repress translation of catabolic mRNAs bearing A-rich catabolite-activity motifs, antagonized by decoy sRNAs CrcZ/CrcY
+  supported_by:
+  - reference_id: PMID:27777366
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  directly_involved_in:
+  - id: GO:0045974
+    label: regulation of translation, ncRNA-mediated
+suggested_questions:
+- question: Does P. putida KT2440 Hfq have direct experimental subcellular localization data (microscopy/fractionation) confirming cytosolic distribution?
+- question: Beyond the CCR/Crc axis, which sRNA regulons (e.g. stress, iron, quorum sensing) does KT2440 Hfq control?
+suggested_experiments:
+- description: CLIP-seq or RIL-seq in P. putida KT2440 to define the genome-wide Hfq-bound sRNA and mRNA interactome
+- description: Phenotypic and transcriptomic comparison of an hfq deletion mutant under carbon-source shifts and envelope/oxidative stress to map the Hfq regulon
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:27777366
+  title: Effect of Crc and Hfq proteins on the transcription, processing, and stability of the Pseudomonas putida CrcZ sRNA
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: KT2440-specific primary study (Hernandez-Arranz et al., RNA 2016, doi:10.1261/rna.058313.116) establishing Hfq/Crc CCR function and Hfq effect on CrcZ stability/processing. PMID corrected from a hallucinated PMID:27811330 (an unrelated QJM editorial) to the PubMed-verified PMID:27777366, which resolves to this DOI and abstract.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

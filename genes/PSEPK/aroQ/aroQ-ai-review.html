@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroQ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroQ</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88IJ6" target="_blank" class="term-link">
+                        Q88IJ6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroQ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88IJ6" data-a="DESCRIPTION: aroQ (PP_3003) encodes a type-II 3-dehydroquinate ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>aroQ (PP_3003) encodes a type-II 3-dehydroquinate dehydratase (3-dehydroquinase, EC 4.2.1.10), a cytoplasmic enzyme of the shikimate pathway. It catalyzes the third step of chorismate biosynthesis, the dehydration of 3-dehydroquinate to 3-dehydroshikimate with release of water. Mechanistically, type-II dehydroquinases catalyze a trans (anti) dehydration through an enolate intermediate, in contrast to the Schiff-base mechanism of the unrelated type-I (aroD) enzymes. The protein adopts a flavodoxin-like fold and assembles as a homododecamer (four trimers). As a shikimate-pathway enzyme, it supplies chorismate, the common precursor of the aromatic amino acids (Phe, Tyr, Trp) and other aromatic metabolites such as folate precursors and ubiquinone.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003855" target="_blank" class="term-link">
+                                    GO:0003855
+                                </a>
+                            </span>
+                            <span class="term-label">3-dehydroquinate dehydratase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ6" data-a="GO:0003855" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The protein belongs to the type-II 3-dehydroquinase family (HAMAP MF_00169, Pfam PF01220) and UniProt records the catalytic activity 3-dehydroquinate = 3-dehydroshikimate + H2O (RHEA:21096, EC 4.2.1.10), with conserved active-site residues (proton acceptor at position 24, proton donor at 102) consistent with the type-II dehydratase mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by family/domain assignment, conserved catalytic residues, and the well-established function of bacterial type-II AroQ enzymes; this is the gene&#39;s core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                    GO:0009423
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ6" data-a="GO:0009423" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> 3-dehydroquinate dehydratase catalyzes step 3 of the 7-step chorismate biosynthesis (shikimate) pathway (UniPathway UPA00053, UER00086). This is the correct biological process context for the enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately captures the pathway role; consistent with UniProt PATHWAY annotation and the enzyme&#39;s molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019631" target="_blank" class="term-link">
+                                    GO:0019631
+                                </a>
+                            </span>
+                            <span class="term-label">quinate catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88IJ6" data-a="GO:0019631" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This TreeGrafter (PANTHER PTHR21272) annotation propagates a quinate catabolism role. Type-II dehydroquinases occur in two physiological contexts the biosynthetic shikimate-pathway AroQ enzyme and a separate catabolic dehydroquinase (e.g., QuiC/QutE) of the quinate/shikimate utilization pathway. PP_3003 is the biosynthetic AroQ enzyme (HAMAP AroQ rule, aroQ TIGR01088, located within the shikimate-pathway context), not the dedicated quinate catabolic enzyme. While type-II DHQases share the same chemistry, assigning quinate catabolism to this specific protein over-extends the prediction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The catabolic process term is an over-propagation from a family-level phylogenetic grouping. The protein&#39;s verified role is biosynthetic (chorismate biosynthesis); there is no organism-specific evidence that PP_3003 functions in quinate catabolism, and that role is normally carried by a distinct enzyme.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the third step of the shikimate (chorismate biosynthesis) pathway, the trans-dehydration of 3-dehydroquinate to 3-dehydroshikimate, as a type-II 3-dehydroquinate dehydratase.</h3>
+                <span class="vote-buttons" data-g="Q88IJ6" data-a="FUNCTION: Catalyzes the third step of the shikimate (chorism..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003855" target="_blank" class="term-link">
+                            3-dehydroquinate dehydratase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">3-dehydroquinate = 3-dehydroshikimate + H2O (RHEA:21096, EC 4.2.1.10); type-II 3-dehydroquinase family (HAMAP MF_00169), chorismate biosynthesis step 3/7 (UniPathway UPA00053).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroQ-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88IJ6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:06:41.512752</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroQ-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroQ-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000014 Figure 2 from the document provides the requested information. Panel A shows pABA titer data (mg/l) for various strains (S1-S16) al</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-aroq-iii-uniprot-q88ij6-pp_3003-in-pseudomonas-putida-kt2440">Research report: aroQ-III (UniProt Q88IJ6; PP_3003) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-and-disambiguation-mandatory">0) Target verification and disambiguation (MANDATORY)</h3>
+<p>The requested target is UniProt <strong>Q88IJ6</strong>, annotated as <strong>3-dehydroquinate dehydratase</strong> (aka <strong>3-dehydroquinase / type II DHQase</strong>), gene <strong>aroQ-III</strong> (synonym aroQ), ordered locus <strong>PP_3003</strong>, from <em>Pseudomonas putida</em> strain KT2440. In the literature retrieved for this report, <strong>no paper explicitly mentions UniProt Q88IJ6 or locus PP_3003</strong>, so direct accession-level linkage could not be independently verified from primary articles in hand. Therefore, gene/protein identity in this report is constrained to: (i) the UniProt-provided identifier set (Q88IJ6; aroQ-III; PP_3003; type-II DHQase family) and (ii) experimental literature that refers to <em>P. putida</em> KT2440 <strong>aroQ</strong> as a <strong>3-dehydroquinate dehydratase</strong> in the shikimate pathway. No conflicting “aroQ-III” usage (different proteins/organisms) was encountered in retrieved texts. (camposmagana2024combinatorialengineeringreveals pages 1-4)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-the-shikimate-pathway-and-the-dhqd-step">1.1 The shikimate pathway and the DHQD step</h4>
+<p>3-dehydroquinate dehydratase (DHQD; also called 3-dehydroquinate dehydratase/3-dehydroquinase in some sources) is a shikimate-pathway enzyme that catalyzes <strong>dehydration of 3-dehydroquinate (DHQ) to 3-dehydroshikimate (DHS)</strong> and is assigned <strong>EC 4.2.1.10</strong>. (niraula2025aromaticaminoacids pages 8-10, lee2023structuralandbiochemical pages 1-2)</p>
+<p>This step sits mid-pathway and is relevant because the shikimate pathway supplies aromatic building blocks (e.g., for aromatic amino acids and other aromatic metabolites). In microbes, the pathway is cytosolic; thus, the enzyme is expected to function in the <strong>cytoplasm</strong> (no direct <em>P. putida</em> KT2440 localization experiment was retrieved in the current corpus). (camposmagana2024combinatorialengineeringreveals pages 1-4)</p>
+<h4 id="12-type-i-vs-type-ii-dhqd-mechanisticstructural-classes">1.2 Type I vs type II DHQD (mechanistic/structural classes)</h4>
+<p>DHQD enzymes are commonly grouped into <strong>type I</strong> and <strong>type II</strong> enzymes that perform the same overall DHQ → DHS conversion but differ in mechanism and fold. A recent enzymology/structure paper summarizes that <strong>type I</strong> DHQDs catalyze dehydration via a <strong>covalent imine (Schiff-base) intermediate</strong> and are associated with an (α/β)8-fold architecture (often homodimers). In contrast, <strong>type II</strong> DHQDs (the <strong>aroQ family</strong>) catalyze <strong>anti/trans-dehydration</strong> through an <strong>enolate-type intermediate</strong>, and adopt a <strong>flavodoxin-like fold</strong> and can assemble as <strong>higher oligomers (e.g., dodecamers)</strong>. (lee2023structuralandbiochemical pages 1-2, niraula2025aromaticaminoacids pages 7-8, niraula2025aromaticaminoacids pages 8-10)</p>
+<p>A mechanistic description consistent with an E1CB-like pathway (formation/stabilization of an enolate intermediate, followed by elimination of water) is also described for DHQD in recent computational work, including mention of conserved catalytic residues (e.g., tyrosine for proton abstraction) and stabilization roles for other residues (e.g., asparagine/histidine roles in intermediate stabilization and water elimination). (isa2025identificationofnovel pages 1-2)</p>
+<h3 id="2-molecular-function-for-p-putida-kt2440-aroq-iiiq88ij6-inference-and-available-organism-level-evidence">2) Molecular function for <em>P. putida</em> KT2440 aroQ-III/Q88IJ6 (inference and available organism-level evidence)</h3>
+<h4 id="21-primary-biochemical-function-reaction-and-substrate-specificity">2.1 Primary biochemical function (reaction and substrate specificity)</h4>
+<p>Based on enzyme-family consensus and shikimate-pathway placement, <strong>aroQ-type enzymes</strong> catalyze <strong>DHQ → DHS (EC 4.2.1.10)</strong>. This is the primary function implied for UniProt Q88IJ6 (aroQ-III) given its assignment to the type II DHQase family and the use of <em>P. putida</em> KT2440 <strong>aroQ</strong> as the <strong>3-dehydroquinate dehydratase</strong> gene in pathway engineering literature. (niraula2025aromaticaminoacids pages 8-10, camposmagana2024combinatorialengineeringreveals pages 1-4, lee2023structuralandbiochemical pages 1-2)</p>
+<p>Direct enzyme kinetics for the <em>P. putida</em> KT2440 Q88IJ6 protein were not retrieved. However, a 2023 peer-reviewed type II DHQD study provides family-relevant quantitative kinetics and residue-level functional constraints (see §5), illustrating typical DHQD enzymology that supports this functional annotation. (lee2023structuralandbiochemical pages 7-10)</p>
+<h4 id="22-cellular-localization">2.2 Cellular localization</h4>
+<p>No paper retrieved here experimentally localizes <em>P. putida</em> KT2440 AroQ-III/Q88IJ6. Given its role as a soluble enzyme of central metabolism and typical bacterial shikimate-pathway localization, the most parsimonious functional site is the <strong>cytoplasm</strong> (inference; not directly evidenced for Q88IJ6 in the retrieved corpus). (camposmagana2024combinatorialengineeringreveals pages 1-4)</p>
+<h3 id="3-pathway-role-and-physiological-relevance-evidence-from-related-bacteria-and-pseudomonas-engineering">3) Pathway role and physiological relevance (evidence from related bacteria and <em>Pseudomonas</em> engineering)</h3>
+<h4 id="31-geneticphysiological-evidence-that-aroq-activity-supports-growth-and-in-pathogens-virulence-programs">3.1 Genetic/physiological evidence that AroQ activity supports growth and (in pathogens) virulence programs</h4>
+<p>A 2023 experimental study in <em>Ralstonia solanacearum</em> (a plant pathogen) demonstrated that two aroQ paralogs (aroQ1/aroQ2) are <strong>collectively essential for growth in minimal medium</strong> and for robust in planta proliferation; deletion of both caused severe growth defects that were <strong>rescued by shikimic acid supplementation</strong>, linking the phenotype to disruption of shikimate-pathway intermediate supply. Quantitatively, wild type achieved ~<strong>10^9–10^10 CFU g−1</strong> at ~4 days post inoculation (dpi), while the double mutant peaked at ~<strong>10^6 CFU g−1</strong> at 4 dpi. (zhang2023functionalcharacterizationof pages 4-6)</p>
+<p>While this is not <em>P. putida</em>, it is a strong experimental demonstration that bacterial AroQ enzymes can be key shikimate-pathway nodes whose loss can influence growth and higher-level phenotypes (e.g., virulence-associated secretion systems). (zhang2023functionalcharacterizationof pages 4-6)</p>
+<h4 id="32-p-putida-kt2440-evidence-from-metabolic-engineering-2024">3.2 <em>P. putida</em> KT2440: evidence from metabolic engineering (2024)</h4>
+<p>A 2024 <em>P. putida</em> KT2440 metabolic engineering preprint explicitly includes <strong>aroQ (annotated as 3-dehydroquinate dehydratase)</strong> among shikimate-pathway genes whose expression is tuned to optimize production of <strong>para-aminobenzoic acid (pABA)</strong>. (camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals pages 4-7)</p>
+<p>Key quantitative findings relevant to functional annotation and pathway control:<br />
+- Across combinatorial expression strains, pABA titers ranged from <strong>2.0 ± 3.4 to 186.2 ± 0.32 mg/L</strong> in an initial screen, and up to <strong>232.1 ± 17.6 mg/L</strong> in a subsequent set. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals pages 4-7)<br />
+- A linear model of factor effects reported <strong>aroQ regression coefficient = −0.20</strong> (statistically significant), indicating that <strong>high aroQ overexpression</strong> tended to <strong>reduce</strong> pABA titers; the authors interpreted results as consistent with <strong>mild</strong> aroQ overexpression being desirable, while high overexpression can be detrimental. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals media 53a23727)</p>
+<p>This provides organism-specific, experimentally grounded evidence that <em>P. putida</em> KT2440 aroQ is an active node in the shikimate pathway whose expression level impacts aromatic-product output, consistent with an in-pathway dehydratase function. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals media 53a23727)</p>
+<h3 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="41-2023-high-resolution-structurefunction-study-of-a-type-ii-dhqd-family-relevant">4.1 2023: high-resolution structure–function study of a type II DHQD (family-relevant)</h4>
+<p>A 2023 peer-reviewed paper solved two crystal structures of a type II DHQD from <em>Corynebacterium glutamicum</em> (CgDHQD), including a citrate-bound wild-type at <strong>1.80 Å</strong> and a DHQ-bound mutant complex at <strong>~2.00–2.03 Å</strong> (PDB <strong>8IDR</strong>, <strong>8IDU</strong>). The enzyme forms a <strong>homododecamer</strong> (four trimers), consistent with a common type II DHQD oligomerization mode, and the authors used extensive mutagenesis to map essential catalytic residues and quantify kinetic impacts of substitutions near the substrate pocket. (lee2023structuralandbiochemical pages 1-2, lee2023structuralandbiochemical pages 7-10, lee2023structuralandbiochemical pages 2-3)</p>
+<p>Although not in <em>P. putida</em>, this is directly relevant to annotating Q88IJ6 as a type II DHQD because it provides contemporary, experimentally validated mechanistic/structural constraints for the enzyme family (fold, oligomeric assembly, active-site residue importance, and kinetic regimes). (lee2023structuralandbiochemical pages 1-2, lee2023structuralandbiochemical pages 7-10)</p>
+<h4 id="42-2024-systems-metabolic-engineering-links-aroq-expression-tuning-to-aromatic-product-performance">4.2 2024: systems metabolic engineering links aroQ expression tuning to aromatic-product performance</h4>
+<p>The 2024 <em>P. putida</em> KT2440 DoE/linear modeling work highlights that optimizing aromatic output (pABA) can require tuning shikimate-pathway nodes, and that <strong>aroQ expression level is not monotonically beneficial</strong>—overexpression can become counterproductive depending on the pathway context. This is a useful “current understanding” point for functional annotation in applied settings: aroQ can act as a controllable node in engineered aromatic metabolism rather than simply being a static housekeeping enzyme. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals media 53a23727)</p>
+<h3 id="5-quantitative-statistics-and-data-highlights-recent-studies">5) Quantitative statistics and data highlights (recent studies)</h3>
+<h4 id="51-enzyme-kinetics-and-residue-constraints-2023-type-ii-dhqd-exemplar">5.1 Enzyme kinetics and residue constraints (2023; type II DHQD exemplar)</h4>
+<p>In the 2023 type II DHQD study (CgDHQD), the authors reported Michaelis–Menten parameters and mutation effects that illustrate typical catalytic performance and structure–function relationships:<br />
+- Wild type: <strong>Vmax 3.00 μM/s</strong>, <strong>Km 348.20 μM</strong>, <strong>kcat 150.19 s−1</strong>. (lee2023structuralandbiochemical pages 7-10)<br />
+- S103T mutant: <strong>Vmax 3.99 μM/s</strong>, <strong>Km 745.3 μM</strong>, <strong>kcat 199.67 s−1</strong> (increased turnover but decreased substrate affinity). (lee2023structuralandbiochemical pages 7-10)<br />
+- Multiple substitutions at catalytic/substrate-binding residues produced near-complete loss of activity (e.g., <strong>N12, R19, Y24, N75, E99, H101, R108</strong>; substrate-binding <strong>H81, R112</strong>). (lee2023structuralandbiochemical pages 7-10)</p>
+<p>These data support expert-level inference that type II DHQDs are sensitive to subtle pocket geometry and lid-loop dynamics and can exhibit activity–affinity tradeoffs upon mutation—important for interpreting any future <em>P. putida</em> Q88IJ6 engineering or variant annotation. (lee2023structuralandbiochemical pages 7-10)</p>
+<h4 id="52-engineering-titers-and-factor-effects-in-p-putida-kt2440-2024">5.2 Engineering titers and factor effects in <em>P. putida</em> KT2440 (2024)</h4>
+<p>As described above, pABA titers up to <strong>232.1 ± 17.6 mg/L</strong> were achieved across engineered strain sets, and <strong>aroQ</strong> carried a <strong>negative coefficient (−0.20)</strong> in the factor-effect model when set to high expression in that experimental design. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals media 53a23727)</p>
+<h3 id="6-applications-and-real-world-implementations">6) Applications and real-world implementations</h3>
+<h4 id="61-metabolic-engineering-of-aromatic-chemicals">6.1 Metabolic engineering of aromatic chemicals</h4>
+<p>The 2024 study demonstrates a concrete application: using statistical Design of Experiments to tune expression of shikimate-pathway genes (including <strong>aroQ</strong>) in <em>P. putida</em> KT2440 to improve production of <strong>pABA</strong>, an industrial intermediate. This is a real-world implementation of aroQ functional knowledge in an engineered host. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals media 53a23727)</p>
+<h4 id="62-antimicrobialanti-virulence-target-context-general">6.2 Antimicrobial/anti-virulence target context (general)</h4>
+<p>Because the shikimate pathway is essential in many bacteria and absent from animals, shikimate-pathway enzymes (including DHQD) are repeatedly explored as antimicrobial targets. While the most recent retrieved inhibitor-focused work here is computational and not 2023–2024, it illustrates that DHQD remains of drug-discovery interest, reporting docking energies and binding free energies for candidate inhibitors as quantitative prioritization metrics. (isa2025identificationofnovel pages 1-2)</p>
+<h3 id="7-expert-analysis-and-interpretation-based-on-authoritative-sources-in-hand">7) Expert analysis and interpretation (based on authoritative sources in hand)</h3>
+<ol>
+<li><strong>Functional assignment confidence</strong>: Family-level evidence strongly supports annotating aroQ-III/Q88IJ6 as <strong>type II 3-dehydroquinate dehydratase (EC 4.2.1.10)</strong> catalyzing <strong>DHQ → DHS</strong>, due to consistent mechanistic/structural characterization of type II DHQDs and explicit use of <em>P. putida</em> KT2440 <strong>aroQ</strong> as “3-dehydroquinate dehydratase” in pathway engineering work. (camposmagana2024combinatorialengineeringreveals pages 1-4, lee2023structuralandbiochemical pages 1-2)</li>
+<li><strong>Control point in engineered metabolism</strong>: The 2024 <em>P. putida</em> DoE study indicates that “more enzyme” is not necessarily better; <strong>overexpression of aroQ can reduce aromatic product titers</strong> depending on pathway balancing, suggesting potential for intermediate imbalances or resource burdens. This nuance is crucial for functional annotation in applied contexts (e.g., when inferring phenotypes from expression changes). (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals media 53a23727)</li>
+<li><strong>Expectation for localization</strong>: In bacteria, the shikimate pathway is typically cytosolic, so Q88IJ6 is expected to act in the <strong>cytoplasm</strong>; however, the present evidence set lacks direct localization experiments for this exact protein. (camposmagana2024combinatorialengineeringreveals pages 1-4)</li>
+</ol>
+<h3 id="8-evidence-summary-table">8) Evidence summary table</h3>
+<p>The following table consolidates the key, citable evidence used in this report (including quantitative values and URLs).</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Key details (include quantitative values)</th>
+<th>Organism/system</th>
+<th>Source (authors, journal, year)</th>
+<th>URL</th>
+<th>Evidence strength/notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction catalyzed and EC number</td>
+<td>3-Dehydroquinate dehydratase (DHQD/DHQase) catalyzes conversion of 3-dehydroquinate (DHQ) to 3-dehydroshikimate (DHS/3-DHS) in the shikimate pathway; EC 4.2.1.10. This supports annotating <strong>aroQ-III / Q88IJ6</strong> as the dehydratase step in aromatic amino acid biosynthesis when family assignment is correct. (niraula2025aromaticaminoacids pages 8-10, lee2023structuralandbiochemical pages 1-2)</td>
+<td>General DHQD; inference applied to <em>Pseudomonas putida</em> KT2440 aroQ-III</td>
+<td>Niraula et al., <em>BioTech</em>, 2025; Lee et al., <em>Journal of Microbiology and Biotechnology</em>, 2023</td>
+<td>https://doi.org/10.3390/biotech14010006 ; https://doi.org/10.4014/jmb.2305.05018</td>
+<td>Strong for enzyme class/reaction; indirect for Q88IJ6 because retrieved literature did not explicitly map UniProt Q88IJ6/PP_3003, so identity relies partly on supplied UniProt annotation.</td>
+</tr>
+<tr>
+<td>Type I vs type II mechanistic distinction</td>
+<td>Type I DHQDs perform <strong>cis/syn-dehydration</strong> via covalent <strong>imine/Schiff-base</strong> chemistry; type II DHQDs perform <strong>trans/anti-dehydration</strong> via an <strong>enolate/E1CB-like</strong> mechanism. Recent summaries note type II uses catalytic acid/base chemistry distinct from type I and has only weak covalent intermediates. (niraula2025aromaticaminoacids pages 7-8, lee2023structuralandbiochemical pages 10-11, isa2025identificationofnovel pages 1-2, niraula2025aromaticaminoacids pages 8-10)</td>
+<td>General DHQD enzyme families</td>
+<td>Niraula et al., <em>BioTech</em>, 2025; Lee et al., <em>J. Microbiol. Biotechnol.</em>, 2023; Isa &amp; Kappo, <em>In Silico Pharmacology</em>, 2025</td>
+<td>https://doi.org/10.3390/biotech14010006 ; https://doi.org/10.4014/jmb.2305.05018 ; https://doi.org/10.1007/s40203-024-00298-x</td>
+<td>Strong for mechanistic distinction at family level; useful for functional inference that aroQ-family enzymes are type II DHQDs.</td>
+</tr>
+<tr>
+<td>Structural/oligomeric features of type II DHQD</td>
+<td>Type II DHQD adopts a <strong>flavodoxin-like α/β fold</strong> and forms a <strong>homododecamer</strong> (four trimers, tetrahedral organization). In <em>Corynebacterium glutamicum</em>, crystal structures were solved as <strong>8IDR</strong> (citrate complex, <strong>1.80 Å</strong>) and <strong>8IDU</strong> (DHQ complex, ~<strong>2.00–2.03 Å</strong>). Solution mass ~<strong>182.3 kDa</strong> supported dodecamer formation; intertrimer interface area <strong>723.9 Å²</strong> (ΔiG <strong>−4.8 kcal/mol</strong>) and intratrimer area <strong>686.5 Å²</strong> (ΔiG <strong>−4.6 kcal/mol</strong>). (lee2023structuralandbiochemical pages 1-2, lee2023structuralandbiochemical pages 3-4, lee2023structuralandbiochemical pages 2-3)</td>
+<td>Type II DHQD from <em>Corynebacterium glutamicum</em> (structural model for aroQ family)</td>
+<td>Lee et al., <em>Journal of Microbiology and Biotechnology</em>, 2023</td>
+<td>https://doi.org/10.4014/jmb.2305.05018</td>
+<td>Strong direct structural evidence for type II DHQD family; informative but not organism-specific to <em>P. putida</em> Q88IJ6.</td>
+</tr>
+<tr>
+<td>Kinetic parameters and mutation effects from Lee 2023</td>
+<td>Wild-type CgDHQD kinetics: <strong>Vmax 3.00 μM/s, Km 348.20 μM, kcat 150.19 s^-1</strong>. Variant <strong>S103T</strong>: <strong>Vmax 3.99 μM/s, Km 745.3 μM, kcat 199.67 s^-1</strong> (&gt;10% higher activity but reduced substrate affinity). Mutations of catalytic residues (<strong>N12, R19, Y24, N75, E99, H101, R108</strong>) and substrate-binding residues (<strong>H81, R112</strong>) caused near-complete loss/no detectable activity. <strong>P105A</strong> lowered activity by <strong>60%</strong>; <strong>P105I</strong> and <strong>P105V</strong> lowered activity by <strong>76%</strong> and <strong>58%</strong>; <strong>I102A</strong> and <strong>S103A</strong> retained <strong>35%</strong> and <strong>19%</strong> activity. (lee2023structuralandbiochemical pages 7-10)</td>
+<td><em>Corynebacterium glutamicum</em> type II DHQD</td>
+<td>Lee et al., <em>Journal of Microbiology and Biotechnology</em>, 2023</td>
+<td>https://doi.org/10.4014/jmb.2305.05018</td>
+<td>Strong biochemical evidence for catalytic mechanism/residue importance in type II DHQDs; extrapolation to Q88IJ6 should be made cautiously unless active-site conservation is verified.</td>
+</tr>
+<tr>
+<td><em>Pseudomonas putida</em> KT2440 metabolic engineering involving aroQ</td>
+<td>In a combinatorial pABA engineering study, <em>P. putida</em> shikimate-pathway strains produced <strong>2.0 ± 3.4 to 186.2 ± 0.32 mg/L</strong> pABA in the initial screen and up to <strong>232.1 ± 17.6 mg/L</strong> after optimization. <strong>Figure 2</strong> reported <strong>aroQ regression coefficient = −0.20</strong>, indicating high aroQ overexpression had a statistically significant negative effect; authors concluded <strong>mild</strong> rather than high aroQ overexpression is preferable. aroQ is annotated there as <strong>3-dehydroquinate dehydratase</strong>. (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals pages 4-7, camposmagana2024combinatorialengineeringreveals media 53a23727)</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>Campos-Magaña et al., <em>bioRxiv</em>, 2024</td>
+<td>https://doi.org/10.1101/2024.06.17.599342</td>
+<td>Moderate evidence: organism-specific and directly relevant to aroQ pathway role, but preprint and not a direct biochemical characterization of Q88IJ6 protein.</td>
+</tr>
+<tr>
+<td>Ralstonia aroQ1/aroQ2 mutant phenotypes</td>
+<td>In <em>Ralstonia solanacearum</em>, deletion of both <strong>aroQ1/aroQ2</strong> abolished growth in minimal medium and caused strong in planta attenuation, while single deletions had no obvious defect, showing functional redundancy of AroQ enzymes. Wild type reached about <strong>10^9–10^10 CFU g^-1 at ~4 dpi</strong> then dropped to <strong>~10^5–10^6 CFU g^-1 at 6 dpi</strong>; the double mutant peaked only at <strong>~10^6 CFU g^-1 at 4 dpi</strong>. Shikimic acid supplementation partially/completely rescued growth defects, linking phenotype to shikimate-pathway disruption. (zhang2023functionalcharacterizationof pages 4-6)</td>
+<td><em>Ralstonia solanacearum</em></td>
+<td>Zhang et al., <em>Frontiers in Microbiology</em>, 2023</td>
+<td>https://doi.org/10.3389/fmicb.2023.1186688</td>
+<td>Moderate evidence: not <em>P. putida</em>, but a peer-reviewed, experimentally validated demonstration that bacterial AroQ enzymes are physiologically important for shikimate-pathway function.</td>
+</tr>
+<tr>
+<td>Recent development: in silico inhibitor metrics for DHQD</td>
+<td>A recent anti-tuberculosis in silico study targeting DHQD reported top docking energies of <strong>−8.99 to −8.39 kcal/mol</strong> versus reference ligand <strong>−4.93 kcal/mol</strong>; MD simulation RMSDs <strong>1.57–2.34 Å</strong> over <strong>50 ns</strong>; MM-GBSA binding energies down to <strong>−32.70 kcal/mol</strong> versus reference <strong>−10.62 kcal/mol</strong>. A cited Mtb DHQD structure had <strong>1.9 Å</strong> resolution. (isa2025identificationofnovel pages 1-2)</td>
+<td><em>Mycobacterium tuberculosis</em> DHQD (drug-target context)</td>
+<td>Isa &amp; Kappo, <em>In Silico Pharmacology</em>, 2025</td>
+<td>https://doi.org/10.1007/s40203-024-00298-x</td>
+<td>Weak-to-moderate for functional annotation: useful as 2024/2025 development context showing DHQD remains a drug target, but results are computational and not directly about <em>P. putida</em> Q88IJ6.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the most relevant evidence for annotating aroQ-III (UniProt Q88IJ6) as a type II 3-dehydroquinate dehydratase in Pseudomonas putida KT2440. It combines direct organism-level pathway evidence with broader structural, mechanistic, and recent research context for the DHQD family.</em></p>
+<h3 id="9-key-figure-supporting-organism-specific-engineering-evidence">9) Key figure supporting organism-specific engineering evidence</h3>
+<p>Campos-Magaña et al. (bioRxiv 2024) Figure 2 contains (i) pABA titers across strains and (ii) regression coefficients for shikimate-gene expression effects, including <strong>aroQ coefficient −0.20</strong>. (camposmagana2024combinatorialengineeringreveals media 53a23727)</p>
+<h3 id="references-urls-and-publication-dates-where-available">References (URLs and publication dates where available)</h3>
+<ul>
+<li>Lee CH, Kim S, Seo H, Kim K-J. “Structural and Biochemical Analysis of 3-Dehydroquinate Dehydratase from <em>Corynebacterium glutamicum</em>.” <em>Journal of Microbiology and Biotechnology</em>. <strong>Aug 2023</strong>. https://doi.org/10.4014/jmb.2305.05018 (lee2023structuralandbiochemical pages 1-2, lee2023structuralandbiochemical pages 7-10)</li>
+<li>Zhang Q et al. “Functional characterization of two 3-dehydroquinases of AroQ1 and AroQ2…” <em>Frontiers in Microbiology</em>. <strong>Apr 2023</strong>. https://doi.org/10.3389/fmicb.2023.1186688 (zhang2023functionalcharacterizationof pages 4-6)</li>
+<li>Campos-Magaña MA et al. “Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in <em>Pseudomonas putida</em>.” <em>bioRxiv</em>. <strong>Jun 17, 2024</strong>. https://doi.org/10.1101/2024.06.17.599342 (camposmagana2024combinatorialengineeringreveals pages 7-11, camposmagana2024combinatorialengineeringreveals pages 1-4, camposmagana2024combinatorialengineeringreveals media 53a23727)</li>
+<li>Isa MA, Kappo AP. “Identification of novel 3-dehydroquinate dehydratase (DHQD) inhibitors for anti-tuberculosis activity…” <em>In Silico Pharmacology</em>. <strong>Jan 2025</strong>. https://doi.org/10.1007/s40203-024-00298-x (isa2025identificationofnovel pages 1-2)</li>
+<li>Niraula A et al. “Aromatic Amino Acids: Exploring Microalgae as a Potential Biofactory.” <em>BioTech</em>. <strong>Jan 2025</strong>. https://doi.org/10.3390/biotech14010006 (niraula2025aromaticaminoacids pages 8-10)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 1-4): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(niraula2025aromaticaminoacids pages 8-10): Archana Niraula, Amir Danesh, Natacha Merindol, Fatma Meddeb-Mouelhi, and Isabel Desgagné-Penix. Aromatic amino acids: exploring microalgae as a potential biofactory. BioTech, 14:6, Jan 2025. URL: https://doi.org/10.3390/biotech14010006, doi:10.3390/biotech14010006. This article has 9 citations.</p>
+</li>
+<li>
+<p>(lee2023structuralandbiochemical pages 1-2): Chan Hwi Lee, Sangwoo Kim, Hogyun Seo, and Kyung-Jin Kim. Structural and biochemical analysis of 3-dehydroquinate dehydratase from corynebacterium glutamicum. Journal of Microbiology and Biotechnology, 33:1595-1605, Aug 2023. URL: https://doi.org/10.4014/jmb.2305.05018, doi:10.4014/jmb.2305.05018. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(niraula2025aromaticaminoacids pages 7-8): Archana Niraula, Amir Danesh, Natacha Merindol, Fatma Meddeb-Mouelhi, and Isabel Desgagné-Penix. Aromatic amino acids: exploring microalgae as a potential biofactory. BioTech, 14:6, Jan 2025. URL: https://doi.org/10.3390/biotech14010006, doi:10.3390/biotech14010006. This article has 9 citations.</p>
+</li>
+<li>
+<p>(isa2025identificationofnovel pages 1-2): Mustafa Alhaji Isa and Abidemi Paul Kappo. Identification of novel 3-dehydroquinate dehydratase (dhqd) inhibitors for anti-tuberculosis activity: insights from virtual screening, molecular docking, and dynamics simulations. In Silico Pharmacology, Jan 2025. URL: https://doi.org/10.1007/s40203-024-00298-x, doi:10.1007/s40203-024-00298-x. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2023structuralandbiochemical pages 7-10): Chan Hwi Lee, Sangwoo Kim, Hogyun Seo, and Kyung-Jin Kim. Structural and biochemical analysis of 3-dehydroquinate dehydratase from corynebacterium glutamicum. Journal of Microbiology and Biotechnology, 33:1595-1605, Aug 2023. URL: https://doi.org/10.4014/jmb.2305.05018, doi:10.4014/jmb.2305.05018. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2023functionalcharacterizationof pages 4-6): Qingshan Zhang, Bofan Wu, Liangliang Han, Duan Yu, Tao Liang, Yan Wang, and Tao Guo. Functional characterization of two 3-dehydroquinases of aroq1 and aroq2 in the shikimate pathway and expression of genes for the type iii secretion system in ralstonia solanacearum. Frontiers in Microbiology, Apr 2023. URL: https://doi.org/10.3389/fmicb.2023.1186688, doi:10.3389/fmicb.2023.1186688. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 4-7): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 7-11): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals media 53a23727): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(lee2023structuralandbiochemical pages 2-3): Chan Hwi Lee, Sangwoo Kim, Hogyun Seo, and Kyung-Jin Kim. Structural and biochemical analysis of 3-dehydroquinate dehydratase from corynebacterium glutamicum. Journal of Microbiology and Biotechnology, 33:1595-1605, Aug 2023. URL: https://doi.org/10.4014/jmb.2305.05018, doi:10.4014/jmb.2305.05018. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2023structuralandbiochemical pages 10-11): Chan Hwi Lee, Sangwoo Kim, Hogyun Seo, and Kyung-Jin Kim. Structural and biochemical analysis of 3-dehydroquinate dehydratase from corynebacterium glutamicum. Journal of Microbiology and Biotechnology, 33:1595-1605, Aug 2023. URL: https://doi.org/10.4014/jmb.2305.05018, doi:10.4014/jmb.2305.05018. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lee2023structuralandbiochemical pages 3-4): Chan Hwi Lee, Sangwoo Kim, Hogyun Seo, and Kyung-Jin Kim. Structural and biochemical analysis of 3-dehydroquinate dehydratase from corynebacterium glutamicum. Journal of Microbiology and Biotechnology, 33:1595-1605, Aug 2023. URL: https://doi.org/10.4014/jmb.2305.05018, doi:10.4014/jmb.2305.05018. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroQ-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000014 Figure 2 from the document provides the requested information. Panel A shows pABA titer data (mg/l) for various strains (S1-S16) al" src="aroQ-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>camposmagana2024combinatorialengineeringreveals pages 1-4</li>
+<li>isa2025identificationofnovel pages 1-2</li>
+<li>lee2023structuralandbiochemical pages 7-10</li>
+<li>zhang2023functionalcharacterizationof pages 4-6</li>
+<li>niraula2025aromaticaminoacids pages 8-10</li>
+<li>lee2023structuralandbiochemical pages 1-2</li>
+<li>niraula2025aromaticaminoacids pages 7-8</li>
+<li>camposmagana2024combinatorialengineeringreveals pages 4-7</li>
+<li>camposmagana2024combinatorialengineeringreveals pages 7-11</li>
+<li>lee2023structuralandbiochemical pages 2-3</li>
+<li>lee2023structuralandbiochemical pages 10-11</li>
+<li>lee2023structuralandbiochemical pages 3-4</li>
+<li>https://doi.org/10.3390/biotech14010006</li>
+<li>https://doi.org/10.4014/jmb.2305.05018</li>
+<li>https://doi.org/10.1007/s40203-024-00298-x</li>
+<li>https://doi.org/10.1101/2024.06.17.599342</li>
+<li>https://doi.org/10.3389/fmicb.2023.1186688</li>
+<li>https://doi.org/10.1101/2024.06.17.599342,</li>
+<li>https://doi.org/10.3390/biotech14010006,</li>
+<li>https://doi.org/10.4014/jmb.2305.05018,</li>
+<li>https://doi.org/10.1007/s40203-024-00298-x,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1186688,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88IJ6
+gene_symbol: aroQ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: aroQ (PP_3003) encodes a type-II 3-dehydroquinate dehydratase (3-dehydroquinase, EC 4.2.1.10), a cytoplasmic enzyme of the shikimate pathway. It catalyzes the third step of chorismate biosynthesis, the dehydration of 3-dehydroquinate to 3-dehydroshikimate with release of water. Mechanistically, type-II dehydroquinases catalyze a trans (anti) dehydration through an enolate intermediate, in contrast to the Schiff-base mechanism of the unrelated type-I (aroD) enzymes. The protein adopts a flavodoxin-like fold and assembles as a homododecamer (four trimers). As a shikimate-pathway enzyme, it supplies chorismate, the common precursor of the aromatic amino acids (Phe, Tyr, Trp) and other aromatic metabolites such as folate precursors and ubiquinone.
+existing_annotations:
+- term:
+    id: GO:0003855
+    label: 3-dehydroquinate dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. The protein belongs to the type-II 3-dehydroquinase family (HAMAP MF_00169, Pfam PF01220) and UniProt records the catalytic activity 3-dehydroquinate = 3-dehydroshikimate + H2O (RHEA:21096, EC 4.2.1.10), with conserved active-site residues (proton acceptor at position 24, proton donor at 102) consistent with the type-II dehydratase mechanism.
+    action: ACCEPT
+    reason: Strongly supported by family/domain assignment, conserved catalytic residues, and the well-established function of bacterial type-II AroQ enzymes; this is the gene&#39;s core function.
+- term:
+    id: GO:0009423
+    label: chorismate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: 3-dehydroquinate dehydratase catalyzes step 3 of the 7-step chorismate biosynthesis (shikimate) pathway (UniPathway UPA00053, UER00086). This is the correct biological process context for the enzyme.
+    action: ACCEPT
+    reason: Accurately captures the pathway role; consistent with UniProt PATHWAY annotation and the enzyme&#39;s molecular function.
+- term:
+    id: GO:0019631
+    label: quinate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: This TreeGrafter (PANTHER PTHR21272) annotation propagates a quinate catabolism role. Type-II dehydroquinases occur in two physiological contexts the biosynthetic shikimate-pathway AroQ enzyme and a separate catabolic dehydroquinase (e.g., QuiC/QutE) of the quinate/shikimate utilization pathway. PP_3003 is the biosynthetic AroQ enzyme (HAMAP AroQ rule, aroQ TIGR01088, located within the shikimate-pathway context), not the dedicated quinate catabolic enzyme. While type-II DHQases share the same chemistry, assigning quinate catabolism to this specific protein over-extends the prediction.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The catabolic process term is an over-propagation from a family-level phylogenetic grouping. The protein&#39;s verified role is biosynthetic (chorismate biosynthesis); there is no organism-specific evidence that PP_3003 functions in quinate catabolism, and that role is normally carried by a distinct enzyme.
+core_functions:
+- description: Catalyzes the third step of the shikimate (chorismate biosynthesis) pathway, the trans-dehydration of 3-dehydroquinate to 3-dehydroshikimate, as a type-II 3-dehydroquinate dehydratase.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: 3-dehydroquinate = 3-dehydroshikimate + H2O (RHEA:21096, EC 4.2.1.10); type-II 3-dehydroquinase family (HAMAP MF_00169), chorismate biosynthesis step 3/7 (UniPathway UPA00053).
+  molecular_function:
+    id: GO:0003855
+    label: 3-dehydroquinate dehydratase activity
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

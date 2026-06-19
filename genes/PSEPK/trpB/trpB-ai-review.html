@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>trpB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>trpB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RP6" target="_blank" class="term-link">
+                        Q88RP6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "trpB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RP6" data-a="DESCRIPTION: Tryptophan synthase beta chain (TrpB, EC 4.2.1.20)..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Tryptophan synthase beta chain (TrpB, EC 4.2.1.20), a pyridoxal 5&#39;-phosphate (PLP)-dependent enzyme that catalyzes the final (beta) reaction of L-tryptophan biosynthesis, condensing indole with L-serine to yield L-tryptophan and water. PLP is bound as an internal aldimine to an active-site lysine (residue 95 in this protein). TrpB is a member of the fold-type II PLP enzyme family (TrpB family) and normally assembles with the alpha subunit (TrpA) into the alpha2-beta2 tryptophan synthase complex, in which the indole produced by TrpA from indole-3-glycerol phosphate is channeled directly to the TrpB active site through an intramolecular tunnel. TrpB carries out the terminal, fifth step of the conversion of chorismate to L-tryptophan and is a soluble cytoplasmic enzyme. In P. putida KT2440 the gene (PP_0083) is adjacent to and co-transcribed with trpA (PP_0082) as a trpBA operon, and its expression is strongly induced by indole.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000162" target="_blank" class="term-link">
+                                    GO:0000162
+                                </a>
+                            </span>
+                            <span class="term-label">L-tryptophan biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RP6" data-a="GO:0000162" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TrpB catalyzes the terminal step of L-tryptophan biosynthesis; this annotation correctly captures the core biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The protein is a UniProt-reviewed tryptophan synthase beta chain (EC 4.2.1.20) belonging to the TrpB family, with UniPathway UPA00035 (L-tryptophan biosynthesis, step 5/5). In P. putida KT2440 trpA disruption causes tryptophan auxotrophy, confirming the trpBA cluster is required for de novo tryptophan synthesis (PMID:21261884; see also file:PSEPK/trpB/trpB-deep-research-falcon.md). The IEA assignment is well-supported and represents a core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004834" target="_blank" class="term-link">
+                                    GO:0004834
+                                </a>
+                            </span>
+                            <span class="term-label">tryptophan synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RP6" data-a="GO:0004834" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct molecular function. TrpB is the tryptophan synthase beta subunit catalyzing the PLP-dependent beta-reaction (indole + L-serine -&gt; L-tryptophan + H2O).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by EC 4.2.1.20, RHEA:10532, the conserved PLP-binding lysine (residue 95), HAMAP-Rule MF_00133, and TrpB-family InterPro/PANTHER signatures. This is the core enzymatic activity of the gene product.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RP6" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bacterial tryptophan synthase is a soluble cytoplasmic enzyme; cytoplasmic localization is correct.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TrpB has no signal peptide or transmembrane region and functions in cytoplasmic amino-acid biosynthesis as part of the soluble alpha2-beta2 tryptophan synthase complex. The TreeGrafter IEA assignment is consistent with the well-established localization of this enzyme family. The term is somewhat generic but accurate for a bacterial cytosolic enzyme.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the PLP-dependent beta-replacement reaction forming L-tryptophan from indole (channeled from TrpA) and L-serine, completing the terminal step of L-tryptophan biosynthesis</h3>
+                <span class="vote-buttons" data-g="Q88RP6" data-a="FUNCTION: Catalyzes the PLP-dependent beta-replacement react..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004834" target="_blank" class="term-link">
+                            tryptophan synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000162" target="_blank" class="term-link">
+                                L-tryptophan biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC=4.2.1.20; tryptophan synthase activity inferred from InterPro, RHEA:10532, UniRule and PANTHER (TrpB family).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/trpB/trpB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">FUNCTION: The beta subunit is responsible for the synthesis of L-tryptophan from indole and L-serine. CATALYTIC ACTIVITY: indol-3-yl glycerol 3-phosphate + L-serine = D-glyceraldehyde 3-phosphate + L-tryptophan + H2O; PATHWAY: L-tryptophan from chorismate, step 5/5; COFACTOR: pyridoxal 5&#39;-phosphate.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/trpB/trpB-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry TRPB_PSEPK (Q88RP6)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TrpB synthesizes L-tryptophan from indole and L-serine; PLP cofactor; pathway L-tryptophan from chorismate step 5/5; functions as a tetramer of two alpha and two beta chains.</div>
+                        
+                        <div class="finding-text">"FUNCTION: The beta subunit is responsible for the synthesis of L-tryptophan from indole and L-serine. SUBUNIT: Tetramer of two alpha and two beta chains."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21261884" target="_blank" class="term-link">
+                            PMID:21261884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In P. putida KT2440 there is a single pathway from chorismate to tryptophan; the trp genes are in unlinked regions with trpBA organized as an operon, and auxotroph screening shows the pathway is required for de novo tryptophan biosynthesis.</div>
+                        
+                        <div class="finding-text">"Genes for tryptophan biosynthesis are grouped in unlinked regions with the trpBA and trpGDE genes organized as operons... There is a single pathway from chorismate leading to the biosynthesis of tryptophan."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(trpB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RP6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive Research Report: trpB Gene (UniProt Q88RP6) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">34 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:37:30.759039</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="trpB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="trpB-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000010 The requested visual evidence can be found in Figures 1 and 4 of the document. Figure 1c depicts the native TrpB reaction mechanism</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-trpb-gene-uniprot-q88rp6-in-pseudomonas-putida-kt2440">Comprehensive Research Report: trpB Gene (UniProt Q88RP6) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>The gene <strong>trpB</strong> (locus tag PP_0083; UniProt accession Q88RP6) in <em>Pseudomonas putida</em> strain KT2440 encodes the <strong>tryptophan synthase beta chain</strong> (EC 4.2.1.20), a pyridoxal 5′-phosphate (PLP)-dependent enzyme catalyzing the terminal step of L-tryptophan biosynthesis (kim2013indoletoxicityinvolves pages 3-5). This report provides a detailed functional annotation based on organism-specific experimental evidence and conserved mechanistic knowledge, with emphasis on recent (2023–2024) advances in TrpB enzymology and applications.</p>
+<hr />
+<h2 id="1-gene-identity-verification-and-organism-specific-context">1. Gene Identity Verification and Organism-Specific Context</h2>
+<h3 id="11-confirmed-identity">1.1 Confirmed Identity</h3>
+<p>The gene symbol <strong>trpB</strong> corresponds unambiguously to <strong>PP_0083</strong> in <em>P. putida</em> KT2440, as verified by microarray and functional genomics studies (kim2013indoletoxicityinvolves pages 3-5). This locus encodes the tryptophan synthase beta subunit, matching the UniProt annotation for Q88RP6 (RecName: Tryptophan synthase beta chain; EC 4.2.1.20) (kim2013indoletoxicityinvolves pages 3-5).</p>
+<p><strong>Source:</strong> Kim et al., 2013, <em>FEMS Microbiology Letters</em> 343(1):89-99. doi:10.1111/1574-6968.12135. URL: https://doi.org/10.1111/1574-6968.12135 (kim2013indoletoxicityinvolves pages 3-5)</p>
+<h3 id="12-operon-organization-and-genomic-context">1.2 Operon Organization and Genomic Context</h3>
+<p>In <em>P. putida</em> KT2440, the tryptophan biosynthesis genes are organized into <strong>unlinked genomic regions</strong>, contrasting with the single-operon architecture in <em>E. coli</em> (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2). Specifically:</p>
+<ul>
+<li><strong>trpA</strong> (PP_0082) and <strong>trpB</strong> (PP_0083) are <strong>adjacent and overlap by one nucleotide</strong>, indicating tight co-transcription as a <strong>trpBA operon</strong> (molinahenares2009functionalanalysisof pages 2-4).</li>
+<li>RT-PCR experiments using primers spanning the trpA/trpB junction confirmed <strong>in vivo co-transcription</strong> of this operon (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 7-8).</li>
+<li>Other tryptophan pathway genes occur as separate operons or monocistronic units: <strong>trpGDC</strong> forms an operon, while <strong>trpE</strong> and <strong>trpF</strong> are monocistronic (molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2).</li>
+<li>The <strong>trpI</strong> gene (encoding a LysR-family regulator) is <strong>divergently oriented</strong> from the trpBA cluster (molinahenares2009functionalanalysisof pages 2-4, matulis2022developmentandcharacterization pages 2-4).</li>
+</ul>
+<p><strong>Sources:</strong><br />
+- Molina-Henares et al., 2009, <em>Microbial Biotechnology</em> 2:91-100. doi:10.1111/j.1751-7915.2008.00062.x. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 7-8, molinahenares2009functionalanalysisof pages 1-2)</p>
+<h3 id="13-pathway-role-and-genetic-evidence">1.3 Pathway Role and Genetic Evidence</h3>
+<p>Genetic disruption experiments demonstrate the <strong>essentiality of trpBA for de novo tryptophan biosynthesis</strong> in <em>P. putida</em> KT2440:</p>
+<ul>
+<li>A <strong>mini-Tn5 insertion at the 7th codon of trpA</strong> (Aux-1 mutant) produces a <strong>tryptophan auxotroph</strong>, which grows only when supplemented with exogenous tryptophan (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6).</li>
+<li>This confirms that the trpA/trpB cluster is <strong>required for L-tryptophan synthesis</strong> from chorismate (molinahenares2009functionalanalysisof pages 1-2).</li>
+</ul>
+<p><strong>Source:</strong> Molina-Henares et al., 2009 (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2)</p>
+<h3 id="14-regulation-indole-responsive-expression">1.4 Regulation: Indole-Responsive Expression</h3>
+<p>Transcriptomic and biosensor studies reveal <strong>indole-responsive regulation</strong> of trpB in <em>P. putida</em> KT2440:</p>
+<ul>
+<li><strong>Microarray analysis</strong> identified trpB (PP_0083) as the <strong>most highly upregulated gene</strong> (3.52-fold) in response to indole treatment, out of 47 genes showing &gt;1.5-fold change (kim2013indoletoxicityinvolves pages 3-5, kim2013indoletoxicityinvolves pages 8-9).</li>
+<li>The authors propose that <strong>incorporation of indole into tryptophan biosynthesis</strong> may represent a detoxification or stress-mitigation mechanism (kim2013indoletoxicityinvolves pages 8-9).</li>
+<li>A <strong>TrpI-dependent, indole-inducible promoter system</strong> (PpTrpI/PPP_RS00425) derived from KT2440 was characterized: it shows <strong>up to 639.6-fold induction</strong> by indole (linear response ~0.4–5 mM) and requires the <strong>trpI regulator</strong> for activation (matulis2022developmentandcharacterization pages 2-4).</li>
+<li>This system functions as a <strong>whole-cell indole biosensor</strong> in heterologous hosts (<em>E. coli</em>, <em>Cupriavidus necator</em>), demonstrating the conserved regulatory logic (matulis2022developmentandcharacterization pages 2-4).</li>
+</ul>
+<p><strong>Sources:</strong><br />
+- Kim et al., 2013, <em>FEMS Microbiology Letters</em> (kim2013indoletoxicityinvolves pages 3-5, kim2013indoletoxicityinvolves pages 8-9)<br />
+- Matulis et al., 2022, <em>International Journal of Molecular Sciences</em> 23:4649. doi:10.3390/ijms23094649. URL: https://doi.org/10.3390/ijms23094649 (matulis2022developmentandcharacterization pages 2-4)</p>
+<hr />
+<h2 id="2-core-function-the-tryptophan-synthase-beta-reaction">2. Core Function: The Tryptophan Synthase Beta Reaction</h2>
+<h3 id="21-enzymatic-reaction-and-substrate-specificity">2.1 Enzymatic Reaction and Substrate Specificity</h3>
+<p>TrpB (EC 4.2.1.20) catalyzes the <strong>β-reaction</strong> of tryptophan biosynthesis, the <strong>final step</strong> in de novo L-tryptophan synthesis (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2):</p>
+<p><strong>Reaction:</strong><br />
+<strong>Indole + L-serine → L-tryptophan + H₂O</strong></p>
+<p>This is a <strong>pyridoxal 5′-phosphate (PLP)-dependent β-replacement reaction</strong> in which the hydroxyl group of L-serine is replaced by indole via a nucleophilic substitution mechanism (ghosh2022allostericregulationof pages 1-2, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 1-3, almhjell2024theβsubunitof media fd21782e).</p>
+<p><strong>Sources:</strong><br />
+- Ghosh et al., 2022, <em>Frontiers in Molecular Biosciences</em> 9:923042. doi:10.3389/fmolb.2022.923042. URL: https://doi.org/10.3389/fmolb.2022.923042 (ghosh2022allostericregulationof pages 1-2)<br />
+- Michalska et al., 2019, <em>IUCrJ</em> 6:649-664. doi:10.1107/s2052252519005955. URL: https://doi.org/10.1107/s2052252519005955 (michalska2019conservationofthe pages 1-2)</p>
+<h3 id="22-catalytic-mechanism-and-key-intermediates">2.2 Catalytic Mechanism and Key Intermediates</h3>
+<p>TrpB employs a <strong>sophisticated PLP-dependent mechanism</strong> involving multiple covalent intermediates (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2, almhjell2024theβsubunitof media fd21782e):</p>
+<ol>
+<li><strong>Internal aldimine:</strong> PLP is covalently linked to a <strong>catalytic lysine residue</strong> (Lys87 in <em>Salmonella typhimurium</em> numbering) via a Schiff base (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2).</li>
+<li><strong>External aldimine formation:</strong> L-serine displaces the lysine, forming an external aldimine.</li>
+<li><strong>Amino-acrylate intermediate (E(A-A)):</strong> Dehydration of the serine external aldimine generates a <strong>kinetically stable α,β-unsaturated Schiff base (amino-acrylate)</strong>, a key catalytic species that is <strong>resistant to β-elimination</strong> (unlike in tyrosine phenol-lyase or tryptophanase) (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 1-2, almhjell2024theβsubunitof media fd21782e).</li>
+<li><strong>C–C bond formation:</strong> Indole performs a <strong>Friedel–Crafts-type nucleophilic attack</strong> at the Cβ of the amino-acrylate, forming L-tryptophan (almhjell2024theβsubunitof pages 1-2, almhjell2024theβsubunitof media fd21782e).</li>
+</ol>
+<p><strong>Visual evidence</strong> of the mechanism is presented in Figure 1c of Almhjell et al. (2024), showing the stable amino-acrylate intermediate bound to PLP and the subsequent C3-alkylation of indole (almhjell2024theβsubunitof media fd21782e).</p>
+<p><strong>Sources:</strong><br />
+- Almhjell et al., 2024, <em>Nature Chemical Biology</em> 20:1086-1093. doi:10.1038/s41589-024-01619-z. URL: https://doi.org/10.1038/s41589-024-01619-z (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 1-2, almhjell2024theβsubunitof media fd21782e)</p>
+<h3 id="23-quaternary-structure-and-substrate-channeling">2.3 Quaternary Structure and Substrate Channeling</h3>
+<p>TrpB normally functions within a <strong>heterotetrameric (α₂β₂) tryptophan synthase complex</strong> composed of two TrpA (α) and two TrpB (β) subunits (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2, khan2025multienzymesynergyand pages 12-13):</p>
+<ul>
+<li><strong>TrpA</strong> catalyzes the cleavage of indole-3-glycerol phosphate (IGP) to <strong>indole and glyceraldehyde-3-phosphate (G3P)</strong> (ghosh2022allostericregulationof pages 1-2, khan2025multienzymesynergyand pages 12-13).</li>
+<li><strong>Indole channeling:</strong> The indole intermediate is transferred from the TrpA active site to the TrpB active site through a <strong>~25 Å hydrophobic tunnel</strong>, preventing indole loss to the medium and enhancing catalytic efficiency by ~100-fold (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2, khan2025multienzymesynergyand pages 12-13).</li>
+<li><strong>Allosteric regulation:</strong> The two subunits <strong>mutually activate</strong> each other through conformational changes mediated by the <strong>TrpB COMM (communication) domain</strong> and specific loops (e.g., αL6 in TrpA) (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2, michalska2021catalyticallyimpairedtrpa pages 4-7).</li>
+<li><strong>Open (T) and closed (R) states:</strong> Ligand binding and the formation of catalytic intermediates (especially the amino-acrylate) trigger transitions between catalytically inactive (open) and active (closed) conformations, synchronizing the α- and β-reactions (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2).</li>
+</ul>
+<p><strong>Sources:</strong><br />
+- Ghosh et al., 2022 (ghosh2022allostericregulationof pages 1-2)<br />
+- Michalska et al., 2019 (michalska2019conservationofthe pages 1-2)<br />
+- Khan &amp; Boehr, 2025, <em>Catalysts</em> 15:718. doi:10.3390/catal15080718. URL: https://doi.org/10.3390/catal15080718 (khan2025multienzymesynergyand pages 12-13)<br />
+- Michalska et al., 2021, <em>Protein Science</em> 30:1904-1918. doi:10.1002/pro.4143. URL: https://doi.org/10.1002/pro.4143 (michalska2021catalyticallyimpairedtrpa pages 4-7)</p>
+<h3 id="24-structural-features-and-domains">2.4 Structural Features and Domains</h3>
+<p>TrpB is a <strong>fold-type II PLP enzyme</strong> with conserved structural elements (michalska2019conservationofthe pages 1-2):</p>
+<ul>
+<li><strong>N-terminal domain:</strong> Contains the <strong>COMM (communication) domain</strong>, which participates in allosteric signaling and conformational gating (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2).</li>
+<li><strong>C-terminal domain:</strong> Houses the <strong>PLP-binding active site</strong> and catalytic residues.</li>
+<li><strong>Key catalytic residues</strong> (based on conserved bacterial TrpB sequences): catalytic Lys (e.g., Lys87), a near-universally conserved <strong>Glu residue (E105 in many TrpB homologs)</strong> that coordinates indole for C–C bond formation, and Asp/Ser residues that stabilize intermediates (khan2025multienzymesynergyand pages 12-13, almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 4-6).</li>
+</ul>
+<p><strong>Source:</strong> Michalska et al., 2019 (michalska2019conservationofthe pages 1-2); Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 12-13); Almhjell et al., 2024 (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 4-6)</p>
+<hr />
+<h2 id="3-cellular-localization">3. Cellular Localization</h2>
+<p>As a <strong>cytoplasmic enzyme</strong> involved in amino acid biosynthesis, TrpB is expected to localize to the <strong>bacterial cytoplasm</strong> where it participates in the tryptophan biosynthetic pathway. No experimental evidence for alternative localization (e.g., membrane association or secretion) has been reported for <em>P. putida</em> KT2440 trpB. Bacterial tryptophan synthases are typically soluble, cytoplasmic enzymes (ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2).</p>
+<hr />
+<h2 id="4-biological-pathways-and-metabolic-context">4. Biological Pathways and Metabolic Context</h2>
+<h3 id="41-the-tryptophan-biosynthesis-pathway">4.1 The Tryptophan Biosynthesis Pathway</h3>
+<p>TrpB functions in the <strong>terminal step of the canonical L-tryptophan biosynthesis pathway</strong>, which proceeds from chorismate via the shikimate pathway (ghosh2022allostericregulationof pages 1-2, khan2025multienzymesynergyand pages 12-13):</p>
+<ol>
+<li><strong>Chorismate</strong> (common precursor for aromatic amino acids)</li>
+<li>Anthranilate (catalyzed by TrpE/TrpD)</li>
+<li>Phosphoribosyl-anthranilate (TrpD)</li>
+<li>Indole-3-glycerol phosphate (IGP) (via TrpC, TrpF, TrpG)</li>
+<li><strong>Indole + G3P</strong> (TrpA, α-reaction)</li>
+<li><strong>L-Tryptophan</strong> (TrpB, β-reaction)</li>
+</ol>
+<p>In <em>P. putida</em> KT2440, the pathway is encoded by <strong>genes distributed across the genome</strong> (trpBA, trpGDC, trpE, trpF, trpI) rather than a single operon (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2).</p>
+<p><strong>Source:</strong> Molina-Henares et al., 2009 (molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2)</p>
+<h3 id="42-regulation-and-feedback-control">4.2 Regulation and Feedback Control</h3>
+<p>The trp operon/pathway is subject to <strong>transcriptional and allosteric regulation</strong> in bacteria:</p>
+<ul>
+<li><strong>TrpI-mediated activation:</strong> In <em>P. putida</em> KT2440 and related pseudomonads, TrpI (a LysR-family regulator) acts as an <strong>indole-responsive transcriptional activator</strong> of trpA and trpB, in contrast to the TrpR repressor system in <em>E. coli</em> (matulis2022developmentandcharacterization pages 2-4).</li>
+<li><strong>Indole stress response:</strong> Indole accumulation strongly induces trpB expression, potentially enabling cells to <strong>re-incorporate indole into tryptophan biosynthesis</strong> as a detoxification strategy (kim2013indoletoxicityinvolves pages 3-5, kim2013indoletoxicityinvolves pages 8-9).</li>
+<li><strong>Feedback inhibition:</strong> Canonical regulation involves feedback inhibition of early pathway enzymes by L-tryptophan; TrpB itself is regulated indirectly through pathway flux and TrpA allosteric coupling (ghosh2022allostericregulationof pages 1-2).</li>
+</ul>
+<p><strong>Sources:</strong> Kim et al., 2013 (kim2013indoletoxicityinvolves pages 3-5, kim2013indoletoxicityinvolves pages 8-9); Matulis et al., 2022 (matulis2022developmentandcharacterization pages 2-4); Ghosh et al., 2022 (ghosh2022allostericregulationof pages 1-2)</p>
+<hr />
+<h2 id="5-recent-developments-20232024-enzyme-engineering-and-new-catalytic-functions">5. Recent Developments (2023–2024): Enzyme Engineering and New Catalytic Functions</h2>
+<h3 id="51-2024-breakthrough-trpb-as-a-latent-tyrosine-synthase">5.1 2024 Breakthrough: TrpB as a Latent Tyrosine Synthase</h3>
+<p>A landmark study by <strong>Almhjell et al. (2024)</strong> demonstrated that TrpB can be <strong>engineered into a highly selective tyrosine synthase</strong> (TyrS), expanding its catalytic repertoire beyond indole substrates (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 1-2, almhjell2024theβsubunitof pages 4-6):</p>
+<ul>
+<li><strong>Key discovery:</strong> A <strong>single substitution</strong> of the near-universally conserved <strong>catalytic glutamate (E105G)</strong> unlocked activity on phenol substrates, giving <strong>exclusive para-selective C–C bond formation</strong> to produce L-tyrosine and analogs (almhjell2024theβsubunitof pages 2-4).</li>
+<li><strong>Activity enhancement:</strong> E105G alone provided an <strong>18-fold rate increase</strong> for 1-naphthol and <strong>&gt;100-fold for phenol</strong> (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 4-6).</li>
+<li><strong>Directed evolution:</strong> Subsequent rounds of random mutagenesis, site-saturation, and recombination produced TmTyrS6 (22 substitutions from the starting Tm9D8<em> variant), achieving a </em><em>net &gt;30,000-fold activity improvement</em>* (almhjell2024theβsubunitof pages 4-6).</li>
+<li><strong>Selectivity:</strong> Engineered TyrS variants show <strong>≥99.5% enantioselectivity and regioselectivity</strong>, with no detectable D-Tyr or ortho-alkylation products even at &gt;1,000-fold over the limit of quantification (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 4-6).</li>
+<li><strong>Catalytic performance:</strong> TmTyrS6 exhibits an <strong>apparent turnover frequency (TOF) of 0.23 min⁻¹</strong> at 37 °C with 50 mM substrates (almhjell2024theβsubunitof pages 2-4).</li>
+<li><strong>Mechanistic insight:</strong> Structural and computational studies reveal that the E105G mutation <strong>allows an active-site water molecule</strong> to occupy the position of the removed glutamate, coordinating phenol for <strong>concerted C–C bond formation and deprotonation</strong> (Figure 4 of Almhjell et al., 2024) (almhjell2024theβsubunitof media 0e8ae960, almhjell2024theβsubunitof pages 30-35, almhjell2024theβsubunitof pages 6-7).</li>
+<li><strong>Preparative utility:</strong> Engineered TyrS enables <strong>gram-scale synthesis</strong> of L-tyrosine analogs, including β-(1-naphthol-4-yl)-L-alanine (NaphAla) (almhjell2024theβsubunitof pages 30-35, almhjell2024theβsubunitof pages 1-2).</li>
+</ul>
+<p><strong>Publication:</strong> Almhjell et al., 2024, <em>Nature Chemical Biology</em> 20:1086-1093. doi:10.1038/s41589-024-01619-z. URL: https://doi.org/10.1038/s41589-024-01619-z (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 4-6, almhjell2024theβsubunitof pages 30-35, almhjell2024theβsubunitof pages 1-2)</p>
+<h3 id="52-stand-alone-trpb-biocatalysts">5.2 Stand-Alone TrpB Biocatalysts</h3>
+<p>Engineering efforts prior to 2024 had already established <strong>stand-alone TrpB variants</strong> freed from dependence on TrpA (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6):</p>
+<ul>
+<li><strong>PfTrpB0B2:</strong> Created via <strong>only three rounds of directed evolution</strong> (six mutations), achieving an <strong>83-fold increase in catalytic efficiency</strong> over wild-type TrpB and activity exceeding the native αββα complex (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6).</li>
+<li><strong>Thermostable variants:</strong> Engineered TrpB from <em>Pyrococcus furiosus</em> and <em>Thermotoga maritima</em> enable <strong>high-temperature reactions (55–75 °C)</strong>, improving indole solubility and substrate loading (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6).</li>
+<li><strong>Mutations recapitulate TrpA activation:</strong> Beneficial mutations stabilize the <strong>catalytically active closed conformation</strong> of TrpB and enhance persistence of the amino-acrylate intermediate, mimicking the allosteric effects normally provided by TrpA (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6, khan2025multienzymesynergyand pages 13-15).</li>
+</ul>
+<p><strong>Sources:</strong><br />
+- Watkins-Dulaney et al., 2021, <em>ChemBioChem</em> 22:5-16. doi:10.1002/cbic.202000379. URL: https://doi.org/10.1002/cbic.202000379 (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)<br />
+- Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 13-15)</p>
+<hr />
+<h2 id="6-applications-and-real-world-implementations">6. Applications and Real-World Implementations</h2>
+<h3 id="61-noncanonical-amino-acid-ncaa-synthesis">6.1 Noncanonical Amino Acid (ncAA) Synthesis</h3>
+<p>Engineered TrpB variants have become <strong>workhorse biocatalysts</strong> for stereoselective ncAA synthesis (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11):</p>
+<p><strong>Substrate scope:</strong><br />
+- <strong>Halogenated indoles:</strong> 4-F, 5-F, 5-Cl, etc. (isolated yields typically <strong>70–99%</strong>) (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)<br />
+- <strong>Functionalized indoles:</strong> Nitro, cyano, carboxamide, boronate, CF₃, azido, amino-substituted (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)<br />
+- <strong>β-Branched amino acids:</strong> L-threonine accepted to produce <strong>β-methyltryptophans</strong> (&gt;6,000-fold activity boost in PfTrpB2B9 vs. wild-type) (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7)<br />
+- <strong>Quaternary stereocenter formation:</strong> PfTrpBquat shows <strong>&gt;99% C3 chemoselectivity</strong> on oxindoles, yielding <strong>122 mg product from 1 mmol substrate</strong> using 100 mL <em>E. coli</em> culture (52% yield) (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9)</p>
+<p><strong>Preparative-scale examples:</strong><br />
+- <strong>800 mg 4-cyanotryptophan</strong> from 1 L <em>E. coli</em> culture (<strong>49% yield</strong>) (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)<br />
+- <strong>965 mg azulene-derived amino acid (AzAla)</strong> with <strong>57% isolated yield</strong> (TmTrpBAzul; turnover improved from 4.6 to <strong>14.0 min⁻¹</strong>) (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11)</p>
+<p><strong>Sources:</strong> Watkins-Dulaney et al., 2021 (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11)</p>
+<h3 id="62-metabolic-engineering-for-l-tryptophan-production">6.2 Metabolic Engineering for L-Tryptophan Production</h3>
+<p>Engineered TrpB and optimized tryptophan pathways have been deployed in industrial microbial hosts (khan2025multienzymesynergyand pages 15-16):</p>
+<ul>
+<li><strong>Corynebacterium glutamicum:</strong> Tryptophan titers reaching <strong>50.5 g/L</strong> (khan2025multienzymesynergyand pages 15-16)</li>
+<li><strong>L-5-Hydroxytryptophan:</strong> <strong>86.7% yield</strong> under optimized conditions (khan2025multienzymesynergyand pages 15-16)</li>
+<li><strong>Indigo biosynthesis:</strong> Integration of TrpS with flavin monooxygenase yielded <strong>1,288 mg/L indigo</strong> (khan2025multienzymesynergyand pages 15-16)</li>
+<li><strong>One-pot D-tryptophan synthesis:</strong> Multi-enzyme cascades (TrpS + L-amino acid deaminase + D-amino acid transaminase) achieved <strong>&gt;99% ee</strong> (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11, khan2025multienzymesynergyand pages 15-16)</li>
+</ul>
+<p><strong>Sources:</strong> Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 15-16); Watkins-Dulaney et al., 2021 (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11)</p>
+<h3 id="63-high-throughput-screening-and-continuous-evolution">6.3 High-Throughput Screening and Continuous Evolution</h3>
+<p>Recent advances enable <strong>ultra-high-throughput engineering</strong> of TrpB (khan2025multienzymesynergyand pages 15-16, khan2025multienzymesynergyand pages 22-23):</p>
+<ul>
+<li><strong>Droplet microfluidics:</strong> Screening of <strong>&gt;100,000 TrpB mutants per day</strong>, identifying variants with <strong>100-fold activity improvements</strong> (khan2025multienzymesynergyand pages 15-16)</li>
+<li><strong>Continuous flow:</strong> Thermostable TrpB variants patented for <strong>continuous-flow bioreactors</strong> and low-temperature manufacturing (khan2025multienzymesynergyand pages 16-18)</li>
+</ul>
+<p><strong>Source:</strong> Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 15-16, khan2025multienzymesynergyand pages 22-23, khan2025multienzymesynergyand pages 16-18)</p>
+<hr />
+<h2 id="7-expert-analysis-and-current-understanding">7. Expert Analysis and Current Understanding</h2>
+<h3 id="71-mechanistic-plasticity">7.1 Mechanistic Plasticity</h3>
+<p>TrpB's <strong>kinetically stable amino-acrylate intermediate</strong> is the key to its versatility as a biocatalyst (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 1-2, almhjell2024theβsubunitof media fd21782e). Unlike TPL or tryptophanase, which favor β-elimination, TrpB's active site stabilizes the amino-acrylate, enabling <strong>kinetic control favoring synthesis over degradation</strong> (almhjell2024theβsubunitof pages 1-2). This property has been exploited to:</p>
+<ul>
+<li>Accept diverse nucleophiles beyond indole (phenols, azulene, nitroalkanes, thiols) (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7, almhjell2024theβsubunitof pages 2-4)</li>
+<li>Form C–C, C–N, C–S, and C–Se bonds (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7)</li>
+<li>Catalyze previously unknown reactions (e.g., photoredox-pyridoxal radical biocatalysis for β-methyl amino acids) (khan2025multienzymesynergyand pages 15-16)</li>
+</ul>
+<p><strong>Sources:</strong> Almhjell et al., 2024 (almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 1-2, almhjell2024theβsubunitof media fd21782e); Watkins-Dulaney et al., 2021 (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7); Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 15-16)</p>
+<h3 id="72-allosteric-engineering">7.2 Allosteric Engineering</h3>
+<p>Rational and computational approaches target <strong>allosteric networks</strong> to improve TrpB activity (khan2025multienzymesynergyand pages 13-15):</p>
+<ul>
+<li><strong>Mutations distal to the active site</strong> can increase the population of catalytically competent conformations, <strong>recapitulating TrpA activation</strong> in the absence of the α-subunit (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6, khan2025multienzymesynergyand pages 13-15).</li>
+<li><strong>Transferability:</strong> Activating mutations can be transferred across TrpB homologs with <strong>≥57% sequence identity</strong> (khan2025multienzymesynergyand pages 13-15).</li>
+<li><strong>Computational tools:</strong> Shortest Path Map (SPM) analysis identifies key residues controlling conformational transitions (khan2025multienzymesynergyand pages 15-16, khan2025multienzymesynergyand pages 13-15).</li>
+</ul>
+<p><strong>Sources:</strong> Watkins-Dulaney et al., 2021 (watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6); Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 15-16, khan2025multienzymesynergyand pages 13-15)</p>
+<h3 id="73-conservation-and-drug-target-potential">7.3 Conservation and Drug Target Potential</h3>
+<p>Bacterial TrpB proteins show <strong>high structural and mechanistic conservation</strong> (michalska2019conservationofthe pages 1-2, michalska2021catalyticallyimpairedtrpa pages 4-7):</p>
+<ul>
+<li>The catalytic glutamate (E105) is conserved in <strong>~98.3% of ~18,051 TrpB-like sequences</strong> (almhjell2024theβsubunitof pages 4-6, almhjell2024theβsubunitof pages 30-35).</li>
+<li>TrpAB is <strong>essential for bacterial survival</strong> in tryptophan-limited environments (e.g., <em>Mycobacterium tuberculosis</em> in macrophages) and is a validated <strong>antimicrobial drug target</strong> (michalska2019conservationofthe pages 1-2).</li>
+<li>Allosteric and active-site inhibitors have been developed, exploiting species-specific structural differences (khan2025multienzymesynergyand pages 16-18).</li>
+</ul>
+<p><strong>Sources:</strong> Michalska et al., 2019 (michalska2019conservationofthe pages 1-2); Michalska et al., 2021 (michalska2021catalyticallyimpairedtrpa pages 4-7); Almhjell et al., 2024 (almhjell2024theβsubunitof pages 4-6, almhjell2024theβsubunitof pages 30-35); Khan &amp; Boehr, 2025 (khan2025multienzymesynergyand pages 16-18)</p>
+<hr />
+<h2 id="8-summary-table-of-key-evidence">8. Summary Table of Key Evidence</h2>
+<p>A comprehensive evidence table summarizing organism-specific findings for <em>P. putida</em> KT2440 trpB (PP_0083; Q88RP6) and general TrpB knowledge is provided below:</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Key finding</th>
+<th>Organism/system</th>
+<th>Quantitative details</th>
+<th>Source (authors, year, journal)</th>
+<th>URL</th>
+<th>Evidence citation id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity verification of target gene</td>
+<td>trpB is explicitly annotated as PP_0083, tryptophan synthase beta subunit, in <em>Pseudomonas putida</em> KT2440, matching UniProt Q88RP6.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>PP_0083 locus tag</td>
+<td>Kim et al., 2013, <em>FEMS Microbiology Letters</em></td>
+<td>https://doi.org/10.1111/1574-6968.12135</td>
+<td>(kim2013indoletoxicityinvolves pages 3-5)</td>
+</tr>
+<tr>
+<td>Operon organization</td>
+<td>trpA and trpB are adjacent, overlap by 1 nucleotide, and are consistent with co-transcription as a trpBA operon.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>1-nt overlap between trpA and trpB</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+<td>(molinahenares2009functionalanalysisof pages 2-4)</td>
+</tr>
+<tr>
+<td>Experimental operon confirmation</td>
+<td>RT-PCR across the trpA/trpB region confirmed in vivo co-transcription of trpA and trpB.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>cDNA band detected with A-1/B-1 primers; negative control lacked RT</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+<td>(molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 7-8)</td>
+</tr>
+<tr>
+<td>Broader pathway organization</td>
+<td>Tryptophan biosynthesis genes are split across unlinked regions: trpBA cluster, trpGDC operon, and monocistronic trpE/trpF; trpI is divergently transcribed from trpBA.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Genomic organization into 2 clusters + 2 monocistronic units</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+<td>(molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2)</td>
+</tr>
+<tr>
+<td>Genetic evidence for pathway function</td>
+<td>Disruption of trpA causes tryptophan auxotrophy, supporting that the trpBA unit is required for de novo tryptophan synthesis.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Aux-1 insertion at 7th codon of trpA; TrpA mutant grows only with tryptophan supplementation</td>
+<td>Molina-Henares et al., 2009, <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/j.1751-7915.2008.00062.x</td>
+<td>(molinahenares2009functionalanalysisof pages 2-4, molinahenares2009functionalanalysisof pages 4-6, molinahenares2009functionalanalysisof pages 1-2)</td>
+</tr>
+<tr>
+<td>trpI-associated regulation</td>
+<td>A trpIAB arrangement was identified; trpI is required for indole-responsive activation of the PP_RS00425 promoter system derived from KT2440.</td>
+<td><em>P. putida</em> KT2440 system tested in <em>E. coli</em> and <em>Cupriavidus necator</em></td>
+<td>Induction observed with 1 mM indole only when trpI was present</td>
+<td>Matulis et al., 2022, <em>International Journal of Molecular Sciences</em></td>
+<td>https://doi.org/10.3390/ijms23094649</td>
+<td>(matulis2022developmentandcharacterization pages 2-4)</td>
+</tr>
+<tr>
+<td>Indole-responsive biosensor utility</td>
+<td>The PpTrpI/PPP_RS00425 gene expression system was developed as an indole biosensor and showed strong, specific induction by indole.</td>
+<td>KT2440-derived regulatory parts in heterologous hosts</td>
+<td>Up to 639.6-fold induction; linear response ~0.4-5 mM indole</td>
+<td>Matulis et al., 2022, <em>International Journal of Molecular Sciences</em></td>
+<td>https://doi.org/10.3390/ijms23094649</td>
+<td>(matulis2022developmentandcharacterization pages 2-4)</td>
+</tr>
+<tr>
+<td>Indole stress response</td>
+<td>trpB (PP_0083) was the most highly induced gene in KT2440 after indole treatment, linking it to indole-responsive physiology and tryptophan biosynthesis.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>3.52-fold upregulation; 47 genes changed &gt;1.5-fold up or &lt;0.67-fold down</td>
+<td>Kim et al., 2013, <em>FEMS Microbiology Letters</em></td>
+<td>https://doi.org/10.1111/1574-6968.12135</td>
+<td>(kim2013indoletoxicityinvolves pages 3-5, kim2013indoletoxicityinvolves pages 8-9)</td>
+</tr>
+<tr>
+<td>Functional interpretation of indole response</td>
+<td>Authors proposed that degradation/incorporation of indole into tryptophan biosynthesis may help mitigate indole stress.</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Qualitative interpretation from microarray data</td>
+<td>Kim et al., 2013, <em>FEMS Microbiology Letters</em></td>
+<td>https://doi.org/10.1111/1574-6968.12135</td>
+<td>(kim2013indoletoxicityinvolves pages 8-9)</td>
+</tr>
+<tr>
+<td>Core enzymatic reaction</td>
+<td>TrpB catalyzes the PLP-dependent β-reaction converting indole + L-serine to L-tryptophan, the terminal step of tryptophan biosynthesis.</td>
+<td>Bacterial tryptophan synthase</td>
+<td>Reaction: indole + L-Ser → L-Trp + H2O</td>
+<td>Ghosh et al., 2022, <em>Frontiers in Molecular Biosciences</em></td>
+<td>https://doi.org/10.3389/fmolb.2022.923042</td>
+<td>(ghosh2022allostericregulationof pages 1-2)</td>
+</tr>
+<tr>
+<td>Catalytic intermediate and cofactor chemistry</td>
+<td>TrpB forms a PLP-linked aminoacrylate (EAA) Schiff-base intermediate; PLP is present as an internal aldimine with a catalytic Lys.</td>
+<td>Bacterial tryptophan synthase</td>
+<td>Catalytic Lys87 noted in <em>Salmonella</em> numbering</td>
+<td>Ghosh et al., 2022, <em>Frontiers in Molecular Biosciences</em>; Michalska et al., 2019, <em>IUCrJ</em></td>
+<td>https://doi.org/10.3389/fmolb.2022.923042 ; https://doi.org/10.1107/S2052252519005955</td>
+<td>(ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Quaternary structure and channeling</td>
+<td>TrpB usually functions in an α2β2 tryptophan synthase complex with TrpA; indole is channeled through an intersubunit tunnel.</td>
+<td>Bacterial tryptophan synthase</td>
+<td>~25 Å tunnel connecting α and β active sites</td>
+<td>Ghosh et al., 2022, <em>Frontiers in Molecular Biosciences</em>; Michalska et al., 2019, <em>IUCrJ</em></td>
+<td>https://doi.org/10.3389/fmolb.2022.923042 ; https://doi.org/10.1107/S2052252519005955</td>
+<td>(ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Allosteric control and structure</td>
+<td>TrpB contains an N-terminal COMM domain that participates in open/closed transitions and α-β allosteric communication.</td>
+<td>Bacterial tryptophan synthase</td>
+<td>Open (T) and closed (R) conformational states regulate catalysis</td>
+<td>Ghosh et al., 2022, <em>Frontiers in Molecular Biosciences</em>; Michalska et al., 2019, <em>IUCrJ</em></td>
+<td>https://doi.org/10.3389/fmolb.2022.923042 ; https://doi.org/10.1107/S2052252519005955</td>
+<td>(ghosh2022allostericregulationof pages 1-2, michalska2019conservationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Structural conservation</td>
+<td>Bacterial TrpB proteins are broadly conserved in fold and mechanism, supporting annotation transfer across species when identity is verified.</td>
+<td>Multiple bacterial pathogens / bacterial TrpAB enzymes</td>
+<td>TrpB described as more sequence- and fold-conserved than TrpA</td>
+<td>Michalska et al., 2019, <em>IUCrJ</em>; Michalska et al., 2021, <em>Protein Science</em></td>
+<td>https://doi.org/10.1107/S2052252519005955 ; https://doi.org/10.1002/pro.4143</td>
+<td>(michalska2019conservationofthe pages 1-2, michalska2021catalyticallyimpairedtrpa pages 4-7)</td>
+</tr>
+<tr>
+<td>2024 mechanistic advance</td>
+<td>A single substitution at the near-universally conserved catalytic glutamate can unlock latent tyrosine synthase activity in TrpB.</td>
+<td>Engineered TrpB (Tm9D8* lineage)</td>
+<td>E105G gave 18-fold activation on 1-naphthol and &gt;100-fold on phenol in one context</td>
+<td>Almhjell et al., 2024, <em>Nature Chemical Biology</em></td>
+<td>https://doi.org/10.1038/s41589-024-01619-z</td>
+<td>(almhjell2024theβsubunitof pages 2-4, almhjell2024theβsubunitof pages 4-6)</td>
+</tr>
+<tr>
+<td>2024 evolved activity gains</td>
+<td>Directed evolution converted TrpB into TyrS variants with very large activity gains and exclusive para-selective C-C bond formation on phenols.</td>
+<td>Engineered TrpB/TyrS</td>
+<td>&gt;30,000-fold overall rate enhancement; ≥99.5% enantio- and regioselectivity</td>
+<td>Almhjell et al., 2024, <em>Nature Chemical Biology</em></td>
+<td>https://doi.org/10.1038/s41589-024-01619-z</td>
+<td>(almhjell2024theβsubunitof pages 4-6, almhjell2024theβsubunitof pages 1-2)</td>
+</tr>
+<tr>
+<td>2024 catalytic performance</td>
+<td>Final TyrS variant synthesized tyrosine with measurable catalytic turnover under preparative conditions.</td>
+<td>Engineered TrpB/TyrS6</td>
+<td>Apparent TOF ~0.23 min⁻1 at 37 °C, 50 mM substrate</td>
+<td>Almhjell et al., 2024, <em>Nature Chemical Biology</em></td>
+<td>https://doi.org/10.1038/s41589-024-01619-z</td>
+<td>(almhjell2024theβsubunitof pages 2-4)</td>
+</tr>
+<tr>
+<td>2024 evolutionary/structural insight</td>
+<td>The catalytic glutamate targeted in TyrS engineering is highly conserved across TrpB-like sequences, underscoring mechanistic importance.</td>
+<td>TrpB-like sequence space</td>
+<td>E105 conserved in ~98.3% of ~18,051 sequences</td>
+<td>Almhjell et al., 2024, <em>Nature Chemical Biology</em></td>
+<td>https://doi.org/10.1038/s41589-024-01619-z</td>
+<td>(almhjell2024theβsubunitof pages 4-6, almhjell2024theβsubunitof pages 30-35)</td>
+</tr>
+<tr>
+<td>2024 practical application</td>
+<td>Engineered TyrS enzymes enabled preparative/gram-scale synthesis of tyrosine analogs.</td>
+<td>Engineered TrpB/TyrS</td>
+<td>Preparative scale; multi-gram / gram-scale products reported</td>
+<td>Almhjell et al., 2024, <em>Nature Chemical Biology</em></td>
+<td>https://doi.org/10.1038/s41589-024-01619-z</td>
+<td>(almhjell2024theβsubunitof pages 30-35, almhjell2024theβsubunitof pages 1-2)</td>
+</tr>
+<tr>
+<td>Stand-alone TrpB biocatalyst engineering</td>
+<td>Directed evolution liberated TrpB from dependence on TrpA, creating stand-alone catalysts suitable for synthesis of noncanonical amino acids.</td>
+<td>Engineered PfTrpB / TmTrpB variants</td>
+<td>PfTrpB0B2 obtained with 6 mutations after 3 rounds; 83-fold increase in catalytic efficiency</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)</td>
+</tr>
+<tr>
+<td>Substrate scope and yields</td>
+<td>Evolved TrpB variants accept many substituted indoles and often give high isolated yields.</td>
+<td>Engineered TrpB biocatalysts</td>
+<td>Typical isolated yields 70-99% across many analogs</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)</td>
+</tr>
+<tr>
+<td>Preparative Trp analog synthesis</td>
+<td>A TmTrpB variant was used to synthesize 4-cyanotryptophan on preparative scale.</td>
+<td>Engineered TmTrpB9D8<em> in </em>E. coli* cells</td>
+<td>800 mg 4-cyanoTrp from 1 L culture; 49% yield</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6)</td>
+</tr>
+<tr>
+<td>Expanded bond-forming chemistry</td>
+<td>Engineered TrpB variants catalyze noncanonical C-C, C-N, C-S, and C-Se bond-forming reactions.</td>
+<td>Engineered TrpB biocatalysts</td>
+<td>Up to 2,700 turnovers on nitro-containing substrates</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7)</td>
+</tr>
+<tr>
+<td>Quaternary-center synthesis</td>
+<td>Engineered PfTrpBquat shifted chemoselectivity to C3 alkylation of oxindoles, enabling quaternary stereocenter formation.</td>
+<td>Engineered PfTrpBquat</td>
+<td>&gt;99% C3 chemoselectivity; 52% yield; 122 mg from 1 mmol substrate using 100 mL <em>E. coli</em> culture</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9)</td>
+</tr>
+<tr>
+<td>Azulene amino acid production</td>
+<td>Evolution improved azulene alkylation and enabled gram-scale synthesis of AzAla.</td>
+<td>Engineered TmTrpBAzul</td>
+<td>Activity improved from 4.6 to 14.0 turnovers/min; 965 mg product; 57% isolated yield</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9, watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11)</td>
+</tr>
+<tr>
+<td>β-branched amino acid synthesis</td>
+<td>TrpB engineering enabled efficient β-methyltryptophan synthesis from threonine-derived chemistry.</td>
+<td>Engineered PfTrpB variants</td>
+<td>&gt;6,000-fold boost in β-methylTrp activity vs WT; one variant used 1 equiv Thr and gave 3.5-fold higher yield than prior variant needing 10 equiv</td>
+<td>Watkins-Dulaney et al., 2021, <em>ChemBioChem</em></td>
+<td>https://doi.org/10.1002/cbic.202000379</td>
+<td>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles organism-specific evidence for </em>Pseudomonas putida<em> KT2440 trpB (PP_0083; UniProt Q88RP6) together with conserved TrpB mechanistic knowledge and recent engineering/application advances. It is useful for separating direct evidence about the target gene from broader, high-confidence functional inference about TrpB enzymes.</em></p>
+<hr />
+<h2 id="9-conclusions">9. Conclusions</h2>
+<p>The <strong>trpB gene (PP_0083; UniProt Q88RP6)</strong> in <em>Pseudomonas putida</em> KT2440 encodes the <strong>tryptophan synthase beta chain</strong>, a PLP-dependent enzyme catalyzing the final step of L-tryptophan biosynthesis. Organism-specific evidence confirms:</p>
+<ol>
+<li><strong>trpB is co-transcribed with trpA</strong> in a trpBA operon and is <strong>essential for tryptophan prototrophy</strong>.</li>
+<li><strong>Expression is strongly induced by indole</strong> (3.52-fold), suggesting a role in indole detoxification/re-assimilation.</li>
+<li><strong>Regulation is mediated by TrpI</strong>, a LysR-family activator responsive to indole or indole-3-glycerol phosphate.</li>
+</ol>
+<p>General TrpB enzymology reveals:</p>
+<ul>
+<li>A <strong>sophisticated PLP-dependent mechanism</strong> involving a stable amino-acrylate intermediate and Friedel–Crafts alkylation.</li>
+<li><strong>Quaternary structure and allosteric regulation</strong> within the αββα tryptophan synthase complex, with indole channeling through a ~25 Å tunnel.</li>
+<li><strong>Broad catalytic plasticity</strong> enabling engineering for noncanonical amino acid synthesis, with applications ranging from gram-scale ncAA production to metabolic engineering (titers up to 50.5 g/L).</li>
+</ul>
+<p><strong>2024 advances</strong> include the discovery that TrpB is a <strong>latent tyrosine synthase</strong> (&gt;30,000-fold activity gain via directed evolution; ≥99.5% selectivity) and the development of <strong>ultra-high-throughput screening platforms</strong> for continuous TrpB optimization. These findings establish TrpB as a versatile biocatalytic platform for sustainable synthesis of aromatic amino acids and derivatives.</p>
+<hr />
+<h2 id="references-selected">References (Selected)</h2>
+<ul>
+<li><strong>Kim et al., 2013.</strong> <em>FEMS Microbiol. Lett.</em> 343(1):89-99. https://doi.org/10.1111/1574-6968.12135  </li>
+<li><strong>Molina-Henares et al., 2009.</strong> <em>Microb. Biotechnol.</em> 2:91-100. https://doi.org/10.1111/j.1751-7915.2008.00062.x  </li>
+<li><strong>Matulis et al., 2022.</strong> <em>Int. J. Mol. Sci.</em> 23:4649. https://doi.org/10.3390/ijms23094649  </li>
+<li><strong>Ghosh et al., 2022.</strong> <em>Front. Mol. Biosci.</em> 9:923042. https://doi.org/10.3389/fmolb.2022.923042  </li>
+<li><strong>Michalska et al., 2019.</strong> <em>IUCrJ</em> 6:649-664. https://doi.org/10.1107/s2052252519005955  </li>
+<li><strong>Watkins-Dulaney et al., 2021.</strong> <em>ChemBioChem</em> 22:5-16. https://doi.org/10.1002/cbic.202000379  </li>
+<li><strong>Almhjell et al., 2024.</strong> <em>Nat. Chem. Biol.</em> 20:1086-1093. https://doi.org/10.1038/s41589-024-01619-z  </li>
+<li><strong>Khan &amp; Boehr, 2025.</strong> <em>Catalysts</em> 15:718. https://doi.org/10.3390/catal15080718</li>
+</ul>
+<hr />
+<p><em>Report compiled from peer-reviewed primary literature and authoritative reviews (2009–2025). All major claims are cited with context IDs traceable to source evidence.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(kim2013indoletoxicityinvolves pages 3-5): Jisun Kim, Hyerim Hong, Aram Heo, and Woojun Park. Indole toxicity involves the inhibition of adenosine triphosphate production and protein folding in pseudomonas putida. FEMS microbiology letters, 343 1:89-99, Jun 2013. URL: https://doi.org/10.1111/1574-6968.12135, doi:10.1111/1574-6968.12135. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 2-4): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 4-6): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 1-2): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molinahenares2009functionalanalysisof pages 7-8): M. A. Molina-Henares, Adela García‐Salamanca, A. Molina-Henares, J. de la Torre, M. C. Herrera, J. Ramos, and E. Duque. Functional analysis of aromatic biosynthetic pathways in pseudomonas putida kt2440. Microbial biotechnology, 2:91-100, Dec 2009. URL: https://doi.org/10.1111/j.1751-7915.2008.00062.x, doi:10.1111/j.1751-7915.2008.00062.x. This article has 32 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(matulis2022developmentandcharacterization pages 2-4): Paulius Matulis, Ingrida Kutraite, Ernesta Augustiniene, Egle Valanciene, Ilona Jonuskiene, and Naglis Malys. Development and characterization of indole-responsive whole-cell biosensor based on the inducible gene expression system from pseudomonas putida kt2440. International Journal of Molecular Sciences, 23:4649, Apr 2022. URL: https://doi.org/10.3390/ijms23094649, doi:10.3390/ijms23094649. This article has 8 citations.</p>
+</li>
+<li>
+<p>(kim2013indoletoxicityinvolves pages 8-9): Jisun Kim, Hyerim Hong, Aram Heo, and Woojun Park. Indole toxicity involves the inhibition of adenosine triphosphate production and protein folding in pseudomonas putida. FEMS microbiology letters, 343 1:89-99, Jun 2013. URL: https://doi.org/10.1111/1574-6968.12135, doi:10.1111/1574-6968.12135. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ghosh2022allostericregulationof pages 1-2): Rittik K. Ghosh, Eduardo Hilario, Chia-en A. Chang, Leonard J. Mueller, and Michael F. Dunn. Allosteric regulation of substrate channeling: salmonella typhimurium tryptophan synthase. Frontiers in Molecular Biosciences, Sep 2022. URL: https://doi.org/10.3389/fmolb.2022.923042, doi:10.3389/fmolb.2022.923042. This article has 14 citations.</p>
+</li>
+<li>
+<p>(michalska2019conservationofthe pages 1-2): Karolina Michalska, Jennifer Gale, Grazyna Joachimiak, Changsoo Chang, Catherine Hatzos-Skintges, Boguslaw Nocek, Stephen E. Johnston, Lance Bigelow, Besnik Bajrami, Robert P. Jedrzejczak, Samantha Wellington, Deborah T. Hung, Partha P. Nag, Stewart L. Fisher, Michael Endres, and Andrzej Joachimiak. Conservation of the structure and function of bacterial tryptophan synthases. IUCrJ, 6:649-664, May 2019. URL: https://doi.org/10.1107/s2052252519005955, doi:10.1107/s2052252519005955. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 1-3): Ella Watkins‐Dulaney, Sabine Straathof, and Frances Arnold. Tryptophan synthase: biocatalyst extraordinaire. Sep 2021. URL: https://doi.org/10.1002/cbic.202000379, doi:10.1002/cbic.202000379. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof media fd21782e): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof pages 2-4): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof pages 1-2): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(khan2025multienzymesynergyand pages 12-13): Sara Khan and David D. Boehr. Multi-enzyme synergy and allosteric regulation in the shikimate pathway: biocatalytic platforms for industrial applications. Catalysts, 15:718, Jul 2025. URL: https://doi.org/10.3390/catal15080718, doi:10.3390/catal15080718. This article has 6 citations.</p>
+</li>
+<li>
+<p>(michalska2021catalyticallyimpairedtrpa pages 4-7): Karolina Michalska, Samantha Wellington, Natalia Maltseva, Robert Jedrzejczak, Nelly Selem‐Mojica, L. Rodrigo Rosas‐Becerra, Francisco Barona‐Gómez, Deborah T. Hung, and Andrzej Joachimiak. Catalytically impaired <scp>trpa</scp> subunit of tryptophan synthase from <i>chlamydia trachomatis</i> is an allosteric regulator of <scp>trpb</scp>. Protein Science, 30:1904-1918, Jun 2021. URL: https://doi.org/10.1002/pro.4143, doi:10.1002/pro.4143. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof pages 4-6): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof media 0e8ae960): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof pages 30-35): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almhjell2024theβsubunitof pages 6-7): Patrick J. Almhjell, Kadina E. Johnston, Nicholas J. Porter, Jennifer L. Kennemur, Vignesh C. Bhethanabotla, Julie Ducharme, and Frances H. Arnold. The β-subunit of tryptophan synthase is a latent tyrosine synthase. Nature chemical biology, 20:1086-1093, May 2024. URL: https://doi.org/10.1038/s41589-024-01619-z, doi:10.1038/s41589-024-01619-z. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 4-6): Ella Watkins‐Dulaney, Sabine Straathof, and Frances Arnold. Tryptophan synthase: biocatalyst extraordinaire. Sep 2021. URL: https://doi.org/10.1002/cbic.202000379, doi:10.1002/cbic.202000379. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(khan2025multienzymesynergyand pages 13-15): Sara Khan and David D. Boehr. Multi-enzyme synergy and allosteric regulation in the shikimate pathway: biocatalytic platforms for industrial applications. Catalysts, 15:718, Jul 2025. URL: https://doi.org/10.3390/catal15080718, doi:10.3390/catal15080718. This article has 6 citations.</p>
+</li>
+<li>
+<p>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 7-9): Ella Watkins‐Dulaney, Sabine Straathof, and Frances Arnold. Tryptophan synthase: biocatalyst extraordinaire. Sep 2021. URL: https://doi.org/10.1002/cbic.202000379, doi:10.1002/cbic.202000379. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 6-7): Ella Watkins‐Dulaney, Sabine Straathof, and Frances Arnold. Tryptophan synthase: biocatalyst extraordinaire. Sep 2021. URL: https://doi.org/10.1002/cbic.202000379, doi:10.1002/cbic.202000379. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(watkins‐dulaney2021tryptophansynthasebiocatalyst pages 9-11): Ella Watkins‐Dulaney, Sabine Straathof, and Frances Arnold. Tryptophan synthase: biocatalyst extraordinaire. Sep 2021. URL: https://doi.org/10.1002/cbic.202000379, doi:10.1002/cbic.202000379. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(khan2025multienzymesynergyand pages 15-16): Sara Khan and David D. Boehr. Multi-enzyme synergy and allosteric regulation in the shikimate pathway: biocatalytic platforms for industrial applications. Catalysts, 15:718, Jul 2025. URL: https://doi.org/10.3390/catal15080718, doi:10.3390/catal15080718. This article has 6 citations.</p>
+</li>
+<li>
+<p>(khan2025multienzymesynergyand pages 22-23): Sara Khan and David D. Boehr. Multi-enzyme synergy and allosteric regulation in the shikimate pathway: biocatalytic platforms for industrial applications. Catalysts, 15:718, Jul 2025. URL: https://doi.org/10.3390/catal15080718, doi:10.3390/catal15080718. This article has 6 citations.</p>
+</li>
+<li>
+<p>(khan2025multienzymesynergyand pages 16-18): Sara Khan and David D. Boehr. Multi-enzyme synergy and allosteric regulation in the shikimate pathway: biocatalytic platforms for industrial applications. Catalysts, 15:718, Jul 2025. URL: https://doi.org/10.3390/catal15080718, doi:10.3390/catal15080718. This article has 6 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="trpB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000010 The requested visual evidence can be found in Figures 1 and 4 of the document. Figure 1c depicts the native TrpB reaction mechanism" src="trpB-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kim2013indoletoxicityinvolves pages 3-5</li>
+<li>molinahenares2009functionalanalysisof pages 2-4</li>
+<li>molinahenares2009functionalanalysisof pages 1-2</li>
+<li>kim2013indoletoxicityinvolves pages 8-9</li>
+<li>matulis2022developmentandcharacterization pages 2-4</li>
+<li>ghosh2022allostericregulationof pages 1-2</li>
+<li>michalska2019conservationofthe pages 1-2</li>
+<li>khan2025multienzymesynergyand pages 12-13</li>
+<li>michalska2021catalyticallyimpairedtrpa pages 4-7</li>
+<li>khan2025multienzymesynergyand pages 13-15</li>
+<li>khan2025multienzymesynergyand pages 15-16</li>
+<li>khan2025multienzymesynergyand pages 16-18</li>
+<li>molinahenares2009functionalanalysisof pages 4-6</li>
+<li>molinahenares2009functionalanalysisof pages 7-8</li>
+<li>khan2025multienzymesynergyand pages 22-23</li>
+<li>https://doi.org/10.1111/1574-6968.12135</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x</li>
+<li>https://doi.org/10.3390/ijms23094649</li>
+<li>https://doi.org/10.3389/fmolb.2022.923042</li>
+<li>https://doi.org/10.1107/s2052252519005955</li>
+<li>https://doi.org/10.1038/s41589-024-01619-z</li>
+<li>https://doi.org/10.3390/catal15080718</li>
+<li>https://doi.org/10.1002/pro.4143</li>
+<li>https://doi.org/10.1002/cbic.202000379</li>
+<li>https://doi.org/10.1107/S2052252519005955</li>
+<li>https://doi.org/10.1111/1574-6968.12135,</li>
+<li>https://doi.org/10.1111/j.1751-7915.2008.00062.x,</li>
+<li>https://doi.org/10.3390/ijms23094649,</li>
+<li>https://doi.org/10.3389/fmolb.2022.923042,</li>
+<li>https://doi.org/10.1107/s2052252519005955,</li>
+<li>https://doi.org/10.1002/cbic.202000379,</li>
+<li>https://doi.org/10.1038/s41589-024-01619-z,</li>
+<li>https://doi.org/10.3390/catal15080718,</li>
+<li>https://doi.org/10.1002/pro.4143,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RP6
+gene_symbol: trpB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Tryptophan synthase beta chain (TrpB, EC 4.2.1.20), a pyridoxal 5&#39;-phosphate (PLP)-dependent enzyme that catalyzes the final (beta) reaction of L-tryptophan biosynthesis, condensing indole with L-serine to yield L-tryptophan and water. PLP is bound as an internal aldimine to an active-site lysine (residue 95 in this protein). TrpB is a member of the fold-type II PLP enzyme family (TrpB family) and normally assembles with the alpha subunit (TrpA) into the alpha2-beta2 tryptophan synthase complex, in which the indole produced by TrpA from indole-3-glycerol phosphate is channeled directly to the TrpB active site through an intramolecular tunnel. TrpB carries out the terminal, fifth step of the conversion of chorismate to L-tryptophan and is a soluble cytoplasmic enzyme. In P. putida KT2440 the gene (PP_0083) is adjacent to and co-transcribed with trpA (PP_0082) as a trpBA operon, and its expression is strongly induced by indole.
+core_functions:
+- description: Catalyzes the PLP-dependent beta-replacement reaction forming L-tryptophan from indole (channeled from TrpA) and L-serine, completing the terminal step of L-tryptophan biosynthesis
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: EC=4.2.1.20; tryptophan synthase activity inferred from InterPro, RHEA:10532, UniRule and PANTHER (TrpB family).
+  - reference_id: file:PSEPK/trpB/trpB-uniprot.txt
+    supporting_text: &#34;FUNCTION: The beta subunit is responsible for the synthesis of L-tryptophan from indole and L-serine. CATALYTIC ACTIVITY: indol-3-yl glycerol 3-phosphate + L-serine = D-glyceraldehyde 3-phosphate + L-tryptophan + H2O; PATHWAY: L-tryptophan from chorismate, step 5/5; COFACTOR: pyridoxal 5&#39;-phosphate.&#34;
+  molecular_function:
+    id: GO:0004834
+    label: tryptophan synthase activity
+  directly_involved_in:
+  - id: GO:0000162
+    label: L-tryptophan biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+existing_annotations:
+- term:
+    id: GO:0000162
+    label: L-tryptophan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: TrpB catalyzes the terminal step of L-tryptophan biosynthesis; this annotation correctly captures the core biological process.
+    reason: The protein is a UniProt-reviewed tryptophan synthase beta chain (EC 4.2.1.20) belonging to the TrpB family, with UniPathway UPA00035 (L-tryptophan biosynthesis, step 5/5). In P. putida KT2440 trpA disruption causes tryptophan auxotrophy, confirming the trpBA cluster is required for de novo tryptophan synthesis (PMID:21261884; see also file:PSEPK/trpB/trpB-deep-research-falcon.md). The IEA assignment is well-supported and represents a core function.
+    action: ACCEPT
+- term:
+    id: GO:0004834
+    label: tryptophan synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Correct molecular function. TrpB is the tryptophan synthase beta subunit catalyzing the PLP-dependent beta-reaction (indole + L-serine -&gt; L-tryptophan + H2O).
+    reason: Supported by EC 4.2.1.20, RHEA:10532, the conserved PLP-binding lysine (residue 95), HAMAP-Rule MF_00133, and TrpB-family InterPro/PANTHER signatures. This is the core enzymatic activity of the gene product.
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Bacterial tryptophan synthase is a soluble cytoplasmic enzyme; cytoplasmic localization is correct.
+    reason: TrpB has no signal peptide or transmembrane region and functions in cytoplasmic amino-acid biosynthesis as part of the soluble alpha2-beta2 tryptophan synthase complex. The TreeGrafter IEA assignment is consistent with the well-established localization of this enzyme family. The term is somewhat generic but accurate for a bacterial cytosolic enzyme.
+    action: ACCEPT
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/trpB/trpB-uniprot.txt
+  title: UniProt entry TRPB_PSEPK (Q88RP6)
+  findings:
+  - statement: TrpB synthesizes L-tryptophan from indole and L-serine; PLP cofactor; pathway L-tryptophan from chorismate step 5/5; functions as a tetramer of two alpha and two beta chains.
+    supporting_text: &#34;FUNCTION: The beta subunit is responsible for the synthesis of L-tryptophan from indole and L-serine. SUBUNIT: Tetramer of two alpha and two beta chains.&#34;
+- id: PMID:21261884
+  title: &#34;Functional analysis of aromatic biosynthetic pathways in Pseudomonas putida KT2440&#34;
+  findings:
+  - statement: In P. putida KT2440 there is a single pathway from chorismate to tryptophan; the trp genes are in unlinked regions with trpBA organized as an operon, and auxotroph screening shows the pathway is required for de novo tryptophan biosynthesis.
+    supporting_text: &#34;Genes for tryptophan biosynthesis are grouped in unlinked regions with the trpBA and trpGDE genes organized as operons... There is a single pathway from chorismate leading to the biosynthesis of tryptophan.&#34;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified (PMID:21261884, DOI 10.1111/j.1751-7915.2008.00062.x, Molina-Henares et al., Microb Biotechnol 2:91-100). Abstract confirms the trpBA operon organization and tryptophan-auxotroph screening in KT2440. Establishes the P. putida KT2440-specific genomic context and pathway essentiality for trpB.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

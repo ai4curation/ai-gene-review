@@ -1,0 +1,3254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUTE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MUTE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9M8K6" target="_blank" class="term-link">
+                        Q9M8K6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MUTE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9M8K6" data-a="DESCRIPTION: MUTE is a basic helix-loop-helix (bHLH) transcript..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MUTE is a basic helix-loop-helix (bHLH) transcription factor of Arabidopsis thaliana that is a central regulator of stomatal development. It is expressed transiently in late meristemoids, where it terminates the amplifying (asymmetric) divisions of the meristemoid and triggers its transition into a guard mother cell (GMC); the GMC then divides once symmetrically to produce the pair of guard cells that form a stoma. MUTE acts in the stomatal lineage downstream of SPEECHLESS (SPCH), which initiates the lineage, and upstream of FAMA, which directs terminal guard cell morphogenesis. As a nuclear, sequence-specific DNA-binding transcription factor, MUTE functions as a heterodimer with the broadly expressed bHLH-leucine-zipper proteins ICE1/SCRM and SCRM2, which specify its activity at the meristemoid-to-GMC transition. Loss of MUTE produces stomata-less plants whose meristemoids arrest after excessive asymmetric divisions, whereas constitutive MUTE expression converts the entire epidermis to guard cell identity. Timely MUTE expression also influences the fate of stomatal lineage ground cells and their differentiation into pavement cells.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MUTE is a sequence-specific DNA-binding bHLH transcription factor; this InterPro-based electronic annotation captures its core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental and ISS evidence that MUTE is a functional bHLH transcription factor; this is a core molecular function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" target="_blank" class="term-link">
+                                        PMID:18641265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these nuclear-localized bHLH heterodimers most likely act as DNA binding transcription factors.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">sequence-specific transcription regulation via nuclear DNA binding (no catalytic substrate)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization of MUTE, consistent with its role as a transcription factor; this electronic annotation is redundant with the IDA annotation from PMID:17183267.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subcellular location is experimentally supported (PMID:17183267) and consistent with TF function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GOA carries an IDA nucleus annotation (GO:0005634) to PMID:17183267.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0006355" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic transcription-regulation process inferred from MUTE&#39;s DNA-binding TF activity; correct but far less informative than its specific role in stomatal lineage progression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but high-level; MUTE&#39;s biologically meaningful process annotations are the stomatal development terms. Retain as non-core background.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" target="_blank" class="term-link">
+                                        PMID:18641265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">these nuclear-localized bHLH heterodimers most likely act as DNA binding transcription factors.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010052" target="_blank" class="term-link">
+                                    GO:0010052
+                                </a>
+                            </span>
+                            <span class="term-label">guard cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0010052" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MUTE drives the meristemoid-to-GMC transition that commits cells to the guard cell fate; this directly matches the term (guard mother cell acquiring guard cell features).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process; strongly supported by loss- and gain-of-function data even though the GOA evidence here is electronic.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17183267" target="_blank" class="term-link">
+                                        PMID:17183267
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Constitutive overexpression of MUTE directs the entire epidermis to adopt guard cell identity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046983" target="_blank" class="term-link">
+                                    GO:0046983
+                                </a>
+                            </span>
+                            <span class="term-label">protein dimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0046983" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MUTE is a bHLH protein that acts as a dimer; experimentally it forms heterodimers with ICE1/SCRM and SCRM2, so the more specific heterodimerization term is preferred.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental evidence (Y2H and BiFC in epidermal nuclei) shows MUTE associates with the broadly expressed bHLH-LZ proteins ICE1/SCRM and SCRM2, indicating heterodimerization activity rather than generic dimerization. This is a core molecular function.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                                    protein heterodimerization activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" target="_blank" class="term-link">
+                                        PMID:18641265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">three stomatal bHLHs, SPCH, MUTE, and FAMA, that exhibit transient expression within a specific precursor state of the stomatal cell lineage function as heterodimers with broadly expressed ICE1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MUTE forms functional heterodimers with SCRM-family bHLHs; disrupting this interaction abolishes differentiation outputs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090627" target="_blank" class="term-link">
+                                    GO:0090627
+                                </a>
+                            </span>
+                            <span class="term-label">plant epidermal cell differentiation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23662679" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23662679
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Timely expression of the Arabidopsis stoma-fate master regul...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0090627" data-r="PMID:23662679" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Timely MUTE expression is required to promote stomatal lineage ground cell differentiation into pavement cells and to prevent ectopic stomatal fate, placing MUTE within broader epidermal cell differentiation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the mute-3 inducible-complementation study (PMID:23662679); MUTE timing affects fates of multiple epidermal cell types, not only guard cells.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23662679" target="_blank" class="term-link">
+                                        PMID:23662679
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">timely MUTE expression is essential to prevent stomatal fate in SLGCs and to promote their differentiation as pavement cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30356219" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30356219
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transcriptional regulation of nitrogen-associated metabolism...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0000976" data-r="PMID:30356219" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MUTE bound a promoter cis-regulatory region in a large enhanced-yeast-one-hybrid nitrogen TF regulatory network screen; a real DNA-binding observation but peripheral to MUTE&#39;s characterized stomatal function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with MUTE being a DNA-binding bHLH, but this interaction comes from a genome-scale network screen (with/from NLP7, AT5G07440) whose in-vivo relevance to stomatal biology is not established. Retain as supporting, non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GOA IPI GO:0000976 transcription cis-regulatory region binding from PMID:30356219 (Gaudinier et al. 2018, nitrogen TF regulatory network), with/from AGI_LocusCode:AT5G07440 (= NLP7, a nitrogen-response TF).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000122
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0005634" data-r="GO_REF:0000122" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-based prediction of nuclear localization, redundant with the experimental IDA annotation to PMID:17183267.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization; redundant electronic support for the experimentally established nuclear location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GOA carries an IDA nucleus annotation (GO:0005634) to PMID:17183267.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17183267" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17183267
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Termination of asymmetric cell division and differentiation ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0005634" data-r="PMID:17183267" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of MUTE nuclear localization, consistent with its transcription factor activity. Core cellular component.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally determined nuclear localization; core to MUTE acting as a nuclear transcription factor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[PMID:17183267] reported nuclear localization (UniProt SUBCELLULAR LOCATION: Nucleus, ECO:0000269|PubMed:17183267).</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">There is no affirmative evidence in the retrieved set for primary cytosolic/cytoplasmic localization as the active functional compartment.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010374" target="_blank" class="term-link">
+                                    GO:0010374
+                                </a>
+                            </span>
+                            <span class="term-label">stomatal complex development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17183265" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17183265
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transcription factor control of asymmetric cell divisions th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0010374" data-r="PMID:17183265" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MUTE is one of three sequentially-acting stomatal bHLHs required for stomatal lineage progression; loss of MUTE arrests meristemoids and blocks stomatal formation. Core developmental process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported (full text of MacAlister et al. 2007 characterizes SPCH, MUTE and FAMA); MUTE is required for development of the stomatal complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17183265" target="_blank" class="term-link">
+                                        PMID:17183265
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">SPCH and two paralogues are successively required for the initiation, proliferation and terminal differentiation of cells in the stomatal lineage.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">terminating amplifying asymmetric divisions of meristemoids and promoting commitment to GMC fate, followed by coordination of the single symmetric division that generates guard cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12679534" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12679534
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The basic helix-loop-helix transcription factor family in pl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0003700" data-r="PMID:12679534" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity inference that MUTE is a DNA-binding bHLH transcription factor, based on the genome-wide bHLH family analysis. Core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental evidence that MUTE acts as a DNA-binding transcription factor; redundant with other DNA-binding TF activity annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12679534" target="_blank" class="term-link">
+                                        PMID:12679534
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Their mechanism for controlling gene transcription often involves homodimerization or heterodimerization.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11118137" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11118137
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arabidopsis transcription factors: genome-wide comparative a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9M8K6" data-a="GO:0003700" data-r="PMID:11118137" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity inference of DNA-binding transcription factor activity from the genome-wide Arabidopsis transcription factor census; supports the core molecular function but is only weakly specific to MUTE.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct molecular function assignment; the reference is a genome-wide TF survey, so it is background-level support, redundant with the more specific ISS annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11118137" target="_blank" class="term-link">
+                                        PMID:11118137
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Arabidopsis dedicates over 5% of its genome to code for more than 1500 transcription factors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as a nuclear sequence-specific DNA-binding bHLH transcription factor that drives the meristemoid-to-guard-mother-cell transition in the stomatal lineage, terminating amplifying asymmetric divisions and committing cells to guard cell fate</h3>
+                <span class="vote-buttons" data-g="Q9M8K6" data-a="FUNCTION: Acts as a nuclear sequence-specific DNA-binding bH..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010374" target="_blank" class="term-link">
+                                stomatal complex development
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010052" target="_blank" class="term-link">
+                                guard cell differentiation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17183267" target="_blank" class="term-link">
+                                PMID:17183267
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the Arabidopsis thaliana basic helix-loop-helix (bHLH) protein MUTE is a key switch for meristemoid fate transition. In the absence of MUTE, meristemoids abort after excessive asymmetric divisions and fail to differentiate stomata.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" target="_blank" class="term-link">
+                                PMID:18641265
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">these nuclear-localized bHLH heterodimers most likely act as DNA binding transcription factors.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">terminating amplifying asymmetric divisions of meristemoids and promoting commitment to GMC fate, followed by coordination of the single symmetric division that generates guard cells</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Functions as a heterodimer with the broadly expressed bHLH-leucine-zipper proteins ICE1/SCRM and SCRM2, which specify MUTE activity at the meristemoid-to-GMC transition step of stomatal differentiation</h3>
+                <span class="vote-buttons" data-g="Q9M8K6" data-a="FUNCTION: Functions as a heterodimer with the broadly expres..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                            protein heterodimerization activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010374" target="_blank" class="term-link">
+                                stomatal complex development
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" target="_blank" class="term-link">
+                                PMID:18641265
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we identify two paralogous proteins, SCREAM (SCRM) and SCRM2, which directly interact with and specify the sequential actions of SPCH, MUTE, and FAMA.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">MUTE forms functional heterodimers with SCRM-family bHLHs; disrupting this interaction abolishes differentiation outputs.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/MUTE/MUTE-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon/Edison deep research report: MUTE</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000122.md" target="_blank" class="term-link">
+                            GO_REF:0000122
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">AtSubP analysis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11118137" target="_blank" class="term-link">
+                            PMID:11118137
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Arabidopsis transcription factors: genome-wide comparative analysis among eukaryotes.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12679534" target="_blank" class="term-link">
+                            PMID:12679534
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The basic helix-loop-helix transcription factor family in plants: a genome-wide study of protein structure and functional diversity.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17183265" target="_blank" class="term-link">
+                            PMID:17183265
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcription factor control of asymmetric cell divisions that establish the stomatal lineage.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17183267" target="_blank" class="term-link">
+                            PMID:17183267
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Termination of asymmetric cell division and differentiation of stomata.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" target="_blank" class="term-link">
+                            PMID:18641265
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SCREAM/ICE1 and SCREAM2 specify three cell-state transitional steps leading to arabidopsis stomatal differentiation.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23662679" target="_blank" class="term-link">
+                            PMID:23662679
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Timely expression of the Arabidopsis stoma-fate master regulator MUTE is required for specification of other epidermal cell types.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30356219" target="_blank" class="term-link">
+                            PMID:30356219
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptional regulation of nitrogen-associated metabolism and growth.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MUTE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9M8K6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Gene Research for GO Annotation Review</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    <a href="MUTE-deep-research-falcon-citations.md" class="term-link">citations file</a>
+                    
+                </div>
+                
+                
+                <h1 id="gene-research-for-go-annotation-review">Gene Research for GO Annotation Review</h1>
+<h2 id="target">Target</h2>
+<ul>
+<li>Gene symbol: MUTE</li>
+<li>Organism: Arabidopsis thaliana</li>
+</ul>
+<h2 id="uniprot-context">UniProt Context</h2>
+<p>=== UNIPROT METADATA ===<br />
+UniProt ID: Q9M8K6<br />
+Entry Name: MUTE_ARATH<br />
+Gene Name: MUTE<br />
+Protein Name: Transcription factor MUTE<br />
+Organism: Arabidopsis thaliana (Mouse-ear cress)<br />
+NCBI Taxonomy ID: 3702<br />
+Function: Transcription factor. Together with FMA and SPCH, regulates the stomata formation. Required for the differentiation of stomatal guard cells, by promoting successive asymmetric cell divisions and the formation of guard mother cells. Promotes the conversion of the leaf epidermis into stomata.<br />
+Subcellular Location: Nucleus<br />
+Subunit: Homodimer.<br />
+======================</p>
+<h2 id="research-objective">Research Objective</h2>
+<p>Prepare a comprehensive literature-backed research report for GO annotation review of the target gene.</p>
+<p>Focus on:</p>
+<ol>
+<li>The core biochemical activity of the gene product and any substrate specificity.</li>
+<li>The activation or maturation mechanism of the protein, including proteolytic processing if relevant.</li>
+<li>The best-supported subcellular localization and complexes where the active protein functions.</li>
+<li>The strongest experimentally supported biological processes in the target organism, or in very close orthologs when transfer is justified.</li>
+<li>Which annotations appear to reflect core function versus context-specific, pleiotropic, or over-extended roles.</li>
+<li>Any evidence bearing on apoptosis, developmental cell death, neuronal roles, inflammatory signaling, pyroptosis, synaptic remodeling, protein processing, and localization to cytoplasm, cytosol, nucleus, or signaling complexes.</li>
+</ol>
+<h2 id="output-requirements">Output Requirements</h2>
+<p>Structure the report as:</p>
+<ol>
+<li>Executive summary</li>
+<li>Molecular function</li>
+<li>Biological process roles</li>
+<li>Cellular localization and complexes</li>
+<li>Annotation-risk assessment</li>
+<li>Key literature</li>
+</ol>
+<p>Use citations for all substantive claims.</p>
+<h2 id="gene-research-report-for-go-annotation-review-mute-arabidopsis-thaliana">Gene Research Report for GO Annotation Review: <strong>MUTE (Arabidopsis thaliana)</strong></h2>
+<p><strong>Target</strong>: MUTE (UniProt Q9M8K6; MUTE_ARATH)<br />
+<strong>Protein</strong>: Transcription factor MUTE (stomatal-lineage bHLH)<br />
+<strong>Primary GO curation goal</strong>: identify <em>core</em> molecular function(s), the best-supported biological process roles, and the cellular component/complex context; flag over-extended annotations.</p>
+<h3 id="1-executive-summary">1. Executive summary</h3>
+<p>MUTE is a stomatal-lineage basic helix–loop–helix (bHLH) transcription factor that functions as a <em>stage-specific fate switch</em> in Arabidopsis leaf epidermis. The strongest experimental and integrative evidence places MUTE at the transition from meristemoid self-renewal/asymmetric divisions to guard mother cell (GMC) commitment, after which a single symmetric division produces paired guard cells. This role is executed through nuclear DNA binding—primarily as a heterodimer with SCRM/ICE1-family bHLH partners—and through cooperation with chromatin-remodeling machinery to activate lineage-appropriate gene expression programs. (liu2023cellfateprogramming pages 1-2, liu2024bhlhtranscriptionfactors pages 5-7)</p>
+<p>Two major 2023–2024 advances refine the mechanistic picture relevant to GO annotation. First, genome-wide chromatin and TF-binding analyses indicate that MUTE (with SCRM) can bind targets in nucleosome-occupied/repressed chromatin and coordinate with SWI/SNF remodelers and the histone acetyltransferase HAC1 during fate commitment, consistent with pioneer-like properties and an “epigenome + TF” model of stomatal differentiation. (liu2024bhlhtranscriptionfactors pages 5-7, liu2024bhlhtranscriptionfactors pages 13-15)</p>
+<p>Second, a 2024 chemical genetics study identified <strong>Stomidazolone</strong>, a small molecule that binds the MUTE C-terminal ACT-like (ACTL) domain and disrupts SCRM–MUTE heterodimerization, producing dose-dependent meristemoid arrest and reduced stomatal differentiation; this provides direct biochemical evidence for an ACTL-mediated dimerization/partner-selectivity mechanism and demonstrates a real-world research tool to perturb MUTE-dependent differentiation. (nakagawa2024chemicalinhibitionof pages 1-2, nakagawa2024chemicalinhibitionof pages 2-3)</p>
+<p>No evidence in the retrieved recent literature supports roles for Arabidopsis MUTE in apoptosis, neuronal biology, inflammatory signaling, pyroptosis, or synaptic remodeling; these processes are animal-centric and would be inappropriate for MUTE based on current evidence. (liu2024bhlhtranscriptionfactors pages 5-7, liu2023cellfateprogramming pages 4-5)</p>
+<h3 id="2-molecular-function">2. Molecular function</h3>
+<h4 id="21-key-concepts-and-definitions-go-relevant">2.1 Key concepts and definitions (GO-relevant)</h4>
+<ul>
+<li><strong>bHLH transcription factor</strong>: DNA-binding transcription regulators with a basic region that recognizes cis-regulatory motifs and an HLH region that mediates dimerization. In the stomatal lineage, stage-specific bHLHs (SPCH→MUTE→FAMA) act sequentially, and their effective DNA binding commonly occurs as heterodimers with SCRM/ICE1-family partners. (zhou2024molecularmechanismsfor pages 2-4, liu2023cellfateprogramming pages 1-2)</li>
+<li><strong>Heterodimeric “core DNA-binding unit”</strong>: Recent genome-wide analyses support that stomatal bHLHs function in constrained heterodimer configurations (e.g., MUTE–SCRM) that impose motif/spacing rules at bound loci and that cooperative binding is a key determinant of specificity and potency. (liu2023cellfateprogramming pages 5-7, liu2024bhlhtranscriptionfactors pages 13-15)</li>
+</ul>
+<h4 id="22-core-biochemical-activity-and-substrate-specificity">2.2 Core biochemical activity and substrate specificity</h4>
+<p><strong>Core activity</strong>: sequence-specific transcription regulation via nuclear DNA binding (no catalytic substrate). Evidence includes ChIP-seq-defined binding of stomatal bHLHs (including MUTE) to cis-regulatory elements and coordinated transcriptional programs observed in scRNA-seq data during lineage transitions. (liu2023cellfateprogramming pages 2-4, liu2024bhlhtranscriptionfactors pages 5-7)</p>
+<p>MUTE-bound CREs are often relatively inaccessible in early lineage contexts and can be nucleosome-occupied and marked by repressive histone modifications (H3K27me3), implying that MUTE participates in activating genes embedded in repressed chromatin during fate commitment. (liu2024bhlhtranscriptionfactors pages 5-7)</p>
+<p><strong>Direct targets supported in retrieved evidence</strong> (best-supported, but note that “directness” varies by source type):<br />
+- <strong>FAMA</strong> is described as a likely/direct target within integrated ChIP-seq and regulatory models, and is positioned downstream in the stomatal bHLH cascade. (liu2023cellfateprogramming pages 5-7)<br />
+- Review syntheses highlight MUTE-dependent activation of <strong>CYCD5</strong> (to drive the GMC symmetric division) coupled to induction of inhibitors such as <strong>FAMA</strong> and <strong>FLP</strong> to restrict division number, and induction of <strong>ERL1</strong> as feedback. (zhou2024molecularmechanismsfor pages 2-4, wakeel2021speechlessandmute pages 3-5)</p>
+<p><strong>Annotation implication</strong>: A GO Molecular Function consistent with the evidence is “sequence-specific DNA-binding transcription factor activity” (and/or “transcription regulator activity”) rather than any enzymatic function; there is no evidence in the retrieved sources for catalytic substrate specificity.</p>
+<h4 id="23-activation-maturation-mechanism">2.3 Activation / maturation mechanism</h4>
+<p>There is no evidence here for proteolytic processing or maturation of MUTE as an activation requirement. Instead, regulation is best supported through:</p>
+<p>1) <strong>Partner-dependent activation (heterodimerization)</strong>: MUTE forms functional heterodimers with SCRM-family bHLHs; disrupting this interaction abolishes differentiation outputs. (nakagawa2024chemicalinhibitionof pages 7-8, nakagawa2024chemicalinhibitionof pages 9-10)</p>
+<p>2) <strong>ACTL-domain-mediated partner selectivity and chemical perturbation</strong>: Stomidazolone binds the MUTE ACTL domain and perturbs SCRM–MUTE heterodimerization both in vitro and in plant cells. Quantitatively, preincubation with Stomidazolone weakened SCRM–MUTE binding by ~100-fold (BLI: Kd ~7.5 nM → ~856.5 nM; ITC: ~9.5 nM → ~900 nM). (nakagawa2024chemicalinhibitionof pages 7-8)</p>
+<p>3) <strong>Upstream signaling context (MAPK cascade)</strong>: Reviews summarize that YDA–MKK–MPK signaling downstream of receptor/ligand modules can suppress stomatal bHLH activity; however, in the retrieved evidence, this is more pathway-contextual than a MUTE-specific post-translational maturation mechanism. (zhou2024molecularmechanismsfor pages 10-11, wakeel2021speechlessandmute pages 3-5)</p>
+<h3 id="3-biological-process-roles">3. Biological process roles</h3>
+<h4 id="31-current-understanding-core-bp">3.1 Current understanding (core BP)</h4>
+<p>The best-supported biological process for MUTE in Arabidopsis is the <strong>meristemoid-to-guard mother cell transition</strong>, i.e., terminating amplifying asymmetric divisions of meristemoids and promoting commitment to GMC fate, followed by coordination of the single symmetric division that generates guard cells. (giannoutsou2025guardiansofwater pages 6-8, zhou2024molecularmechanismsfor pages 2-4)</p>
+<p>Genome-wide chromatin/TB-binding work further supports that MUTE drives fate commitment by enabling activation of a new phase of transcriptional regulation at targets that are initially in a more repressed chromatin state, consistent with a commitment switch. (liu2024bhlhtranscriptionfactors pages 5-7, liu2024bhlhtranscriptionfactors pages 13-15)</p>
+<h4 id="32-recent-developments-20232024">3.2 Recent developments (2023–2024)</h4>
+<p><strong>Chromatin and epigenetic machinery as integral components of the MUTE program</strong>: In Arabidopsis stomatal development, bHLH targets can reside in repressive chromatin and MUTE/SCRM binding is associated with nucleosome-occupied regions. The 2024 PLOS Biology study proposes that recruitment of SWI/SNF chromatin remodelers and HAC1 supports chromatin opening and sustained target expression during differentiation. (liu2024bhlhtranscriptionfactors pages 13-15, liu2024bhlhtranscriptionfactors pages 5-7)</p>
+<p><strong>Chemical control of the MUTE step</strong>: Stomidazolone treatment produces dose-dependent inhibition of stomatal differentiation with large increases in meristemoids, matching a blockade at the MUTE-dependent commitment step. Reported changes include stomatal decreases of ~24.45%, 59.50%, 69.53% and meristemoid increases of ~315.8%, 801.5%, 647.6% at 20, 50, and 100 μM. (nakagawa2024chemicalinhibitionof pages 2-3)</p>
+<h4 id="33-applications-and-real-world-implementations">3.3 Applications and real-world implementations</h4>
+<p><strong>Crop engineering direction (review-level evidence)</strong>: A 2024 Development review discusses leveraging stomatal developmental genetics—including SMF factors and their network wiring—to generate crop varieties with optimized stomatal traits for resilience under climate change, including CRISPR/Cas-based modification strategies that tune stomatal density and related physiological traits. These examples are presented as applied implementations/proposals rather than MUTE-specific Arabidopsis phenotypes. (chua2024stomataldevelopmentin pages 12-13)</p>
+<p><strong>Tool compound for research and potential developmental manipulation</strong>: Stomidazolone constitutes a concrete in vivo chemical tool to perturb stomatal differentiation by directly targeting MUTE dimerization, and engineered Stomidazolone-resistant MUTE variants demonstrate on-target engagement. (nakagawa2024chemicalinhibitionof pages 1-2, nakagawa2024chemicalinhibitionof pages 10-11)</p>
+<h3 id="4-cellular-localization-and-complexes">4. Cellular localization and complexes</h3>
+<h4 id="41-subcellular-localization">4.1 Subcellular localization</h4>
+<p>The strongest evidence supports <strong>nuclear localization</strong> of MUTE in stomatal-lineage cells:<br />
+- A MUTE promoter-driven nuclear reporter (MUTEpro::nucYFP) is used to monitor MUTE nuclear localization/expression in differentiating meristemoids, including under Stomidazolone conditions. (nakagawa2024chemicalinhibitionof pages 2-3, nakagawa2024chemicalinhibitionof media 2b410197)<br />
+- MUTEpro::MUTE-GFP signals are observed in nuclei of late meristemoids; these constructs rescue mute phenotypes in the cited work, supporting that the nuclear fusion is functional. (nakagawa2024chemicalinhibitionof pages 10-11, nakagawa2024chemicalinhibitionof pages 10-10)</p>
+<p>There is no affirmative evidence in the retrieved set for primary cytosolic/cytoplasmic localization as the active functional compartment.</p>
+<h4 id="42-complexes-interaction-partners">4.2 Complexes / interaction partners</h4>
+<p><strong>Core partner(s)</strong>: MUTE heterodimerizes with <strong>SCRM/ICE1-family bHLHs</strong> (SCRM and/or SCRM2), supported by interaction assays including Y2H and nuclear BiFC/rBiFC readouts, and by functional disruption with Stomidazolone. (nakagawa2024chemicalinhibitionof pages 7-8, nakagawa2024chemicalinhibitionof pages 9-10)</p>
+<p><strong>Functional association with chromatin remodelers</strong>: Proximity labeling and genetic dependency analyses support that stomatal bHLH-driven fate programs involve SWI/SNF components and HAC1; these are best viewed as functional co-factors associated with bHLH-dependent chromatin opening, rather than a single fully defined stable macromolecular complex with fixed composition. (liu2023cellfateprogramming pages 4-5, liu2024bhlhtranscriptionfactors pages 13-15)</p>
+<h3 id="5-annotation-risk-assessment-core-vs-over-extended">5. Annotation-risk assessment (core vs over-extended)</h3>
+<h4 id="51-high-confidence-core-annotations-recommended">5.1 High-confidence, core annotations (recommended)</h4>
+<p><strong>Molecular Function (MF)</strong><br />
+- Sequence-specific DNA-binding transcription factor activity / transcription regulator activity (bHLH family). (liu2023cellfateprogramming pages 2-4, liu2024bhlhtranscriptionfactors pages 5-7)</p>
+<p><strong>Biological Process (BP)</strong><br />
+- Stomatal lineage cell fate commitment; meristemoid-to-GMC transition; stomatal development / stomatal complex development; regulation of asymmetric→symmetric division transitions within stomatal lineage. (giannoutsou2025guardiansofwater pages 6-8, zhou2024molecularmechanismsfor pages 2-4)</p>
+<p><strong>Cellular Component (CC)</strong><br />
+- Nucleus (functional TF localization supported by nuclear reporters/fusions). (nakagawa2024chemicalinhibitionof pages 10-11, nakagawa2024chemicalinhibitionof media 2b410197)</p>
+<h4 id="52-moderate-confidence-context-dependent-annotations-use-with-caution">5.2 Moderate-confidence / context-dependent annotations (use with caution)</h4>
+<ul>
+<li>“Chromatin remodeling” or “regulation of chromatin accessibility” as BP terms: recent evidence argues MUTE/SCRM functionally cooperates with SWI/SNF/HAC1 and shows pioneer-like binding; however, whether MUTE should itself be directly annotated to chromatin remodeling processes depends on GO evidence standards (direct participation vs enabling recruitment). (liu2024bhlhtranscriptionfactors pages 13-15, liu2023cellfateprogramming pages 4-5)</li>
+<li>“Response to environmental stimulus” terms (CO2/temperature/drought): reviews emphasize that environmental signaling modulates stomatal development networks and that engineering stomatal traits is a climate-resilience strategy, but these are not MUTE-specific causal phenotypes in Arabidopsis in the retrieved evidence and are likely over-extended if assigned directly to MUTE. (chua2024stomataldevelopmentin pages 12-13, zhou2024molecularmechanismsfor pages 10-11)</li>
+</ul>
+<h4 id="53-likely-erroneous-or-unsupported-annotations-avoid">5.3 Likely erroneous or unsupported annotations (avoid)</h4>
+<ul>
+<li>Apoptosis, pyroptosis, inflammatory signaling, neuronal/synaptic remodeling: no evidence in the retrieved corpus supports these processes for MUTE, and they are generally animal-specific. (liu2024bhlhtranscriptionfactors pages 5-7, liu2023cellfateprogramming pages 4-5)</li>
+<li>Cytosol/cytoplasm as primary active location: current evidence emphasizes nuclear localization and genome-binding/chromatin-based function. (nakagawa2024chemicalinhibitionof pages 10-10, liu2024bhlhtranscriptionfactors pages 5-7)</li>
+<li>Proteolytic maturation/processing: no evidence in the retrieved sources that MUTE requires proteolytic processing to become active. (nakagawa2024chemicalinhibitionof pages 1-2)</li>
+</ul>
+<h3 id="6-key-literature-prioritizing-20232024">6. Key literature (prioritizing 2023–2024)</h3>
+<p>Below are authoritative sources used for this report; URLs are DOI links and publication dates are as provided in the retrieved metadata.</p>
+<p>1) <strong>Nakagawa et al.</strong> “Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bHLH heterodimer via an ACT-Like domain.” <em>Nature Communications</em> (Publication date: <strong>Oct 2024</strong>). https://doi.org/10.1038/s41467-024-53214-4<br />
+   Key contributions: ACTL-domain mechanism; quantitative biophysics; nuclear reporters; dose-response phenotypes; engineered resistance. (nakagawa2024chemicalinhibitionof pages 1-2, nakagawa2024chemicalinhibitionof pages 7-8, nakagawa2024chemicalinhibitionof pages 10-11, nakagawa2024chemicalinhibitionof pages 2-3)</p>
+<p>2) <strong>Liu et al.</strong> “bHLH transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during Arabidopsis stomatal development.” <em>PLOS Biology</em> (Publication date: <strong>Aug 2024</strong>). https://doi.org/10.1371/journal.pbio.3002770<br />
+   Key contributions: TF–chromatin state coupling; pioneer-like binding; SWI/SNF and HAC1 cooperation model; example direct targets. (liu2024bhlhtranscriptionfactors pages 5-7, liu2024bhlhtranscriptionfactors pages 13-15)</p>
+<p>3) <strong>Chua &amp; Lau</strong> “Stomatal development in the changing climate.” <em>Development</em> (Publication date: <strong>Oct 2024</strong>). https://doi.org/10.1242/dev.202681<br />
+   Key contributions: updated review of environmental control and applications in crop improvement; context for SMF network use in engineering. (chua2024stomataldevelopmentin pages 12-13)</p>
+<p>4) <strong>Zhou et al.</strong> “Molecular Mechanisms for Regulating Stomatal Formation across Diverse Plant Species.” <em>International Journal of Molecular Sciences</em> (Publication date: <strong>Sep 2024</strong>). https://doi.org/10.3390/ijms251910403<br />
+   Key contributions: mechanistic synthesis of SPCH→MUTE→FAMA; heterodimer partners; cell-cycle and feedback nodes (CYCD5, ERL1, FLP/FAMA). (zhou2024molecularmechanismsfor pages 2-4, zhou2024molecularmechanismsfor pages 10-11)</p>
+<p>5) <strong>Liu et al.</strong> “Cell Fate Programming by Transcription Factors and Epigenetic Machinery in Stomatal Development.” <em>bioRxiv</em> (Preprint posted: <strong>Aug 2023</strong>). https://doi.org/10.1101/2023.08.23.554515<br />
+   Key contributions: foundational analyses on nucleosome-occupied targets, MUTE-induced chromatin changes, and proximity labeling evidence for remodeler association (preprint version of later peer-reviewed work). (liu2023cellfateprogramming pages 4-5)</p>
+<p>6) <strong>Wakeel et al.</strong> “SPEECHLESS and MUTE Mediate Feedback Regulation of Signal Transduction during Stomatal Development.” <em>Plants</em> (Publication date: <strong>Feb 2021</strong>). https://doi.org/10.3390/plants10030432<br />
+   Key contributions: pathway and feedback framing for MUTE (ERL1/EPF2 nodes; MAPK pathway context). (wakeel2021speechlessandmute pages 3-5)</p>
+<hr />
+<h3 id="go-focused-evidence-table">GO-focused evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim (GO-relevant)</th>
+<th>Evidence type/assay</th>
+<th>Key quantitative/statistical data (if any)</th>
+<th>Best citation(s) (with paper title, year, DOI URL)</th>
+<th>Notes for annotation-risk (core vs over-extended)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Molecular function evidence:</strong> MUTE is a <strong>stomatal-lineage bHLH transcription factor</strong> that binds cis-regulatory DNA together with SCRM/ICE1-family partners and activates transcription during fate transition.</td>
+<td>ChIP-seq, scRNA-seq integration, motif analysis, MNase-seq, inducible expression; in planta and genomic assays show MUTE-bound CREs, often in closed chromatin, with cooperative binding with SCRM.</td>
+<td>No single catalytic substrate; DNA-binding is sequence/motif-based. MUTE induction reduced nucleosome density at targets within <strong>4 h</strong>.</td>
+<td><em>bHLH transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during Arabidopsis stomatal development</em> (2024), https://doi.org/10.1371/journal.pbio.3002770 (liu2024bhlhtranscriptionfactors pages 5-7, liu2024bhlhtranscriptionfactors pages 13-15); <em>Cell Fate Programming by Transcription Factors and Epigenetic Machinery in Stomatal Development</em> (2023), https://doi.org/10.1101/2023.08.23.554515 (liu2023cellfateprogramming pages 4-5, liu2023cellfateprogramming pages 2-4)</td>
+<td><strong>Core MF.</strong> Strong support for sequence-specific transcription regulator / DNA-binding TF role. <strong>Do not over-annotate enzyme activity or substrate-specific catalysis</strong>; evidence supports transcriptional/chromatin regulatory function, not classical catalytic biochemistry.</td>
+</tr>
+<tr>
+<td><strong>Key downstream targets:</strong> MUTE promotes GMC transition and single symmetric division by activating stomatal/cell-cycle regulators including <strong>CYCD5</strong>, <strong>FAMA</strong>, <strong>FLP</strong>, and induces <strong>ERL1</strong> feedback.</td>
+<td>Review synthesis from genetic, transcriptional, and downstream network studies; ChIP-seq/scRNA-seq support for shared bHLH targets; FAMA identified as a likely direct target.</td>
+<td>Qualitative network logic: CYCD5 induction promotes division; FAMA/FLP restrict further divisions; no quantitative fold-change given in gathered excerpts.</td>
+<td><em>Molecular Mechanisms for Regulating Stomatal Formation across Diverse Plant Species</em> (2024), https://doi.org/10.3390/ijms251910403 (zhou2024molecularmechanismsfor pages 2-4); <em>Speechless and Mute Mediate Feedback Regulation of Signal Transduction during Stomatal Development</em> (2021), https://doi.org/10.3390/plants10030432 (wakeel2021speechlessandmute pages 3-5); <em>Cell Fate Programming by Transcription Factors and Epigenetic Machinery in Stomatal Development</em> (2023), https://doi.org/10.1101/2023.08.23.554515 (liu2023cellfateprogramming pages 5-7)</td>
+<td><strong>Core BP-network support</strong>, but direct GO target-based annotation should be cautious unless target-specific direct binding/perturbation is explicit. Safer to annotate upstream process roles than many individual “positive regulation of X gene expression” terms.</td>
+</tr>
+<tr>
+<td><strong>Activation/regulation mechanisms:</strong> MUTE function depends on <strong>heterodimerization via its ACT-like (ACTL) domain</strong> with SCRM-family bHLHs; Stomidazolone directly binds MUTE ACTL and perturbs SCRM–MUTE interaction. Upstream MAPK signaling is reported to negatively regulate the stomatal bHLH module.</td>
+<td>Y2H, rBiFC/BiFC in nuclei, BLI, ITC, docking, site-directed mutagenesis, chemical genetics, in planta rescue/resistance assays; review evidence for MAPK-pathway control.</td>
+<td>Stomidazolone increased SCRM–MUTE dissociation constant from about <strong>7.5 nM to 856.5 nM</strong> (BLI) and about <strong>9.5 nM to 900 nM</strong> (ITC); Arabidopsis seedlings showed stomatal decreases of <strong>24.45%, 59.50%, 69.53%</strong> and meristemoid increases of <strong>315.8%, 801.5%, 647.6%</strong> at <strong>20/50/100 μM</strong>.</td>
+<td><em>Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bHLH heterodimer via an ACT-Like domain</em> (2024), https://doi.org/10.1038/s41467-024-53214-4 (nakagawa2024chemicalinhibitionof pages 7-8, nakagawa2024chemicalinhibitionof pages 10-11, nakagawa2024chemicalinhibitionof pages 1-2, nakagawa2024chemicalinhibitionof pages 9-10, nakagawa2024chemicalinhibitionof pages 2-3); <em>Molecular Mechanisms for Regulating Stomatal Formation across Diverse Plant Species</em> (2024), https://doi.org/10.3390/ijms251910403 (zhou2024molecularmechanismsfor pages 10-11)</td>
+<td><strong>Core mechanistic support</strong> for dimerization-dependent TF activity. <strong>Do not annotate proteolytic maturation or covalent activation</strong>: no evidence for proteolytic processing; MAPK regulation is pathway-contextual and less direct than ACTL-mediated partner selection.</td>
+</tr>
+<tr>
+<td><strong>Biological process roles:</strong> MUTE is required for <strong>meristemoid-to-guard mother cell transition</strong>, termination of amplifying asymmetric divisions, promotion of GMC fate, and coordination of the <strong>single symmetric division</strong> leading toward paired guard cells/stomata.</td>
+<td>Mutant phenotype, overexpression, lineage analysis, review synthesis, scRNA-seq and chromatin studies.</td>
+<td>Loss of function causes continued asymmetric divisions / arrested meristemoids; overexpression converts epidermal cells to GMC-like fate and eventual paired guard cells. No unified numerical penetrance in gathered excerpts.</td>
+<td><em>bHLH transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during Arabidopsis stomatal development</em> (2024), https://doi.org/10.1371/journal.pbio.3002770 (liu2024bhlhtranscriptionfactors pages 5-7); <em>Stomatal development in the changing climate</em> (2024), https://doi.org/10.1242/dev.202681 (chua2024stomataldevelopmentin pages 12-13); <em>Molecular Mechanisms for Regulating Stomatal Formation across Diverse Plant Species</em> (2024), https://doi.org/10.3390/ijms251910403 (zhou2024molecularmechanismsfor pages 2-4); <em>Guardians of Water and Gas Exchange</em> (2025), https://doi.org/10.3390/plants14152405 (giannoutsou2025guardiansofwater pages 6-8)</td>
+<td><strong>Highest-confidence GO BP area.</strong> Appropriate for stomatal lineage progression, stomatal complex development, cell fate commitment/differentiation. <strong>Avoid broad whole-plant stress annotations</strong> unless directly tied to developmental mechanism.</td>
+</tr>
+<tr>
+<td><strong>Cellular component/localization:</strong> Active MUTE is <strong>nuclear</strong> in stomatal-lineage cells; evidence supports DNA/chromatin-associated function rather than cytosolic/cytoplasmic residence.</td>
+<td>MUTEpro::nucYFP reporter, MUTEpro::MUTE-GFP rescue lines with confocal imaging; ChIP-seq/MNase-seq imply chromatin association.</td>
+<td>Confocal imaging shows MUTE-GFP/nucYFP in nuclei of differentiating meristemoids; no quantitative localization ratio reported.</td>
+<td><em>Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bHLH heterodimer via an ACT-Like domain</em> (2024), https://doi.org/10.1038/s41467-024-53214-4 (nakagawa2024chemicalinhibitionof pages 10-11, nakagawa2024chemicalinhibitionof pages 2-3, nakagawa2024chemicalinhibitionof media 2b410197, nakagawa2024chemicalinhibitionof pages 10-10); <em>bHLH transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during Arabidopsis stomatal development</em> (2024), https://doi.org/10.1371/journal.pbio.3002770 (liu2024bhlhtranscriptionfactors pages 5-7)</td>
+<td><strong>Core CC.</strong> Nuclear annotation is well supported. <strong>Cytoplasm/cytosol annotations are not supported by gathered evidence</strong> and would be risky unless based on separate direct localization experiments.</td>
+</tr>
+<tr>
+<td><strong>Complex/interaction partners:</strong> MUTE forms functional <strong>heterodimers with SCRM/ICE1 and SCRM2</strong>; the MUTE–SCRM module associates with chromatin-remodeling machinery including <strong>SWI/SNF components</strong> and <strong>HAC1</strong>.</td>
+<td>Y2H, rBiFC/BiFC, BLI, ITC, TurboID proximity labeling, Y2H confirmation for remodeler interactions; structural modeling.</td>
+<td>Drug perturbation data show strong quantitative weakening of SCRM–MUTE binding; remodeler associations are supported qualitatively rather than stoichiometrically.</td>
+<td><em>Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bHLH heterodimer via an ACT-Like domain</em> (2024), https://doi.org/10.1038/s41467-024-53214-4 (nakagawa2024chemicalinhibitionof pages 7-8, nakagawa2024chemicalinhibitionof pages 1-2, nakagawa2024chemicalinhibitionof pages 9-10); <em>Cell Fate Programming by Transcription Factors and Epigenetic Machinery in Stomatal Development</em> (2023), https://doi.org/10.1101/2023.08.23.554515 (liu2023cellfateprogramming pages 4-5, liu2023cellfateprogramming pages 5-7); <em>bHLH transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during Arabidopsis stomatal development</em> (2024), https://doi.org/10.1371/journal.pbio.3002770 (liu2024bhlhtranscriptionfactors pages 13-15)</td>
+<td><strong>Heterodimer with SCRM-family partner is core.</strong> Association with SWI/SNF/HAC1 is well supported for functional cooperation, but GO complex annotations should be cautious because stable stoichiometric complex identity is less firmly defined than dimerization with SCRM/SCRM2.</td>
+</tr>
+<tr>
+<td><strong>Applications:</strong> MUTE/SMF knowledge is being leveraged for <strong>stomatal trait engineering</strong> and chemical control of stomatal differentiation; crop studies and reviews highlight editing of stomatal regulators/paralogs to tune density, transpiration, photosynthesis, and drought resilience. Stomidazolone is a research tool for selective perturbation of the MUTE step.</td>
+<td>2024 reviews summarizing crop engineering examples; 2024 chemical-biology primary study demonstrating selective developmental inhibition.</td>
+<td>Stomidazolone caused dose-dependent stomatal reduction and meristemoid accumulation in Arabidopsis at <strong>20–100 μM</strong>. Review excerpts cite paralog editing/CRISPR applications but do not provide numeric field-performance data in gathered passages.</td>
+<td><em>Stomatal development in the changing climate</em> (2024), https://doi.org/10.1242/dev.202681 (chua2024stomataldevelopmentin pages 12-13); <em>The tomato genome encodes SPCH, MUTE, and FAMA candidates that can replace the endogenous functions of their Arabidopsis orthologs</em> (2019), https://doi.org/10.3389/fpls.2019.01300 (ortega2019thetomatogenome pages 1-2); <em>Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bHLH heterodimer via an ACT-Like domain</em> (2024), https://doi.org/10.1038/s41467-024-53214-4 (nakagawa2024chemicalinhibitionof pages 2-3)</td>
+<td><strong>Not for direct GO function annotation.</strong> Useful translational context only. Avoid inferring endogenous biological-process terms such as drought tolerance or climate adaptation directly onto Arabidopsis MUTE without gene-specific causal evidence in the target organism.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes GO-relevant evidence for Arabidopsis thaliana MUTE, emphasizing experimentally supported molecular function, biological process, localization, and interaction data while flagging annotation risks. It is designed to support careful GO annotation review using recent primary and review literature.</em></p>
+<p><strong>Image-supported evidence</strong>: Nuclear localization and dose-dependent stomatal/meristemoid phenotypes under Stomidazolone treatment are supported by figure panels retrieved from Nakagawa et al. 2024. (nakagawa2024chemicalinhibitionof media 2b410197)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(liu2023cellfateprogramming pages 1-2): Ao Liu, Andrea Mair, Juliana L. Matos, Macy Vollbrecht, Shou-Ling Xu, and Dominique C. Bergmann. Cell fate programming by transcription factors and epigenetic machinery in stomatal development. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.23.554515, doi:10.1101/2023.08.23.554515. This article has 8 citations.</p>
+</li>
+<li>
+<p>(liu2024bhlhtranscriptionfactors pages 5-7): Ao Liu, Andrea Mair, Juliana L. Matos, Macy Vollbrecht, Shou-Ling Xu, and Dominique C. Bergmann. Bhlh transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during arabidopsis stomatal development. Aug 2024. URL: https://doi.org/10.1371/journal.pbio.3002770, doi:10.1371/journal.pbio.3002770. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2024bhlhtranscriptionfactors pages 13-15): Ao Liu, Andrea Mair, Juliana L. Matos, Macy Vollbrecht, Shou-Ling Xu, and Dominique C. Bergmann. Bhlh transcription factors cooperate with chromatin remodelers to regulate cell fate decisions during arabidopsis stomatal development. Aug 2024. URL: https://doi.org/10.1371/journal.pbio.3002770, doi:10.1371/journal.pbio.3002770. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof pages 1-2): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof pages 2-3): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2023cellfateprogramming pages 4-5): Ao Liu, Andrea Mair, Juliana L. Matos, Macy Vollbrecht, Shou-Ling Xu, and Dominique C. Bergmann. Cell fate programming by transcription factors and epigenetic machinery in stomatal development. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.23.554515, doi:10.1101/2023.08.23.554515. This article has 8 citations.</p>
+</li>
+<li>
+<p>(zhou2024molecularmechanismsfor pages 2-4): Wenqi Zhou, Jieshan Liu, Wenjin Wang, Yongsheng Li, Zixu Ma, Haijun He, Xiaojuan Wang, Xiaorong Lian, Xiaoyun Dong, Xiaoqiang Zhao, and Yuqian Zhou. Molecular mechanisms for regulating stomatal formation across diverse plant species. International Journal of Molecular Sciences, 25:10403, Sep 2024. URL: https://doi.org/10.3390/ijms251910403, doi:10.3390/ijms251910403. This article has 12 citations.</p>
+</li>
+<li>
+<p>(liu2023cellfateprogramming pages 5-7): Ao Liu, Andrea Mair, Juliana L. Matos, Macy Vollbrecht, Shou-Ling Xu, and Dominique C. Bergmann. Cell fate programming by transcription factors and epigenetic machinery in stomatal development. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.23.554515, doi:10.1101/2023.08.23.554515. This article has 8 citations.</p>
+</li>
+<li>
+<p>(liu2023cellfateprogramming pages 2-4): Ao Liu, Andrea Mair, Juliana L. Matos, Macy Vollbrecht, Shou-Ling Xu, and Dominique C. Bergmann. Cell fate programming by transcription factors and epigenetic machinery in stomatal development. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.23.554515, doi:10.1101/2023.08.23.554515. This article has 8 citations.</p>
+</li>
+<li>
+<p>(wakeel2021speechlessandmute pages 3-5): Abdul Wakeel, Lin Wang, and Ming Xu. Speechless and mute mediate feedback regulation of signal transduction during stomatal development. Plants, 10:432, Feb 2021. URL: https://doi.org/10.3390/plants10030432, doi:10.3390/plants10030432. This article has 11 citations.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof pages 7-8): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof pages 9-10): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2024molecularmechanismsfor pages 10-11): Wenqi Zhou, Jieshan Liu, Wenjin Wang, Yongsheng Li, Zixu Ma, Haijun He, Xiaojuan Wang, Xiaorong Lian, Xiaoyun Dong, Xiaoqiang Zhao, and Yuqian Zhou. Molecular mechanisms for regulating stomatal formation across diverse plant species. International Journal of Molecular Sciences, 25:10403, Sep 2024. URL: https://doi.org/10.3390/ijms251910403, doi:10.3390/ijms251910403. This article has 12 citations.</p>
+</li>
+<li>
+<p>(giannoutsou2025guardiansofwater pages 6-8): E. Giannoutsou, I-D S Adamakis, and D. Samakovli. Guardians of water and gas exchange: adaptive dynamics of stomatal development and patterning. Plants, Aug 2025. URL: https://doi.org/10.3390/plants14152405, doi:10.3390/plants14152405. This article has 4 citations.</p>
+</li>
+<li>
+<p>(chua2024stomataldevelopmentin pages 12-13): Li Cong Chua and On Sun Lau. Stomatal development in the changing climate. Development (Cambridge, England), Oct 2024. URL: https://doi.org/10.1242/dev.202681, doi:10.1242/dev.202681. This article has 38 citations.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof pages 10-11): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof media 2b410197): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakagawa2024chemicalinhibitionof pages 10-10): Ayami Nakagawa, Krishna Mohan Sepuru, Shu Jan Yip, Hyemin Seo, Calvin M. Coffin, Kota Hashimoto, Zixuan Li, Yasutomo Segawa, Rie Iwasaki, Hiroe Kato, Daisuke Kurihara, Yusuke Aihara, Stephanie Kim, Toshinori Kinoshita, Kenichiro Itami, Soon-Ki Han, Kei Murakami, and Keiko U. Torii. Chemical inhibition of stomatal differentiation by perturbation of the master-regulatory bhlh heterodimer via an act-like domain. Nature Communications, Oct 2024. URL: https://doi.org/10.1038/s41467-024-53214-4, doi:10.1038/s41467-024-53214-4. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ortega2019thetomatogenome pages 1-2): Alfonso Ortega, Alberto de Marcos, Jonatan Illescas-Miranda, Montaña Mena, and Carmen Fenoll. The tomato genome encodes spch, mute, and fama candidates that can replace the endogenous functions of their arabidopsis orthologs. Frontiers in Plant Science, Oct 2019. URL: https://doi.org/10.3389/fpls.2019.01300, doi:10.3389/fpls.2019.01300. This article has 43 citations.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MUTE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9M8K6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mute-at3g06120-q9m8k6-gene-review-notes">MUTE (AT3G06120, Q9M8K6) — Gene Review Notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li><em>Arabidopsis thaliana</em> bHLH transcription factor, also known as AtbHLH45 / bHLH045 / EN20.</li>
+<li>202 aa; single bHLH domain (UniProt FT DOMAIN 1..49; PROSITE PS50888 BHLH).</li>
+<li>Member of the FAMA/SPEECHLESS/MUTE-like subfamily (InterPro IPR044283; PANTHER PTHR46684:SF1 "TRANSCRIPTION FACTOR MUTE").</li>
+<li>TAIR: AT3G06120; expressed at transcript level (UniProt PE 2).</li>
+</ul>
+<h2 id="core-biology-synthesis">Core biology (synthesis)</h2>
+<p>MUTE is the central of three closely related stomatal bHLH transcription factors — SPEECHLESS (SPCH) → MUTE → FAMA — that act sequentially to build stomata. MUTE terminates the amplifying (asymmetric) divisions of the meristemoid and triggers the transition of the meristemoid into a guard mother cell (GMC), which then divides once symmetrically to form the guard cell pair. MUTE functions as a nuclear, DNA-binding transcription factor that heterodimerizes with the broadly expressed ICE1/SCRM and SCRM2 bHLH-leucine-zipper proteins.</p>
+<h2 id="provenance">Provenance</h2>
+<h3 id="master-switch-function-meristemoid-gmc-transition">Master-switch function: meristemoid → GMC transition</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/17183267" title="the Arabidopsis thaliana basic helix-loop-helix (bHLH) protein MUTE is a key switch for meristemoid fate transition. In the absence of MUTE, meristemoids abort after excessive asymmetric divisions and fail to differentiate stomata. Constitutive overexpression of MUTE directs the entire epidermis to adopt guard cell identity.">PMID:17183267</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17183267" title="SPCH, MUTE and FAMA bHLH proteins control stomatal development at three consecutive steps: initiation, meristemoid differentiation and guard cell morphogenesis.">PMID:17183267</a></p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/17183265" title="We demonstrate that SPCH and two paralogues are successively required for the initiation, proliferation and terminal differentiation of cells in the stomatal lineage. The stomatal bHLHs define a molecular pathway sufficient to create one of the key cell types in plants.">PMID:17183265</a><br />
+- Note: PMID:17183265 abstract foregrounds SPCH but the full study (MacAlister, Ohashi-Ito &amp; Bergmann 2007) characterizes the three paralogues; the GOA IMP annotation to GO:0010374 stomatal complex development is curator-attributed from the full text.</p>
+<h3 id="late-meristemoid-expression-slgc-fate-and-lineage-autonomy">Late-meristemoid expression; SLGC fate and lineage-autonomy</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/23662679" title="MUTE is a bHLH transcription factor that is expressed in late meristemoids and drives their transition to GMCs. Loss-of-function mute mutants are stomata-less dwarf plants with arrested lineages, in which stunted putative SLGCs surround a halted meristemoid.">PMID:23662679</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23662679" title="These results show that timely MUTE expression is essential to prevent stomatal fate in SLGCs and to promote their differentiation as pavement cells.">PMID:23662679</a><br />
+- This is the basis for the GO:0090627 plant epidermal cell differentiation IMP annotation (MUTE timing affects SLGC/pavement-cell fate, not only guard cells).</p>
+<h3 id="heterodimerization-with-ice1scrm-and-scrm2-key-for-mfdimerization">Heterodimerization with ICE1/SCRM and SCRM2 (key for MF/dimerization)</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/18641265" title="we identify two paralogous proteins, SCREAM (SCRM) and SCRM2, which directly interact with and specify the sequential actions of SPCH, MUTE, and FAMA.">PMID:18641265</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18641265" title="three stomatal bHLHs, SPCH, MUTE, and FAMA, that exhibit transient expression within a specific precursor state of the stomatal cell lineage function as heterodimers with broadly expressed ICE1.">PMID:18641265</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18641265" title="these nuclear-localized bHLH heterodimers most likely act as DNA binding transcription factors.">PMID:18641265</a><br />
+- Full text available (PMC2518248). Establishes physical interaction (Y2H + BiFC in epidermal nuclei) of MUTE with ICE1/SCRM and SCRM2. UniProt SUBUNIT says "Homodimer {ECO:0000305}" but the experimentally supported biologically relevant partner is the SCRM/SCRM2 heterodimer; the dimerization MF annotation (GO:0046983) is therefore well supported, with heterodimerization the functional reality.</p>
+<h3 id="subcellular-localization">Subcellular localization</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/17183267">PMID:17183267</a> reported nuclear localization (UniProt SUBCELLULAR LOCATION: Nucleus, ECO:0000269|PubMed:17183267). GOA carries an IDA nucleus annotation (GO:0005634) to PMID:17183267. Heterodimers also localized to nuclei in BiFC <a href="https://pubmed.ncbi.nlm.nih.gov/18641265" title="showed strong heterodimerization with MUTE and FAMA in the nuclei">PMID:18641265</a>.</p>
+<h3 id="dna-cis-regulatory-binding">DNA / cis-regulatory binding</h3>
+<ul>
+<li>GOA IPI GO:0000976 transcription cis-regulatory region binding from PMID:30356219 (Gaudinier et al. 2018, nitrogen TF regulatory network), with/from AGI_LocusCode:AT5G07440 (= NLP7, a nitrogen-response TF). This derives from an enhanced yeast-one-hybrid promoter-TF interaction network. The abstract does not mention MUTE specifically; the network screen captured MUTE binding a promoter. Plausible (MUTE is a DNA-binding bHLH) but the in-vivo relevance to stomatal biology is not established here — treat as a real but peripheral binding observation. Keep, non-core.</li>
+</ul>
+<h3 id="gene-family-structural-iss-iea-basis">Gene-family / structural (ISS, IEA basis)</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/12679534" title="there are 133 bHLH genes in Arabidopsis thaliana ... Their mechanism for controlling gene transcription often involves homodimerization or heterodimerization.">PMID:12679534</a> — basis for ISS DNA-binding TF activity (family-level inference).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11118137" title="Arabidopsis dedicates over 5% of its genome to code for more than 1500 transcription factors">PMID:11118137</a> — genome-wide TF census; only weak/background support for MUTE specifically (TF family membership). Low relevance to MUTE function.</p>
+<h2 id="go-term-definitions-verified-quickgo-services-api">GO term definitions verified (QuickGO services API)</h2>
+<ul>
+<li>GO:0000976 transcription cis-regulatory region binding: "the capacity to bind to a particular DNA sequence that comprises a regulatory region controlling transcription."</li>
+<li>GO:0010374 stomatal complex development: "The process whose specific outcome is the progression of the stomatal complex over time from its formation to the mature structure."</li>
+<li>GO:0010052 guard cell differentiation: "The process in which a guard mother cell acquires the specialized features of a guard cell."</li>
+<li>GO:0046983 protein dimerization activity: "The formation of a protein dimer, a macromolecular structure consists of two noncovalently associated identical or nonidentical subunits."</li>
+</ul>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<ul>
+<li>GO:0003700 DNA-binding TF activity (IEA, ISS x2): ACCEPT (core MF). Sequence-specific bHLH TF.</li>
+<li>GO:0005634 nucleus (IEA x1, ISM, IDA): ACCEPT the IDA (PMID:17183267) as core; the IEA/ISM duplicates ACCEPT as redundant electronic support.</li>
+<li>GO:0006355 regulation of DNA-templated transcription (IEA): KEEP_AS_NON_CORE — correct but general; more specific BP is stomatal lineage progression. (Acceptable as-is; not the most informative.)</li>
+<li>GO:0010052 guard cell differentiation (IEA, InterPro): ACCEPT — directly matches MUTE's role driving meristemoid→GMC→guard cell.</li>
+<li>GO:0046983 protein dimerization activity (IEA): MODIFY → GO:0046982 protein heterodimerization activity (experimentally MUTE acts as heterodimer with SCRM/SCRM2 per PMID:18641265). Keep as core MF.</li>
+<li>GO:0090627 plant epidermal cell differentiation (IMP, PMID:23662679): ACCEPT — experimentally supported (SLGC/pavement cell fate + stomatal lineage).</li>
+<li>GO:0000976 transcription cis-regulatory region binding (IPI, PMID:30356219): KEEP_AS_NON_CORE — real binding observation from a large network screen, peripheral to stomatal function.</li>
+<li>GO:0010374 stomatal complex development (IMP, PMID:17183265): ACCEPT — core developmental process.</li>
+</ul>
+<h2 id="go0046982-check">GO:0046982 check</h2>
+<p>GO:0046982 = "protein heterodimerization activity" (child of GO:0046983 protein dimerization activity). Appropriate replacement given MUTE's obligate heterodimerization with ICE1/SCRM and SCRM2 (PMID:18641265).</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9M8K6
+gene_symbol: MUTE
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: MUTE is a basic helix-loop-helix (bHLH) transcription factor of Arabidopsis
+  thaliana that is a central regulator of stomatal development. It is expressed
+  transiently in late meristemoids, where it terminates the amplifying (asymmetric)
+  divisions of the meristemoid and triggers its transition into a guard mother cell
+  (GMC); the GMC then divides once symmetrically to produce the pair of guard cells
+  that form a stoma. MUTE acts in the stomatal lineage downstream of SPEECHLESS (SPCH),
+  which initiates the lineage, and upstream of FAMA, which directs terminal guard
+  cell morphogenesis. As a nuclear, sequence-specific DNA-binding transcription factor,
+  MUTE functions as a heterodimer with the broadly expressed bHLH-leucine-zipper
+  proteins ICE1/SCRM and SCRM2, which specify its activity at the meristemoid-to-GMC
+  transition. Loss of MUTE produces stomata-less plants whose meristemoids arrest
+  after excessive asymmetric divisions, whereas constitutive MUTE expression converts
+  the entire epidermis to guard cell identity. Timely MUTE expression also influences
+  the fate of stomatal lineage ground cells and their differentiation into pavement
+  cells.
+existing_annotations:
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: MUTE is a sequence-specific DNA-binding bHLH transcription factor; this
+      InterPro-based electronic annotation captures its core molecular function.
+    action: ACCEPT
+    reason: Consistent with experimental and ISS evidence that MUTE is a functional
+      bHLH transcription factor; this is a core molecular function.
+    supported_by:
+    - reference_id: PMID:18641265
+      supporting_text: these nuclear-localized bHLH heterodimers most likely act as
+        DNA binding transcription factors.
+    - reference_id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+      supporting_text: &#39;sequence-specific transcription regulation via nuclear DNA
+        binding (no catalytic substrate)&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Nuclear localization of MUTE, consistent with its role as a transcription
+      factor; this electronic annotation is redundant with the IDA annotation from
+      PMID:17183267.
+    action: ACCEPT
+    reason: Subcellular location is experimentally supported (PMID:17183267) and consistent
+      with TF function.
+    supported_by:
+    - reference_id: file:ARATH/MUTE/MUTE-notes.md
+      supporting_text: GOA carries an IDA nucleus annotation (GO:0005634) to PMID:17183267.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: Generic transcription-regulation process inferred from MUTE&#39;s DNA-binding
+      TF activity; correct but far less informative than its specific role in stomatal
+      lineage progression.
+    action: KEEP_AS_NON_CORE
+    reason: Accurate but high-level; MUTE&#39;s biologically meaningful process annotations
+      are the stomatal development terms. Retain as non-core background.
+    supported_by:
+    - reference_id: PMID:18641265
+      supporting_text: these nuclear-localized bHLH heterodimers most likely act as
+        DNA binding transcription factors.
+- term:
+    id: GO:0010052
+    label: guard cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: MUTE drives the meristemoid-to-GMC transition that commits cells to the
+      guard cell fate; this directly matches the term (guard mother cell acquiring
+      guard cell features).
+    action: ACCEPT
+    reason: Core biological process; strongly supported by loss- and gain-of-function
+      data even though the GOA evidence here is electronic.
+    supported_by:
+    - reference_id: PMID:17183267
+      supporting_text: Constitutive overexpression of MUTE directs the entire epidermis
+        to adopt guard cell identity.
+- term:
+    id: GO:0046983
+    label: protein dimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: MUTE is a bHLH protein that acts as a dimer; experimentally it forms
+      heterodimers with ICE1/SCRM and SCRM2, so the more specific heterodimerization
+      term is preferred.
+    action: MODIFY
+    reason: Experimental evidence (Y2H and BiFC in epidermal nuclei) shows MUTE associates
+      with the broadly expressed bHLH-LZ proteins ICE1/SCRM and SCRM2, indicating
+      heterodimerization activity rather than generic dimerization. This is a core
+      molecular function.
+    proposed_replacement_terms:
+    - id: GO:0046982
+      label: protein heterodimerization activity
+    supported_by:
+    - reference_id: PMID:18641265
+      supporting_text: three stomatal bHLHs, SPCH, MUTE, and FAMA, that exhibit transient
+        expression within a specific precursor state of the stomatal cell lineage
+        function as heterodimers with broadly expressed ICE1.
+    - reference_id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+      supporting_text: &#39;MUTE forms functional heterodimers with SCRM-family bHLHs;
+        disrupting this interaction abolishes differentiation outputs.&#39;
+- term:
+    id: GO:0090627
+    label: plant epidermal cell differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:23662679
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Timely MUTE expression is required to promote stomatal lineage ground
+      cell differentiation into pavement cells and to prevent ectopic stomatal fate,
+      placing MUTE within broader epidermal cell differentiation.
+    action: ACCEPT
+    reason: Directly supported by the mute-3 inducible-complementation study (PMID:23662679);
+      MUTE timing affects fates of multiple epidermal cell types, not only guard cells.
+    supported_by:
+    - reference_id: PMID:23662679
+      supporting_text: timely MUTE expression is essential to prevent stomatal fate
+        in SLGCs and to promote their differentiation as pavement cells.
+- term:
+    id: GO:0000976
+    label: transcription cis-regulatory region binding
+  evidence_type: IPI
+  original_reference_id: PMID:30356219
+  qualifier: enables
+  review:
+    summary: MUTE bound a promoter cis-regulatory region in a large enhanced-yeast-one-hybrid
+      nitrogen TF regulatory network screen; a real DNA-binding observation but peripheral
+      to MUTE&#39;s characterized stomatal function.
+    action: KEEP_AS_NON_CORE
+    reason: Consistent with MUTE being a DNA-binding bHLH, but this interaction comes
+      from a genome-scale network screen (with/from NLP7, AT5G07440) whose in-vivo
+      relevance to stomatal biology is not established. Retain as supporting, non-core.
+    supported_by:
+    - reference_id: file:ARATH/MUTE/MUTE-notes.md
+      supporting_text: GOA IPI GO:0000976 transcription cis-regulatory region binding
+        from PMID:30356219 (Gaudinier et al. 2018, nitrogen TF regulatory network),
+        with/from AGI_LocusCode:AT5G07440 (= NLP7, a nitrogen-response TF).
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISM
+  original_reference_id: GO_REF:0000122
+  qualifier: located_in
+  review:
+    summary: Sequence-based prediction of nuclear localization, redundant with the
+      experimental IDA annotation to PMID:17183267.
+    action: ACCEPT
+    reason: Correct localization; redundant electronic support for the experimentally
+      established nuclear location.
+    supported_by:
+    - reference_id: file:ARATH/MUTE/MUTE-notes.md
+      supporting_text: GOA carries an IDA nucleus annotation (GO:0005634) to PMID:17183267.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:17183267
+  qualifier: located_in
+  review:
+    summary: Direct experimental demonstration of MUTE nuclear localization, consistent
+      with its transcription factor activity. Core cellular component.
+    action: ACCEPT
+    reason: Experimentally determined nuclear localization; core to MUTE acting as
+      a nuclear transcription factor.
+    supported_by:
+    - reference_id: file:ARATH/MUTE/MUTE-notes.md
+      supporting_text: &#39;[PMID:17183267] reported nuclear localization (UniProt SUBCELLULAR
+        LOCATION: Nucleus, ECO:0000269|PubMed:17183267).&#39;
+    - reference_id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+      supporting_text: There is no affirmative evidence in the retrieved set for primary
+        cytosolic/cytoplasmic localization as the active functional compartment.
+- term:
+    id: GO:0010374
+    label: stomatal complex development
+  evidence_type: IMP
+  original_reference_id: PMID:17183265
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: MUTE is one of three sequentially-acting stomatal bHLHs required for
+      stomatal lineage progression; loss of MUTE arrests meristemoids and blocks stomatal
+      formation. Core developmental process.
+    action: ACCEPT
+    reason: Experimentally supported (full text of MacAlister et al. 2007 characterizes
+      SPCH, MUTE and FAMA); MUTE is required for development of the stomatal complex.
+    supported_by:
+    - reference_id: PMID:17183265
+      supporting_text: SPCH and two paralogues are successively required for the initiation,
+        proliferation and terminal differentiation of cells in the stomatal lineage.
+    - reference_id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+      supporting_text: terminating amplifying asymmetric divisions of meristemoids
+        and promoting commitment to GMC fate, followed by coordination of the single
+        symmetric division that generates guard cells
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: ISS
+  original_reference_id: PMID:12679534
+  qualifier: enables
+  review:
+    summary: Sequence-similarity inference that MUTE is a DNA-binding bHLH transcription
+      factor, based on the genome-wide bHLH family analysis. Core molecular function.
+    action: ACCEPT
+    reason: Consistent with experimental evidence that MUTE acts as a DNA-binding
+      transcription factor; redundant with other DNA-binding TF activity annotations.
+    supported_by:
+    - reference_id: PMID:12679534
+      supporting_text: Their mechanism for controlling gene transcription often involves
+        homodimerization or heterodimerization.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: ISS
+  original_reference_id: PMID:11118137
+  qualifier: enables
+  review:
+    summary: Sequence-similarity inference of DNA-binding transcription factor activity
+      from the genome-wide Arabidopsis transcription factor census; supports the core
+      molecular function but is only weakly specific to MUTE.
+    action: ACCEPT
+    reason: Correct molecular function assignment; the reference is a genome-wide TF
+      survey, so it is background-level support, redundant with the more specific
+      ISS annotation.
+    supported_by:
+    - reference_id: PMID:11118137
+      supporting_text: Arabidopsis dedicates over 5% of its genome to code for more
+        than 1500 transcription factors
+core_functions:
+- description: Acts as a nuclear sequence-specific DNA-binding bHLH transcription
+    factor that drives the meristemoid-to-guard-mother-cell transition in the stomatal
+    lineage, terminating amplifying asymmetric divisions and committing cells to guard
+    cell fate
+  supported_by:
+  - reference_id: PMID:17183267
+    supporting_text: the Arabidopsis thaliana basic helix-loop-helix (bHLH) protein
+      MUTE is a key switch for meristemoid fate transition. In the absence of MUTE,
+      meristemoids abort after excessive asymmetric divisions and fail to differentiate
+      stomata.
+  - reference_id: PMID:18641265
+    supporting_text: these nuclear-localized bHLH heterodimers most likely act as
+      DNA binding transcription factors.
+  - reference_id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+    supporting_text: terminating amplifying asymmetric divisions of meristemoids and
+      promoting commitment to GMC fate, followed by coordination of the single symmetric
+      division that generates guard cells
+  molecular_function:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  directly_involved_in:
+  - id: GO:0010374
+    label: stomatal complex development
+  - id: GO:0010052
+    label: guard cell differentiation
+  locations:
+  - id: GO:0005634
+    label: nucleus
+- description: Functions as a heterodimer with the broadly expressed bHLH-leucine-zipper
+    proteins ICE1/SCRM and SCRM2, which specify MUTE activity at the meristemoid-to-GMC
+    transition step of stomatal differentiation
+  supported_by:
+  - reference_id: PMID:18641265
+    supporting_text: we identify two paralogous proteins, SCREAM (SCRM) and SCRM2,
+      which directly interact with and specify the sequential actions of SPCH, MUTE,
+      and FAMA.
+  - reference_id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+    supporting_text: &#39;MUTE forms functional heterodimers with SCRM-family bHLHs; disrupting
+      this interaction abolishes differentiation outputs.&#39;
+  molecular_function:
+    id: GO:0046982
+    label: protein heterodimerization activity
+  directly_involved_in:
+  - id: GO:0010374
+    label: stomatal complex development
+  locations:
+  - id: GO:0005634
+    label: nucleus
+references:
+- id: file:ARATH/MUTE/MUTE-deep-research-falcon.md
+  title: &#39;Falcon/Edison deep research report: MUTE&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: AI-generated (Falcon/Edison) deep-research synthesis used as supporting
+      context; trace individual claims to primary literature before treating as definitive.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000122
+  title: AtSubP analysis
+  findings: []
+- id: PMID:11118137
+  title: &#39;Arabidopsis transcription factors: genome-wide comparative analysis among
+    eukaryotes.&#39;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified genome-wide Arabidopsis TF census; supports MUTE
+      being a transcription factor only at the family/background level, not its specific
+      function.
+- id: PMID:12679534
+  title: &#39;The basic helix-loop-helix transcription factor family in plants: a genome-wide
+    study of protein structure and functional diversity.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified bHLH family analysis (133 Arabidopsis bHLHs); basis
+      for the ISS DNA-binding TF activity annotation and notes bHLH homo/heterodimerization.
+- id: PMID:17183265
+  title: Transcription factor control of asymmetric cell divisions that establish
+    the stomatal lineage.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Abstract foregrounds SPCH but the full study (MacAlister,
+      Ohashi-Ito &amp; Bergmann 2007) characterizes SPCH, MUTE and FAMA as sequentially
+      required; supports the GO:0010374 IMP annotation.
+- id: PMID:17183267
+  title: Termination of asymmetric cell division and differentiation of stomata.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Defines MUTE as the key switch for the meristemoid-to-GMC
+      transition; loss-of-function and overexpression phenotypes plus nuclear localization
+      (IDA).
+- id: PMID:18641265
+  title: SCREAM/ICE1 and SCREAM2 specify three cell-state transitional steps leading
+    to arabidopsis stomatal differentiation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified, full text available (PMC2518248). Establishes by
+      Y2H and BiFC that MUTE heterodimerizes with ICE1/SCRM and SCRM2 in epidermal
+      nuclei; basis for the heterodimerization MF call.
+- id: PMID:23662679
+  title: Timely expression of the Arabidopsis stoma-fate master regulator MUTE is
+    required for specification of other epidermal cell types.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified. mute-3 inducible complementation shows MUTE is
+      expressed in late meristemoids, drives the GMC transition, and influences SLGC/pavement
+      cell fate; basis for the GO:0090627 IMP annotation.
+- id: PMID:30356219
+  title: Transcriptional regulation of nitrogen-associated metabolism and growth.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Genome-scale enhanced-Y1H nitrogen TF regulatory
+      network (Gaudinier et al. 2018); source of the IPI cis-regulatory region binding
+      annotation (with/from NLP7, AT5G07440). Peripheral to MUTE&#39;s stomatal function.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

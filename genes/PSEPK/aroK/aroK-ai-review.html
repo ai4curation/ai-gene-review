@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aroK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>aroK</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CV1" target="_blank" class="term-link">
+                        Q88CV1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "aroK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CV1" data-a="DESCRIPTION: AroK is the shikimate kinase (EC 2.7.1.71) of Pseu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AroK is the shikimate kinase (EC 2.7.1.71) of Pseudomonas putida KT2440. It catalyzes the fifth step of the shikimate pathway, the ATP-dependent phosphorylation of the 3-hydroxyl group of shikimate to form shikimate 3-phosphate (3-phosphoshikimate), with release of ADP and a proton. The enzyme requires a Mg(2+) cofactor (one ion bound per subunit) and adopts the P-loop (Walker A) NTPase fold characteristic of the shikimate kinase family, with a glycine-rich nucleotide-binding loop near the N-terminus. As a cytoplasmic monomer, AroK provides shikimate 3-phosphate as the substrate for the downstream EPSP synthase (AroA) and ultimately chorismate, the branch-point precursor for aromatic amino acids (Phe, Tyr, Trp), folate, ubiquinone, and other aromatic metabolites. In bacteria, shikimate kinase activity can be encoded by two isoenzymes, AroK (shikimate kinase I) and AroL (shikimate kinase II); this step is a recognized flux-control point in shikimate-pathway metabolic engineering.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV1" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Shikimate kinase requires a divalent Mg(2+) cofactor for catalysis; UniProt records binding of one Mg(2+) ion per subunit, coordinated near the ATP-binding P-loop. This is a well-supported, family-conserved molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Magnesium binding is intrinsic to shikimate kinase catalysis and is supported by the HAMAP rule and conserved metal-binding residue; consistent with the enzymology of the shikimate kinase family.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004765" target="_blank" class="term-link">
+                                    GO:0004765
+                                </a>
+                            </span>
+                            <span class="term-label">shikimate kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV1" data-a="GO:0004765" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core molecular function of AroK, supported by the EC 2.7.1.71 assignment, the RHEA:13121 catalytic-activity mapping, HAMAP rule MF_00109, and strong family/domain evidence (Pfam SKI, shikimate kinase signature).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly represents the defining enzymatic activity of the gene product and is the central core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV1" data-a="GO:0005524" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroK is an ATP-dependent kinase that uses ATP as the phosphoryl donor; it contains a P-loop/Walker A motif (residues 11-16) and additional ATP-contacting residues. ATP binding is a required, well-supported molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ATP binding is an obligatory part of the shikimate kinase reaction and is supported by the conserved P-loop nucleotide-binding fold.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV1" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroK is a soluble cytoplasmic enzyme acting in central metabolism, consistent with UniProt subcellular location and the general biology of bacterial shikimate-pathway enzymes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct localization for a cytoplasmic biosynthetic enzyme; consistent with the cytosol annotation below.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV1" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter assigns the cytosol component, the more specific child of cytoplasm, consistent with a soluble bacterial shikimate kinase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate and slightly more specific localization than GO:0005737; both are appropriate for this enzyme.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                    GO:0009423
+                                </a>
+                            </span>
+                            <span class="term-label">chorismate biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CV1" data-a="GO:0009423" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AroK catalyzes step 5 of 7 in chorismate biosynthesis (the shikimate pathway), converting shikimate to shikimate 3-phosphate en route to chorismate. This is the precise biological process for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly and specifically captures the pathway role of AroK; UniPathway UPA00053/UER00088 corroborates the chorismate-biosynthesis placement.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP- and Mg(2+)-dependent shikimate kinase that phosphorylates the 3-hydroxyl of shikimate to form shikimate 3-phosphate, catalyzing step 5 of the shikimate pathway in chorismate biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88CV1" data-a="FUNCTION: ATP- and Mg(2+)-dependent shikimate kinase that ph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004765" target="_blank" class="term-link">
+                            shikimate kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009423" target="_blank" class="term-link">
+                                chorismate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC 2.7.1.71; RHEA:13121 shikimate + ATP = 3-phosphoshikimate + ADP + H(+); HAMAP-Rule MF_00109.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida KT2440 encode a second shikimate kinase isoenzyme (AroL/shikimate kinase II), and what is the relative contribution of AroK versus any paralog to in vivo shikimate kinase flux?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CV1" data-a="Q: Does P. putida KT2440 encode a second shikimate ki..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine steady-state kinetic parameters (Km/kcat for shikimate and ATP, Mg(2+) dependence) of recombinant KT2440 AroK to confirm substrate specificity and rule out promiscuous quinate kinase activity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CV1" data-a="EXPERIMENT: Determine steady-state kinetic parameters (Km/kcat..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Assess essentiality/fitness of an aroK deletion in KT2440 on minimal medium with and without aromatic amino acid supplementation to test for aromatic auxotrophy.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88CV1" data-a="EXPERIMENT: Assess essentiality/fitness of an aroK deletion in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(aroK-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CV1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">23 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:09:29.533954</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroK-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="aroK-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000016 The engineered Pseudomonas putida KT2440 strains and their genotypes, including those with the specified modifications (e.g., ΔpykF</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-arok-uniprot-q88cv1-locus-pp_5079-in-pseudomonas-putida-kt2440">Research report: Functional annotation of <strong>aroK</strong> (UniProt <strong>Q88CV1</strong>, locus <strong>PP_5079</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-geneprotein-identity-verification-critical">0) Gene/protein identity verification (critical)</h3>
+<p>The target provided (UniProt Q88CV1; gene <strong>aroK</strong>; ordered locus <strong>PP_5079</strong>) is annotated as <strong>shikimate kinase (SK)</strong>, EC <strong>2.7.1.71</strong>, belonging to the <strong>shikimate kinase family</strong> with P-loop NTPase/“shikimate/glucono_kinase” domain architecture (per user-supplied UniProt context). In the retrieved literature, <strong>aroK</strong> consistently refers to a bacterial <strong>shikimate kinase I</strong> isoenzyme (contrasted with <strong>aroL</strong>, shikimate kinase II), consistent with the UniProt description and EC assignment. (gu2016tunableswitchmediated pages 1-2, niraula2025aromaticaminoacids pages 8-10)</p>
+<p><strong>Limitation:</strong> none of the retrieved papers explicitly cross-references UniProt accession <strong>Q88CV1</strong> or the KT2440 locus tag <strong>PP_5079</strong> in the text excerpts obtained, so KT2440-specific details below are supported by <em>P. putida</em> KT2440 studies that manipulate <strong>aroK</strong> at the gene level, combined with general shikimate-kinase enzymology. (ling2022muconicacidproduction pages 2-3, gu2016tunableswitchmediated pages 1-2)</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-shikimate-pathway-and-the-biochemical-role-of-arok">1.1 Shikimate pathway and the biochemical role of AroK</h4>
+<p>The <strong>shikimate pathway</strong> is the central biosynthetic route from central carbon metabolism toward <strong>chorismate</strong>, a key branch point precursor for <strong>aromatic amino acids</strong> and numerous aromatic metabolites. Within this pathway, <strong>shikimate kinase (SK; EC 2.7.1.71)</strong> catalyzes the ATP-dependent phosphorylation of <strong>shikimate to shikimate-3-phosphate (S3P)</strong>; this step is required to proceed to <strong>5-enolpyruvyl-shikimate-3-phosphate (EPSP)</strong> and ultimately <strong>chorismate</strong>. (niraula2025aromaticaminoacids pages 8-10)</p>
+<p><strong>Reaction (core functional annotation):</strong><br />
+- Shikimate + ATP → Shikimate-3-phosphate + ADP (SK; EC 2.7.1.71). (niraula2025aromaticaminoacids pages 8-10)</p>
+<h4 id="12-arok-versus-arol-bacterial-isoenzymes">1.2 AroK versus AroL (bacterial isoenzymes)</h4>
+<p>Many bacteria encode two shikimate kinase isoenzymes:<br />
+- <strong>AroK</strong>: shikimate kinase I<br />
+- <strong>AroL</strong>: shikimate kinase II</p>
+<p>This redundancy is important in both physiology and metabolic engineering: engineered “shikimate-overproducer” strains often <strong>inactivate/decrease</strong> shikimate kinase activity to accumulate shikimate upstream, but complete loss of SK activity can lead to <strong>aromatic auxotrophy</strong> (requiring supplementation with aromatic compounds). (gu2016tunableswitchmediated pages 1-2)</p>
+<h4 id="13-structurefunction-concepts-relevant-to-substrate-specificity">1.3 Structure/function concepts relevant to substrate specificity</h4>
+<p>While organism-specific kinetics for <em>P. putida</em> KT2440 AroK were not retrieved in the accessible excerpts, a recent synthesis of bacterial SK structure–function notes that shikimate-binding can be described via subsites (CX, OCORE, OLID) and that specific conserved residues (e.g., positions corresponding to R60 and R140 in one referenced mapping) are functionally critical; mutating strictly conserved residues severely compromises function in engineering contexts, consistent with strong substrate-enzyme specificity requirements for shikimate recognition. (bo2023multiplemetabolicengineering pages 7-9)</p>
+<hr />
+<h3 id="2-functional-annotation-for-p-putida-kt2440-arok-q88cv1">2) Functional annotation for <em>P. putida</em> KT2440 <strong>aroK</strong> (Q88CV1)</h3>
+<h4 id="21-molecular-function-enzyme-activity">2.1 Molecular function (enzyme activity)</h4>
+<p><strong>AroK is a shikimate kinase (SK; EC 2.7.1.71)</strong> catalyzing the ATP-dependent phosphorylation of shikimate to shikimate-3-phosphate in the shikimate pathway. (niraula2025aromaticaminoacids pages 8-10, gu2016tunableswitchmediated pages 1-2)</p>
+<h4 id="22-biological-process-pathway-placement">2.2 Biological process / pathway placement</h4>
+<p>AroK functions in <strong>chorismate biosynthesis</strong> via the shikimate pathway, enabling downstream synthesis of aromatic amino acids and diverse chorismate-derived metabolites. (niraula2025aromaticaminoacids pages 8-10)</p>
+<h4 id="23-cellular-localization-where-it-acts">2.3 Cellular localization (where it acts)</h4>
+<p>The retrieved sources explicitly contrast chloroplast-localized shikimate kinase isoforms in algae/plants with bacterial SK functioning without organellar targeting; thus, for bacteria including <em>P. putida</em> KT2440, the working assumption supported by this context is that SK is a <strong>soluble, intracellular (cytosolic) enzyme</strong> acting in central metabolism. (niraula2025aromaticaminoacids pages 8-10)</p>
+<p><strong>Limitation:</strong> no KT2440-specific localization experiment (e.g., fractionation, fluorescence tagging) was found in the retrieved set.</p>
+<hr />
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-kt2440-as-an-aromaticssynbio-chassis-expert-synthesis-2024">3.1 KT2440 as an aromatics/synbio chassis (expert synthesis, 2024)</h4>
+<p>A 2024 authoritative review/perspective describes <em>P. putida</em> KT2440’s rise as a synthetic biology chassis and emphasizes that its central metabolism delivers <strong>high NADPH regeneration</strong> (via ED/EDEMP-related architecture), supporting expression of heterologous pathways and tolerance to stress—properties relevant to building shikimate-pathway-derived aromatic production strains. (lorenzo2024pseudomonasputidakt2440 pages 2-4, lorenzo2024pseudomonasputidakt2440 pages 4-7, lorenzo2024pseudomonasputidakt2440 pages 1-2)</p>
+<p>This review also highlights KT2440’s native and engineered capabilities in aromatic metabolism and production, citing examples of engineered production of shikimate-derived aromatics such as <strong>phenol, vanillate, and anthranilate</strong>. (lorenzo2024pseudomonasputidakt2440 pages 4-7)</p>
+<p>Source: de Lorenzo et al., <strong>2024-07</strong>, <em>Journal of Bacteriology</em>. https://doi.org/10.1128/jb.00136-24 (lorenzo2024pseudomonasputidakt2440 pages 2-4)</p>
+<h4 id="32-2024-shikimate-pathway-dependent-catabolism-sdc-rewiring-to-near-theoretical-yields">3.2 2024 “shikimate pathway-dependent catabolism” (SDC) rewiring to near-theoretical yields</h4>
+<p>A 2024 study reports a major conceptual advance: reprogramming <em>P. putida</em> so that growth-supporting catabolism becomes <strong>dependent on shikimate-pathway-derived reactions</strong>, demonstrating substantial metabolic plasticity and enabling very high-yield aromatic production. They report <strong>89% of the maximum theoretical yield</strong> for <strong>4-hydroxybenzoate</strong> in minimal medium and describe adaptive evolution mutations (e.g., in <strong>miaA</strong> and <strong>mexT</strong>) as important contributors. (santos2024shikimatepathwaydependentcatabolism pages 5-7)</p>
+<p>Source: dos Santos et al., <strong>2024-08</strong> (preprint server posting). https://doi.org/10.21203/rs.3.rs-4761679/v1 (santos2024shikimatepathwaydependentcatabolism pages 5-7)</p>
+<h4 id="33-2024-combinatorial-pathway-engineering-to-find-bottlenecks-paba">3.3 2024 combinatorial pathway engineering to find bottlenecks (pABA)</h4>
+<p>A 2024 design-of-experiments/combinatorial expression study in <em>P. putida</em> quantitatively mapped how varying shikimate- and pABA-pathway gene expression influences production. It reports wide performance spread (2–186.2 mg/L) and improved strains (~232.1 mg/L), identifying <strong>aroB</strong> (not aroK) as a key bottleneck for pABA production under tested conditions, while situating the shikimate pathway as a major industrial node (muconate, tryptophan, salicylic acid, vanillin, 2-phenylethanol). (camposmagana2024combinatorialengineeringreveals pages 1-4)</p>
+<p>Source: Campos-Magaña et al., <strong>2024-06</strong> (bioRxiv). https://doi.org/10.1101/2024.06.17.599342 (camposmagana2024combinatorialengineeringreveals pages 1-4)</p>
+<hr />
+<h3 id="4-current-applications-and-real-world-implementations-with-p-putida-examples">4) Current applications and real-world implementations (with <em>P. putida</em> examples)</h3>
+<h4 id="41-arok-as-a-practical-flux-control-lever-in-kt2440-muconate-bioproduction">4.1 AroK as a practical flux-control lever in KT2440 muconate bioproduction</h4>
+<p>A key KT2440 implementation is <strong>cis,cis-muconate production</strong>, a bioprivileged platform chemical. In a high-impact <em>Nature Communications</em> study, KT2440-derived strains were engineered with <strong>aroK under the inducible Ptac promoter</strong>, either alone (<strong>ΔpykF::Ptac:aroK</strong>) or together with <strong>aroB</strong> (<strong>ΔpykF::Ptac:aroK:aroB</strong>), demonstrating that <strong>modulating aroK expression</strong> is used in practice to tune shikimate-pathway flux in KT2440-derived production strains. (ling2022muconicacidproduction pages 2-3, ling2022muconicacidproduction media b6590159)</p>
+<p>The same study reports <strong>33.7 g/L muconate</strong>, <strong>0.18 g/L/h</strong> productivity, and <strong>46% molar yield</strong> (reported as <strong>92% of maximum theoretical yield</strong>) in the rationally engineered strain context. (ling2022muconicacidproduction pages 2-3)</p>
+<p>Source: Ling et al., <strong>2022-08</strong>, <em>Nature Communications</em>. https://doi.org/10.1038/s41467-022-32296-y (ling2022muconicacidproduction pages 2-3)</p>
+<h4 id="42-kt2440-production-of-gallic-acid-from-glycerol-2023">4.2 KT2440 production of gallic acid from glycerol (2023)</h4>
+<p>A 2023 study demonstrates conversion of glycerol to the antioxidant <strong>gallic acid</strong> in KT2440 by combining heterologous pathway expression with deletions that block product degradation, explicitly leveraging KT2440’s metabolic and chassis advantages. The reported titer is <strong>346.7 ± 0.004 mg/L gallic acid after 72 h</strong> (shake flasks). (dias2023fromdegraderto pages 1-2)</p>
+<p>Source: Dias et al., <strong>2023-11</strong>, <em>International Microbiology</em>. https://doi.org/10.1007/s10123-022-00282-5 (dias2023fromdegraderto pages 1-2)</p>
+<hr />
+<h3 id="5-expert-opinions-and-analysis-authoritative-sources">5) Expert opinions and analysis (authoritative sources)</h3>
+<h4 id="51-why-kt2440-is-repeatedly-chosen-for-shikimate-pathway-aromatics">5.1 Why KT2440 is repeatedly chosen for shikimate-pathway aromatics</h4>
+<p>Across authoritative sources, KT2440 is characterized as an “industriphilic” synthetic biology chassis and “versatile aromatics cell factory,” with repeated emphasis on:<br />
+- <strong>High NADPH regeneration</strong> and redox-biased central metabolism, supporting reductive biosynthesis and heterologous pathway operation. (lorenzo2024pseudomonasputidakt2440 pages 2-4, lorenzo2024pseudomonasputidakt2440 pages 4-7)<br />
+- <strong>Intrinsic tolerance</strong> to aromatic compounds and possession of oxygenase repertoires to transform them—useful because many aromatics are toxic or require harsh processes. (lorenzo2024pseudomonasputidakt2440 pages 4-7)</p>
+<p>These points contextualize aroK’s importance: as a <strong>control point in the shikimate pathway</strong>, aroK expression/activity influences whether carbon proceeds toward chorismate-derived products (desired aromatics) or accumulates upstream intermediates (e.g., shikimate) (gu2016tunableswitchmediated pages 1-2, ling2022muconicacidproduction pages 2-3).</p>
+<hr />
+<h3 id="6-quantitative-statistics-and-data-points-from-recent-and-relevant-studies">6) Quantitative statistics and data points from recent and relevant studies</h3>
+<p>Key quantitative outcomes tied to shikimate-pathway engineering in <em>P. putida</em> include:<br />
+- <strong>Muconate production (KT2440)</strong>: 33.7 g/L, 0.18 g/L/h, 46% molar yield (92% of max theoretical); includes strains engineered with <strong>Ptac:aroK</strong> (flux control through shikimate pathway). (ling2022muconicacidproduction pages 2-3, ling2022muconicacidproduction media b6590159)<br />
+- <strong>Gallic acid production (KT2440)</strong>: 346.7 ± 0.004 mg/L after 72 h from 10 g/L glycerol in shake flasks (as described in excerpt). (dias2023fromdegraderto pages 1-2)<br />
+- <strong>pABA production (P. putida, 2024 DoE)</strong>: 2–186.2 mg/L across sampled genotypes; improved to ~232.1 mg/L; identified aroB as bottleneck. (camposmagana2024combinatorialengineeringreveals pages 1-4)<br />
+- <strong>4-hydroxybenzoate yield (P. putida, 2024 SDC concept)</strong>: 89% of maximum theoretical yield in minimal medium (yield benchmark claim). (santos2024shikimatepathwaydependentcatabolism pages 5-7)</p>
+<hr />
+<h3 id="7-evidence-summary-table">7) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Evidence summary</th>
+<th>Organism/context</th>
+<th>Quantitative data</th>
+<th>Source (with year, DOI URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core enzymatic reaction of shikimate kinase</td>
+<td>Shikimate kinase (SK; EC 2.7.1.71) phosphorylates shikimate at the C3 hydroxyl using ATP to form shikimate-3-phosphate (S3P), a required step toward EPSP and chorismate in the shikimate pathway (niraula2025aromaticaminoacids pages 8-10)</td>
+<td>General bacterial/plant/algal shikimate-pathway context</td>
+<td>Reaction: shikimate + ATP -&gt; shikimate-3-phosphate + ADP</td>
+<td>Niraula et al., 2025, https://doi.org/10.3390/biotech14010006</td>
+</tr>
+<tr>
+<td>Bacterial isoenzymes AroK and AroL</td>
+<td>In bacteria, two shikimate kinase isoenzymes are commonly recognized: shikimate kinase I (AroK) and shikimate kinase II (AroL). Engineering studies often repress/delete these enzymes to accumulate shikimate, but full loss causes auxotrophy and necessitates aromatic supplementation (gu2016tunableswitchmediated pages 1-2)</td>
+<td>Engineered bacterial shikimate producers, especially E. coli</td>
+<td>Example reported for engineered E. coli: 13.15 g/L shikimate in 5-L fed-batch using tunable aroK expression rather than permanent deletion</td>
+<td>Gu et al., 2016, https://doi.org/10.1038/srep29745</td>
+</tr>
+<tr>
+<td>Shikimate-binding determinants in AroK</td>
+<td>Structural/functional analysis of bacterial AroK identifies shikimate-binding subsites CX, OCORE, and OLID. Conserved residues contacting the substrate include positions corresponding to R60 and R140; mutating these severely impaired function/growth in engineering contexts (bo2023multiplemetabolicengineering pages 7-9)</td>
+<td>Bacterial AroK, with cited structural work including Helicobacter pylori and other bacterial SKs</td>
+<td>No single kinetic value in snippet; severe growth inhibition observed for key conserved-site mutants</td>
+<td>Bo et al., 2023, https://doi.org/10.3390/metabo13060747</td>
+</tr>
+<tr>
+<td>KT2440-specific aroK manipulation in muconate engineering</td>
+<td>In Pseudomonas putida KT2440-derived strains for muconate production, aroK was deliberately overexpressed from Ptac, either alone or together with aroB (e.g., ΔpykF::Ptac:aroK and ΔpykF::Ptac:aroK:aroB), indicating aroK is a practical flux-control point in the native shikimate pathway (ling2022muconicacidproduction pages 2-3)</td>
+<td>Pseudomonas putida KT2440 metabolic engineering for muconic acid</td>
+<td>Muconate process in study reached 33.7 g/L muconate, 0.18 g/L/h, 46% molar yield (92% of maximum theoretical yield); snippet specifically highlights Ptac:aroK strain designs</td>
+<td>Ling et al., 2022, https://doi.org/10.1038/s41467-022-32296-y</td>
+</tr>
+<tr>
+<td>2024 pABA combinatorial engineering identifies pathway bottleneck</td>
+<td>A 2024 DoE study in P. putida varied shikimate- and pABA-pathway gene expression across 14 representative strains sampled from 512 possible combinations. The analysis identified aroB, not aroK, as a significant bottleneck for pABA production, while noting aroK overexpression had been beneficial in related production contexts (camposmagana2024combinatorialengineeringreveals pages 1-4)</td>
+<td>Pseudomonas putida shikimate/pABA pathway engineering</td>
+<td>Titers ranged from 2 to 186.2 mg/L initially; second-round designs reached ~232.1 mg/L</td>
+<td>Campos-Magaña et al., 2024, https://doi.org/10.1101/2024.06.17.599342</td>
+</tr>
+<tr>
+<td>2024 shikimate pathway-dependent catabolism (SDC)</td>
+<td>A 2024 P. putida study rewired metabolism so shikimate-pathway-derived reactions supplied pyruvate, demonstrating strong metabolic plasticity of the pathway relevant to enzymes such as AroK that control flux into downstream aromatic intermediates (santos2024shikimatepathwaydependentcatabolism pages 5-7)</td>
+<td>Pseudomonas putida engineered for aromatic production</td>
+<td>89% of maximum theoretical yield for 4-hydroxybenzoate in minimal medium; adapted strains also produced salicylate and 3-hydroxybenzoate at high yields</td>
+<td>dos Santos et al., 2024, https://doi.org/10.21203/rs.3.rs-4761679/v1</td>
+</tr>
+<tr>
+<td>2023 real-world aromatic production application in KT2440</td>
+<td>P. putida KT2440 was engineered to produce gallic acid from glycerol using a synthetic operon (aroG4, quiC, pobA*) plus deletions blocking degradation (pcaHG and galTAPR). This shows the practical biotechnological value of controlling shikimate-pathway flux in KT2440, even though aroK itself was not directly manipulated in the snippet (dias2023fromdegraderto pages 1-2)</td>
+<td>Pseudomonas putida KT2440 producing gallic acid from glycerol</td>
+<td>346.7 ± 0.004 mg/L gallic acid after 72 h in shake flasks</td>
+<td>Dias et al., 2023, https://doi.org/10.1007/s10123-022-00282-5</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most relevant gathered evidence for annotating Pseudomonas putida KT2440 aroK as shikimate kinase, including core reaction chemistry, bacterial isoenzyme context, and KT2440-specific engineering evidence. It is useful for separating direct functional evidence from broader pathway and application-level evidence.</em></p>
+<hr />
+<h3 id="8-practical-functional-annotation-statement-recommended">8) Practical functional-annotation statement (recommended)</h3>
+<p><strong>aroK (UniProt Q88CV1; PP_5079) encodes shikimate kinase (EC 2.7.1.71), a cytosolic ATP-dependent kinase that converts shikimate to shikimate-3-phosphate in the shikimate pathway, enabling downstream EPSP/chorismate formation and thereby aromatic amino acid and aromatic metabolite biosynthesis.</strong> (niraula2025aromaticaminoacids pages 8-10, gu2016tunableswitchmediated pages 1-2)</p>
+<p>In <em>P. putida</em> KT2440, aroK is repeatedly treated as a <strong>flux-control point</strong> in industrially motivated shikimate-pathway engineering, including muconate production strains where aroK is overexpressed from Ptac in defined genomic backgrounds. (ling2022muconicacidproduction pages 2-3, ling2022muconicacidproduction media b6590159)</p>
+<hr />
+<h3 id="9-gaps-and-recommended-next-evidence-to-retrieve-to-strengthen-annotation">9) Gaps and recommended next evidence to retrieve (to strengthen annotation)</h3>
+<p>The current evidence set is strong for pathway placement and engineering relevance, but limited for <em>P. putida</em> KT2440-specific mechanistic details.</p>
+<p>Most impactful missing items would be:<br />
+1) <strong>Direct biochemical characterization</strong> (Km/kcat for shikimate/ATP; Mg2+ dependence; substrate scope such as quinate) for KT2440 AroK.<br />
+2) <strong>Genetic essentiality/fitness</strong> measurements for KT2440 aroK under defined media (e.g., transposon insertion sequencing) and rescue by aromatic supplementation.<br />
+3) <strong>Subcellular localization experiments</strong> (fractionation or fluorescence tagging) in KT2440.</p>
+<p>These gaps were not recoverable within the retrieved corpus and are therefore not asserted beyond supported inference.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(gu2016tunableswitchmediated pages 1-2): Pengfei Gu, Tianyuan Su, Qian Wang, Quanfeng Liang, and Qingsheng Qi. Tunable switch mediated shikimate biosynthesis in an engineered non-auxotrophic escherichia coli. Scientific Reports, Jul 2016. URL: https://doi.org/10.1038/srep29745, doi:10.1038/srep29745. This article has 43 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(niraula2025aromaticaminoacids pages 8-10): Archana Niraula, Amir Danesh, Natacha Merindol, Fatma Meddeb-Mouelhi, and Isabel Desgagné-Penix. Aromatic amino acids: exploring microalgae as a potential biofactory. BioTech, 14:6, Jan 2025. URL: https://doi.org/10.3390/biotech14010006, doi:10.3390/biotech14010006. This article has 9 citations.</p>
+</li>
+<li>
+<p>(ling2022muconicacidproduction pages 2-3): Chen Ling, George L. Peabody, Davinia Salvachúa, Young-Mo Kim, Colin M. Kneucker, Christopher H. Calvey, Michela A. Monninger, Nathalie Munoz Munoz, Brenton C. Poirier, Kelsey J. Ramirez, Peter C. St. John, Sean P. Woodworth, Jon K. Magnuson, Kristin E. Burnum-Johnson, Adam M. Guss, Christopher W. Johnson, and Gregg T. Beckham. Muconic acid production from glucose and xylose in pseudomonas putida via evolution and metabolic engineering. Nature Communications, Aug 2022. URL: https://doi.org/10.1038/s41467-022-32296-y, doi:10.1038/s41467-022-32296-y. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bo2023multiplemetabolicengineering pages 7-9): Taidong Bo, Chen Wu, Zeting Wang, Hao Jiang, Fei-Yong Wang, N. Chen, and Yanjun Li. Multiple metabolic engineering strategies to improve shikimate titer in escherichia coli. Metabolites, 13:747, Jun 2023. URL: https://doi.org/10.3390/metabo13060747, doi:10.3390/metabo13060747. This article has 12 citations.</p>
+</li>
+<li>
+<p>(lorenzo2024pseudomonasputidakt2440 pages 2-4): Victor de Lorenzo, Danilo Pérez-Pantoja, and Pablo I. Nikel. <i>pseudomonas putida</i> kt2440: the long journey of a soil-dweller to become a synthetic biology chassis. Journal of Bacteriology, Jul 2024. URL: https://doi.org/10.1128/jb.00136-24, doi:10.1128/jb.00136-24. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lorenzo2024pseudomonasputidakt2440 pages 4-7): Victor de Lorenzo, Danilo Pérez-Pantoja, and Pablo I. Nikel. <i>pseudomonas putida</i> kt2440: the long journey of a soil-dweller to become a synthetic biology chassis. Journal of Bacteriology, Jul 2024. URL: https://doi.org/10.1128/jb.00136-24, doi:10.1128/jb.00136-24. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lorenzo2024pseudomonasputidakt2440 pages 1-2): Victor de Lorenzo, Danilo Pérez-Pantoja, and Pablo I. Nikel. <i>pseudomonas putida</i> kt2440: the long journey of a soil-dweller to become a synthetic biology chassis. Journal of Bacteriology, Jul 2024. URL: https://doi.org/10.1128/jb.00136-24, doi:10.1128/jb.00136-24. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santos2024shikimatepathwaydependentcatabolism pages 5-7): Vitor Martins dos Santos, Lyon Bruinsma, Christos Batianis, Sara Moreno-Paz, Kesi Kurnia, Job Dirkmaat, Alexandra Müller, Jose Juncosa Nuñez, and Ruud Weusthuis. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. Unknown journal, Aug 2024. URL: https://doi.org/10.21203/rs.3.rs-4761679/v1, doi:10.21203/rs.3.rs-4761679/v1.</p>
+</li>
+<li>
+<p>(camposmagana2024combinatorialengineeringreveals pages 1-4): Marco A Campos-Magaña, Sara Moreno-Paz, Vitor AP Martins dos Santos, Luis Garcia-Morales, and Maria Suarez-Diez. Combinatorial engineering reveals shikimate pathway bottlenecks in para-aminobenzoic acid production in pseudomonas putida. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.17.599342, doi:10.1101/2024.06.17.599342. This article has 0 citations.</p>
+</li>
+<li>
+<p>(ling2022muconicacidproduction media b6590159): Chen Ling, George L. Peabody, Davinia Salvachúa, Young-Mo Kim, Colin M. Kneucker, Christopher H. Calvey, Michela A. Monninger, Nathalie Munoz Munoz, Brenton C. Poirier, Kelsey J. Ramirez, Peter C. St. John, Sean P. Woodworth, Jon K. Magnuson, Kristin E. Burnum-Johnson, Adam M. Guss, Christopher W. Johnson, and Gregg T. Beckham. Muconic acid production from glucose and xylose in pseudomonas putida via evolution and metabolic engineering. Nature Communications, Aug 2022. URL: https://doi.org/10.1038/s41467-022-32296-y, doi:10.1038/s41467-022-32296-y. This article has 141 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 1-2): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="aroK-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000016 The engineered Pseudomonas putida KT2440 strains and their genotypes, including those with the specified modifications (e.g., ΔpykF" src="aroK-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>niraula2025aromaticaminoacids pages 8-10</li>
+<li>gu2016tunableswitchmediated pages 1-2</li>
+<li>bo2023multiplemetabolicengineering pages 7-9</li>
+<li>santos2024shikimatepathwaydependentcatabolism pages 5-7</li>
+<li>camposmagana2024combinatorialengineeringreveals pages 1-4</li>
+<li>ling2022muconicacidproduction pages 2-3</li>
+<li>dias2023fromdegraderto pages 1-2</li>
+<li>https://doi.org/10.1128/jb.00136-24</li>
+<li>https://doi.org/10.21203/rs.3.rs-4761679/v1</li>
+<li>https://doi.org/10.1101/2024.06.17.599342</li>
+<li>https://doi.org/10.1038/s41467-022-32296-y</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5</li>
+<li>https://doi.org/10.3390/biotech14010006</li>
+<li>https://doi.org/10.1038/srep29745</li>
+<li>https://doi.org/10.3390/metabo13060747</li>
+<li>https://doi.org/10.1038/srep29745,</li>
+<li>https://doi.org/10.3390/biotech14010006,</li>
+<li>https://doi.org/10.1038/s41467-022-32296-y,</li>
+<li>https://doi.org/10.3390/metabo13060747,</li>
+<li>https://doi.org/10.1128/jb.00136-24,</li>
+<li>https://doi.org/10.21203/rs.3.rs-4761679/v1,</li>
+<li>https://doi.org/10.1101/2024.06.17.599342,</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CV1
+gene_symbol: aroK
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: AroK is the shikimate kinase (EC 2.7.1.71) of Pseudomonas putida KT2440. It catalyzes the fifth step of the shikimate pathway, the ATP-dependent phosphorylation of the 3-hydroxyl group of shikimate to form shikimate 3-phosphate (3-phosphoshikimate), with release of ADP and a proton. The enzyme requires a Mg(2+) cofactor (one ion bound per subunit) and adopts the P-loop (Walker A) NTPase fold characteristic of the shikimate kinase family, with a glycine-rich nucleotide-binding loop near the N-terminus. As a cytoplasmic monomer, AroK provides shikimate 3-phosphate as the substrate for the downstream EPSP synthase (AroA) and ultimately chorismate, the branch-point precursor for aromatic amino acids (Phe, Tyr, Trp), folate, ubiquinone, and other aromatic metabolites. In bacteria, shikimate kinase activity can be encoded by two isoenzymes, AroK (shikimate kinase I) and AroL (shikimate kinase II); this step is a recognized flux-control point in shikimate-pathway metabolic engineering.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Shikimate kinase requires a divalent Mg(2+) cofactor for catalysis; UniProt records binding of one Mg(2+) ion per subunit, coordinated near the ATP-binding P-loop. This is a well-supported, family-conserved molecular function.
+    action: ACCEPT
+    reason: Magnesium binding is intrinsic to shikimate kinase catalysis and is supported by the HAMAP rule and conserved metal-binding residue; consistent with the enzymology of the shikimate kinase family.
+- term:
+    id: GO:0004765
+    label: shikimate kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the core molecular function of AroK, supported by the EC 2.7.1.71 assignment, the RHEA:13121 catalytic-activity mapping, HAMAP rule MF_00109, and strong family/domain evidence (Pfam SKI, shikimate kinase signature).
+    action: ACCEPT
+    reason: Directly represents the defining enzymatic activity of the gene product and is the central core function.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: AroK is an ATP-dependent kinase that uses ATP as the phosphoryl donor; it contains a P-loop/Walker A motif (residues 11-16) and additional ATP-contacting residues. ATP binding is a required, well-supported molecular function.
+    action: ACCEPT
+    reason: ATP binding is an obligatory part of the shikimate kinase reaction and is supported by the conserved P-loop nucleotide-binding fold.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: AroK is a soluble cytoplasmic enzyme acting in central metabolism, consistent with UniProt subcellular location and the general biology of bacterial shikimate-pathway enzymes.
+    action: ACCEPT
+    reason: Correct localization for a cytoplasmic biosynthetic enzyme; consistent with the cytosol annotation below.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: TreeGrafter assigns the cytosol component, the more specific child of cytoplasm, consistent with a soluble bacterial shikimate kinase.
+    action: ACCEPT
+    reason: Accurate and slightly more specific localization than GO:0005737; both are appropriate for this enzyme.
+- term:
+    id: GO:0009423
+    label: chorismate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: AroK catalyzes step 5 of 7 in chorismate biosynthesis (the shikimate pathway), converting shikimate to shikimate 3-phosphate en route to chorismate. This is the precise biological process for the gene.
+    action: ACCEPT
+    reason: Directly and specifically captures the pathway role of AroK; UniPathway UPA00053/UER00088 corroborates the chorismate-biosynthesis placement.
+core_functions:
+- description: ATP- and Mg(2+)-dependent shikimate kinase that phosphorylates the 3-hydroxyl of shikimate to form shikimate 3-phosphate, catalyzing step 5 of the shikimate pathway in chorismate biosynthesis.
+  molecular_function:
+    id: GO:0004765
+    label: shikimate kinase activity
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: EC 2.7.1.71; RHEA:13121 shikimate + ATP = 3-phosphoshikimate + ADP + H(+); HAMAP-Rule MF_00109.
+  directly_involved_in:
+  - id: GO:0009423
+    label: chorismate biosynthetic process
+proposed_new_terms: []
+suggested_questions:
+- question: Does P. putida KT2440 encode a second shikimate kinase isoenzyme (AroL/shikimate kinase II), and what is the relative contribution of AroK versus any paralog to in vivo shikimate kinase flux?
+suggested_experiments:
+- description: Determine steady-state kinetic parameters (Km/kcat for shikimate and ATP, Mg(2+) dependence) of recombinant KT2440 AroK to confirm substrate specificity and rule out promiscuous quinate kinase activity.
+- description: Assess essentiality/fitness of an aroK deletion in KT2440 on minimal medium with and without aromatic amino acid supplementation to test for aromatic auxotrophy.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome paper (Nelson et al. 2002); same PMID verified in aroA/aroB/aroC/aroE.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TXNDC12 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TXNDC12</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95881" target="_blank" class="term-link">
+                        O95881
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TXNDC12";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95881" data-a="DESCRIPTION: TXNDC12 (Thioredoxin domain-containing protein 12;..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TXNDC12 (Thioredoxin domain-containing protein 12; also known as ERp18, ERp19, ERp16, and hTLP19) is a small (172 aa precursor; 146 aa mature) soluble thioredoxin- superfamily oxidoreductase resident in the endoplasmic reticulum lumen. After cleavage of an N-terminal signal peptide it is retained in the ER via a C-terminal EDEL motif. It comprises a single thioredoxin-like fold carrying an unusual CGAC redox-active active-site motif (catalytic cysteines Cys66/Cys69) with a redox potential (about -165 mV) within the range of the ER, allowing it to catalyze the formation, reduction, and isomerization of disulfide bonds in client/substrate proteins. TXNDC12 thus acts early in oxidative protein folding in the ER, promoting native disulfide bond formation, and contributes to cellular defense against prolonged ER stress, where its catalytic activity attenuates ER-stress-induced apoptosis. It is widely expressed.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of ER localization, consistent with the experimentally determined ER-lumen localization and the protein&#39;s EDEL retention motif.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct compartment; TXNDC12 is an ER-resident oxidoreductase acting in oxidative protein folding in the ER.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005788" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of ER lumen localization, redundant with and consistent with the experimental IDA annotation and the curated UniProt subcellular location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct site of action; the mature soluble protein is retained in the ER lumen via its EDEL motif.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019153" target="_blank" class="term-link">
+                                    GO:0019153
+                                </a>
+                            </span>
+                            <span class="term-label">protein-disulfide reductase (glutathione) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0019153" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the glutathione-dependent protein-disulfide reductase activity (EC 1.8.4.2), redundant with the experimental IDA annotation from the ERp18 characterization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; corresponds to the curated EC 1.8.4.2 and the CGAC active-site redox chemistry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=1.8.4.2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005515" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct capture from a proteome-scale human interactome map. Bare protein binding is uninformative relative to the established oxidoreductase function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome data; per guidelines bare protein binding is not elevated to a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">O95881; O43765: SGTA; NbExp=3; IntAct=EBI-2564581, EBI-347996;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005515" data-r="PMID:31515488" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct capture from a variant-interactome screen. Uninformative bare protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome data; not elevated to core per guidelines.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">O95881; Q9UMX0: UBQLN1; NbExp=4; IntAct=EBI-2564581, EBI-741480;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct capture from the HuRI binary interactome. Uninformative bare protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome data; not elevated to core per guidelines.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">O95881; P49069: CAMLG; NbExp=5; IntAct=EBI-2564581, EBI-1748958;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005783" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-based electronic transfer of ER localization, consistent with the experimental ER-lumen localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct compartment; redundant with the IDA/IBA ER annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC12/TXNDC12-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum lumen</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12761212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12761212
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of ERp18, a new endoplasmic reti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005788" data-r="PMID:12761212" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that ERp18 (TXNDC12) is located in the endoplasmic reticulum, consistent with its EDEL ER-retention motif.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported ER-lumen localization; the curated site of action.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12761212" target="_blank" class="term-link">
+                                        PMID:12761212
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We show that ERp18 is located in the endoplasmic reticulum</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019153" target="_blank" class="term-link">
+                                    GO:0019153
+                                </a>
+                            </span>
+                            <span class="term-label">protein-disulfide reductase (glutathione) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12761212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12761212
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional characterization of ERp18, a new endoplasmic reti...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0019153" data-r="PMID:12761212" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical demonstration that ERp18 (TXNDC12) has peptide thiol-disulfide oxidase activity dependent on both active-site cysteines (CGAC motif), the basis of EC 1.8.4.2. This is a core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, experimentally supported molecular function; mutation of either active-site cysteine abolishes activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12761212" target="_blank" class="term-link">
+                                        PMID:12761212
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">in vitro ERp18 possesses significant peptide thiol-disulfide oxidase activity, which is dependent on the presence of both active site cysteine residues.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18628206
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ERp16, an endoplasmic reticulum-resident thiol-disulfide oxi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0005788" data-r="PMID:18628206" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that the mature protein (ERp16/TXNDC12) is localized in the lumen of the ER, consistent with its EDEL retention sequence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported ER-lumen localization.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link">
+                                        PMID:18628206
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a COOH-terminal endoplasmic reticulum (ER) retention sequence (EDEL)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                                    GO:0015035
+                                </a>
+                            </span>
+                            <span class="term-label">protein-disulfide reductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18628206
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ERp16, an endoplasmic reticulum-resident thiol-disulfide oxi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:0015035" data-r="PMID:18628206" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical demonstration that ERp16/TXNDC12 is a thiol-disulfide oxidoreductase catalyzing the formation, reduction, and isomerization of disulfide bonds via its CGAC active site. This is the core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core, experimentally supported molecular function; the broad protein-disulfide reductase/oxidoreductase activity is the protein&#39;s defining biochemical role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link">
+                                        PMID:18628206
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">it catalyzed the formation, reduction, and isomerization of disulfide bonds, with the unusual CGAC active site motif being responsible for these activities</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902236" target="_blank" class="term-link">
+                                    GO:1902236
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of endoplasmic reticulum stress-induced intrinsic apoptotic signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18628206
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ERp16, an endoplasmic reticulum-resident thiol-disulfide oxi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O95881" data-a="GO:1902236" data-r="PMID:18628206" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Overexpression of ERp16/TXNDC12 inhibited ER-stress-induced apoptosis whereas a catalytically inactive mutant or knockdown potentiated it, demonstrating a catalysis- dependent protective role against prolonged ER stress. This is a downstream physiological consequence of its redox-folding activity rather than its primary biochemical function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported experimentally (PMID:18628206) but represents a downstream/physiological output of the core oxidoreductase activity; retained as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link">
+                                        PMID:18628206
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Expression of ERp16 in HeLa cells inhibited the induction of apoptosis by agents that elicit ER stress, including brefeldin A, tunicamycin, and dithiothreitol.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ER-luminal thiol-disulfide oxidoreductase that, via its CGAC active-site motif (Cys66/Cys69), catalyzes formation, reduction, and isomerization of disulfide bonds in client proteins, contributing to oxidative protein folding in the endoplasmic reticulum.</h3>
+                <span class="vote-buttons" data-g="O95881" data-a="FUNCTION: ER-luminal thiol-disulfide oxidoreductase that, vi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                endoplasmic reticulum lumen
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link">
+                                PMID:18628206
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">it catalyzed the formation, reduction, and isomerization of disulfide bonds, with the unusual CGAC active site motif being responsible for these activities</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12761212" target="_blank" class="term-link">
+                                PMID:12761212
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">in vitro ERp18 possesses significant peptide thiol-disulfide oxidase activity, which is dependent on the presence of both active site cysteine residues.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12761212" target="_blank" class="term-link">
+                            PMID:12761212
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional characterization of ERp18, a new endoplasmic reticulum-located thioredoxin superfamily member.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ERp18 (TXNDC12) is an ER-located, PDI-related protein with a single catalytic thioredoxin domain bearing an unusual CGAC active-site motif and possesses peptide thiol-disulfide oxidase activity dependent on both active-site cysteines.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18628206" target="_blank" class="term-link">
+                            PMID:18628206
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ERp16, an endoplasmic reticulum-resident thiol-disulfide oxidoreductase: biochemical properties and role in apoptosis induced by endoplasmic reticulum stress.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ERp16 (the same protein as ERp18/ERp19/hTLP19/TXNDC12) is an ER-lumen thiol-disulfide oxidoreductase (redox potential about -165 mV) that catalyzes formation, reduction, and isomerization of disulfide bonds via its CGAC motif.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Catalytically active TXNDC12 protects HeLa cells against ER-stress-induced apoptosis, whereas a catalytically dead mutant or knockdown potentiates it, indicating a catalysis-dependent role in defense against prolonged ER stress.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39696500" target="_blank" class="term-link">
+                            PMID:39696500
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel role for protein disulfide isomerase ERp18 in venous thrombosis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ERp18 (TXNDC12) enhances venous thrombosis: ERp18-knockout mice develop significantly less thrombosis in an inferior vena cava stenosis model, and this pro-thrombotic role is dependent on its enzymatic activity (the inactive CGAC-to-SGAS mutant fails to support thrombosis). ERp18 is detected in endothelial cells, leukocytes and platelets and its deficiency lowers vWF at the thrombus site, implicating ERp18 in regulating vWF release.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TXNDC12/TXNDC12-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry O95881 (TXD12_HUMAN), Thioredoxin domain-containing protein 12</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Protein-disulfide reductase (EC 1.8.4.2) of the ER lumen with a single thioredoxin domain, redox-active C66/C69, EDEL ER-retention motif; promotes disulfide bond formation in client proteins.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the endogenous physiological substrates whose native disulfide bonds depend on TXNDC12, and does it act redundantly with other ER PDI-family oxidoreductases?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95881" data-a="Q: What are the endogenous physiological substrates w..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does the unusual CGAC active-site motif tune TXNDC12 between oxidase, reductase, and isomerase activities relative to canonical CXXC PDI enzymes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95881" data-a="Q: How does the unusual CGAC active-site motif tune T..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Identify TXNDC12 substrates by trapping mixed-disulfide intermediates with active-site cysteine-trapping mutants followed by mass spectrometry in human cells.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95881" data-a="EXPERIMENT: Identify TXNDC12 substrates by trapping mixed-disu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test whether TXNDC12 depletion sensitizes cells to ER-stress-induced apoptosis and whether re-expression of wild-type but not CGAC-mutant protein rescues, to confirm the catalysis- dependent cytoprotective role.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O95881" data-a="EXPERIMENT: Test whether TXNDC12 depletion sensitizes cells to..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TXNDC12-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95881" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">30 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-12T04:29:04.501090</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="TXNDC12-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="TXNDC12-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000010 The requested information regarding ERp18 (TXNDC12) is primarily found in Figures 4, 5, and 6: - **Figure 5 (image-006)**: Shows th</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-human-txndc12-erp18-uniprot-o95881">Comprehensive research report: Human <strong>TXNDC12</strong> (ERp18; UniProt O95881)</h2>
+<h3 id="0-target-verification-geneprotein-identity">0) Target verification (gene/protein identity)</h3>
+<p>The sources retrieved in this review consistently refer to <strong>ERp18</strong> as <strong>TXNDC12</strong> in <strong>human</strong>, describing it as a small ER thioredoxin/PDI-family oxidoreductase with a single <strong>CGAC</strong> active-site motif and an ER-retention signal (EDEL), aligning with the UniProt O95881 definition provided. (pierre2023investigatingtherole pages 36-41, he2024anovelrole pages 4-7)</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-thioldisulfide-oxidoreductases-and-the-pdi-family">1.1 Thiol–disulfide oxidoreductases and the PDI family</h4>
+<p>Protein disulfide isomerase (PDI) family enzymes are defined by the presence of thioredoxin-like domains that typically contain an active-site <strong>CXXC</strong> motif, enabling <strong>thiol–disulfide exchange</strong> reactions that form, reduce, or rearrange disulfide bonds in substrate proteins. These reactions support <strong>ER proteostasis</strong> and are commonly linked to <strong>ER stress</strong> and the <strong>unfolded protein response (UPR)</strong>. (powell2021proteindisulphideisomerase pages 1-2)</p>
+<h4 id="12-what-txndc12erp18-is">1.2 What TXNDC12/ERp18 is</h4>
+<p>The 2023 ATF6α-focused work describes ERp18/TXNDC12 as an <strong>ER-resident</strong>, <strong>172-aa</strong>, thioredoxin-fold <strong>PDI-like protein</strong> with a <strong>single CGAC catalytic motif</strong> near the N-terminus and a characteristic ER retention signal (EDEL). (pierre2023investigatingtherole pages 36-41)</p>
+<hr />
+<h3 id="2-molecular-function-of-txndc12erp18">2) Molecular function of TXNDC12/ERp18</h3>
+<h4 id="21-enzymatic-activity-and-catalytic-motif">2.1 Enzymatic activity and catalytic motif</h4>
+<p>A 2024 primary study produced <strong>recombinant human ERp18</strong> in two forms—wild-type (WT) containing the <strong>CGAC</strong> motif and a catalytically inactive mutant in which <strong>CGAC→SGAS</strong>—and measured enzyme activity using a <strong>Di-E-GSSG</strong> assay. WT ERp18 displayed strong disulfide reductase activity, whereas the SGAS mutant lost this activity, supporting that ERp18 functions as a <strong>thiol–disulfide oxidoreductase</strong> and that the <strong>CGAC</strong> motif is required. (he2024anovelrole pages 4-7, he2024anovelrole pages 7-10)</p>
+<p>The 2023 mechanistic UPR study also reports in vitro reductase activity and outlines assays used to probe ERp18 function (e.g., insulin reduction assay and redox shift assays). (pierre2023investigatingtherole pages 7-10, pierre2023investigatingtherole pages 6-7)</p>
+<p><strong>Reaction/substrate specificity (what is known vs. unknown):</strong><br />
+* Direct evidence in the retrieved sources supports thiol–disulfide exchange activity, but does <strong>not</strong> provide classic enzyme kinetic constants (e.g., kcat/KM) or a comprehensive substrate repertoire.<br />
+* Mechanistic work supports <strong>ATF6α</strong> as a functionally relevant redox-regulated client pathway, with ERp18 forming mixed disulfides preferentially involving ATF6α C467 (see below). (pierre2023investigatingtherole pages 137-141)</p>
+<h4 id="22-experimentally-supported-partnersclients-atf6-upr-sensor">2.2 Experimentally supported partners/clients: ATF6α (UPR sensor)</h4>
+<p>The 2023 UPR-focused study provides multiple lines of evidence that ERp18 regulates <strong>ATF6α</strong> early in activation, via controlling ATF6α redox state and ER exit:</p>
+<ul>
+<li>ERp18 interacts with ATF6α during ER stress, and ERp18 knockout causes <strong>non-canonical ATF6α processing</strong>. (pierre2023investigatingtherole pages 7-10, pierre2023investigatingtherole pages 122-126)</li>
+<li>Under ER stress, ATF6α shifts from monomeric forms to a disulfide-linked dimer termed <strong>“467D”</strong>; this species traffics to the Golgi where S1P cleavage occurs. ERp18 overexpression antagonizes 467D formation, whereas ERp18 knockout enhances the monomer→467D shift, indicating ERp18 activity modulates the redox transition linked to trafficking. (pierre2023investigatingtherole pages 116-122, pierre2023investigatingtherole pages 1-6)</li>
+<li>Mixed-disulfide “substrate-trapping” logic supports ERp18 forming mixed disulfide intermediates biased toward <strong>ATF6α C467</strong>, consistent with ERp18 functioning as a <strong>redox quality-control checkpoint</strong> for ATF6α maturation/trafficking. (pierre2023investigatingtherole pages 137-141)</li>
+</ul>
+<p>Together, these data support an experimentally grounded client relationship: ERp18 modulates ATF6α’s disulfide status, affecting ATF6α ER-to-Golgi trafficking and proteolytic activation during the UPR. (pierre2023investigatingtherole pages 133-137, pierre2023investigatingtherole pages 116-122)</p>
+<hr />
+<h3 id="3-subcellular-localization-and-where-txndc12-acts">3) Subcellular localization and where TXNDC12 acts</h3>
+<h4 id="31-er-residency-intracellular">3.1 ER residency (intracellular)</h4>
+<p>Cell-based evidence indicates ERp18 is <strong>ER-localized</strong> and functions in ER quality control/UPR signaling via ATF6α. (pierre2023investigatingtherole pages 7-10)</p>
+<h4 id="32-vascularplatelet-surface-and-extracellular-presence-context-dependent">3.2 Vascular/platelet surface and extracellular presence (context-dependent)</h4>
+<p>A 2024 thrombosis study reports ERp18 is detected in <strong>endothelial cells, leukocytes, and platelets</strong>, is present on the surface of <strong>resting platelets</strong> (with increased surface exposure upon activation), and can be released/secreted from activated platelets or endothelial cells, supporting a context in which ERp18 can act <strong>extracellularly</strong> in vascular biology. (he2024anovelrole pages 4-7, he2024anovelrole pages 7-10)</p>
+<hr />
+<h3 id="4-pathways-and-biological-roles">4) Pathways and biological roles</h3>
+<h4 id="41-role-in-upr-signaling-via-atf6-redox-control-2023-mechanistic-update">4.1 Role in UPR signaling via ATF6α redox control (2023 mechanistic update)</h4>
+<p>The 2023 mechanistic work supports that ERp18 regulates the <strong>ATF6 branch of the UPR</strong> by controlling ATF6α redox status, oligomeric states, and trafficking competence. Loss of ERp18 dysregulates trafficking and proteolytic processing and yields a non-canonical cleavage product (ATF6-P), suggesting ERp18 supports correct ATF6α processing and quality control under stress. (pierre2023investigatingtherole pages 133-137, pierre2023investigatingtherole pages 122-126, pierre2023investigatingtherole pages 116-122)</p>
+<h4 id="42-role-in-venous-thrombosis-via-catalytic-activity-and-vwf-release-2024-primary-study">4.2 Role in venous thrombosis via catalytic activity and vWF release (2024 primary study)</h4>
+<p>A 2024 in vivo study used an inferior vena cava (IVC) stenosis model and reported that <strong>ERp18 knockout (ERp18-KO)</strong> mice developed <strong>less venous thrombosis</strong> than wild-type, with statistically significant reductions in thrombus weight/length/incidence (reported as <em>P&lt;0.05 to </em>**P&lt;0.001 depending on metric). (he2024anovelrole pages 7-10)</p>
+<p>Mechanistically and causally:<br />
+* Recombinant <strong>rhERp18-WT (CGAC)</strong> versus catalytically inactive <strong>rhERp18 mutant (SGAS)</strong> experiments indicate that ERp18’s <strong>enzymatic activity is required</strong> for pro-thrombotic effects in this model. (he2024anovelrole pages 7-10)<br />
+* ERp18-KO mice had reduced <strong>vWF</strong> at thrombosis sites and within thrombi, while basal vWF was unchanged (ns in ELISA), supporting a model where ERp18 promotes <strong>vWF release/exocytosis</strong> rather than baseline vWF biosynthesis. (he2024anovelrole pages 7-10)</p>
+<p>The figures from this study provide direct visual evidence for the <strong>CGAC motif</strong>, <strong>Di-E-GSSG activity assay</strong>, and in vivo thrombosis/vWF readouts. (he2024anovelrole media 70c97672, he2024anovelrole media f12e516c, he2024anovelrole media 3800f751)</p>
+<hr />
+<h3 id="5-recent-developments-and-latest-research-prioritizing-20232024">5) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="51-2024-erp18-as-a-catalytic-driver-of-venous-thrombosis">5.1 2024: ERp18 as a catalytic driver of venous thrombosis</h4>
+<p>The most direct 2024 advance for TXNDC12 is the demonstration that ERp18 catalytic activity contributes to venous thrombosis in an in vivo model, and that the effect correlates with local vWF levels at thrombus sites. (he2024anovelrole pages 7-10)</p>
+<p>Publication details: He et al., <strong>2024</strong>, <em>Thrombosis Journal</em>. DOI/URL: https://doi.org/10.1186/s12959-024-00678-5. (he2024anovelrole pages 7-10)</p>
+<h4 id="52-2023-erp18-redox-checkpoint-role-in-atf6-activation">5.2 2023: ERp18 redox checkpoint role in ATF6α activation</h4>
+<p>A 2023 thesis provides a mechanistic model in which ERp18 regulates ATF6α redox transitions (monomer↔467D dimer), trafficking, and cleavage during ER stress, and indicates active-site cysteine dependence for the regulatory effect. (pierre2023investigatingtherole pages 133-137, pierre2023investigatingtherole pages 116-122)</p>
+<p>Publication details: Pierre, <strong>2023</strong>, University of Glasgow thesis. DOI/URL: https://doi.org/10.5525/gla.thesis.83614. (pierre2023investigatingtherole pages 36-41)</p>
+<h4 id="53-2024-canceroxidative-stressferroptosis-associations-evidence-status">5.3 2024: Cancer/oxidative stress/ferroptosis associations (evidence status)</h4>
+<p>Two 2024 cancer-focused papers mention TXNDC12, but the accessible excerpts provide mainly association or hypothesis-level support rather than detailed mechanistic or clinical-performance statistics:</p>
+<ul>
+<li><strong>Osteosarcoma prognostic signature:</strong> TXNDC12 is included among five ER stress-related genes in a prognostic signature; in the excerpted analysis, higher TXNDC12 expression was associated with better overall survival in osteosarcoma. (chen2024constructionofan pages 11-15)</li>
+<li>
+<p>Chen et al., <strong>2024</strong>, <em>Journal of Translational Medicine</em>. DOI/URL: https://doi.org/10.1186/s12967-023-04794-0. (chen2024constructionofan pages 11-15)</p>
+</li>
+<li>
+<p><strong>Hepatocellular carcinoma oxidative-stress response:</strong> TXNDC12 is discussed as an antioxidant/redox protein upregulated in a SOCS1-expressing HCC model and is referenced (via other literature) as a factor that can inhibit lipid peroxidation/ferroptosis. The excerpt does not provide quantitative clinical statistics for TXNDC12. (shukla2024thetumorsuppressor pages 18-20)</p>
+</li>
+<li>Shukla et al., <strong>2024</strong>, <em>Cancers</em>. DOI/URL: https://doi.org/10.3390/cancers16020292. (shukla2024thetumorsuppressor pages 18-20)</li>
+</ul>
+<hr />
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-translational-vascular-biology-antithrombotic-target-hypothesis">6.1 Translational vascular biology / antithrombotic target hypothesis</h4>
+<p>The 2024 thrombosis study demonstrates that ERp18’s <strong>catalytic activity</strong> is necessary for its pro-thrombotic role in a mouse model and that vWF release is involved, implying ERp18 could be considered a candidate target for antithrombotic strategies (conceptually analogous to broader thiol-isomerase targeting approaches). However, the retrieved evidence stops short of clinical intervention trials in humans for ERp18/TXNDC12 specifically. (he2024anovelrole pages 7-10)</p>
+<h4 id="62-biomarkerprognostic-signature-usage-research-stage">6.2 Biomarker/prognostic signature usage (research-stage)</h4>
+<p>TXNDC12 appears as one component of an ER stress-related prognostic signature in osteosarcoma, representing a research-stage application of TXNDC12 expression in risk stratification. The excerpted material does not include AUC/hazard ratios for TXNDC12 alone, and clinical adoption would require independent validation. (chen2024constructionofan pages 11-15)</p>
+<hr />
+<h3 id="7-expert-opinions-and-analysis-grounded-in-authoritative-sources">7) Expert opinions and analysis grounded in authoritative sources</h3>
+<h4 id="71-functional-interpretation-from-enzymology-pathway-data">7.1 Functional interpretation from enzymology + pathway data</h4>
+<p>The combined 2023–2024 evidence supports a coherent annotation:</p>
+<ul>
+<li><strong>Primary biochemical function:</strong> ERp18/TXNDC12 is a <strong>thiol–disulfide oxidoreductase</strong> with a single <strong>CGAC</strong> active site, capable of reductase activity in vitro and required for certain redox-regulated processes in cells and in vivo. (he2024anovelrole pages 7-10, pierre2023investigatingtherole pages 7-10)</li>
+<li><strong>Key pathway role (high-confidence):</strong> ERp18 regulates the <strong>ATF6α arm</strong> of the UPR by controlling redox-dependent trafficking/processing; evidence includes interaction, redox-state modulation, and active-site dependence. (pierre2023investigatingtherole pages 133-137, pierre2023investigatingtherole pages 116-122)</li>
+<li><strong>Context-dependent extracellular/vascular role:</strong> ERp18 can be surface-exposed/released by platelets and endothelial cells and promotes venous thrombosis, plausibly via thiol–disulfide remodeling of substrates that influence <strong>vWF release</strong>. While the precise extracellular substrates are not yet identified in the retrieved excerpts, the requirement for enzymatic activity supports a direct catalytic mechanism rather than a scaffolding-only role. (he2024anovelrole pages 7-10)</li>
+</ul>
+<h4 id="72-limitations-and-open-questions-based-on-available-evidence">7.2 Limitations and open questions (based on available evidence)</h4>
+<ul>
+<li><strong>Substrate specificity remains incompletely mapped</strong>: ATF6α redox regulation is supported, but additional direct substrates in thrombosis (or broader ER client proteins) are not identified in the retrieved materials. (he2024anovelrole pages 7-10, pierre2023investigatingtherole pages 122-126)</li>
+<li><strong>Cancer/ferroptosis links are suggestive</strong> in the retrieved excerpts and require deeper inspection of the primary ferroptosis paper(s) referenced by Shukla et al. (not retrieved here) to quantify effect sizes and establish direct causality. (shukla2024thetumorsuppressor pages 18-20)</li>
+</ul>
+<hr />
+<h3 id="8-relevant-statistics-and-data-recent-studies">8) Relevant statistics and data (recent studies)</h3>
+<ul>
+<li><strong>Venous thrombosis model (mouse, IVC stenosis):</strong> ERp18 deficiency reduced thrombosis outcomes (thrombus weight/length/incidence) with reported statistical significance (<em>P&lt;0.05; </em>**P&lt;0.001; with n reported as ~6–8 depending on readout). (he2024anovelrole pages 7-10)</li>
+<li><strong>Enzymatic dependence:</strong> In vivo rescue/perturbation with recombinant proteins showed the inactive SGAS mutant failed to support the pro-thrombotic effect observed with WT ERp18; enzyme activity was also supported by the Di-E-GSSG assay comparison of WT vs mutant. (he2024anovelrole pages 7-10, he2024anovelrole media 70c97672)</li>
+<li><strong>vWF measurements:</strong> Local plasma/thrombus vWF was lower in ERp18-KO mice after stenosis, while basal plasma vWF was not significantly different (ns), consistent with an effect on vWF release in the thrombosis context. (he2024anovelrole pages 7-10)</li>
+</ul>
+<hr />
+<h3 id="evidence-map-summary-table">Evidence map (summary table)</h3>
+<p>The following table condenses the key claims, evidence, and sources.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Key findings (1-3 bullets)</th>
+<th>Evidence/source</th>
+<th>Publication (author year, DOI/URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domain</td>
+<td>• Human TXNDC12 corresponds to ERp18, a small PDI/thioredoxin-like ER protein. <br>• Reported as 172 aa, with a single thioredoxin-fold catalytic domain and ER-retention signal EDEL. <br>• Family-level reviews place TXNDC12/ERp18 among PDI-family proteins that mediate thiol-disulfide exchange in ER proteostasis.</td>
+<td>Pierre 2023 thesis; PDI family review (pierre2023investigatingtherole pages 36-41, powell2021proteindisulphideisomerase pages 1-2)</td>
+<td>Pierre 2023, https://doi.org/10.5525/gla.thesis.83614; Powell &amp; Foster 2021, https://doi.org/10.1002/cam4.3836</td>
+</tr>
+<tr>
+<td>Enzymatic activity</td>
+<td>• Recombinant human ERp18 shows disulfide reductase activity in a Di-E-GSSG assay; catalytic mutant loses activity. <br>• Thesis evidence also reports in vitro reductase activity and insulin reduction assay framework. <br>• ERp18 is described as capable of catalyzing disulfide bond formation, reduction, and isomerization.</td>
+<td>Recombinant-protein assay and thesis biochemical analyses (he2024anovelrole pages 4-7, pierre2023investigatingtherole pages 7-10, pierre2023investigatingtherole pages 36-41)</td>
+<td>He et al. 2024, https://doi.org/10.1186/s12959-024-00678-5; Pierre 2023, https://doi.org/10.5525/gla.thesis.83614</td>
+</tr>
+<tr>
+<td>Active-site motif</td>
+<td>• ERp18 contains a single CGAC catalytic motif. <br>• Mutation of CGAC to SGAS abolishes reductase activity and fails to support the pro-thrombotic function seen with WT protein. <br>• PDI-family reviews note catalytic CXXC motifs as the basis for thiol-disulfide exchange activity.</td>
+<td>Catalytic-motif experiment and family review (he2024anovelrole pages 4-7, he2024anovelrole pages 7-10, powell2021proteindisulphideisomerase pages 1-2)</td>
+<td>He et al. 2024, https://doi.org/10.1186/s12959-024-00678-5; Powell &amp; Foster 2021, https://doi.org/10.1002/cam4.3836</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>• ERp18 is ER-resident/ER-localized in cell-based studies. <br>• In thrombosis work, ERp18 is detected in endothelial cells, leukocytes, and platelets; present on resting platelet surfaces and surface exposure increases with activation. <br>• Activated platelets/endothelial cells can release or externalize ERp18, indicating extracellular activity in vascular settings.</td>
+<td>Cell localization and vascular-cell expression studies (pierre2023investigatingtherole pages 7-10, he2024anovelrole pages 4-7, he2024anovelrole pages 7-10)</td>
+<td>Pierre 2023, https://doi.org/10.5525/gla.thesis.83614; He et al. 2024, https://doi.org/10.1186/s12959-024-00678-5</td>
+</tr>
+<tr>
+<td>UPR/ATF6 mechanism</td>
+<td>• ERp18 interacts with ATF6α during ER stress and regulates ATF6α redox state and ER-to-Golgi trafficking. <br>• ERp18 reductase activity antagonizes the monomer→467D disulfide-linked dimer shift; knockout enhances this shift and causes dysregulated/non-canonical ATF6α processing. <br>• Substrate-trapping evidence supports mixed-disulfide formation with ATF6α, biased toward C467, consistent with ERp18 acting as a redox quality-control checkpoint in early ATF6 activation.</td>
+<td>ATF6-focused thesis experiments (pierre2023investigatingtherole pages 133-137, pierre2023investigatingtherole pages 116-122, pierre2023investigatingtherole pages 137-141, pierre2023investigatingtherole pages 1-6)</td>
+<td>Pierre 2023, https://doi.org/10.5525/gla.thesis.83614</td>
+</tr>
+<tr>
+<td>Thrombosis findings</td>
+<td>• ERp18 knockout mice develop reduced venous thrombosis in the IVC stenosis model, with lower thrombus weight, length, and incidence. <br>• WT recombinant ERp18, but not inactive SGAS mutant, supports pro-thrombotic effects, indicating catalytic activity is required. <br>• ERp18 deficiency lowers local plasma/thrombus vWF after stenosis while basal vWF is unchanged, suggesting regulation of vWF release/exocytosis rather than biosynthesis.</td>
+<td>In vivo mouse model, enzymatic rescue, and vWF analyses (he2024anovelrole pages 7-10, he2024anovelrole pages 4-7, he2024anovelrole media 70c97672)</td>
+<td>He et al. 2024, https://doi.org/10.1186/s12959-024-00678-5</td>
+</tr>
+<tr>
+<td>Cancer/ferroptosis associations</td>
+<td>• In osteosarcoma, TXNDC12 is one of five genes in an ER-stress prognostic signature; higher TXNDC12 expression was associated with better overall survival in that cohort. <br>• In hepatocarcinoma-cell proteomic analysis, TXNDC12 is discussed as an antioxidant/redox protein and cited as a factor that may inhibit lipid peroxidation and ferroptosis. <br>• These 2024 sources provide association/mechanistic hypotheses rather than definitive TXNDC12-specific clinical implementation.</td>
+<td>Prognostic-signature study and oxidative-stress/ferroptosis discussion (chen2024constructionofan pages 11-15, shukla2024thetumorsuppressor pages 18-20)</td>
+<td>Chen et al. 2024, https://doi.org/10.1186/s12967-023-04794-0; Shukla et al. 2024, https://doi.org/10.3390/cancers16020292</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported identity, molecular function, localization, UPR role, and disease associations of human TXNDC12/ERp18 using only the retrieved evidence snippets. It is useful as a compact evidence map for building the full research report.</em></p>
+<hr />
+<h3 id="key-references-with-dates-and-urls">Key references (with dates and URLs)</h3>
+<ul>
+<li>He C. et al. <strong>2024</strong>. <em>A novel role for protein disulfide isomerase ERp18 in venous thrombosis</em>. <strong>Thrombosis Journal</strong>. https://doi.org/10.1186/s12959-024-00678-5 (he2024anovelrole pages 7-10)</li>
+<li>Pierre A.S. <strong>2023</strong>. <em>Investigating the role of ERp18 during activation of UPR sensor ATF6α</em> (thesis). https://doi.org/10.5525/gla.thesis.83614 (pierre2023investigatingtherole pages 36-41)</li>
+<li>Chen W. et al. <strong>2024</strong>. <em>Construction of an ER stress-related prognostic signature… osteosarcoma</em>. <strong>Journal of Translational Medicine</strong>. https://doi.org/10.1186/s12967-023-04794-0 (chen2024constructionofan pages 11-15)</li>
+<li>Shukla A. et al. <strong>2024</strong>. <em>SOCS1 diminishes tolerance to oxidative stress in hepatocellular carcinoma</em>. <strong>Cancers</strong>. https://doi.org/10.3390/cancers16020292 (shukla2024thetumorsuppressor pages 18-20)</li>
+<li>Powell L.E., Foster P.A. <strong>2021</strong>. <em>Protein disulphide isomerase inhibition as a potential cancer therapeutic strategy</em>. <strong>Cancer Medicine</strong>. https://doi.org/10.1002/cam4.3836 (powell2021proteindisulphideisomerase pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(pierre2023investigatingtherole pages 36-41): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2024anovelrole pages 4-7): Chao He, Aizhen Yang, Yuxin Zhang, Zhenzhen Zhao, Yi Lu, Jingyu Zhang, and Yi Wu. A novel role for protein disulfide isomerase erp18 in venous thrombosis. Thrombosis Journal, Dec 2024. URL: https://doi.org/10.1186/s12959-024-00678-5, doi:10.1186/s12959-024-00678-5. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(powell2021proteindisulphideisomerase pages 1-2): Lauren E. Powell and Paul A. Foster. Protein disulphide isomerase inhibition as a potential cancer therapeutic strategy. Cancer Medicine, 10:2812-2825, Mar 2021. URL: https://doi.org/10.1002/cam4.3836, doi:10.1002/cam4.3836. This article has 108 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2024anovelrole pages 7-10): Chao He, Aizhen Yang, Yuxin Zhang, Zhenzhen Zhao, Yi Lu, Jingyu Zhang, and Yi Wu. A novel role for protein disulfide isomerase erp18 in venous thrombosis. Thrombosis Journal, Dec 2024. URL: https://doi.org/10.1186/s12959-024-00678-5, doi:10.1186/s12959-024-00678-5. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 7-10): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 6-7): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 137-141): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 122-126): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 116-122): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 1-6): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierre2023investigatingtherole pages 133-137): Arvin Shedrach Pierre. Investigating the role of erp18 during activation of upr sensor atf6α. Text, Jan 2023. URL: https://doi.org/10.5525/gla.thesis.83614, doi:10.5525/gla.thesis.83614. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2024anovelrole media 70c97672): Chao He, Aizhen Yang, Yuxin Zhang, Zhenzhen Zhao, Yi Lu, Jingyu Zhang, and Yi Wu. A novel role for protein disulfide isomerase erp18 in venous thrombosis. Thrombosis Journal, Dec 2024. URL: https://doi.org/10.1186/s12959-024-00678-5, doi:10.1186/s12959-024-00678-5. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2024anovelrole media f12e516c): Chao He, Aizhen Yang, Yuxin Zhang, Zhenzhen Zhao, Yi Lu, Jingyu Zhang, and Yi Wu. A novel role for protein disulfide isomerase erp18 in venous thrombosis. Thrombosis Journal, Dec 2024. URL: https://doi.org/10.1186/s12959-024-00678-5, doi:10.1186/s12959-024-00678-5. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2024anovelrole media 3800f751): Chao He, Aizhen Yang, Yuxin Zhang, Zhenzhen Zhao, Yi Lu, Jingyu Zhang, and Yi Wu. A novel role for protein disulfide isomerase erp18 in venous thrombosis. Thrombosis Journal, Dec 2024. URL: https://doi.org/10.1186/s12959-024-00678-5, doi:10.1186/s12959-024-00678-5. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024constructionofan pages 11-15): Weidong Chen, Yan Liao, Pengxiao Sun, Jian Tu, Yutong Zou, Ji Fang, Ziyun Chen, Hongbo Li, Junkai Chen, Yuzhong Peng, Lili Wen, and Xianbiao Xie. Construction of an er stress-related prognostic signature for predicting prognosis and screening the effective anti-tumor drug in osteosarcoma. Journal of Translational Medicine, Jan 2024. URL: https://doi.org/10.1186/s12967-023-04794-0, doi:10.1186/s12967-023-04794-0. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shukla2024thetumorsuppressor pages 18-20): Akhil Shukla, Md Gulam Musawwir Khan, Anny Armas Cayarga, Mozhdeh Namvarpour, Mohammad Mobarak H. Chowdhury, Dominique Levesque, Jean-François Lucier, François-Michel Boisvert, Sheela Ramanathan, and Subburaj Ilangumaran. The tumor suppressor socs1 diminishes tolerance to oxidative stress in hepatocellular carcinoma. Cancers, 16:292, Jan 2024. URL: https://doi.org/10.3390/cancers16020292, doi:10.3390/cancers16020292. This article has 6 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="TXNDC12-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000010 The requested information regarding ERp18 (TXNDC12) is primarily found in Figures 4, 5, and 6: - **Figure 5 (image-006)**: Shows th" src="TXNDC12-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>powell2021proteindisulphideisomerase pages 1-2</li>
+<li>pierre2023investigatingtherole pages 36-41</li>
+<li>pierre2023investigatingtherole pages 137-141</li>
+<li>pierre2023investigatingtherole pages 7-10</li>
+<li>he2024anovelrole pages 7-10</li>
+<li>chen2024constructionofan pages 11-15</li>
+<li>shukla2024thetumorsuppressor pages 18-20</li>
+<li>he2024anovelrole pages 4-7</li>
+<li>pierre2023investigatingtherole pages 6-7</li>
+<li>pierre2023investigatingtherole pages 122-126</li>
+<li>pierre2023investigatingtherole pages 116-122</li>
+<li>pierre2023investigatingtherole pages 1-6</li>
+<li>pierre2023investigatingtherole pages 133-137</li>
+<li>https://doi.org/10.1186/s12959-024-00678-5.</li>
+<li>https://doi.org/10.5525/gla.thesis.83614.</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0.</li>
+<li>https://doi.org/10.3390/cancers16020292.</li>
+<li>https://doi.org/10.5525/gla.thesis.83614;</li>
+<li>https://doi.org/10.1002/cam4.3836</li>
+<li>https://doi.org/10.1186/s12959-024-00678-5;</li>
+<li>https://doi.org/10.5525/gla.thesis.83614</li>
+<li>https://doi.org/10.1186/s12959-024-00678-5</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0;</li>
+<li>https://doi.org/10.3390/cancers16020292</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0</li>
+<li>https://doi.org/10.5525/gla.thesis.83614,</li>
+<li>https://doi.org/10.1186/s12959-024-00678-5,</li>
+<li>https://doi.org/10.1002/cam4.3836,</li>
+<li>https://doi.org/10.1186/s12967-023-04794-0,</li>
+<li>https://doi.org/10.3390/cancers16020292,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TXNDC12-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95881" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="txndc12-o95881-review-notes">TXNDC12 (O95881) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Thioredoxin domain-containing protein 12; aliases ERp18, ERp19, ERp16, hTLP19, TLP19. HGNC:24626. 172 aa precursor (mature 27-172 after signal peptide cleavage).</li>
+<li>Small ER-lumen thioredoxin-superfamily oxidoreductase of the AGR/PDI-related family. Single thioredoxin-like domain (27-156) with an <strong>unusual CGAC active-site motif</strong> and redox-active disulfide C66-C69.</li>
+<li>C-terminal EDEL/ER-retention motif (169-172, "Prevents secretion from ER"). N-terminal signal peptide 1-26. PDB 1SEN (X-ray, 1.20 A), 2K8V (NMR).</li>
+<li>EC 1.8.4.2 (protein-disulfide reductase, glutathione). UniProt FUNCTION: "Protein-disulfide reductase of the endoplasmic reticulum that promotes disulfide bond formation in client proteins through its thiol-disulfide oxidase activity."</li>
+</ul>
+<h2 id="functional-evidence">Functional evidence</h2>
+<h3 id="pmid12761212-alanen-et-al-2003-functional-characterization-of-erp18-abstract-only-cached">PMID:12761212 (Alanen et al. 2003, "Functional characterization of ERp18") — abstract only cached</h3>
+<ul>
+<li>"we describe the functional characterization of a new 18-kDa protein (ERp18) related to protein-disulfide isomerase. We show that ERp18 is located in the endoplasmic reticulum and that it contains a single catalytic domain with an unusual CGAC active site motif"</li>
+<li>"in vitro ERp18 possesses significant peptide thiol-disulfide oxidase activity, which is dependent on the presence of both active site cysteine residues."</li>
+<li>"the reduced form of the protein is more stable than the oxidized form, suggesting that it is involved in disulfide bond formation."</li>
+<li>Basis of EC 1.8.4.2 and the MUTAGEN C66S/C69S "Loss of protein-disulfide reductase (glutathione) activity" annotations.</li>
+</ul>
+<h3 id="pmid18628206-jeong-et-al-2008-erp16-role-in-apoptosis-full-text-cached">PMID:18628206 (Jeong et al. 2008, "ERp16 ... role in apoptosis") — full text cached</h3>
+<ul>
+<li>Same protein: "a mammalian thioredoxin-like protein, ERp16 (previously designated ERp18, ERp19, or hTLP19)."</li>
+<li>"a thioredoxin-like domain with an active site motif (CGAC), and a COOH-terminal endoplasmic reticulum (ER) retention sequence (EDEL) ... localized in the lumen of the ER."</li>
+<li>"Biochemical experiments with the recombinant mature protein revealed it to be a thioldisulfide oxidoreductase. Its redox potential was about -165 mV; its active site cysteine residue Cys(66) was nucleophilic ... it catalyzed the formation, reduction, and isomerization of disulfide bonds, with the unusual CGAC active site motif being responsible for these activities"</li>
+<li>"The observations that the redox potential of ERp16 (-165 mV) was within the range of that of the ER (-135 to -185 mV) and that ERp16 catalyzed disulfide isomerization of scrambled ribonuclease A suggest a role for ERp16 in protein disulfide isomerization in the ER."</li>
+<li>Apoptosis: "Expression of ERp16 in HeLa cells inhibited the induction of apoptosis by agents that elicit ER stress, including brefeldin A, tunicamycin, and dithiothreitol. In contrast, expression of a catalytically inactive mutant of ERp16 potentiated such apoptosis, as did depletion of ERp16 by RNA interference. Our results suggest that ERp16 mediates disulfide bond formation in the ER and plays an important role in cellular defense against prolonged ER stress."</li>
+</ul>
+<h2 id="goa-assessment">GOA assessment</h2>
+<ul>
+<li>GO:0005783 ER (IBA) / GO:0005788 ER lumen (IEA/IDA) — ACCEPT; ER lumen is the curated/experimental localization (EDEL retention motif).</li>
+<li>GO:0019153 protein-disulfide reductase (glutathione) activity (IEA + IDA, EC 1.8.4.2) — ACCEPT (core MF; PMID:12761212).</li>
+<li>GO:0015035 protein-disulfide reductase activity (IDA, MGI) — ACCEPT (core MF; broader oxidoreductase).</li>
+<li>GO:1902236 negative regulation of ER stress-induced intrinsic apoptotic signaling (IDA, MGI; PMID:18628206) — ACCEPT/KEEP_AS_NON_CORE; well supported (inhibits ER-stress apoptosis; catalytically dependent) but a downstream/physiological consequence of its redox-folding function rather than the primary biochemical activity.</li>
+<li>GO:0005515 protein binding x3 (IPI; PMID:25416956 proteome-scale interactome, PMID:31515488 variant interactome, PMID:32296183 HuRI) — HT interactome captures, uninformative; KEEP_AS_NON_CORE.</li>
+</ul>
+<h2 id="core-function-summary">Core function summary</h2>
+<p>Core MF = protein-disulfide reductase / thiol-disulfide oxidoreductase activity (CGAC motif, C66/C69); BP = oxidative protein folding in the ER / cell redox homeostasis, with a documented role in negative regulation of ER-stress-induced apoptosis; CC = ER lumen.</p>
+<h2 id="falcon-deep-research-findings-incorporated-2026-06">Falcon deep-research findings (incorporated 2026-06)</h2>
+<ul>
+<li>New gene-specific in vivo role: ERp18 (TXNDC12) promotes venous thrombosis. In an IVC-stenosis model, ERp18-KO mice developed significantly less thrombosis than WT, whereas other PDI-family members (PDI, PDIp, ERp57, PDIr, ERp5, ERp27, ERp29, TMX4, ERdj5) had no effect <a href="https://pubmed.ncbi.nlm.nih.gov/39696500" title="the mice lacking ERp18 developed significantly less venous thrombosis compared with the WT mice">PMID:39696500</a> (He et al. 2024, Thromb J 22:110; PubMed-verified).</li>
+<li>The pro-thrombotic effect is catalysis-dependent, reconfirming CGAC active-site requirement: the inactive rhERp18 mutant (CGAC-&gt;SGAS) failed to support thrombosis, unlike WT rhERp18 <a href="https://pubmed.ncbi.nlm.nih.gov/39696500" title="ERp18 contains one CGAC active motif ... rhERp18-Mut protein inhibited venous thrombosis ... suggesting that the role of ERp18 is dependent on its enzymatic activity">PMID:39696500</a>. Consistent with the established C66/C69 CGAC reductase chemistry.</li>
+<li>ERp18 regulates vWF release: vWF at the site of venous thrombi was significantly lower in ERp18-KO than WT mice (effect on release/exocytosis, basal vWF unchanged in deep-research summary) <a href="https://pubmed.ncbi.nlm.nih.gov/39696500" title="the levels of vWF in the plasma at the site of venous thrombus in ERp18-KO mice were significantly lower than those in WT mice">PMID:39696500</a>.</li>
+<li>Context-dependent localization beyond ER lumen: per the deep-research narrative ERp18 is detected in endothelial cells, leukocytes and platelets and on the resting-platelet surface (surface exposure increasing on activation) and can be released by activated platelets/endothelial cells, providing an extracellular vascular context <a href="https://pubmed.ncbi.nlm.nih.gov/39696500">PMID:39696500</a> — does not displace the curated ER-lumen core localization.</li>
+<li>Candidate UPR mechanism (thesis, NOT separately citable): Pierre 2023 (Univ. Glasgow thesis, DOI:10.5525/gla.thesis.83614, no PMID) proposes ERp18 is an early redox checkpoint for ATF6alpha: it interacts with ATF6alpha during ER stress, antagonizes the monomer-&gt;disulfide-linked "467D" dimer transition (biased toward ATF6alpha C467), and ERp18 knockout causes non-canonical ATF6alpha processing [DOI:10.5525/gla.thesis.83614]. Unpublished thesis -&gt; notes-only; not added to YAML references.</li>
+<li>Cancer associations (signature-level only, notes-only): TXNDC12 is one of five ER-stress genes in an osteosarcoma prognostic signature, with higher expression associated with better overall survival [DOI:10.1186/s12967-023-04794-0] (Chen et al. 2024); and it is discussed as an antioxidant/redox protein upregulated in a SOCS1-expressing HCC model that may inhibit lipid peroxidation/ferroptosis [DOI:10.3390/cancers16020292] (Shukla et al. 2024). These are association/hypothesis-level mentions, not gene-specific mechanistic evidence -&gt; not added to YAML.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Pn Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TXNDC12-pn-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95881" data-a="DOC: Pn Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="txndc12-pn-consistency-notes">TXNDC12 PN Consistency Notes</h1>
+<ul>
+<li>Generated: 2026-06-18</li>
+<li>Project: PROTEOSTASIS</li>
+<li>Scope: PN consistency rereview against local AIGR review and available deep-research artifacts</li>
+<li>UniProt: O95881</li>
+<li>AIGR review status: COMPLETE</li>
+<li>Review batch: proteostasis-batch-2026-06-11</li>
+<li>Batch change status: added</li>
+</ul>
+<h2 id="source-files-checked">Source Files Checked</h2>
+<ul>
+<li>AIGR review YAML: present - <a href="TXNDC12-ai-review.yaml">genes/human/TXNDC12/TXNDC12-ai-review.yaml</a></li>
+<li>AIGR review HTML: missing - genes/human/TXNDC12/TXNDC12-ai-review.html</li>
+<li>Gene notes: present - <a href="TXNDC12-notes.md">genes/human/TXNDC12/TXNDC12-notes.md</a></li>
+<li>GOA TSV: present - <a href="TXNDC12-goa.tsv">genes/human/TXNDC12/TXNDC12-goa.tsv</a></li>
+<li>UniProt record: present - <a href="TXNDC12-uniprot.txt">genes/human/TXNDC12/TXNDC12-uniprot.txt</a></li>
+<li>PN dossier: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/TXNDC12.md">projects/PROTEOSTASIS/reports/phase1_dossiers/TXNDC12.md</a></li>
+<li>PN consistency section: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/TXNDC12.md">projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/TXNDC12.md</a></li>
+<li>PN projection report: <a href="../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv">projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv</a></li>
+<li>PN mapping audit: <a href="../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv">projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv</a></li>
+</ul>
+<h3 id="deep-research-files">Deep Research Files</h3>
+<ul>
+<li><a href="TXNDC12-deep-research-falcon.md">genes/human/TXNDC12/TXNDC12-deep-research-falcon.md</a></li>
+</ul>
+<h2 id="aigr-review-snapshot">AIGR Review Snapshot</h2>
+<ul>
+<li>Description: TXNDC12 (Thioredoxin domain-containing protein 12; also known as ERp18, ERp19, ERp16, and hTLP19) is a small (172 aa precursor; 146 aa mature) soluble thioredoxin- superfamily oxidoreductase resident in the endoplasmic reticulum lumen. After cleavage of an N-terminal signal peptide it is retained in the ER via a C-terminal EDEL motif. It comprises a single thioredoxin-like fold carrying an unusual CGAC redox-active active-site motif (catalytic cysteines Cys66/Cys69) with a redox potential (about -165 mV) within the range of the ER, allowing it to catalyze the formation, reduction, and isomerization of disulfide bonds in client/substrate proteins. TXNDC12 thus acts early in oxidative protein folding in the ER, promoting native disulfide bond formation, and contributes to cellular defense against prolonged ER stress, where its catalytic activity attenuates ER-stress-induced apoptosis. It is widely expressed.</li>
+<li>Existing/core annotation action counts: ACCEPT: 8; KEEP_AS_NON_CORE: 4</li>
+</ul>
+<h2 id="pn-consistency-summary">PN Consistency Summary</h2>
+<ul>
+<li><strong>Consistency:</strong> Largely consistent with a caveat on the projected term. Review, notes, and deep research describe a small soluble ER-lumen thioredoxin-superfamily oxidoreductase with an unusual CGAC active site (Cys66/Cys69) that "catalyzes formation, reduction, and isomerization of disulfide bonds" (PMID:18628206; PMID:12761212), redox potential ~−165 mV, EDEL-retained. So it does have isomerase-type chemistry (unlike TXNDC11). GOA MF terms are GO:0019153 protein-disulfide reductase (glutathione) activity and GO:0015035 protein-disulfide reductase activity; the review core MF is GO:0015035. The PN projects GO:0003756 (isomerase).</li>
+<li><strong>PN story / NEW pressure:</strong> Lower NEW pressure than TXNDC11 — TXNDC12 already HAS catalytic MF terms in GOA (GO:0015035, GO:0019153; verified goa.tsv), accepted in the review. PN claims GO:0003756 is new_to_goa, which is literally true (isomerase term specifically is absent), and the literature does report isomerization activity, so GO:0003756 is defensible-but-redundant given the existing reductase terms. Per OLS, GO:0003756 (isomerase) and GO:0015035 (reductase) are siblings, so GO:0003756 would ADD an activity facet rather than refine an existing one. Conclusion: already substantially captured (reductase); GO:0003756 is a defensible minor ADD, not an over-reach, since isomerase activity is experimentally reported.</li>
+<li><strong>Evidence alignment:</strong> PN mapping-only. Review key refs: IDA PMID:12761212 (ERp18 characterization), PMID:18628206 (ERp16, isomerization + anti-apoptotic role), PMID:39696500 (vWF/thrombosis, non-core). Isomerization activity in PMID:18628206 supports the PN GO:0003756 projection.</li>
+<li><strong>Verdict:</strong> Consistent; catalytic MF already in GOA (reductase) — PN GO:0003756 isomerase projection is a defensible, literature-supported minor ADD rather than core-missing or over-reach.</li>
+</ul>
+<h2 id="full-consistency-review">Full Consistency Review</h2>
+<ul>
+<li><strong>UniProt:</strong> O95881 (ERp18/ERp19/ERp16/hTLP19) · <strong>batch:</strong> proteostasis-batch-2026-06-11 · <strong>review status:</strong> COMPLETE</li>
+<li><strong>PN placement:</strong> <code>ER proteostasis | Folding enzyme | Protein disulfide isomerases</code> ; <strong>PN-node mapping:</strong> group=mapped, scope=ok_for_propagation_to_go, GO=GO:0003756 protein disulfide isomerase activity (class/branch=no_mapping). Projection goa_status=new_to_goa.</li>
+<li><strong>Consistency:</strong> Largely consistent with a caveat on the projected term. Review, notes, and deep research describe a small soluble ER-lumen thioredoxin-superfamily oxidoreductase with an unusual CGAC active site (Cys66/Cys69) that "catalyzes formation, reduction, and isomerization of disulfide bonds" (PMID:18628206; PMID:12761212), redox potential ~−165 mV, EDEL-retained. So it does have isomerase-type chemistry (unlike TXNDC11). GOA MF terms are GO:0019153 protein-disulfide reductase (glutathione) activity and GO:0015035 protein-disulfide reductase activity; the review core MF is GO:0015035. The PN projects GO:0003756 (isomerase).</li>
+<li><strong>PN story / NEW pressure:</strong> Lower NEW pressure than TXNDC11 — TXNDC12 already HAS catalytic MF terms in GOA (GO:0015035, GO:0019153; verified goa.tsv), accepted in the review. PN claims GO:0003756 is new_to_goa, which is literally true (isomerase term specifically is absent), and the literature does report isomerization activity, so GO:0003756 is defensible-but-redundant given the existing reductase terms. Per OLS, GO:0003756 (isomerase) and GO:0015035 (reductase) are siblings, so GO:0003756 would ADD an activity facet rather than refine an existing one. Conclusion: already substantially captured (reductase); GO:0003756 is a defensible minor ADD, not an over-reach, since isomerase activity is experimentally reported.</li>
+<li><strong>Mapping strategy:</strong> Acceptable. Catalytic, canonical PDI-family member that genuinely belongs in the "Protein disulfide isomerases" group (in contrast to TXNDC11). Group GO:0003756 projection is reasonable here. No node change needed.</li>
+<li><strong>Evidence alignment:</strong> PN mapping-only. Review key refs: IDA PMID:12761212 (ERp18 characterization), PMID:18628206 (ERp16, isomerization + anti-apoptotic role), PMID:39696500 (vWF/thrombosis, non-core). Isomerization activity in PMID:18628206 supports the PN GO:0003756 projection.</li>
+<li><strong>Verdict:</strong> Consistent; catalytic MF already in GOA (reductase) — PN GO:0003756 isomerase projection is a defensible, literature-supported minor ADD rather than core-missing or over-reach.</li>
+</ul>
+<h2 id="pn-dossier-context">PN Dossier Context</h2>
+<ul>
+<li>review_batch: proteostasis-batch-2026-06-11</li>
+<li>review_yaml: genes/human/TXNDC12/TXNDC12-ai-review.yaml</li>
+<li>PN workbook rows: 1</li>
+</ul>
+<h2 id="pn-row-1-er-proteostasis-folding-enzyme-protein-disulfide-isomerases">PN row 1: ER proteostasis | Folding enzyme | Protein disulfide isomerases</h2>
+<ul>
+<li>UniProt: O95881</li>
+<li>In branches: ER</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[group] ER proteostasis|Folding enzyme|Protein disulfide isomerases<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0003756 protein disulfide isomerase activity]<br />
+    rationale: This PN group captures the canonical ER protein-disulfide-isomerase folding enzymes. GO protein disulfide isomerase activity is the cleanest propagation target for the catalytically active family members.</li>
+<li>[class] ER proteostasis|Folding enzyme<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad PN category rather than a single GO class. The member genes span multiple activities, complexes, or contexts, so direct propagation from this node would overstate the shared biology.</li>
+<li>[branch] ER proteostasis<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a top-level PN branch. This is a systems/taxonomy umbrella, not a direct GO assertion; narrower child curations carry any propagating GO mappings.</li>
+</ul>
+</li>
+</ul>
+<h2 id="projected-go-annotations-1">Projected GO annotations (1)</h2>
+<ul>
+<li>GO:0003756 protein disulfide isomerase activity | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=ER proteostasis|Folding enzyme|Protein disulfide isomerases</li>
+</ul>
+<h2 id="note">Note</h2>
+<p>This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95881
+gene_symbol: TXNDC12
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TXNDC12 (Thioredoxin domain-containing protein 12; also known as ERp18, ERp19,
+  ERp16, and hTLP19) is a small (172 aa precursor; 146 aa mature) soluble thioredoxin-
+  superfamily oxidoreductase resident in the endoplasmic reticulum lumen. After cleavage
+  of an N-terminal signal peptide it is retained in the ER via a C-terminal EDEL motif.
+  It comprises a single thioredoxin-like fold carrying an unusual CGAC redox-active
+  active-site motif (catalytic cysteines Cys66/Cys69) with a redox potential (about
+  -165 mV) within the range of the ER, allowing it to catalyze the formation, reduction,
+  and isomerization of disulfide bonds in client/substrate proteins. TXNDC12 thus acts
+  early in oxidative protein folding in the ER, promoting native disulfide bond formation,
+  and contributes to cellular defense against prolonged ER stress, where its catalytic
+  activity attenuates ER-stress-induced apoptosis. It is widely expressed.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of ER localization, consistent with the experimentally
+      determined ER-lumen localization and the protein&#39;s EDEL retention motif.
+    action: ACCEPT
+    reason: &gt;-
+      Correct compartment; TXNDC12 is an ER-resident oxidoreductase acting in oxidative
+      protein folding in the ER.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#39;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assignment of ER lumen localization, redundant with and consistent with the
+      experimental IDA annotation and the curated UniProt subcellular location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct site of action; the mature soluble protein is retained in the ER lumen via its
+      EDEL motif.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#39;
+- term:
+    id: GO:0019153
+    label: protein-disulfide reductase (glutathione) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the glutathione-dependent protein-disulfide reductase activity
+      (EC 1.8.4.2), redundant with the experimental IDA annotation from the ERp18 characterization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; corresponds to the curated EC 1.8.4.2 and the CGAC
+      active-site redox chemistry.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: EC=1.8.4.2
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct capture from a proteome-scale human interactome map. Bare protein binding is
+      uninformative relative to the established oxidoreductase function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome data; per guidelines bare protein binding is not elevated to
+      a core function.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: &#39;O95881; O43765: SGTA; NbExp=3; IntAct=EBI-2564581, EBI-347996;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct capture from a variant-interactome screen. Uninformative bare protein binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome data; not elevated to core per guidelines.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: &#39;O95881; Q9UMX0: UBQLN1; NbExp=4; IntAct=EBI-2564581, EBI-741480;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct capture from the HuRI binary interactome. Uninformative bare protein binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome data; not elevated to core per guidelines.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: &#39;O95881; P49069: CAMLG; NbExp=5; IntAct=EBI-2564581, EBI-1748958;&#39;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ortholog-based electronic transfer of ER localization, consistent with the experimental
+      ER-lumen localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct compartment; redundant with the IDA/IBA ER annotations.
+    supported_by:
+    - reference_id: file:human/TXNDC12/TXNDC12-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum lumen&#39;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: IDA
+  original_reference_id: PMID:12761212
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Direct experimental demonstration that ERp18 (TXNDC12) is located in the endoplasmic
+      reticulum, consistent with its EDEL ER-retention motif.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported ER-lumen localization; the curated site of action.
+    supported_by:
+    - reference_id: PMID:12761212
+      supporting_text: We show that ERp18 is located in the endoplasmic reticulum
+- term:
+    id: GO:0019153
+    label: protein-disulfide reductase (glutathione) activity
+  evidence_type: IDA
+  original_reference_id: PMID:12761212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct biochemical demonstration that ERp18 (TXNDC12) has peptide thiol-disulfide oxidase
+      activity dependent on both active-site cysteines (CGAC motif), the basis of EC 1.8.4.2.
+      This is a core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core, experimentally supported molecular function; mutation of either active-site cysteine
+      abolishes activity.
+    supported_by:
+    - reference_id: PMID:12761212
+      supporting_text: &gt;-
+        in vitro ERp18 possesses significant peptide thiol-disulfide oxidase activity, which is
+        dependent on the presence of both active site cysteine residues.
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: IDA
+  original_reference_id: PMID:18628206
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct evidence that the mature protein (ERp16/TXNDC12) is localized in the lumen of the
+      ER, consistent with its EDEL retention sequence.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported ER-lumen localization.
+    supported_by:
+    - reference_id: PMID:18628206
+      supporting_text: &gt;-
+        a COOH-terminal endoplasmic reticulum (ER) retention sequence (EDEL)
+- term:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  evidence_type: IDA
+  original_reference_id: PMID:18628206
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct biochemical demonstration that ERp16/TXNDC12 is a thiol-disulfide oxidoreductase
+      catalyzing the formation, reduction, and isomerization of disulfide bonds via its CGAC
+      active site. This is the core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Core, experimentally supported molecular function; the broad protein-disulfide
+      reductase/oxidoreductase activity is the protein&#39;s defining biochemical role.
+    supported_by:
+    - reference_id: PMID:18628206
+      supporting_text: &gt;-
+        it catalyzed the formation, reduction, and isomerization of disulfide bonds, with the
+        unusual CGAC active site motif being responsible for these activities
+- term:
+    id: GO:1902236
+    label: negative regulation of endoplasmic reticulum stress-induced intrinsic apoptotic
+      signaling pathway
+  evidence_type: IDA
+  original_reference_id: PMID:18628206
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      Overexpression of ERp16/TXNDC12 inhibited ER-stress-induced apoptosis whereas a
+      catalytically inactive mutant or knockdown potentiated it, demonstrating a catalysis-
+      dependent protective role against prolonged ER stress. This is a downstream physiological
+      consequence of its redox-folding activity rather than its primary biochemical function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Well supported experimentally (PMID:18628206) but represents a downstream/physiological
+      output of the core oxidoreductase activity; retained as non-core.
+    supported_by:
+    - reference_id: PMID:18628206
+      supporting_text: &gt;-
+        Expression of ERp16 in HeLa cells inhibited the induction of apoptosis by agents that
+        elicit ER stress, including brefeldin A, tunicamycin, and dithiothreitol.
+core_functions:
+- description: &gt;-
+    ER-luminal thiol-disulfide oxidoreductase that, via its CGAC active-site motif
+    (Cys66/Cys69), catalyzes formation, reduction, and isomerization of disulfide bonds in
+    client proteins, contributing to oxidative protein folding in the endoplasmic reticulum.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  locations:
+  - id: GO:0005788
+    label: endoplasmic reticulum lumen
+  supported_by:
+  - reference_id: PMID:18628206
+    supporting_text: &gt;-
+      it catalyzed the formation, reduction, and isomerization of disulfide bonds, with the
+      unusual CGAC active site motif being responsible for these activities
+  - reference_id: PMID:12761212
+    supporting_text: &gt;-
+      in vitro ERp18 possesses significant peptide thiol-disulfide oxidase activity, which is
+      dependent on the presence of both active site cysteine residues.
+proposed_new_terms: []
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12761212
+  title: Functional characterization of ERp18, a new endoplasmic reticulum-located
+    thioredoxin superfamily member.
+  findings:
+  - statement: &gt;-
+      ERp18 (TXNDC12) is an ER-located, PDI-related protein with a single catalytic
+      thioredoxin domain bearing an unusual CGAC active-site motif and possesses peptide
+      thiol-disulfide oxidase activity dependent on both active-site cysteines.
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original functional characterization of ERp18/TXNDC12; basis of EC 1.8.4.2 and the
+      C66/C69 active-site annotations. Cached entry is abstract-only.
+- id: PMID:18628206
+  title: &#39;ERp16, an endoplasmic reticulum-resident thiol-disulfide oxidoreductase:
+    biochemical properties and role in apoptosis induced by endoplasmic reticulum
+    stress.&#39;
+  findings:
+  - statement: &gt;-
+      ERp16 (the same protein as ERp18/ERp19/hTLP19/TXNDC12) is an ER-lumen thiol-disulfide
+      oxidoreductase (redox potential about -165 mV) that catalyzes formation, reduction, and
+      isomerization of disulfide bonds via its CGAC motif.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Catalytically active TXNDC12 protects HeLa cells against ER-stress-induced apoptosis,
+      whereas a catalytically dead mutant or knockdown potentiates it, indicating a
+      catalysis-dependent role in defense against prolonged ER stress.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text cached; confirms the same gene under the ERp16 alias and supports both the core
+      oxidoreductase function and the anti-apoptotic role under ER stress.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome; source of a high-throughput protein binding capture.
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Variant-interactome screen; source of a high-throughput protein binding capture.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome; source of a high-throughput protein binding capture.
+- id: PMID:39696500
+  title: A novel role for protein disulfide isomerase ERp18 in venous thrombosis.
+  findings:
+  - statement: &gt;-
+      ERp18 (TXNDC12) enhances venous thrombosis: ERp18-knockout mice develop
+      significantly less thrombosis in an inferior vena cava stenosis model, and this
+      pro-thrombotic role is dependent on its enzymatic activity (the inactive
+      CGAC-to-SGAS mutant fails to support thrombosis). ERp18 is detected in
+      endothelial cells, leukocytes and platelets and its deficiency lowers vWF at the
+      thrombus site, implicating ERp18 in regulating vWF release.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID:39696500, DOI:10.1186/s12959-024-00678-5). Gene-specific 2024
+      primary study establishing a context-dependent extracellular/vascular role for
+      TXNDC12/ERp18 in venous thrombosis and reconfirming that the CGAC active site is
+      required for activity (CGAC-to-SGAS abolishes function). The thrombosis/vWF role is a
+      non-core physiological output; the catalytic-dependence data corroborate the core
+      oxidoreductase function. Full text not cached, so no verbatim supporting_text added to
+      annotations.
+- id: file:human/TXNDC12/TXNDC12-uniprot.txt
+  title: UniProt entry O95881 (TXD12_HUMAN), Thioredoxin domain-containing protein 12
+  findings:
+  - statement: &gt;-
+      Protein-disulfide reductase (EC 1.8.4.2) of the ER lumen with a single thioredoxin domain,
+      redox-active C66/C69, EDEL ER-retention motif; promotes disulfide bond formation in client
+      proteins.
+    reference_section_type: OTHER
+suggested_questions:
+- question: &gt;-
+    What are the endogenous physiological substrates whose native disulfide bonds depend on
+    TXNDC12, and does it act redundantly with other ER PDI-family oxidoreductases?
+- question: &gt;-
+    How does the unusual CGAC active-site motif tune TXNDC12 between oxidase, reductase, and
+    isomerase activities relative to canonical CXXC PDI enzymes?
+suggested_experiments:
+- description: &gt;-
+    Identify TXNDC12 substrates by trapping mixed-disulfide intermediates with active-site
+    cysteine-trapping mutants followed by mass spectrometry in human cells.
+- description: &gt;-
+    Test whether TXNDC12 depletion sensitizes cells to ER-stress-induced apoptosis and whether
+    re-expression of wild-type but not CGAC-mutant protein rescues, to confirm the catalysis-
+    dependent cytoprotective role.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

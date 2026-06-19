@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>amtB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>amtB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CE8" target="_blank" class="term-link">
+                        Q88CE8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "amtB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CE8" data-a="DESCRIPTION: AmtB (PP_5233) is a high-affinity ammonium transpo..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AmtB (PP_5233) is a high-affinity ammonium transporter of the Amt/Mep/Rh (ammonia transporter channel) superfamily located in the cytoplasmic (inner) membrane, where it is predicted to form a trimer with each protomer providing an 11-transmembrane-helix channel. It mediates uptake of ammonium across the membrane, scavenging low external ammonium to support nitrogen assimilation under nitrogen-limiting conditions; family members recruit NH4+ at a periplasmic site and conduct it through a hydrophobic pore (with conserved Phe-gate and twin-His motifs), with deprotonation to NH3 and growing evidence for electrogenic transport. In Pseudomonas putida KT2440, amtB is encoded in a glnK-amtB operon together with the PII-family nitrogen signaling protein GlnK; it is strongly induced (tens-of-fold) during nitrogen limitation under control of the NtrC/sigma-54 (RpoN) regulatory system, and, as in other Proteobacteria, AmtB transport activity can be gated post-translationally by GlnK binding to its cytoplasmic face.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE8" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AmtB is a multi-pass cytoplasmic (inner) membrane transporter; plasma membrane localization is correct for this Amt-family protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt SUBCELLULAR LOCATION (RuleBase/ARBA) annotates AmtB as a multi-pass cell membrane protein, and the deep research describes AmtB as a cytoplasmic (inner) membrane ammonium transporter. The 11 predicted transmembrane helices in the UniProt record support membrane localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008519" target="_blank" class="term-link">
+                                    GO:0008519
+                                </a>
+                            </span>
+                            <span class="term-label">ammonium channel activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE8" data-a="GO:0008519" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AmtB is a member of the ammonia transporter channel (TC 1.A.11.2) family; ammonium channel activity is the appropriate molecular function for this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The Amt/Mep/Rh family is the canonical ammonium channel/transporter family, and AmtB carries the IPR001905/IPR018047/IPR024041 (Ammonium_transpt) domains plus the TC 1.A.11.2 family assignment. This is the standard, well-supported molecular function term for AmtB orthologs. Mechanistic debate over passive NH3 conduction versus electrogenic NH4+ transport does not change the family-level MF assignment.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE8" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization; correct but subsumed by the more specific plasma membrane annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016020 (membrane) is a true but high-level parent of the more informative GO:0005886 (plasma membrane) annotation already present. It is an InterPro2GO electronic inference that is not incorrect, but adds little specificity; retained as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072488" target="_blank" class="term-link">
+                                    GO:0072488
+                                </a>
+                            </span>
+                            <span class="term-label">ammonium transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CE8" data-a="GO:0072488" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AmtB mediates transport of ammonium across the cytoplasmic membrane; this is the core biological process for the gene.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the molecular function (ammonium channel activity) and with KT2440-specific evidence that amtB is a high-affinity ammonium transporter strongly induced under nitrogen limitation to scavenge external ammonium for nitrogen assimilation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17965157" target="_blank" class="term-link">
+                                        PMID:17965157
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">amtB (PP5233) in P. putida KT2440 is the high-affinity ammonium transporter, induced ~62-fold under nitrogen limitation, supporting its role in ammonium uptake for nitrogen assimilation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>High-affinity ammonium transport across the cytoplasmic membrane, scavenging external ammonium for nitrogen assimilation under nitrogen-limiting conditions.</h3>
+                <span class="vote-buttons" data-g="Q88CE8" data-a="FUNCTION: High-affinity ammonium transport across the cytopl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008519" target="_blank" class="term-link">
+                            ammonium channel activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072488" target="_blank" class="term-link">
+                                ammonium transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17965157" target="_blank" class="term-link">
+                                PMID:17965157
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">amtB (PP5233) in P. putida KT2440 is described as the high-affinity ammonium transporter, linked to upstream glnK, and is strongly induced (~62-fold) under nitrogen limitation in an NtrC-dependent manner.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17965157" target="_blank" class="term-link">
+                            PMID:17965157
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptome analysis of Pseudomonas putida in response to nitrogen availability</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In P. putida KT2440, amtB (PP_5233) is a high-affinity ammonium transporter genetically linked to glnK and strongly induced under nitrogen limitation in an NtrC/sigma-54-dependent manner.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(amtB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CE8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">28 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T16:46:28.638549</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="amtB-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="amtB-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000018 Table 1 on page 2 provides the requested data, showing the induction (ratio of expression) of *amtB* (PP5233) and other NtrC-regula</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-amtb-uniprot-q88ce8-locus-pp_5233-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>amtB</strong> (UniProt Q88CE8; locus <strong>PP_5233</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-critical-disambiguation">0) Target verification (critical disambiguation)</h3>
+<p>The UniProt entry <strong>Q88CE8</strong> corresponds to <strong>AmtB</strong>, an <strong>ammonium transporter</strong> in <em>Pseudomonas putida</em> strain KT2440 (also referred to as ATCC 47054 / DSM 6125 / NCIMB 11950). Independent primary literature in <em>P. putida</em> KT2440 explicitly identifies <strong>amtB = PP_5233</strong> and annotates it as a <strong>high-affinity ammonium transporter</strong>, verifying that the gene symbol and function match the UniProt-provided identity. (hervas2008transcriptomeanalysisof pages 2-3)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-is-amtb">1.1 What is AmtB?</h4>
+<p><strong>AmtB</strong> is a cytoplasmic-membrane ammonium transporter of the conserved <strong>Amt/Mep/Rh</strong> superfamily. In Gram-negative bacteria, AmtB is typically a <strong>high-affinity ammonium uptake system</strong> that is induced under nitrogen limitation to scavenge low external ammonium and support nitrogen assimilation. In <em>P. putida</em> KT2440, amtB (PP_5233) is specifically described as the <strong>high-affinity ammonium transporter</strong>. (hervas2008transcriptomeanalysisof pages 2-3)</p>
+<h4 id="12-substrate-and-mechanism-nh4-vs-nh3-and-why-the-debate-persists">1.2 Substrate and mechanism: NH4+ vs NH3, and why the debate persists</h4>
+<p>At physiological pH (~7), most “ammonium” exists as <strong>NH4+</strong> (pKa ~9.28), whereas <strong>NH3</strong> is membrane-permeant. This creates a long-standing mechanistic debate over whether Amt proteins are passive NH3 channels or energy-coupled/electrogenic ammonium transporters. A 2024 review synthesizes the field’s current view using <strong>E. coli AmtB</strong> as a paradigm: the protein contains a <strong>hydrophobic pore</strong> with conserved gating/selectivity motifs, suggesting that <strong>NH4+ binds and is deprotonated</strong>, with <strong>NH3</strong> traversing the hydrophobic lumen; however, functional work increasingly supports <strong>electrogenic transport</strong> and more complex coupling than simple NH3 diffusion. (williamson2024biologicalammoniumtransporters pages 1-3, williamson2024biologicalammoniumtransporters pages 3-5, williamson2024biologicalammoniumtransporters pages 5-7)</p>
+<h4 id="13-structural-hallmarks-family-defining-features">1.3 Structural hallmarks (family-defining features)</h4>
+<p>High-resolution structures show that Amt/Mep/Rh proteins are typically <strong>trimers</strong>, with each monomer forming a pore. Conserved features in bacterial AmtB include:<br />
+- A periplasmic NH4+ recruitment/binding site,<br />
+- A <strong>Phe-gate</strong> (e.g., F107/F215 in <em>E. coli</em> AmtB),<br />
+- A central hydrophobic pore containing a conserved <strong>twin-His motif</strong> (e.g., H168/H318 in <em>E. coli</em> AmtB),<br />
+- A cytoplasmic vestibule. (williamson2024biologicalammoniumtransporters pages 1-3, pfluger2024howsensoramtlike pages 1-2)<br />
+A 2024 <em>Science Advances</em> study on an Amt-like receptor reinforces the canonical <strong>trimeric fold</strong> and highlights conserved vestibule/gate motifs (Trp/Ser pair, Phe pair, twin-His), emphasizing their importance for discriminating ammonium from other small solutes. (pfluger2024howsensoramtlike pages 2-3, pfluger2024howsensoramtlike pages 1-2)</p>
+<h3 id="2-p-putida-kt2440-amtb-function-pathway-context-and-regulation">2) P. putida KT2440 <strong>amtB</strong>: function, pathway context, and regulation</h3>
+<h4 id="21-genomic-context-association-with-glnk-pii-protein">2.1 Genomic context: association with <strong>glnK</strong> (PII protein)</h4>
+<p>In <em>P. putida</em> KT2440, <strong>amtB (PP_5233)</strong> is linked to an upstream <strong>PII-family nitrogen signaling gene, glnK</strong>, consistent with a canonical <strong>glnK–amtB operon</strong> architecture found across many Proteobacteria. The 2008 KT2440 transcriptome study explicitly notes the upstream PII gene and supports operon-level coupling, while also suggesting an <strong>internal promoter</strong> immediately upstream of amtB. (hervas2008transcriptomeanalysisof pages 2-3)</p>
+<h4 id="22-transcriptional-regulation-ntrc54-rpon-nitrogen-starvation-response">2.2 Transcriptional regulation: NtrC/σ54 (RpoN) nitrogen-starvation response</h4>
+<p>A key, KT2440-specific conclusion is that <strong>amtB is NtrC-activated</strong> under nitrogen limitation. Quantitative RT-PCR in KT2440 showed <strong>~62-fold induction</strong> of <strong>amtB</strong> when comparing nitrogen-limited vs nitrogen-replete conditions (serine vs ammonium+serine), and <strong>~76-fold</strong> NtrC-dependent differences when comparing wild type and an <strong>ntrC mutant</strong>. (hervas2008transcriptomeanalysisof pages 2-3, hervas2008transcriptomeanalysisof media a469352e)</p>
+<p>Mechanistically, <em>P. putida</em> NtrC is a σ54-dependent activator, and the KT2440 study indicates promoter dependence on <strong>σ54/RpoN</strong> (“dependent on 54”). (hervas2008transcriptomeanalysisof pages 2-3)</p>
+<p>A complementary 2009 KT2440 study further establishes that the <strong>glnK promoter</strong> is a direct target of NtrC: it identifies <strong>two contiguous NtrC binding sites</strong> upstream of the nitrogen-dependent glnK promoter and shows <strong>direct activation by NtrC</strong> with <strong>IHF required</strong> for open-complex formation. Together, these data support a model in which nitrogen starvation activates NtrC, which then induces glnK–amtB transcription to increase ammonium scavenging capacity. (hervas2009ntrcdependentregulatorynetwork pages 1-2, hervas2008transcriptomeanalysisof pages 2-3)</p>
+<h4 id="23-post-translational-control-the-pii-glnk-gate-on-amtb-activity">2.3 Post-translational control: the PII (GlnK) “gate” on AmtB activity</h4>
+<p>In many bacteria, transcriptional induction of amtB under nitrogen limitation is complemented by <strong>rapid post-translational gating</strong> of AmtB by <strong>PII proteins</strong> (GlnK). A highly cited authoritative review synthesizes structural and biochemical evidence that <strong>trimeric GlnK binds the cytoplasmic face of trimeric AmtB and inserts its T-loops into AmtB pores, blocking transport</strong>; <strong>uridylylation (GlnK-UMP)</strong> prevents this interaction, thereby opening the channel when nitrogen is limiting. This coupling integrates intracellular <strong>glutamine</strong> (via UTase/UR), and broader carbon/nitrogen/energy signals (2-oxoglutarate, ATP/ADP, Mg2+). (heeswijk2013nitrogenassimilationin pages 22-23)</p>
+<p>While this post-translational mechanism is established primarily from model organisms (e.g., <em>E. coli</em>), it is directly relevant to KT2440 because <em>P. putida</em> encodes a nitrogen-regulated PII protein <strong>GlnK</strong> linked to amtB and under NtrC control, providing the regulatory architecture required for analogous gating. (hervas2009ntrcdependentregulatorynetwork pages 1-2, hervas2008transcriptomeanalysisof pages 2-3, heeswijk2013nitrogenassimilationin pages 22-23)</p>
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-mechanisticenergetic-shift-renewed-support-for-electrogenic-transport">3.1 Mechanistic/energetic shift: renewed support for electrogenic transport</h4>
+<p>A 2024 review argues that the earlier “passive NH3 channel” paradigm is increasingly inconsistent with physiology and modern electrophysiology. Using solid-supported membrane electrophysiology (SSME) in reconstituted systems, the review reports evidence consistent with <strong>electrogenic transport</strong> (net charge transfer) and estimates <strong>~30–300 NH4+ per second per trimer</strong>. It further discusses a “two-lane” model in which <strong>NH4+ is deprotonated</strong> and <strong>H+ and NH3</strong> traverse via distinct pathways. (williamson2024biologicalammoniumtransporters pages 7-9)</p>
+<h4 id="32-structural-biology-broadens-function-amt-modules-repurposed-as-ammonium-sensors">3.2 Structural biology broadens function: Amt modules repurposed as ammonium sensors</h4>
+<p>A 2024 <em>Science Advances</em> paper shows that some Amt-like proteins are fused to signaling domains and can act as <strong>ammonium receptors</strong> rather than purely transporters. The Amt module retains canonical features (trimer, vestibule gate motifs), but the protein architecture enables downstream signaling (e.g., cyclic-di-GMP synthesis). This expands the functional landscape of Amt-family proteins and helps contextualize why conserved transport-like scaffolds can support different physiological roles. (pfluger2024howsensoramtlike pages 2-3, pfluger2024howsensoramtlike pages 1-2)</p>
+<h4 id="33-technical-limitations-acknowledged-by-experts-why-mechanism-remains-hard">3.3 Technical limitations acknowledged by experts (why mechanism remains hard)</h4>
+<p>The 2024 review emphasizes that mechanistic conclusions are constrained by major assay limitations: methylammonium is an imperfect proxy; proteoliposome reconstitution can have uncontrolled orientation/copy number; experiments often use nonphysiologically high ammonium (5–200 mM); and lipid composition can be essential for activity (e.g., phosphatidylglycerol dependence). These limitations explain divergent conclusions in the literature and highlight why multiple orthogonal methods (SSME, structural dynamics, native-lipid systems) are needed for definitive mechanism. (williamson2024biologicalammoniumtransporters pages 18-20, williamson2024biologicalammoniumtransporters pages 5-7)</p>
+<h3 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h3>
+<p>Although the target here is <em>P. putida</em> KT2440 AmtB (PP_5233), applications frequently manipulate <strong>AmtB homologs</strong> in other bacteria to control ammonium retention vs excretion—conceptually leveraging the same biology (AmtB as a high-affinity ammonium recapture/import route).</p>
+<h4 id="41-biofertilizer-oriented-engineering-via-amtb-deletion-2024">4.1 Biofertilizer-oriented engineering via amtB deletion (2024)</h4>
+<p>A 2024 applied study engineered the plant endophyte <strong>Gluconacetobacter diazotrophicus</strong> to enhance extracellular ammonium release using <strong>clean (markerless) deletions of two amtB homologs</strong> (and combinations with nifA regulatory edits). Quantitatively, engineered strains accumulated <strong>~16–19 mM extracellular ammonium</strong> (often ~18 mM) after 4 days under the tested conditions, while wild type remained <strong>&lt;0.1 mM</strong>; the edits imposed measurable growth/fitness costs (final OD600 reduced relative to wild type: WT 5.3 vs engineered strains ~1.1–1.4 in representative constructs). The authors explicitly discuss the mechanistic rationale that AmtB normally <strong>recaptures leaked ammonium</strong>, so deleting amtB can increase net ammonium release. (dietz2024enhancedextracellularammonium pages 9-11, dietz2024enhancedextracellularammonium pages 1-2)</p>
+<p>These engineering results provide a concrete, real-world-oriented example of how AmtB function (ammonium uptake/retention) can be leveraged for agricultural nitrogen delivery strategies—even though they are not KT2440-specific. (dietz2024enhancedextracellularammonium pages 9-11, dietz2024enhancedextracellularammonium pages 1-2)</p>
+<h3 id="5-relevant-statistics-and-data-summary-recent-and-authoritative">5) Relevant statistics and data summary (recent and authoritative)</h3>
+<p>Key quantitative and mechanistic values relevant for functional annotation include:<br />
+- <strong>P. putida KT2440 amtB (PP_5233) expression</strong>: ~<strong>62-fold induction</strong> under nitrogen limitation (serine vs ammonium+serine) and ~<strong>76-fold NtrC-dependent</strong> difference versus an ntrC mutant condition/comparison. (hervas2008transcriptomeanalysisof media a469352e, hervas2008transcriptomeanalysisof pages 2-3)<br />
+- <strong>Transporter flux estimates (2024 review; paradigm organism AmtB)</strong>: SSME-derived flux ~<strong>30–300 NH4+ s−1 per trimer</strong> under reconstituted electrophysiology conditions, consistent with electrogenic transport. (williamson2024biologicalammoniumtransporters pages 7-9)<br />
+- <strong>Application engineering output (2024)</strong>: <strong>~16–19 mM extracellular ammonium</strong> from engineered amtB-deletion constructs in an endophyte; wild type <strong>&lt;0.1 mM</strong>, with reduced final culture densities (OD600 ~1.1–1.4 vs 5.3). (dietz2024enhancedextracellularammonium pages 9-11)</p>
+<h3 id="6-expert-synthesis-best-supported-functional-annotation-for-q88ce8-amtb-in-kt2440">6) Expert synthesis: best-supported functional annotation for Q88CE8 (AmtB) in KT2440</h3>
+<p><strong>Molecular function:</strong> High-affinity ammonium uptake/transport across the cytoplasmic membrane (Amt/Mep/Rh-family transporter). In KT2440, amtB is strongly induced in nitrogen limitation and is NtrC/σ54 regulated, consistent with a role in ammonium scavenging when nitrogen is scarce. (hervas2008transcriptomeanalysisof pages 2-3, hervas2008transcriptomeanalysisof media a469352e)</p>
+<p><strong>Likely transported species:</strong> The protein binds <strong>NH4+</strong> at the periplasmic face and supports transport that involves <strong>deprotonation and NH3 passage</strong> through a hydrophobic pore, with increasing evidence for <strong>electrogenic transport and coupled H+/NH3 transfer</strong> in bacterial AmtB paradigms. For KT2440, direct biophysical flux measurements were not identified in the retrieved KT2440-specific papers; therefore, mechanistic specifics are best treated as <strong>family-supported inference</strong> rather than organism-specific proof. (williamson2024biologicalammoniumtransporters pages 1-3, williamson2024biologicalammoniumtransporters pages 7-9)</p>
+<p><strong>Cellular localization:</strong> Cytoplasmic (inner) membrane transporter/channel (Amt/Mep/Rh family architecture; KT2440-specific evidence is functional/genetic and family-based rather than a direct localization assay in the retrieved excerpts). (hervas2008transcriptomeanalysisof pages 2-3, williamson2024biologicalammoniumtransporters pages 1-3)</p>
+<p><strong>Pathway context:</strong> Part of the nitrogen assimilation starvation response controlled by the <strong>NtrB/NtrC–σ54 (RpoN)</strong> regulatory axis; genomically coupled to <strong>glnK</strong> (PII nitrogen sensor), indicating integration of ammonium uptake with cellular nitrogen-status signaling and regulation. (hervas2009ntrcdependentregulatorynetwork pages 1-2, hervas2008transcriptomeanalysisof pages 2-3)</p>
+<p><strong>Regulatory architecture:</strong><br />
+- Transcriptional: <strong>NtrC-activated, σ54/RpoN-dependent</strong> promoters controlling glnK–amtB. (hervas2009ntrcdependentregulatorynetwork pages 1-2, hervas2008transcriptomeanalysisof pages 2-3)<br />
+- Post-translational (family-supported): <strong>GlnK</strong> can bind and block AmtB under nitrogen sufficiency; uridylylation state controls gating. (heeswijk2013nitrogenassimilationin pages 22-23)</p>
+<h3 id="evidence-map-compact-summary-table">Evidence map (compact summary table)</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Summary</th>
+<th>Quantitative / specific data</th>
+<th>Citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity</td>
+<td>Correct target is <strong>AmtB</strong> from <strong>Pseudomonas putida KT2440</strong>; gene <strong>amtB</strong>, ordered locus <strong>PP_5233</strong>, UniProt <strong>Q88CE8</strong>. In P. putida literature, <strong>amtB (PP5233)</strong> is explicitly described as the <strong>high-affinity ammonium transporter</strong> and is linked to upstream <strong>glnK</strong>.</td>
+<td>qRT-PCR/microarray study explicitly maps <strong>amtB = PP5233</strong> in KT2440.</td>
+<td>(hervas2008transcriptomeanalysisof pages 2-3)</td>
+</tr>
+<tr>
+<td>Primary function / substrate</td>
+<td>AmtB is a <strong>cytoplasmic membrane ammonium transporter/channel</strong> of the <strong>Amt/Mep/Rh family</strong>. Current consensus is that the physiological substrate enters as <strong>NH4+</strong>, then is <strong>deprotonated</strong> and transferred largely as <strong>NH3</strong> through a hydrophobic pore; bacterial AmtB is therefore best viewed as an ammonium uptake system for nitrogen scavenging under limitation.</td>
+<td>Family-level high-affinity behavior is reported around <strong>Km ~10 µM</strong> in classic AmtB discussions; direct bacterial AmtB electrophysiology suggests net ammonium translocation rather than simple passive NH3 equilibration.</td>
+<td>(junqueira2019evolutionofswimming pages 85-90, heeswijk2013nitrogenassimilationin pages 22-23, williamson2024biologicalammoniumtransporters pages 7-9, williamson2024biologicalammoniumtransporters pages 1-3)</td>
+</tr>
+<tr>
+<td>Operon context</td>
+<td>In <strong>P. putida KT2440</strong>, <strong>amtB</strong> is genetically linked with <strong>glnK</strong> in a <strong>glnK-amtB operon</strong>; evidence also suggests an <strong>internal promoter</strong> upstream of amtB.</td>
+<td>glnK and amtB are co-oriented; amtB can also show stronger induction than glnK, consistent with additional promoter control.</td>
+<td>(hervas2008transcriptomeanalysisof pages 2-3, hervas2009ntrcdependentregulatorynetwork pages 1-2)</td>
+</tr>
+<tr>
+<td>Transcriptional regulation</td>
+<td><strong>NtrC</strong> directly activates the nitrogen-responsive promoter(s) controlling <strong>glnK-amtB</strong> in <strong>P. putida</strong>; these promoters are <strong>σ54/RpoN-dependent</strong>, and <strong>IHF</strong> is required for open-complex formation at the glnK promoter.</td>
+<td>Two contiguous <strong>NtrC binding sites</strong> were identified upstream of the N-dependent glnK promoter.</td>
+<td>(hervas2008transcriptomeanalysisof pages 2-3, hervas2009ntrcdependentregulatorynetwork pages 1-2)</td>
+</tr>
+<tr>
+<td>Nitrogen-responsive expression</td>
+<td><strong>amtB</strong> is strongly induced during nitrogen limitation in <strong>P. putida KT2440</strong>, consistent with a role in scavenging low external ammonium.</td>
+<td><strong>~62-fold induction</strong> in wild type under serine vs ammonium+serine; <strong>~75.8- to 76-fold NtrC-dependent difference</strong> versus the ntrC mutant / corresponding comparison.</td>
+<td>(hervas2008transcriptomeanalysisof pages 2-3, hervas2008transcriptomeanalysisof media a469352e)</td>
+</tr>
+<tr>
+<td>Post-translational control</td>
+<td>Beyond transcriptional control, AmtB activity is regulated by the <strong>PII protein GlnK</strong>. Non-uridylylated <strong>GlnK</strong> binds AmtB and <strong>blocks the channel</strong>; <strong>GlnK-UMP</strong> does not bind, allowing transport. This links transport to intracellular <strong>glutamine, 2-oxoglutarate, ATP/ADP, and Mg2+</strong> status.</td>
+<td>GlnK is <strong>trimeric</strong> and inserts T-loops into AmtB vestibules/pore entrances; metabolite-dependent complex formation couples N/C status to transport.</td>
+<td>(junqueira2019evolutionofswimming pages 90-93, heeswijk2013nitrogenassimilationin pages 22-23, junqueira2019evolutionofswimming pages 85-90, junqueira2019evolutionofswimming pages 99-102)</td>
+</tr>
+<tr>
+<td>Structural motifs</td>
+<td>AmtB family proteins are <strong>trimers</strong> with one pore per protomer. Conserved motifs include the <strong>periplasmic NH4+ recruitment site</strong>, <strong>Phe-gate</strong> (<strong>F107/F215</strong> in E. coli AmtB), and central <strong>twin-His motif</strong> (<strong>H168/H318</strong> in E. coli AmtB).</td>
+<td>Recent structural work also describes 11 TM helices per monomer and conserved vestibule features (Trp/Ser, Phe pair, coplanar His pair).</td>
+<td>(williamson2024biologicalammoniumtransporters pages 1-3, pfluger2024howsensoramtlike pages 2-3, williamson2024biologicalammoniumtransporters pages 3-5, pfluger2024howsensoramtlike pages 1-2)</td>
+</tr>
+<tr>
+<td>Mechanism model</td>
+<td>The leading 2024 model favors <strong>electrogenic ammonium transport</strong> with <strong>NH4+ deprotonation</strong> and a <strong>“two-lane” pathway</strong> in which <strong>H+</strong> and <strong>NH3</strong> traverse separately, rather than simple passive NH3 diffusion alone. However, mechanism/energetics remain debated and assay-dependent.</td>
+<td>Solid-supported membrane electrophysiology estimated <strong>~30–300 NH4+ s−1 per trimer</strong> for microbial Amts/AmtB-like transport.</td>
+<td>(williamson2024biologicalammoniumtransporters pages 7-9, williamson2024biologicalammoniumtransporters pages 5-7, williamson2024biologicalammoniumtransporters pages 9-10)</td>
+</tr>
+<tr>
+<td>Technical limitations / evidence quality</td>
+<td>Functional interpretation is complicated by assay limitations: methylammonium is an imperfect surrogate, proteoliposome orientation/copy number are hard to control, high ammonium concentrations can be nonphysiological, and lipid environment strongly affects activity.</td>
+<td>Early studies reported apparent intracellular ammonium accumulation of <strong>~60–3000-fold</strong>; transport assays often used <strong>5–200 mM</strong> ammonium, which may distort mechanism inference.</td>
+<td>(williamson2024biologicalammoniumtransporters pages 3-5, williamson2024biologicalammoniumtransporters pages 18-20, williamson2024biologicalammoniumtransporters pages 5-7)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes verified identity, function, regulation, quantitative data, and mechanistic interpretation for P. putida KT2440 AmtB/PP_5233. It is useful as a compact evidence map linking organism-specific annotation to broader 2024 mechanistic understanding of bacterial AmtB transporters.</em></p>
+<h3 id="references-with-publication-dates-and-urls-as-available-in-retrieved-sources">References (with publication dates and URLs as available in retrieved sources)</h3>
+<ul>
+<li>Hervás AB, Canosa I, Santero E. <strong>Transcriptome analysis of <em>Pseudomonas putida</em> in response to nitrogen availability.</strong> <em>Journal of Bacteriology</em> (Jan <strong>2008</strong>). https://doi.org/10.1128/jb.01230-07 (hervas2008transcriptomeanalysisof pages 2-3, hervas2008transcriptomeanalysisof media a469352e)</li>
+<li>Hervás AB, Canosa I, Little R, Dixon R, Santero E. <strong>NtrC-dependent regulatory network for nitrogen assimilation in <em>Pseudomonas putida</em>.</strong> <em>Journal of Bacteriology</em> (Oct <strong>2009</strong>). https://doi.org/10.1128/jb.00744-09 (hervas2009ntrcdependentregulatorynetwork pages 1-2)</li>
+<li>Williamson G, Bizior A, Harris T, et al. <strong>Biological ammonium transporters from the Amt/Mep/Rh superfamily: mechanism, energetics, and technical limitations.</strong> <em>Bioscience Reports</em> (Jan <strong>2024</strong>). https://doi.org/10.1042/BSR20211209 (williamson2024biologicalammoniumtransporters pages 1-3, williamson2024biologicalammoniumtransporters pages 7-9, williamson2024biologicalammoniumtransporters pages 18-20)</li>
+<li>Pflüger T, Gschell M, Zhang L, et al. <strong>How sensor Amt-like proteins integrate ammonium signals.</strong> <em>Science Advances</em> (Jun <strong>2024</strong>). https://doi.org/10.1126/sciadv.adm9441 (pfluger2024howsensoramtlike pages 2-3, pfluger2024howsensoramtlike pages 1-2)</li>
+<li>van Heeswijk WC, Westerhoff HV, Boogerd FC. <strong>Nitrogen assimilation in <em>Escherichia coli</em>: Putting molecular data into a systems perspective.</strong> <em>Microbiology and Molecular Biology Reviews</em> (Dec <strong>2013</strong>). https://doi.org/10.1128/MMBR.00025-13 (heeswijk2013nitrogenassimilationin pages 22-23)</li>
+<li>Dietz BR, Olszewski NE, Barney BM. <strong>Enhanced extracellular ammonium release in the plant endophyte <em>Gluconacetobacter diazotrophicus</em> through genome editing.</strong> <em>Microbiology Spectrum</em> (Jan <strong>2024</strong>). https://doi.org/10.1128/spectrum.02478-23 (dietz2024enhancedextracellularammonium pages 9-11, dietz2024enhancedextracellularammonium pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(hervas2008transcriptomeanalysisof pages 2-3): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Transcriptome analysis of <i>pseudomonas putida</i> in response to nitrogen availability. Journal of Bacteriology, 190:416-420, Jan 2008. URL: https://doi.org/10.1128/jb.01230-07, doi:10.1128/jb.01230-07. This article has 114 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williamson2024biologicalammoniumtransporters pages 1-3): Gordon Williamson, Adriana Bizior, Thomas Harris, Leighton Pritchard, Paul A. Hoskisson, and Arnaud Javelle. Biological ammonium transporters from the amt/mep/rh superfamily: mechanism, energetics, and technical limitations. Bioscience Reports, Jan 2024. URL: https://doi.org/10.1042/bsr20211209, doi:10.1042/bsr20211209. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williamson2024biologicalammoniumtransporters pages 3-5): Gordon Williamson, Adriana Bizior, Thomas Harris, Leighton Pritchard, Paul A. Hoskisson, and Arnaud Javelle. Biological ammonium transporters from the amt/mep/rh superfamily: mechanism, energetics, and technical limitations. Bioscience Reports, Jan 2024. URL: https://doi.org/10.1042/bsr20211209, doi:10.1042/bsr20211209. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williamson2024biologicalammoniumtransporters pages 5-7): Gordon Williamson, Adriana Bizior, Thomas Harris, Leighton Pritchard, Paul A. Hoskisson, and Arnaud Javelle. Biological ammonium transporters from the amt/mep/rh superfamily: mechanism, energetics, and technical limitations. Bioscience Reports, Jan 2024. URL: https://doi.org/10.1042/bsr20211209, doi:10.1042/bsr20211209. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pfluger2024howsensoramtlike pages 1-2): Tobias Pflüger, Mathias Gschell, Lin Zhang, Volodymyr Shnitsar, Annas J. Zabadné, Paul Zierep, Stefan Günther, Oliver Einsle, and Susana L. A. Andrade. How sensor amt-like proteins integrate ammonium signals. Jun 2024. URL: https://doi.org/10.1126/sciadv.adm9441, doi:10.1126/sciadv.adm9441. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pfluger2024howsensoramtlike pages 2-3): Tobias Pflüger, Mathias Gschell, Lin Zhang, Volodymyr Shnitsar, Annas J. Zabadné, Paul Zierep, Stefan Günther, Oliver Einsle, and Susana L. A. Andrade. How sensor amt-like proteins integrate ammonium signals. Jun 2024. URL: https://doi.org/10.1126/sciadv.adm9441, doi:10.1126/sciadv.adm9441. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hervas2008transcriptomeanalysisof media a469352e): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Transcriptome analysis of <i>pseudomonas putida</i> in response to nitrogen availability. Journal of Bacteriology, 190:416-420, Jan 2008. URL: https://doi.org/10.1128/jb.01230-07, doi:10.1128/jb.01230-07. This article has 114 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hervas2009ntrcdependentregulatorynetwork pages 1-2): Ana B. Hervás, Inés Canosa, Richard Little, Ray Dixon, and Eduardo Santero. Ntrc-dependent regulatory network for nitrogen assimilation in <i>pseudomonas putida</i>. Oct 2009. URL: https://doi.org/10.1128/jb.00744-09, doi:10.1128/jb.00744-09. This article has 94 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(heeswijk2013nitrogenassimilationin pages 22-23): Wally C. van Heeswijk, Hans V. Westerhoff, and Fred C. Boogerd. Nitrogen assimilation in escherichia coli: putting molecular data into a systems perspective. Microbiology and Molecular Biology Reviews, 77:628-695, Dec 2013. URL: https://doi.org/10.1128/mmbr.00025-13, doi:10.1128/mmbr.00025-13. This article has 336 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williamson2024biologicalammoniumtransporters pages 7-9): Gordon Williamson, Adriana Bizior, Thomas Harris, Leighton Pritchard, Paul A. Hoskisson, and Arnaud Javelle. Biological ammonium transporters from the amt/mep/rh superfamily: mechanism, energetics, and technical limitations. Bioscience Reports, Jan 2024. URL: https://doi.org/10.1042/bsr20211209, doi:10.1042/bsr20211209. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williamson2024biologicalammoniumtransporters pages 18-20): Gordon Williamson, Adriana Bizior, Thomas Harris, Leighton Pritchard, Paul A. Hoskisson, and Arnaud Javelle. Biological ammonium transporters from the amt/mep/rh superfamily: mechanism, energetics, and technical limitations. Bioscience Reports, Jan 2024. URL: https://doi.org/10.1042/bsr20211209, doi:10.1042/bsr20211209. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dietz2024enhancedextracellularammonium pages 9-11): Benjamin R. Dietz, Neil E. Olszewski, and Brett M. Barney. Enhanced extracellular ammonium release in the plant endophyte <i>gluconacetobacter diazotrophicus</i> through genome editing. Jan 2024. URL: https://doi.org/10.1128/spectrum.02478-23, doi:10.1128/spectrum.02478-23. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dietz2024enhancedextracellularammonium pages 1-2): Benjamin R. Dietz, Neil E. Olszewski, and Brett M. Barney. Enhanced extracellular ammonium release in the plant endophyte <i>gluconacetobacter diazotrophicus</i> through genome editing. Jan 2024. URL: https://doi.org/10.1128/spectrum.02478-23, doi:10.1128/spectrum.02478-23. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(junqueira2019evolutionofswimming pages 85-90): AE Altamirano Junqueira. Evolution of swimming motility in aflagellate strains of pseudomonas fluorescens sbw25. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(junqueira2019evolutionofswimming pages 90-93): AE Altamirano Junqueira. Evolution of swimming motility in aflagellate strains of pseudomonas fluorescens sbw25. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(junqueira2019evolutionofswimming pages 99-102): AE Altamirano Junqueira. Evolution of swimming motility in aflagellate strains of pseudomonas fluorescens sbw25. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(williamson2024biologicalammoniumtransporters pages 9-10): Gordon Williamson, Adriana Bizior, Thomas Harris, Leighton Pritchard, Paul A. Hoskisson, and Arnaud Javelle. Biological ammonium transporters from the amt/mep/rh superfamily: mechanism, energetics, and technical limitations. Bioscience Reports, Jan 2024. URL: https://doi.org/10.1042/bsr20211209, doi:10.1042/bsr20211209. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="amtB-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000018 Table 1 on page 2 provides the requested data, showing the induction (ratio of expression) of *amtB* (PP5233) and other NtrC-regula" src="amtB-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hervas2008transcriptomeanalysisof pages 2-3</li>
+<li>heeswijk2013nitrogenassimilationin pages 22-23</li>
+<li>williamson2024biologicalammoniumtransporters pages 7-9</li>
+<li>dietz2024enhancedextracellularammonium pages 9-11</li>
+<li>hervas2009ntrcdependentregulatorynetwork pages 1-2</li>
+<li>williamson2024biologicalammoniumtransporters pages 1-3</li>
+<li>williamson2024biologicalammoniumtransporters pages 3-5</li>
+<li>williamson2024biologicalammoniumtransporters pages 5-7</li>
+<li>pfluger2024howsensoramtlike pages 1-2</li>
+<li>pfluger2024howsensoramtlike pages 2-3</li>
+<li>williamson2024biologicalammoniumtransporters pages 18-20</li>
+<li>dietz2024enhancedextracellularammonium pages 1-2</li>
+<li>junqueira2019evolutionofswimming pages 85-90</li>
+<li>junqueira2019evolutionofswimming pages 90-93</li>
+<li>junqueira2019evolutionofswimming pages 99-102</li>
+<li>williamson2024biologicalammoniumtransporters pages 9-10</li>
+<li>https://doi.org/10.1128/jb.01230-07</li>
+<li>https://doi.org/10.1128/jb.00744-09</li>
+<li>https://doi.org/10.1042/BSR20211209</li>
+<li>https://doi.org/10.1126/sciadv.adm9441</li>
+<li>https://doi.org/10.1128/MMBR.00025-13</li>
+<li>https://doi.org/10.1128/spectrum.02478-23</li>
+<li>https://doi.org/10.1128/jb.01230-07,</li>
+<li>https://doi.org/10.1042/bsr20211209,</li>
+<li>https://doi.org/10.1126/sciadv.adm9441,</li>
+<li>https://doi.org/10.1128/jb.00744-09,</li>
+<li>https://doi.org/10.1128/mmbr.00025-13,</li>
+<li>https://doi.org/10.1128/spectrum.02478-23,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CE8
+gene_symbol: amtB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: AmtB (PP_5233) is a high-affinity ammonium transporter of the Amt/Mep/Rh (ammonia transporter channel) superfamily located in the cytoplasmic (inner) membrane, where it is predicted to form a trimer with each protomer providing an 11-transmembrane-helix channel. It mediates uptake of ammonium across the membrane, scavenging low external ammonium to support nitrogen assimilation under nitrogen-limiting conditions; family members recruit NH4+ at a periplasmic site and conduct it through a hydrophobic pore (with conserved Phe-gate and twin-His motifs), with deprotonation to NH3 and growing evidence for electrogenic transport. In Pseudomonas putida KT2440, amtB is encoded in a glnK-amtB operon together with the PII-family nitrogen signaling protein GlnK; it is strongly induced (tens-of-fold) during nitrogen limitation under control of the NtrC/sigma-54 (RpoN) regulatory system, and, as in other Proteobacteria, AmtB transport activity can be gated post-translationally by GlnK binding to its cytoplasmic face.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: AmtB is a multi-pass cytoplasmic (inner) membrane transporter; plasma membrane localization is correct for this Amt-family protein.
+    action: ACCEPT
+    reason: UniProt SUBCELLULAR LOCATION (RuleBase/ARBA) annotates AmtB as a multi-pass cell membrane protein, and the deep research describes AmtB as a cytoplasmic (inner) membrane ammonium transporter. The 11 predicted transmembrane helices in the UniProt record support membrane localization.
+- term:
+    id: GO:0008519
+    label: ammonium channel activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: AmtB is a member of the ammonia transporter channel (TC 1.A.11.2) family; ammonium channel activity is the appropriate molecular function for this protein.
+    action: ACCEPT
+    reason: The Amt/Mep/Rh family is the canonical ammonium channel/transporter family, and AmtB carries the IPR001905/IPR018047/IPR024041 (Ammonium_transpt) domains plus the TC 1.A.11.2 family assignment. This is the standard, well-supported molecular function term for AmtB orthologs. Mechanistic debate over passive NH3 conduction versus electrogenic NH4+ transport does not change the family-level MF assignment.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Generic membrane localization; correct but subsumed by the more specific plasma membrane annotation.
+    action: KEEP_AS_NON_CORE
+    reason: GO:0016020 (membrane) is a true but high-level parent of the more informative GO:0005886 (plasma membrane) annotation already present. It is an InterPro2GO electronic inference that is not incorrect, but adds little specificity; retained as non-core.
+- term:
+    id: GO:0072488
+    label: ammonium transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: AmtB mediates transport of ammonium across the cytoplasmic membrane; this is the core biological process for the gene.
+    action: ACCEPT
+    reason: Consistent with the molecular function (ammonium channel activity) and with KT2440-specific evidence that amtB is a high-affinity ammonium transporter strongly induced under nitrogen limitation to scavenge external ammonium for nitrogen assimilation.
+    supported_by:
+    - reference_id: PMID:17965157
+      supporting_text: amtB (PP5233) in P. putida KT2440 is the high-affinity ammonium transporter, induced ~62-fold under nitrogen limitation, supporting its role in ammonium uptake for nitrogen assimilation.
+      full_text_unavailable: true
+core_functions:
+- description: High-affinity ammonium transport across the cytoplasmic membrane, scavenging external ammonium for nitrogen assimilation under nitrogen-limiting conditions.
+  supported_by:
+  - reference_id: PMID:17965157
+    supporting_text: amtB (PP5233) in P. putida KT2440 is described as the high-affinity ammonium transporter, linked to upstream glnK, and is strongly induced (~62-fold) under nitrogen limitation in an NtrC-dependent manner.
+    full_text_unavailable: true
+  molecular_function:
+    id: GO:0008519
+    label: ammonium channel activity
+  directly_involved_in:
+  - id: GO:0072488
+    label: ammonium transmembrane transport
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17965157
+  title: Transcriptome analysis of Pseudomonas putida in response to nitrogen availability
+  findings:
+  - statement: In P. putida KT2440, amtB (PP_5233) is a high-affinity ammonium transporter genetically linked to glnK and strongly induced under nitrogen limitation in an NtrC/sigma-54-dependent manner.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Corrected wrong identifier. The original PMID:18156253 resolved to an
+      unrelated Thermotoga maritima glycerate 2-kinase paper. The intended
+      reference was recovered via DOI 10.1128/JB.01230-07 from the deep-research
+      report and verified against PubMed as PMID:17965157 (Hervas AB, Canosa I,
+      Santero E; J Bacteriol 190:416-420, 2008). Title and content directly
+      establish KT2440-specific amtB identity, nitrogen-limitation induction, and
+      NtrC/sigma-54 regulation. Full text not in cache; amtB-specific (~62-fold)
+      details are paraphrased from the deep-research summary of the full text.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

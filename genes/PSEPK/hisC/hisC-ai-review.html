@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hisC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hisC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P86" target="_blank" class="term-link">
+                        Q88P86
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hisC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P86" data-a="DESCRIPTION: Histidinol-phosphate aminotransferase (HisC; EC 2...." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Histidinol-phosphate aminotransferase (HisC; EC 2.6.1.9), a cytosolic pyridoxal-5&#39;-phosphate (PLP)-dependent class-II aminotransferase that catalyzes the seventh step of L-histidine biosynthesis. It transfers an amino group from L-glutamate to imidazole-acetol phosphate (3-(imidazol-4-yl)-2-oxopropyl phosphate), producing L-histidinol phosphate and 2-oxoglutarate. The enzyme functions as a homodimer with active sites at the dimer interface; PLP is covalently bound as an internal aldimine to an active-site lysine (Lys210 in this protein) and catalysis proceeds via a ping-pong mechanism through a pyridoxamine-5&#39;-phosphate intermediate. In Pseudomonas putida KT2440 the gene (PP_0967) lies within a histidine-biosynthesis gene cluster. As in other bacterial homologs of this subfamily, the enzyme can show broadened substrate tolerance toward aromatic amino acids (e.g. tyrosine, phenylalanine) in vitro, but its physiological role is in histidine biosynthesis.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                    GO:0000105
+                                </a>
+                            </span>
+                            <span class="term-label">L-histidine biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P86" data-a="GO:0000105" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisC catalyzes the seventh step of histidine biosynthesis; this BP term is well supported by family/HAMAP-rule assignment, the UniProt pathway annotation, and operon context in KT2440.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biological process for this enzyme. The histidinol-phosphate aminotransferase function places it squarely in the L-histidine biosynthetic pathway (UniPathway UPA00031; HAMAP-Rule MF_01023).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004400" target="_blank" class="term-link">
+                                    GO:0004400
+                                </a>
+                            </span>
+                            <span class="term-label">L-histidinol-phosphate:2-oxoglutarate transaminase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P86" data-a="GO:0004400" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the specific molecular function of HisC (EC 2.6.1.9), transaminating L-histidinol phosphate with 2-oxoglutarate/L-glutamate. The UniProt CATALYTIC ACTIVITY block and HAMAP rule directly support this.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Represents the core molecular function. Strongly supported by family assignment (HisP_aminotrans subfamily, TIGR01141 hisC), Rhea:23744, and EC 2.6.1.9.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P86" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A high-level parent of the specific aminotransferase activity already annotated (GO:0004400). It is correct but uninformative given the more precise term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant generic ancestor of GO:0004400; adds no information beyond the specific transaminase MF term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P86" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HisC is a PLP-dependent enzyme that covalently binds pyridoxal 5&#39;-phosphate as an internal aldimine at the active-site lysine (MOD_RES 210 in this entry). Well supported by the COFACTOR annotation and conserved PLP-lysine motif.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> PLP binding is an essential, well-supported molecular function of this enzyme. The PLP-lysine internal aldimine and ping-pong mechanism are documented for HisC homologs (see hisC-deep-research-falcon.md).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140385" target="_blank" class="term-link">
+                                    GO:0140385
+                                </a>
+                            </span>
+                            <span class="term-label">amino acid transaminase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P86" data-a="GO:0140385" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad parent term covering aminotransferase activity on amino acid substrates. Correct but less specific than GO:0004400, which is already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic ancestor of the specific histidinol-phosphate transaminase activity; the more precise term GO:0004400 already captures this function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the PLP-dependent transamination of imidazole-acetol phosphate to L-histidinol phosphate (using L-glutamate as amino donor), the seventh step of L-histidine biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88P86" data-a="FUNCTION: Catalyzes the PLP-dependent transamination of imid..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004400" target="_blank" class="term-link">
+                            L-histidinol-phosphate:2-oxoglutarate transaminase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000105" target="_blank" class="term-link">
+                                L-histidine biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/hisC/hisC-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 histidine-biosynthesis genes PP0965-PP0967 are annotated as the hisGDC cluster, placing PP_0967 as hisC within histidine biosynthesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniRule/HAMAP MF_01023 assigns histidinol-phosphate aminotransferase activity (EC 2.6.1.9) and L-histidine biosynthetic process.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20158506" target="_blank" class="term-link">
+                            PMID:20158506
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium through the screening of a genome-wide mutant library</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In P. putida KT2440 the histidine-biosynthesis genes PP0965-PP0967 are annotated as the hisGDC cluster, with PP_0967 corresponding to hisC, and RT-PCR co-transcription assays support operon organization of these clusters.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11518529" target="_blank" class="term-link">
+                            PMID:11518529
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Crystal structure of histidinol phosphate aminotransferase (HisC) from Escherichia coli, and its covalent complex with pyridoxal-5&#39;-phosphate and L-histidinol phosphate</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">E. coli HisC is a PLP-dependent homodimeric aminotransferase with active sites at the dimer interface; the active-site lysine (Lys214) forms an internal aldimine with PLP and catalysis proceeds through PMP via a ping-pong mechanism.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hisC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P86" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">27 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:01:27.871031</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="hisC-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="hisC-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 The requested visual content is found in Figure 7(c) and Figure 9 of the document. Figure 7(c) shows a schematic of the covalent co</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-hisc-pp_0967-uniprot-q88p86-in-pseudomonas-putida-kt2440">Research report: <strong>hisC (PP_0967; UniProt Q88P86)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The <em>Pseudomonas putida</em> KT2440 gene <strong>hisC</strong> (annotated as <strong>PP_0967</strong>) encodes <strong>histidinol-phosphate aminotransferase</strong> (also called <strong>imidazole acetol-phosphate transaminase</strong>), an enzyme of <strong>histidine biosynthesis</strong> that catalyzes a <strong>pyridoxal-5′-phosphate (PLP)-dependent</strong> transamination step (EC <strong>2.6.1.9</strong>). In KT2440, hisC is part of a histidine-biosynthesis gene cluster annotated <strong>hisGDC (PP_0965–PP_0967)</strong> and is supported as an operon by RT-PCR co-transcription assays (data referenced but not shown). Although KT2440 gene-level quantitative fitness for <strong>hisC</strong> was not found in the retrieved texts, histidine biosynthesis is conditionally essential for minimal-medium growth, and multiple other <strong>his</strong> genes yield histidine auxotrophy in a genome-wide mutant screen. The enzyme is expected to be <strong>cytosolic</strong>, consistent with its role in core amino-acid biosynthesis.</p>
+<h3 id="mandatory-target-verification-avoid-symbol-ambiguity">Mandatory target verification (avoid symbol ambiguity)</h3>
+<p><strong>Target identity required by the prompt:</strong> UniProt <strong>Q88P86</strong>, gene <strong>hisC</strong>, locus <strong>PP_0967</strong>, organism <em>P. putida</em> KT2440.</p>
+<p><strong>Strain-specific verification from KT2440 literature:</strong> A genome-wide KT2440 study explicitly lists histidine-biosynthesis genes as organized into four clusters and identifies <strong>PP0965–PP0967 as the “hisGDC” cluster</strong>, placing <strong>PP_0967 as hisC</strong> within that cluster. The same source reports co-transcription assays indicating the clusters form independent operons, supporting operon organization for this region (molina‐henares2010identificationofconditionally pages 7-9). In parallel, an authoritative histidine-biosynthesis review defines <strong>HisC</strong> as <strong>histidinol aminotransferase</strong> with EC <strong>2.6.1.9</strong> (winkler2009biosynthesisofhistidine pages 46-47).</p>
+<p><strong>Limitations of verification:</strong> The tools in this run did not directly retrieve the UniProt record for <strong>Q88P86</strong>, so the UniProt accession-to-locus mapping is <strong>indirect</strong> (PP_0967 ↔ hisC) rather than confirmed by UniProt text in context.</p>
+<h3 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h3>
+<h4 id="11-histidine-biosynthesis-context">1.1 Histidine biosynthesis context</h4>
+<p>Histidine is synthesized in bacteria via a conserved multi-step pathway; <strong>HisC</strong> performs a late aminotransferase step (often described as the <strong>7th step</strong> in bacteria) in which an amino group is installed on the histidine precursor (sivaraman2001crystalstructureof pages 1-2, winkler2009biosynthesisofhistidine pages 12-13).</p>
+<h4 id="12-enzymatic-function-reaction-ec-number-substratesproducts">1.2 Enzymatic function (reaction, EC number, substrates/products)</h4>
+<p>Primary biochemical role of HisC (EC <strong>2.6.1.9</strong>):<br />
+- <strong>Amino donor:</strong> typically <strong>L-glutamate</strong><br />
+- <strong>Amino acceptor:</strong> <strong>imidazole acetol-phosphate</strong> (also described as <strong>3-(imidazol-4-yl)-2-oxo-propyl phosphate</strong>, or imidazoleacetol-phosphate)<br />
+- <strong>Products:</strong> <strong>L-histidinol phosphate</strong> + <strong>2-oxoglutarate (α-ketoglutarate)</strong></p>
+<p>This reaction is explicitly described in structural/enzymology studies and reviews (sivaraman2001crystalstructureof pages 1-2, matte2003contributionofstructural pages 2-3, fernandez2004structuralstudiesof pages 1-2).</p>
+<h4 id="13-cofactor-dependence-and-enzyme-class">1.3 Cofactor dependence and enzyme class</h4>
+<p>HisC is a <strong>PLP-dependent aminotransferase</strong>. Structural work shows the canonical PLP chemistry: PLP is covalently linked to an active-site lysine as an <strong>internal aldimine</strong>, cycles through <strong>pyridoxamine-5′-phosphate (PMP)</strong>, and catalysis proceeds via a <strong>ping-pong (double-displacement)</strong> mechanism characteristic of aminotransferases (sivaraman2001crystalstructureof pages 1-2, sivaraman2001crystalstructureof pages 7-9, winkler2009biosynthesisofhistidine pages 12-13).</p>
+<h4 id="14-mechanism-and-structural-determinants-expert-level-structural-biology">1.4 Mechanism and structural determinants (expert-level structural biology)</h4>
+<p>High-resolution crystallography on bacterial HisC (not KT2440-specific) provides mechanistic anchors useful for functional annotation:<br />
+- <strong>Oligomerization:</strong> HisC is <strong>dimeric</strong>, and the active sites lie at the <strong>dimer interface</strong> (sivaraman2001crystalstructureof pages 1-2, sivaraman2001crystalstructureof pages 7-9, sivaraman2001crystalstructureof pages 2-4).<br />
+- <strong>Active-site lysine:</strong> in <em>E. coli</em> HisC, <strong>Lys214</strong> forms the internal aldimine with PLP (sivaraman2001crystalstructureof pages 13-14).<br />
+- <strong>Captured intermediates:</strong> structures include PLP internal aldimine, PMP state, and an unusual <strong>covalent tetrahedral/gem-diamine–like intermediate</strong> involving PLP + L-histidinol phosphate + active-site Lys, supporting the transimination mechanism (sivaraman2001crystalstructureof pages 1-2, matte2003contributionofstructural pages 2-3, winkler2009biosynthesisofhistidine pages 12-13).<br />
+- <strong>Conserved PLP-contact residues:</strong> residues such as Tyr55, Asn157, Asp184, Tyr187, Ser213, Lys214, Arg222 (numbering from <em>E. coli</em>) are described as conserved PLP-interacting positions (sivaraman2001crystalstructureof pages 1-2, matte2003contributionofstructural pages 2-3).</p>
+<p><strong>Image evidence:</strong> Sivaraman et al. provide figures schematizing (i) the covalent PLP–L-histidinol phosphate complex interactions and (ii) the transimination mechanism states (internal aldimine → gem-diamine intermediates → external aldimine), which directly support the mechanistic model (sivaraman2001crystalstructureof media 1b7db48c, sivaraman2001crystalstructureof media 8b8302fc).</p>
+<h3 id="2-kt2440-specific-biology-gene-context-pathway-integration-phenotypes-localization">2) KT2440-specific biology: gene context, pathway integration, phenotypes, localization</h3>
+<h4 id="21-genomic-organization-and-operon-context-kt2440">2.1 Genomic organization and operon context (KT2440)</h4>
+<p>In <em>P. putida</em> KT2440, histidine-biosynthesis genes are described as distributed in <strong>four genomic clusters</strong>, including <strong>PP0965–PP0967 (“hisGDC”)</strong>. Co-transcription assays by RT-PCR are reported to show that the clusters form <strong>independent operons</strong>, supporting that <strong>PP_0965–PP_0967 are co-transcribed</strong> (molina‐henares2010identificationofconditionally pages 7-9).</p>
+<h4 id="22-functional-genetics-minimal-medium-conditional-essentiality-and-auxotrophy">2.2 Functional genetics: minimal-medium conditional essentiality and auxotrophy</h4>
+<p>A genome-wide KT2440 mutant-library screen on glucose minimal medium provides quantitative and phenotype-level evidence that histidine biosynthesis is crucial under nutrient limitation:<br />
+- Library size: <strong>7,760</strong> independent clones screened.<br />
+- Minimal-medium growth defects: <strong>79</strong> mutants unable to grow on glucose minimal medium.<br />
+- Unique genes implicated: <strong>47</strong> independent knockout genes mapped from those mutants.<br />
+- Histidine auxotroph-associated hits recovered include <strong>hisB (PP0289; 1 hit), hisF (PP0293; 2 hits), hisH (PP0290; 2 hits), and hisZ (PP4890; 1 hit)</strong> (molina‐henares2010identificationofconditionally pages 2-3).</p>
+<p>Notably, <strong>hisC was not recovered as a mutant hit</strong> in that screen, despite being in a cluster predicted by in silico models to yield histidine auxotrophy (molina‐henares2010identificationofconditionally pages 7-9, molina‐henares2010identificationofconditionally pages 2-3). This is consistent with the broader point made by the authors that transposon mutagenesis screens can miss some predicted conditionally essential loci due to library coverage and gene organization effects (molina‐henares2010identificationofconditionally pages 2-3).</p>
+<h4 id="23-cellular-localization-kt2440">2.3 Cellular localization (KT2440)</h4>
+<p>No retrieved KT2440 paper provided an explicit subcellular localization statement for HisC. Given HisC’s role in <strong>core amino-acid biosynthesis</strong> and the absence of any membrane/periplasmic context in the KT2440 evidence presented here, the most defensible statement from the present evidence base is that HisC functions in the <strong>intracellular (cytosolic) metabolic network</strong> that supplies histidine for translation and metabolism (sivaraman2001crystalstructureof pages 1-2, molina‐henares2010identificationofconditionally pages 2-3).</p>
+<h3 id="3-quantitative-biochemical-data-relevant-to-functional-annotation">3) Quantitative biochemical data relevant to functional annotation</h3>
+<p>Direct biochemical kinetics for KT2440 HisC were not retrieved in this run. However, quantitative parameters from well-studied bacterial homologs provide a calibrated expectation for activity and specificity (with appropriate caution about species differences).</p>
+<h4 id="31-kinetic-constants-and-specificity-thermotoga-maritima-hisc-homolog">3.1 Kinetic constants and specificity (Thermotoga maritima HisC homolog)</h4>
+<p>A hyperthermophilic HisC (tmHspAT) study reported kinetic constants (measured at <strong>20°C</strong>) for multiple substrates:<br />
+- Histidinol phosphate (Hsp): <strong>Km 0.8 mM; kcat 2.8 min⁻¹; kcat/Km 3.5 min⁻¹·mM⁻¹</strong><br />
+- Tyrosine: <strong>Km 2.3 mM; kcat 2.6 min⁻¹; kcat/Km 1.13</strong><br />
+- Tryptophan: <strong>Km 3.4 mM; kcat 0.85 min⁻¹; kcat/Km 0.25</strong><br />
+- Phenylalanine: <strong>Km 38.0 mM; kcat 0.52 min⁻¹; kcat/Km 0.014</strong></p>
+<p>The same study reports no measurable activity with L-histidine and notes temperature dependence with maximal activity above <strong>60°C</strong> (fernandez2004structuralstudiesof pages 9-10).</p>
+<p>These data illustrate a key annotation nuance: some HisC homologs can display <strong>broadened substrate ranges</strong> (e.g., aromatic amino acids), while still functioning in histidine biosynthesis (fernandez2004structuralstudiesof pages 1-2, fernandez2004structuralstudiesof pages 9-10).</p>
+<h4 id="32-spectral-signatures-of-plppmp-states-e-coli-hisc">3.2 Spectral signatures of PLP/PMP states (E. coli HisC)</h4>
+<p>UV–visible spectroscopy provides quantitative cofactor-state signatures:<br />
+- A peak around <strong>327 nm</strong> (assigned to PMP form)<br />
+- Conversion to PLP internal aldimine yields peaks at <strong>338 nm</strong> and <strong>427 nm</strong>; addition of α-ketoglutarate drives this conversion, with an observed shift above <strong>15 mM</strong> α-ketoglutarate (sivaraman2001crystalstructureof pages 7-9).</p>
+<h4 id="33-structuralbiophysical-quantitative-descriptors-e-coli-hisc">3.3 Structural/biophysical quantitative descriptors (E. coli HisC)</h4>
+<p>Reported measurements include:<br />
+- Dimer in solution, with dynamic light scattering Mr ≈ <strong>60 kDa</strong> and monomer ≈ <strong>40 kDa</strong><br />
+- Dimer dimensions ≈ <strong>94 × 55 × 54 Å</strong><br />
+- PLP–PLP phosphate distance across the dimer: <strong>22.6 Å</strong><br />
+- Soaking concentration for L-histidinol phosphate in crystallography: <strong>4 mM</strong><br />
+- A PLP ring rotation ~<strong>20°</strong> and Lys movement ~<strong>1 Å</strong> upon covalent complex formation (sivaraman2001crystalstructureof pages 2-4, sivaraman2001crystalstructureof pages 9-10).</p>
+<h3 id="4-recent-developments-prioritizing-20232024-and-current-applications">4) Recent developments (prioritizing 2023–2024) and current applications</h3>
+<h4 id="41-recent-advances-in-kt2440-functional-annotation-workflows-2024">4.1 Recent advances in KT2440 functional annotation workflows (2024)</h4>
+<p>A 2024 <strong>mSystems</strong> paper demonstrates use of <strong>independent component analysis (ICA)</strong> on a large RB-TnSeq fitness compendium to identify “functional modules” (fModules) in <em>P. putida</em> KT2440 and links these to regulatory iModulons. The retrieved excerpt specifically notes histidine-related signals (e.g., <strong>hisA</strong> in a histidine/purine-related module and a “His metabolism” connection via HutC) as part of this modern data-driven annotation strategy (borchert2024machinelearninganalysis pages 11-13). While this excerpt does not provide hisC-specific values, it reflects a current trend: integrating high-throughput fitness and transcriptomics with machine learning to refine gene-function relationships.</p>
+<h4 id="42-real-world-implementation-kt2440-as-a-biotechnological-chassis-2023">4.2 Real-world implementation: KT2440 as a biotechnological chassis (2023)</h4>
+<p>A 2023 <strong>Science Advances</strong> study reports metabolic engineering and bioprocess development of <em>P. putida</em> KT2440 for lignin-related aromatic conversion to <strong>β-ketoadipic acid</strong>, achieving titers of <strong>44.5 g/L</strong> (model LRCs) and <strong>25 g/L</strong> (corn stover-derived LRCs), and predicted a minimum selling price of <strong>$2.01/kg</strong> (Werner et al., 2023; URL in retrieved metadata). This positions KT2440 as an industrially relevant chassis; although the retrieved text segments did not connect this directly to histidine biosynthesis, such chassis optimization depends on robust central metabolism including amino acid supply and PLP-dependent enzyme networks (paper metadata retrieved; no direct in-text hisC evidence found here).</p>
+<h4 id="43-broader-non-kt2440-translational-relevance-of-hisc">4.3 Broader (non-KT2440) translational relevance of HisC</h4>
+<p>While outside the KT2440 scope, recent microbiology frequently treats HisC and histidine biosynthesis as potential antimicrobial or host-adaptation nodes because humans lack de novo histidine biosynthesis. This supports the general relevance of accurate HisC functional annotation, but pathogen-specific claims should not be transferred to KT2440 without direct evidence.</p>
+<h3 id="5-expert-interpretation-and-annotation-confidence">5) Expert interpretation and annotation confidence</h3>
+<h4 id="51-primary-function-and-substrate-specificity-best-supported-statements">5.1 Primary function and substrate specificity (best-supported statements)</h4>
+<p>Across authoritative reviews and structural enzymology, HisC is best described as a PLP-dependent aminotransferase that transfers the amino group from glutamate to imidazole acetol-phosphate, producing L-histidinol phosphate and α-ketoglutarate (sivaraman2001crystalstructureof pages 1-2, matte2003contributionofstructural pages 2-3, fernandez2004structuralstudiesof pages 1-2). This is the strongest functional basis for annotating PP_0967/Q88P86 as histidinol-phosphate aminotransferase.</p>
+<h4 id="52-kt2440-context-strengthens-pathway-assignment-but-lacks-direct-hisc-phenotyping">5.2 KT2440 context strengthens pathway assignment but lacks direct hisC phenotyping</h4>
+<p>KT2440 operon context (PP_0965–PP_0967 annotated as hisGDC; RT-PCR co-transcription) places PP_0967 within histidine biosynthesis at the genomic level (molina‐henares2010identificationofconditionally pages 7-9). However, currently retrieved KT2440 genetic screens did not directly yield a PP_0967/hisC mutant phenotype, so essentiality/auxotrophy for hisC remains an inference from pathway logic plus operon annotation rather than directly demonstrated in these sources (molina‐henares2010identificationofconditionally pages 2-3).</p>
+<h3 id="consolidated-evidence-table">Consolidated evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Key facts</th>
+<th>Organism/Scope</th>
+<th>Evidence source (with DOI URL and year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td>User-specified target is <strong>hisC / PP_0967 / UniProt Q88P86</strong> in <em>Pseudomonas putida</em> KT2440. KT2440 histidine-biosynthesis genes are organized in four clusters, and <strong>PP0965–PP0967</strong> is annotated as the <strong>hisGDC</strong> cluster, placing <strong>PP_0967 as hisC</strong> in this strain-specific genomic context; this matches the expected role of histidinol-phosphate aminotransferase in histidine biosynthesis. Generic histidine-pathway references also identify <strong>HisC = histidinol aminotransferase, EC 2.6.1.9</strong>. (molina‐henares2010identificationofconditionally pages 7-9, winkler2009biosynthesisofhistidine pages 46-47)</td>
+<td><em>P. putida</em> KT2440 for locus/operon context; broad bacterial annotation for enzyme name/EC</td>
+<td>Molina-Henares et al., 2010, <em>Environmental Microbiology</em>, DOI: https://doi.org/10.1111/j.1462-2920.2010.02166.x; Winkler &amp; Ramos-Montañez, 2009, <em>EcoSal Plus</em>, DOI: https://doi.org/10.1128/ecosalplus.3.6.1.9</td>
+</tr>
+<tr>
+<td>Catalyzed reaction and pathway step</td>
+<td><strong>HisC (EC 2.6.1.9)</strong> catalyzes the <strong>7th step of histidine biosynthesis</strong>: amino-group transfer from <strong>L-glutamate</strong> to <strong>imidazole acetol-phosphate / 3-(imidazol-4-yl)-2-oxo-propyl phosphate</strong>, producing <strong>L-histidinol phosphate</strong> and <strong>2-oxoglutarate (α-ketoglutarate)</strong>. The transferred amino group becomes the product’s α-amino group. (sivaraman2001crystalstructureof pages 1-2, matte2003contributionofstructural pages 2-3, winkler2009biosynthesisofhistidine pages 12-13, fernandez2004structuralstudiesof pages 1-2)</td>
+<td>Broad bacterial HisC biochemistry and structural enzymology</td>
+<td>Sivaraman et al., 2001, <em>J. Mol. Biol.</em>, DOI: https://doi.org/10.1006/jmbi.2001.4882; Matte et al., 2003, <em>J. Bacteriol.</em>, DOI: https://doi.org/10.1128/jb.185.14.3994-4002.2003; Winkler &amp; Ramos-Montañez, 2009, <em>EcoSal Plus</em>, DOI: https://doi.org/10.1128/ecosalplus.3.6.1.9; Fernandez et al., 2004, <em>J. Biol. Chem.</em>, DOI: https://doi.org/10.1074/jbc.m400291200</td>
+</tr>
+<tr>
+<td>Mechanistic/structural features</td>
+<td>HisC is a <strong>PLP-dependent aminotransferase</strong> that follows a <strong>ping-pong (double-displacement)</strong> mechanism. Structural work shows a <strong>dimeric enzyme (~80 kDa total in <em>E. coli</em>)</strong>, with each monomer containing a <strong>large PLP-binding domain</strong>, a <strong>smaller domain</strong>, and an <strong>N-terminal arm</strong> involved in dimerization/active-site shielding. The catalytic <strong>Lys214</strong> (numbering from <em>E. coli</em> HisC) forms the <strong>internal aldimine</strong> with PLP; crystallography captured <strong>PMP</strong>, <strong>internal aldimine</strong>, and a <strong>covalent tetrahedral/gem-diamine-like intermediate</strong> with PLP and L-histidinol phosphate. Conserved PLP-interacting residues include <strong>Tyr55, Asn157, Asp184, Tyr187, Ser213, Lys214, Arg222</strong>. (sivaraman2001crystalstructureof pages 1-2, sivaraman2001crystalstructureof pages 7-9, matte2003contributionofstructural pages 2-3, winkler2009biosynthesisofhistidine pages 12-13, sivaraman2001crystalstructureof pages 13-14, fernandez2004structuralstudiesof pages 5-7, sivaraman2001crystalstructureof media 1b7db48c)</td>
+<td>Broad bacterial HisC structural mechanism; residue numbering from <em>E. coli</em> and <em>Thermotoga maritima</em> homologs used for functional inference</td>
+<td>Sivaraman et al., 2001, <em>J. Mol. Biol.</em>, DOI: https://doi.org/10.1006/jmbi.2001.4882; Matte et al., 2003, <em>J. Bacteriol.</em>, DOI: https://doi.org/10.1128/jb.185.14.3994-4002.2003; Fernandez et al., 2004, <em>J. Biol. Chem.</em>, DOI: https://doi.org/10.1074/jbc.m400291200</td>
+</tr>
+<tr>
+<td>KT2440 genomic context / operon evidence</td>
+<td>In <em>P. putida</em> KT2440, histidine biosynthesis genes occur in <strong>four genomic clusters</strong>. One cluster is <strong>PP0965–PP0967 (hisGDC)</strong>, and RT-PCR evidence indicated these histidine clusters form <strong>independent operons</strong>, supporting that <strong>hisC/PP_0967 is cotranscribed with neighboring histidine-biosynthesis genes</strong> in this region. A separate monocistronic <strong>hisZ</strong> locus is <strong>PP4890</strong>. (molina‐henares2010identificationofconditionally pages 7-9)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Molina-Henares et al., 2010, <em>Environmental Microbiology</em>, DOI: https://doi.org/10.1111/j.1462-2920.2010.02166.x</td>
+</tr>
+<tr>
+<td>KT2440 functional genomics / essentiality</td>
+<td>In a genome-wide miniTn5 screen of <strong>7,760</strong> KT2440 mutants, <strong>79</strong> mutants failed to grow on glucose minimal medium, mapping to <strong>47–48 conditionally essential genes</strong>; histidine auxotrophs were recovered, including <strong>hisB (PP0289), hisF (PP0293), hisH (PP0290), and hisZ (PP4890)</strong>, but <strong>no hisC mutant was recovered</strong>, so this study supports histidine-pathway importance in minimal medium without direct knockout evidence for <strong>PP_0967</strong>. A 2024 RB-TnSeq/ICA reanalysis identified histidine-related functional modules (e.g., <strong>hisA in fModule_71</strong>, “His metabolism” connection to <strong>HutC</strong> iModulon), but the cited text provides <strong>no quantitative hisC-specific fitness value or essentiality call</strong>. (molina‐henares2010identificationofconditionally pages 11-12, molina‐henares2010identificationofconditionally pages 2-3, borchert2024machinelearninganalysis pages 11-13)</td>
+<td><em>P. putida</em> KT2440 functional genomics</td>
+<td>Molina-Henares et al., 2010, <em>Environmental Microbiology</em>, DOI: https://doi.org/10.1111/j.1462-2920.2010.02166.x; Borchert et al., 2024, <em>mSystems</em>, DOI: https://doi.org/10.1128/msystems.00942-23</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table consolidates strain-specific identity and operon evidence for PP_0967/hisC in Pseudomonas putida KT2440 with core biochemical and structural knowledge for HisC enzymes. It also distinguishes direct KT2440 evidence from broader homolog-based inference and notes current limits of hisC-specific functional-genomics data.</em></p>
+<h3 id="key-primary-sources-publication-dates-and-urls">Key primary sources (publication dates and URLs)</h3>
+<ul>
+<li><strong>Molina-Henares et al.</strong> “Identification of conditionally essential genes for growth of <em>Pseudomonas putida</em> KT2440 on minimal medium…” <em>Environmental Microbiology</em> (Jun <strong>2010</strong>). https://doi.org/10.1111/j.1462-2920.2010.02166.x (molina‐henares2010identificationofconditionally pages 2-3)</li>
+<li><strong>Borchert et al.</strong> “Machine learning analysis of RB-TnSeq fitness data predicts functional gene modules in <em>Pseudomonas putida</em> KT2440.” <em>mSystems</em> (Mar <strong>2024</strong>). https://doi.org/10.1128/msystems.00942-23 (borchert2024machinelearninganalysis pages 11-13)</li>
+<li><strong>Winkler &amp; Ramos-Montañez</strong> “Biosynthesis of Histidine.” <em>EcoSal Plus</em> (Dec <strong>2009</strong>). https://doi.org/10.1128/ecosalplus.3.6.1.9 (winkler2009biosynthesisofhistidine pages 12-13)</li>
+<li><strong>Sivaraman et al.</strong> “Crystal structure of histidinol phosphate aminotransferase (HisC) from <em>Escherichia coli</em>…” <em>Journal of Molecular Biology</em> (Aug <strong>2001</strong>). https://doi.org/10.1006/jmbi.2001.4882 (sivaraman2001crystalstructureof pages 1-2)</li>
+<li><strong>Fernandez et al.</strong> “Structural Studies of the Catalytic Reaction Pathway of a Hyperthermophilic Histidinol-phosphate Aminotransferase.” <em>Journal of Biological Chemistry</em> (May <strong>2004</strong>). https://doi.org/10.1074/jbc.m400291200 (fernandez2004structuralstudiesof pages 1-2)</li>
+</ul>
+<h3 id="notes-on-evidence-gaps-and-recommendations">Notes on evidence gaps and recommendations</h3>
+<ol>
+<li><strong>UniProt Q88P86 record not retrieved in-tool:</strong> to fully satisfy accession-level verification, the UniProt entry should be programmatically retrieved and cross-checked for sequence features (PLP-lysine motif, domain architecture) and any curated experimental evidence.</li>
+<li><strong>KT2440 hisC quantitative fitness/essentiality:</strong> Borchert et al. point to supplemental files for fitness metrics; extracting PP_0967 values would require retrieval of those supplements.</li>
+<li><strong>Subcellular localization:</strong> direct localization experiments for HisC in KT2440 were not found here; targeted proteomics or fractionation references would improve this section.</li>
+</ol>
+<p>References</p>
+<ol>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 7-9): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(winkler2009biosynthesisofhistidine pages 46-47): Malcolm E. Winkler and Smirla Ramos-Montañez. Biosynthesis of histidine. Dec 2009. URL: https://doi.org/10.1128/ecosalplus.3.6.1.9, doi:10.1128/ecosalplus.3.6.1.9. This article has 247 citations.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof pages 1-2): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(winkler2009biosynthesisofhistidine pages 12-13): Malcolm E. Winkler and Smirla Ramos-Montañez. Biosynthesis of histidine. Dec 2009. URL: https://doi.org/10.1128/ecosalplus.3.6.1.9, doi:10.1128/ecosalplus.3.6.1.9. This article has 247 citations.</p>
+</li>
+<li>
+<p>(matte2003contributionofstructural pages 2-3): Allan Matte, J. Sivaraman, Irena Ekiel, Kalle Gehring, Zongchao Jia, and Miroslaw Cygler. Contribution of structural genomics to understanding the biology of escherichia coli. Journal of Bacteriology, 185:3994-4002, Jul 2003. URL: https://doi.org/10.1128/jb.185.14.3994-4002.2003, doi:10.1128/jb.185.14.3994-4002.2003. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandez2004structuralstudiesof pages 1-2): Francisco J. Fernandez, M. Cristina Vega, Frank Lehmann, Erika Sandmeier, Heinz Gehring, Philipp Christen, and Matthias Wilmanns. Structural studies of the catalytic reaction pathway of a hyperthermophilic histidinol-phosphate aminotransferase*. Journal of Biological Chemistry, 279:21478-21488, May 2004. URL: https://doi.org/10.1074/jbc.m400291200, doi:10.1074/jbc.m400291200. This article has 54 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof pages 7-9): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof pages 2-4): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof pages 13-14): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof media 1b7db48c): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof media 8b8302fc): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 2-3): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandez2004structuralstudiesof pages 9-10): Francisco J. Fernandez, M. Cristina Vega, Frank Lehmann, Erika Sandmeier, Heinz Gehring, Philipp Christen, and Matthias Wilmanns. Structural studies of the catalytic reaction pathway of a hyperthermophilic histidinol-phosphate aminotransferase*. Journal of Biological Chemistry, 279:21478-21488, May 2004. URL: https://doi.org/10.1074/jbc.m400291200, doi:10.1074/jbc.m400291200. This article has 54 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sivaraman2001crystalstructureof pages 9-10): J Sivaraman, Yunge Li, Robert Larocque, Joseph D Schrag, Miroslaw Cygler, and Allan Matte. Crystal structure of histidinol phosphate aminotransferase (hisc) from escherichia coli, and its covalent complex with pyridoxal-5'-phosphate and l-histidinol phosphate. Journal of molecular biology, 311 4:761-76, Aug 2001. URL: https://doi.org/10.1006/jmbi.2001.4882, doi:10.1006/jmbi.2001.4882. This article has 90 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 11-13): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fernandez2004structuralstudiesof pages 5-7): Francisco J. Fernandez, M. Cristina Vega, Frank Lehmann, Erika Sandmeier, Heinz Gehring, Philipp Christen, and Matthias Wilmanns. Structural studies of the catalytic reaction pathway of a hyperthermophilic histidinol-phosphate aminotransferase*. Journal of Biological Chemistry, 279:21478-21488, May 2004. URL: https://doi.org/10.1074/jbc.m400291200, doi:10.1074/jbc.m400291200. This article has 54 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(molina‐henares2010identificationofconditionally pages 11-12): M. Antonia Molina‐Henares, Jesús De La Torre, Adela García‐Salamanca, A. Jesús Molina‐Henares, M. Carmen Herrera, Juan L. Ramos, and Estrella Duque. Identification of conditionally essential genes for growth of <i>pseudomonas putida</i> kt2440 on minimal medium through the screening of a genome‐wide mutant library. Environmental Microbiology, 12:1468-1485, Jun 2010. URL: https://doi.org/10.1111/j.1462-2920.2010.02166.x, doi:10.1111/j.1462-2920.2010.02166.x. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hisC-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 The requested visual content is found in Figure 7(c) and Figure 9 of the document. Figure 7(c) shows a schematic of the covalent co" src="hisC-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>winkler2009biosynthesisofhistidine pages 46-47</li>
+<li>sivaraman2001crystalstructureof pages 13-14</li>
+<li>fernandez2004structuralstudiesof pages 9-10</li>
+<li>sivaraman2001crystalstructureof pages 7-9</li>
+<li>borchert2024machinelearninganalysis pages 11-13</li>
+<li>winkler2009biosynthesisofhistidine pages 12-13</li>
+<li>sivaraman2001crystalstructureof pages 1-2</li>
+<li>fernandez2004structuralstudiesof pages 1-2</li>
+<li>matte2003contributionofstructural pages 2-3</li>
+<li>sivaraman2001crystalstructureof pages 2-4</li>
+<li>sivaraman2001crystalstructureof pages 9-10</li>
+<li>fernandez2004structuralstudiesof pages 5-7</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x;</li>
+<li>https://doi.org/10.1128/ecosalplus.3.6.1.9</li>
+<li>https://doi.org/10.1006/jmbi.2001.4882;</li>
+<li>https://doi.org/10.1128/jb.185.14.3994-4002.2003;</li>
+<li>https://doi.org/10.1128/ecosalplus.3.6.1.9;</li>
+<li>https://doi.org/10.1074/jbc.m400291200</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.1006/jmbi.2001.4882</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x,</li>
+<li>https://doi.org/10.1128/ecosalplus.3.6.1.9,</li>
+<li>https://doi.org/10.1006/jmbi.2001.4882,</li>
+<li>https://doi.org/10.1128/jb.185.14.3994-4002.2003,</li>
+<li>https://doi.org/10.1074/jbc.m400291200,</li>
+<li>https://doi.org/10.1128/msystems.00942-23,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P86
+gene_symbol: hisC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Histidinol-phosphate aminotransferase (HisC; EC 2.6.1.9), a cytosolic pyridoxal-5&#39;-phosphate (PLP)-dependent class-II aminotransferase that catalyzes the seventh step of L-histidine biosynthesis. It transfers an amino group from L-glutamate to imidazole-acetol phosphate (3-(imidazol-4-yl)-2-oxopropyl phosphate), producing L-histidinol phosphate and 2-oxoglutarate. The enzyme functions as a homodimer with active sites at the dimer interface; PLP is covalently bound as an internal aldimine to an active-site lysine (Lys210 in this protein) and catalysis proceeds via a ping-pong mechanism through a pyridoxamine-5&#39;-phosphate intermediate. In Pseudomonas putida KT2440 the gene (PP_0967) lies within a histidine-biosynthesis gene cluster. As in other bacterial homologs of this subfamily, the enzyme can show broadened substrate tolerance toward aromatic amino acids (e.g. tyrosine, phenylalanine) in vitro, but its physiological role is in histidine biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0000105
+    label: L-histidine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: HisC catalyzes the seventh step of histidine biosynthesis; this BP term is well supported by family/HAMAP-rule assignment, the UniProt pathway annotation, and operon context in KT2440.
+    action: ACCEPT
+    reason: Core biological process for this enzyme. The histidinol-phosphate aminotransferase function places it squarely in the L-histidine biosynthetic pathway (UniPathway UPA00031; HAMAP-Rule MF_01023).
+- term:
+    id: GO:0004400
+    label: L-histidinol-phosphate:2-oxoglutarate transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the specific molecular function of HisC (EC 2.6.1.9), transaminating L-histidinol phosphate with 2-oxoglutarate/L-glutamate. The UniProt CATALYTIC ACTIVITY block and HAMAP rule directly support this.
+    action: ACCEPT
+    reason: Represents the core molecular function. Strongly supported by family assignment (HisP_aminotrans subfamily, TIGR01141 hisC), Rhea:23744, and EC 2.6.1.9.
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: A high-level parent of the specific aminotransferase activity already annotated (GO:0004400). It is correct but uninformative given the more precise term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Redundant generic ancestor of GO:0004400; adds no information beyond the specific transaminase MF term.
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: HisC is a PLP-dependent enzyme that covalently binds pyridoxal 5&#39;-phosphate as an internal aldimine at the active-site lysine (MOD_RES 210 in this entry). Well supported by the COFACTOR annotation and conserved PLP-lysine motif.
+    action: ACCEPT
+    reason: PLP binding is an essential, well-supported molecular function of this enzyme. The PLP-lysine internal aldimine and ping-pong mechanism are documented for HisC homologs (see hisC-deep-research-falcon.md).
+- term:
+    id: GO:0140385
+    label: amino acid transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: A broad parent term covering aminotransferase activity on amino acid substrates. Correct but less specific than GO:0004400, which is already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic ancestor of the specific histidinol-phosphate transaminase activity; the more precise term GO:0004400 already captures this function.
+core_functions:
+- description: Catalyzes the PLP-dependent transamination of imidazole-acetol phosphate to L-histidinol phosphate (using L-glutamate as amino donor), the seventh step of L-histidine biosynthesis.
+  molecular_function:
+    id: GO:0004400
+    label: L-histidinol-phosphate:2-oxoglutarate transaminase activity
+  supported_by:
+  - reference_id: file:PSEPK/hisC/hisC-deep-research-falcon.md
+    supporting_text: KT2440 histidine-biosynthesis genes PP0965-PP0967 are annotated as the hisGDC cluster, placing PP_0967 as hisC within histidine biosynthesis.
+  - reference_id: GO_REF:0000120
+    supporting_text: UniRule/HAMAP MF_01023 assigns histidinol-phosphate aminotransferase activity (EC 2.6.1.9) and L-histidine biosynthetic process.
+  directly_involved_in:
+  - id: GO:0000105
+    label: L-histidine biosynthetic process
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20158506
+  title: Identification of conditionally essential genes for growth of Pseudomonas putida KT2440 on minimal medium through the screening of a genome-wide mutant library
+  full_text_unavailable: true
+  findings:
+  - statement: In P. putida KT2440 the histidine-biosynthesis genes PP0965-PP0967 are annotated as the hisGDC cluster, with PP_0967 corresponding to hisC, and RT-PCR co-transcription assays support operon organization of these clusters.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#39;Citation-integrity fix: the original identifier PMID:19838707 was a hallucinated/wrong identifier (resolves to an unrelated knee-arthroplasty article). Replaced with PMID:20158506, the correct Molina-Henares et al. 2010 Environ Microbiol paper (DOI 10.1111/j.1462-2920.2010.02166.x), recovered via DOI lookup and PubMed-verified to match the supporting text (KT2440 hisGDC cluster, PP_0967 = hisC). Supporting snippet is paraphrased from the abstract-only source.&#39;
+- id: PMID:11518529
+  title: Crystal structure of histidinol phosphate aminotransferase (HisC) from Escherichia coli, and its covalent complex with pyridoxal-5&#39;-phosphate and L-histidinol phosphate
+  findings:
+  - statement: E. coli HisC is a PLP-dependent homodimeric aminotransferase with active sites at the dimer interface; the active-site lysine (Lys214) forms an internal aldimine with PLP and catalysis proceeds through PMP via a ping-pong mechanism.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Citation-integrity fix. The original identifier PMID:11470432 was a wrong
+      identifier (resolves to an unrelated article, &#34;Crystal structures of the
+      MJ1267 ATP binding cassette reveal an induced-fit effect at the ATPase active
+      site of an ABC transporter&#34;). Replaced with PMID:11518529, the correct
+      Sivaraman et al. 2001 J Mol Biol 311:761-776 paper
+      (DOI 10.1006/jmbi.2001.4882), recovered via DOI lookup and PubMed-verified to
+      match the title and supporting text (E. coli HisC crystal structure, PLP
+      internal aldimine at Lys214, dimer interface). Structural/mechanistic support
+      for the HisC family (E. coli homolog).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

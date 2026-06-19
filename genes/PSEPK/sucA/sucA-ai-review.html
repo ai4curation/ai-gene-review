@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sucA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sucA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FA9" target="_blank" class="term-link">
+                        Q88FA9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sucA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FA9" data-a="DESCRIPTION: sucA (PP_4189) encodes the E1 component (2-oxoglut..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>sucA (PP_4189) encodes the E1 component (2-oxoglutarate dehydrogenase, EC 1.2.4.2) of the 2-oxoglutarate dehydrogenase complex (OGDHc; also called the alpha-ketoglutarate dehydrogenase complex, KGDH). Together with the E2 dihydrolipoyl succinyltransferase (SucB) and the E3 dihydrolipoyl dehydrogenase (LpdG), SucA catalyzes the oxidative decarboxylation of 2-oxoglutarate to succinyl-CoA, releasing CO2 and reducing NAD+ to NADH. SucA performs the first, thiamine-diphosphate (ThDP)-dependent step, decarboxylating 2-oxoglutarate and transferring the resulting succinyl moiety to the lipoyl group carried on the E2 component. This reaction is an irreversible step of the tricarboxylic acid (TCA) cycle and a major node connecting carbon, nitrogen (via 2-oxoglutarate/glutamate), and redox metabolism. The OGDH complex is a large, soluble multienzyme assembly located in the cytoplasm of bacteria.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004591" target="_blank" class="term-link">
+                                    GO:0004591
+                                </a>
+                            </span>
+                            <span class="term-label">oxoglutarate dehydrogenase (succinyl-transferring) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA9" data-a="GO:0004591" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. This is the E1 enzymatic activity (EC 1.2.4.2) of the OGDH complex, matching the UniProt RecName and domain architecture (TPP_E1_OGDC-like CDD, IPR011603 2-oxoglutarate_DH_E1). Although IEA, this is strongly supported by family/EC assignment and the conserved domain set.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA9" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The bacterial OGDH complex is a soluble cytoplasmic assembly of central carbon metabolism. The annotation is consistent with the known localization, though the GO term &#34;cytosol&#34; (GO:0005829) is the term applied by TreeGrafter.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA9" data-a="GO:0006099" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. The OGDH complex catalyzes the 2-oxoglutarate to succinyl-CoA step of the TCA cycle. Well supported for this gene in P. putida KT2440 (sucA = PP_4189 repeatedly identified as a key Krebs cycle enzyme).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016624" target="_blank" class="term-link">
+                                    GO:0016624
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the aldehyde or oxo group of donors, disulfide as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA9" data-a="GO:0016624" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a parent/more general molecular function term covering the E1 oxidoreductase chemistry (oxo-group donor, lipoyl-disulfide acceptor). It is not wrong, but it is a less informative generalization of the specific E1 activity already captured by GO:0004591. Keeping as non-core to avoid redundancy with the precise term.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030976" target="_blank" class="term-link">
+                                    GO:0030976
+                                </a>
+                            </span>
+                            <span class="term-label">thiamine pyrophosphate binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA9" data-a="GO:0030976" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SucA is a ThDP (thiamine diphosphate)-dependent decarboxylase; the UniProt cofactor annotation lists thiamine diphosphate, and the InterPro signature (IPR011603, THDP-binding fold) supports this. Accept as a supporting molecular function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045252" target="_blank" class="term-link">
+                                    GO:0045252
+                                </a>
+                            </span>
+                            <span class="term-label">oxoglutarate dehydrogenase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA9" data-a="GO:0045252" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct cellular component. SucA is the E1 component and a structural part of the OGDH complex (with SucB/E2 and LpdG/E3). Operon-context evidence in KT2440 places sucA with sucB and lpdG.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Thiamine diphosphate-dependent E1 component catalyzing the oxidative decarboxylation of 2-oxoglutarate as the first step of the OGDH complex reaction, transferring the succinyl moiety to the lipoyl group of the E2 component</h3>
+                <span class="vote-buttons" data-g="Q88FA9" data-a="FUNCTION: Thiamine diphosphate-dependent E1 component cataly..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004591" target="_blank" class="term-link">
+                            oxoglutarate dehydrogenase (succinyl-transferring) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">oxoglutarate dehydrogenase (succinyl-transferring) activity (EC:1.2.4.2) assigned to Q88FA9</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sucA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FA9" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">25 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:46:59.097281</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="sucA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="sucA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000009 I have extracted Table 1 from page 5, which lists the proteins altered in the Pseudomonas putida ∆graA strain. The table includes d</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-suca-pp_4189-uniprot-q88fa9-in-pseudomonas-putida-kt2440">Research report: <strong>sucA (PP_4189; UniProt Q88FA9)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-critical-disambiguation">0) Target verification (critical disambiguation)</h3>
+<p>Multiple KT2440-focused studies explicitly identify <strong>sucA as PP_4189</strong> and annotate it as the <strong>α-ketoglutarate/2‑oxoglutarate dehydrogenase E1 component (SucA)</strong> in the tricarboxylic acid (TCA) cycle, matching the UniProt Q88FA9 description (2‑oxoglutarate dehydrogenase E1; EC 1.2.4.2). (avendano2023productionofselenium pages 5-6, ainelo2019pseudomonasputidaresponds pages 5-9)</p>
+<h3 id="1-key-concepts-definitions-current-understanding">1) Key concepts &amp; definitions (current understanding)</h3>
+<h4 id="11-the-enzyme-and-the-reaction-catalyzed">1.1 The enzyme and the reaction catalyzed</h4>
+<p><strong>SucA is the E1 (decarboxylase) component</strong> of the bacterial <strong>2‑oxoglutarate dehydrogenase complex</strong> (also termed <strong>α‑ketoglutarate dehydrogenase complex; OGDHc/KGDH</strong>). (bunik2013translatingenzymologyinto pages 2-3, chakraborty2022engineeringthe2oxoglutarate pages 2-3)</p>
+<p>At the pathway level, the complex catalyzes the <strong>oxidative decarboxylation of 2‑oxoglutarate (α‑ketoglutarate)</strong> to succinyl‑CoA:</p>
+<ul>
+<li><strong>Overall reaction:</strong> 2‑oxoglutarate + CoA + NAD+ → succinyl‑CoA + CO2 + NADH (chakraborty2022engineeringthe2oxoglutarate pages 2-3)</li>
+</ul>
+<p>This step is <strong>irreversible</strong> and is a major <strong>branch point</strong> linking carbon metabolism with nitrogen (via 2‑oxoglutarate/glutamate) and redox metabolism through NADH generation. (bunik2013translatingenzymologyinto pages 1-2)</p>
+<h4 id="12-complex-architecture-cofactors-and-substrate-channeling">1.2 Complex architecture, cofactors, and substrate channeling</h4>
+<p>The bacterial complex is a multienzyme assembly of:<br />
+- <strong>E1o (SucA)</strong>: ThDP/TPP-dependent 2‑oxoglutarate dehydrogenase (decarboxylase) (bunik2013translatingenzymologyinto pages 2-3)<br />
+- <strong>E2o</strong>: dihydrolipoamide succinyltransferase (forms succinyl‑CoA from CoA) (bunik2013translatingenzymologyinto pages 2-3)<br />
+- <strong>E3</strong>: dihydrolipoamide dehydrogenase (FAD/NAD+-dependent reoxidation of reduced lipoamide, producing NADH) (bunik2013translatingenzymologyinto pages 2-3)</p>
+<p>Key cofactors include <strong>ThDP (TPP), lipoate (lipoyllysine swinging arm on E2), CoA, FAD, and NAD+</strong>. (bunik2013translatingenzymologyinto pages 2-3)</p>
+<p>Structurally, in <em>E. coli</em> (a reference bacterial system), the complex is described as having a <strong>24‑mer E2 core</strong> with E1 and E3 peripherally associated, and catalysis involves transfer of intermediates via a lipoyl “swinging arm” mechanism. (chakraborty2022engineeringthe2oxoglutarate pages 2-3)</p>
+<h4 id="13-substrate-specificity-and-mechanistic-determinants-inference-relevant-to-annotation">1.3 Substrate specificity and mechanistic determinants (inference relevant to annotation)</h4>
+<p>Mechanistic/structural work across bacterial systems indicates that E1o substrate specificity for 2‑oxoglutarate is supported by conserved active-site features, including a positively charged loop (e.g., <strong>Arg505-containing loop</strong>) implicated in recognizing the <strong>5‑carboxylate</strong> of 2‑oxoglutarate. (bunik2013translatingenzymologyinto pages 3-4, bunik2013translatingenzymologyinto pages 4-6)</p>
+<p>Engineering studies show that mutating specific E1 residues can broaden or alter substrate recognition (e.g., variants accepting substrates lacking the 5‑carboxyl group), illustrating how E1 chemistry can be retuned for nonnative substrates in related systems. (chakraborty2022engineeringthe2oxoglutarate pages 1-2)</p>
+<h3 id="2-suca-in-pseudomonas-putida-kt2440-function-pathway-role-and-likely-localization">2) sucA in <em>Pseudomonas putida</em> KT2440: function, pathway role, and likely localization</h3>
+<h4 id="21-core-biological-role-in-kt2440">2.1 Core biological role in KT2440</h4>
+<p>In KT2440, sucA (PP_4189) is repeatedly described as a <strong>key Krebs/TCA cycle enzyme</strong>, consistent with the canonical OGDHc role in producing succinyl‑CoA and NADH from 2‑oxoglutarate. (avendano2023productionofselenium pages 5-6, ainelo2019pseudomonasputidaresponds pages 5-9)</p>
+<h4 id="22-genomicoperon-context-and-complex-partners-kt2440-specific-evidence">2.2 Genomic/operon context and complex partners (KT2440-specific evidence)</h4>
+<p>RNA-level investigations in <em>P. putida</em> KT2440 place <strong>sucA in operon context</strong> with other TCA genes, including <strong>sucB</strong> and <strong>lpdG</strong> (as part of the α‑ketoglutarate dehydrogenase complex components), and suggest larger transcriptional units that can include <strong>sdh</strong> and <strong>suc</strong> genes. (geiger2019investigationofrnabased pages 18-22)</p>
+<h4 id="23-cellular-localization">2.3 Cellular localization</h4>
+<p>The OGDHc is a soluble cytosolic enzyme complex in bacteria (as part of central carbon metabolism); consistent with this, KT2440 studies treat SucA as a central metabolic enzyme measured in whole-cell proteomes. (ainelo2019pseudomonasputidaresponds pages 5-9, kratzl2024pseudomonasputidaas pages 7-9)</p>
+<h3 id="3-regulation-and-control-what-is-known-and-what-is-still-uncertain">3) Regulation and control: what is known and what is still uncertain</h3>
+<h4 id="31-protein-abundance-changes-under-stress-experimental-evidence">3.1 Protein abundance changes under stress (experimental evidence)</h4>
+<p>A proteomics/metabolomics study of the GraT toxin system in <em>P. putida</em> (KT2440-derivative background) reported that TCA-cycle enzymes including <strong>SucA are downregulated</strong> when GraT is active (ΔgraA). In extracted quantitative data, SucA shows a <strong>fold change of −2.12</strong> (ΔgraA vs WT, 25 °C), with other enzymes in the same TCA segment also down (Idh −2.87; SucD −2.52). (ainelo2019pseudomonasputidaresponds media c323b5f8, ainelo2019pseudomonasputidaresponds pages 5-9)</p>
+<p>These changes were interpreted as part of a coordinated decrease in flux through the isocitrate→succinate segment of the TCA cycle. (ainelo2019pseudomonasputidaresponds pages 5-9)</p>
+<h4 id="32-rna-based-regulation-kt2440-and-broader-pseudomonadaceae-context">3.2 RNA-based regulation (KT2440 and broader Pseudomonadaceae context)</h4>
+<p>Work on RNA motifs reports a conserved <strong>sucA RNA / sucA‑II motif</strong> in the <strong>5′ UTR</strong> and notes <strong>two transcription start sites</strong> in <em>P. putida</em> KT2440, including one ~110 nt upstream of the ORF. The motif was proposed as a potential cis-regulatory element because predicted structures overlap the Shine–Dalgarno region. (geiger2019investigationofrnabased pages 22-27, geiger2019investigationofrnabased pages 83-87)</p>
+<p>However, extensive ligand screening and follow-up experiments did <strong>not validate</strong> a classic small-molecule riboswitch mechanism for sucA‑II. Instead, results suggested possible <strong>protein-mediated regulation</strong>; RNA pulldown experiments nominated candidate interacting proteins including <strong>SucC/SucD</strong> (consistent with potential operon-level feedback). (geiger2019investigationofrnabaseda pages 83-87, geiger2019investigationofrnabased pages 83-87)</p>
+<p>Overall, the best-supported current interpretation from these data is that <strong>post-transcriptional control may exist</strong>, but its mechanism and physiological ligand(s) remain unresolved. (geiger2019investigationofrnabased pages 83-87, geiger2019investigationofrnabaseda pages 83-87)</p>
+<h3 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="41-2023-suca-links-central-metabolism-to-selenium-nanoparticle-biogenesis">4.1 2023: sucA links central metabolism to selenium nanoparticle biogenesis</h4>
+<p>A 2023 <em>Microbial Biotechnology</em> study of aerobic selenite reduction in <em>P. putida</em> KT2440 used genetic approaches and identified <strong>sucA (PP_4189)</strong> among genes implicating <strong>2‑ketoglutarate/glutamate metabolism</strong> as important for converting selenite to selenium. The authors explicitly identify sucA as encoding <strong>2‑oxoglutarate dehydrogenase</strong> and a key Krebs cycle enzyme. (avendano2023productionofselenium pages 5-6)</p>
+<p><strong>Quantitative/experimental context:</strong> Experiments were conducted in the presence of <strong>1 mM selenite</strong>; despite optical density differences (attributed in part to elemental selenium formation), the authors report <strong>no differences in CFUs for at least 22 h</strong> between WT and mutants under selenite exposure. (avendano2023productionofselenium pages 5-6)</p>
+<p>This provides recent, organism-specific evidence that sucA-linked central metabolism affects a real biotransformation phenotype (selenite → selenium nanoparticles). (avendano2023productionofselenium pages 5-6)</p>
+<h4 id="42-2024-multi-omics-suggests-metabolic-rerouting-around-decarboxylative-tca-steps">4.2 2024: multi-omics suggests metabolic rerouting around decarboxylative TCA steps</h4>
+<p>A 2024 <em>Communications Biology</em> multi-omics study of a defined synthetic co-culture (cyanobacterium feeding sucrose to <em>P. putida</em>) reports decreased protein abundances of <strong>SucA/B/D</strong> and <strong>Idh</strong> in <em>P. putida</em> alongside increased glyoxylate-cycle enzymes <strong>AceA</strong> and <strong>GlcB</strong>, interpreted as partial TCA “shutdown” and redirection through the glyoxylate cycle. (kratzl2024pseudomonasputidaas pages 7-9)</p>
+<p>Quantitative transcriptomics in the same study reported <strong>idh transcript upregulation (log2-FC = 1.9)</strong> and <strong>aceA transcript downregulation (log2-FC = −2.64)</strong>, emphasizing that transcript–protein concordance was only moderate and suggesting additional layers of regulation. (kratzl2024pseudomonasputidaas pages 7-9)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-biotechnology-nanoparticle-biosynthesis">5.1 Biotechnology: nanoparticle biosynthesis</h4>
+<p>The 2023 KT2440 study indicates that manipulating central metabolic nodes including sucA can affect <strong>selenite biotransformation to selenium nanoparticles</strong>, and identifies gene targets of potential biotechnological interest for tuning nanoparticle formation rate. (avendano2023productionofselenium pages 5-6)</p>
+<h4 id="52-systems-and-synthetic-biology-managing-redox-and-carbon-flux">5.2 Systems and synthetic biology: managing redox and carbon flux</h4>
+<p>More generally, authoritative enzymology literature emphasizes OGDHc as a <strong>rate-limiting</strong> and regulatable node at the intersection of carbon flux and redox status. (bunik2013translatingenzymologyinto pages 2-3, bunik2013translatingenzymologyinto pages 1-2)</p>
+<p>In applied contexts, the 2024 co-culture study illustrates a real implementation of multi-omics to diagnose central metabolism rewiring (including downshifts in SucA/B/D proteins) as part of designing or understanding microbial consortia. (kratzl2024pseudomonasputidaas pages 7-9)</p>
+<h3 id="6-expert-opinions-and-authoritative-synthesis-interpretation-anchored-in-reviews">6) Expert opinions and authoritative synthesis (interpretation anchored in reviews)</h3>
+<p>A detailed review of the OGDHc frames this complex as an irreversible, rate-limiting TCA step whose flux is tuned through enzyme–ligand interactions and protein–protein interactions, and notes that component stoichiometry and cofactor interactions can serve as regulatory handles. (bunik2013translatingenzymologyinto pages 1-2, bunik2013translatingenzymologyinto pages 2-3)</p>
+<p>In the context of functional annotation for KT2440 sucA (Q88FA9), these authoritative sources justify annotating SucA as:<br />
+- ThDP-dependent decarboxylase E1 component of OGDHc<br />
+- critical for producing succinyl-CoA and NADH from 2-oxoglutarate<br />
+- likely a key control point linking carbon/nitrogen/redox metabolism</p>
+<h3 id="7-statistics-data-highlights-compiled">7) Statistics &amp; data highlights (compiled)</h3>
+<ul>
+<li><strong>Proteomics (GraT toxin response, ΔgraA vs WT, 25 °C):</strong> SucA fold change <strong>−2.12</strong>; Idh <strong>−2.87</strong>; SucD <strong>−2.52</strong>. (ainelo2019pseudomonasputidaresponds media c323b5f8)</li>
+<li><strong>Selenite conversion study:</strong> <strong>1 mM selenite</strong> exposure; <strong>no CFU difference for ≥22 h</strong> between WT and mutants; sucA mutant shows slight reduction in growth/biomass. (avendano2023productionofselenium pages 5-6)</li>
+<li><strong>Co-culture transcriptomics:</strong> idh transcript <strong>log2-FC = 1.9</strong>; aceA transcript <strong>log2-FC = −2.64</strong>; proteomics indicates decreased SucA/B/D proteins with increased glyoxylate-cycle enzymes. (kratzl2024pseudomonasputidaas pages 7-9)</li>
+<li><strong>RNA–protein pulldown (sucA-II motif regulation hypothesis):</strong> condition-dependent changes in numbers of specifically bound proteins (e.g., <strong>5</strong> specific proteins in rich medium vs <strong>17</strong> in osmotic shock; <strong>3</strong> in rich vs <strong>7</strong> in nitrogen limitation), supporting stress-dependent post-transcriptional interaction landscapes. (geiger2019investigationofrnabased pages 65-68)</li>
+</ul>
+<h3 id="8-limitations-of-the-current-evidence-base-important-for-annotation-quality">8) Limitations of the current evidence base (important for annotation quality)</h3>
+<ul>
+<li>Direct biochemical characterization (e.g., KT2440 SucA kinetic parameters, in vitro substrate specificity across analogs) was not available in the retrieved KT2440 primary literature excerpts; catalytic mechanism is therefore best supported by conserved-family enzymology and cross-bacterial evidence. (chakraborty2022engineeringthe2oxoglutarate pages 2-3, bunik2013translatingenzymologyinto pages 2-3)</li>
+<li>RNA motif work proposes and tests regulatory hypotheses but does not conclusively establish a ligand-based riboswitch for KT2440 sucA regulation. (geiger2019investigationofrnabased pages 83-87, geiger2019investigationofrnabaseda pages 83-87)</li>
+</ul>
+<hr />
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Evidence category</th>
+<th>Finding</th>
+<th>Experimental context/system</th>
+<th>Source (authors year journal)</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Function/reaction</td>
+<td><strong>sucA (PP_4189)</strong> in <em>Pseudomonas putida</em> KT2440 is identified as the <strong>E1 component of 2-oxoglutarate dehydrogenase (α-ketoglutarate dehydrogenase)</strong>, a <strong>ThDP-dependent</strong> enzyme in the 2-oxoglutarate dehydrogenase complex. The complex converts <strong>2-oxoglutarate + CoA + NAD+ → succinyl-CoA + CO2 + NADH</strong>. (avendano2023productionofselenium pages 5-6, geiger2019investigationofrnabased pages 22-27, chakraborty2022engineeringthe2oxoglutarate pages 2-3, bunik2013translatingenzymologyinto pages 2-3)</td>
+<td>KT2440 gene assignment from mutant study; broader bacterial OGDHc mechanism from reviews/enzymology papers</td>
+<td>Avendaño et al. 2023 <em>Microbial Biotechnology</em>; Geiger 2019; Chakraborty et al. 2022 <em>Reactions</em>; Bunik et al. 2013 <em>Current Chemical Biology</em></td>
+<td>https://doi.org/10.1111/1751-7915.14215; https://doi.org/10.3390/reactions3010011; https://doi.org/10.2174/2212796811307010008</td>
+</tr>
+<tr>
+<td>Function/reaction</td>
+<td>The OGDH complex is a <strong>multienzyme E1/E2/E3 assembly</strong>: E1o/SucA performs ThDP-dependent decarboxylation and succinyl transfer to lipoyl groups on E2; E2 forms succinyl-CoA; E3 reoxidizes dihydrolipoamide using <strong>FAD and NAD+</strong>. Cofactors highlighted include <strong>ThDP, lipoate, CoA, FAD, NAD+</strong>, with E2 built on a 24-mer core and flexible lipoyl “swinging arm” domains for substrate channeling. (chakraborty2022engineeringthe2oxoglutarate pages 2-3, bunik2013translatingenzymologyinto pages 2-3, bunik2013translatingenzymologyinto pages 4-6)</td>
+<td>Authoritative conceptual background from bacterial OGDHc reviews and engineering paper</td>
+<td>Chakraborty et al. 2022 <em>Reactions</em>; Bunik et al. 2013 <em>Current Chemical Biology</em></td>
+<td>https://doi.org/10.3390/reactions3010011; https://doi.org/10.2174/2212796811307010008</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>SucA is placed in the <strong>Krebs/TCA cycle</strong> as a key enzyme linking <strong>2-oxoglutarate metabolism to succinyl-CoA formation</strong>, i.e., a central node connecting carbon flow and redox generation. (avendano2023productionofselenium pages 5-6, ainelo2019pseudomonasputidaresponds pages 5-9, bunik2013translatingenzymologyinto pages 1-2)</td>
+<td>KT2440 mutant phenotype paper and stress proteomics; broader metabolic review</td>
+<td>Avendaño et al. 2023 <em>Microbial Biotechnology</em>; Ainelo et al. 2019 <em>Toxins</em>; Bunik et al. 2013 <em>Current Chemical Biology</em></td>
+<td>https://doi.org/10.1111/1751-7915.14215; https://doi.org/10.3390/toxins11020103; https://doi.org/10.2174/2212796811307010008</td>
+</tr>
+<tr>
+<td>Pathway/operon context</td>
+<td>In <em>P. putida</em> KT2440, <strong>sucA</strong> is reported in operon context with <strong>sucB</strong> and in broader TCA-linked transcriptional units that can include <strong>sdh genes, sucAB, sucABCD, and lpdG</strong>; the α-KGDH complex in this context comprises <strong>SucA, SucB, and LpdG</strong>. (geiger2019investigationofrnabased pages 18-22)</td>
+<td>Transcript/operon analysis and RNA-regulation study in KT2440</td>
+<td>Geiger 2019</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>A conserved <strong>sucA RNA motif / sucA-II motif</strong> in the <strong>5′ UTR</strong> was proposed as a <strong>cis-regulatory RNA</strong> because structural elements overlap the ribosome-binding region; in KT2440, <strong>two transcription start sites</strong> were reported, including one about <strong>110 nt upstream</strong> of the ORF. (geiger2019investigationofrnabased pages 22-27, geiger2019investigationofrnabased pages 83-87)</td>
+<td>Comparative RNA motif analysis and follow-up regulatory experiments</td>
+<td>Geiger 2019</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>The small-molecule riboswitch model for sucA-II was <strong>not validated</strong>. A systematic screen of <strong>55 candidates</strong> and another screen of <strong>109 ligands</strong> failed to confirm a ligand-responsive riboswitch; instead, results suggest possible <strong>protein-mediated regulation</strong>. Candidate binders included <strong>SucC/SucD</strong> (possible operon-level feedback) and PP_4065, which increased RNA cleavage consistent with mRNA destabilization. (geiger2019investigationofrnabased pages 83-87, geiger2019investigationofrnabaseda pages 83-87, geiger2019investigationofrnabaseda pages 50-54)</td>
+<td>In-line probing, RNA pulldown, RNase footprinting, reporter assays</td>
+<td>Geiger 2019</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>In broader bacterial OGDHc, E1o/SucA is described as a <strong>major physiological regulation target</strong> and often <strong>rate-limiting</strong>; <strong>ThDP</strong> can act as both catalytic cofactor and allosteric regulator, and adenine nucleotides can modulate substrate binding. (bunik2013translatingenzymologyinto pages 2-3, bunik2013translatingenzymologyinto pages 4-6, bunik2013translatingenzymologyinto pages 1-2)</td>
+<td>Review-level mechanistic/regulatory synthesis across bacterial systems</td>
+<td>Bunik et al. 2013 <em>Current Chemical Biology</em></td>
+<td>https://doi.org/10.2174/2212796811307010008</td>
+</tr>
+<tr>
+<td>Phenotypes/stress links</td>
+<td>In a KT2440 mutant collection studying selenium metabolism, the <strong>sucA mutant (PP_4189)</strong> showed a <strong>very slight reduction in growth rate and biomass formation</strong> and was among mutants with a slower growth rate than WT. The paper interprets this as consistent with sucA encoding a key Krebs cycle enzyme. (avendano2023productionofselenium pages 5-6)</td>
+<td>KT2440 mutants grown with and without selenite during selenium nanoparticle studies</td>
+<td>Avendaño et al. 2023 <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/1751-7915.14215</td>
+</tr>
+<tr>
+<td>Phenotypes/stress links</td>
+<td>In the same KT2440 selenium study, <strong>2-ketoglutarate/glutamate metabolism</strong> involving <strong>sucA</strong> was implicated as important for <strong>selenite reduction to elemental selenium/selenium nanoparticles</strong>. The authors highlight sucA among genes connecting central metabolism to selenium transformation. (avendano2023productionofselenium pages 5-6)</td>
+<td>Genetic and analytical study of aerobic selenite reduction</td>
+<td>Avendaño et al. 2023 <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/1751-7915.14215</td>
+</tr>
+<tr>
+<td>Phenotypes/stress links</td>
+<td>Under <strong>GraT toxin</strong> stress in <em>P. putida</em>, SucA protein abundance decreased together with other TCA enzymes, supporting a model of <strong>repressed central carbon metabolism/TCA flux</strong> during toxin-induced physiological reprogramming. (ainelo2019pseudomonasputidaresponds pages 5-9, ainelo2019pseudomonasputidaresponds pages 1-3)</td>
+<td>Proteomics and metabolomics in ΔgraA strain where GraT toxin is active</td>
+<td>Ainelo et al. 2019 <em>Toxins</em></td>
+<td>https://doi.org/10.3390/toxins11020103</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>In the GraT study, <strong>SucA abundance decreased &gt;2-fold</strong> in the ΔgraA strain at <strong>25 °C</strong>; the extracted table gives a <strong>fold change of -2.12</strong> for SucA. Other TCA enzymes in the same branch also dropped (e.g., Idh <strong>-2.87</strong>, SucD <strong>-2.52</strong>), supporting coordinated repression of the isocitrate-to-succinate segment. (ainelo2019pseudomonasputidaresponds pages 5-9, ainelo2019pseudomonasputidaresponds media c323b5f8)</td>
+<td>Quantitative proteomics table from ΔgraA vs WT comparison</td>
+<td>Ainelo et al. 2019 <em>Toxins</em></td>
+<td>https://doi.org/10.3390/toxins11020103</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>In the selenium study, growth/selenite experiments were carried out with <strong>1 mM selenite</strong>. Although OD differed, the authors reported <strong>no CFU differences for at least 22 h</strong> between WT and mutants under selenite, indicating that optical changes may reflect selenium nanoparticle formation rather than loss of viability. (avendano2023productionofselenium pages 5-6)</td>
+<td>KT2440 WT and mutant comparison during selenite reduction</td>
+<td>Avendaño et al. 2023 <em>Microbial Biotechnology</em></td>
+<td>https://doi.org/10.1111/1751-7915.14215</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>Stress-dependent RNA pulldown experiments for sucA-related RNA regulation reported changing numbers of specifically bound proteins: <strong>5</strong> specific proteins in rich medium vs <strong>17</strong> in osmotic shock; <strong>3</strong> in rich medium, <strong>3</strong> in carbon limitation, and <strong>7</strong> in nitrogen limitation; at low pH with glutamate, <strong>147</strong> proteins were detected before filtering. These data support condition-dependent post-transcriptional regulation hypotheses rather than a validated ligand riboswitch. (geiger2019investigationofrnabased pages 65-68)</td>
+<td>RNA–protein pulldown under osmoshock, carbon limitation (<strong>1 mM glucose</strong>), nitrogen limitation (<strong>6 mM NH4+</strong>), and pH-shift conditions</td>
+<td>Geiger 2019</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Mechanistic specificity</td>
+<td>Conserved E1o/SucA active-site features implicated in substrate specificity include an <strong>Arg505-containing loop</strong> for recognition of the substrate <strong>5-carboxylate</strong> and conserved histidines (<strong>His539, His579, His747, His1020</strong>). Engineering of E1o residues <strong>His260</strong> and <strong>His298</strong> altered substrate recognition, demonstrating that E1 chemistry can be retuned for nonnative substrates. (chakraborty2022engineeringthe2oxoglutarate pages 1-2, bunik2013translatingenzymologyinto pages 4-6, bunik2013translatingenzymologyinto pages 3-4)</td>
+<td>Structural/mutational enzymology in bacterial OGDHc systems</td>
+<td>Chakraborty et al. 2022 <em>Reactions</em>; Bunik et al. 2013 <em>Current Chemical Biology</em></td>
+<td>https://doi.org/10.3390/reactions3010011; https://doi.org/10.2174/2212796811307010008</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main functional-annotation evidence for Pseudomonas putida KT2440 sucA (PP_4189; UniProt Q88FA9), covering enzymatic function, pathway placement, regulation, stress-linked phenotypes, and quantitative findings from the gathered literature.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(avendano2023productionofselenium pages 5-6): Roberto Avendaño, Said Muñoz‐Montero, Diego Rojas‐Gätjens, Paola Fuentes‐Schweizer, Sofía Vieto, Rafael Montenegro, Manuel Salvador, Rufus Frew, Juhyun Kim, Max Chavarría, and Jose I. Jiménez. Production of selenium nanoparticles occurs through an interconnected pathway of sulphur metabolism and oxidative stress response in <i>pseudomonas putida</i> kt2440. Microbial Biotechnology, 16:931-946, Jan 2023. URL: https://doi.org/10.1111/1751-7915.14215, doi:10.1111/1751-7915.14215. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ainelo2019pseudomonasputidaresponds pages 5-9): Andres Ainelo, Rando Porosk, Kalle Kilk, Sirli Rosendahl, Jaanus Remme, and Rita Hõrak. Pseudomonas putida responds to the toxin grat by inducing ribosome biogenesis factors and repressing tca cycle enzymes. Toxins, 11:103, Feb 2019. URL: https://doi.org/10.3390/toxins11020103, doi:10.3390/toxins11020103. This article has 10 citations.</p>
+</li>
+<li>
+<p>(bunik2013translatingenzymologyinto pages 2-3): Victoria I. Bunik, Guenter Raddatz, and Slawomir Strumilo. Translating enzymology into metabolic regulation: the case of the 2- oxoglutarate dehydrogenase multienzyme complex. Apr 2013. URL: https://doi.org/10.2174/2212796811307010008, doi:10.2174/2212796811307010008. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chakraborty2022engineeringthe2oxoglutarate pages 2-3): Joydeep Chakraborty, Natalia Nemeria, Yujeong Shim, Xu Zhang, Elena L. Guevara, Hetal Patel, Edgardo T. Farinas, and Frank Jordan. Engineering the 2-oxoglutarate dehydrogenase complex to understand catalysis and alter substrate recognition. Reactions, 3:139-159, Feb 2022. URL: https://doi.org/10.3390/reactions3010011, doi:10.3390/reactions3010011. This article has 8 citations.</p>
+</li>
+<li>
+<p>(bunik2013translatingenzymologyinto pages 1-2): Victoria I. Bunik, Guenter Raddatz, and Slawomir Strumilo. Translating enzymology into metabolic regulation: the case of the 2- oxoglutarate dehydrogenase multienzyme complex. Apr 2013. URL: https://doi.org/10.2174/2212796811307010008, doi:10.2174/2212796811307010008. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bunik2013translatingenzymologyinto pages 3-4): Victoria I. Bunik, Guenter Raddatz, and Slawomir Strumilo. Translating enzymology into metabolic regulation: the case of the 2- oxoglutarate dehydrogenase multienzyme complex. Apr 2013. URL: https://doi.org/10.2174/2212796811307010008, doi:10.2174/2212796811307010008. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bunik2013translatingenzymologyinto pages 4-6): Victoria I. Bunik, Guenter Raddatz, and Slawomir Strumilo. Translating enzymology into metabolic regulation: the case of the 2- oxoglutarate dehydrogenase multienzyme complex. Apr 2013. URL: https://doi.org/10.2174/2212796811307010008, doi:10.2174/2212796811307010008. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chakraborty2022engineeringthe2oxoglutarate pages 1-2): Joydeep Chakraborty, Natalia Nemeria, Yujeong Shim, Xu Zhang, Elena L. Guevara, Hetal Patel, Edgardo T. Farinas, and Frank Jordan. Engineering the 2-oxoglutarate dehydrogenase complex to understand catalysis and alter substrate recognition. Reactions, 3:139-159, Feb 2022. URL: https://doi.org/10.3390/reactions3010011, doi:10.3390/reactions3010011. This article has 8 citations.</p>
+</li>
+<li>
+<p>(geiger2019investigationofrnabased pages 18-22): S Geiger. Investigation of rna-based regulation of gene expression in proteobacterial energy metabolism. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(kratzl2024pseudomonasputidaas pages 7-9): Franziska Kratzl, Marlene Urban, Jagroop Pandhal, Mengxun Shi, Chen Meng, Karin Kleigrewe, Andreas Kremling, and Katharina Pflüger-Grau. Pseudomonas putida as saviour for troubled synechococcus elongatus in a synthetic co-culture – interaction studies based on a multi-omics approach. Communications Biology, Apr 2024. URL: https://doi.org/10.1038/s42003-024-06098-5, doi:10.1038/s42003-024-06098-5. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ainelo2019pseudomonasputidaresponds media c323b5f8): Andres Ainelo, Rando Porosk, Kalle Kilk, Sirli Rosendahl, Jaanus Remme, and Rita Hõrak. Pseudomonas putida responds to the toxin grat by inducing ribosome biogenesis factors and repressing tca cycle enzymes. Toxins, 11:103, Feb 2019. URL: https://doi.org/10.3390/toxins11020103, doi:10.3390/toxins11020103. This article has 10 citations.</p>
+</li>
+<li>
+<p>(geiger2019investigationofrnabased pages 22-27): S Geiger. Investigation of rna-based regulation of gene expression in proteobacterial energy metabolism. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(geiger2019investigationofrnabased pages 83-87): S Geiger. Investigation of rna-based regulation of gene expression in proteobacterial energy metabolism. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(geiger2019investigationofrnabaseda pages 83-87): S Geiger. Investigation of rna-based regulation of gene expression in proteobacterial energy metabolism. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(geiger2019investigationofrnabased pages 65-68): S Geiger. Investigation of rna-based regulation of gene expression in proteobacterial energy metabolism. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(geiger2019investigationofrnabaseda pages 50-54): S Geiger. Investigation of rna-based regulation of gene expression in proteobacterial energy metabolism. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(ainelo2019pseudomonasputidaresponds pages 1-3): Andres Ainelo, Rando Porosk, Kalle Kilk, Sirli Rosendahl, Jaanus Remme, and Rita Hõrak. Pseudomonas putida responds to the toxin grat by inducing ribosome biogenesis factors and repressing tca cycle enzymes. Toxins, 11:103, Feb 2019. URL: https://doi.org/10.3390/toxins11020103, doi:10.3390/toxins11020103. This article has 10 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sucA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000009 I have extracted Table 1 from page 5, which lists the proteins altered in the Pseudomonas putida ∆graA strain. The table includes d" src="sucA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bunik2013translatingenzymologyinto pages 1-2</li>
+<li>bunik2013translatingenzymologyinto pages 2-3</li>
+<li>geiger2019investigationofrnabased pages 18-22</li>
+<li>ainelo2019pseudomonasputidaresponds pages 5-9</li>
+<li>avendano2023productionofselenium pages 5-6</li>
+<li>kratzl2024pseudomonasputidaas pages 7-9</li>
+<li>geiger2019investigationofrnabased pages 65-68</li>
+<li>bunik2013translatingenzymologyinto pages 3-4</li>
+<li>bunik2013translatingenzymologyinto pages 4-6</li>
+<li>geiger2019investigationofrnabased pages 22-27</li>
+<li>geiger2019investigationofrnabased pages 83-87</li>
+<li>geiger2019investigationofrnabaseda pages 83-87</li>
+<li>geiger2019investigationofrnabaseda pages 50-54</li>
+<li>ainelo2019pseudomonasputidaresponds pages 1-3</li>
+<li>https://doi.org/10.1111/1751-7915.14215;</li>
+<li>https://doi.org/10.3390/reactions3010011;</li>
+<li>https://doi.org/10.2174/2212796811307010008</li>
+<li>https://doi.org/10.3390/toxins11020103;</li>
+<li>https://doi.org/10.1111/1751-7915.14215</li>
+<li>https://doi.org/10.3390/toxins11020103</li>
+<li>https://doi.org/10.1111/1751-7915.14215,</li>
+<li>https://doi.org/10.3390/toxins11020103,</li>
+<li>https://doi.org/10.2174/2212796811307010008,</li>
+<li>https://doi.org/10.3390/reactions3010011,</li>
+<li>https://doi.org/10.1038/s42003-024-06098-5,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FA9
+gene_symbol: sucA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: sucA (PP_4189) encodes the E1 component (2-oxoglutarate dehydrogenase, EC 1.2.4.2) of the 2-oxoglutarate dehydrogenase complex (OGDHc; also called the alpha-ketoglutarate dehydrogenase complex, KGDH). Together with the E2 dihydrolipoyl succinyltransferase (SucB) and the E3 dihydrolipoyl dehydrogenase (LpdG), SucA catalyzes the oxidative decarboxylation of 2-oxoglutarate to succinyl-CoA, releasing CO2 and reducing NAD+ to NADH. SucA performs the first, thiamine-diphosphate (ThDP)-dependent step, decarboxylating 2-oxoglutarate and transferring the resulting succinyl moiety to the lipoyl group carried on the E2 component. This reaction is an irreversible step of the tricarboxylic acid (TCA) cycle and a major node connecting carbon, nitrogen (via 2-oxoglutarate/glutamate), and redox metabolism. The OGDH complex is a large, soluble multienzyme assembly located in the cytoplasm of bacteria.
+existing_annotations:
+- term:
+    id: GO:0004591
+    label: oxoglutarate dehydrogenase (succinyl-transferring) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. This is the E1 enzymatic activity (EC 1.2.4.2) of the OGDH complex, matching the UniProt RecName and domain architecture (TPP_E1_OGDC-like CDD, IPR011603 2-oxoglutarate_DH_E1). Although IEA, this is strongly supported by family/EC assignment and the conserved domain set.
+    action: ACCEPT
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: The bacterial OGDH complex is a soluble cytoplasmic assembly of central carbon metabolism. The annotation is consistent with the known localization, though the GO term &#34;cytosol&#34; (GO:0005829) is the term applied by TreeGrafter.
+    action: ACCEPT
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Core biological process. The OGDH complex catalyzes the 2-oxoglutarate to succinyl-CoA step of the TCA cycle. Well supported for this gene in P. putida KT2440 (sucA = PP_4189 repeatedly identified as a key Krebs cycle enzyme).
+    action: ACCEPT
+- term:
+    id: GO:0016624
+    label: oxidoreductase activity, acting on the aldehyde or oxo group of donors, disulfide as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This is a parent/more general molecular function term covering the E1 oxidoreductase chemistry (oxo-group donor, lipoyl-disulfide acceptor). It is not wrong, but it is a less informative generalization of the specific E1 activity already captured by GO:0004591. Keeping as non-core to avoid redundancy with the precise term.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0030976
+    label: thiamine pyrophosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: SucA is a ThDP (thiamine diphosphate)-dependent decarboxylase; the UniProt cofactor annotation lists thiamine diphosphate, and the InterPro signature (IPR011603, THDP-binding fold) supports this. Accept as a supporting molecular function.
+    action: ACCEPT
+- term:
+    id: GO:0045252
+    label: oxoglutarate dehydrogenase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: part_of
+  review:
+    summary: Correct cellular component. SucA is the E1 component and a structural part of the OGDH complex (with SucB/E2 and LpdG/E3). Operon-context evidence in KT2440 places sucA with sucB and lpdG.
+    action: ACCEPT
+core_functions:
+- description: Thiamine diphosphate-dependent E1 component catalyzing the oxidative decarboxylation of 2-oxoglutarate as the first step of the OGDH complex reaction, transferring the succinyl moiety to the lipoyl group of the E2 component
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: oxoglutarate dehydrogenase (succinyl-transferring) activity (EC:1.2.4.2) assigned to Q88FA9
+  molecular_function:
+    id: GO:0004591
+    label: oxoglutarate dehydrogenase (succinyl-transferring) activity
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: UNVERIFIED
+    review_notes: Genome sequence paper establishing the PP_4189/sucA locus in KT2440; background/genomic context for this gene. Citation from UniProt record, not independently PubMed-verified here.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
