@@ -84,3 +84,56 @@ All 50 are in the public pilot release. See `argo_protnlm_50.csv`.
 ## Overlap with AIGR reviews
 
 Only 8 of 1,334 reviewed genes appear in this 28K dataset (all TrEMBL/unreviewed proteins): C5AXM3, O94267, Q09490, Q21303, Q86WA8, Q9BZE2, Q9UNW9, Q9XUS3.
+
+## ARGO-ProtNLM-50 Evaluation Results
+
+All 50 benchmark proteins received full AIGR annotation reviews (`*-ai-review.yaml`), falcon deep research, and the 39 proteins with GO predictions received biologically informed prediction assessments (`*-protnlm-predictions-review.yaml`). Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/).
+
+### Aggregate results (75 predictions across 39 proteins)
+
+| Category | Code | CS | Count | % | Description |
+|----------|------|----|-------|---|-------------|
+| Correct novel | COR | 2 | 17 | 23% | Biologically accurate, adds new information beyond GOA |
+| Correct not novel | CNN | 2 | 11 | 15% | Correct but already captured in existing annotations |
+| Less precise | LSP | 2 | 18 | 24% | Correct at higher level but more specific term exists in GOA |
+| Uncertain | UNC | 1 | 13 | 17% | Cannot validate or refute from available evidence |
+| Nonparalog incorrect | NPI | 0 | 14 | 19% | Refuted by biological evidence |
+| Paralog incorrect | PLI | 0 | 2 | 3% | Wrong paralog subfamily assignment |
+| **Total** | | | **75** | | **Mean CS: 1.40/2.0; Aggregate: 105/150 (70%)** |
+
+**Concordant** (CS=2): 46/75 (61%) — predictions supported by evidence
+**Uncertain** (CS=1): 13/75 (17%) — insufficient evidence to judge
+**Discordant** (CS=0): 16/75 (21%) — predictions refuted by evidence
+
+### Results by GOA overlap category
+
+| Match category | n | Dominant assessments |
+|----------------|---|---------------------|
+| EXACT | 19 | LSP:13, CNN:6 — predictions match existing GOA but are typically parent terms |
+| MORE_SPECIFIC | 6 | CNN:3, NPI:2, UNC:1 — some correctly refine GOA, others overreach |
+| LESS_SPECIFIC | 1 | LSP:1 |
+| NO_OVERLAP | 26 | NPI:9, UNC:6, COR:5, PLI:2 — mixed; novel predictions often wrong |
+| NOT_IN_GOA | 23 | COR:12, UNC:6, NPI:3 — best category for genuinely novel discoveries |
+
+### Error analysis (16 incorrect predictions)
+
+| Error type | Count | Description |
+|------------|-------|-------------|
+| FREQUENCY_BIAS | 13 | Model defaults to high-frequency training labels (e.g., generic "membrane", "transferase activity") |
+| PARALOG_OVERANNOTATION | 4 | Wrong subfamily — e.g., predicting phosphatase activity for catalytically dead MTMR9, kinase activity for kinase-domain-lacking RIC7 |
+| PATHWAY_CONTEXT_IGNORED | 3 | Cross-kingdom errors — e.g., neuronal/immune terms for plant proteins |
+| TRAINING_DATA_CONTAMINATION | 2 | Predictions that simply reproduce existing IEA annotations |
+
+### Key findings
+
+1. **ProtNLM2 is strongest for uncharacterized proteins (NOT_IN_GOA)**: 12/23 (52%) of these predictions were correct and novel, identifying genuine functions like DNA binding for a KilA-N domain protein (A2FPI7), ECM organization for OLFML2A (A0A8C9H4D2), and nuclear localization for MCM-4 (A0A061AL94).
+
+2. **EXACT matches are predominantly less precise, not novel**: 13/19 (68%) of "exact" matches are actually parent terms of more specific existing annotations (e.g., predicting "cytoplasm" when "clathrin-coated vesicle" is already annotated). This suggests ProtNLM2 captures broad functional categories but lacks resolution.
+
+3. **Frequency bias is the dominant error mode** (13/22 error annotations): The model over-predicts common GO terms (membrane, transferase activity, phosphorylation) without biological specificity. This is especially problematic for proteins with unusual functions (e.g., HERC3 truncation lacking HECT domain, auxilin's repurposed PTEN-like domain).
+
+4. **Cross-kingdom errors persist despite taxon constraint filtering**: 3 predictions applied animal-specific terms (neuronal cell body, protein antigen binding) to plant proteins, indicating the Evidencer's taxon constraint checking has gaps.
+
+5. **Paralog discrimination is a weakness**: The model conflates catalytically active and inactive family members (MTMR9 pseudophosphatase, RIC7 lacking kinase domain), a Type 6 error pattern that sequence similarity methods inherently struggle with.
+
+6. **Assessment quality depends on biological synthesis**: The mechanical category mapping (EXACT→CNN, NO_OVERLAP→UNC) used in preliminary analysis was substantially revised by expert review. For example, many "EXACT" matches were reclassified from CNN to LSP, and several "MORE_SPECIFIC" predictions from CNN to NPI, after considering protein biology.
