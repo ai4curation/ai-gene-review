@@ -1,0 +1,572 @@
+id: MODULE:methionine_cycle
+title: Methionine (S-adenosylmethionine) cycle module
+description: >-
+  A taxon-neutral decomposition of the methionine / S-adenosylmethionine (SAM)
+  cycle, the core methyl-group-cycling pathway that interconverts methionine,
+  S-adenosyl-L-methionine, S-adenosyl-L-homocysteine, and homocysteine, with
+  exits to transsulfuration (via cystathionine beta-synthase) and remethylation
+  inputs from folate (via methionine synthase) and choline/betaine (via BHMT).
+
+  This module is intentionally structured in two layers. The CATALYTIC layer
+  (enzymatic steps) grounds each step to a GO molecular-function term, the same
+  EC <-> GO MF alignment used by the gluconeogenesis module. The REGULATORY layer
+  is captured as connections of type POSITIVELY_REGULATES / NEGATIVELY_REGULATES
+  whose predicate is grounded to a Systems Biology Ontology (SBO) term that
+  distinguishes the MECHANISM (competitive vs allosteric), with the effector
+  represented as a ChEBI-grounded metabolite-pool node. This regulatory wiring
+  (small-molecule effector -> enzyme, with mechanism and sign) is information GO
+  cannot express: GO annotations attach to gene products, the effectors here are
+  metabolites, and GO has no competitive-vs-allosteric distinction.
+
+  The regulatory structure is transcribed from the biosustain Maud kinetic model
+  `data/methionine/methionine_cycle.toml`. A notable showcase is METAT, where two
+  isozyme forms of methionine adenosyltransferase catalyse the SAME reaction but
+  are OPPOSITELY regulated by SAM: MAT-I is competitively product-inhibited by
+  SAM, whereas MAT-III is allosterically activated by SAM. Isozyme-specific
+  regulation of this kind is the central thing GO flattens away.
+status: DRAFT
+evidence:
+  - source_id: GO:0033353
+    title: L-methionine cycle
+    statement: The module is grounded in the GO biological-process term for the methionine / S-adenosylmethionine cycle (exact synonym "S-adenosylmethionine cycle").
+  - source_id: file:modules/methionine_cycle.yaml
+    title: biosustain Methionine_model (Maud kinetic model)
+    statement: >-
+      Reaction set, isozymes, and the allosteric/competitive regulation wiring are
+      transcribed from the Maud model data/methionine/methionine_cycle.toml.
+    url: https://github.com/biosustain/Methionine_model/blob/main/data/methionine/methionine_cycle.toml
+module:
+  id: methionine_cycle
+  label: Methionine (SAM) cycle
+  module_type: METABOLIC_PATHWAY
+  concepts:
+    - preferred_term: methionine cycle
+      term:
+        id: GO:0033353
+        label: L-methionine cycle
+      description: >-
+        Cyclic interconversion of methionine, S-adenosyl-L-methionine,
+        S-adenosyl-L-homocysteine, and homocysteine, coupling methyl-donor supply
+        to folate one-carbon and transsulfuration metabolism.
+  parts:
+    - order: 1
+      role: SAM-forming step (methionine activation)
+      node:
+        id: metat_step
+        label: Methionine -> S-adenosyl-L-methionine
+        module_type: REACTION
+        description: >-
+          Methionine adenosyltransferase (EC 2.5.1.6) condenses methionine and
+          ATP to S-adenosyl-L-methionine (SAM), the universal methyl donor. The
+          isozyme forms differ in their feedback logic, so they are modelled as
+          variants to carry isozyme-specific regulation.
+        concepts:
+          - preferred_term: methionine adenosyltransferase reaction
+        variant_sets:
+          - id: mat_isozyme_form
+            label: Methionine adenosyltransferase isozyme/oligomeric forms
+            axis: isozyme / oligomeric form
+            selection: ONE_OR_MORE
+            variants:
+              - id: mat1_form
+                label: MAT-I (high-capacity hepatic form)
+                module_type: REACTION
+                annotons:
+                  - id: mat1_activity
+                    label: MAT-I methionine adenosyltransferase activity
+                    participant:
+                      selector_type: GENE_PRODUCT
+                      gene_product:
+                        preferred_term: MAT-I (MAT1A-encoded high-K_m hepatic isozyme)
+                        description: >-
+                          High-K_m hepatic methionine adenosyltransferase form. Subject
+                          to competitive product (SAM) inhibition in the kinetic model.
+                    function:
+                      preferred_term: methionine adenosyltransferase activity
+                      term:
+                        id: GO:0004478
+                        label: methionine adenosyltransferase activity
+                      substrates:
+                        - preferred_term: L-methionine
+                        - preferred_term: ATP
+                      products:
+                        - preferred_term: S-adenosyl-L-methionine
+                        - preferred_term: phosphate
+                        - preferred_term: diphosphate
+              - id: mat3_form
+                label: MAT-III (low-affinity hepatic form)
+                module_type: REACTION
+                annotons:
+                  - id: mat3_activity
+                    label: MAT-III methionine adenosyltransferase activity
+                    participant:
+                      selector_type: GENE_PRODUCT
+                      gene_product:
+                        preferred_term: MAT-III (MAT1A-encoded low-affinity hepatic isozyme)
+                        description: >-
+                          Low-affinity hepatic methionine adenosyltransferase form,
+                          allosterically activated by its own product SAM and by
+                          methionine (feed-forward), the opposite of MAT-I.
+                    function:
+                      preferred_term: methionine adenosyltransferase activity
+                      term:
+                        id: GO:0004478
+                        label: methionine adenosyltransferase activity
+                      substrates:
+                        - preferred_term: L-methionine
+                        - preferred_term: ATP
+                      products:
+                        - preferred_term: S-adenosyl-L-methionine
+                        - preferred_term: phosphate
+                        - preferred_term: diphosphate
+    - order: 2
+      role: bulk transmethylation (SAM-dependent methyltransferases)
+      node:
+        id: meth_step
+        label: SAM-dependent transmethylation (general)
+        module_type: REACTION
+        description: >-
+          Lumped node for the many SAM-dependent methyltransferases (EC 2.1.1.-)
+          that transfer SAM's methyl group to acceptors (DNA, protein, small
+          molecules), yielding S-adenosyl-L-homocysteine (SAH). Competitively
+          product-inhibited by SAH in the kinetic model.
+        annotons:
+          - id: meth_activity
+            label: SAM-dependent methyltransferase activity (general)
+            participant:
+              selector_type: ANY_WITH_FUNCTION
+              required_function:
+                preferred_term: methyltransferase activity
+                term:
+                  id: GO:0008168
+                  label: methyltransferase activity
+            function:
+              preferred_term: methyltransferase activity
+              term:
+                id: GO:0008168
+                label: methyltransferase activity
+              substrates:
+                - preferred_term: S-adenosyl-L-methionine
+                - preferred_term: methyl acceptor
+              products:
+                - preferred_term: S-adenosyl-L-homocysteine
+                - preferred_term: methylated acceptor
+    - order: 3
+      role: SAM disposal / glycine sink
+      node:
+        id: gnmt_step
+        label: Glycine N-methyltransferase (SAM:SAH buffering)
+        module_type: REACTION
+        description: >-
+          Glycine N-methyltransferase (EC 2.1.1.20) methylates glycine to
+          sarcosine, acting as the overflow valve that buffers the SAM:SAH ratio.
+          Allosterically inhibited by 5,10-methylenetetrahydrofolate and
+          competitively inhibited by SAH; activated by SAM.
+        annotons:
+          - id: gnmt_activity
+            label: Glycine N-methyltransferase activity
+            participant:
+              selector_type: ANY_WITH_FUNCTION
+              required_function:
+                preferred_term: glycine N-methyltransferase activity
+                term:
+                  id: GO:0017174
+                  label: glycine N-methyltransferase activity
+            function:
+              preferred_term: glycine N-methyltransferase activity
+              term:
+                id: GO:0017174
+                label: glycine N-methyltransferase activity
+              substrates:
+                - preferred_term: S-adenosyl-L-methionine
+                - preferred_term: glycine
+              products:
+                - preferred_term: S-adenosyl-L-homocysteine
+                - preferred_term: sarcosine
+    - order: 4
+      role: SAH hydrolysis
+      node:
+        id: ahc_step
+        label: S-adenosyl-L-homocysteine -> L-homocysteine
+        module_type: REACTION
+        description: >-
+          Adenosylhomocysteinase (EC 3.3.1.1) hydrolyses SAH to L-homocysteine
+          and adenosine, relieving SAH product inhibition of methyltransferases.
+        annotons:
+          - id: ahc_activity
+            label: Adenosylhomocysteinase activity
+            participant:
+              selector_type: ANY_WITH_FUNCTION
+              required_function:
+                preferred_term: adenosylhomocysteinase activity
+                term:
+                  id: GO:0004013
+                  label: adenosylhomocysteinase activity
+            function:
+              preferred_term: adenosylhomocysteinase activity
+              term:
+                id: GO:0004013
+                label: adenosylhomocysteinase activity
+              substrates:
+                - preferred_term: S-adenosyl-L-homocysteine
+              products:
+                - preferred_term: L-homocysteine
+                - preferred_term: adenosine
+    - order: 5
+      role: homocysteine fate (remethylation vs transsulfuration)
+      node:
+        id: homocysteine_fate
+        label: Homocysteine fate branch
+        module_type: REACTION
+        description: >-
+          Homocysteine is either remethylated back to methionine (folate-dependent
+          via methionine synthase, or betaine-dependent via BHMT) or committed to
+          transsulfuration via cystathionine beta-synthase.
+        variant_sets:
+          - id: homocysteine_fate_axis
+            label: Homocysteine disposal routes
+            axis: metabolic fate
+            selection: ONE_OR_MORE
+            variants:
+              - id: ms_route
+                label: Folate-dependent remethylation (methionine synthase)
+                module_type: REACTION
+                annotons:
+                  - id: ms_activity
+                    label: Methionine synthase activity
+                    participant:
+                      selector_type: ANY_WITH_FUNCTION
+                      required_function:
+                        preferred_term: methionine synthase activity
+                        term:
+                          id: GO:0008705
+                          label: methionine synthase activity
+                    function:
+                      preferred_term: methionine synthase activity
+                      term:
+                        id: GO:0008705
+                        label: methionine synthase activity
+                      substrates:
+                        - preferred_term: L-homocysteine
+                        - preferred_term: 5-methyltetrahydrofolate
+                      products:
+                        - preferred_term: L-methionine
+                        - preferred_term: tetrahydrofolate
+              - id: bhmt_route
+                label: Betaine-dependent remethylation (BHMT)
+                module_type: REACTION
+                annotons:
+                  - id: bhmt_activity
+                    label: Betaine-homocysteine S-methyltransferase activity
+                    participant:
+                      selector_type: ANY_WITH_FUNCTION
+                      required_function:
+                        preferred_term: betaine-homocysteine S-methyltransferase activity
+                        term:
+                          id: GO:0047150
+                          label: betaine-homocysteine S-methyltransferase activity
+                    function:
+                      preferred_term: betaine-homocysteine S-methyltransferase activity
+                      term:
+                        id: GO:0047150
+                        label: betaine-homocysteine S-methyltransferase activity
+                      substrates:
+                        - preferred_term: L-homocysteine
+                        - preferred_term: glycine betaine
+                      products:
+                        - preferred_term: L-methionine
+                        - preferred_term: N,N-dimethylglycine
+              - id: cbs_route
+                label: Transsulfuration commitment (cystathionine beta-synthase)
+                module_type: REACTION
+                description: Exit from the cycle toward cysteine biosynthesis; allosterically activated by SAM.
+                annotons:
+                  - id: cbs_activity
+                    label: Cystathionine beta-synthase activity
+                    participant:
+                      selector_type: ANY_WITH_FUNCTION
+                      required_function:
+                        preferred_term: cystathionine beta-synthase activity
+                        term:
+                          id: GO:0004122
+                          label: cystathionine beta-synthase activity
+                    function:
+                      preferred_term: cystathionine beta-synthase activity
+                      term:
+                        id: GO:0004122
+                        label: cystathionine beta-synthase activity
+                      substrates:
+                        - preferred_term: L-homocysteine
+                        - preferred_term: L-serine
+                      products:
+                        - preferred_term: L-cystathionine
+    - order: 6
+      role: folate methyl input arm
+      node:
+        id: mthfr_step
+        label: Methylenetetrahydrofolate reductase (5-methyl-THF supply)
+        module_type: REACTION
+        description: >-
+          Methylenetetrahydrofolate reductase (EC 1.5.1.20) reduces
+          5,10-methylenetetrahydrofolate to 5-methyltetrahydrofolate, the methyl
+          donor consumed by methionine synthase. Allosterically inhibited by SAM
+          and activated by SAH, coupling folate flux to methyl-group demand.
+        annotons:
+          - id: mthfr_activity
+            label: Methylenetetrahydrofolate reductase activity
+            participant:
+              selector_type: ANY_WITH_FUNCTION
+              required_function:
+                preferred_term: methylenetetrahydrofolate reductase [NAD(P)H] activity
+                term:
+                  id: GO:0004489
+                  label: methylenetetrahydrofolate reductase [NAD(P)H] activity
+            function:
+              preferred_term: methylenetetrahydrofolate reductase [NAD(P)H] activity
+              term:
+                id: GO:0004489
+                label: methylenetetrahydrofolate reductase [NAD(P)H] activity
+              substrates:
+                - preferred_term: 5,10-methylenetetrahydrofolate
+                - preferred_term: NAD(P)H
+              products:
+                - preferred_term: 5-methyltetrahydrofolate
+                - preferred_term: NAD(P)+
+    - order: 7
+      optional: true
+      role: regulatory effector pools (metabolite endpoints for regulation edges)
+      notes: >-
+        These nodes are NOT catalytic steps. They represent the small-molecule
+        effector pools that serve as the source endpoints of the regulatory
+        connections below. They are grounded to ChEBI rather than GO, because the
+        regulators are metabolites and cannot bear GO annotations.
+      node:
+        id: regulatory_effectors
+        label: Regulatory effector pools
+        module_type: MODULE
+        parts:
+          - role: methyl-donor effector
+            node:
+              id: amet_pool
+              label: S-adenosyl-L-methionine (SAM) pool
+              concepts:
+                - preferred_term: S-adenosyl-L-methionine
+                  term:
+                    id: CHEBI:15414
+                    label: S-adenosyl-L-methionine
+                  description: Master regulatory effector of the cycle; signals methyl-donor sufficiency.
+          - role: demethylated-donor effector
+            node:
+              id: ahcys_pool
+              label: S-adenosyl-L-homocysteine (SAH) pool
+              concepts:
+                - preferred_term: S-adenosyl-L-homocysteine
+                  term:
+                    id: CHEBI:16680
+                    label: S-adenosyl-L-homocysteine
+                  description: Pan-methyltransferase product inhibitor; signals methyl-donor depletion.
+          - role: folate effector
+            node:
+              id: mlthf_pool
+              label: 5,10-methylenetetrahydrofolate pool
+              concepts:
+                - preferred_term: 5,10-methylenetetrahydrofolate
+                  term:
+                    id: CHEBI:1989
+                    label: (6R)-5,10-methylenetetrahydrofolic acid
+                  description: Folate one-carbon node; allosteric inhibitor of GNMT in the model.
+          - role: amino-acid effector
+            node:
+              id: met_pool
+              label: L-methionine pool
+              concepts:
+                - preferred_term: L-methionine
+                  description: Substrate that feed-forward activates MAT-III.
+  connections:
+    # ---------------- Metabolic (flux) backbone ----------------
+    - source: mat1_activity
+      target: meth_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: SAM produced by methionine adenosyltransferase is the methyl donor for transmethylation.
+    - source: mat3_activity
+      target: meth_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: SAM produced by methionine adenosyltransferase is the methyl donor for transmethylation.
+    - source: metat_step
+      target: gnmt_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: SAM is also consumed by glycine N-methyltransferase (overflow disposal).
+    - source: meth_step
+      target: ahc_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: Transmethylation produces SAH, the substrate of adenosylhomocysteinase.
+    - source: gnmt_step
+      target: ahc_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: GNMT produces SAH, the substrate of adenosylhomocysteinase.
+    - source: ahc_step
+      target: homocysteine_fate
+      connection_type: PROVIDES_INPUT_FOR
+      description: SAH hydrolysis yields homocysteine, the branch-point metabolite.
+    - source: ms_route
+      target: metat_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: Folate-dependent remethylation regenerates methionine, closing the cycle.
+    - source: bhmt_route
+      target: metat_step
+      connection_type: PROVIDES_INPUT_FOR
+      description: Betaine-dependent remethylation regenerates methionine, closing the cycle.
+    - source: mthfr_step
+      target: ms_route
+      connection_type: PROVIDES_INPUT_FOR
+      description: MTHFR supplies 5-methyltetrahydrofolate consumed by methionine synthase.
+    # ---------------- Regulatory layer (the part GO cannot express) ----------------
+    # Allosteric regulation (SBO:0000636 activator / SBO:0000639 inhibitor)
+    - source: amet_pool
+      target: mat3_activity
+      connection_type: POSITIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric activation
+        term:
+          id: SBO:0000636
+          label: allosteric activator
+      description: >-
+        SAM allosterically activates MAT-III (feed-forward). Contrast with MAT-I,
+        which SAM competitively inhibits - same reaction, opposite isozyme logic.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "MAT3 activated by amet (allosteric)."
+    - source: met_pool
+      target: mat3_activity
+      connection_type: POSITIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric activation
+        term:
+          id: SBO:0000636
+          label: allosteric activator
+      description: Methionine feed-forward activates MAT-III.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "MAT3 activated by met-L (allosteric)."
+    - source: amet_pool
+      target: gnmt_activity
+      connection_type: POSITIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric activation
+        term:
+          id: SBO:0000636
+          label: allosteric activator
+      description: SAM allosterically activates GNMT, opening the SAM overflow valve when methyl donor is in excess.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "GNMT1 activated by amet (allosteric)."
+    - source: mlthf_pool
+      target: gnmt_activity
+      connection_type: NEGATIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric inhibition
+        term:
+          id: SBO:0000639
+          label: allosteric inhibitor
+      description: 5,10-methylenetetrahydrofolate allosterically inhibits GNMT, linking folate status to SAM disposal.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "GNMT1 inhibited by mlthf (allosteric)."
+    - source: amet_pool
+      target: cbs_activity
+      connection_type: POSITIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric activation
+        term:
+          id: SBO:0000636
+          label: allosteric activator
+      description: SAM allosterically activates CBS, diverting homocysteine to transsulfuration when methyl donor is abundant.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "CBS1 activated by amet (allosteric)."
+    - source: amet_pool
+      target: mthfr_activity
+      connection_type: NEGATIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric inhibition
+        term:
+          id: SBO:0000639
+          label: allosteric inhibitor
+      description: SAM allosterically inhibits MTHFR, throttling folate-dependent remethylation when SAM is high.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "MTHFR1 inhibited by amet (allosteric)."
+    - source: ahcys_pool
+      target: mthfr_activity
+      connection_type: POSITIVELY_REGULATES
+      predicate:
+        preferred_term: allosteric activation
+        term:
+          id: SBO:0000636
+          label: allosteric activator
+      description: SAH allosterically activates MTHFR, restoring remethylation flux when the methylation index falls.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [allosteric]
+          statement: "MTHFR1 activated by ahcys (allosteric)."
+    # Competitive inhibition (SBO:0000206)
+    - source: amet_pool
+      target: mat1_activity
+      connection_type: NEGATIVELY_REGULATES
+      predicate:
+        preferred_term: competitive inhibition
+        term:
+          id: SBO:0000206
+          label: competitive inhibitor
+      description: SAM competitively (product-feedback) inhibits MAT-I - opposite sign to its allosteric activation of MAT-III.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [competitive_inhibition]
+          statement: "MAT1 (reaction METAT) competitively inhibited by amet."
+    - source: ahcys_pool
+      target: meth_activity
+      connection_type: NEGATIVELY_REGULATES
+      predicate:
+        preferred_term: competitive inhibition
+        term:
+          id: SBO:0000206
+          label: competitive inhibitor
+      description: SAH competitively inhibits bulk transmethylation (classic product inhibition / methylation index).
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [competitive_inhibition]
+          statement: "METH-Gen (reaction METH) competitively inhibited by ahcys."
+    - source: ahcys_pool
+      target: gnmt_activity
+      connection_type: NEGATIVELY_REGULATES
+      predicate:
+        preferred_term: competitive inhibition
+        term:
+          id: SBO:0000206
+          label: competitive inhibitor
+      description: SAH competitively inhibits GNMT.
+      evidence:
+        - source_id: file:modules/methionine_cycle.yaml
+          title: Maud methionine_cycle.toml [competitive_inhibition]
+          statement: "GNMT1 (reaction GNMT) competitively inhibited by ahcys."
+  notes: >-
+    Layering: catalytic steps ground to GO molecular-function terms (GO:0004478,
+    GO:0008168, GO:0017174, GO:0004013, GO:0008705, GO:0047150, GO:0004122,
+    GO:0004489); the pathway grounds to GO:0033353. The regulatory layer is
+    deliberately NOT expressed in GO. Each regulatory edge is a connection typed
+    POSITIVELY/NEGATIVELY_REGULATES whose predicate is grounded to SBO so the
+    competitive-vs-allosteric MECHANISM is explicit (SBO:0000206 competitive
+    inhibitor, SBO:0000636 allosteric activator, SBO:0000639 allosteric
+    inhibitor), with the effector grounded to ChEBI. This is the information that
+    falls outside GO scope: a metabolite cannot bear a GO annotation, and GO has
+    no representation of inhibition mechanism. The MAT-I vs MAT-III split (same
+    GO MF GO:0004478, opposite SAM regulation) is the canonical illustration.
+    Quantitative kinetics (K_m, k_cat, K_i, Hill/MWC parameters) from the Maud
+    model are intentionally out of scope for this module and belong with the
+    model / SABIO-RK-style resources.
