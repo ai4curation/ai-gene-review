@@ -43,12 +43,15 @@ the masking/closure caveats.
   rows over 14,799 distinct InterPro entries** (GO release `2026-04-28`) — but a
   member signature contributes GO only if it is *integrated* into one of those
   entries.
-- **NCBIFAM/CDD are masked by InterPro in GOA.** A `GO_REF:0000002` row's
-  `WITH/FROM` names the integrated `InterPro:IPRnnnnnn` entry, **never** the
-  member signature. Verified on this repo's gene set: **0** `TIGR…/NF…/cd…`
-  signatures appear in any `*-goa.tsv` `WITH/FROM`, yet the same proteins'
-  UniProt records carry **1,160 `DR NCBIfam`** and **2,174 `DR CDD`** lines. This
-  is the NCBIFAM/CDD analog of RHEA being "masked by EC".
+- **NCBIFAM/CDD are masked by InterPro in GOA — and the contribution is now
+  measured.** A `GO_REF:0000002` row's `WITH/FROM` names the integrated
+  `InterPro:IPRnnnnnn` entry, **never** the member signature (0 `TIGR…/NF…/cd…` ids
+  in any `*-goa.tsv` `WITH/FROM`, vs 1,160 `DR NCBIfam` + 2,174 `DR CDD` in the
+  proteins' UniProt records). Re-joining each annotation to its InterPro entry's
+  member databases shows **NCBIFAM backs 705 (13%) and CDD 469 (8%)** of the repo's
+  5,549 InterPro2GO rows, and is the **sole** integrated signature for **250 / 116**
+  — invisible in GOA (the [attribution section](#un-masking-member-db-attribution-on-this-repos-annotations)).
+  This is the NCBIFAM/CDD analog of RHEA being "masked by EC".
 - **NCBIFAM carries its own NCBI-curated GO/EC that GO does not ingest.** The PGAP
   HMM metadata (`hmm_PGAP.tsv`, **34,351 models**) assigns function directly:
   **11,228 models (33%) carry GO terms** (3,622 distinct GO ids) and **6,417
@@ -98,6 +101,35 @@ already supplies the same term. Two consequences:
   member model is *more* specific/curated than the Pfam-style domain it shares an
   InterPro entry with — the place NCBIFAM resolves a function the broader members
   lump (mirroring RHEA resolving a cofactor split EC hides).
+
+## Un-masking: member-DB attribution on this repo's annotations
+
+The masking claim is now **measured**, not just asserted. Every `GO_REF:0000002`
+annotation in this repo's `genes/**/*-goa.tsv` was re-joined to its InterPro entry's
+`member_databases` via the InterPro API
+([`interpro_member_attribution.py`](NCBIFam/interpro_member_attribution.py),
+resumable). Across **5,549** resolved InterPro-citation rows (1,827 distinct entries):
+
+| Member DB | distinct entries | annotation rows | sole signature |
+|-----------|----------------:|----------------:|---------------:|
+| pfam | 708 (39%) | 2,374 (43%) | — |
+| panther | 459 (25%) | 1,082 (19%) | — |
+| **ncbifam** | **272 (15%)** | **705 (13%)** | **250** |
+| prints / profile / smart | ~190 each | ~820 each | — |
+| **cdd** | **183 (10%)** | **469 (8%)** | **116** |
+| hamap / pirsf / ssf / cathgene3d | 117–159 | 403–627 | — |
+
+**NCBIFAM contributes a signature to 705 (13%) and CDD to 469 (8%)** of the repo's
+InterPro2GO annotations — a contribution **entirely invisible in GOA**, which shows
+only the `InterPro:IPR…` id. Stronger still, **NCBIFAM is the *sole* integrated
+signature for 250 rows and CDD for 116** — annotations that exist *purely* because of
+an NCBIFAM/CDD model, with no other member DB in the entry. And these are not exotic:
+NCBIFAM-sole entries back annotations on **GAPDH** (`IPR006424`→`GO:0006006`), **RPS3**
+(`IPR005703`→`GO:0006412`), **ATP6V1A** (`IPR005725`→`GO:0016887`), and **HMGCS2**
+(`IPR010122`→`GO:0008299`) — mainstream genes whose InterPro2GO term traces solely to a
+TIGRFAM/NCBIFAM signature. This is the quantitative form of the masking finding, and
+the join the sibling [InterPro Mapping Review](INTERPRO.md) project needs to attribute
+each interpro2go term to the member DB that earned it.
 
 ## Specificity and quality cut by family_type
 
@@ -276,10 +308,13 @@ UniProtKB REST API by [`ncbifam_go_gain.py`](NCBIFam/ncbifam_go_gain.py)
 (closure-aware `go:` query; see
 [NCBIFAM-ANNOTATION-GAIN.md](NCBIFam/NCBIFAM-ANNOTATION-GAIN.md)). The CDD-own-GO
 check uses the NCBI CDD FTP (`cddannot*.dat`, `cddid_all.tbl`) and Entrez `cdd`
-records. The forward closure-filtered cross-organism contribution table reuses the
-[UniPathway](UNIPATHWAY.md)/[RHEA](RHEA.md) uniqueness query and is **staged**
-pending the go-db DuckDBs (absent in the web container). Full queries and caveats:
-[NCBIFAM-METHODOLOGY.md](NCBIFam/NCBIFAM-METHODOLOGY.md).
+records. The **member-DB attribution** (which member DB backs each `GO_REF:0000002`
+row in the repo) is computed live by
+[`interpro_member_attribution.py`](NCBIFam/interpro_member_attribution.py) against the
+InterPro API (resumable, cached). The forward closure-filtered cross-organism
+contribution table reuses the [UniPathway](UNIPATHWAY.md)/[RHEA](RHEA.md) uniqueness
+query and is **staged** pending the go-db DuckDBs (absent in the web container). Full
+queries and caveats: [NCBIFAM-METHODOLOGY.md](NCBIFam/NCBIFAM-METHODOLOGY.md).
 
 ## How this differs from RHEA, SPKW, and UniPathway
 
@@ -317,8 +352,8 @@ over-annotation.
 
 | Target | Rationale |
 |--------|-----------|
-| GOA × InterPro member-integration re-join | Attribute each `GO_REF:0000002` row to its firing member DB; quantify NCBIFAM/CDD's *actual* forward contribution. |
-| Forward closure-filtered cross-organism scan | UniPathway-style uniqueness for member-attributed rows; needs go-db DuckDBs. |
+| ✅ GOA × InterPro member-integration re-join | **Done** ([attribution section](#un-masking-member-db-attribution-on-this-repos-annotations)): NCBIFAM backs 13% / CDD 8% of the repo's InterPro2GO rows (sole signature for 250 / 116). |
+| Forward closure-filtered cross-organism scan | UniPathway-style uniqueness for member-attributed rows; needs go-db DuckDBs. Now seeded by the member-attribution join above. |
 | Promote the 2,455 EC-bridge candidates | Altitude/obsolete-check [`ncbifam2go.candidates.tsv`](NCBIFam/ncbifam2go.candidates.tsv) and fold the clean rows into the reviewed SSSOM → a near-complete ingestible `ncbifam2go`. |
 | Build the 843 "refine" class | Auto-propose `ec2go`'s specific term where NCBI's `go_terms` is broad/absent (the spermidine-synthase pattern), then altitude-review as FtsX shows is needed. |
 | Non-EC families (defense/secretion/transport) | The high-gain non-enzyme equivalogs (transposases, anti-phage, T4SS, encapsulins) have no EC bridge → need a different verification (literature/SPARCLE), curated like the seed's CC/BP rows. |
@@ -331,15 +366,18 @@ over-annotation.
 - **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
-  28-row `ncbifam2go` seed** in place, and a **2,455-model EC-bridge candidate set**
-  generated at collection scale; member-attribution re-join is staged.
+  28-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
+  generated at collection scale, and the **member-DB attribution re-join done** on the
+  repo's annotations.
 - **Computed live** (via [`NCBIFam/ncbifam_cdd_probe.py`](NCBIFam/ncbifam_cdd_probe.py)
   and [`ncbifam_go_gain.py`](NCBIFam/ncbifam_go_gain.py)):
   `interpro2go` = 30,200 rows / 14,799 InterPro ids (GO `2026-04-28`); NCBIFAM PGAP
   = 34,351 models, 11,228 (33%) with GO, 6,417 (19%) with EC, 13,253 equivalogs;
   InterPro integration NCBIFAM 7,447/18,511 (40%), CDD 5,059/19,902 (25%); CDD-proper
   carries 0 native GO (FTP + Entrez); 60-model gain Σ = 19 reviewed / 26,578
-  all-UniProtKB; masking verified from this repo's `*-goa.tsv` / `*-uniprot.txt`.
+  all-UniProtKB; member-DB attribution = NCBIFAM backs 705 (13%) / CDD 469 (8%) of
+  5,549 repo InterPro2GO rows (sole signature 250 / 116); masking verified from this
+  repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
   — 28 verified SSSOM rows (27 exactMatch ready-to-add, incl. 5 proposing our own
   specific term over NCBI's broad one and 1 — FtsX — declining a too-specific term;

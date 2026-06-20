@@ -46,8 +46,12 @@ grep -rhE "^DR   CDD"     genes/ --include=*-uniprot.txt | wc -l   # 2174
 So you cannot, from GOA alone, tell whether a `GO_REF:0000002` annotation owes to
 an NCBIFAM equivalog (high-quality, 1:1 function-grounded) or to a broad CDD
 domain — they are flattened into the same `InterPro:IPR…` provenance. Attributing
-contribution to the member DB requires re-joining GOA to the InterPro
-member-integration table (InterPro API `entry/integrated/{db}/`).
+contribution to the member DB requires re-joining each annotation's InterPro entry to
+its `member_databases` (InterPro API `entry/interpro/<IPR>`). This is **implemented**
+in [`interpro_member_attribution.py`](interpro_member_attribution.py) and run over the
+repo's gene set — see the [attribution result](../NCBIFam.md#un-masking-member-db-attribution-on-this-repos-annotations)
+(NCBIFAM backs 13%, CDD 8%, of the repo's `GO_REF:0000002` rows; sole signature for
+250 / 116).
 
 ## NCBIFAM has its own curated GO/EC that GO does not ingest
 
