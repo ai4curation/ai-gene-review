@@ -191,6 +191,14 @@ reviewed (mostly PE1, with catalytic-activity PMIDs). Validate with
 validation (GO objects bound to the molecular-function branch; generated nested
 view [`rhea2go.terms.yaml`](RHEA/rhea2go.terms.yaml)).
 
+**Propagation gain.** If these mappings were added to `rhea2go`, they would
+yield **~9,325 new GO molecular-function annotations across UniProtKB** but only
+**23 for reviewed (Swiss-Prot) entries** — almost all the gain is in TrEMBL,
+because reviewed enzymes carrying the reaction already have the term (the
+EC-masking result at the annotation level). See
+[RHEA-ANNOTATION-GAIN.md](RHEA/RHEA-ANNOTATION-GAIN.md)
+([`rhea_annotation_gain.py`](RHEA/rhea_annotation_gain.py)).
+
 ## Methods
 
 `GO_REF:0000116` identification and the `rhea2go` mapping statistics were
