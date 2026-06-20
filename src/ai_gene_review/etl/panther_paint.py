@@ -173,6 +173,47 @@ def family_member_ids(entries_csv: Path) -> Set[str]:
     return members
 
 
+def family_member_subfamilies(entries_csv: Path) -> Dict[str, str]:
+    """Return ``member UniProt id -> subfamily accession`` from a member table.
+
+    Members with an empty ``subfamily`` map to ``""``. Rows with an empty ``id``
+    are ignored.
+    """
+    out: Dict[str, str] = {}
+    with entries_csv.open() as fh:
+        for row in csv.DictReader(fh):
+            ident = (row.get("id") or "").strip()
+            if ident:
+                out[ident] = (row.get("subfamily") or "").strip()
+    return out
+
+
+def iter_losses(
+    ibd_index: Dict[str, List[IBDRecord]],
+) -> Iterable[Tuple[IBDRecord, List[str]]]:
+    """Yield ``(loss_record, ancestral_nodes)`` for every loss (IRD/IKR) record.
+
+    A PAINT loss is annotated *on* the node where the function diverged, with the
+    ancestral (gain) node carried in the with/from field. The ancestral nodes are
+    parsed out so callers can pair the loss with where the function was present.
+
+    >>> data = [
+    ...     "PANTHER\\tPTNa\\tPTNa\\tNOT\\tGO:1\\tGO_REF:0000033\\tIRD\\t"
+    ...     "PANTHER:PTNb\\tF\\t\\t\\tprotein\\ttaxon:1\\t20250101\\tGO_Central\\t\\t",
+    ...     "PANTHER\\tPTNc\\tPTNc\\t\\tGO:2\\tGO_REF:0000033\\tIBD\\t"
+    ...     "UniProtKB:P1\\tF\\t\\t\\tprotein\\ttaxon:\\t20250101\\tGO_Central\\t\\t",
+    ... ]
+    >>> idx = parse_ibd_gaf(data)
+    >>> [(r.node, r.go_id, anc) for r, anc in iter_losses(idx)]
+    [('PTNa', 'GO:1', ['PTNb'])]
+    """
+    for recs in ibd_index.values():
+        for rec in recs:
+            if rec.negated or rec.evidence in ("IRD", "IKR"):
+                yield rec, parse_ptn_nodes("|".join(rec.seeds))
+
+
+
 def leaf_nodes_for_members(lines: Iterable[str], members: Set[str]) -> Set[str]:
     """Stream the leaf IBA GAF and collect ancestral ``PTN`` nodes for members.
 

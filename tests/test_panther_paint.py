@@ -10,6 +10,8 @@ from ai_gene_review.etl.panther_paint import (
     parse_ptn_nodes,
     parse_ibd_gaf,
     family_member_ids,
+    family_member_subfamilies,
+    iter_losses,
     leaf_nodes_for_members,
     write_family_paint,
     load_all_family_members,
@@ -90,6 +92,27 @@ def test_family_member_ids(tmp_path: Path):
         ",missing id row,PTHR1:SF3\n"
     )
     assert family_member_ids(csv_path) == {"P14635", "P24864"}
+
+
+def test_family_member_subfamilies(tmp_path: Path):
+    csv_path = tmp_path / "PTHR1-entries.csv"
+    csv_path.write_text(
+        "id,name,subfamily\n"
+        "P14635,cyclin B1,PTHR1:SF1\n"
+        "P24864,cyclin E1,\n"  # no subfamily
+        ",missing id,PTHR1:SF3\n"
+    )
+    assert family_member_subfamilies(csv_path) == {"P14635": "PTHR1:SF1", "P24864": ""}
+
+
+def test_iter_losses_returns_only_losses_with_ancestor():
+    losses = list(iter_losses(parse_ibd_gaf(IBD_FIXTURE.splitlines())))
+    assert len(losses) == 1
+    rec, ancestors = losses[0]
+    assert rec.node == "PTN002681965"
+    assert rec.evidence == "IRD"
+    assert rec.negated is True
+    assert ancestors == ["PTN001800605"]
 
 
 def test_leaf_nodes_for_members_streams_and_filters():

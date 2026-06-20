@@ -26,6 +26,17 @@ propagation — rather than re-judging gene by gene.
   annotations, and flags node annotations that did **not** propagate to our gene
   (`propagated=false` → candidate missing annotation or lineage loss).
 - `node_annotations.tsv` — the resulting per-node-annotation table.
+- `extract_function_losses.py` — flags families where a **subfamily lost a
+  function**: pairs every PAINT loss (IRD/IKR `NOT`) with its ancestral gain node
+  (IBD), checks the loss is within a cached family's PTN node set, and attributes
+  it to the family **subfamilies** whose members descend from the loss node
+  (resolved from the leaf GAF + member tables). This is the strongest
+  within-family neo-/sub-functionalization signal and a direct curation guard:
+  do not propagate the ancestral function to members under the loss node.
+- `family_function_losses.tsv` — per-(family, lost-GO) findings with
+  `ancestral_node`, `loss_node`, `gain_confirmed`, and the affected
+  `subfamilies`. (`n_members_affected=0` means the loss is in an unsampled
+  subfamily — the gain→loss pair is still confirmed.)
 - `REVIEW.md` — the written review and findings.
 
 Regenerate:
@@ -33,6 +44,7 @@ Regenerate:
 ```bash
 uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
 uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
 ```
 
 The node-level source files (`IBD.gaf`, leaf GAF) are downloaded on demand into
