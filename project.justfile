@@ -220,11 +220,12 @@ deep-research-codex organism gene_id *args="":
 # Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
 # Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
 # Output: interpro/<database>/<ID>/<ID>-deep-research-<provider>.md
+# Provider defaults to falcon (Edison).
 # Examples:
-#   just deep-research-interpro-family IPR000719 perplexity
+#   just deep-research-interpro-family IPR000719                    # falcon (Edison)
 #   just deep-research-interpro-family IPR001128 openai --fallback perplexity-lite
 #   just deep-research-interpro-family PTHR10314 perplexity --database panther
-deep-research-interpro-family interpro_id provider="perplexity" *args="":
+deep-research-interpro-family interpro_id provider="falcon" *args="":
     uv run python scripts/deep_research_interpro_family.py {{interpro_id}} {{provider}} {{args}}
 
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report

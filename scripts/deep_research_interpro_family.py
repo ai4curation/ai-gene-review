@@ -15,10 +15,10 @@ researches a gene). It:
 
 Usage::
 
-    python scripts/deep_research_interpro_family.py IPR000719 perplexity
+    python scripts/deep_research_interpro_family.py IPR000719            # falcon (Edison), the default
     python scripts/deep_research_interpro_family.py PTHR10314 openai --database panther
 
-Normally invoked through the ``just deep-research-interpro-family-*`` recipes.
+Normally invoked through the ``just deep-research-interpro-family`` recipe.
 """
 
 from __future__ import annotations
@@ -201,7 +201,12 @@ def run(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("interpro_id", help="InterPro/PANTHER/Pfam entry id (e.g. IPR000719)")
-    parser.add_argument("provider", help="Provider (openai, perplexity, perplexity-lite, falcon, ...)")
+    parser.add_argument(
+        "provider",
+        nargs="?",
+        default="falcon",
+        help="Provider (default: falcon/Edison; also openai, perplexity, perplexity-lite, ...)",
+    )
     parser.add_argument("--database", default="interpro", help="Source database (default: interpro)")
     parser.add_argument("--fallback", nargs="+", metavar="PROVIDER", help="Fallback providers")
     parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)

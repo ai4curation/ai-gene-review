@@ -91,8 +91,9 @@ hand-written file. The new recipe drives `deep-research-client` with a dedicated
 InterPro-family prompt template:
 
 ```bash
-# generates interpro/interpro/IPR000719/IPR000719-deep-research-perplexity.md
-just deep-research-interpro-family IPR000719 perplexity
+# provider defaults to falcon (Edison); generates
+# interpro/interpro/IPR000719/IPR000719-deep-research-falcon.md
+just deep-research-interpro-family IPR000719
 just deep-research-interpro-family IPR001128 openai --fallback perplexity-lite
 just deep-research-interpro-family PTHR10314 perplexity --database panther
 ```
@@ -144,7 +145,7 @@ uv run python projects/INTERPRO/extract_suspect_interpro_mappings.py
       `scripts/deep_research_interpro_family.py`, and the
       `just deep-research-interpro-family` recipe
 - [x] Seed example cached (`interpro/interpro/IPR000719/`)
-- [ ] Run `just deep-research-interpro-family <IPR> <provider>` for the top entries
+- [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the top entries
 
 Last updated: 2026-06-20
 
@@ -162,7 +163,7 @@ Cu/Zn SOD, GPCR), confirming the "fold ≠ function" failure mode as the main dr
 process (`just deep-research-<provider>`); there was no equivalent for the InterPro
 entries behind InterPro2GO annotations. Added the InterPro-family analogue —
 `templates/interpro_family_research.md`, `scripts/deep_research_interpro_family.py`, and
-the `just deep-research-interpro-family <IPR> <provider>` recipe — so families are
-researched by the same generated pipeline (output:
+the `just deep-research-interpro-family <IPR> [provider]` recipe (provider defaults to
+`falcon`/Edison) — so families are researched by the same generated pipeline (output:
 `interpro/<db>/<ID>/<ID>-deep-research-<provider>.md`), with `IPR000719` cached as a
 seed.

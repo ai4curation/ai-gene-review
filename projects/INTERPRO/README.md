@@ -27,11 +27,12 @@ deep research:
 - `templates/interpro_family_research.md` — the deep-research prompt template.
 - `scripts/deep_research_interpro_family.py` — wrapper that loads the cached InterPro
   metadata as context and runs `deep-research-client`.
-- `just deep-research-interpro-family <IPR> <provider>` — the recipe (in
-  `project.justfile`). Output: `interpro/<db>/<ID>/<ID>-deep-research-<provider>.md`.
+- `just deep-research-interpro-family <IPR> [provider]` — the recipe (in
+  `project.justfile`); provider defaults to `falcon` (Edison). Output:
+  `interpro/<db>/<ID>/<ID>-deep-research-<provider>.md`.
 
 ```bash
-just deep-research-interpro-family IPR000719 perplexity
+just deep-research-interpro-family IPR000719          # falcon (Edison) by default
 ```
 
 ## Regenerate
