@@ -86,14 +86,35 @@ a naive bulk ingest would have propagated:
 - **Altitude-broad** — several sit far above the family's real function, up to the
   ontology **near-root** `GO:0003824 catalytic activity` (enoyl-CoA hydratase
   NF005804, spermidine synthase TIGR00417), or a class parent (dGTPase NF002326 →
-  `GO:0016793` when `GO:0008832 dGTPase activity` exists). Demoted to `broadMatch`
-  with the specific child named.
+  `GO:0016793` when `GO:0008832 dGTPase activity` exists). For these we **propose our
+  own specific term** as the `exactMatch` mapping (the EC-bridged child) instead of
+  recording NCBI's broad value.
+
+### Proposing the specific term unmasks the gain
+
+The altitude fix is **not cosmetic**. Because UniProt's `go:` query is closure-aware,
+the gain measured against a broad parent is near-zero (the parent is already
+near-universal), so the broad NCBI term makes a real gap look like *no* gap.
+Re-measuring against the specific child we propose flips this:
+
+| Family | NCBI broad term (gain) | Our specific term (gain all / reviewed) |
+|--------|-----------------------:|----------------------------------------:|
+| spermidine synthase TIGR00417 | `GO:0003824` (~0) | `GO:0004766` — **575** / 1 |
+| LL-DAP aminotransferase TIGR03542 | `GO:0008483` (77) | `GO:0010285` — **1,185** / 2 |
+| dihydroorotase NF006559 | `GO:0016810` (4) | `GO:0004151` — **491** / 0 |
+| dGTPase NF002326 | `GO:0016793` (20) | `GO:0008832` — **456** / **13** |
+| enoyl-CoA hydratase NF005804 | `GO:0003824` (~0) | `GO:0004300` — **184** / 1 |
+
+So suggesting our own term is what converts these from invisible to actionable — and
+surfaces genuine **reviewed/Swiss-Prot** gaps (dGTPase 13, LL-DAP 2) that the broad
+NCBI assignment hid entirely.
 
 So an `ncbifam2go` build must, like the curated seed in
 [`ncbifam2go.sssom.yaml`](ncbifam2go.sssom.yaml):
 
 1. drop obsolete **and incorrect** GO ids (check against EC where available),
-2. prefer the specific child where the NCBI term is a broad parent (`broadMatch`),
+2. **propose the specific child** where the NCBI term is a broad parent, and measure
+   gain against *that* term, not the parent,
 3. EC-bridge-confirm enzyme rows via `ec2go`.
 
 ## Reproduce
