@@ -16,9 +16,11 @@ is a ``PTN`` node. Most rows carry one of three PAINT evidence codes:
   the node (a ``NOT`` annotation). Source of negated IBAs.
 * ``IKR`` - Inferred from Key Residues: loss inferred from key-residue change.
 
-A small number of rows additionally carry ``IBA`` on a ``PTN`` node; these are
-legitimate in the current PANTHER data and are parsed/retained as-is (we do not
-filter by evidence code, only require a ``PTN`` subject).
+A *loss* is therefore any ``NOT`` annotation: usually ``IRD``/``IKR``, but
+occasionally a rare ``NOT|IBD``. A small number of rows also carry plain ``IBA``
+on a ``PTN`` node. All are legitimate in the current PANTHER data and are
+parsed/retained as-is (we do not filter by evidence code, only require a ``PTN``
+subject).
 
 ``IBD.gaf`` is keyed by node and carries no ``PTHR`` family id, so to slice it
 per family we resolve which ``PTN`` nodes belong to a family by joining:
@@ -45,7 +47,7 @@ from typing import IO, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 
-PAINT_BASE = "http://data.pantherdb.org/ftp/downloads/paint/current"
+PAINT_BASE = "https://data.pantherdb.org/ftp/downloads/paint/current"
 IBD_GAF_URL = f"{PAINT_BASE}/IBD.gaf"
 LEAF_GAF_URL = f"{PAINT_BASE}/gene_association.paint_uniprot.gaf.gz"
 
@@ -196,11 +198,13 @@ def family_member_subfamilies(entries_csv: Path) -> Dict[str, str]:
 def iter_losses(
     ibd_index: Dict[str, List[IBDRecord]],
 ) -> Iterable[Tuple[IBDRecord, List[str]]]:
-    """Yield ``(loss_record, ancestral_nodes)`` for every loss (IRD/IKR) record.
+    """Yield ``(loss_record, ancestral_nodes)`` for every loss record.
 
-    A PAINT loss is annotated *on* the node where the function diverged, with the
-    ancestral (gain) node carried in the with/from field. The ancestral nodes are
-    parsed out so callers can pair the loss with where the function was present.
+    A loss is any negated (``NOT``) annotation — usually ``IRD``/``IKR``, but
+    occasionally a rare ``NOT|IBD``. It is annotated *on* the node where the
+    function diverged, with the ancestral (gain) node carried in the with/from
+    field. The ancestral nodes are parsed out so callers can pair the loss with
+    where the function was present.
 
     >>> data = [
     ...     "PANTHER\\tPTNa\\tPTNa\\tNOT\\tGO:1\\tGO_REF:0000033\\tIRD\\t"
