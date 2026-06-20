@@ -20,8 +20,9 @@ propagation — rather than re-judging gene by gene.
   seed — weak support), `NODE_LOSS` (an IRD/IKR loss at the source node), and
   `NODE_NOT_IN_IBD`.
 - `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
-  themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR layer that is the *source*
-  of every IBA). For each ancestral node our genes derive from, it lists the full
+  themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR — plus a few IBA-on-node —
+  layer that is the *source* of every IBA). For each ancestral node our genes
+  derive from, it lists the full
   node annotation set with the canonical seed counts, marks loss (IRD/IKR `NOT`)
   annotations, and flags node annotations that did **not** propagate to our gene
   (`propagated=false` → candidate missing annotation or lineage loss).

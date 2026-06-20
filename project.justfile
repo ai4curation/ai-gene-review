@@ -135,7 +135,7 @@ fetch-descriptions-bulk organism *args="":
 
 # Fetch PANTHER PAINT (PTN node-level) annotations for a family.
 # Resolves the family's PTN tree nodes and slices the node-level IBD.gaf
-# (IBD/IRD/IKR) into interpro/panther/<FAMILY>/<FAMILY>-paint.{gaf,tsv}.
+# (IBD/IRD/IKR, plus any IBA-on-node) into interpro/panther/<FAMILY>/<FAMILY>-paint.tsv.
 # Requires the family's <FAMILY>-entries.csv (fetch a member gene first).
 # Example: just fetch-panther-paint PTHR10177
 # Example: just fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3

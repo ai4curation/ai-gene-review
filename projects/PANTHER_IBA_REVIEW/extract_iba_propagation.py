@@ -212,6 +212,9 @@ def main() -> None:
                 "flags": ";".join(flags),
             })
 
+    if not rows:
+        print("No IBA annotations found.")
+        return
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "iba_propagation.tsv"
     cols = list(rows[0].keys())
     with out.open("w", newline="") as fh:
