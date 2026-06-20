@@ -164,12 +164,12 @@ Filling the gaps is a curation deliverable, not just an audit. The curated
 RHEA→GO mappings — reactions absent from `rhea2go` but with (or needing) a GO MF
 term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the same
 **SSSOM YAML** format used by the [ANTIMICROBIAL_RESISTANCE](ANTIMICROBIAL_RESISTANCE.md)
-`aro2go` mapping set. **78 mappings** so far, each backed by a review of a reviewed
+`aro2go` mapping set. **118 mappings** so far, each backed by a review of a reviewed
 (Swiss-Prot) enzyme that carries the reaction
 ([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
 the specificity finding:
 
-- **`skos:exactMatch`** (67 rows) — the GO term *is* the reaction's activity;
+- **`skos:exactMatch`** (107 rows) — the GO term *is* the reaction's activity;
   ready-to-add `rhea2go` entries. Most are **EC-bridge supported**: `ec2go` maps
   the reaction's EC to this exact GO term and `rhea2ec` maps the reaction to that
   EC. Backed by enzymes such as biotinidase (BTD, biotinidase deficiency), TPMT
@@ -192,8 +192,8 @@ validation (GO objects bound to the molecular-function branch; generated nested
 view [`rhea2go.terms.yaml`](RHEA/rhea2go.terms.yaml)).
 
 **Propagation gain.** If these mappings were added to `rhea2go`, they would
-yield **~9,325 new GO molecular-function annotations across UniProtKB** but only
-**23 for reviewed (Swiss-Prot) entries** — almost all the gain is in TrEMBL,
+yield **~25,842 new GO molecular-function annotations across UniProtKB** (reviewed/
+Swiss-Prot entries gain only 34) — almost all the gain is bulk propagation into TrEMBL,
 because reviewed enzymes carrying the reaction already have the term (the
 EC-masking result at the annotation level). See
 [RHEA-ANNOTATION-GAIN.md](RHEA/RHEA-ANNOTATION-GAIN.md)
@@ -274,8 +274,8 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   (reverse gap), [`RHEA/rhea_ec_specificity.py`](RHEA/rhea_ec_specificity.py)
   (EC-masking, specificity, gaps), [`RHEA/rhea_gap_finder.py`](RHEA/rhea_gap_finder.py)
   (gap case selection)
-- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 78
-  SSSOM rows (67 exactMatch ready-to-add, 4 broadMatch, 7 new-term suggestions),
+- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 118
+  SSSOM rows (107 exactMatch ready-to-add, 4 broadMatch, 7 new-term suggestions),
   each backed by a reviewed enzyme in
   [`RHEA/RHEA-MAPPING-REVIEWS.md`](RHEA/RHEA-MAPPING-REVIEWS.md);
   `just validate-rhea-mappings`

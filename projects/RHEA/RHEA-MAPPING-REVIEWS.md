@@ -124,3 +124,48 @@ just validate-rhea-mappings   # SSSOM structural + GO term/label validation
 
 **UDP-Gal:alpha-D-GlcNAc-diphosphoundecaprenol beta-1,3-galactosyltransferase** (wbbD Q03084, Escherichia coli; PE1, PMID:18536883). Reaction RHEA:36747 (EC 2.4.1.303): N-acetyl-alpha-D-glucosaminyl-di-trans,octa-cis-undecaprenyl diphosphate + UDP-alpha-D-galactose = beta-D-Gal-(1->3)-alpha-D-GlcNAc-di-trans,octa-cis-undecaprenyl diphosphate + UDP + H(+). No specific GO MF term (QuickGO); proposed *UDP-Gal:alpha-D-GlcNAc-diphosphoundecaprenol beta-1,3-galactosyltransferase activity*.
 
+
+## Batch 4 mappings (ranked by UniProt propagation gain)
+
+| RHEA | GO term | Reviewed enzyme | Organism | Evidence | UniProt gain |
+|------|---------|-----------------|----------|----------|-------------:|
+| RHEA:48564 | GO:0102682 cytokinin riboside 5'-monophosphate phosphoribohydrolase activity | Cytokinin riboside 5'-monophosphate phosphoribohydrolase LOG8 (Q84MC2) | Arabidopsis thaliana | PE1, PMID:19837870 | 8,360 |
+| RHEA:85243 | GO:0003960 quinone reductase (NADPH) activity | Zeta-crystallin (Q08257) | Homo sapiens | PE1, PMID:17497241 | 4,995 |
+| RHEA:18113 | GO:0004550 nucleoside diphosphate kinase activity | Adenylate kinase 7 (Q96M32) | Homo sapiens | PE1, PMID:23416111 | 645 |
+| RHEA:59468 | GO:0036374 glutathione gamma-glutamate hydrolase | Putative glutathione hydrolase 3 proenzyme (A6NGU5) | Homo sapiens | PE5, Swiss-Prot curator | 340 |
+| RHEA:53428 | GO:0003908 methylated-DNA-[protein]-cysteine S-methyltransferase activity | Methylated-DNA--protein-cysteine methyltransferase (P16455) | Homo sapiens | PE1, Swiss-Prot curator | 200 |
+| RHEA:63644 | GO:0046922 peptide-O-fucosyltransferase activity | GDP-fucose protein O-fucosyltransferase 3 (Q6P4F1) | Homo sapiens | PE1, PMID:39775168 | 186 |
+| RHEA:44880 | GO:0004675 transmembrane receptor protein serine/threonine kinase activity | Activin receptor type-1B (P36896) | Homo sapiens | PE1, Swiss-Prot curator | 183 |
+| RHEA:77639 | GO:0008441 3'(2'),5'-bisphosphate nucleotidase activity | 3' (O95861) | Homo sapiens | PE1, PMID:10675562 | 167 |
+| RHEA:47844 | GO:0004789 thiamine-phosphate diphosphorylase activity | Thiamine-phosphate synthase (P39594) | Bacillus subtilis | PE1, PMID:9139923 | 151 |
+| RHEA:54712 | GO:0071885 N-terminal protein N-methyltransferase activity | N-terminal Xaa-Pro-Lys N-methyltransferase 1 (Q9BV86) | Homo sapiens | PE1, PMID:26543159 | 149 |
+| RHEA:34287 | GO:0004503 tyrosinase activity | Tyrosinase (P14679) | Homo sapiens | PE1, PMID:28661582 | 138 |
+| RHEA:79699 | GO:0008486 diphosphoinositol-polyphosphate diphosphatase activity | Inositol diphosphatase DSP2 (Q0DX67) | Oryza sativa subsp. japonica | PE2, Swiss-Prot curator | 131 |
+| RHEA:42288 | GO:0008710 8-amino-7-oxononanoate synthase activity | 8-amino-7-oxononanoate synthase (P12998) | Escherichia coli | PE1, PMID:20693992 | 86 |
+| RHEA:65896 | GO:0047315 L-kynurenine:glyoxylate transaminase activity | Kynurenine--oxoglutarate transaminase 3 (Q6YP21) | Homo sapiens | PE1, Swiss-Prot curator | 80 |
+| RHEA:85579 | GO:0004347 glucose-6-phosphate isomerase activity | Glucose-6-phosphate isomerase (P06744) | Homo sapiens | PE1, PMID:28803808 | 80 |
+| RHEA:27738 | GO:0004731 purine-nucleoside phosphorylase activity | Purine nucleoside phosphorylase (P00491) | Homo sapiens | PE1, PMID:9305964 | 69 |
+| RHEA:36231 | GO:0004623 A2-type glycerophospholipase activity | Cytosolic phospholipase A2 zeta (Q68DD2) | Homo sapiens | PE1, PMID:29158256 | 69 |
+| RHEA:24768 | GO:0034256 chlorophyll(ide) b reductase activity | Probable chlorophyll (Q93ZA0) | Arabidopsis thaliana | PE1, Swiss-Prot curator | 68 |
+| RHEA:37339 | GO:0003837 beta-ureidopropionase activity | Beta-ureidopropionase (Q9UBR1) | Homo sapiens | PE1, PMID:29976570 | 61 |
+| RHEA:16541 | GO:0045549 9-cis-epoxycarotenoid dioxygenase activity | 9-cis-epoxycarotenoid dioxygenase NCED3, chloroplastic (Q9LRR7) | Arabidopsis thaliana | PE1, PMID:15466233 | 49 |
+| RHEA:25104 | GO:0008478 pyridoxal kinase activity | Pyridoxal kinase (O00764) | Homo sapiens | PE1, PMID:9099727 | 42 |
+| RHEA:52540 | GO:0016154 pyrimidine-nucleoside phosphorylase activity | Pyrimidine/purine nucleoside phosphorylase (P0C037) | Escherichia coli | PE1, PMID:27941785 | 37 |
+| RHEA:50496 | GO:0004596 protein-N-terminal amino-acid acetyltransferase activity | N-alpha-acetyltransferase 10 (P41227) | Homo sapiens | PE1, PMID:25489052 | 32 |
+| RHEA:51904 | GO:0004326 tetrahydrofolylpolyglutamate synthase activity | Dihydrofolate synthase/folylpolyglutamate synthase (P08192) | Escherichia coli | PE1, PMID:2985605 | 29 |
+| RHEA:64648 | GO:0016621 cinnamoyl-CoA reductase activity | Cinnamoyl-CoA reductase CAD2 (G7IYC1) | Medicago truncatula | PE1, PMID:25217505 | 27 |
+| RHEA:33099 | GO:0004145 diamine N-acetyltransferase activity | Diamine acetyltransferase 1 (P21673) | Homo sapiens | PE1, PMID:17516632 | 19 |
+| RHEA:25112 | GO:0033883 pyridoxal phosphatase activity | Chronophin (Q96GD0) | Homo sapiens | PE1, PMID:14522954 | 18 |
+| RHEA:61392 | GO:0102193 protein-ribulosamine 3-kinase activity | Fructosamine-3-kinase (Q9H479) | Homo sapiens | PE1, PMID:11522682 | 14 |
+| RHEA:75931 | GO:0047972 guanidinopropionase activity | Guanidino acid hydrolase, mitochondrial (Q9BSE5) | Homo sapiens | PE1, PMID:36543883 | 13 |
+| RHEA:43632 | GO:0008914 leucyl-tRNA--protein transferase activity | Leucyl/phenylalanyl-tRNA--protein transferase (P0A8P1) | Escherichia coli | PE1, Swiss-Prot curator | 12 |
+| RHEA:34495 | GO:0016165 linoleate 13S-lipoxygenase activity | Lipoxygenase 7, chloroplastic (P38419) | Oryza sativa subsp. japonica | PE2, Swiss-Prot curator | 11 |
+| RHEA:58284 | GO:0017113 dihydropyrimidine dehydrogenase (NADP+) activity | Dihydropyrimidine dehydrogenase [NADP (Q12882) | Homo sapiens | PE1, PMID:1512248 | 11 |
+| RHEA:36179 | GO:0004142 diacylglycerol cholinephosphotransferase activity | Choline/ethanolaminephosphotransferase 1 (Q9Y6K0) | Homo sapiens | PE1, PMID:10191259 | 10 |
+| RHEA:56552 | GO:0050254 rhodopsin kinase activity | Rhodopsin kinase GRK7 (Q8WTQ7) | Homo sapiens | PE1, PMID:15946941 | 10 |
+| RHEA:62556 | GO:0043722 4-hydroxyphenylacetate decarboxylase activity | 4-hydroxyphenylacetate decarboxylase glycyl radical subunit (Q38HX4) | Clostridium scatologenes | PE1, PMID:16878993 | 7 |
+| RHEA:59760 | GO:0047891 flavone 7-O-beta-glucosyltransferase activity | Gallate 1-beta-glucosyltransferase 84A23 (A0A193AUF6) | Punica granatum | PE1, PMID:27227328 | 6 |
+| RHEA:53900 | GO:0004687 myosin light chain kinase activity | Myosin light chain kinase 3 (Q32MK0) | Homo sapiens | PE1, Swiss-Prot curator | 5 |
+| RHEA:59980 | GO:0008413 8-oxo-7,8-dihydroguanosine triphosphate pyrophosphatase activity | ADP-sugar pyrophosphatase (Q9UKK9) | Homo sapiens | PE1, PMID:27257257 | 4 |
+| RHEA:65152 | GO:0047243 flavanone 7-O-beta-glucosyltransferase activity | UDP-glycosyltransferase 3A2 (Q3SY77) | Homo sapiens | PE1, PMID:21088224 | 2 |
+| RHEA:16457 | GO:0009027 tartrate dehydrogenase activity | Probable tartrate dehydrogenase/decarboxylase (P42958) | Bacillus subtilis | PE3, Swiss-Prot curator | 1 |
