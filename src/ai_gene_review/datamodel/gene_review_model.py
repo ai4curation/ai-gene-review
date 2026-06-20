@@ -1914,6 +1914,61 @@ class FamilyDescriptor(Descriptor):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
     representative_members: Optional[list[GeneProductDescriptor]] = Field(default=None, description="""Representative concrete members used to orient the family. These are examples, not an exhaustive member list and not a claim that the module is limited to these proteins.""", json_schema_extra = { "linkml_meta": {'alias': 'representative_members', 'domain_of': ['FamilyDescriptor']} })
+    ancestral_nodes: Optional[list[AncestralNodeDescriptor]] = Field(default=None, description="""PANTHER/PAINT ancestral node(s) at which the associated function is inferred to have arisen (or to have been present in the last common ancestor). Unlike representative_members, which only give orienting examples, an ancestral node makes a clade-level evolutionary claim: extant descendants are inferred to retain the function unless there is evidence of divergence, neofunctionalization, or loss of key residues.""", json_schema_extra = { "linkml_meta": {'alias': 'ancestral_nodes', 'domain_of': ['FamilyDescriptor']} })
+    preferred_term: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'preferred_term', 'domain_of': ['Descriptor']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'description',
+         'domain_of': ['GeneReview',
+                       'AlternativeProduct',
+                       'FunctionalIsoform',
+                       'Term',
+                       'Descriptor',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'ParticipantSelector',
+                       'ModuleConnection',
+                       'CoreFunction',
+                       'Experiment',
+                       'RuleReview',
+                       'PredictionReview']} })
+    term: Optional[Term] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'term',
+         'domain_of': ['Descriptor', 'ExistingAnnotation', 'AnnotationExtension']} })
+    evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'evidence',
+         'domain_of': ['Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection']} })
+    notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'notes',
+         'domain_of': ['EvidenceItem',
+                       'Descriptor',
+                       'ComplexUnit',
+                       'ModuleReview',
+                       'ModuleNode',
+                       'ModulePart',
+                       'ModuleVariantSet',
+                       'ModuleAnnoton',
+                       'ParticipantSelector',
+                       'ModuleContext',
+                       'ModuleConnection',
+                       'RuleConditionSet',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment']} })
+
+
+class AncestralNodeDescriptor(Descriptor):
+    """
+    A PANTHER/PAINT ancestral node (a PTN identifier, e.g. PANTHER:PTN000299444) used to ground an evolutionary inference about a function. Asserting an ancestral node states that the function associated with the enclosing annoton is inferred to have arisen at, or been present in, the last common ancestor represented by this node, and is therefore inferred to be retained in extant descendant proteins barring divergence, neofunctionalization, or loss of key residues. This is a stronger, clade-level claim than a representative member. Such nodes can be resolved from the IBA WITH/FROM column (GO_REF:0000033) of a representative member's GOA record rather than guessed.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
     preferred_term: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'preferred_term', 'domain_of': ['Descriptor']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'description',
          'domain_of': ['GeneReview',
@@ -3918,6 +3973,7 @@ ChemicalEntityDescriptor.model_rebuild()
 GeneDescriptor.model_rebuild()
 GeneProductDescriptor.model_rebuild()
 FamilyDescriptor.model_rebuild()
+AncestralNodeDescriptor.model_rebuild()
 DomainDescriptor.model_rebuild()
 CellularComponentDescriptor.model_rebuild()
 ProteinComplexDescriptor.model_rebuild()
