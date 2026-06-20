@@ -170,6 +170,24 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - **CPT1C** (above) similarly inherits CPT1A/B metabolism it no longer performs.
 - **Lesson**: **always read the WITH/FROM before flagging.** It tells you whether the IBA is a defensible family-level transfer or a traceable mis-grouping — and if a single paralog or out-of-family protein is the source, that is strong, near-mechanical evidence of error.
 
+### 13. Generic / Mutually-Exclusive Compartment Over-Propagation
+
+**The Problem**: Localization is one of the most frequently over-propagated IBA categories — but whether a flag is valid depends entirely on the **GO compartment hierarchy**, which makes this a two-sided pattern. Mutually-exclusive compartments are valid REMOVE grounds; broad *subsuming* terms are not.
+
+**Tier A — valid REMOVE: a mutually-exclusive specific compartment on a protein that lives elsewhere.** `GO:0005634` nucleus is the one compartment the cytoplasm definition explicitly **excludes**, and plasma membrane / peroxisome / a specific organelle are likewise non-overlapping — so these are genuine errors:
+- **Cytoplasmic PIWI/Argonaute & germ-granule proteins given `GO:0005634` nucleus** — PIWIL1 (human), and worm prg-1, wago-1, glh-1. All are cytoplasmic nuage/P-granule/chromatoid-body proteins (UniProt: cytoplasmic granule, no nucleus). The WITH/FROM nodes include **nuclear-acting Piwi orthologs** (e.g. *Drosophila* Piwi is nuclear; nuclear PIWIL4/MIWI2), so the nuclear compartment leaks onto the cytoplasmic members.
+- **EIF2AK3/PERK → nucleus** (UniProt: ER membrane kinase) and **BIRC6 → nucleus** (UniProt: TGN/endosome/cytoskeleton/midbody — no nuclear pool).
+- **Ribosome-associated chaperones SSB2 / SSZ1 (yeast) → `GO:0005886` plasma membrane** (UniProt: cytoplasmic, ribosome-associated) — PM propagated across the HSP70 family node.
+- **BAIAP2L2 → `GO:0005654` nucleoplasm** (UniProt: plasma membrane / cell junction; I-BAR family) and **PIK3C3/VPS34 → `GO:0005777` peroxisome** (UniProt: autophagosome/endosome/midbody).
+- **Inverse** — strictly **nuclear** proteins given `GO:0005737` cytoplasm: rqh1 (RecQ helicase) and HDA1 (HDAC) are nucleus-only, and nucleus is excluded from cytoplasm, so cytoplasm is wrong. And the genuinely **extracellular** SCGB1A1 given cytoplasm (secreted = outside the cell).
+
+**Tier B — anti-pattern (do NOT flag; these reviewer REMOVEs were over-reaches).** `GO:0005737` cytoplasm **subsumes** mitochondrion, ER, Golgi, and lysosome (all `part_of` cytoplasm), so "cytoplasm" is defensible — if imprecise — for an organellar protein:
+- "cytoplasm" REMOVE on **Aga / GLA** (lysosome), **DHCR24** (ER membrane, catalytic domain faces the cytosol), **ISCA1 / ATP5IF1 / gtpbp3** (mitochondrion) — all should be UNDECIDED/KEEP, not REMOVE.
+- "membrane" (`GO:0016020`) REMOVE on **flvcr2a** is wrong — it is a multi-pass membrane transporter.
+- **Self-correction**: HINT2's "cytoplasm" flag (added in the WITH/FROM pass) belongs here too — HINT2 is mitochondrial, but mitochondrion ⊂ cytoplasm, so cytoplasm is not strictly wrong; downgraded from the findings.
+
+**Lesson**: before a localization REMOVE, place both compartments in the GO hierarchy. Mutually-exclusive (nucleus vs cytoplasm; PM vs internal; one organelle vs another) → valid. A broad subsuming term over a more specific true location (cytoplasm over any organelle; membrane over a membrane protein) → leave it.
+
 ## Featured Examples
 
 ### Epe1 - Pseudo-Demethylase
@@ -335,7 +353,12 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | NOTCH1 | human | Wrong-source transfer (axon guidance from SLIT1-3) | MEDIUM | COMPLETE |
 | IL23R | human | Over-broad superfamily (prolactin-receptor activity from PRLR) | MEDIUM | COMPLETE |
 | ABRAXAS1 | human | Wrong-paralog (spindle/MT terms trace to ABRAXAS2) | MEDIUM | COMPLETE |
-| HINT2 | human | Wrong-paralog localization (cytoplasm term reflects HINT1) | LOW | COMPLETE |
+| PIWIL1 / prg-1 / wago-1 | human, worm | Nucleus on cytoplasmic PIWI/Argonaute (mutually-exclusive compartment) | MEDIUM | COMPLETE |
+| EIF2AK3, BIRC6 | human | Nucleus on ER-membrane / TGN-cytoskeletal protein | MEDIUM | COMPLETE |
+| SSB2 / SSZ1 | yeast | Plasma membrane on cytoplasmic ribosome-associated chaperone | LOW | COMPLETE |
+| BAIAP2L2, PIK3C3 | human | Nucleoplasm / peroxisome on membrane / autophagy protein | LOW | COMPLETE |
+| SCGB1A1 | human | Cytoplasm on a secreted (extracellular) protein | LOW | COMPLETE |
+| rqh1, HDA1 | SCHPO, yeast | Cytoplasm on strictly nuclear proteins | LOW | COMPLETE |
 
 ## Recommendations for IBA Curation
 
@@ -372,6 +395,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 - A label that merely *looks* opposite — check the term **definition**. GO:0015677 "copper ion import" covers movement into a cell *or organelle*, so a Golgi-loading copper exporter (ATP7B) still satisfies it. (This is why ATP7B was **not** flagged.)
 - A shared reaction that is *classified* under a pathway does not prove pathway membership in vivo — but it does mean the activity is real, so prefer "over-annotation/non-core" over "absent" (HMGCS2: the HMG-CoA-synthase step is genuine; only the FPP-pathway *flux* belongs to the other paralog).
 - **Neither** a UniProt keyword **nor** a review assertion is sufficient on its own. Weigh all lines: a UniProt "By similarity" tag is weak and can be overturned by direct experimental papers (AGK: "ceramide By similarity" is refuted by two papers reporting no ceramide/sphingosine phosphorylation — so AGK *was* flagged); an explicit UniProt CAUTION or a curated NOT annotation is strong (DPYSL2, CRYAA).
+- A broad **subsuming compartment** is not wrong just because a more specific location is known. `GO:0005737` cytoplasm includes mitochondrion, ER, Golgi, and lysosome (`part_of` cytoplasm), so "cytoplasm" is defensible for an organellar protein; only nucleus, plasma membrane, the extracellular space, or a *different* organelle are mutually exclusive enough to justify a localization REMOVE (see Pattern 13).
 
 **Signs of reliable IBA**:
 - Core metabolic enzymes with conserved mechanism

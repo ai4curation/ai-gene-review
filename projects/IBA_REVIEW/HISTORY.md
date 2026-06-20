@@ -83,6 +83,44 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
     involved in"* processing UQCRFS1. That is genuinely unresolved, so the right call
     is UNDECIDED, not a confident REMOVE. Excluding it was the disciplined choice.
 
+11. **For localization, place both compartments in the GO hierarchy first.**
+    `GO:0005737` cytoplasm is defined as "the contents of a cell excluding the plasma
+    membrane and nucleus, but including other subcellular structures" — and
+    mitochondrion, ER, Golgi, and lysosome are all `part_of` cytoplasm. So "cytoplasm"
+    is *not wrong* for a mitochondrial/ER/lysosomal protein (just imprecise); flagging
+    it REMOVE is an over-reach. Valid localization REMOVEs need **mutually-exclusive**
+    compartments: nucleus vs cytoplasm, plasma membrane vs internal, one organelle vs
+    another. This is the same "read the definition" trap as ATP7B's copper import.
+
+---
+
+## 2026-06-20 (c) — Fourth pass: the generic-localization cluster (two-sided)
+
+Triaged the 32 generic-localization REMOVE candidates (cytoplasm 10, nucleus 7,
+plasma membrane 6, mitochondrion 2, membrane 2, cytosol 2, peroxisome/Golgi/nucleoplasm
+1 each). First fetched the **GO:0005737 definition** — it subsumes membrane-bounded
+organelles — which split the cluster cleanly:
+
+**Valid REMOVEs (mutually-exclusive compartment) → added as Pattern 13 Tier A:**
+nucleus on cytoplasmic PIWI/Argonaute (PIWIL1, prg-1, wago-1, glh-1; WITH/FROM
+includes nuclear-acting Piwi orthologs), nucleus on ER-kinase EIF2AK3 and on BIRC6,
+plasma membrane on ribosome-associated chaperones SSB2/SSZ1, nucleoplasm on BAIAP2L2,
+peroxisome on PIK3C3, cytoplasm on strictly-nuclear rqh1/HDA1, cytoplasm on secreted
+SCGB1A1.
+
+**Reviewer over-reaches (cytoplasm subsumes the organelle) → Pattern 13 Tier B, NOT
+flagged:** "cytoplasm" REMOVE on Aga/GLA (lysosome), DHCR24 (ER), ISCA1/ATP5IF1/gtpbp3
+(mito); "membrane" REMOVE on flvcr2a (a multi-pass membrane transporter). These
+should be UNDECIDED/KEEP.
+
+**Self-correction:** HINT2 (added in pass (b) as a wrong-paralog "cytoplasm" case) is
+itself a Tier-B over-reach — mitochondrion ⊂ cytoplasm, so "cytoplasm" isn't strictly
+wrong. Removed HINT2 from the findings table.
+
+Net lesson: localization is where reviewers (me included) most often over-flag, because
+"cytoplasm"/"membrane" are broad subsuming terms. Roughly a third of this cluster were
+reviewer over-reaches rather than bad IBAs.
+
 ---
 
 ## 2026-06-20 (b) — Third pass: WITH/FROM-driven triage of the backlog
