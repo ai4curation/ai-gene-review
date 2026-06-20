@@ -64,7 +64,8 @@ _LINE = re.compile(r"RHEA:(\d+) > GO:(.+) ; (GO:\d+)")
 
 def load_rhea2go() -> dict[str, tuple[str, str]]:
     """Return {rhea_id: (go_id, go_label)} from the public rhea2go mapping."""
-    with urllib.request.urlopen(RHEA2GO_URL, timeout=60) as resp:
+    req = urllib.request.Request(RHEA2GO_URL, headers={"User-Agent": "ai-gene-review-rhea/1.0"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
         text = resp.read().decode()
     mapping: dict[str, tuple[str, str]] = {}
     for line in text.splitlines():
@@ -98,7 +99,10 @@ def uniprot_entries_for_rhea(rhea_num: str, size: int = 500, reviewed: bool = Tr
     params = urllib.parse.urlencode(
         {"query": query, "fields": "accession,go_id", "format": "tsv", "size": size}
     )
-    with urllib.request.urlopen(f"{UNIPROT_URL}?{params}", timeout=60) as resp:
+    req = urllib.request.Request(
+        f"{UNIPROT_URL}?{params}", headers={"User-Agent": "ai-gene-review-rhea/1.0"}
+    )
+    with urllib.request.urlopen(req, timeout=60) as resp:
         text = resp.read().decode()
     for row in text.splitlines()[1:]:
         if not row.strip():

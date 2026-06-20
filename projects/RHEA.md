@@ -29,10 +29,17 @@ reactions), so the analysis runs in **two complementary directions**:
    opportunities rather than over-annotations.
 
 See [RHEA-METHODOLOGY.md](RHEA/RHEA-METHODOLOGY.md) for the queries, the
-reproducible probe script, and the all-important closure caveat.
+reproducible probe script, and the all-important closure caveat. The deeper
+**EC-masking and specificity** analysis lives in
+[RHEA-EC-SPECIFICITY.md](RHEA/RHEA-EC-SPECIFICITY.md).
 
 ## Key Findings (scoping pass)
 
+- **RHEA is largely masked by EC.** 84% of RHEA's GO terms are also reachable
+  via EC2GO, and 88% of EC-carrying reactions map to the *same* GO term EC2GO
+  already supplies — so most `GO_REF:0000116` volume is redundant and RHEA's
+  unique value is a small set of pockets (see below). This is the concrete form
+  of "contributions may be masked by EC".
 - **`GO_REF:0000116` is the RHEA→GO pipeline reference.** Confirmed directly
   from GOA rows in this repo's gene set: every `GO_REF:0000116` row is
   `assigned_by=RHEA`, aspect `molecular_function`, evidence `IEA`. This is the
@@ -60,6 +67,42 @@ reproducible probe script, and the all-important closure caveat.
   line). These cannot propagate by construction and are candidates for
   `proposed_new_terms`.
 
+## RHEA is mostly masked by EC
+
+UniProt enzymes almost always carry **both** an EC number and a RHEA reaction,
+and EC also reaches GO — via `ec2go` (`GO_REF:0000003`). So RHEA's `GO_REF:0000116`
+contribution is only "real" where EC2GO did not already supply the same term.
+Computed live from `rhea2go`, `ec2go`, and the RHEA REST API
+([`rhea_ec_specificity.py`](RHEA/rhea_ec_specificity.py)):
+
+- **84%** of RHEA's GO terms (3,972 / 4,744) are **also reachable via EC2GO**;
+  only **772** GO terms are RHEA-only.
+- At the reaction level, of the 4,904 reactions carrying both a `rhea2go` term
+  and an EC, **88% (4,324) map to the exact same GO term EC2GO already gives** —
+  fully masked; only **118** differ, and **462** have an EC with no `ec2go` term
+  (RHEA as sole route).
+
+So most `GO_REF:0000116` volume is redundant with EC2GO and would be dropped by
+the closure-filtered uniqueness query. RHEA's genuine value is the **772
+RHEA-only terms**, the **462 EC-without-ec2go** reactions, the **118
+differing-term** reactions, and the reverse-propagation gap below.
+
+## Specificity cuts both ways
+
+- **EC → RHEA → GO:** one EC number spans many RHEA reactions. Of 435 ECs that
+  map to >1 reaction, **323 (74%) collapse to a single GO term** (GO can't tell
+  the reactions apart) but **112 (26%) spread across multiple GO terms** — RHEA
+  here resolves a distinction the bare EC lumps. Cleanest case: **EC:1.1.1.256 →
+  `GO:0004090 carbonyl reductase (NADPH)` + `GO:0004022 alcohol dehydrogenase
+  (NAD+)`** — a cofactor split EC hides but RHEA→GO preserves.
+- **RHEA → GO:** the more common direction is specificity *loss* — **679 GO terms
+  absorb >1 reaction**, up to **67 distinct ADH reactions → one
+  `alcohol dehydrogenase (NAD+) activity` term**, because GO lacks
+  substrate-specific MF children. RHEA→GO is a specificity *bottleneck* that
+  occasionally *rescues* a cofactor/substrate split.
+
+Full tables and examples: [RHEA-EC-SPECIFICITY.md](RHEA/RHEA-EC-SPECIFICITY.md).
+
 ## Reverse-Gap Pilot (live, exact-match)
 
 Reviewed-only UniProtKB entries carrying each reaction, and how many lack the
@@ -86,6 +129,24 @@ specific children — so most of that 40–99% is expected closure coverage, not
 genuine missing annotation. The job of the closure-filtered follow-up is to
 separate the residual *true* gaps (entries with neither the parent nor any
 child) from this expected altitude difference.
+
+## Mapping Gaps Found
+
+| # | Gap | Size | What it is |
+|---|-----|------|-----------|
+| G1 | EC-masking redundancy | 4,324 reactions (88%) | RHEA's GO term duplicates one EC2GO already supplies → low marginal value |
+| G2 | RHEA-only GO terms | 772 terms | Reachable via `rhea2go` but not `ec2go` — RHEA's unique forward contribution |
+| G3 | EC-without-`ec2go` | 462 reactions | EC has no `ec2go` line → RHEA is the only EC-adjacent GO route |
+| G4 | No-`rhea2go` enzymatic reactions | **2,731 / 7,635 (36%)** | Genuine enzymatic reaction with no GO MF target (2,445 EC-level; 286 specific-reaction-only) |
+| G5 | Specificity-collapse | 679 terms, up to 67:1 | GO lacks substrate-specific MF children → many reactions flatten to one term |
+| G6 | Reverse-propagation gap | pilot below | UniProt RHEA annotations whose mapped GO term never reaches GOA |
+
+G1/G4 are mirror images: where EC and RHEA agree RHEA is redundant; where RHEA
+has no GO term EC usually still carries the protein at coarser EC granularity —
+so most gaps are **specificity** gaps (right activity, coarse GO representation),
+not **coverage** gaps (no MF term at all). G2/G3/G6 are where RHEA genuinely adds
+something EC does not. Detail and reproduction in
+[RHEA-EC-SPECIFICITY.md](RHEA/RHEA-EC-SPECIFICITY.md).
 
 ## Methods
 
@@ -155,8 +216,12 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   pending go-db access.
 - **Computed live**: `GO_REF:0000116` identification (assigned_by=RHEA, MF, IEA);
   `rhea2go` = 7,746 reactions → 4,744 GO terms (GO release 2026-05-19);
-  8-reaction reverse-gap pilot via UniProt REST.
-- **Reproducible probe**: [`RHEA/rhea_go_gap_probe.py`](RHEA/rhea_go_gap_probe.py)
+  EC-masking + specificity (84% RHEA terms shared with EC2GO; 88% reaction-level
+  masking; 772 RHEA-only terms; 36% no-GO enzymatic-reaction gap) via
+  `rhea2go`/`ec2go`/RHEA REST; 8-reaction reverse-gap pilot via UniProt REST.
+- **Reproducible scripts**: [`RHEA/rhea_go_gap_probe.py`](RHEA/rhea_go_gap_probe.py)
+  (reverse gap), [`RHEA/rhea_ec_specificity.py`](RHEA/rhea_ec_specificity.py)
+  (EC-masking, specificity, gaps)
 - **Current conclusion**: RHEA is an active, reaction-grounded MF source whose
   most valuable contribution to this project is the **reverse direction** —
   surfacing UniProt-annotated enzyme activities that never propagate to GO — once
