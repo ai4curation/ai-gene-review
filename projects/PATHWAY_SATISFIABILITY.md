@@ -1,7 +1,7 @@
 ---
 title: "Pathway satisfiability: context-resolved module logic"
-maturity: DEVELOPING
-tags: [METHODS, MODULES]
+maturity: IN_PROGRESS
+tags: [PIPELINE]
 autolink_gene_symbols: false
 ---
 
