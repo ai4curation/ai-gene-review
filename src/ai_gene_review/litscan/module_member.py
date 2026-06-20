@@ -62,6 +62,7 @@ def scan_module(
                 "publication_date": pub.publication_date,
                 "authors": pub.authors,
                 "pubmed_url": pub.pubmed_url,
+                "europe_pmc_url": pub.europe_pmc_url,
                 "abstract": pub.abstract,
                 "already_cited": pub.reference_id in entity.cited_pmids,
                 "membership_score": _signal_score(signals),
@@ -123,7 +124,17 @@ def run(
     }
 
 
+def _blockquote(text: str, *, max_chars: int = 1200) -> str:
+    if not text:
+        return "> (no abstract available)"
+    snippet = text[:max_chars].rstrip()
+    if len(text) > max_chars:
+        snippet += " …"
+    return "> " + snippet
+
+
 def render_markdown(packet: dict[str, Any]) -> str:
+    """Render a per-record packet with everything an issue handoff needs verbatim."""
     lines = [
         "# LitScan: Module-Member Discovery Packet",
         "",
@@ -132,8 +143,8 @@ def render_markdown(packet: dict[str, Any]) -> str:
         f"- Modules scanned: {packet['module_count']}",
         f"- Total candidate papers: {packet['total_records']}",
         "",
-        "Deterministic high-recall lead list. `new` = not yet cited in the module's",
-        "evidence. Triage downstream (e.g. a haiku filter) to confirm true new members.",
+        "Deterministic high-recall lead list. `[NEW]` = not yet cited in the module's",
+        "evidence. Most records are false positives; triage before acting.",
         "",
     ]
     for module in packet["modules"]:
@@ -141,6 +152,7 @@ def render_markdown(packet: dict[str, Any]) -> str:
         lines += [
             f"## {module['module_title']} (`{module['module_id']}`)",
             "",
+            f"- Module file: `{module['module_path']}`",
             f"- Europe PMC hits: {module['hit_count']}; in packet: "
             f"{module['record_count']} ({new_count} not yet cited)",
             f"- Query terms: {', '.join(module['query_terms'])}",
@@ -150,16 +162,25 @@ def render_markdown(packet: dict[str, Any]) -> str:
             lines += ["_No records._", ""]
             continue
         for rec in module["records"]:
-            flag = "cited" if rec["already_cited"] else "NEW"
+            flag = "NEW" if not rec["already_cited"] else "cited"
             pmid = f"PMID:{rec['pmid']}" if rec["pmid"] else "(no PMID)"
-            lines.append(
-                f"- [{flag}] {pmid} ({rec['publication_date']}) "
-                f"score={rec['membership_score']} — {rec['title']}"
-            )
-            for sig in rec["membership_signals"]:
-                cats = ", ".join(sig["categories"])
-                lines.append(f"    - [{cats}] {sig['sentence']}")
-        lines.append("")
+            lines += [
+                f"### [{flag}] {pmid} — {rec['title']}",
+                "",
+                f"- Date: {rec['publication_date']} | Journal: {rec['journal']} "
+                f"| DOI: {rec['doi'] or '(none)'}",
+                f"- PubMed: {rec['pubmed_url'] or '(none)'} | "
+                f"Europe PMC: {rec.get('europe_pmc_url') or '(none)'}",
+                f"- Membership score: {rec['membership_score']}",
+                "",
+            ]
+            if rec["membership_signals"]:
+                lines.append("Membership signals:")
+                for sig in rec["membership_signals"]:
+                    cats = ", ".join(sig["categories"])
+                    lines.append(f"- [{cats}] {sig['sentence']}")
+                lines.append("")
+            lines += ["Abstract:", "", _blockquote(rec["abstract"]), ""]
     return "\n".join(lines).rstrip() + "\n"
 
 

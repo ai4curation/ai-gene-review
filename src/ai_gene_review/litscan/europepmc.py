@@ -63,11 +63,18 @@ def publication_from_record(record: dict[str, Any]) -> Publication:
     pmid = normalize_text(record.get("pmid"))
     if not pmid and source == "MED" and re.fullmatch(r"\d+", record_id):
         pmid = record_id
+    journal = record.get("journalTitle")
+    if not journal:
+        journal_info = record.get("journalInfo")
+        if isinstance(journal_info, dict) and isinstance(
+            journal_info.get("journal"), dict
+        ):
+            journal = journal_info["journal"].get("title")
     return Publication(
         pmid=pmid,
         doi=normalize_text(record.get("doi")),
         title=normalize_text(record.get("title")),
-        journal=normalize_text(record.get("journalTitle")),
+        journal=normalize_text(journal),
         publication_date=normalize_text(record.get("firstPublicationDate")),
         authors=normalize_text(record.get("authorString")),
         abstract=normalize_text(record.get("abstractText")),
