@@ -26,6 +26,7 @@ from ai_gene_review.module_logic import (
     iter_atoms,
     step_id,
     unsatisfied_steps,
+    abduce,
 )
 
 GLUCONEO_HUMAN = Path("modules/gluconeogenesis_human.yaml")
@@ -227,6 +228,37 @@ def test_methionine_genome_reconstruction(present, found, gaps):
 
     assert is_satisfied(circuit, holds) is found
     assert [step_id(s) for s in unsatisfied_steps(circuit, holds)] == gaps
+
+
+@pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
+@pytest.mark.parametrize(
+    "present,active,classification,gaps",
+    [
+        # complete pathway, organism known prototroph -> explained
+        ({"metA", "metB", "metC", "metE"}, True, "CONSISTENT_ACTIVE", []),
+        # autotroph (makes methionine) but no acylation/sulfur candidates -> abduction lead
+        ({"metH"}, True, "ABDUCTION_TARGET", ["acylation", "sulfur_incorporation"]),
+        # nothing encoded, known auxotroph -> engine correctly predicts the auxotrophy
+        (set(), False, "CONSISTENT_INACTIVE", ["acylation", "sulfur_incorporation", "methylation"]),
+        # complete pathway but asserted inactive -> overprediction
+        ({"metA", "metB", "metC", "metE"}, False, "OVERPREDICTION", []),
+    ],
+)
+def test_abduction_classification(present, active, classification, gaps):
+    circuit = compile_module_file(METHIONINE)
+
+    def holds(atom):
+        return atom.gene_symbol in present
+
+    ab = abduce(circuit, holds, asserted_active=active)
+    assert ab.classification == classification
+    assert ab.gap_steps == gaps
+    # only abduction targets carry gap-filling hypotheses
+    assert bool(ab.hypotheses) == (classification in {"ABDUCTION_TARGET", "OVERPREDICTION"})
+    if classification == "ABDUCTION_TARGET":
+        # the candidate canonical enzymes that were all absent are reported per gap
+        assert ab.gap_candidates["acylation"] == ["metA", "metX"]
+        assert ab.gap_candidates["sulfur_incorporation"] == ["metB", "metC", "metY"]
 
 
 def test_atom_is_hashable():

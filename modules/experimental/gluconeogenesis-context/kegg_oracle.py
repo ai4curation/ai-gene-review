@@ -41,6 +41,9 @@ ORGANISMS = {
     "hin": "Haemophilus influenzae Rd",
     "cgl": "Corynebacterium glutamicum",
     "buc": "Buchnera aphidicola (APS, Acyrthosiphon pisum endosymbiont)",
+    "syn": "Synechocystis sp. PCC 6803",
+    "mja": "Methanocaldococcus jannaschii",
+    "rpr": "Rickettsia prowazekii",
 }
 
 

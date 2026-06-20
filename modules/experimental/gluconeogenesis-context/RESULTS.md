@@ -188,6 +188,43 @@ first-class engine primitive in `src/ai_gene_review/module_logic.py`. The upshot
 satisfiability core spans **prokaryote genome-presence and eukaryote expression-gating** —
 the original framing, demonstrated end to end.
 
+## Abduction: a gap is a hypothesis, not a verdict
+
+A missing step only *means* something once you know whether the pathway is actually
+running. `abduce()` (engine primitive) crosses circuit satisfiability with an
+**independent** activity claim — here the organism's documented growth phenotype on
+defined media, which says nothing about its gene content. `resolve_abduction.py` runs
+this for methionine biosynthesis:
+
+```
+CONSISTENT_ACTIVE   eco, bsu, cgl   prototrophs, pathway reconstructable          (explained)
+ABDUCTION_TARGET    syn, mja        make methionine but acylation + sulfur steps
+                                    have NO known candidate encoded               (leads!)
+CONSISTENT_INACTIVE rpr             auxotroph; gap correctly predicts the auxotrophy
+```
+
+The two abduction targets are real **metabolic dark matter**:
+
+* *Synechocystis* sp. PCC 6803 (obligate photoautotroph, grows in BG-11 mineral medium)
+  and *Methanocaldococcus jannaschii* (chemolithoautotroph on H2/CO2) both synthesise
+  methionine, yet encode none of the canonical homoserine acyltransferases (metA/metX)
+  or sulfur-incorporation enzymes (metB/metC/metY) under their KOs.
+* The engine therefore emits a **structured, reviewable prediction** per gap step: "this
+  organism makes methionine but none of {metA,metX} (resp. {metB,metC,metY}) is encoded →
+  an unannotated / non-orthologous enzyme, or an unmodelled route, must fill it." This is
+  exactly how GapMind surfaces candidates for enzyme discovery (cyanobacterial and archaeal
+  methionine biosynthesis are known to be divergent / poorly annotated at these steps).
+* Crucially the same machinery does **not** cry wolf on *Rickettsia prowazekii*: it is an
+  obligate intracellular methionine auxotroph, so its gap is classified
+  `CONSISTENT_INACTIVE` — the engine *correctly predicts the auxotrophy* rather than
+  proposing a phantom enzyme.
+
+Epistemics: the activity column is independent of the ortholog oracle (growth phenotype,
+not gene set), so a gap scored against it is a genuine prediction, not a circular
+restatement. A `ABDUCTION_TARGET` is a lead to verify (sequence/structure search, or
+fixing the model), and the explicit `the activity assertion is incorrect` hypothesis keeps
+the engine honest when the phenotype call itself is the error.
+
 ## Honest scope / epistemics
 
 - **Expression is used asymmetrically:** absence excludes a route (no enzyme → no
@@ -226,6 +263,7 @@ uv run python resolve_substrates.py                   # which precursor can each
 
 uv run python kegg_oracle.py                           # cache KEGG ortholog presence per genome
 uv run python resolve_genomes.py                       # GapMind-style methionine reconstruction
+uv run python resolve_abduction.py                     # gaps vs known phenotype -> leads / auxotrophy
 uv run pytest tests/test_module_logic.py -q            # engine unit tests (from repo root)
 ```
 
@@ -247,6 +285,9 @@ uv run pytest tests/test_module_logic.py -q            # engine unit tests (from
    to prove the core spans prokaryote→eukaryote.~~ **Done**
    (`modules/methionine_biosynthesis.yaml` + `kegg_oracle.py` + `resolve_genomes.py`):
    route selection and gap/auxotrophy detection across five genomes from KEGG.
-5. Wire the "known-active + unexpressed required atom = gap" abduction path and emit
-   gaps as reviewable predictions (the eukaryotic counterpart of the Buchnera gap:
-   a pathway known active in a context but with a required atom unexpressed).
+5. ~~Wire the "known-active + unexpressed required atom = gap" abduction path and emit
+   gaps as reviewable predictions.~~ **Done** (`abduce()` + `resolve_abduction.py`):
+   Synechocystis and M. jannaschii surfaced as real methionine "dark matter" leads;
+   Rickettsia's gap correctly classified as a predicted auxotrophy.
+6. Carry the abduction path to the eukaryotic side: assert a tissue/zone where a pathway
+   is independently known active and flag any unexpressed required atom as a lead.

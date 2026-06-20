@@ -226,6 +226,72 @@ def step_id(circuit: Circuit) -> str:
     return circuit.node_id
 
 
+@dataclass
+class Abduction:
+    """Reconciliation of engine satisfiability with an independent activity claim.
+
+    When a pathway is *independently known* to be active in a context (an organism
+    grows without the end product; a flux is measured) but the engine finds it
+    unsatisfiable, the unsatisfied steps are not a verdict that the pathway is
+    impossible — they are an **abduction**: there must be an explanation the model
+    does not yet capture. This object records that reconciliation.
+    """
+
+    classification: str            # see classify() below
+    consistent: bool               # engine agrees with the asserted activity
+    asserted_active: bool
+    satisfiable: bool
+    gap_steps: list[str]           # ids of unsatisfied top-level steps
+    gap_candidates: dict[str, list[str]]  # per gap step, the canonical atoms all absent
+    hypotheses: list[str]          # candidate explanations (when not consistent)
+
+
+#: Explanations emitted for a gap in a context where the pathway is known active.
+GAP_HYPOTHESES = [
+    "non-orthologous / unannotated enzyme fills this step (candidate to identify by sequence/structure)",
+    "an alternative route not represented in the module is used",
+    "the activity assertion is incorrect for this context",
+]
+
+
+def abduce(circuit: Circuit, holds: Predicate, asserted_active: bool) -> Abduction:
+    """Reconcile circuit satisfiability against an independent activity assertion.
+
+    Four outcomes:
+
+    * ``CONSISTENT_ACTIVE`` - satisfiable and asserted active (pathway explained).
+    * ``CONSISTENT_INACTIVE`` - unsatisfiable and asserted inactive (correctly predicts
+      the absence, e.g. a known auxotrophy).
+    * ``ABDUCTION_TARGET`` - asserted active but unsatisfiable: a real gap to explain
+      (novel enzyme / unmodelled route / wrong assertion).
+    * ``OVERPREDICTION`` - satisfiable but asserted inactive: encoded yet not realised
+      (regulation/expression off, or the assertion is wrong).
+
+    >>> doc = {"module": {"id": "m", "parts": [
+    ...   {"order": 1, "node": {"id": "s1", "annotons": [{"id": "a",
+    ...      "participant": {"gene": {"preferred_term": "A"}}}]}}]}}
+    >>> circ = compile_module(doc)
+    >>> abduce(circ, lambda atom: False, asserted_active=True).classification
+    'ABDUCTION_TARGET'
+    >>> abduce(circ, lambda atom: False, asserted_active=False).classification
+    'CONSISTENT_INACTIVE'
+    """
+    sat = is_satisfied(circuit, holds)
+    gaps = unsatisfied_steps(circuit, holds)
+    gap_ids = [step_id(s) for s in gaps]
+    gap_candidates = {step_id(s): sorted({a.gene_symbol for a in iter_atoms(s) if a.gene_symbol})
+                      for s in gaps}
+    if sat and asserted_active:
+        return Abduction("CONSISTENT_ACTIVE", True, True, True, gap_ids, gap_candidates, [])
+    if not sat and not asserted_active:
+        return Abduction("CONSISTENT_INACTIVE", True, False, False, gap_ids, gap_candidates, [])
+    if not sat and asserted_active:
+        return Abduction("ABDUCTION_TARGET", False, True, False, gap_ids, gap_candidates,
+                         list(GAP_HYPOTHESES))
+    return Abduction("OVERPREDICTION", False, False, True, gap_ids, gap_candidates,
+                     ["pathway encoded but asserted inactive: regulation/expression off, or the assertion is wrong"])
+
+
 def unsatisfied_steps(circuit: Circuit, holds: Predicate) -> list[Circuit]:
     """Top-level conjuncts (pathway steps) that are not satisfied under ``holds``.
 
