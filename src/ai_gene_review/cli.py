@@ -3302,6 +3302,86 @@ def analyze_evidence_sources(
     typer.echo(f"Report written to {report_path}")
 
 
+@app.command()
+def fetch_panther_paint(
+    family: Annotated[
+        str, typer.Argument(help="PANTHER family id (e.g., PTHR10177)")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Repo root (default: current directory). Slice is written to "
+            "interpro/panther/<FAMILY>/.",
+        ),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--cache-dir",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+        ),
+    ] = None,
+    extra_uniprot: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--extra-uniprot",
+            help="Extra member UniProt id(s) to include when resolving nodes "
+            "(repeatable).",
+        ),
+    ] = None,
+    force_download: Annotated[
+        bool,
+        typer.Option("--force-download", help="Re-download source GAFs even if cached."),
+    ] = False,
+):
+    """Fetch PANTHER PAINT (PTN node-level) annotations for a family.
+
+    Resolves the family's PTN tree nodes (from its cached ``<FAM>-entries.csv``
+    member list joined against the leaf IBA GAF), then slices the node-level
+    ``IBD.gaf`` (IBD/IRD/IKR annotations) for those nodes. Writes:
+
+        interpro/panther/<FAMILY>/<FAMILY>-paint.gaf   (raw GAF subset)
+        interpro/panther/<FAMILY>/<FAMILY>-paint.tsv   (parsed sidecar)
+
+    Run ``fetch-gene`` for a member first (or otherwise populate the family's
+    ``<FAMILY>-entries.csv``) so the member list is available.
+
+    Examples:
+        ai-gene-review fetch-panther-paint PTHR10177
+        ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+    """
+    from ai_gene_review.etl.panther_paint import fetch_family_paint
+
+    repo_root = output_dir or Path.cwd()
+    family_dir = repo_root / "interpro" / "panther" / family
+    entries_csv = family_dir / f"{family}-entries.csv"
+    if not entries_csv.exists():
+        typer.echo(
+            f"❌ {entries_csv} not found. Fetch the family first "
+            f"(e.g. via fetch-gene for a member of {family})."
+        )
+        raise typer.Exit(code=1)
+
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
+    gaf_path, tsv_path, nodes = fetch_family_paint(
+        family,
+        entries_csv=entries_csv,
+        out_dir=family_dir,
+        cache_dir=cache,
+        extra_uniprot=extra_uniprot,
+        force_download=force_download,
+    )
+    n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
+    typer.echo(
+        f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
+    )
+    typer.echo(f"  {gaf_path}")
+    typer.echo(f"  {tsv_path}")
+
+
 def main():
     """Main entry point for the CLI."""
     app()

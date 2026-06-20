@@ -13,12 +13,28 @@ propagation — rather than re-judging gene by gene.
   and its seeds (from the cached `interpro/panther/<FAM>/` tables); flags
   cross-subfamily and localization propagations and joins our curation action.
 - `iba_propagation.tsv` — the resulting per-IBA table (regenerate with the script).
+- `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
+  themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR layer that is the *source*
+  of every IBA). For each ancestral node our genes derive from, it lists the full
+  node annotation set with the canonical seed counts, marks loss (IRD/IKR `NOT`)
+  annotations, and flags node annotations that did **not** propagate to our gene
+  (`propagated=false` → candidate missing annotation or lineage loss).
+- `node_annotations.tsv` — the resulting per-node-annotation table.
 - `REVIEW.md` — the written review and findings.
 
 Regenerate:
 
 ```bash
 uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+```
+
+The node-level source files (`IBD.gaf`, leaf GAF) are downloaded on demand into
+a gitignored `.cache/panther/` and are not committed. Per-family node slices can
+be materialised under `interpro/panther/<FAM>/<FAM>-paint.{gaf,tsv}` with:
+
+```bash
+just fetch-panther-paint PTHR10177
 ```
 
 Scope: the 151 IBAs in the 40 reviewed genes (38 PANTHER families, all cached
