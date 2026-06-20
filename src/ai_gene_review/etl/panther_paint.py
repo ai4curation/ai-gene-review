@@ -41,7 +41,7 @@ import csv
 import gzip
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import IO, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 
@@ -324,7 +324,7 @@ def download_cached(url: str, cache_dir: Path, *, force: bool = False) -> Path:
     return dest
 
 
-def open_text(path: Path):
+def open_text(path: Path) -> IO[str]:
     """Open a possibly-gzipped text file for line iteration."""
     if path.suffix == ".gz":
         return gzip.open(path, "rt")
