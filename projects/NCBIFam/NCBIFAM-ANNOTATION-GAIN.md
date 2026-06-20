@@ -109,6 +109,27 @@ So suggesting our own term is what converts these from invisible to actionable �
 surfaces genuine **reviewed/Swiss-Prot** gaps (dGTPase 13, LL-DAP 2) that the broad
 NCBI assignment hid entirely.
 
+### …but high gain can also be an over-annotation trap (FtsX)
+
+The same machinery warns against over-reach. For `TIGR00439` (cell division protein
+**FtsX**) the candidate terms give:
+
+| Term | gain (all / reviewed) | Interpretation |
+|------|----------------------:|----------------|
+| `GO:0051301` cell division | **22** / 0 (of 3,306 / 7) | curator consensus; all 7 reviewed FtsX already carry it |
+| `GO:0000910` cytokinesis (NCBI's) | 3,304 / 5 | only 2/7 reviewed carry it |
+| `GO:0043093` FtsZ-dependent cytokinesis | 3,304 / 5 | most specific; only 2/7 reviewed carry it |
+
+A naive "maximise gain" rule would pick `GO:0043093` (3,304!), but the ontology says
+cytokinesis is `part_of` cell division (so the specific terms are *narrower*, not
+parents), and curators apply them to only 2/7 FtsX — FtsX/FtsEX *regulates* septal
+hydrolysis rather than performing constriction. Propagating the specific term to all
+3,306 entries would assert more than the evidence supports. The seed therefore maps
+FtsX to the consensus `GO:0051301` (gain 22, confirmatory) and **declines** the
+high-gain specific term. **High gain is a flag for review, not an instruction to
+propagate** — it can mean a real masked gap (the five rows above) *or* an
+over-annotation waiting to happen (FtsX).
+
 So an `ncbifam2go` build must, like the curated seed in
 [`ncbifam2go.sssom.yaml`](ncbifam2go.sssom.yaml):
 

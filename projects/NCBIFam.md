@@ -180,10 +180,9 @@ parallel to RHEA:
   IS630 transposase → `GO:0004803` (18,874 entries missing it), an encapsulin-shell
   CC term, and an anti-phage defense BP term. **Five of these rows propose our own
   *specific* term to replace an NCBI value that was too broad** (see below).
-- **`skos:broadMatch`** (2 rows) — reserved for the case where **no more-specific GO
+- **`skos:broadMatch`** (1 row) — reserved for the case where **no more-specific GO
   term exists to adopt**: VirB5 → `type IV secretion system complex` (a subunit
-  `part_of` the whole complex, no VirB5-specific CC term), and FtsX → `cytokinesis`
-  (no clean bacterial child is an exact fit).
+  `part_of` the whole complex, no VirB5-specific CC term).
 
 **We suggest our own term where NCBI's was too broad — and that unmasks the real
 gain.** For five families NCBI's `go_terms` gave only a broad parent — twice the
@@ -198,6 +197,23 @@ large gaps the parent masked** — spermidine synthase **575**, LL-DAP aminotran
 **1,185**, dihydroorotase **491**, and dGTPase **456 (incl. 13 reviewed/Swiss-Prot)**
 entries missing the precise activity. Proposing our own term is what turns these from
 invisible into actionable gap-fills.
+
+**…but more specific is not always right — the FtsX cell-division case.** The
+mirror-image judgement is `TIGR00439` (permease-like cell division protein **FtsX**),
+where chasing specificity would be **over-annotation**. NCBI assigned `GO:0000910
+cytokinesis`; the ontology shows cytokinesis is `part_of` `GO:0051301 cell division`
+(so NCBI's term is actually the *narrower* one — an earlier draft of this seed had
+that backwards). Empirically, **all 7 reviewed FtsX proteins carry `GO:0051301 cell
+division`** but only 2/7 carry cytokinesis or the most specific `GO:0043093
+FtsZ-dependent cytokinesis`. FtsX/FtsEX *regulates* septal peptidoglycan hydrolysis
+and divisome assembly, so curators annotate the safe participation term, not the
+constriction act. The gain numbers make the trap explicit: mapping to `GO:0051301`
+gains only **22** (it is already near-universal — a confirmatory mapping), whereas
+mapping to `GO:0043093` would show a **3,304** apparent gap — but propagating
+*FtsZ-dependent cytokinesis* to every FtsX would assert more than the family supports.
+We therefore propose the curator-consensus `GO:0051301 cell division` as the
+`exactMatch` and **decline** the higher-gain specific term. Specificity is the goal
+only up to the altitude the evidence supports.
 
 **Verification matters and catches real errors.** One scoping-sample NCBIFAM
 `go_terms` value (`GO:0009448` on a GABA transaminase) is **obsolete**; a
@@ -294,9 +310,10 @@ over-annotation.
   carries 0 native GO (FTP + Entrez); 60-model gain Σ = 19 reviewed / 26,578
   all-UniProtKB; masking verified from this repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 28 verified SSSOM rows (26 exactMatch ready-to-add, incl. 5 proposing our own
-  specific term over NCBI's broad one; 2 broadMatch where no specific term exists),
-  spanning MF/BP/CC, each with live propagation gain; **passes** `just validate-ncbifam-mappings`.
+  — 28 verified SSSOM rows (27 exactMatch ready-to-add, incl. 5 proposing our own
+  specific term over NCBI's broad one and 1 — FtsX — declining a too-specific term;
+  1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with
+  live propagation gain; **passes** `just validate-ncbifam-mappings`.
 - **Current conclusion**: NCBIFAM/CDD reach GO only through InterPro, which
   **masks** their contribution in GOA and leaves the **majority of signatures
   unintegrated**. CDD-proper has **no native GO** (it is NCBIFAM, bundled inside
