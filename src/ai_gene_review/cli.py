@@ -3351,8 +3351,7 @@ def fetch_panther_paint(
     member list joined against the leaf IBA GAF), then slices the node-level
     ``IBD.gaf`` (IBD/IRD/IKR annotations) for those nodes. Writes:
 
-        interpro/panther/<FAMILY>/<FAMILY>-paint.gaf   (raw GAF subset)
-        interpro/panther/<FAMILY>/<FAMILY>-paint.tsv   (parsed sidecar)
+        interpro/panther/<FAMILY>/<FAMILY>-paint.tsv   (one row per node annotation)
 
     Run ``fetch-gene`` for a member first (or otherwise populate the family's
     ``<FAMILY>-entries.csv``) so the member list is available.
@@ -3403,7 +3402,7 @@ def fetch_panther_paint(
         raise typer.Exit(code=1)
 
     typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
-    gaf_path, tsv_path, nodes = fetch_family_paint(
+    tsv_path, nodes = fetch_family_paint(
         family,
         entries_csv=entries_csv,
         out_dir=family_dir,
@@ -3415,7 +3414,6 @@ def fetch_panther_paint(
     typer.echo(
         f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
     )
-    typer.echo(f"  {gaf_path}")
     typer.echo(f"  {tsv_path}")
 
 

@@ -11,6 +11,7 @@ from ai_gene_review.etl.panther_paint import (
     parse_ibd_gaf,
     family_member_ids,
     family_member_subfamilies,
+    iter_leaf_rows,
     iter_losses,
     leaf_nodes_for_members,
     write_family_paint,
@@ -151,23 +152,24 @@ def test_leaf_nodes_for_members_ignores_unrelated_leaves():
     assert "PTN999999999" not in nodes
 
 
-def test_write_family_paint_emits_gaf_and_tsv(tmp_path: Path):
+def test_iter_leaf_rows_yields_object_go_and_nodes():
+    rows = list(iter_leaf_rows(LEAF_FIXTURE.splitlines()))
+    # header skipped; 3 data rows in the fixture
+    assert ("P14635", "GO:0016538", ["PTN000019791"]) in rows
+    assert ("Q99999", "GO:0000001", ["PTN999999999"]) in rows
+    assert len(rows) == 3
+
+
+def test_write_family_paint_writes_tsv_only(tmp_path: Path):
     index = parse_ibd_gaf(IBD_FIXTURE.splitlines())
     nodes = {"PTN000019791"}
     out_dir = tmp_path / "PTHR000"
     out_dir.mkdir()
-    gaf_path, tsv_path = write_family_paint("PTHR000", nodes, index, out_dir)
+    tsv_path = write_family_paint("PTHR000", nodes, index, out_dir)
 
-    assert gaf_path == out_dir / "PTHR000-paint.gaf"
     assert tsv_path == out_dir / "PTHR000-paint.tsv"
-
-    gaf_text = gaf_path.read_text()
-    # header preserved, both node rows present, unrelated node excluded
-    assert gaf_text.startswith("!")
-    data_lines = [ln for ln in gaf_text.splitlines() if not ln.startswith("!")]
-    assert len(data_lines) == 2
-    assert all("PTN000019791" in ln for ln in data_lines)
-    assert "PTN002681965" not in gaf_text
+    # No GAF is written any more.
+    assert not (out_dir / "PTHR000-paint.gaf").exists()
 
     tsv_lines = tsv_path.read_text().strip().splitlines()
     assert tsv_lines[0].split("\t")[:5] == [
@@ -177,18 +179,19 @@ def test_write_family_paint_emits_gaf_and_tsv(tmp_path: Path):
         "aspect",
         "evidence",
     ]
-    # two data rows for the single node
+    # two data rows for the single node; unrelated node excluded
     assert len(tsv_lines) == 3
     assert all(line.startswith("PTHR000\tPTN000019791") for line in tsv_lines[1:])
+    assert "PTN002681965" not in tsv_path.read_text()
 
 
 def test_write_family_paint_empty_nodes(tmp_path: Path):
     index = parse_ibd_gaf(IBD_FIXTURE.splitlines())
     out_dir = tmp_path / "PTHRX"
     out_dir.mkdir()
-    gaf_path, tsv_path = write_family_paint("PTHRX", set(), index, out_dir)
-    # still writes (empty) files with just headers so downstream code is uniform
-    assert gaf_path.exists() and tsv_path.exists()
+    tsv_path = write_family_paint("PTHRX", set(), index, out_dir)
+    # still writes an (empty) file with just the header so downstream is uniform
+    assert tsv_path.exists()
     assert tsv_path.read_text().strip().splitlines() == [
         "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\ttaxon\tdate"
     ]
@@ -221,7 +224,7 @@ def test_fetch_family_paint_end_to_end_with_seeded_cache(tmp_path: Path):
 
     out_dir = tmp_path / "PTHRX"
     out_dir.mkdir()
-    gaf_path, tsv_path, nodes = fetch_family_paint(
+    tsv_path, nodes = fetch_family_paint(
         "PTHRX",
         entries_csv=entries_csv,
         out_dir=out_dir,
@@ -230,6 +233,7 @@ def test_fetch_family_paint_end_to_end_with_seeded_cache(tmp_path: Path):
 
     # P14635's leaf rows cite PTN000019791, which has 2 IBD annotations.
     assert nodes == {"PTN000019791"}
+    assert not (out_dir / "PTHRX-paint.gaf").exists()
     tsv_rows = tsv_path.read_text().strip().splitlines()
     assert len(tsv_rows) == 3  # header + 2 annotations
     assert all(r.startswith("PTHRX\tPTN000019791") for r in tsv_rows[1:])
@@ -257,7 +261,7 @@ def test_fetch_family_paint_extra_uniprot_expands_nodes(tmp_path: Path):
 
     out_dir = tmp_path / "PTHRX"
     out_dir.mkdir()
-    _, _, nodes = fetch_family_paint(
+    _, nodes = fetch_family_paint(
         "PTHRX",
         entries_csv=entries_csv,
         out_dir=out_dir,
@@ -311,6 +315,6 @@ def test_fetch_all_family_paint_bulk(tmp_path: Path):
 
     counts = fetch_all_family_paint(panther, cache_dir=cache_dir)
     assert counts == {"PTHR1": 2}
-    assert (panther / "PTHR1" / "PTHR1-paint.gaf").exists()
+    assert (panther / "PTHR1" / "PTHR1-paint.tsv").exists()
     # Empty family is skipped by default.
-    assert not (panther / "EMPTY" / "EMPTY-paint.gaf").exists()
+    assert not (panther / "EMPTY" / "EMPTY-paint.tsv").exists()

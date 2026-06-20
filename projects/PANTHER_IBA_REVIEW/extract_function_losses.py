@@ -32,15 +32,13 @@ sys.path.insert(0, str(REPO / "src"))
 from ai_gene_review.etl.panther_paint import (  # noqa: E402
     IBD_GAF_URL,
     LEAF_GAF_URL,
-    _COL_OBJECT_ID,
-    _COL_WITH_FROM,
-    _open_text,
     download_cached,
     family_member_subfamilies,
+    iter_leaf_rows,
     iter_losses,
     load_all_family_members,
+    open_text,
     parse_ibd_gaf,
-    parse_ptn_nodes,
 )
 
 PANTHER = REPO / "interpro" / "panther"
@@ -75,18 +73,11 @@ def main() -> None:
     # Single leaf-GAF pass: family node sets + which members descend from a loss node.
     family_nodes: dict[str, set[str]] = {}
     loss_node_members: dict[str, set[str]] = {}
-    with _open_text(leaf_path) as fh:
-        for line in fh:
-            if not line or line.startswith("!"):
-                continue
-            cols = line.split("\t")
-            if len(cols) <= _COL_WITH_FROM:
-                continue
-            acc = cols[_COL_OBJECT_ID]
+    with open_text(leaf_path) as fh:
+        for acc, _go, nodes in iter_leaf_rows(fh):
             fams = member_to_families.get(acc)
             if not fams:
                 continue
-            nodes = parse_ptn_nodes(cols[_COL_WITH_FROM])
             for n in nodes:
                 for f in fams:
                     family_nodes.setdefault(f, set()).add(n)
@@ -127,6 +118,9 @@ def main() -> None:
                 }
             )
 
+    if not rows:
+        print("No within-family loss findings.")
+        return
     rows.sort(key=lambda r: (r["family"], r["go_id"]))
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "family_function_losses.tsv"
     cols = list(rows[0].keys())

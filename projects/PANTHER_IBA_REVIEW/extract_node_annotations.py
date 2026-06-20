@@ -97,6 +97,9 @@ def main() -> None:
                     }
                 )
 
+    if not rows:
+        print("No node-level annotations found.")
+        return
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "node_annotations.tsv"
     cols = list(rows[0].keys())
     with out.open("w", newline="") as fh:

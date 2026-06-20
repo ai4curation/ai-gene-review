@@ -36,14 +36,12 @@ sys.path.insert(0, str(REPO / "src"))
 from ai_gene_review.etl.panther_paint import (  # noqa: E402
     IBD_GAF_URL,
     LEAF_GAF_URL,
-    _COL_GO_ID,
-    _COL_OBJECT_ID,
-    _COL_WITH_FROM,
-    _open_text,
     assemble_loss_input,
     download_cached,
     family_member_ids,
     family_member_subfamilies,
+    iter_leaf_rows,
+    open_text,
     parse_ibd_gaf,
     parse_ptn_nodes,
 )
@@ -100,19 +98,13 @@ def main() -> None:
     # (loss clade) and members still annotated with the GO (retaining clade).
     loss_members: set[str] = set()
     retaining_members: set[str] = set()
-    with _open_text(leaf_path) as fh:
-        for line in fh:
-            if not line or line.startswith("!"):
-                continue
-            cols = line.split("\t")
-            if len(cols) <= _COL_WITH_FROM:
-                continue
-            acc = cols[_COL_OBJECT_ID]
+    with open_text(leaf_path) as fh:
+        for acc, go, nodes in iter_leaf_rows(fh):
             if acc not in members:
                 continue
-            if args.loss_node in parse_ptn_nodes(cols[_COL_WITH_FROM]):
+            if args.loss_node in nodes:
                 loss_members.add(acc)
-            if cols[_COL_GO_ID] == loss.go_id:
+            if go == loss.go_id:
                 retaining_members.add(acc)
 
     bundle = assemble_loss_input(

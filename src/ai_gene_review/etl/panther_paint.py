@@ -7,7 +7,7 @@ proteins: an IBA on a gene is just the projection onto that leaf of an
 annotation curated on one of its ancestral nodes.
 
 The authoritative file is ``IBD.gaf`` from the PANTHER FTP. Each row's subject
-is a ``PTN`` node, with one of three evidence codes:
+is a ``PTN`` node. Most rows carry one of three PAINT evidence codes:
 
 * ``IBD`` - Inferred from Biological aspect of Descendant: a function annotated
   *at* the node (seeded by experimental annotations on descendants). Source of
@@ -15,6 +15,10 @@ is a ``PTN`` node, with one of three evidence codes:
 * ``IRD`` - Inferred from Reviewed Descendant: a function *lost / diverged* at
   the node (a ``NOT`` annotation). Source of negated IBAs.
 * ``IKR`` - Inferred from Key Residues: loss inferred from key-residue change.
+
+A small number of rows additionally carry ``IBA`` on a ``PTN`` node; these are
+legitimate in the current PANTHER data and are parsed/retained as-is (we do not
+filter by evidence code, only require a ``PTN`` subject).
 
 ``IBD.gaf`` is keyed by node and carries no ``PTHR`` family id, so to slice it
 per family we resolve which ``PTN`` nodes belong to a family by joining:
@@ -25,7 +29,7 @@ per family we resolve which ``PTN`` nodes belong to a family by joining:
 
 The union of ancestral nodes cited by a family's members is that family's node
 set. We then slice ``IBD.gaf`` to those nodes and write a per-family
-``<FAM>-paint.gaf`` (raw GAF) plus a parsed ``<FAM>-paint.tsv`` sidecar.
+``<FAM>-paint.tsv`` (parsed, one row per node annotation).
 
 Both source files are cached (gitignored ``.cache/`` by default); only the
 small per-family slices are intended to be committed.
@@ -76,7 +80,8 @@ class IBDRecord:
         node: The ``PTN`` tree-node id the annotation is made on.
         go_id: The GO term id.
         aspect: GAF aspect (``F`` molecular function, ``P`` process, ``C`` component).
-        evidence: PAINT evidence code (``IBD``, ``IRD``, or ``IKR``).
+        evidence: PAINT evidence code (usually ``IBD``, ``IRD``, or ``IKR``;
+            occasionally ``IBA`` on a node, which is retained as-is).
         negated: True for loss annotations (``NOT`` qualifier; IRD/IKR).
         seeds: Full CURIEs in the with/from field (experimental seeds for IBD;
             the ancestral node for IRD/IKR), preserved verbatim (e.g.
@@ -213,12 +218,40 @@ def iter_losses(
                 yield rec, parse_ptn_nodes("|".join(rec.seeds))
 
 
+def iter_leaf_rows(
+    lines: Iterable[str],
+) -> Iterable[Tuple[str, str, List[str]]]:
+    """Yield ``(object_id, go_id, ancestral_PTN_nodes)`` per leaf IBA GAF row.
+
+    A public streaming primitive over the (large) leaf GAF so callers do not need
+    the column-index internals. Header/comment and short lines are skipped.
+
+    >>> leaf = [
+    ...     "UniProtKB\\tP14635\\tCCNB1\\tinvolved_in\\tGO:0016538\\tGO_REF:0000033\\tIBA\\t"
+    ...     "PANTHER:PTN1|UniProtKB:P2\\tF\\t\\t\\tprotein\\ttaxon:9606\\t20250101\\tGO_Central\\t\\t",
+    ... ]
+    >>> list(iter_leaf_rows(leaf))
+    [('P14635', 'GO:0016538', ['PTN1'])]
+    """
+    for line in lines:
+        if not line or line.startswith("!"):
+            continue
+        cols = line.split("\t")
+        if len(cols) <= _COL_WITH_FROM:
+            continue
+        yield (
+            cols[_COL_OBJECT_ID],
+            cols[_COL_GO_ID],
+            parse_ptn_nodes(cols[_COL_WITH_FROM]),
+        )
+
+
 def leaf_nodes_for_members(lines: Iterable[str], members: Set[str]) -> Set[str]:
     """Stream the leaf IBA GAF and collect ancestral ``PTN`` nodes for members.
 
-    For every leaf row whose object id (column 2) is in ``members``, the
-    ancestral ``PTN`` node(s) in the with/from field are collected. Streaming
-    keeps memory flat over the ~4.6M-line leaf GAF.
+    For every leaf row whose object id is in ``members``, the ancestral ``PTN``
+    node(s) in the with/from field are collected. Streaming keeps memory flat
+    over the ~4.6M-line leaf GAF.
 
     >>> leaf = [
     ...     "UniProtKB\\tP14635\\tCCNB1\\tinvolved_in\\tGO:0016538\\tGO_REF:0000033\\tIBA\\t"
@@ -228,14 +261,9 @@ def leaf_nodes_for_members(lines: Iterable[str], members: Set[str]) -> Set[str]:
     ['PTN1']
     """
     nodes: Set[str] = set()
-    for line in lines:
-        if not line or line.startswith("!"):
-            continue
-        cols = line.split("\t")
-        if len(cols) <= _COL_WITH_FROM:
-            continue
-        if cols[_COL_OBJECT_ID] in members:
-            nodes.update(parse_ptn_nodes(cols[_COL_WITH_FROM]))
+    for obj_id, _go, anc_nodes in iter_leaf_rows(lines):
+        if obj_id in members:
+            nodes.update(anc_nodes)
     return nodes
 
 
@@ -244,27 +272,17 @@ def write_family_paint(
     nodes: Set[str],
     ibd_index: Dict[str, List[IBDRecord]],
     out_dir: Path,
-) -> Tuple[Path, Path]:
-    """Write the per-family PAINT slice as ``<FAM>-paint.gaf`` and ``-paint.tsv``.
+) -> Path:
+    """Write the per-family PAINT slice as ``<FAM>-paint.tsv``.
 
-    The ``.gaf`` is the raw subset of IBD.gaf rows for the family's nodes
-    (with a provenance header); the ``.tsv`` is a parsed, easier-to-consume
-    sidecar. Returns ``(gaf_path, tsv_path)``.
+    One row per node-level annotation (IBD/IRD/IKR, plus any IBA-on-node) for the
+    family's ``PTN`` nodes, ordered by node, aspect, GO id. Returns the TSV path.
     """
-    gaf_path = out_dir / f"{family}-paint.gaf"
     tsv_path = out_dir / f"{family}-paint.tsv"
 
     # Stable ordering: by node, then aspect, then GO id.
     selected = [rec for node in nodes for rec in ibd_index.get(node, [])]
     selected.sort(key=lambda r: (r.node, r.aspect, r.go_id))
-
-    with gaf_path.open("w") as fh:
-        fh.write("!gaf-version: 2.1\n")
-        fh.write(f"!PANTHER PAINT node annotations for family {family}\n")
-        fh.write(f"!nodes: {len(nodes)}; annotations: {len(selected)}\n")
-        fh.write(f"!source: {IBD_GAF_URL}\n")
-        for rec in selected:
-            fh.write(rec.raw_line + "\n")
 
     with tsv_path.open("w", newline="") as fh:
         writer = csv.writer(fh, delimiter="\t")
@@ -284,7 +302,7 @@ def write_family_paint(
                 ]
             )
 
-    return gaf_path, tsv_path
+    return tsv_path
 
 
 def download_cached(url: str, cache_dir: Path, *, force: bool = False) -> Path:
@@ -306,7 +324,7 @@ def download_cached(url: str, cache_dir: Path, *, force: bool = False) -> Path:
     return dest
 
 
-def _open_text(path: Path):
+def open_text(path: Path):
     """Open a possibly-gzipped text file for line iteration."""
     if path.suffix == ".gz":
         return gzip.open(path, "rt")
@@ -321,7 +339,7 @@ def fetch_family_paint(
     cache_dir: Path,
     extra_uniprot: Optional[Iterable[str]] = None,
     force_download: bool = False,
-) -> Tuple[Path, Path, Set[str]]:
+) -> Tuple[Path, Set[str]]:
     """Fetch + cache the PAINT GAFs and write a family's node-level slice.
 
     Args:
@@ -334,8 +352,8 @@ def fetch_family_paint(
         force_download: Re-download source GAFs even if cached.
 
     Returns:
-        ``(gaf_path, tsv_path, nodes)`` where ``nodes`` is the resolved set of
-        ``PTN`` nodes for the family.
+        ``(tsv_path, nodes)`` where ``nodes`` is the resolved set of ``PTN``
+        nodes for the family.
     """
     members = family_member_ids(entries_csv)
     if extra_uniprot:
@@ -344,15 +362,15 @@ def fetch_family_paint(
     leaf_path = download_cached(LEAF_GAF_URL, cache_dir, force=force_download)
     ibd_path = download_cached(IBD_GAF_URL, cache_dir, force=force_download)
 
-    with _open_text(leaf_path) as fh:
+    with open_text(leaf_path) as fh:
         nodes = leaf_nodes_for_members(fh, members)
 
-    with _open_text(ibd_path) as fh:
+    with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    gaf_path, tsv_path = write_family_paint(family, nodes, ibd_index, out_dir)
-    return gaf_path, tsv_path, nodes
+    tsv_path = write_family_paint(family, nodes, ibd_index, out_dir)
+    return tsv_path, nodes
 
 
 def load_all_family_members(
@@ -387,17 +405,9 @@ def family_nodes_from_leaf(
     {'PTHRX': {'PTN1'}}
     """
     family_nodes: Dict[str, Set[str]] = {}
-    for line in lines:
-        if not line or line.startswith("!"):
-            continue
-        cols = line.split("\t")
-        if len(cols) <= _COL_WITH_FROM:
-            continue
-        families = member_to_families.get(cols[_COL_OBJECT_ID])
-        if not families:
-            continue
-        nodes = parse_ptn_nodes(cols[_COL_WITH_FROM])
-        if not nodes:
+    for obj_id, _go, nodes in iter_leaf_rows(lines):
+        families = member_to_families.get(obj_id)
+        if not families or not nodes:
             continue
         for family in families:
             family_nodes.setdefault(family, set()).update(nodes)
@@ -425,9 +435,9 @@ def fetch_all_family_paint(
     leaf_path = download_cached(LEAF_GAF_URL, cache_dir, force=force_download)
     ibd_path = download_cached(IBD_GAF_URL, cache_dir, force=force_download)
 
-    with _open_text(leaf_path) as fh:
+    with open_text(leaf_path) as fh:
         family_nodes = family_nodes_from_leaf(fh, member_to_families)
-    with _open_text(ibd_path) as fh:
+    with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
 
     counts: Dict[str, int] = {}

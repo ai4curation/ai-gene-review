@@ -67,7 +67,7 @@ uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
 
 The node-level source files (`IBD.gaf`, leaf GAF) are downloaded on demand into
 a gitignored `.cache/panther/` and are not committed. Per-family node slices can
-be materialised under `interpro/panther/<FAM>/<FAM>-paint.{gaf,tsv}` with:
+be materialised under `interpro/panther/<FAM>/<FAM>-paint.tsv` with:
 
 ```bash
 just fetch-panther-paint PTHR10177
