@@ -142,6 +142,11 @@ fetch-descriptions-bulk organism *args="":
 fetch-panther-paint family *args="":
     uv run ai-gene-review fetch-panther-paint {{family}} --output-dir . {{args}}
 
+# Bulk-generate PANTHER PAINT slices for every cached family (single leaf-GAF pass).
+# Families whose members resolve to no node-level annotations are skipped.
+fetch-panther-paint-all *args="":
+    uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
 # Report review status of gene description files
 # Example: just descriptions-status yeast
 # Example: just descriptions-status yeast --all

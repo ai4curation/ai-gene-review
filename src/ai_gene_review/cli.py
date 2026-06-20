@@ -3305,8 +3305,17 @@ def analyze_evidence_sources(
 @app.command()
 def fetch_panther_paint(
     family: Annotated[
-        str, typer.Argument(help="PANTHER family id (e.g., PTHR10177)")
-    ],
+        Optional[str],
+        typer.Argument(help="PANTHER family id (e.g., PTHR10177). Omit with --all."),
+    ] = None,
+    all_families: Annotated[
+        bool,
+        typer.Option(
+            "--all",
+            help="Process every cached family under interpro/panther/ in a single "
+            "leaf-GAF pass (skips families with no node annotations).",
+        ),
+    ] = False,
     output_dir: Annotated[
         Optional[Path],
         typer.Option(
@@ -3328,7 +3337,7 @@ def fetch_panther_paint(
         typer.Option(
             "--extra-uniprot",
             help="Extra member UniProt id(s) to include when resolving nodes "
-            "(repeatable).",
+            "(repeatable). Single-family mode only.",
         ),
     ] = None,
     force_download: Annotated[
@@ -3336,7 +3345,7 @@ def fetch_panther_paint(
         typer.Option("--force-download", help="Re-download source GAFs even if cached."),
     ] = False,
 ):
-    """Fetch PANTHER PAINT (PTN node-level) annotations for a family.
+    """Fetch PANTHER PAINT (PTN node-level) annotations for a family (or --all).
 
     Resolves the family's PTN tree nodes (from its cached ``<FAM>-entries.csv``
     member list joined against the leaf IBA GAF), then slices the node-level
@@ -3351,11 +3360,40 @@ def fetch_panther_paint(
     Examples:
         ai-gene-review fetch-panther-paint PTHR10177
         ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+        ai-gene-review fetch-panther-paint --all
     """
-    from ai_gene_review.etl.panther_paint import fetch_family_paint
+    from ai_gene_review.etl.panther_paint import (
+        fetch_family_paint,
+        fetch_all_family_paint,
+    )
 
     repo_root = output_dir or Path.cwd()
-    family_dir = repo_root / "interpro" / "panther" / family
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    panther_root = repo_root / "interpro" / "panther"
+
+    if all_families:
+        if family:
+            typer.echo("❌ Pass either a FAMILY or --all, not both.")
+            raise typer.Exit(code=1)
+        typer.echo(
+            "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
+            "this downloads/caches PAINT GAFs)..."
+        )
+        counts = fetch_all_family_paint(
+            panther_root, cache_dir=cache, force_download=force_download
+        )
+        total = sum(counts.values())
+        typer.echo(
+            f"✓ Wrote PAINT slices for {len(counts)} family/families "
+            f"({total} node-level annotations total)."
+        )
+        return
+
+    if not family:
+        typer.echo("❌ Provide a FAMILY id or use --all.")
+        raise typer.Exit(code=1)
+
+    family_dir = panther_root / family
     entries_csv = family_dir / f"{family}-entries.csv"
     if not entries_csv.exists():
         typer.echo(
@@ -3364,7 +3402,6 @@ def fetch_panther_paint(
         )
         raise typer.Exit(code=1)
 
-    cache = cache_dir or (repo_root / ".cache" / "panther")
     typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
     gaf_path, tsv_path, nodes = fetch_family_paint(
         family,

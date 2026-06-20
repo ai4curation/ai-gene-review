@@ -313,3 +313,89 @@ def fetch_family_paint(
     out_dir.mkdir(parents=True, exist_ok=True)
     gaf_path, tsv_path = write_family_paint(family, nodes, ibd_index, out_dir)
     return gaf_path, tsv_path, nodes
+
+
+def load_all_family_members(
+    panther_root: Path,
+) -> Tuple[Dict[str, Set[str]], Dict[str, Path]]:
+    """Scan ``panther_root`` for cached families with a ``<FAM>-entries.csv``.
+
+    Returns ``(member_uniprot -> {families}, family -> family_dir)`` for every
+    family directory that has a member table. The inverted member map lets the
+    bulk path resolve nodes for all families in a single leaf-GAF pass.
+    """
+    member_to_families: Dict[str, Set[str]] = {}
+    family_dirs: Dict[str, Path] = {}
+    for entries in sorted(panther_root.glob("*/*-entries.csv")):
+        family = entries.parent.name
+        family_dirs[family] = entries.parent
+        for uid in family_member_ids(entries):
+            member_to_families.setdefault(uid, set()).add(family)
+    return member_to_families, family_dirs
+
+
+def family_nodes_from_leaf(
+    lines: Iterable[str], member_to_families: Dict[str, Set[str]]
+) -> Dict[str, Set[str]]:
+    """One streaming leaf-GAF pass -> ``family -> {PTN nodes}`` for all families.
+
+    >>> leaf = [
+    ...     "UniProtKB\\tP14635\\tCCNB1\\tinvolved_in\\tGO:1\\tGO_REF:0000033\\tIBA\\t"
+    ...     "PANTHER:PTN1|UniProtKB:P2\\tF\\t\\t\\tprotein\\ttaxon:9606\\t20250101\\tGO_Central\\t\\t",
+    ... ]
+    >>> family_nodes_from_leaf(leaf, {"P14635": {"PTHRX"}})
+    {'PTHRX': {'PTN1'}}
+    """
+    family_nodes: Dict[str, Set[str]] = {}
+    for line in lines:
+        if not line or line.startswith("!"):
+            continue
+        cols = line.split("\t")
+        if len(cols) <= _COL_WITH_FROM:
+            continue
+        families = member_to_families.get(cols[_COL_OBJECT_ID])
+        if not families:
+            continue
+        nodes = parse_ptn_nodes(cols[_COL_WITH_FROM])
+        if not nodes:
+            continue
+        for family in families:
+            family_nodes.setdefault(family, set()).update(nodes)
+    return family_nodes
+
+
+def fetch_all_family_paint(
+    panther_root: Path,
+    *,
+    cache_dir: Path,
+    force_download: bool = False,
+    skip_empty: bool = True,
+) -> Dict[str, int]:
+    """Write per-family PAINT slices for every cached family in one pass.
+
+    Does a single streaming pass over the (large) leaf GAF and a single load of
+    ``IBD.gaf``, rather than re-reading them per family. Families whose members
+    resolve to no node-level annotations are skipped when ``skip_empty`` is True.
+
+    Returns ``family -> number of node-level annotations written`` for each
+    family that had at least one (or all families when ``skip_empty`` is False).
+    """
+    member_to_families, family_dirs = load_all_family_members(panther_root)
+
+    leaf_path = download_cached(LEAF_GAF_URL, cache_dir, force=force_download)
+    ibd_path = download_cached(IBD_GAF_URL, cache_dir, force=force_download)
+
+    with _open_text(leaf_path) as fh:
+        family_nodes = family_nodes_from_leaf(fh, member_to_families)
+    with _open_text(ibd_path) as fh:
+        ibd_index = parse_ibd_gaf(fh)
+
+    counts: Dict[str, int] = {}
+    for family, fdir in family_dirs.items():
+        nodes = family_nodes.get(family, set())
+        n_annotations = sum(len(ibd_index.get(n, [])) for n in nodes)
+        if skip_empty and n_annotations == 0:
+            continue
+        write_family_paint(family, nodes, ibd_index, fdir)
+        counts[family] = n_annotations
+    return counts

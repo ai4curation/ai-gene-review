@@ -12,6 +12,9 @@ from ai_gene_review.etl.panther_paint import (
     family_member_ids,
     leaf_nodes_for_members,
     write_family_paint,
+    load_all_family_members,
+    family_nodes_from_leaf,
+    fetch_all_family_paint,
 )
 
 
@@ -215,3 +218,52 @@ def test_fetch_family_paint_extra_uniprot_expands_nodes(tmp_path: Path):
         extra_uniprot=["P14635"],
     )
     assert nodes == {"PTN000019791"}
+
+
+def _seed_cache(cache_dir: Path) -> None:
+    """Write the IBD + (gzipped) leaf fixtures into a cache dir."""
+    import gzip
+
+    from ai_gene_review.etl.panther_paint import IBD_GAF_URL, LEAF_GAF_URL
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    (cache_dir / IBD_GAF_URL.rsplit("/", 1)[1]).write_text(IBD_FIXTURE)
+    with gzip.open(cache_dir / LEAF_GAF_URL.rsplit("/", 1)[1], "wt") as fh:
+        fh.write(LEAF_FIXTURE)
+
+
+def test_load_all_family_members_inverts_membership(tmp_path: Path):
+    panther = tmp_path / "panther"
+    (panther / "PTHR1").mkdir(parents=True)
+    (panther / "PTHR2").mkdir(parents=True)
+    (panther / "PTHR1" / "PTHR1-entries.csv").write_text("id,name\nP14635,a\nP1,b\n")
+    (panther / "PTHR2" / "PTHR2-entries.csv").write_text("id,name\nP14635,a\n")
+
+    member_to_families, family_dirs = load_all_family_members(panther)
+    assert member_to_families["P14635"] == {"PTHR1", "PTHR2"}
+    assert member_to_families["P1"] == {"PTHR1"}
+    assert set(family_dirs) == {"PTHR1", "PTHR2"}
+
+
+def test_family_nodes_from_leaf_multi_family():
+    member_to_families = {"P14635": {"PTHR1", "PTHR2"}}
+    nodes = family_nodes_from_leaf(LEAF_FIXTURE.splitlines(), member_to_families)
+    assert nodes == {"PTHR1": {"PTN000019791"}, "PTHR2": {"PTN000019791"}}
+
+
+def test_fetch_all_family_paint_bulk(tmp_path: Path):
+    panther = tmp_path / "panther"
+    (panther / "PTHR1").mkdir(parents=True)
+    (panther / "EMPTY").mkdir(parents=True)
+    (panther / "PTHR1" / "PTHR1-entries.csv").write_text("id,name\nP14635,a\n")
+    # A family whose member never appears in the leaf GAF -> no nodes -> skipped.
+    (panther / "EMPTY" / "EMPTY-entries.csv").write_text("id,name\nP00000,x\n")
+
+    cache_dir = tmp_path / ".cache"
+    _seed_cache(cache_dir)
+
+    counts = fetch_all_family_paint(panther, cache_dir=cache_dir)
+    assert counts == {"PTHR1": 2}
+    assert (panther / "PTHR1" / "PTHR1-paint.gaf").exists()
+    # Empty family is skipped by default.
+    assert not (panther / "EMPTY" / "EMPTY-paint.gaf").exists()
