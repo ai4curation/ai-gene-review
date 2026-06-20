@@ -78,6 +78,17 @@ uv run python gapmind_to_module.py cache/gapmind/aa/ile.steps --name Isoleucine 
 uv run linkml-validate -s ../../../src/ai_gene_review/schema/gene_review.yaml -C ModuleReview his-from-gapmind.yaml
 ```
 
+## Status: first curated module produced
+
+`his-from-gapmind.yaml` (the mined DRAFT here) has been curated into a real,
+publishable module at **`modules/histidine_biosynthesis.yaml`**: every enzyme step
+was assigned a GO molecular-function term **verified via QuickGO** (no guessing),
+reaction chemistry and bifunctional-enzyme notes (HisIE, HisB, PriA) were added,
+ordered `connections` were drawn, and one incorrect ModelSEED EC auto-mapping
+(hisC → a promiscuous phenylalanine aminotransferase row) was caught and corrected.
+It validates (`-C ModuleReview`) and projects cleanly through `module_notation`.
+This demonstrates the full mine → curate → publish loop end to end.
+
 ## Recommended next steps (if we proceed past the spike)
 
 1. Promote the converter into `src/ai_gene_review/` with pytest coverage and a `just`
