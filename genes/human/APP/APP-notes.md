@@ -49,3 +49,34 @@ Human APP mutations cause familial Alzheimer's disease by increasing Abeta42/Abe
 - PMID:2881207 - Original APP cloning
 - PMID:8886002 - Swedish mutation characterization
 - PMID:23150908 - Icelandic protective mutation
+
+## 2026-06-20 Second-Pass Review Notes
+
+Second-pass cleanup separated normal APP biology from Alzheimer disease mechanism
+context. The review description now emphasizes full-length APP receptor/adhesion
+activity, regulated proteolytic processing, APP751/770 KPI-domain protease
+inhibitor activity, and copper/metal-binding biology.
+
+Key evidence anchors:
+- UniProt supports full-length APP receptor/adhesion biology: "Functions as a
+  cell surface receptor" and "neuronal adhesion and axonogenesis"
+  [file:human/APP/APP-uniprot.txt].
+- UniProt supports APP-family synaptic adhesion output: "promotes synaptogenesis"
+  [file:human/APP/APP-uniprot.txt].
+- UniProt supports copper/metal biology: "Extracellular binding and reduction of
+  copper" and "Amyloid-beta peptides are lipophilic metal chelators"
+  [file:human/APP/APP-uniprot.txt].
+
+Second-pass curation decisions:
+- Added NEW review entries for GO:0098631 cell adhesion mediator activity,
+  GO:0050839 cell adhesion molecule binding, and GO:0005507 copper ion binding
+  so authored core-function terms are represented in the annotation block.
+- Harmonized GO:1900272 negative regulation of long-term synaptic potentiation
+  as KEEP_AS_NON_CORE. The evidence is credible for amyloid-beta cleavage-product
+  effects on plasticity, but this is not the core evolved function of full-length
+  APP.
+- Harmonized broad GO:0051247 positive regulation of protein metabolic process
+  and GO:0070555 response to interleukin-1 as MARK_AS_OVER_ANNOTATED.
+- Added knowledge-gap questions and suggested experiments focused on evolved
+  in-vivo APP isoform, fragment, adhesion, trophic-signaling, metal-binding, and
+  intracellular-domain biology.

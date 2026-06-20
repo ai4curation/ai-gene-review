@@ -15,3 +15,7 @@ Generic protein binding rows, broad kinase activity rows, and broad peptidyl-ser
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the Proteostasis Network context was used to treat CDK5R1 mainly as the CDK5 activator relevant to CDK5-mediated induced autophagy, while noting that the direct human experiment is CDK5-SH3GLB1/endophilin B1 centered rather than CDK5R1-specific.
+
+## 2026-06-20 second-pass audit
+
+The second-pass audit added manual `reference_review` metadata for the core p35/CDK5R1 activator paper, p35-to-p25 deregulation evidence, CDK5/p25 structural context, p35 microtubule binding, p35 myristoylation/localization, and CDK5-mediated induced autophagy as complex-level context. No annotation action changes were needed: CDK5R1 remains curated as a non-catalytic CDK5 activator/regulatory subunit whose p35 and p25 forms determine CDK5 localization, stability, and substrate context.
