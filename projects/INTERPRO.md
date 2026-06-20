@@ -152,7 +152,16 @@ uv run python projects/INTERPRO/extract_suspect_interpro_mappings.py
       children (GO:0004674 / GO:0004713)
 - [x] Batch 1 of 5 more top entries researched with falcon/Edison (P450, Cu/Zn SOD,
       GPCR, NRAMP/SLC11, DnaJ) — see the table below
-- [ ] Feed the family verdicts back into the affected gene reviews and a curators' summary
+- [x] Began feeding verdicts back into gene reviews (DnaJ family): the reviews are
+      **strongly concordant** with the family research — all 7 DnaJ genes with the
+      InterPro2GO `ATP binding` annotation already flagged it (5 REMOVE, 1 MODIFY-to
+      ATPase-activator, 1 over-annotated). Hardened the one soft outlier (`yeast/YDJ1`,
+      MARK_AS_OVER_ANNOTATED → REMOVE) and attached the IPR012724 family report as
+      corroborating evidence.
+- [ ] Per-family, hunt for the higher-value case: a gene that currently **ACCEPTs** the
+      flagged term but is actually one of the verdict's *exception* members (pseudokinase,
+      copper chaperone, atypical chemokine/orphan receptor, non-catalytic P450) — a genuine
+      missed over-annotation rather than a soft-vs-hard mismatch
 - [ ] Continue down the worklist (`interpro_family_priorities.tsv`)
 
 ## Family deep-research verdicts (falcon/Edison)
