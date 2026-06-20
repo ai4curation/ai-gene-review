@@ -134,7 +134,11 @@ def test_gap_provenance_reuses_supporting_text_in_reference():
         temp_path = Path(f.name)
     try:
         # Schema-level validation only; verbatim quote checking is done by the
-        # separate linkml-reference-validator CLI.
+        # separate linkml-reference-validator CLI, which schema-walks every
+        # SupportingTextInReference instance (including KnowledgeGap.provenance).
+        # That path was confirmed by deliberately corrupting a CFAP300 provenance
+        # quote and observing the validator flag
+        # knowledge_gaps[0].provenance[0].supporting_text.
         report = validate_gene_review(temp_path, check_best_practices=False)
         assert report.is_valid, f"Unexpected validation failure: {report.issues}"
     finally:

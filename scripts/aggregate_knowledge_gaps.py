@@ -263,6 +263,17 @@ def write_tsv(rows: list[GapRow], out: Path) -> None:
             )
 
 
+def _md_cell(text: str) -> str:
+    """Escape text for safe rendering inside a single Markdown table cell.
+
+    Collapses any embedded newlines (which would break the row) and escapes the
+    characters that are significant inside a table cell: the pipe column
+    delimiter and backtick code spans.
+    """
+    text = " ".join(text.split())
+    return text.replace("\\", "\\\\").replace("|", "\\|").replace("`", "\\`")
+
+
 def write_markdown(rows: list[GapRow], out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     n = len(rows)
@@ -313,8 +324,8 @@ def write_markdown(rows: list[GapRow], out: Path) -> None:
         statement = r.gap_statement
         if len(statement) > 240:
             statement = statement[:237] + "…"
-        statement = statement.replace("|", "\\|")
-        symbol = r.entity_symbol.replace("|", "\\|")
+        statement = _md_cell(statement)
+        symbol = _md_cell(r.entity_symbol)
         kind = r.gap_kind.replace("|", " + ") if r.gap_kind else "—"
         lines.append(
             f"| {symbol} | {r.level} | {r.status or '—'} | {kind} | "
