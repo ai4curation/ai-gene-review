@@ -1,0 +1,2466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sdhA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sdhA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FA7" target="_blank" class="term-link">
+                        Q88FA7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sdhA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FA7" data-a="DESCRIPTION: Flavoprotein (catalytic) subunit of succinate dehy..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Flavoprotein (catalytic) subunit of succinate dehydrogenase (respiratory Complex II) in Pseudomonas putida KT2440. SdhA carries a covalently bound FAD cofactor and the succinate/fumarate active site, catalysing the oxidation of succinate to fumarate with transfer of electrons into the membrane quinone pool (EC 1.3.5.1). This reaction couples the tricarboxylic acid (TCA) cycle to the aerobic respiratory electron transport chain. SdhA forms the soluble catalytic head of the four-subunit enzyme together with the iron-sulfur subunit SdhB (PP_4190) and the membrane anchor subunits SdhD (PP_4192) and SdhC (PP_4193), to which it is peripherally attached on the cytoplasmic face of the inner (plasma) membrane. FAD incorporation (flavinylation) depends on the accessory assembly factor SdhE.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000104" target="_blank" class="term-link">
+                                    GO:0000104
+                                </a>
+                            </span>
+                            <span class="term-label">succinate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0000104" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SdhA is the flavoprotein catalytic subunit of succinate dehydrogenase (Complex II); succinate dehydrogenase activity is its core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strongly supported by family/domain assignment (TIGR01816 sdhA_forward, Pfam FAD_binding_2, FRD/SDH subfamily), conserved active-site and FAD-binding residues, and UniProt EC 1.3.5.1. Consistent across all lines of evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SdhA is a peripheral membrane protein attached to the cytoplasmic (inner) face of the inner/plasma membrane as part of the membrane-bound Complex II.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Matches UniProt subcellular location (Cell inner membrane; peripheral membrane protein; cytoplasmic side). In Gram-negative bacteria the inner membrane is the GO plasma membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0006099" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Succinate dehydrogenase catalyses the succinate-to-fumarate step of the TCA cycle; this is a core biological process for SdhA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by UniProt pathway annotation (tricarboxylic acid cycle; fumarate from succinate, step 1/1) and conserved enzyme function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008177" target="_blank" class="term-link">
+                                    GO:0008177
+                                </a>
+                            </span>
+                            <span class="term-label">succinate dehydrogenase (quinone) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0008177" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the precise quinone-coupled reaction (succinate + quinone = fumarate + quinol, RHEA:40523, EC 1.3.5.1) catalysed by the holo-enzyme to which SdhA contributes the catalytic flavoprotein head.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Directly matches the UniProt CATALYTIC ACTIVITY (RHEA:40523) and EC 1.3.5.1. Most informative molecular-function term for the complex&#39;s overall reaction.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0009055" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SdhA participates in electron transfer, passing electrons abstracted from succinate via FAD toward the iron-sulfur clusters of SdhB and the quinone pool.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Biologically true but more generic than the specific succinate dehydrogenase (quinone) activity that captures SdhA&#39;s core function. Retain as supporting/non-core rather than primary.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009061" target="_blank" class="term-link">
+                                    GO:0009061
+                                </a>
+                            </span>
+                            <span class="term-label">anaerobic respiration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0009061" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This subunit is the forward/aerobic succinate dehydrogenase flavoprotein (TIGR01816 sdhA_forward), not the fumarate reductase used in anaerobic respiration.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt notes that two distinct FAD enzymes interconvert fumarate and succinate, with fumarate reductase (FrdA) used in anaerobic growth and succinate dehydrogenase used in aerobic growth. The forward SdhA is assigned to aerobic respiration; this TreeGrafter-propagated anaerobic respiration term reflects the broader SdhA/FrdA family and over-annotates the aerobic SdhA.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic parent of the specific succinate dehydrogenase (quinone) activity already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformative high-level term; subsumed by the specific EC 1.3.5.1 annotation. Retain as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016627" target="_blank" class="term-link">
+                                    GO:0016627
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-CH group of donors</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0016627" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accurate intermediate-level description of the chemistry (oxidation of the succinate CH-CH bond to the fumarate C=C bond), but less specific than succinate dehydrogenase (quinone) activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct grouping term but subsumed by the specific MF term; keep as non-core supporting annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022900" target="_blank" class="term-link">
+                                    GO:0022900
+                                </a>
+                            </span>
+                            <span class="term-label">electron transport chain</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0022900" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Complex II feeds electrons from succinate into the respiratory quinone pool, contributing to the aerobic electron transport chain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by UniProt (electron transport keyword) and the established role of Complex II linking the TCA cycle to respiration.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0050660" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SdhA binds a (covalently attached) FAD cofactor essential for succinate oxidation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported by UniProt COFACTOR (FAD), multiple conserved FAD-binding residues, the Tele-8alpha-FAD histidine modified residue, and SdhE-dependent flavinylation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160308" target="_blank" class="term-link">
+                                    GO:0160308
+                                </a>
+                            </span>
+                            <span class="term-label">succinate dehydrogenase (FAD) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FA7" data-a="GO:0160308" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Describes the FAD-dependent succinate-&gt;fumarate half-reaction occurring at the SdhA flavin site, prior to electron transfer to quinone.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately captures the FAD-coupled catalytic step intrinsic to the SdhA subunit; complementary to the holo-enzyme quinone-coupled term GO:0008177. Both are valid and informative.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalytic flavoprotein subunit of succinate dehydrogenase (Complex II) that oxidises succinate to fumarate using a covalently bound FAD cofactor, the rate-limiting catalytic step linking the TCA cycle to the respiratory chain.</h3>
+                <span class="vote-buttons" data-g="Q88FA7" data-a="FUNCTION: Catalytic flavoprotein subunit of succinate dehydr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008177" target="_blank" class="term-link">
+                            succinate dehydrogenase (quinone) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                tricarboxylic acid cycle
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniProt CATALYTIC ACTIVITY a quinone + succinate = fumarate + a quinol (RHEA:40523, EC 1.3.5.1).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds FAD at the catalytic head to abstract electrons from succinate and feed them into the electron transport chain via the SdhB iron-sulfur clusters and the membrane quinone pool.</h3>
+                <span class="vote-buttons" data-g="Q88FA7" data-a="FUNCTION: Binds FAD at the catalytic head to abstract electr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022900" target="_blank" class="term-link">
+                                electron transport chain
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniProt COFACTOR FAD; conserved FAD-binding residues and Tele-8alpha-FAD histidine.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22474332" target="_blank" class="term-link">
+                            PMID:22474332
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">SdhE is a conserved protein required for flavinylation of succinate dehydrogenase in bacteria</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The accessory protein SdhE binds FAD and is required for flavinylation of the succinate dehydrogenase flavoprotein subunit (SdhA) and for SDH activity in bacteria.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has the SdhA-SdhBCD Complex II of P. putida KT2440 been biochemically characterised (kinetics, FAD content, quinone specificity), and does it show any fumarate reductase activity in vitro?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FA7" data-a="Q: Has the SdhA-SdhBCD Complex II of P. putida KT2440..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify the P. putida KT2440 SdhABCD complex and measure succinate:quinone oxidoreductase kinetics and FAD flavinylation status, with and without SdhE, to confirm the conserved mechanism in this organism.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FA7" data-a="EXPERIMENT: Purify the P. putida KT2440 SdhABCD complex and me..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sdhA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FA7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **sdhA** (PP_4191; UniProt Q88FA7) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">14 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T22:36:14.747032</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="sdhA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="sdhA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000005 Table 1 (found on page 3) provides physiological characteristics of P. putida MAD2 and its mutants. While it does not list the spec</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-sdha-pp_4191-uniprot-q88fa7-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>sdhA</strong> (PP_4191; UniProt Q88FA7) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-target-verification-mandatory-disambiguation">0. Target verification (mandatory disambiguation)</h2>
+<p>The gene symbol <strong>sdhA</strong> in <em>Pseudomonas putida</em> KT2440 is unambiguously linked to <strong>PP_4191</strong>, annotated as the <strong>succinate dehydrogenase flavoprotein subunit (SdhA)</strong>, and occurs with the other complex II subunits <strong>SdhB (PP_4190), SdhD (PP_4192), and SdhC (PP_4193)</strong> in KT2440. This mapping matches the UniProt-provided identity (Q88FA7) as a succinate dehydrogenase flavoprotein subunit (EC 1.3.5.1). (chavarria2012regulatorytasksof pages 3-4, chavarria2012regulatorytasksof media b14b64f4, chavarria2012regulatorytasksof media 8dabbe7d)</p>
+<h2 id="1-key-concepts-definitions-and-current-understanding">1. Key concepts, definitions, and current understanding</h2>
+<h3 id="11-what-sdha-is-protein-role-within-complex-ii">1.1 What SdhA is (protein role within Complex II)</h3>
+<p><strong>Succinate dehydrogenase (SDH; respiratory complex II)</strong> is a central bioenergetic enzyme that functionally couples the <strong>tricarboxylic acid (TCA) cycle</strong> to the <strong>aerobic respiratory electron transport chain</strong>. In bacteria and mitochondria, complex II comprises a soluble catalytic “head” and membrane anchor components that connect catalysis to the quinone pool. (bouillaud2023inhibitionofsuccinate pages 3-5, mcneil2012sdheisa pages 1-2)</p>
+<p>Within this complex, <strong>SdhA</strong> is the <strong>flavoprotein catalytic subunit</strong> that carries the flavin cofactor and hosts the succinate/fumarate active-site chemistry. (bouillaud2023inhibitionofsuccinate pages 3-5, mcneil2012sdheisa pages 1-2)</p>
+<h3 id="12-enzymatic-reaction-and-substrate-specificity-primary-function">1.2 Enzymatic reaction and substrate specificity (primary function)</h3>
+<p>The canonical SDH reaction (EC <strong>1.3.5.1</strong>) is the <strong>oxidation of succinate to fumarate</strong>:</p>
+<ul>
+<li><strong>succinate → fumarate + 2H+ + 2e−</strong></li>
+</ul>
+<p>The electrons are transferred into the membrane quinone pool by coupled reduction of quinone:</p>
+<ul>
+<li><strong>Q + 2e− + 2H+ → QH2</strong></li>
+</ul>
+<p>Thus, SdhA’s primary substrate specificity is toward <strong>succinate</strong> (as the electron donor in the forward SDH direction) and <strong>fumarate</strong> (in the reverse fumarate reductase direction in organisms/conditions where reversal occurs), with coupling to the quinone pool as electron acceptor via the rest of complex II. (bouillaud2023inhibitionofsuccinate pages 3-5)</p>
+<h3 id="13-cofactorsprosthetic-groups-and-maturation-concepts">1.3 Cofactors/prosthetic groups and maturation concepts</h3>
+<p>Complex II function depends on redox cofactors:</p>
+<ul>
+<li>SDH contains <strong>FAD</strong> (associated with the soluble catalytic portion containing SdhA) and <strong>iron</strong> (consistent with iron-containing redox centers in the soluble part of the complex). (bouillaud2023inhibitionofsuccinate pages 3-5)</li>
+</ul>
+<p>A key mechanistic concept for bacterial SdhA is <strong>flavinylation</strong> (incorporation/attachment of FAD into the SdhA subunit). In a bacterial model system, SdhA requires an accessory protein <strong>SdhE</strong> for FAD incorporation; SdhE interacts with SdhA, binds FAD, and is required for SdhA flavinylation and SDH activity. (mcneil2012sdheisa pages 4-5, mcneil2012sdheisa pages 1-2)</p>
+<p>Although this SdhE-dependent maturation evidence is not from <em>P. putida</em> directly, SdhE is described as conserved across diverse proteobacteria, supporting inference that <em>P. putida</em> SdhA likewise depends on proper flavinylation for activity. (mcneil2012sdheisa pages 1-2)</p>
+<h2 id="2-pathway-context-and-cellular-localization-in-pseudomonas-putida-kt2440">2. Pathway context and cellular localization in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="21-localization">2.1 Localization</h3>
+<p>Complex II is described as a <strong>membrane-spanning redox enzyme</strong> with a soluble catalytic side containing the flavoprotein subunit (SdhA) and membrane subunits that inject electrons into quinone in the membrane. (bouillaud2023inhibitionofsuccinate pages 3-5)</p>
+<p>Consistent with this, bacterial experimental work localized SdhA to the <strong>membrane-associated complex</strong>, reflecting its function as part of a membrane respiratory complex rather than a freely soluble cytosolic enzyme. (mcneil2012sdheisa pages 4-5)</p>
+<h3 id="22-subunitsoperon-context-in-kt2440">2.2 Subunits/operon context in KT2440</h3>
+<p>In KT2440, the complex II subunits are explicitly mapped as:</p>
+<ul>
+<li><strong>SdhB</strong> (iron–sulfur subunit): <strong>PP_4190</strong></li>
+<li><strong>SdhA</strong> (flavoprotein subunit): <strong>PP_4191</strong></li>
+<li><strong>SdhD</strong> (hydrophobic membrane anchor): <strong>PP_4192</strong></li>
+<li><strong>SdhC</strong> (cytochrome b556 subunit): <strong>PP_4193</strong></li>
+</ul>
+<p>This supports annotation of PP_4191/Q88FA7 as the catalytic complex II flavoprotein subunit within the canonical SDH architecture in <em>P. putida</em> KT2440. (chavarria2012regulatorytasksof media b14b64f4, chavarria2012regulatorytasksof media 8dabbe7d)</p>
+<h2 id="3-recent-developments-prioritizing-20232024-and-latest-research-relevant-to-sdhacomplex-ii">3. Recent developments (prioritizing 2023–2024) and latest research relevant to sdhA/complex II</h2>
+<h3 id="31-2023-sdh-function-contextualized-by-modern-bioenergetics-and-inhibition-literature">3.1 2023: SDH function contextualized by modern bioenergetics and inhibition literature</h3>
+<p>A 2023 review synthesizes modern understanding of SDH/complex II as a redox enzyme connecting succinate oxidation to quinone reduction, emphasizing its four-subunit architecture and centrality to energy metabolism, while also discussing assay approaches and the energetic consequence that complex II <strong>does not pump protons</strong> (unlike complexes I/III/IV), implying its control is primarily redox/substrate/quinone-state dependent. (bouillaud2023inhibitionofsuccinate pages 3-5)</p>
+<p>While this review focuses on SDH inhibition in eukaryotic contexts, its biochemical statements about the enzyme’s reaction chemistry and architecture are directly applicable to bacterial SDH (including <em>P. putida</em>). (bouillaud2023inhibitionofsuccinate pages 3-5)</p>
+<h3 id="32-2023-kt2440-microaerobic-regulation-of-sdha-and-metabolic-engineering-implications">3.2 2023: KT2440 microaerobic regulation of sdhA and metabolic engineering implications</h3>
+<p>A 2023 study on microaerobic cultivation of <em>P. putida</em> KT2440 for succinate production provides direct KT2440 evidence that:</p>
+<ul>
+<li>KT2440 can <strong>reassimilate succinate</strong> via an SDH activity (“sdhAB enzyme”), which can reduce apparent succinate accumulation in bioprocess contexts; therefore, deleting or downregulating sdhAB is proposed as a strategy to improve succinate production. (mutyala2023citratesynthaseoverexpression pages 10-11)</li>
+<li><strong>sdhA expression is reduced by ~2.2-fold</strong> under <strong>microaerobic</strong> relative to aerobic cultivation in WT KT2440, consistent with reduced succinate oxidation capacity when oxygen availability is limited. (mutyala2023citratesynthaseoverexpression pages 10-11)</li>
+</ul>
+<p>Together, these findings operationalize sdhA (and sdhAB) as a tunable node in <em>P. putida</em> metabolic engineering for improved organic acid accumulation under oxygen-limited regimes. (mutyala2023citratesynthaseoverexpression pages 10-11)</p>
+<h3 id="33-2024-evidence-limitation-explicitly-stated">3.3 2024 evidence limitation (explicitly stated)</h3>
+<p>Although 2024 <em>P. putida</em> KT2440 systems-biology papers were retrieved in the search set, the accessible text evidence obtained in this run did not provide explicit, citable sdhA-specific quantitative statements. Therefore, sdhA-focused 2023 KT2440 evidence (above) is the primary recent source for strain-specific regulation and application claims within the current tool-retrieved corpus. (mutyala2023citratesynthaseoverexpression pages 10-11)</p>
+<h2 id="4-applications-and-real-world-implementations">4. Applications and real-world implementations</h2>
+<h3 id="41-industrial-and-metabolic-engineering-context-succinate-bioproduction">4.1 Industrial and metabolic engineering context (succinate bioproduction)</h3>
+<p>In KT2440 succinate bioproduction under microaerobic conditions, sdhA/SDH is relevant because it can <strong>consume succinate</strong> (reassimilate it into the TCA cycle via succinate oxidation). The 2023 microaerobic cultivation study explicitly frames <strong>sdhAB</strong> as a target whose downregulation or deletion could improve succinate accumulation and yields in engineered strains. (mutyala2023citratesynthaseoverexpression pages 10-11)</p>
+<p>This is a practical, real-world application: controlling SDH activity (via sdhA expression or function) helps redirect carbon and reducing equivalents away from respiration-driven succinate consumption toward product accumulation. (mutyala2023citratesynthaseoverexpression pages 10-11)</p>
+<h2 id="5-expert-opinion-and-analysis-authoritative-synthesis">5. Expert opinion and analysis (authoritative synthesis)</h2>
+<h3 id="51-why-sdha-is-a-high-confidence-functional-annotation-target">5.1 Why sdhA is a high-confidence functional annotation target</h3>
+<p>Multiple independent lines of evidence converge on the functional assignment:</p>
+<ol>
+<li><strong>Direct KT2440 locus mapping</strong> (PP_4191 = SdhA) and subunit context (PP_4190/4192/4193), establishing correct gene identity in the correct organism/strain. (chavarria2012regulatorytasksof pages 3-4, chavarria2012regulatorytasksof media b14b64f4, chavarria2012regulatorytasksof media 8dabbe7d)</li>
+<li><strong>Biochemical consensus</strong> that SdhA-containing complex II catalyzes succinate oxidation coupled to quinone reduction (EC 1.3.5.1) and contains FAD and iron-based redox centers. (bouillaud2023inhibitionofsuccinate pages 3-5)</li>
+<li><strong>Mechanistic bacterial evidence</strong> that SdhA is FAD-dependent and requires maturation (flavinylation) mediated by the conserved protein SdhE; disruption of this process dramatically reduces SDH activity. (mcneil2012sdheisa pages 4-5, mcneil2012sdheisa pages 1-2)</li>
+</ol>
+<p>Thus, even if KT2440-specific enzymology (e.g., purified enzyme kinetics) is limited in the retrieved corpus, functional inference for Q88FA7 is robust because complex II is highly conserved and anchored by direct strain-specific gene mapping. (bouillaud2023inhibitionofsuccinate pages 3-5, chavarria2012regulatorytasksof pages 3-4, chavarria2012regulatorytasksof media b14b64f4, chavarria2012regulatorytasksof media 8dabbe7d)</p>
+<h3 id="52-regulatory-interpretation-under-oxygen-limitation">5.2 Regulatory interpretation under oxygen limitation</h3>
+<p>The KT2440 observation that <strong>sdhA transcript abundance drops ~2.2-fold under microaerobic cultivation</strong> can be interpreted as part of a broader physiological shift: when oxygen is limiting, cells may downshift electron transport chain activity and reduce flux through succinate oxidation, a step that normally passes electrons to quinone in aerobic respiration. (bouillaud2023inhibitionofsuccinate pages 3-5, mutyala2023citratesynthaseoverexpression pages 10-11)</p>
+<h2 id="6-relevant-statistics-and-quantitative-data-from-recent-studies">6. Relevant statistics and quantitative data (from recent studies)</h2>
+<h3 id="61-kt2440-sdha-expression-under-microaerobic-vs-aerobic-conditions">6.1 KT2440 sdhA expression under microaerobic vs aerobic conditions</h3>
+<ul>
+<li><strong>~2.2-fold reduction</strong> in <strong>sdhA expression</strong> in WT <em>P. putida</em> under <strong>microaerobic</strong> versus aerobic cultivation. (mutyala2023citratesynthaseoverexpression pages 10-11)</li>
+</ul>
+<h3 id="62-kt2440-succinate-production-metrics-engineering-context-tied-to-sdh-control">6.2 KT2440 succinate production metrics (engineering context tied to SDH control)</h3>
+<p>In the same 2023 study (microaerobic succinate production from acetate with citrate synthase overexpression):</p>
+<ul>
+<li>gltA overexpression yielded an <strong>~50% improvement</strong> in succinate production compared with WT. (mutyala2023citratesynthaseoverexpression pages 10-11)</li>
+<li>Under optimal pH 7.5, succinate accumulation reached <strong>4.73 ± 0.6 mM in 36 h</strong>, reported as <strong>~400% higher</strong> than WT. (mutyala2023citratesynthaseoverexpression pages 10-11)</li>
+</ul>
+<p>These values provide practical quantitative context for why minimizing SDH-mediated succinate reassimilation (e.g., via sdhAB modulation) is an attractive engineering strategy. (mutyala2023citratesynthaseoverexpression pages 10-11)</p>
+<h3 id="63-mechanistic-activity-effect-size-for-sdha-maturation-disruption-bacterial-model">6.3 Mechanistic activity effect size for SdhA maturation disruption (bacterial model)</h3>
+<p>In a bacterial model system used to elucidate complex II flavinylation:</p>
+<ul>
+<li>Loss of the flavin assembly factor <strong>SdhE</strong> caused a <strong>~90% reduction</strong> in measured SDH activity, consistent with the requirement of SdhA flavinylation (FAD incorporation) for function. (mcneil2012sdheisa pages 4-5)</li>
+</ul>
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key findings (concise)</th>
+<th>Evidence type (review/primary; organism)</th>
+<th>Quantitative data (if any)</th>
+<th>Primary source (authors, year)</th>
+<th>Publication date (month/year if available)</th>
+<th>URL</th>
+<th>PaperQA citation id (pqac-...)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>identity</td>
+<td>PP_4191 is explicitly annotated as <strong>SdhA, succinate dehydrogenase flavoprotein subunit</strong> in <em>Pseudomonas putida</em> KT2440, matching UniProt Q88FA7.</td>
+<td>Primary; <em>P. putida</em> KT2440</td>
+<td>Not reported</td>
+<td>Chavarría et al., 2012</td>
+<td>05/2012</td>
+<td>https://doi.org/10.1128/mbio.00028-12</td>
+<td>(chavarria2012regulatorytasksof pages 3-4)</td>
+</tr>
+<tr>
+<td>reaction/EC</td>
+<td>Succinate dehydrogenase (complex II) catalyzes <strong>succinate → fumarate + 2H+ + 2e−</strong> and couples this to <strong>quinone reduction (Q → QH2)</strong>, consistent with EC 1.3.5.1.</td>
+<td>Review; general SDH biology</td>
+<td>Stoichiometry given in review; no strain-specific kinetic values</td>
+<td>Bouillaud, 2023</td>
+<td>02/2023</td>
+<td>https://doi.org/10.3390/ijms24044045</td>
+<td>(bouillaud2023inhibitionofsuccinate pages 3-5)</td>
+</tr>
+<tr>
+<td>role/pathway</td>
+<td>SDH/complex II links the <strong>TCA cycle</strong> and <strong>electron transport chain</strong>; SdhA is the catalytic flavoprotein subunit of this respiratory enzyme.</td>
+<td>Review + primary; general bacteria</td>
+<td>Not reported for KT2440</td>
+<td>Bouillaud, 2023; McNeil et al., 2012</td>
+<td>02/2023; 05/2012</td>
+<td>https://doi.org/10.3390/ijms24044045 ; https://doi.org/10.1074/jbc.m111.293803</td>
+<td>(bouillaud2023inhibitionofsuccinate pages 3-5, mcneil2012sdheisa pages 1-2)</td>
+</tr>
+<tr>
+<td>cofactors</td>
+<td>Bacterial SdhA is a <strong>FAD-dependent flavoprotein</strong>; SDH contains <strong>FAD and iron</strong> cofactors, and SdhE is required for SdhA flavinylation in bacteria.</td>
+<td>Review + primary; general bacteria</td>
+<td>Loss of SdhE caused ~<strong>90% reduction in SDH activity</strong> in Serratia model</td>
+<td>McNeil et al., 2012; Bouillaud, 2023</td>
+<td>05/2012; 02/2023</td>
+<td>https://doi.org/10.1074/jbc.m111.293803 ; https://doi.org/10.3390/ijms24044045</td>
+<td>(mcneil2012sdheisa pages 4-5, bouillaud2023inhibitionofsuccinate pages 3-5, mcneil2012sdheisa pages 1-2)</td>
+</tr>
+<tr>
+<td>complex subunits/operon</td>
+<td>In KT2440, the SDH subunits are mapped as <strong>SdhB/PP_4190</strong>, <strong>SdhA/PP_4191</strong>, <strong>SdhD/PP_4192</strong>, and <strong>SdhC/PP_4193</strong>. This supports assignment of PP_4191 to the canonical bacterial SDH complex.</td>
+<td>Primary; <em>P. putida</em> KT2440</td>
+<td>Not reported</td>
+<td>Chavarría et al., 2012</td>
+<td>05/2012</td>
+<td>https://doi.org/10.1128/mbio.00028-12</td>
+<td>(chavarria2012regulatorytasksof media b14b64f4, chavarria2012regulatorytasksof media 8dabbe7d)</td>
+</tr>
+<tr>
+<td>localization</td>
+<td>SDH is a <strong>membrane-spanning complex</strong> with a soluble catalytic side containing SdhA and membrane subunits that transfer electrons to quinone; bacterial experiments localized SdhA to the membrane-associated complex.</td>
+<td>Review + primary; general bacteria</td>
+<td>Functional SDH reported as ~<strong>360 kDa trimeric</strong> complex in Serratia model</td>
+<td>Bouillaud, 2023; McNeil et al., 2012</td>
+<td>02/2023; 05/2012</td>
+<td>https://doi.org/10.3390/ijms24044045 ; https://doi.org/10.1074/jbc.m111.293803</td>
+<td>(mcneil2012sdheisa pages 4-5, bouillaud2023inhibitionofsuccinate pages 3-5)</td>
+</tr>
+<tr>
+<td>regulation/expression</td>
+<td>In <em>P. putida</em>, <strong>sdhA expression decreases under microaerobic cultivation</strong>, consistent with reduced succinate oxidation when oxygen becomes limiting.</td>
+<td>Primary; <em>P. putida</em></td>
+<td><strong>~2.2-fold reduction</strong> of sdhA expression in wild type under microaerobic vs aerobic conditions</td>
+<td>Mutyala et al., 2023</td>
+<td>07/2023</td>
+<td>https://doi.org/10.1021/acsomega.3c02520</td>
+<td>(mutyala2023citratesynthaseoverexpression pages 10-11)</td>
+</tr>
+<tr>
+<td>phenotypes/essentiality</td>
+<td>KT2440 transposon screening identified the <strong>succinate dehydrogenase complex (5 genes)</strong> among genes important for growth on minimal medium, supporting central metabolic importance, though not proving PP_4191 alone is universally essential.</td>
+<td>Primary; <em>P. putida</em> KT2440</td>
+<td>Gene count only; no PP_4191-specific effect size in provided context</td>
+<td>Molina-Henares et al., 2010</td>
+<td>06/2010</td>
+<td>https://doi.org/10.1111/j.1462-2920.2010.02166.x</td>
+<td>(chavarria2012regulatorytasksof pages 3-4)</td>
+</tr>
+<tr>
+<td>applications/engineering relevance</td>
+<td>Because KT2440 can <strong>reassimilate succinate using sdhAB</strong>, downregulating or deleting sdhAB is proposed to improve biotechnological <strong>succinate accumulation</strong>; microaerobic repression of sdhA supports this strategy.</td>
+<td>Primary; <em>P. putida</em></td>
+<td>gltA overexpression improved succinate production by <strong>~50%</strong>; succinate reached <strong>4.73 ± 0.6 mM in 36 h</strong>, ~<strong>400%</strong> above wild type at pH 7.5; sdhA expression reduced <strong>~2.2-fold</strong> microaerobically</td>
+<td>Mutyala et al., 2023</td>
+<td>07/2023</td>
+<td>https://doi.org/10.1021/acsomega.3c02520</td>
+<td>(mutyala2023citratesynthaseoverexpression pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes evidence-supported functional annotation points for </em>Pseudomonas putida<em> KT2440 sdhA (PP_4191; UniProt Q88FA7), including identity, biochemistry, pathway role, localization, and engineering relevance. It only includes claims directly supported by the available evidence contexts.</em></p>
+<h2 id="references-with-dates-and-urls">References (with dates and URLs)</h2>
+<ul>
+<li>Chavarría M. et al. <em>mBio</em> (May 2012). “Regulatory Tasks of the Phosphoenolpyruvate-Phosphotransferase System of <em>Pseudomonas putida</em> in Central Carbon Metabolism.” https://doi.org/10.1128/mbio.00028-12 (chavarria2012regulatorytasksof pages 3-4, chavarria2012regulatorytasksof media b14b64f4, chavarria2012regulatorytasksof media 8dabbe7d)</li>
+<li>Bouillaud F. <em>Int J Mol Sci</em> (Feb 2023). “Inhibition of Succinate Dehydrogenase by Pesticides (SDHIs) and Energy Metabolism.” https://doi.org/10.3390/ijms24044045 (bouillaud2023inhibitionofsuccinate pages 3-5)</li>
+<li>McNeil M.B. et al. <em>J Biol Chem</em> (May 2012). “SdhE Is a Conserved Protein Required for Flavinylation of Succinate Dehydrogenase in Bacteria.” https://doi.org/10.1074/jbc.m111.293803 (mcneil2012sdheisa pages 4-5, mcneil2012sdheisa pages 1-2)</li>
+<li>Mutyala S. et al. <em>ACS Omega</em> (Jul 2023). “Citrate Synthase Overexpression of <em>Pseudomonas putida</em> Increases Succinate Production from Acetate in Microaerobic Cultivation.” https://doi.org/10.1021/acsomega.3c02520 (mutyala2023citratesynthaseoverexpression pages 10-11)</li>
+</ul>
+<h2 id="scope-notes-and-limitations">Scope notes and limitations</h2>
+<ul>
+<li>The retrieved evidence set contained <strong>strong strain-specific identity mapping</strong> and <strong>a 2023 KT2440 expression/regulation signal</strong> for sdhA under microaerobic conditions, but did not include KT2440-specific biochemical purification/kinetic constants for SdhA. Therefore, enzyme kinetics and residue-level substrate determinants are not reported here to avoid unsupported extrapolation. (mutyala2023citratesynthaseoverexpression pages 10-11, chavarria2012regulatorytasksof pages 3-4)</li>
+<li>Where mechanistic details (e.g., SdhE-dependent flavinylation) are drawn from non-<em>P. putida</em> bacterial experiments, they are explicitly framed as <strong>conserved bacterial complex II biology</strong> rather than KT2440-specific demonstrations. (mcneil2012sdheisa pages 4-5, mcneil2012sdheisa pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(chavarria2012regulatorytasksof pages 3-4): Max Chavarría, Roelco J. Kleijn, Uwe Sauer, Katharina Pflüger-Grau, and Víctor de Lorenzo. Regulatory tasks of the phosphoenolpyruvate-phosphotransferase system of pseudomonas putida in central carbon metabolism. May 2012. URL: https://doi.org/10.1128/mbio.00028-12, doi:10.1128/mbio.00028-12. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chavarria2012regulatorytasksof media b14b64f4): Max Chavarría, Roelco J. Kleijn, Uwe Sauer, Katharina Pflüger-Grau, and Víctor de Lorenzo. Regulatory tasks of the phosphoenolpyruvate-phosphotransferase system of pseudomonas putida in central carbon metabolism. May 2012. URL: https://doi.org/10.1128/mbio.00028-12, doi:10.1128/mbio.00028-12. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chavarria2012regulatorytasksof media 8dabbe7d): Max Chavarría, Roelco J. Kleijn, Uwe Sauer, Katharina Pflüger-Grau, and Víctor de Lorenzo. Regulatory tasks of the phosphoenolpyruvate-phosphotransferase system of pseudomonas putida in central carbon metabolism. May 2012. URL: https://doi.org/10.1128/mbio.00028-12, doi:10.1128/mbio.00028-12. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bouillaud2023inhibitionofsuccinate pages 3-5): Frederic Bouillaud. Inhibition of succinate dehydrogenase by pesticides (sdhis) and energy metabolism. International Journal of Molecular Sciences, 24:4045, Feb 2023. URL: https://doi.org/10.3390/ijms24044045, doi:10.3390/ijms24044045. This article has 60 citations.</p>
+</li>
+<li>
+<p>(mcneil2012sdheisa pages 1-2): Matthew B. McNeil, James S. Clulow, Nabil M. Wilf, George P.C. Salmond, and Peter C. Fineran. Sdhe is a conserved protein required for flavinylation of succinate dehydrogenase in bacteria. Journal of Biological Chemistry, 287:18418-18428, May 2012. URL: https://doi.org/10.1074/jbc.m111.293803, doi:10.1074/jbc.m111.293803. This article has 86 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mcneil2012sdheisa pages 4-5): Matthew B. McNeil, James S. Clulow, Nabil M. Wilf, George P.C. Salmond, and Peter C. Fineran. Sdhe is a conserved protein required for flavinylation of succinate dehydrogenase in bacteria. Journal of Biological Chemistry, 287:18418-18428, May 2012. URL: https://doi.org/10.1074/jbc.m111.293803, doi:10.1074/jbc.m111.293803. This article has 86 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mutyala2023citratesynthaseoverexpression pages 10-11): Sakuntala Mutyala, Shuwei Li, Himanshu Khandelwal, Da Seul Kong, and Jung Rae Kim. Citrate synthase overexpression of <i>pseudomonas putida</i> increases succinate production from acetate in microaerobic cultivation. ACS Omega, 8:26231-26242, Jul 2023. URL: https://doi.org/10.1021/acsomega.3c02520, doi:10.1021/acsomega.3c02520. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sdhA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000005 Table 1 (found on page 3) provides physiological characteristics of P. putida MAD2 and its mutants. While it does not list the spec" src="sdhA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bouillaud2023inhibitionofsuccinate pages 3-5</li>
+<li>mcneil2012sdheisa pages 1-2</li>
+<li>mcneil2012sdheisa pages 4-5</li>
+<li>mutyala2023citratesynthaseoverexpression pages 10-11</li>
+<li>chavarria2012regulatorytasksof pages 3-4</li>
+<li>https://doi.org/10.1128/mbio.00028-12</li>
+<li>https://doi.org/10.3390/ijms24044045</li>
+<li>https://doi.org/10.1074/jbc.m111.293803</li>
+<li>https://doi.org/10.1021/acsomega.3c02520</li>
+<li>https://doi.org/10.1111/j.1462-2920.2010.02166.x</li>
+<li>https://doi.org/10.1128/mbio.00028-12,</li>
+<li>https://doi.org/10.3390/ijms24044045,</li>
+<li>https://doi.org/10.1074/jbc.m111.293803,</li>
+<li>https://doi.org/10.1021/acsomega.3c02520,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FA7
+gene_symbol: sdhA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Flavoprotein (catalytic) subunit of succinate dehydrogenase (respiratory Complex II) in Pseudomonas putida KT2440. SdhA carries a covalently bound FAD cofactor and the succinate/fumarate active site, catalysing the oxidation of succinate to fumarate with transfer of electrons into the membrane quinone pool (EC 1.3.5.1). This reaction couples the tricarboxylic acid (TCA) cycle to the aerobic respiratory electron transport chain. SdhA forms the soluble catalytic head of the four-subunit enzyme together with the iron-sulfur subunit SdhB (PP_4190) and the membrane anchor subunits SdhD (PP_4192) and SdhC (PP_4193), to which it is peripherally attached on the cytoplasmic face of the inner (plasma) membrane. FAD incorporation (flavinylation) depends on the accessory assembly factor SdhE.
+existing_annotations:
+- term:
+    id: GO:0000104
+    label: succinate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: SdhA is the flavoprotein catalytic subunit of succinate dehydrogenase (Complex II); succinate dehydrogenase activity is its core molecular function.
+    action: ACCEPT
+    reason: Strongly supported by family/domain assignment (TIGR01816 sdhA_forward, Pfam FAD_binding_2, FRD/SDH subfamily), conserved active-site and FAD-binding residues, and UniProt EC 1.3.5.1. Consistent across all lines of evidence.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: SdhA is a peripheral membrane protein attached to the cytoplasmic (inner) face of the inner/plasma membrane as part of the membrane-bound Complex II.
+    action: ACCEPT
+    reason: Matches UniProt subcellular location (Cell inner membrane; peripheral membrane protein; cytoplasmic side). In Gram-negative bacteria the inner membrane is the GO plasma membrane.
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Succinate dehydrogenase catalyses the succinate-to-fumarate step of the TCA cycle; this is a core biological process for SdhA.
+    action: ACCEPT
+    reason: Supported by UniProt pathway annotation (tricarboxylic acid cycle; fumarate from succinate, step 1/1) and conserved enzyme function.
+- term:
+    id: GO:0008177
+    label: succinate dehydrogenase (quinone) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the precise quinone-coupled reaction (succinate + quinone = fumarate + quinol, RHEA:40523, EC 1.3.5.1) catalysed by the holo-enzyme to which SdhA contributes the catalytic flavoprotein head.
+    action: ACCEPT
+    reason: Directly matches the UniProt CATALYTIC ACTIVITY (RHEA:40523) and EC 1.3.5.1. Most informative molecular-function term for the complex&#39;s overall reaction.
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: SdhA participates in electron transfer, passing electrons abstracted from succinate via FAD toward the iron-sulfur clusters of SdhB and the quinone pool.
+    action: KEEP_AS_NON_CORE
+    reason: Biologically true but more generic than the specific succinate dehydrogenase (quinone) activity that captures SdhA&#39;s core function. Retain as supporting/non-core rather than primary.
+- term:
+    id: GO:0009061
+    label: anaerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: This subunit is the forward/aerobic succinate dehydrogenase flavoprotein (TIGR01816 sdhA_forward), not the fumarate reductase used in anaerobic respiration.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: UniProt notes that two distinct FAD enzymes interconvert fumarate and succinate, with fumarate reductase (FrdA) used in anaerobic growth and succinate dehydrogenase used in aerobic growth. The forward SdhA is assigned to aerobic respiration; this TreeGrafter-propagated anaerobic respiration term reflects the broader SdhA/FrdA family and over-annotates the aerobic SdhA.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Generic parent of the specific succinate dehydrogenase (quinone) activity already annotated.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but uninformative high-level term; subsumed by the specific EC 1.3.5.1 annotation. Retain as non-core.
+- term:
+    id: GO:0016627
+    label: oxidoreductase activity, acting on the CH-CH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Accurate intermediate-level description of the chemistry (oxidation of the succinate CH-CH bond to the fumarate C=C bond), but less specific than succinate dehydrogenase (quinone) activity.
+    action: KEEP_AS_NON_CORE
+    reason: Correct grouping term but subsumed by the specific MF term; keep as non-core supporting annotation.
+- term:
+    id: GO:0022900
+    label: electron transport chain
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Complex II feeds electrons from succinate into the respiratory quinone pool, contributing to the aerobic electron transport chain.
+    action: ACCEPT
+    reason: Supported by UniProt (electron transport keyword) and the established role of Complex II linking the TCA cycle to respiration.
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: SdhA binds a (covalently attached) FAD cofactor essential for succinate oxidation.
+    action: ACCEPT
+    reason: Supported by UniProt COFACTOR (FAD), multiple conserved FAD-binding residues, the Tele-8alpha-FAD histidine modified residue, and SdhE-dependent flavinylation.
+- term:
+    id: GO:0160308
+    label: succinate dehydrogenase (FAD) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Describes the FAD-dependent succinate-&gt;fumarate half-reaction occurring at the SdhA flavin site, prior to electron transfer to quinone.
+    action: ACCEPT
+    reason: Accurately captures the FAD-coupled catalytic step intrinsic to the SdhA subunit; complementary to the holo-enzyme quinone-coupled term GO:0008177. Both are valid and informative.
+core_functions:
+- description: Catalytic flavoprotein subunit of succinate dehydrogenase (Complex II) that oxidises succinate to fumarate using a covalently bound FAD cofactor, the rate-limiting catalytic step linking the TCA cycle to the respiratory chain.
+  molecular_function:
+    id: GO:0008177
+    label: succinate dehydrogenase (quinone) activity
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: UniProt CATALYTIC ACTIVITY a quinone + succinate = fumarate + a quinol (RHEA:40523, EC 1.3.5.1).
+  directly_involved_in:
+  - id: GO:0006099
+    label: tricarboxylic acid cycle
+- description: Binds FAD at the catalytic head to abstract electrons from succinate and feed them into the electron transport chain via the SdhB iron-sulfur clusters and the membrane quinone pool.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  directly_involved_in:
+  - id: GO:0022900
+    label: electron transport chain
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: UniProt COFACTOR FAD; conserved FAD-binding residues and Tele-8alpha-FAD histidine.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22474332
+  title: SdhE is a conserved protein required for flavinylation of succinate dehydrogenase in bacteria
+  findings:
+  - statement: The accessory protein SdhE binds FAD and is required for flavinylation of the succinate dehydrogenase flavoprotein subunit (SdhA) and for SDH activity in bacteria.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: McNeil et al., J Biol Chem 2012;287:18418-28 (Serratia); supports SdhE-dependent flavinylation of bacterial SdhA. PMID corrected from 22593091 (which resolves to an unrelated orthopedics paper) to 22474332, recovered via DOI 10.1074/jbc.M111.293803 and PubMed-verified to the intended SdhE paper.
+suggested_questions:
+- question: Has the SdhA-SdhBCD Complex II of P. putida KT2440 been biochemically characterised (kinetics, FAD content, quinone specificity), and does it show any fumarate reductase activity in vitro?
+suggested_experiments:
+- description: Purify the P. putida KT2440 SdhABCD complex and measure succinate:quinone oxidoreductase kinetics and FAD flavinylation status, with and without SdhE, to confirm the conserved mechanism in this organism.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

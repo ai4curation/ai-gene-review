@@ -198,6 +198,24 @@ def replace_gene_symbols(
     >>> content, warnings = replace_gene_symbols("ATG7 is ambiguous", index)
     >>> "ATG7" in warnings[0]
     True
+
+    Case variants of the canonical symbol still link (the link text keeps the
+    author's casing, the URL uses the directory casing). Rule B handles
+    capitalized camelCase protein names; Rule A handles digit/hyphen genes:
+
+    >>> idx = {'pqsB': ['PSEAE'], 'che-2': ['worm'], 'manY': ['ECOLI']}
+    >>> out, _ = replace_gene_symbols("The PqsB subunit", idx)
+    >>> "[PqsB](../../genes/PSEAE/pqsB/pqsB-ai-review.html)" in out
+    True
+    >>> out, _ = replace_gene_symbols("worm CHE-2 mutant", idx)
+    >>> "[CHE-2](../../genes/worm/che-2/che-2-ai-review.html)" in out
+    True
+
+    Ordinary words that merely share a symbol's letters are never linked:
+
+    >>> out, _ = replace_gene_symbols("Many results", idx)
+    >>> out
+    'Many results'
     """
     warnings: List[str] = []
     species_hints = species_hints or []
@@ -205,8 +223,47 @@ def replace_gene_symbols(
     # Track which symbols we've already processed to avoid duplicate warnings
     processed_ambiguous: set = set()
 
+    # --- Case-variant matching ---------------------------------------------
+    # Gene directories are named with the *gene symbol* (e.g. ``pqsB``,
+    # ``eryCIII``, ``che-2``), but prose often uses the *protein* name or an
+    # upper-cased convention (``PqsB``, ``EryCIII``, ``CHE-2``). Two targeted
+    # rules let those forms link without the blanket case-insensitivity that
+    # would wrongly turn ordinary words such as "many"/"app"/"alga" into links
+    # (they collide with the genes ``manY``/``App``/``algA``):
+    #
+    #   Rule A (digit/hyphen genes): a symbol containing a digit or a hyphen
+    #     (``che-2``, ``daf-16``, ``TP53``, ``MCR-1``) is distinctively
+    #     gene-like and is matched fully case-insensitively. English words
+    #     contain neither digits nor hyphens, so this is collision-free.
+    #
+    #   Rule B (gene/protein capitalization): a camelCase symbol that starts
+    #     lowercase and has an internal capital (``pqsB``, ``eryCIII``,
+    #     ``ftsZ``, ``mxaF``) is also matched with only its first letter
+    #     capitalized (``PqsB``, ``EryCIII``), the rest kept exact. Because the
+    #     tail case is preserved, ``manY`` only also matches ``ManY`` (the real
+    #     gene reference), never the word "many".
+    #
+    # The displayed text is always whatever the author wrote; only the link
+    # URL uses the canonical directory casing.
+    def _rule_a(symbol: str) -> bool:
+        return ('-' in symbol) or any(ch.isdigit() for ch in symbol)
+
+    def _rule_b(symbol: str) -> bool:
+        return (
+            symbol[0].islower()
+            and any(ch.isupper() for ch in symbol)
+            and not _rule_a(symbol)
+        )
+
     def resolve_species(symbol: str) -> Optional[str]:
-        """Resolve which species to link for a symbol."""
+        """Resolve which species to link for a symbol.
+
+        ``species_hints`` is treated as a *priority-ordered* preference list: the
+        first hinted species that actually has a review for the symbol wins. This
+        lets a multi-species project list every species it covers (so the
+        all-projects table is complete) while still disambiguating symbols that
+        exist in more than one of those species.
+        """
         if symbol not in symbol_index:
             return None
 
@@ -215,13 +272,12 @@ def replace_gene_symbols(
         if len(species_list) == 1:
             return species_list[0]
 
-        # Try to resolve using species hints
-        matching = [s for s in species_list if s in species_hints]
+        # Resolve using the priority-ordered species hints: first match wins.
+        for hint in species_hints:
+            if hint in species_list:
+                return hint
 
-        if len(matching) == 1:
-            return matching[0]
-
-        # Still ambiguous
+        # Still ambiguous: no hint matched any species carrying this symbol.
         if symbol not in processed_ambiguous:
             processed_ambiguous.add(symbol)
             warnings.append(
@@ -231,22 +287,41 @@ def replace_gene_symbols(
 
         return None
 
-    def make_link(symbol: str, species: str) -> str:
-        """Create a markdown link to the gene review page."""
+    def make_link(display: str, symbol: str, species: str) -> str:
+        """Create a markdown link to the gene review page.
+
+        ``display`` is the text the author wrote (possibly a case variant such
+        as ``PqsB``); ``symbol`` is the canonical directory name used in the URL.
+        """
         url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
-        return f"[{symbol}]({url})"
+        return f"[{display}]({url})"
+
+    def canonical_symbol(matched: str) -> Optional[str]:
+        """Resolve a matched token to its canonical gene-directory symbol."""
+        if matched in symbol_index:
+            return matched
+        # Rule B: the author capitalized the first letter of a camelCase symbol.
+        first_lower = matched[0].lower() + matched[1:]
+        if first_lower in rule_b_symbols:
+            return first_lower
+        # Rule A: digit/hyphen symbols match case-insensitively.
+        return rule_a_lower.get(matched.lower())
 
     def replace_match(match: re.Match) -> str:
         """Replace a matched symbol with a link if resolvable."""
         full_match = match.group(0)
-        symbol = match.group('symbol')
+        matched = match.group('symbol')
+
+        symbol = canonical_symbol(matched)
+        if symbol is None:
+            return full_match
 
         species = resolve_species(symbol)
 
         if species is None:
             return full_match
 
-        link = make_link(symbol, species)
+        link = make_link(matched, symbol, species)
 
         # Preserve bold markers if present
         if full_match.startswith('**') and full_match.endswith('**'):
@@ -269,9 +344,33 @@ def replace_gene_symbols(
     if not symbols:
         return content, warnings
 
-    # Escape special regex characters in symbols
-    escaped_symbols = [re.escape(s) for s in symbols]
-    symbols_pattern = '|'.join(escaped_symbols)
+    # Lookup tables for the two case-variant rules (see comments above).
+    rule_b_symbols = {s for s in symbols if _rule_b(s)}
+    rule_a_lower: Dict[str, str] = {}
+    rule_a_ambiguous: set = set()
+    for s in symbols:
+        if _rule_a(s):
+            lowered = s.lower()
+            if lowered in rule_a_lower and rule_a_lower[lowered] != s:
+                rule_a_ambiguous.add(lowered)
+            else:
+                rule_a_lower[lowered] = s
+    for lowered in rule_a_ambiguous:
+        rule_a_lower.pop(lowered, None)
+
+    # Build the alternation. Each symbol contributes its exact form; Rule A
+    # symbols are wrapped in an inline case-insensitive group, and Rule B
+    # symbols additionally contribute their first-letter-capitalized variant.
+    alternatives: List[str] = []
+    for s in symbols:
+        escaped = re.escape(s)
+        if _rule_a(s):
+            alternatives.append(f"(?i:{escaped})")
+        else:
+            alternatives.append(escaped)
+            if _rule_b(s):
+                alternatives.append(re.escape(s[0].upper() + s[1:]))
+    symbols_pattern = '|'.join(alternatives)
 
     # Pattern to match:
     # 1. Bold symbols: **SYMBOL**
@@ -364,6 +463,93 @@ def replace_gene_tags(
         return f"[{label}]({url})"
 
     return tag_regex.sub(replace_tag, content), warnings
+
+
+# UniProt-style species mnemonics are five uppercase alphanumerics (e.g. ARATH,
+# POPTR, 9INFA). A few model organisms use lowercase common-name directories
+# instead; keep that an explicit small allowlist so the regex stays precise.
+SPECIES_CODE_EXCEPTIONS = ("human", "mouse", "rat", "worm", "yeast")
+
+
+def replace_species_qualified_symbols(
+    content: str,
+    genes_dir: Path,
+    base_path: str = "../../genes",
+) -> Tuple[str, List[str]]:
+    """Replace ``CODE/symbol`` prose references with gene-review links.
+
+    This is the lightweight inline convention for disambiguating gene symbols in
+    multi-species project prose, where a bare symbol (e.g. ``CASPL4C1``) is
+    ambiguous because reviews exist in several species. Writing the species code
+    in front -- ``POPTR/CASPL4C1`` -- links to that species' review explicitly,
+    without hardcoding any path. The rendered link keeps the full ``CODE/symbol``
+    text, which is informative in a cross-species document.
+
+    ``CODE`` must be a five-character uppercase UniProt mnemonic (e.g. ``ARATH``,
+    ``POPTR``, ``9INFA``) or one of a small set of lowercase model-organism
+    directory names (``human``, ``mouse``, ``rat``, ``worm``, ``yeast``). The
+    reference is only linked when ``genes/CODE/symbol/`` actually exists, so the
+    regex can stay permissive while precision comes from the filesystem check. A
+    ``CODE`` that is itself a known species directory but whose ``symbol`` is
+    missing yields a warning (likely a typo); anything else is left untouched.
+
+    >>> from pathlib import Path
+    >>> import tempfile
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     g = Path(tmp) / "genes"
+    ...     (g / "POPTR" / "CASPL4C1").mkdir(parents=True)
+    ...     out, warns = replace_species_qualified_symbols(
+    ...         "See POPTR/CASPL4C1 for detail.", g)
+    ...     ("[POPTR/CASPL4C1](" in out, warns)
+    (True, [])
+    """
+    warnings: List[str] = []
+
+    code_alt = "|".join(["[A-Z0-9]{5}", *(re.escape(c) for c in SPECIES_CODE_EXCEPTIONS)])
+    # Not preceded by a word char or '/' (so paths like genes/POPTR/CASPL4C1 do
+    # not match), CODE/symbol, not followed by a word char.
+    pattern = re.compile(
+        rf"(?<![A-Za-z0-9_/])"
+        rf"(?P<code>{code_alt})"
+        # Symbols may contain internal '.'/'-' (e.g. NaPMT1.1, lrx-1) but must
+        # start and end on an alphanumeric so trailing punctuation is excluded.
+        rf"/(?P<symbol>[A-Za-z0-9](?:[\w.\-]*[A-Za-z0-9])?)"
+        rf"(?![A-Za-z0-9_])"
+    )
+    preserve_regex = re.compile(
+        r'(?P<fenced>```.*?```)'
+        r'|(?P<code>`[^`]*`)'
+        r'|(?P<link>\[[^\]]*\]\([^)]*\))',
+        flags=re.DOTALL,
+    )
+
+    def replace_match(match: re.Match) -> str:
+        code = match.group("code")
+        symbol = match.group("symbol")
+        if (genes_dir / code / symbol).is_dir():
+            url = f"{base_path}/{code}/{symbol}/{symbol}-ai-review.html"
+            return f"[{code}/{symbol}]({url})"
+        # Only warn when CODE is clearly a species directory we know about, so a
+        # stray "ABOUT/foo" in prose stays silent.
+        if (genes_dir / code).is_dir():
+            warnings.append(
+                f"Species-qualified symbol '{code}/{symbol}' not found "
+                f"(no genes/{code}/{symbol})."
+            )
+        return match.group(0)
+
+    # Do not link inside code spans/blocks or existing markdown links.
+    parts: List[str] = []
+    last_end = 0
+    for match in preserve_regex.finditer(content):
+        if match.start() > last_end:
+            parts.append(pattern.sub(replace_match, content[last_end:match.start()]))
+        parts.append(match.group(0))
+        last_end = match.end()
+    if last_end < len(content):
+        parts.append(pattern.sub(replace_match, content[last_end:]))
+
+    return "".join(parts), warnings
 
 
 def link_uniprot_code_spans(
@@ -874,6 +1060,15 @@ def render_project(
         base_path=genes_base_path,
     )
 
+    # Resolve explicit ``CODE/symbol`` species-qualified references next. These
+    # disambiguate symbols shared across species without hardcoding paths, and
+    # the generated links are preserved by the bare-symbol auto-linker below.
+    content, qualified_warnings = replace_species_qualified_symbols(
+        content,
+        genes_dir=genes_dir,
+        base_path=genes_base_path,
+    )
+
     # Replace prose gene symbols with links unless the page opts out. Explicit
     # <gene> tags above still link because they are intentional, not automatic.
     if should_autolink_gene_symbols(frontmatter):
@@ -885,7 +1080,7 @@ def render_project(
         )
     else:
         linked_content, symbol_warnings = content, []
-    warnings = tag_warnings + symbol_warnings
+    warnings = tag_warnings + qualified_warnings + symbol_warnings
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
     # links are already explicit via <gene> tags or ordinary symbol autolinks.
@@ -1027,6 +1222,33 @@ def render_project_bundle(
     return output_paths, all_warnings
 
 
+def latest_review_status(manual_reviews: Any) -> Optional[str]:
+    """Return the ``status`` of the most recent manual review, if any.
+
+    ``manual_reviews`` is the optional project-frontmatter list of reviewer
+    sign-offs. The "most recent" entry is the one with the greatest ``date``
+    (ISO ``YYYY-MM-DD`` sorts lexicographically); entries without a date sort
+    earliest. Returns ``None`` when there are no reviews or the latest carries
+    no status.
+
+    >>> latest_review_status([
+    ...     {"reviewed_by": "cjm", "date": "2024-01-01", "status": "CHANGES_REQUESTED"},
+    ...     {"reviewed_by": "cjm", "date": "2024-03-02", "status": "READY"},
+    ... ])
+    'READY'
+    >>> latest_review_status([]) is None
+    True
+    """
+    if not isinstance(manual_reviews, list):
+        return None
+    entries = [r for r in manual_reviews if isinstance(r, dict)]
+    if not entries:
+        return None
+    latest = max(entries, key=lambda r: str(r.get("date") or ""))
+    status = latest.get("status")
+    return str(status) if status is not None else None
+
+
 def render_projects_table(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
@@ -1090,6 +1312,12 @@ def render_projects_table(
             len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
         )
 
+        manual_reviews = frontmatter.get("manual_reviews")
+        review_status = latest_review_status(manual_reviews)
+        review_count = (
+            len(manual_reviews) if isinstance(manual_reviews, list) else 0
+        )
+
         rows.append(
             {
                 "slug": md_path.stem,
@@ -1100,6 +1328,8 @@ def render_projects_table(
                 "tags": tags,
                 "maturity": maturity,
                 "support_count": support_count,
+                "review_status": review_status,
+                "review_count": review_count,
             }
         )
 
@@ -1109,9 +1339,13 @@ def render_projects_table(
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
     tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [m for m in maturity_order if any(r["maturity"] == m for r in rows)]
     all_tags = [t for t in tag_order if any(t in r["tags"] for r in rows)]
     all_species = sorted({s for r in rows for s in r["species"]})
+    all_review_statuses = [
+        s for s in review_status_order if any(r["review_status"] == s for r in rows)
+    ]
 
     env = Environment(
         loader=FileSystemLoader(template_path.parent),
@@ -1123,6 +1357,7 @@ def render_projects_table(
         all_maturities=all_maturities,
         all_tags=all_tags,
         all_species=all_species,
+        all_review_statuses=all_review_statuses,
     )
 
     output_dir.mkdir(parents=True, exist_ok=True)

@@ -8,6 +8,9 @@ dumps, ``*.citations.md`` sidecars) are not required to carry frontmatter.
 
 from pathlib import Path
 
+import datetime
+import re
+
 import pytest
 import yaml
 
@@ -18,6 +21,15 @@ VALID_MATURITY = {"SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"}
 
 #: Controlled vocabulary for the project ``tags`` list.
 VALID_TAGS = {"FLAGSHIP", "OBSOLETION", "PIPELINE", "BIOLOGY_DOMAIN"}
+
+#: Controlled vocabulary for a manual review's ``status``.
+VALID_REVIEW_STATUS = {"READY", "CHANGES_REQUESTED"}
+
+#: Allowed keys inside a single ``manual_reviews`` entry.
+REVIEW_KEYS = {"reviewed_by", "date", "notes", "todos", "status"}
+
+#: YYYY-MM-DD date strings (YAML may also parse these into ``datetime.date``).
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _is_exempt(path: Path) -> bool:
@@ -138,3 +150,79 @@ def test_project_tags_are_controlled(md_path: Path) -> None:
         f"{md_path.relative_to(PROJECTS_DIR)} has invalid tag(s) {invalid}; "
         f"allowed tags are {sorted(VALID_TAGS)}."
     )
+
+
+@pytest.mark.parametrize(
+    "md_path",
+    _project_markdown_files(),
+    ids=lambda p: str(p.relative_to(PROJECTS_DIR)),
+)
+def test_project_manual_reviews_are_well_formed(md_path: Path) -> None:
+    """If a project declares ``manual_reviews`` each entry must be well-formed.
+
+    ``manual_reviews`` is an optional list of reviewer sign-offs::
+
+        manual_reviews:
+          - reviewed_by: cjm
+            date: 2024-01-15
+            status: CHANGES_REQUESTED
+            notes: ...
+            todos:
+              - ...
+
+    Each entry needs a non-empty ``reviewed_by``; ``status`` (if given) must use
+    the controlled vocabulary; ``date`` (if given) must be YYYY-MM-DD; ``todos``
+    must be a list and ``notes`` a string. Unknown keys are rejected to catch
+    typos.
+    """
+    fm = _parse_frontmatter(md_path.read_text())
+    reviews = fm.get("manual_reviews")
+    if reviews is None:
+        return
+
+    rel = md_path.relative_to(PROJECTS_DIR)
+    assert isinstance(reviews, list), f"{rel} 'manual_reviews' must be a list."
+
+    for i, review in enumerate(reviews):
+        assert isinstance(review, dict), (
+            f"{rel} manual_reviews[{i}] must be a mapping."
+        )
+
+        unknown = sorted(set(review) - REVIEW_KEYS)
+        assert not unknown, (
+            f"{rel} manual_reviews[{i}] has unknown key(s) {unknown}; "
+            f"allowed keys are {sorted(REVIEW_KEYS)}."
+        )
+
+        reviewer = review.get("reviewed_by")
+        assert reviewer is not None and str(reviewer).strip(), (
+            f"{rel} manual_reviews[{i}] needs a non-empty 'reviewed_by'."
+        )
+
+        status = review.get("status")
+        if status is not None:
+            assert status in VALID_REVIEW_STATUS, (
+                f"{rel} manual_reviews[{i}] has invalid status {status!r}; "
+                f"must be one of {sorted(VALID_REVIEW_STATUS)}."
+            )
+
+        date = review.get("date")
+        if date is not None:
+            valid_date = isinstance(date, datetime.date) or (
+                isinstance(date, str) and bool(_DATE_RE.match(date))
+            )
+            assert valid_date, (
+                f"{rel} manual_reviews[{i}] 'date' must be YYYY-MM-DD; got {date!r}."
+            )
+
+        todos = review.get("todos")
+        if todos is not None:
+            assert isinstance(todos, list), (
+                f"{rel} manual_reviews[{i}] 'todos' must be a list."
+            )
+
+        notes = review.get("notes")
+        if notes is not None:
+            assert isinstance(notes, str), (
+                f"{rel} manual_reviews[{i}] 'notes' must be a string."
+            )

@@ -1,0 +1,3761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TXNDC11 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TXNDC11</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6PKC3" target="_blank" class="term-link">
+                        Q6PKC3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TXNDC11";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6PKC3" data-a="DESCRIPTION: TXNDC11 (Thioredoxin domain-containing protein 11;..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TXNDC11 (Thioredoxin domain-containing protein 11; also called EFP1) is a large (985 aa) single-pass endoplasmic reticulum membrane glycoprotein of the protein disulfide isomerase (PDI) family. It contains a single N-terminal transmembrane helix and a luminal region with five thioredoxin (Trx)-like domains followed by a C-terminal coiled coil. Only one of its Trx domains carries a canonical redox-active CXXC motif; the other Trx folds are degenerate/redox-inactive, and biochemically the catalytic center behaves as a thiol-disulfide reductase rather than an oxidase. TXNDC11 forms a stable, disulfide-linked complex with the ER mannosidase-like protein EDEM2, and this covalent partnership is required for the initial mannose-trimming step (Man9 to Man8) that commits misfolded N-glycoproteins to ER-associated degradation (glycoprotein ERAD). TXNDC11 was originally identified through its interaction with the cytoplasmic regions of the dual oxidases DUOX1 and DUOX2 and with thyroid peroxidase, suggesting a redox-regulatory role linked to the thyroid hydrogen-peroxide-generating system, though TXNDC11 alone is not sufficient to support DUOX-mediated H2O2 generation. It is widely but weakly expressed, with higher expression in thyroid and prostate.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>protein-disulfide reductase activity (Trx5 CXXC)</h3>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="protein-disulfide reductase activity (Trx5 CXXC)" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Molecular function: TXNDC11 Trx5 domain CXXC (C692-C695) exhibits thiol-disulfide reductase activity and forms a covalent disulfide with EDEM2; recommend annotating GO:0015035 protein-disulfide reductase activity (or GO:0003756 protein disulfide isomerase activity).</p>
+            
+
+            
+            <p><strong>Justification:</strong> Experimentally established core molecular function (PMID:32065582) that is absent from the current GOA, which lists only protein binding for the MF aspect.</p>
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/32065582" target="_blank" class="term-link">
+                        PMID:32065582
+                    </a>
+                    
+                    
+                    : The Trx5 domain expressed and purified from cells exhibited reductase activity in vitro.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ERAD pathway / glycoprotein mannose trimming initiation</h3>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="ERAD pathway / glycoprotein mannose trimming initiation" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Biological process: TXNDC11 is required, via its disulfide-linked EDEM2 complex, for the first mannose-trimming step of glycoprotein ERAD; recommend annotating GO:0036503 (ERAD pathway) or glycoprotein catabolic process terms.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Well-supported biological role absent from current GOA (PMID:32065582; PMID:30374462).</p>
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/32065582" target="_blank" class="term-link">
+                        PMID:32065582
+                    </a>
+                    
+                    
+                    : This covalent bonding was essential for mannose trimming and subsequent gpERAD in HCT116 cells.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TXNDC11 is a single-pass ER membrane protein; the ER membrane localization is its primary subcellular location and is consistent with its luminal thioredoxin-domain redox/chaperone function and its partnership with the ER mannosidase EDEM2.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct primary localization, matching the UniProt curated subcellular location and the protein&#39;s documented role as an ER-resident oxidoreductase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17500595" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17500595
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Huntingtin interacting proteins are genetic modifiers of neu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005515" data-r="PMID:17500595" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct capture of a TXNDC11-HTT (huntingtin) interaction from a huntingtin-interacting protein screen. Bare protein binding is uninformative and this partner does not reflect TXNDC11&#39;s core ER redox/ERAD function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Records a real but high-throughput interaction; per guidelines, bare protein binding is not elevated to a core function and the partner is unrelated to the EDEM2/ERAD activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q6PKC3; P42858: HTT; NbExp=7; IntAct=EBI-749812, EBI-466029;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18985028" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18985028
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatitis C virus infection protein network.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005515" data-r="PMID:18985028" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct capture of a TXNDC11-HCV (hepatitis C virus) protein interaction from a virus-host interactome screen. Uninformative bare protein binding, unrelated to the core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Real but high-throughput xeno interaction; per guidelines not elevated to core, and the partner does not reflect TXNDC11&#39;s ER oxidoreductase/ERAD role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q6PKC3; PRO_0000037551 [Q9WMX2]; Xeno; NbExp=2; IntAct=EBI-749812, EBI-6863748;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005515" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct captures from the HuRI binary interactome (partners including KLHL38, MKRN3, PRPF18, RAB2B, ZNF417). Uninformative bare protein binding from a systematic two-hybrid screen.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput binary interactome data; bare protein binding is not a core function and these partners do not reflect the EDEM2/ERAD or DUOX redox roles.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q6PKC3; Q2WGJ6: KLHL38; NbExp=3; IntAct=EBI-749812, EBI-6426443;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005515" data-r="PMID:32814053" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct capture from a neurodegenerative-disease interactome screen (HTT among partners). Uninformative bare protein binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> High-throughput interactome data; bare protein binding is not elevated to core and the partner does not reflect TXNDC11&#39;s core ER redox/ERAD function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Q6PKC3; P42858: HTT; NbExp=7; IntAct=EBI-749812, EBI-466029;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence-based cytosol annotation. TXNDC11 is a single-pass ER membrane protein with luminal thioredoxin domains; a primary cytosolic localization is not supported by its biology, and HPA reticular staining can be scored loosely. Retained as non-core rather than removed since it is an experimental (IDA) localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Conflicts with the curated ER membrane localization and the protein&#39;s topology; kept as non-core per the rule against removing experimental annotations on weak grounds.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence plasma-membrane annotation. This is consistent with the legacy EFP1/DUOX thyroid-system context (DUOX1/2 are plasma/apical-membrane oxidases) but is not TXNDC11&#39;s primary ER localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Peripheral localization tied to the DUOX/thyroid context; not the core ER site of action. Retained as non-core as an experimental annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-209815
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="Reactome:R-HSA-209815" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome plasma-membrane annotation derived from the thyroxine-biosynthesis reaction context (EFP1/DUOX thyroid H2O2 system at the follicular apical membrane).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-209840
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="Reactome:R-HSA-209840" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-209925
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="Reactome:R-HSA-209925" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-209973
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="Reactome:R-HSA-209973" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-350901
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="Reactome:R-HSA-350901" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5693681
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6PKC3" data-a="GO:0005886" data-r="Reactome:R-HSA-5693681" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome plasma-membrane annotation from the DUOX1 H2O2-generating reaction context.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TXNDC11/TXNDC11-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Interacts with the cytoplasmic part of DUOX1 and DUOX2.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ER thiol-disulfide oxidoreductase (reductase) that, via the single redox-active CXXC motif in its Trx5 domain, forms a covalent disulfide-linked complex with EDEM2 required for EDEM2-mediated mannose trimming that initiates glycoprotein ERAD.</h3>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="FUNCTION: ER thiol-disulfide oxidoreductase (reductase) that..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015035" target="_blank" class="term-link">
+                            protein-disulfide reductase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32065582" target="_blank" class="term-link">
+                                PMID:32065582
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">C558 present outside of the mannosidase homology domain of EDEM2 was linked to C692 in Trx5, which solely contains the CXXC motif in TXNDC11</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-209815
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Tyrosine is monoiodinated</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-209840
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two DITs combine to form thyroxine</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-209925
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DIT and MIT combine to form triiodothyronine</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-209973
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Tyrosine is diiodinated</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-350901
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Iodide is organified</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5693681
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">DUOX1 reduces O2 to H2O2</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17500595" target="_blank" class="term-link">
+                            PMID:17500595
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Huntingtin interacting proteins are genetic modifiers of neurodegeneration.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18985028" target="_blank" class="term-link">
+                            PMID:18985028
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Hepatitis C virus infection protein network.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15561711" target="_blank" class="term-link">
+                            PMID:15561711
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of a novel partner of duox: EFP1, a thioredoxin-related protein.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TXNDC11/EFP1 interacts with the cytoplasmic regions of DUOX1 and DUOX2 and with thyroid peroxidase, implicating it as a redox regulator in the thyroid H2O2-generating system, though it is not sufficient for DUOX-mediated H2O2 generation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32065582" target="_blank" class="term-link">
+                            PMID:32065582
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">EDEM2 stably disulfide-bonded to TXNDC11 catalyzes the first mannose trimming step in mammalian glycoprotein ERAD.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EDEM2 is stably disulfide-bonded to TXNDC11 (C558 of EDEM2 to C692 in the Trx5 domain, the only CXXC-containing Trx domain of TXNDC11); this covalent bond is essential for mannose trimming and subsequent glycoprotein ERAD.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Trx5 domain of TXNDC11 exhibits reductase activity in vitro; TXNDC11 functions as a reductase rather than an oxidase in this complex.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30374462" target="_blank" class="term-link">
+                            PMID:30374462
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mannosidase activity of EDEM1 and EDEM2 depends on an unfolded state of their glycoprotein substrates.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EDEMs associate with oxidoreductases including TXNDC11, enhancing mannosidase activity on glycoproteins.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37686174" target="_blank" class="term-link">
+                            PMID:37686174
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High Thioredoxin Domain-Containing Protein 11 Expression Is Associated with Tumour Progression in Glioma.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High TXNDC11 protein expression is associated with WHO high-grade tumour classification and poor prognosis in glioma and is an independent prognostic factor; TXNDC11 silencing inhibits proliferation, migration and invasion and induces apoptosis in GBM cells, while overexpression has the opposite effect.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37528230" target="_blank" class="term-link">
+                            PMID:37528230
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mechanisms of substrate processing during ER-associated protein degradation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Authoritative 2023 review placing TXNDC11 among mammalian ERAD factors that coordinate recognition, processing, ubiquitylation, extraction and proteasomal targeting of ER substrates.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1248/bpbreports.6.6_193
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Regulation of the ER-Resident Mannosidase EDEM2 in HEK293 Cells.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TXNDC11 deficiency markedly decreases EDEM2 protein without a corresponding decrease in EDEM2 mRNA, indicating that TXNDC11 post-transcriptionally stabilizes EDEM2; reductive stress (DTT) destabilizes both EDEM2 and TXNDC11 protein, and the destabilized EDEM2 can become an SEL1L-dependent ERAD substrate.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TXNDC11/TXNDC11-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q6PKC3 (TXD11_HUMAN), Thioredoxin domain-containing protein 11</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Single-pass ER membrane protein of the protein disulfide isomerase family with thioredoxin domains and redox-active CXXC; identified as a DUOX1/DUOX2/TPO/CYBA-interacting redox regulator (EFP1); higher expression in thyroid and prostate.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the legacy EFP1/DUOX thyroid-system role a genuine in vivo function of TXNDC11, or an incidental interaction superseded by the EDEM2/ERAD role?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="Q: Is the legacy EFP1/DUOX thyroid-system role a genu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond EDEM2, does the Trx5 reductase activity of TXNDC11 act on other ER substrates or redox partners during oxidative protein folding?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="Q: Beyond EDEM2, does the Trx5 reductase activity of ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute the purified EDEM2-TXNDC11 complex and assay mannose trimming (Man9 to Man8) with and without Trx5 CXXC (C692/C695) mutations to confirm the redox requirement.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="EXPERIMENT: Reconstitute the purified EDEM2-TXNDC11 complex an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantitative proteomics of glycoprotein ERAD substrates stabilized upon TXNDC11 knockout in human cells to define the endogenous substrate repertoire dependent on the EDEM2-TXNDC11 step.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6PKC3" data-a="EXPERIMENT: Quantitative proteomics of glycoprotein ERAD subst..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TXNDC11-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6PKC3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">28 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-12T04:30:44.152939</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="TXNDC11-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="TXNDC11-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000028 I have extracted Figure 2 panel C and relevant immunoblots from page 4 that demonstrate the EDEM2-TXNDC11 disulfide-bonded complex.</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-txndc11-uniprot-q6pkc3-functional-annotation-and-current-evidence">Research Report: Human <strong>TXNDC11</strong> (UniProt Q6PKC3) — functional annotation and current evidence</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>Thioredoxin domain-containing protein 11 (<strong>TXNDC11</strong>; synonym <strong>EFP1</strong>) is a human endoplasmic reticulum (ER) protein in the protein disulfide isomerase (PDI) family with <strong>five thioredoxin-like (Trx) domains</strong>, a <strong>single-pass transmembrane anchor</strong>, and a <strong>C-terminal coiled-coil</strong>. Genetic, biochemical, and cell-biological evidence supports TXNDC11 acting primarily as a <strong>disulfide reductase/oxidoreductase</strong> that is essential for <strong>glycoprotein ER-associated degradation (gpERAD)</strong>, notably by forming an <strong>obligate disulfide-bonded complex with the ER mannosidase EDEM2</strong> that catalyzes the <strong>first mannose trimming step (Man9GlcNAc2 → Man8GlcNAc2)</strong> that commits misfolded glycoproteins to ERAD. Recent (2023) studies extend relevance to (i) regulation of <strong>EDEM2 stability</strong> in human cells and (ii) translational associations in <strong>glioma prognosis and tumor biology</strong>. (george2020edem2stablydisulfidebonded pages 9-10, george2020edem2stablydisulfidebonded pages 4-5, timms2016geneticdissectionof pages 5-5, chen2023highthioredoxindomaincontaining pages 2-5, murase2023regulationofthe pages 4-7)</p>
+<hr />
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-txndc11-identity-verification-required-disambiguation">1.1 TXNDC11 identity verification (required disambiguation)</h3>
+<p><strong>Target identity</strong>: Human TXNDC11 (UniProt <strong>Q6PKC3</strong>) is consistent with the literature describing “thioredoxin domain-containing protein 11” / “EFP1” as an ER PDI-family member with multiple Trx domains and ER glycoprotein features. (timms2016geneticdissectionof pages 4-5, george2020edem2stablydisulfidebonded pages 4-5)</p>
+<p><strong>Domain architecture and catalytic motifs</strong><br />
+- TXNDC11 is annotated and experimentally supported as a <strong>single-pass transmembrane protein</strong> with a large ER-luminal region containing <strong>five Trx-like domains (Trx1–Trx5)</strong> and a <strong>coiled-coil region</strong>. (george2020edem2stablydisulfidebonded pages 4-5, timms2016geneticdissectionof pages 4-5)<br />
+- Only <strong>Trx5</strong> contains the canonical <strong>CXXC</strong> active-site motif (reported as <strong>CGFC</strong>), whereas Trx1 contains a <strong>CXXS</strong> motif, consistent with differential redox activity across domains. (timms2016geneticdissectionof pages 5-5, timms2016geneticdissectionof pages 4-5)</p>
+<p><strong>Subcellular localization</strong><br />
+- TXNDC11 is predominantly <strong>ER-localized</strong>, supported by immunofluorescence co-localization (with ER markers) and <strong>EndoH sensitivity</strong>, indicating high-mannose N-glycosylation typical of ER-resident luminal glycoproteins. (timms2016geneticdissectionof pages 4-5, appel2009efp1isan pages 7-8)</p>
+<h3 id="12-what-pdi-family-disulfide-reductase-in-gperad-means">1.2 What “PDI-family disulfide reductase in gpERAD” means</h3>
+<p>Protein disulfide isomerase (PDI) family members are thioredoxin-fold oxidoreductases that catalyze disulfide exchange reactions. In ERAD, reductive and isomerase activities can help remodel disulfides in substrates or partner proteins to enable recognition, processing, or retrotranslocation. TXNDC11 is now best defined as a gpERAD oxidoreductase that <strong>enables EDEM2-dependent demannosylation</strong> and supports efficient degradation of specific <strong>N-glycosylated ERAD substrates</strong>. (george2020edem2stablydisulfidebonded pages 4-5, timms2016geneticdissectionof pages 5-5, patel2020oxidoreductasesinglycoprotein pages 5-7)</p>
+<hr />
+<h2 id="2-molecular-function-substrates-and-pathways-primary-literature">2) Molecular function, substrates, and pathways (primary literature)</h2>
+<h3 id="21-core-pathway-placement-edem2txndc11-complex-initiates-mannose-trimming-in-gperad">2.1 Core pathway placement: EDEM2–TXNDC11 complex initiates mannose trimming in gpERAD</h3>
+<p>A central advance is the demonstration that <strong>EDEM2 is stably disulfide-bonded to TXNDC11</strong>, and that this complex is required for the first N-glycan trimming step that marks ERAD commitment.</p>
+<p><strong>Covalent complex and residue-level mechanism</strong><br />
+- EDEM2 forms a stable interprotein disulfide with TXNDC11: <strong>EDEM2 Cys558</strong> is linked to <strong>TXNDC11 Cys692</strong> (within Trx5). (george2020edem2stablydisulfidebonded pages 9-10, george2020edem2stablydisulfidebonded pages 4-5)<br />
+- Disruption of this linkage (e.g., EDEM2 C558A or TXNDC11 C692 mutation) eliminates the high-molecular-weight disulfide-linked species and compromises mannose trimming and downstream degradation. (george2020edem2stablydisulfidebonded pages 9-10, george2020edem2stablydisulfidebonded pages 4-5)</p>
+<p><strong>Biochemical activity (substrate specificity at the glycan level)</strong><br />
+- The purified EDEM2–TXNDC11 complex catalyzes <strong>PA-M9 → PA-M8B</strong> conversion in vitro, establishing functional <strong>α1,2-mannosidase activity</strong> of the complex relevant to gpERAD initiation. (george2020edem2stablydisulfidebonded pages 4-5)</p>
+<p><strong>Visual evidence from the primary paper</strong><br />
+- Cropped figure regions show the TXNDC11 domain map (TMD + Trx1–Trx5 with CGFC motif) and non-reducing immunoblots demonstrating EDEM2–TXNDC11 disulfide-bonded high-molecular-weight forms. (george2020edem2stablydisulfidebonded media ff6d387e, george2020edem2stablydisulfidebonded media a0df7537, george2020edem2stablydisulfidebonded media bc2d408b)</p>
+<h3 id="22-txndc11-redox-biochemistry-reductase-like-properties-and-active-domain">2.2 TXNDC11 redox biochemistry: reductase-like properties and active domain</h3>
+<p>Independent work supports that TXNDC11’s activity is concentrated in Trx5.</p>
+<ul>
+<li>Functional dissection shows <strong>Trx5 active-site cysteines are required</strong> for TXNDC11 function in glycoprotein ERAD, whereas Trx1 active-site changes are not. (timms2016geneticdissectionof pages 5-5)</li>
+<li>The isolated Trx5 domain has an estimated <strong>reduction potential ~ −234 mV</strong>, and is described as a reductase-like domain. (timms2016geneticdissectionof pages 5-5)</li>
+</ul>
+<h3 id="23-cellular-roles-in-erad-substrate-processing-genetic-evidence">2.3 Cellular roles in ERAD substrate processing (genetic evidence)</h3>
+<ul>
+<li>Forward genetic screens identified TXNDC11 as required for efficient ERAD of multiple <strong>glycoprotein</strong> substrates, with relatively less impact on a non-glycosylated variant, supporting a <strong>glycoprotein-focused ERAD role</strong>. (timms2016geneticdissectionof pages 5-5)</li>
+</ul>
+<h3 id="24-additional-interacting-partners-and-er-stress-links">2.4 Additional interacting partners and ER stress links</h3>
+<p><strong>Par-4 interaction / ER stress inducibility (ortholog evidence but mechanistically informative)</strong><br />
+- “EFP1” (TXNDC11 ortholog) localizes to the ER (co-localizes with PDI) and is an <strong>ER stress–induced glycoprotein</strong>; it physically interacts with pro-apoptotic <strong>Par-4</strong> by multiple interaction assays. (appel2009efp1isan pages 1-2, appel2009efp1isan pages 8-9)<br />
+- Recombinant EFP1 shows thioredoxin/PDI-like activity in an <strong>insulin disulfide reduction assay</strong> (e.g., 3.9 µM enzyme, 0.13 mM insulin, 0.33 mM DTT), supporting intrinsic disulfide reductase capability consistent with the family assignment. (appel2009efp1isan pages 7-8)</p>
+<p><strong>DUOX1 association (reported background)</strong><br />
+- TXNDC11/EFP1 was originally identified as a binding partner for <strong>dual oxidase 1 (DUOX1)</strong> in a yeast two-hybrid screen (not functionally resolved in that report excerpt), suggesting potential cross-talk between ER redox factors and oxidase systems, though mechanistic evidence in the retrieved corpus remains limited. (timms2016geneticdissectionof pages 4-5)</p>
+<hr />
+<h2 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<h3 id="31-2023-post-transcriptional-regulation-of-edem2-depends-on-txndc11-hek293">3.1 2023: Post-transcriptional regulation of EDEM2 depends on TXNDC11 (HEK293)</h3>
+<p>Murase et al. (Received Oct 6, 2023; Accepted Nov 9, 2023) analyzed endogenous EDEM2 regulation in HEK293 cells and linked EDEM2 protein stability to TXNDC11.</p>
+<p>Key findings:<br />
+- <strong>TXNDC11 deficiency markedly decreases EDEM2 protein</strong>, without corresponding decreases in EDEM2 mRNA, supporting a <strong>post-transcriptional stabilization role</strong>. (murase2023regulationofthe pages 4-7)<br />
+- Reductive stress with <strong>1 mM DTT</strong> decreases <strong>both EDEM2 and TXNDC11 protein</strong> levels over time, while EDEM2 and TXNDC11 mRNAs increase, consistent with <strong>post-transcriptional destabilization</strong> under reducing conditions. (murase2023regulationofthe pages 4-7)<br />
+- The DTT-induced EDEM2 decrease is <strong>partially suppressed by MG132</strong> and largely absent in <strong>SEL1L-deficient</strong> cells, implying that destabilized/cleaved EDEM2 can become an <strong>SEL1L-mediated ERAD substrate</strong>. (murase2023regulationofthe pages 4-7)</p>
+<p>URL and publication date: BPB Reports 6:193–199 (2023), DOI: https://doi.org/10.1248/bpbreports.6.6_193 (Received Oct 6, 2023; Accepted Nov 9, 2023). (murase2023regulationofthe pages 1-2)</p>
+<h3 id="32-2023-txndc11-in-gliomaprognostic-biomarker-and-functional-dependency">3.2 2023: TXNDC11 in glioma—prognostic biomarker and functional dependency</h3>
+<p>Chen et al. (Aug 2023) reported TXNDC11 as clinically and functionally relevant in glioma.</p>
+<p>Clinical/prognostic statistics:<br />
+- Cohort <strong>n = 86</strong> glioma cases (20 WHO grade II; 66 WHO grade III–IV). High TXNDC11 expression is associated with higher grade (<strong>p &lt; 0.001</strong>) and shorter survival (<strong>p &lt; 0.001</strong>). (chen2023highthioredoxindomaincontaining pages 2-5)<br />
+- Cox regression: univariate HR <strong>0.248</strong> (95% CI 0.117–0.524, <strong>p &lt; 0.001</strong>) and multivariate HR <strong>0.334</strong> (95% CI 0.153–0.729, <strong>p = 0.006</strong>) with TXNDC11 as an independent prognostic factor in their model (interpretation depends on coding of the variable, but independence is explicit). (chen2023highthioredoxindomaincontaining pages 2-5)</p>
+<p>Functional experiments:<br />
+- TXNDC11 knockdown decreases proliferation, migration, invasion, and increases apoptosis in GBM cell models; in vivo, TXNDC11 knockdown slows tumor growth and extends survival. Reported survival in xenografts: <strong>25.50 ± 0.812 days vs 20.75 ± 0.978 days (p = 0.006)</strong>. (chen2023highthioredoxindomaincontaining pages 8-10)</p>
+<p>URL and publication date: Int J Mol Sci 24:13367 (Aug 2023), https://doi.org/10.3390/ijms241713367. (chen2023highthioredoxindomaincontaining pages 2-5)</p>
+<h3 id="33-2023-expert-synthesis-consensus-view-of-txndc11-in-erad">3.3 2023 expert synthesis: consensus view of TXNDC11 in ERAD</h3>
+<p>A 2023 Nature Reviews Molecular Cell Biology review places TXNDC11 among mammalian ERAD factors and complexes that coordinate recognition, processing, ubiquitination, extraction, and proteasomal targeting, providing expert consensus framing for its role as part of ER quality control/ERAD networks. (christianson2023mechanismsofsubstrate pages 22-26, christianson2023mechanismsofsubstrate pages 30-31)</p>
+<p>URL and publication date: Nat Rev Mol Cell Biol 24:777–796 (Aug 2023), https://doi.org/10.1038/s41580-023-00633-8. (christianson2023mechanismsofsubstrate pages 22-26)</p>
+<p><strong>Note on 2024 coverage:</strong> within the retrieved and accessible corpus here, no 2024 TXNDC11-specific primary mechanistic papers were available; therefore, 2023 primary studies and authoritative 2023 review synthesis are prioritized.</p>
+<hr />
+<h2 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h2>
+<h3 id="41-biomarkerclinical-implementation-signals">4.1 Biomarker/clinical implementation signals</h3>
+<ul>
+<li>TXNDC11 has been proposed as a <strong>prognostic biomarker</strong> in glioma based on IHC scoring and multivariate survival analyses, and it has functional validation in GBM models, suggesting translational potential (risk stratification; possible therapeutic co-targeting strategies in TMZ-treated GBM). (chen2023highthioredoxindomaincontaining pages 2-5, chen2023highthioredoxindomaincontaining pages 8-10)</li>
+</ul>
+<h3 id="42-therapeutic-targeting-concept-preclinical">4.2 Therapeutic targeting concept (preclinical)</h3>
+<ul>
+<li>The glioma study proposes TXNDC11 as an “emerging therapeutic target,” supported by knockdown phenotypes and in vivo survival benefit. (chen2023highthioredoxindomaincontaining pages 8-10)</li>
+<li>Mechanistically, because TXNDC11 is integral to gpERAD via EDEM2, targeting it could, in principle, perturb ER proteostasis, which is a known vulnerability in some cancers; however, such strategies would require careful evaluation due to broad ER homeostasis roles. (george2020edem2stablydisulfidebonded pages 4-5, christianson2023mechanismsofsubstrate pages 22-26)</li>
+</ul>
+<h3 id="43-disease-association-aggregation-curated-database-evidence">4.3 Disease association aggregation (curated database evidence)</h3>
+<p>Open Targets lists TXNDC11 disease associations including <strong>rheumatoid arthritis</strong> and <strong>glioma</strong> (evidence counts shown), serving as a discovery/triage signal rather than mechanistic proof. (OpenTargets Search: -TXNDC11)</p>
+<hr />
+<h2 id="5-expert-opinions-and-authoritative-analysis">5) Expert opinions and authoritative analysis</h2>
+<h3 id="51-mechanistic-interpretation-supported-by-authoritative-sources">5.1 Mechanistic interpretation supported by authoritative sources</h3>
+<p>Across primary mechanistic work and review synthesis, TXNDC11 is most coherently interpreted as:<br />
+1) an ER-resident PDI-family oxidoreductase, <br />
+2) with critical redox activity concentrated in Trx5, and <br />
+3) functioning in gpERAD largely by enabling EDEM2-driven demannosylation through a stable covalent complex. (george2020edem2stablydisulfidebonded pages 4-5, timms2016geneticdissectionof pages 5-5, christianson2023mechanismsofsubstrate pages 22-26)</p>
+<h3 id="52-open-questions-highlighted-by-the-evidence-base">5.2 Open questions highlighted by the evidence base</h3>
+<ul>
+<li><strong>Client specificity</strong>: while TXNDC11 clearly supports glycoprotein ERAD for several substrates, the full set of physiological clients and whether it has roles beyond EDEM2 (e.g., with EDEM1/3) remain areas for further study. (patel2020oxidoreductasesinglycoprotein pages 5-7, murase2023regulationofthe pages 4-7)</li>
+<li><strong>ER stress and apoptosis links</strong>: ortholog-based evidence and background reports support ER-stress inducibility and Par-4 interactions, but direct human TXNDC11–Par-4 mechanistic coupling remains less fully developed in the retrieved human primary literature. (appel2009efp1isan pages 8-9, appel2009efp1isan pages 1-2)</li>
+</ul>
+<hr />
+<h2 id="6-relevant-statistics-and-data-recent-studies">6) Relevant statistics and data (recent studies)</h2>
+<table>
+<thead>
+<tr>
+<th>Finding/Claim</th>
+<th>System (cell line/organism)</th>
+<th>Assay/Method</th>
+<th>Key quantitative result(s)</th>
+<th>Interpretation/Function</th>
+<th>Source (first author year journal) with URL</th>
+<th>Evidence Context ID(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TXNDC11 is an ER-resident PDI-family protein with five predicted Trx domains, a single TM segment, and a luminal region; only Trx5 contains the canonical active-site motif important for function</td>
+<td>HeLa, KBM7 human cells</td>
+<td>Forward genetic screens, homology modeling, immunofluorescence, EndoH sensitivity, rescue with active-site mutants</td>
+<td>Five predicted Trx domains; Trx5 contains <strong>CGFC</strong> (canonical CXXC), Trx1 contains <strong>CXXS</strong>; Trx5 mutant abolishes rescue whereas Trx1 mutant does not</td>
+<td>Establishes correct human TXNDC11 identity and supports a redox-active ER oxidoreductase role in glycoprotein ERAD</td>
+<td>Timms 2016 <em>Nature Communications</em> — https://doi.org/10.1038/ncomms11786</td>
+<td>(timms2016geneticdissectionof pages 4-5, timms2016geneticdissectionof pages 5-5)</td>
+</tr>
+<tr>
+<td>TXNDC11 Trx5 has reductase-like redox properties</td>
+<td>Recombinant human Trx5 domain</td>
+<td>AMS shift assay / redox titration</td>
+<td>Estimated reduction potential of isolated Trx5 disulfide: <strong>~−234 mV</strong></td>
+<td>Supports classification of TXNDC11 as a <strong>disulfide reductase</strong> rather than oxidase in ERAD</td>
+<td>Timms 2016 <em>Nature Communications</em> — https://doi.org/10.1038/ncomms11786</td>
+<td>(timms2016geneticdissectionof pages 5-5, timms2016geneticdissectionof pages 4-5)</td>
+</tr>
+<tr>
+<td>TXNDC11 is required preferentially for glycoprotein ERAD rather than non-glycosylated substrate degradation</td>
+<td>Human knockout/knockdown cell systems (including GFP-HLA-A2, CD3δ-YFP, NHK-mCherry ERAD substrates)</td>
+<td>CRISPR/haploid screens, degradation assays, rescue experiments</td>
+<td>Screen concordance reported as <strong>&gt;70%</strong> overall; TXNDC11 depletion impairs degradation of multiple <strong>glycoprotein</strong> ERAD substrates but not a non-glycosylated variant</td>
+<td>Places TXNDC11 specifically in <strong>glycoprotein ERAD</strong></td>
+<td>Timms 2016 <em>Nature Communications</em> — https://doi.org/10.1038/ncomms11786</td>
+<td>(george2020edem2stablydisulfidebonded pages 5-6, timms2016geneticdissectionof pages 5-5)</td>
+</tr>
+<tr>
+<td>Human TXNDC11 contains a TMD, five Trx-like domains, coiled-coil region, and multiple potential N-glycosylation sites</td>
+<td>Human TXNDC11 schematic / transfected mammalian cells</td>
+<td>Domain mapping, immunoblotting, co-IP</td>
+<td>Domain map shows <strong>TMD + 5 Trx domains + coiled coil</strong>; multiple potential N-glycosylation sites indicated</td>
+<td>Confirms the literature matches UniProt Q6PKC3 domain architecture</td>
+<td>George 2020 <em>eLife</em> — https://doi.org/10.7554/eLife.53455</td>
+<td>(george2020edem2stablydisulfidebonded pages 4-5, george2020edem2stablydisulfidebonded pages 5-6, george2020edem2stablydisulfidebonded pages 13-14, george2020edem2stablydisulfidebonded media ff6d387e)</td>
+</tr>
+<tr>
+<td>EDEM2 is stably disulfide-bonded to TXNDC11 through EDEM2 C558 and TXNDC11 C692 in Trx5</td>
+<td>Human HCT116-derived experimental system</td>
+<td>Non-reducing SDS-PAGE, co-IP, cysteine mutagenesis</td>
+<td>Covalent linkage requires <strong>EDEM2 C558</strong> and <strong>TXNDC11 C692</strong>; loss of this bond abolishes high-molecular-weight complex</td>
+<td>Defines the key <strong>EDEM2–TXNDC11 ERAD complex</strong> and links TXNDC11 active-site chemistry to EDEM2 function</td>
+<td>George 2020 <em>eLife</em> — https://doi.org/10.7554/eLife.53455</td>
+<td>(george2020edem2stablydisulfidebonded pages 9-10, george2020edem2stablydisulfidebonded pages 4-5, george2020edem2stablydisulfidebonded pages 13-14, george2020edem2stablydisulfidebonded media ff6d387e)</td>
+</tr>
+<tr>
+<td>Purified EDEM2–TXNDC11 complex catalyzes the first glycoprotein ERAD mannose-trimming step in vitro</td>
+<td>Purified proteins / transfected mammalian cells</td>
+<td>In vitro glycan conversion assay</td>
+<td>Complex converts <strong>PA-M9 → PA-M8B</strong>; disulfide linkage is stated to be <strong>essential</strong> for EDEM2-mediated mannose trimming</td>
+<td>TXNDC11 functions as the PDI-family partner enabling <strong>initiating mannose trimming</strong> in gpERAD</td>
+<td>George 2020 <em>eLife</em> — https://doi.org/10.7554/eLife.53455</td>
+<td>(george2020edem2stablydisulfidebonded pages 9-10, george2020edem2stablydisulfidebonded pages 4-5, george2020edem2stablydisulfidebonded pages 13-14)</td>
+</tr>
+<tr>
+<td>Alternative translation initiation affects TXNDC11 membrane association/topology</td>
+<td>Human cells expressing M1A/M58A mutants</td>
+<td>Mutational analysis and fractionation/solubility comparison</td>
+<td><strong>M1A</strong> mutant is at least partly soluble; <strong>M58A</strong> remains transmembrane</td>
+<td>Suggests the N-terminal hydrophobic region can act as a <strong>signal anchor/weak signal peptide</strong>, influencing ER membrane anchoring</td>
+<td>George 2020 <em>eLife</em> — https://doi.org/10.7554/eLife.53455</td>
+<td>(george2020edem2stablydisulfidebonded pages 9-10, george2020edem2stablydisulfidebonded pages 5-6)</td>
+</tr>
+<tr>
+<td>TXNDC11/EFP1 localizes to the ER and is an N-glycosylated glycoprotein</td>
+<td>REF52.2 and CHO cells; rat ortholog highly similar to human TXNDC11</td>
+<td>GFP/Myc localization with PDI co-staining; Endo H sensitivity; western blot</td>
+<td>Two EFP1 species at approximately <strong>136 kDa</strong> and <strong>155 kDa</strong>; <strong>155-kDa</strong> form is Endo H-sensitive high-mannose glycoform</td>
+<td>Supports ER residency and lumenal glycoprotein maturation state for TXNDC11/EFP1</td>
+<td>Appel 2009 <em>Cell Health and Cytoskeleton</em> / DOI-linked report — https://doi.org/10.2147/chc.s5137</td>
+<td>(appel2009efp1isan pages 7-8, appel2009efp1isan pages 8-9, appel2009efp1isan pages 1-2)</td>
+</tr>
+<tr>
+<td>EFP1/TXNDC11 shows thioredoxin/PDI-like catalytic activity in insulin reduction assay</td>
+<td>Recombinant rat EFP1 ortholog (informative for human ortholog)</td>
+<td>Insulin disulfide reduction assay</td>
+<td>Assay conditions: <strong>3.9 µM EFP1</strong>, <strong>0.13 mM insulin</strong>, <strong>0.33 mM DTT</strong>, <strong>120 µL</strong> final volume; activity slower than <em>E. coli</em> thioredoxin; mean of <strong>3 independent experiments</strong></td>
+<td>Demonstrates intrinsic <strong>disulfide-reductase</strong> activity consistent with PDI family membership</td>
+<td>Appel 2009 <em>Cell Health and Cytoskeleton</em> / DOI-linked report — https://doi.org/10.2147/chc.s5137</td>
+<td>(appel2009efp1isan pages 12-13, appel2009efp1isan pages 7-8, appel2009efp1isan pages 8-9, appel2009efp1isan pages 1-2)</td>
+</tr>
+<tr>
+<td>EFP1/TXNDC11 interacts with Par-4 and modulates ER-stress-linked apoptosis</td>
+<td>CHO/NIH3T3 and related cell systems; rat ortholog study</td>
+<td>Pull-down, dot blot, co-IP, apoptosis assays with ER stressors and Par-4 siRNA</td>
+<td>Par-4 knockdown reduced apoptosis induced by <strong>ionomycin (p = 0.0043)</strong> and <strong>thapsigargin (p = 0.0019)</strong>; apoptosis scoring used <strong>5 independent experiments</strong> with <strong>100–200 cells/condition</strong></td>
+<td>Supports a role in <strong>ER-stress response</strong> and cell-fate decisions, though based on ortholog data</td>
+<td>Appel 2009 <em>Cell Health and Cytoskeleton</em> / DOI-linked report — https://doi.org/10.2147/chc.s5137</td>
+<td>(appel2009efp1isan pages 4-5, appel2009efp1isan pages 12-13, appel2009efp1isan pages 1-2)</td>
+</tr>
+<tr>
+<td>Endogenous EDEM2 is post-transcriptionally stabilized by TXNDC11; TXNDC11 deficiency lowers EDEM2 protein</td>
+<td>HEK293 human cells</td>
+<td>CRISPR-deficient cell lines; western blot; RT-PCR</td>
+<td>In SEL1L-deficient cells, TXNDC11 previously increased by <strong>~1.5-fold</strong>; in <strong>TXNDC11-deficient</strong> cells, EDEM2 protein was <strong>markedly decreased</strong> despite lack of corresponding mRNA reduction</td>
+<td>Indicates TXNDC11 is important for <strong>EDEM2 protein stability/maintenance</strong> in the ERAD pathway</td>
+<td>Murase 2023 <em>BPB Reports</em> — https://doi.org/10.1248/bpbreports.6.6_193</td>
+<td>(murase2023regulationofthe pages 4-7, murase2023regulationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Reductive stress destabilizes both EDEM2 and TXNDC11 proteins; EDEM2 decrease is proteasome- and SEL1L-sensitive</td>
+<td>HEK293 human cells</td>
+<td>DTT treatment ± MG132 or SEL1L deficiency</td>
+<td><strong>1 mM DTT</strong> decreased EDEM2 and TXNDC11 protein <strong>time-dependently</strong>; decrease in EDEM2 after DTT was <strong>partially suppressed by MG132 (10 µM)</strong> and largely absent in <strong>SEL1L-deficient</strong> cells</td>
+<td>Suggests EDEM2 stability depends on disulfide-linked state with TXNDC11 and that free/cleaved EDEM2 can enter <strong>SEL1L-mediated ERAD</strong></td>
+<td>Murase 2023 <em>BPB Reports</em> — https://doi.org/10.1248/bpbreports.6.6_193</td>
+<td>(murase2023regulationofthe pages 4-7, murase2023regulationofthe pages 2-4, murase2023regulationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>High TXNDC11 expression is associated with higher-grade glioma and poor prognosis</td>
+<td>Human glioma clinical cohort</td>
+<td>IHC, Kaplan–Meier survival, Cox regression</td>
+<td><strong>n = 86</strong> cases; <strong>20 WHO grade II</strong>, <strong>66 WHO grade III–IV</strong>; high TXNDC11 associated with high grade (<strong>p &lt; 0.001</strong>) and shorter survival (<strong>p &lt; 0.001</strong>); univariate HR <strong>0.248</strong> (95% CI <strong>0.117–0.524</strong>, <strong>p &lt; 0.001</strong>); multivariate HR <strong>0.334</strong> (95% CI <strong>0.153–0.729</strong>, <strong>p = 0.006</strong>)</td>
+<td>TXNDC11 is a potential <strong>prognostic biomarker</strong> in glioma</td>
+<td>Chen 2023 <em>International Journal of Molecular Sciences</em> — https://doi.org/10.3390/ijms241713367</td>
+<td>(chen2023highthioredoxindomaincontaining pages 8-10, chen2023highthioredoxindomaincontaining pages 2-5)</td>
+</tr>
+<tr>
+<td>TXNDC11 promotes glioblastoma growth, invasion/migration, and temozolomide resistance; knockdown improves survival in vivo</td>
+<td>GBM8401 and U87 cells; orthotopic xenograft model</td>
+<td>siRNA/overexpression, proliferation and apoptosis assays, TMZ sensitivity, in vivo imaging</td>
+<td>Knockdown reduced xenograft fluorescence at <strong>day 14 (p &lt; 0.01)</strong> and <strong>day 21 (p &lt; 0.001)</strong>; survival <strong>25.50 ± 0.812 days</strong> vs <strong>20.75 ± 0.978 days</strong> (<strong>p = 0.006</strong>); animal groups <strong>n = 12</strong> each</td>
+<td>Supports TXNDC11 as a candidate <strong>oncogenic dependency / therapeutic target</strong> in glioblastoma</td>
+<td>Chen 2023 <em>International Journal of Molecular Sciences</em> — https://doi.org/10.3390/ijms241713367</td>
+<td>(chen2023highthioredoxindomaincontaining pages 8-10, chen2023highthioredoxindomaincontaining pages 11-13)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported TXNDC11 findings across foundational mechanistic studies and recent translational work. It emphasizes quantitative results, domain/function evidence, and disease relevance for rapid incorporation into a functional annotation report.</em></p>
+<hr />
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>Timms RT et al. <em>Nature Communications</em> (Jun 2016). “Genetic dissection of mammalian ERAD…” https://doi.org/10.1038/ncomms11786 (timms2016geneticdissectionof pages 4-5)</li>
+<li>George G et al. <em>eLife</em> (Feb 2020). “EDEM2 stably disulfide-bonded to TXNDC11…” https://doi.org/10.7554/eLife.53455 (george2020edem2stablydisulfidebonded pages 4-5)</li>
+<li>Patel C et al. <em>Cells</em> (Sep 2020). “Oxidoreductases in glycoprotein glycosylation, folding, and ERAD” https://doi.org/10.3390/cells9092138 (patel2020oxidoreductasesinglycoprotein pages 7-9)</li>
+<li>Christianson JC et al. <em>Nature Reviews Molecular Cell Biology</em> (Aug 2023). “Mechanisms of substrate processing during ER-associated protein degradation” https://doi.org/10.1038/s41580-023-00633-8 (christianson2023mechanismsofsubstrate pages 22-26)</li>
+<li>Murase R et al. <em>BPB Reports</em> (2023; Received Oct 6, 2023; Accepted Nov 9, 2023). “Regulation of the ER-Resident Mannosidase EDEM2 in HEK293 Cells” https://doi.org/10.1248/bpbreports.6.6_193 (murase2023regulationofthe pages 1-2)</li>
+<li>Chen Y-T et al. <em>International Journal of Molecular Sciences</em> (Aug 2023). “High Thioredoxin Domain-Containing Protein 11 Expression…” https://doi.org/10.3390/ijms241713367 (chen2023highthioredoxindomaincontaining pages 2-5)</li>
+<li>Open Targets Platform (accessed via tool; aggregated evidence for TXNDC11–disease associations). (OpenTargets Search: -TXNDC11)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(george2020edem2stablydisulfidebonded pages 9-10): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(george2020edem2stablydisulfidebonded pages 4-5): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(timms2016geneticdissectionof pages 5-5): Richard T. Timms, Sam A. Menzies, Iva A. Tchasovnikarova, Lea C. Christensen, James C. Williamson, Robin Antrobus, Gordon Dougan, Lars Ellgaard, and Paul J. Lehner. Genetic dissection of mammalian erad through comparative haploid and crispr forward genetic screens. Nature Communications, Jun 2016. URL: https://doi.org/10.1038/ncomms11786, doi:10.1038/ncomms11786. This article has 84 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2023highthioredoxindomaincontaining pages 2-5): Ying-Tso Chen, Chia-Li Chung, Yu-Wen Cheng, Chien-Ju Lin, Tzu-Ting Tseng, Shu-Shong Hsu, Hung-Pei Tsai, and Aij-Lie Kwan. High thioredoxin domain-containing protein 11 expression is associated with tumour progression in glioma. International Journal of Molecular Sciences, 24:13367, Aug 2023. URL: https://doi.org/10.3390/ijms241713367, doi:10.3390/ijms241713367. This article has 1 citations.</p>
+</li>
+<li>
+<p>(murase2023regulationofthe pages 4-7): Ryoichi Murase, Genki Kato, and Kentaro Oh-hashi. Regulation of the er-resident mannosidase edem2 in hek293 cells. BPB Reports, 6:193-199, Jan 2023. URL: https://doi.org/10.1248/bpbreports.6.6_193, doi:10.1248/bpbreports.6.6_193. This article has 3 citations.</p>
+</li>
+<li>
+<p>(timms2016geneticdissectionof pages 4-5): Richard T. Timms, Sam A. Menzies, Iva A. Tchasovnikarova, Lea C. Christensen, James C. Williamson, Robin Antrobus, Gordon Dougan, Lars Ellgaard, and Paul J. Lehner. Genetic dissection of mammalian erad through comparative haploid and crispr forward genetic screens. Nature Communications, Jun 2016. URL: https://doi.org/10.1038/ncomms11786, doi:10.1038/ncomms11786. This article has 84 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appel2009efp1isan pages 7-8): S. Appel, S. Vetterkind, Ansgar Koplin, Barbara Maertens, Meike Boosen, and U. Preuss. Efp1 is an er stress-induced glycoprotein which interacts with the pro-apoptotic protein par-4. ArXiv, 1:1-16, May 2009. URL: https://doi.org/10.2147/chc.s5137, doi:10.2147/chc.s5137. This article has 2 citations.</p>
+</li>
+<li>
+<p>(patel2020oxidoreductasesinglycoprotein pages 5-7): Chaitanya Patel, Haddas Saad, Marina Shenkman, and Gerardo Z. Lederkremer. Oxidoreductases in glycoprotein glycosylation, folding, and erad. Sep 2020. URL: https://doi.org/10.3390/cells9092138, doi:10.3390/cells9092138. This article has 33 citations.</p>
+</li>
+<li>
+<p>(george2020edem2stablydisulfidebonded media ff6d387e): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(george2020edem2stablydisulfidebonded media a0df7537): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(george2020edem2stablydisulfidebonded media bc2d408b): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appel2009efp1isan pages 1-2): S. Appel, S. Vetterkind, Ansgar Koplin, Barbara Maertens, Meike Boosen, and U. Preuss. Efp1 is an er stress-induced glycoprotein which interacts with the pro-apoptotic protein par-4. ArXiv, 1:1-16, May 2009. URL: https://doi.org/10.2147/chc.s5137, doi:10.2147/chc.s5137. This article has 2 citations.</p>
+</li>
+<li>
+<p>(appel2009efp1isan pages 8-9): S. Appel, S. Vetterkind, Ansgar Koplin, Barbara Maertens, Meike Boosen, and U. Preuss. Efp1 is an er stress-induced glycoprotein which interacts with the pro-apoptotic protein par-4. ArXiv, 1:1-16, May 2009. URL: https://doi.org/10.2147/chc.s5137, doi:10.2147/chc.s5137. This article has 2 citations.</p>
+</li>
+<li>
+<p>(murase2023regulationofthe pages 1-2): Ryoichi Murase, Genki Kato, and Kentaro Oh-hashi. Regulation of the er-resident mannosidase edem2 in hek293 cells. BPB Reports, 6:193-199, Jan 2023. URL: https://doi.org/10.1248/bpbreports.6.6_193, doi:10.1248/bpbreports.6.6_193. This article has 3 citations.</p>
+</li>
+<li>
+<p>(chen2023highthioredoxindomaincontaining pages 8-10): Ying-Tso Chen, Chia-Li Chung, Yu-Wen Cheng, Chien-Ju Lin, Tzu-Ting Tseng, Shu-Shong Hsu, Hung-Pei Tsai, and Aij-Lie Kwan. High thioredoxin domain-containing protein 11 expression is associated with tumour progression in glioma. International Journal of Molecular Sciences, 24:13367, Aug 2023. URL: https://doi.org/10.3390/ijms241713367, doi:10.3390/ijms241713367. This article has 1 citations.</p>
+</li>
+<li>
+<p>(christianson2023mechanismsofsubstrate pages 22-26): John C. Christianson, Ernst Jarosch, and Thomas Sommer. Mechanisms of substrate processing during er-associated protein degradation. Nature Reviews Molecular Cell Biology, 24:777-796, Aug 2023. URL: https://doi.org/10.1038/s41580-023-00633-8, doi:10.1038/s41580-023-00633-8. This article has 189 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(christianson2023mechanismsofsubstrate pages 30-31): John C. Christianson, Ernst Jarosch, and Thomas Sommer. Mechanisms of substrate processing during er-associated protein degradation. Nature Reviews Molecular Cell Biology, 24:777-796, Aug 2023. URL: https://doi.org/10.1038/s41580-023-00633-8, doi:10.1038/s41580-023-00633-8. This article has 189 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -TXNDC11): Open Targets Query (-TXNDC11, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(george2020edem2stablydisulfidebonded pages 5-6): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(george2020edem2stablydisulfidebonded pages 13-14): Ginto George, Satoshi Ninagawa, Hirokazu Yagi, Taiki Saito, Tokiro Ishikawa, Tetsushi Sakuma, Takashi Yamamoto, Koshi Imami, Yasushi Ishihama, Koichi Kato, Tetsuya Okada, and Kazutoshi Mori. Edem2 stably disulfide-bonded to txndc11 catalyzes the first mannose trimming step in mammalian glycoprotein erad. eLife, Feb 2020. URL: https://doi.org/10.7554/elife.53455, doi:10.7554/elife.53455. This article has 58 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(appel2009efp1isan pages 12-13): S. Appel, S. Vetterkind, Ansgar Koplin, Barbara Maertens, Meike Boosen, and U. Preuss. Efp1 is an er stress-induced glycoprotein which interacts with the pro-apoptotic protein par-4. ArXiv, 1:1-16, May 2009. URL: https://doi.org/10.2147/chc.s5137, doi:10.2147/chc.s5137. This article has 2 citations.</p>
+</li>
+<li>
+<p>(appel2009efp1isan pages 4-5): S. Appel, S. Vetterkind, Ansgar Koplin, Barbara Maertens, Meike Boosen, and U. Preuss. Efp1 is an er stress-induced glycoprotein which interacts with the pro-apoptotic protein par-4. ArXiv, 1:1-16, May 2009. URL: https://doi.org/10.2147/chc.s5137, doi:10.2147/chc.s5137. This article has 2 citations.</p>
+</li>
+<li>
+<p>(murase2023regulationofthe pages 2-4): Ryoichi Murase, Genki Kato, and Kentaro Oh-hashi. Regulation of the er-resident mannosidase edem2 in hek293 cells. BPB Reports, 6:193-199, Jan 2023. URL: https://doi.org/10.1248/bpbreports.6.6_193, doi:10.1248/bpbreports.6.6_193. This article has 3 citations.</p>
+</li>
+<li>
+<p>(chen2023highthioredoxindomaincontaining pages 11-13): Ying-Tso Chen, Chia-Li Chung, Yu-Wen Cheng, Chien-Ju Lin, Tzu-Ting Tseng, Shu-Shong Hsu, Hung-Pei Tsai, and Aij-Lie Kwan. High thioredoxin domain-containing protein 11 expression is associated with tumour progression in glioma. International Journal of Molecular Sciences, 24:13367, Aug 2023. URL: https://doi.org/10.3390/ijms241713367, doi:10.3390/ijms241713367. This article has 1 citations.</p>
+</li>
+<li>
+<p>(patel2020oxidoreductasesinglycoprotein pages 7-9): Chaitanya Patel, Haddas Saad, Marina Shenkman, and Gerardo Z. Lederkremer. Oxidoreductases in glycoprotein glycosylation, folding, and erad. Sep 2020. URL: https://doi.org/10.3390/cells9092138, doi:10.3390/cells9092138. This article has 33 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="TXNDC11-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000028 I have extracted Figure 2 panel C and relevant immunoblots from page 4 that demonstrate the EDEM2-TXNDC11 disulfide-bonded complex." src="TXNDC11-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>timms2016geneticdissectionof pages 5-5</li>
+<li>timms2016geneticdissectionof pages 4-5</li>
+<li>murase2023regulationofthe pages 4-7</li>
+<li>murase2023regulationofthe pages 1-2</li>
+<li>chen2023highthioredoxindomaincontaining pages 2-5</li>
+<li>chen2023highthioredoxindomaincontaining pages 8-10</li>
+<li>christianson2023mechanismsofsubstrate pages 22-26</li>
+<li>patel2020oxidoreductasesinglycoprotein pages 7-9</li>
+<li>patel2020oxidoreductasesinglycoprotein pages 5-7</li>
+<li>christianson2023mechanismsofsubstrate pages 30-31</li>
+<li>murase2023regulationofthe pages 2-4</li>
+<li>chen2023highthioredoxindomaincontaining pages 11-13</li>
+<li>https://doi.org/10.1248/bpbreports.6.6_193</li>
+<li>https://doi.org/10.3390/ijms241713367.</li>
+<li>https://doi.org/10.1038/s41580-023-00633-8.</li>
+<li>https://doi.org/10.1038/ncomms11786</li>
+<li>https://doi.org/10.7554/eLife.53455</li>
+<li>https://doi.org/10.2147/chc.s5137</li>
+<li>https://doi.org/10.3390/ijms241713367</li>
+<li>https://doi.org/10.3390/cells9092138</li>
+<li>https://doi.org/10.1038/s41580-023-00633-8</li>
+<li>https://doi.org/10.7554/elife.53455,</li>
+<li>https://doi.org/10.1038/ncomms11786,</li>
+<li>https://doi.org/10.3390/ijms241713367,</li>
+<li>https://doi.org/10.1248/bpbreports.6.6_193,</li>
+<li>https://doi.org/10.2147/chc.s5137,</li>
+<li>https://doi.org/10.3390/cells9092138,</li>
+<li>https://doi.org/10.1038/s41580-023-00633-8,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TXNDC11-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6PKC3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="txndc11-q6pkc3-review-notes">TXNDC11 (Q6PKC3) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Thioredoxin domain-containing protein 11; synonym EFP1 (EF-hand-binding protein 1). HGNC:28030. 985 aa.</li>
+<li>Type II single-pass ER membrane protein with five thioredoxin (Trx)-like domains and a C-terminal coiled coil. N-glycosylated ER glycoprotein.</li>
+<li>UniProt: "Belongs to the protein disulfide isomerase family." TRANSMEM 65..85; Thioredoxin domains 92..214 and 649..799; COILED 821..919.</li>
+<li>Redox-active disulfides annotated at 469..472 and 719..722 (PROSITE-predicted CXXC).</li>
+</ul>
+<h2 id="two-distinct-functional-storylines">Two distinct functional storylines</h2>
+<h3 id="1-legacy-uniprot-efp1-partner-of-duox-thyroid-h2o2-system">1. Legacy / UniProt: EFP1 partner of DUOX (thyroid H2O2 system)</h3>
+<ul>
+<li>Discovered as a DUOX-interacting thioredoxin-related protein <a href="https://pubmed.ncbi.nlm.nih.gov/15561711" title="Identification of a novel partner of duox: EFP1, a thioredoxin-related protein.">PMID:15561711</a>.</li>
+<li>UniProt FUNCTION: "May act as a redox regulator involved in DUOX proteins folding. The interaction with DUOX1 and DUOX2 suggest that it belongs to a multiprotein complex constituting the thyroid H(2)O(2) generating system. It is however not sufficient to assist DUOX1 and DUOX2 in H(2)O(2) generation."</li>
+<li>UniProt SUBUNIT: "Interacts with the cytoplasmic part of DUOX1 and DUOX2. Interacts with TPO and CYBA."</li>
+<li>This is the basis for the Reactome "Thyroxine biosynthesis" (R-HSA-209968) pathway mapping and the plasma-membrane TAS annotations (thyroid follicular apical membrane / DUOX context). Tissue specificity: "Expressed at higher level in thyroid and prostate."</li>
+<li>NOTE: this function is "May act" / suggestive; the protein is NOT sufficient for H2O2 generation. The plasma membrane localization is a downstream Reactome reaction-context inference, not a primary localization claim; UniProt's own SUBCELLULAR LOCATION is "Endoplasmic reticulum membrane; Single-pass membrane protein."</li>
+</ul>
+<h3 id="2-current-consensus-edem2-partner-in-glycoprotein-erad-gperad">2. Current consensus: EDEM2 partner in glycoprotein ERAD (gpERAD)</h3>
+<p>The well-established molecular function (not yet in this UniProt FUNCTION block):<br />
+- TXNDC11 is stably disulfide-bonded to EDEM2 and this complex catalyzes the FIRST mannose-trimming step (M9 -&gt; M8B) that initiates gpERAD.<br />
+- George et al. 2020 eLife [PMID:32065582, DOI:10.7554/eLife.53455]:<br />
+  - Abstract: "we found that EDEM2 was stably disulfide-bonded to TXNDC11, an endoplasmic reticulum protein containing five thioredoxin (Trx)-like domains. C558 present outside of the mannosidase homology domain of EDEM2 was linked to C692 in Trx5, which solely contains the CXXC motif in TXNDC11. This covalent bonding was essential for mannose trimming and subsequent gpERAD in HCT116 cells."<br />
+  - "EDEM2-TXNDC11 complex purified from transfected HCT116 cells converted ManGlcNAc to ManGlcNAc (isomerB) in vitro."<br />
+  - Text: "TXNDC11 ... was shown to be N-glycosylated, localized in the ER and required for gpERAD of various substrates, including CD3δ, TCRα and NHK ... but not for NHK-QQQ, a non-glycosylated version of NHK."<br />
+  - Text: "TXNDC11 in the gpERAD assay was inactivated by the double mutation of Cys692 and Cys695 in the CxxC motif of the Trx5 domain ... The Trx5 domain expressed and purified from cells exhibited reductase activity in vitro."<br />
+  - Text: "C558 of EDEM2 may be disulfide-bonded to C488 ... by the action of PDI and then reduced by the Trx5 domain of TXNDC11" — TXNDC11 acts as a REDUCTASE (reduction potential), not oxidase.<br />
+  - "only one cysteine residue of the CXXC motif (C692) of TXNDC11 is used for such covalent bonding. This can be explained by the finding that the C692-containing Trx5 domain of TXNDC11 ... exhibited reduction potential as a reductase rather than an oxidase."<br />
+- Shenkman et al. 2018 Commun Biol [PMID:30374462, DOI:10.1038/s42003-018-0174-8]: "The EDEMs associate with oxidoreductases, protein disulfide isomerase, and especially TXNDC11, enhancing mannosidase activity on glycoproteins but not on free N-glycans."<br />
+- George et al. 2021 eLife [PMID:34698634, DOI:10.7554/eLife.70357] recap: "We previously showed that EDEM2 stably disulfide-bonded to the thioredoxin domain-containing protein TXNDC11 is responsible for the first step."</p>
+<p>So the core MF is best described as protein-disulfide reductase / thiol-disulfide oxidoreductase activity (the catalytically active CXXC is in Trx5 / C692-C695). TXNDC11 functions as an oxidoreductase chaperone partner whose redox activity supports EDEM2-mediated mannose trimming in gpERAD. BP = ER-associated misfolded glycoprotein catabolism (ERAD) / glycoprotein ERAD pathway. CC = ER membrane (lumen-facing Trx domains).</p>
+<h2 id="redox-motifs-catalytic-status">Redox motifs / catalytic status</h2>
+<ul>
+<li>TXNDC11 has five Trx-like domains but only ONE bona fide CXXC motif (Trx5, C692-x-x-C695) that is catalytically redox-active; Trx1 has a CXXS (C137) variant that is NOT required for gpERAD ("not by the mutation of Cys137 in the CxxS motif of the Trx1 domain"). So most Trx domains are redox-inactive/pseudo; the functional redox center is Trx5.</li>
+<li>Therefore the redox-active disulfide UniProt features (469..472, 719..722) are predicted; the experimentally validated functional CXXC is C692/C695 (Trx5, part of the 719..722-numbered redox feature region by domain count). The protein is a reductase, not an oxidase.</li>
+</ul>
+<h2 id="goa-annotation-assessment">GOA annotation assessment</h2>
+<ul>
+<li>GO:0005789 ER membrane (IEA, SubCell) — ACCEPT (primary localization; UniProt SUBCELLULAR LOCATION).</li>
+<li>GO:0005515 protein binding x4 (IPI; HTT/PMID:17500595, HCV NS5A xeno/PMID:18985028, binary interactome partners/PMID:32296183, neurodegeneration interactome/PMID:32814053) — all HT interactome captures, uninformative; KEEP_AS_NON_CORE. None capture the functional EDEM2 or DUOX partnerships.</li>
+<li>GO:0005829 cytosol (IDA, HPA) — questionable; TXNDC11 is an ER membrane/luminal protein. HPA IF can show ER/reticular staining scored loosely. KEEP_AS_NON_CORE / not core (do not REMOVE an IDA on weak grounds; flag uncertainty).</li>
+<li>GO:0005886 plasma membrane (IDA HPA + 6x Reactome TAS thyroxine biosynthesis) — derives from the EFP1/DUOX thyroid-system role and thyroid apical membrane reaction context. Not the protein's primary/ER localization. KEEP_AS_NON_CORE (real but peripheral; legacy thyroid context).</li>
+</ul>
+<h2 id="missing-annotations-worth-proposing">Missing annotations worth proposing</h2>
+<ul>
+<li>Molecular function: protein-disulfide reductase activity / thiol-disulfide exchange (GO:0015035 protein-disulfide reductase activity or GO:0003756 PDI activity). The CXXC is a reductase.</li>
+<li>BP: ERAD pathway / ER-associated misfolded glycoprotein catabolic process (GO:1904153 or GO:0036503), specifically the glycoprotein mannose-trimming initiation.</li>
+<li>These are strongly supported by PMID:32065582 but are NOT currently in GOA — propose as NEW.</li>
+</ul>
+<h2 id="falcon-deep-research-findings-incorporated-2026-06">Falcon deep-research findings (incorporated 2026-06)</h2>
+<ul>
+<li>TXNDC11 post-transcriptionally stabilizes EDEM2: in TXNDC11-deficient HEK293 cells EDEM2 protein is markedly decreased without a corresponding fall in EDEM2 mRNA [DOI:10.1248/bpbreports.6.6_193 "TXNDC11 deficiency markedly decreases EDEM2 protein ... without corresponding decreases in EDEM2 mRNA"] (Murase et al. 2023, BPB Reports 6:193-199; not PubMed-indexed, no PMID, full text not cached).</li>
+<li>Reductive stress (1 mM DTT) destabilizes both EDEM2 and TXNDC11 protein over time while their mRNAs rise; the DTT-induced EDEM2 loss is partially blocked by MG132 and largely absent in SEL1L-deficient cells, implying freed/cleaved EDEM2 becomes an SEL1L-mediated ERAD substrate [DOI:10.1248/bpbreports.6.6_193]. Mechanistically consistent with EDEM2 stability depending on the disulfide-linked state with TXNDC11.</li>
+<li>TXNDC11 is a candidate oncogene/prognostic biomarker in glioma: high protein expression associates with WHO high-grade classification and poor prognosis and is an independent prognostic factor <a href="https://pubmed.ncbi.nlm.nih.gov/37686174" title="High levels of TXNDC11 protein expression were significantly associated with World Health Organization (WHO) high-grade tumour classification and poor prognosis">PMID:37686174</a> (Chen et al. 2023, Int J Mol Sci 24:13367; PubMed-verified).</li>
+<li>In GBM cell models, TXNDC11 silencing inhibits proliferation, migration and invasion and induces apoptosis, downregulating N-cadherin and cyclin D1 and upregulating E-cadherin; overexpression has the opposite effect; orthotopic xenograft knockdown slows tumour growth and prolongs survival <a href="https://pubmed.ncbi.nlm.nih.gov/37686174" title="TXNDC11 silencing inhibited proliferation, migration, and invasion and led to apoptosis of GBM cells">PMID:37686174</a>. This is a non-core disease role, not the ER redox/ERAD core function.</li>
+<li>Falcon notes the Chen 2023 paper frames TXNDC11 as "an endoplasmic reticulum stress-induced protein" <a href="https://pubmed.ncbi.nlm.nih.gov/37686174" title="reported as an endoplasmic reticulum stress-induced protein">PMID:37686174</a>, echoing the legacy EFP1 ER-stress-inducible glycoprotein characterization.</li>
+<li>A 2023 authoritative review (Christianson, Jarosch &amp; Sommer, Nat Rev Mol Cell Biol 24:777-796) places TXNDC11 among mammalian ERAD factors coordinating substrate recognition, processing, ubiquitylation, extraction and proteasomal targeting <a href="https://pubmed.ncbi.nlm.nih.gov/37528230">PMID:37528230</a> — consensus framing supporting the EDEM2/gpERAD core role, contextual only.</li>
+<li>No 2024-2025 TXNDC11-specific primary mechanistic papers were surfaced by Falcon; the George 2020 eLife study (PMID:32065582) and Timms 2016 (PMID:32065582 family) remain the definitive mechanistic sources already captured in the review.<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Pn Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TXNDC11-pn-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6PKC3" data-a="DOC: Pn Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="txndc11-pn-consistency-notes">TXNDC11 PN Consistency Notes</h1>
+<ul>
+<li>Generated: 2026-06-18</li>
+<li>Project: PROTEOSTASIS</li>
+<li>Scope: PN consistency rereview against local AIGR review and available deep-research artifacts</li>
+<li>UniProt: Q6PKC3</li>
+<li>AIGR review status: COMPLETE</li>
+<li>Review batch: proteostasis-batch-2026-06-11</li>
+<li>Batch change status: added</li>
+</ul>
+<h2 id="source-files-checked">Source Files Checked</h2>
+<ul>
+<li>AIGR review YAML: present - <a href="TXNDC11-ai-review.yaml">genes/human/TXNDC11/TXNDC11-ai-review.yaml</a></li>
+<li>AIGR review HTML: missing - genes/human/TXNDC11/TXNDC11-ai-review.html</li>
+<li>Gene notes: present - <a href="TXNDC11-notes.md">genes/human/TXNDC11/TXNDC11-notes.md</a></li>
+<li>GOA TSV: present - <a href="TXNDC11-goa.tsv">genes/human/TXNDC11/TXNDC11-goa.tsv</a></li>
+<li>UniProt record: present - <a href="TXNDC11-uniprot.txt">genes/human/TXNDC11/TXNDC11-uniprot.txt</a></li>
+<li>PN dossier: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/TXNDC11.md">projects/PROTEOSTASIS/reports/phase1_dossiers/TXNDC11.md</a></li>
+<li>PN consistency section: <a href="../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/TXNDC11.md">projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/TXNDC11.md</a></li>
+<li>PN projection report: <a href="../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv">projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv</a></li>
+<li>PN mapping audit: <a href="../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv">projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv</a></li>
+</ul>
+<h3 id="deep-research-files">Deep Research Files</h3>
+<ul>
+<li><a href="TXNDC11-deep-research-falcon.md">genes/human/TXNDC11/TXNDC11-deep-research-falcon.md</a></li>
+</ul>
+<h2 id="aigr-review-snapshot">AIGR Review Snapshot</h2>
+<ul>
+<li>Description: TXNDC11 (Thioredoxin domain-containing protein 11; also called EFP1) is a large (985 aa) single-pass endoplasmic reticulum membrane glycoprotein of the protein disulfide isomerase (PDI) family. It contains a single N-terminal transmembrane helix and a luminal region with five thioredoxin (Trx)-like domains followed by a C-terminal coiled coil. Only one of its Trx domains carries a canonical redox-active CXXC motif; the other Trx folds are degenerate/redox-inactive, and biochemically the catalytic center behaves as a thiol-disulfide reductase rather than an oxidase. TXNDC11 forms a stable, disulfide-linked complex with the ER mannosidase-like protein EDEM2, and this covalent partnership is required for the initial mannose-trimming step (Man9 to Man8) that commits misfolded N-glycoproteins to ER-associated degradation (glycoprotein ERAD). TXNDC11 was originally identified through its interaction with the cytoplasmic regions of the dual oxidases DUOX1 and DUOX2 and with thyroid peroxidase, suggesting a redox-regulatory role linked to the thyroid hydrogen-peroxide-generating system, though TXNDC11 alone is not sufficient to support DUOX-mediated H2O2 generation. It is widely but weakly expressed, with higher expression in thyroid and prostate.</li>
+<li>Existing/core annotation action counts: ACCEPT: 1; KEEP_AS_NON_CORE: 12</li>
+</ul>
+<h2 id="pn-consistency-summary">PN Consistency Summary</h2>
+<ul>
+<li><strong>Consistency:</strong> Partial mismatch on the catalytic activity. Review, notes, and deep research converge that TXNDC11 is a <strong>disulfide reductase</strong>, not an isomerase/oxidase: only Trx5 carries a bona fide CXXC (CGFC, C692/C695), the other four Trx folds are degenerate, and Trx5 has reduction-potential (~−234 mV) behaving "as a reductase rather than an oxidase" (PMID:32065582; Timms 2016). The review's core MF and proposed_new_terms use GO:0015035 protein-disulfide reductase activity. The PN node projects GO:0003756 (isomerase). Verified via OLS: GO:0003756 (isomerase, S-S rearrangement) and GO:0015035 (reductase) are <strong>siblings under different parents</strong>, not parent/child — so GO:0003756 does not subsume the reductase function and is an over-projection for this specific member.</li>
+<li><strong>PN story / NEW pressure:</strong> Strong NEW pressure — TXNDC11 GOA has NO molecular-function term at all (only protein binding + localizations; verified goa.tsv). A catalytic MF should be added, but as GO:0015035 protein-disulfide reductase activity (verified real), not GO:0003756. The review also proposes a BP gap: glycoprotein ERAD (GO:0036503 ERAD pathway / GO:0097466 ubiquitin-dependent glycoprotein ERAD pathway, both verified real) via the disulfide-linked EDEM2 mannose-trimming complex. Conclusion: ADD GO:0015035 (MF) + GO:0097466/GO:0036503 (BP).</li>
+<li><strong>Evidence alignment:</strong> PN mapping-only. Review key refs: PMID:32065582 (EDEM2-TXNDC11 reductase, gpERAD), PMID:30374462, PMID:15561711 (legacy DUOX/EFP1). The reductase-not-isomerase evidence directly undercuts the PN isomerase projection.</li>
+<li><strong>Verdict:</strong> Inconsistent on activity class — PN GO:0003756 (isomerase) over-projects; review-supported activity is GO:0015035 reductase. MF is genuinely missing from GOA.</li>
+</ul>
+<h2 id="full-consistency-review">Full Consistency Review</h2>
+<ul>
+<li><strong>UniProt:</strong> Q6PKC3 (EFP1) · <strong>batch:</strong> proteostasis-batch-2026-06-11 · <strong>review status:</strong> COMPLETE</li>
+<li><strong>PN placement:</strong> <code>ER proteostasis | Folding enzyme | Protein disulfide isomerases</code> ; <strong>PN-node mapping:</strong> group=mapped, scope=ok_for_propagation_to_go, GO=GO:0003756 protein disulfide isomerase activity (class/branch=no_mapping). Projection goa_status=new_to_goa.</li>
+<li><strong>Consistency:</strong> Partial mismatch on the catalytic activity. Review, notes, and deep research converge that TXNDC11 is a <strong>disulfide reductase</strong>, not an isomerase/oxidase: only Trx5 carries a bona fide CXXC (CGFC, C692/C695), the other four Trx folds are degenerate, and Trx5 has reduction-potential (~−234 mV) behaving "as a reductase rather than an oxidase" (PMID:32065582; Timms 2016). The review's core MF and proposed_new_terms use GO:0015035 protein-disulfide reductase activity. The PN node projects GO:0003756 (isomerase). Verified via OLS: GO:0003756 (isomerase, S-S rearrangement) and GO:0015035 (reductase) are <strong>siblings under different parents</strong>, not parent/child — so GO:0003756 does not subsume the reductase function and is an over-projection for this specific member.</li>
+<li><strong>PN story / NEW pressure:</strong> Strong NEW pressure — TXNDC11 GOA has NO molecular-function term at all (only protein binding + localizations; verified goa.tsv). A catalytic MF should be added, but as GO:0015035 protein-disulfide reductase activity (verified real), not GO:0003756. The review also proposes a BP gap: glycoprotein ERAD (GO:0036503 ERAD pathway / GO:0097466 ubiquitin-dependent glycoprotein ERAD pathway, both verified real) via the disulfide-linked EDEM2 mannose-trimming complex. Conclusion: ADD GO:0015035 (MF) + GO:0097466/GO:0036503 (BP).</li>
+<li><strong>Mapping strategy:</strong> The "Protein disulfide isomerases" group's GO:0003756 projection over-reaches for TXNDC11 specifically (it lacks canonical PDI isomerase activity). Group-level GO:0003756 may be right for canonical members but is the wrong activity class for this non-canonical reductase. The node mapping itself need not change, but TXNDC11 should be flagged as a group member whose projected isomerase term should NOT be propagated (scope exception), or projected as reductase.</li>
+<li><strong>Evidence alignment:</strong> PN mapping-only. Review key refs: PMID:32065582 (EDEM2-TXNDC11 reductase, gpERAD), PMID:30374462, PMID:15561711 (legacy DUOX/EFP1). The reductase-not-isomerase evidence directly undercuts the PN isomerase projection.</li>
+<li><strong>Verdict:</strong> Inconsistent on activity class — PN GO:0003756 (isomerase) over-projects; review-supported activity is GO:0015035 reductase. MF is genuinely missing from GOA.</li>
+<li><strong>Recommended edits:</strong> [MAP] Flag TXNDC11 in the "Protein disulfide isomerases" group as a non-canonical reductase: do not propagate GO:0003756 to it; project GO:0015035 protein-disulfide reductase activity instead. [YAML] Optionally tighten the TXNDC11 proposed_new_terms to GO:0097466 (ubiquitin-dependent glycoprotein ERAD pathway) as the precise BP, and drop the GO:0003756 alternative wording in favor of GO:0015035.</li>
+</ul>
+<h2 id="pn-dossier-context">PN Dossier Context</h2>
+<ul>
+<li>review_batch: proteostasis-batch-2026-06-11</li>
+<li>review_yaml: genes/human/TXNDC11/TXNDC11-ai-review.yaml</li>
+<li>PN workbook rows: 1</li>
+</ul>
+<h2 id="pn-row-1-er-proteostasis-folding-enzyme-protein-disulfide-isomerases">PN row 1: ER proteostasis | Folding enzyme | Protein disulfide isomerases</h2>
+<ul>
+<li>UniProt: Q6PKC3</li>
+<li>In branches: ER</li>
+<li>PN-node mapping records (path + ancestors):<ul>
+<li>[group] ER proteostasis|Folding enzyme|Protein disulfide isomerases<br />
+    status=mapped scope=ok_for_propagation_to_go GO=[GO:0003756 protein disulfide isomerase activity]<br />
+    rationale: This PN group captures the canonical ER protein-disulfide-isomerase folding enzymes. GO protein disulfide isomerase activity is the cleanest propagation target for the catalytically active family members.</li>
+<li>[class] ER proteostasis|Folding enzyme<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a broad PN category rather than a single GO class. The member genes span multiple activities, complexes, or contexts, so direct propagation from this node would overstate the shared biology.</li>
+<li>[branch] ER proteostasis<br />
+    status=no_mapping scope= GO=[]<br />
+    rationale: Reviewed as a top-level PN branch. This is a systems/taxonomy umbrella, not a direct GO assertion; narrower child curations carry any propagating GO mappings.</li>
+</ul>
+</li>
+</ul>
+<h2 id="projected-go-annotations-1">Projected GO annotations (1)</h2>
+<ul>
+<li>GO:0003756 protein disulfide isomerase activity | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=ER proteostasis|Folding enzyme|Protein disulfide isomerases</li>
+</ul>
+<h2 id="note">Note</h2>
+<p>This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6PKC3
+gene_symbol: TXNDC11
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TXNDC11 (Thioredoxin domain-containing protein 11; also called EFP1) is a large
+  (985 aa) single-pass endoplasmic reticulum membrane glycoprotein of the protein
+  disulfide isomerase (PDI) family. It contains a single N-terminal transmembrane
+  helix and a luminal region with five thioredoxin (Trx)-like domains followed by a
+  C-terminal coiled coil. Only one of its Trx domains carries a canonical redox-active
+  CXXC motif; the other Trx folds are degenerate/redox-inactive, and biochemically the
+  catalytic center behaves as a thiol-disulfide reductase rather than an oxidase.
+  TXNDC11 forms a stable, disulfide-linked complex with the ER mannosidase-like protein
+  EDEM2, and this covalent partnership is required for the initial mannose-trimming step
+  (Man9 to Man8) that commits misfolded N-glycoproteins to ER-associated degradation
+  (glycoprotein ERAD). TXNDC11 was originally identified through its interaction with the
+  cytoplasmic regions of the dual oxidases DUOX1 and DUOX2 and with thyroid peroxidase,
+  suggesting a redox-regulatory role linked to the thyroid hydrogen-peroxide-generating
+  system, though TXNDC11 alone is not sufficient to support DUOX-mediated H2O2 generation.
+  It is widely but weakly expressed, with higher expression in thyroid and prostate.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q6PKC3-1
+- name: &#39;2&#39;
+  id: Q6PKC3-2
+  sequence_note: VSP_014335
+- name: &#39;3&#39;
+  id: Q6PKC3-3
+  sequence_note: VSP_014336, VSP_014337
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TXNDC11 is a single-pass ER membrane protein; the ER membrane localization is its
+      primary subcellular location and is consistent with its luminal thioredoxin-domain
+      redox/chaperone function and its partnership with the ER mannosidase EDEM2.
+    action: ACCEPT
+    reason: &gt;-
+      Correct primary localization, matching the UniProt curated subcellular location and
+      the protein&#39;s documented role as an ER-resident oxidoreductase.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17500595
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct capture of a TXNDC11-HTT (huntingtin) interaction from a huntingtin-interacting
+      protein screen. Bare protein binding is uninformative and this partner does not reflect
+      TXNDC11&#39;s core ER redox/ERAD function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Records a real but high-throughput interaction; per guidelines, bare protein binding is
+      not elevated to a core function and the partner is unrelated to the EDEM2/ERAD activity.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: &#39;Q6PKC3; P42858: HTT; NbExp=7; IntAct=EBI-749812, EBI-466029;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18985028
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct capture of a TXNDC11-HCV (hepatitis C virus) protein interaction from a virus-host
+      interactome screen. Uninformative bare protein binding, unrelated to the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real but high-throughput xeno interaction; per guidelines not elevated to core, and the
+      partner does not reflect TXNDC11&#39;s ER oxidoreductase/ERAD role.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: &#39;Q6PKC3; PRO_0000037551 [Q9WMX2]; Xeno; NbExp=2; IntAct=EBI-749812, EBI-6863748;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct captures from the HuRI binary interactome (partners including KLHL38, MKRN3,
+      PRPF18, RAB2B, ZNF417). Uninformative bare protein binding from a systematic two-hybrid
+      screen.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput binary interactome data; bare protein binding is not a core function and
+      these partners do not reflect the EDEM2/ERAD or DUOX redox roles.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: &#39;Q6PKC3; Q2WGJ6: KLHL38; NbExp=3; IntAct=EBI-749812, EBI-6426443;&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IntAct capture from a neurodegenerative-disease interactome screen (HTT among partners).
+      Uninformative bare protein binding.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-throughput interactome data; bare protein binding is not elevated to core and the
+      partner does not reflect TXNDC11&#39;s core ER redox/ERAD function.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: &#39;Q6PKC3; P42858: HTT; NbExp=7; IntAct=EBI-749812, EBI-466029;&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence-based cytosol annotation. TXNDC11 is a single-pass ER membrane
+      protein with luminal thioredoxin domains; a primary cytosolic localization is not
+      supported by its biology, and HPA reticular staining can be scored loosely. Retained as
+      non-core rather than removed since it is an experimental (IDA) localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Conflicts with the curated ER membrane localization and the protein&#39;s topology; kept as
+      non-core per the rule against removing experimental annotations on weak grounds.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence plasma-membrane annotation. This is consistent with the legacy
+      EFP1/DUOX thyroid-system context (DUOX1/2 are plasma/apical-membrane oxidases) but is not
+      TXNDC11&#39;s primary ER localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Peripheral localization tied to the DUOX/thyroid context; not the core ER site of action.
+      Retained as non-core as an experimental annotation.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-209815
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome plasma-membrane annotation derived from the thyroxine-biosynthesis reaction
+      context (EFP1/DUOX thyroid H2O2 system at the follicular apical membrane).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-209840
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction
+      context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-209925
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction
+      context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-209973
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction
+      context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-350901
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome plasma-membrane annotation from the thyroxine-biosynthesis (DUOX) reaction
+      context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5693681
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome plasma-membrane annotation from the DUOX1 H2O2-generating reaction context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legacy thyroid reaction-context localization; not the protein&#39;s primary ER location.
+    supported_by:
+    - reference_id: file:human/TXNDC11/TXNDC11-uniprot.txt
+      supporting_text: Interacts with the cytoplasmic part of DUOX1 and DUOX2.
+core_functions:
+- description: &gt;-
+    ER thiol-disulfide oxidoreductase (reductase) that, via the single redox-active CXXC
+    motif in its Trx5 domain, forms a covalent disulfide-linked complex with EDEM2 required
+    for EDEM2-mediated mannose trimming that initiates glycoprotein ERAD.
+  molecular_function:
+    id: GO:0015035
+    label: protein-disulfide reductase activity
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:32065582
+    supporting_text: &gt;-
+      C558 present outside of the mannosidase homology domain of EDEM2 was linked to C692 in
+      Trx5, which solely contains the CXXC motif in TXNDC11
+proposed_new_terms:
+- proposed_name: protein-disulfide reductase activity (Trx5 CXXC)
+  proposed_definition: &gt;-
+    Molecular function: TXNDC11 Trx5 domain CXXC (C692-C695) exhibits thiol-disulfide reductase
+    activity and forms a covalent disulfide with EDEM2; recommend annotating GO:0015035
+    protein-disulfide reductase activity (or GO:0003756 protein disulfide isomerase activity).
+  justification: &gt;-
+    Experimentally established core molecular function (PMID:32065582) that is absent from the
+    current GOA, which lists only protein binding for the MF aspect.
+  supported_by:
+  - reference_id: PMID:32065582
+    supporting_text: &gt;-
+      The Trx5 domain expressed and purified from cells exhibited reductase activity in vitro.
+    full_text_unavailable: true
+- proposed_name: ERAD pathway / glycoprotein mannose trimming initiation
+  proposed_definition: &gt;-
+    Biological process: TXNDC11 is required, via its disulfide-linked EDEM2 complex, for the
+    first mannose-trimming step of glycoprotein ERAD; recommend annotating GO:0036503 (ERAD
+    pathway) or glycoprotein catabolic process terms.
+  justification: &gt;-
+    Well-supported biological role absent from current GOA (PMID:32065582; PMID:30374462).
+  supported_by:
+  - reference_id: PMID:32065582
+    supporting_text: &gt;-
+      This covalent bonding was essential for mannose trimming and subsequent gpERAD in HCT116 cells.
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: Reactome:R-HSA-209815
+  title: Tyrosine is monoiodinated
+  findings: []
+- id: Reactome:R-HSA-209840
+  title: Two DITs combine to form thyroxine
+  findings: []
+- id: Reactome:R-HSA-209925
+  title: DIT and MIT combine to form triiodothyronine
+  findings: []
+- id: Reactome:R-HSA-209973
+  title: Tyrosine is diiodinated
+  findings: []
+- id: Reactome:R-HSA-350901
+  title: Iodide is organified
+  findings: []
+- id: Reactome:R-HSA-5693681
+  title: DUOX1 reduces O2 to H2O2
+  findings: []
+- id: PMID:17500595
+  title: Huntingtin interacting proteins are genetic modifiers of neurodegeneration.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput huntingtin-interactome screen; source of the TXNDC11-HTT IntAct protein
+      binding capture. Not relevant to TXNDC11&#39;s core ER redox/ERAD function.
+- id: PMID:18985028
+  title: Hepatitis C virus infection protein network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Virus-host interactome screen; source of a xeno HCV interaction. Not relevant to the core
+      function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome; source of several systematic two-hybrid protein binding captures.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Neurodegenerative-disease interactome screen; source of a protein binding capture.
+- id: PMID:15561711
+  title: &#39;Identification of a novel partner of duox: EFP1, a thioredoxin-related protein.&#39;
+  findings:
+  - statement: &gt;-
+      TXNDC11/EFP1 interacts with the cytoplasmic regions of DUOX1 and DUOX2 and with thyroid
+      peroxidase, implicating it as a redox regulator in the thyroid H2O2-generating system,
+      though it is not sufficient for DUOX-mediated H2O2 generation.
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original identification of EFP1/TXNDC11 as a DUOX partner; basis of the UniProt FUNCTION
+      and SUBUNIT statements and the Reactome thyroid/plasma-membrane annotations. Cached full
+      text unavailable; verified via the UniProt entry which cites this paper for the
+      DUOX/TPO/CYBA interactions and tissue specificity.
+- id: PMID:32065582
+  title: &gt;-
+    EDEM2 stably disulfide-bonded to TXNDC11 catalyzes the first mannose trimming step in
+    mammalian glycoprotein ERAD.
+  findings:
+  - statement: &gt;-
+      EDEM2 is stably disulfide-bonded to TXNDC11 (C558 of EDEM2 to C692 in the Trx5 domain, the
+      only CXXC-containing Trx domain of TXNDC11); this covalent bond is essential for mannose
+      trimming and subsequent glycoprotein ERAD.
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      The Trx5 domain of TXNDC11 exhibits reductase activity in vitro; TXNDC11 functions as a
+      reductase rather than an oxidase in this complex.
+    reference_section_type: RESULTS
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Definitive study establishing TXNDC11&#39;s core function as the disulfide-linked EDEM2 partner
+      required for the first mannose-trimming step of glycoprotein ERAD, with Trx5 CXXC reductase
+      activity. Not in the current GOA; basis for the proposed new MF/BP terms. Cached full text
+      unavailable; quotes verified against the gene notes deep-research summary.
+- id: PMID:30374462
+  title: &gt;-
+    Mannosidase activity of EDEM1 and EDEM2 depends on an unfolded state of their glycoprotein
+    substrates.
+  findings:
+  - statement: &gt;-
+      EDEMs associate with oxidoreductases including TXNDC11, enhancing mannosidase activity on
+      glycoproteins.
+    reference_section_type: ABSTRACT
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Corroborates the EDEM-TXNDC11 oxidoreductase association supporting mannose trimming. Cached
+      full text unavailable.
+- id: PMID:37686174
+  title: &gt;-
+    High Thioredoxin Domain-Containing Protein 11 Expression Is Associated with
+    Tumour Progression in Glioma.
+  findings:
+  - statement: &gt;-
+      High TXNDC11 protein expression is associated with WHO high-grade tumour
+      classification and poor prognosis in glioma and is an independent prognostic
+      factor; TXNDC11 silencing inhibits proliferation, migration and invasion and
+      induces apoptosis in GBM cells, while overexpression has the opposite effect.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID:37686174, DOI:10.3390/ijms241713367). Gene-specific
+      translational study proposing TXNDC11 as an oncogene/prognostic biomarker and
+      candidate therapeutic target in glioblastoma. Disease-association evidence, not
+      core ER redox/ERAD function; informs a non-core disease role.
+- id: PMID:37528230
+  title: &gt;-
+    Mechanisms of substrate processing during ER-associated protein degradation.
+  findings:
+  - statement: &gt;-
+      Authoritative 2023 review placing TXNDC11 among mammalian ERAD factors that
+      coordinate recognition, processing, ubiquitylation, extraction and proteasomal
+      targeting of ER substrates.
+    reference_section_type: LITERATURE_REVIEW
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID:37528230, DOI:10.1038/s41580-023-00633-8). Expert review
+      providing consensus framing of TXNDC11 within ER quality control/ERAD networks;
+      contextual/background rather than primary evidence for this gene.
+- id: DOI:10.1248/bpbreports.6.6_193
+  title: &gt;-
+    Regulation of the ER-Resident Mannosidase EDEM2 in HEK293 Cells.
+  findings:
+  - statement: &gt;-
+      TXNDC11 deficiency markedly decreases EDEM2 protein without a corresponding
+      decrease in EDEM2 mRNA, indicating that TXNDC11 post-transcriptionally
+      stabilizes EDEM2; reductive stress (DTT) destabilizes both EDEM2 and TXNDC11
+      protein, and the destabilized EDEM2 can become an SEL1L-dependent ERAD substrate.
+    reference_section_type: RESULTS
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Identifier resolved to BPB Reports 6:193-199 (2023) via DOI:10.1248/bpbreports.6.6_193;
+      journal is not indexed in PubMed so no PMID is available and full text is not cached.
+      Falcon deep-research reports it shows TXNDC11 is required for EDEM2 protein stability,
+      extending the EDEM2-TXNDC11 partnership; topic/title confirmed but findings not
+      independently verified against cached full text.
+- id: file:human/TXNDC11/TXNDC11-uniprot.txt
+  title: UniProt entry Q6PKC3 (TXD11_HUMAN), Thioredoxin domain-containing protein 11
+  findings:
+  - statement: &gt;-
+      Single-pass ER membrane protein of the protein disulfide isomerase family with thioredoxin
+      domains and redox-active CXXC; identified as a DUOX1/DUOX2/TPO/CYBA-interacting redox
+      regulator (EFP1); higher expression in thyroid and prostate.
+    reference_section_type: OTHER
+suggested_questions:
+- question: &gt;-
+    Is the legacy EFP1/DUOX thyroid-system role a genuine in vivo function of TXNDC11, or an
+    incidental interaction superseded by the EDEM2/ERAD role?
+- question: &gt;-
+    Beyond EDEM2, does the Trx5 reductase activity of TXNDC11 act on other ER substrates or
+    redox partners during oxidative protein folding?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute the purified EDEM2-TXNDC11 complex and assay mannose trimming (Man9 to Man8)
+    with and without Trx5 CXXC (C692/C695) mutations to confirm the redox requirement.
+- description: &gt;-
+    Quantitative proteomics of glycoprotein ERAD substrates stabilized upon TXNDC11 knockout in
+    human cells to define the endogenous substrate repertoire dependent on the EDEM2-TXNDC11 step.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -120,7 +120,7 @@ For each protein in a selected complex:
 ### First worked example: PqsBC (BGC0000922)
 
 The PqsB/PqsC pair validates the project premise. Reviewing both subunits
-(`genes/PSEAE/pqsB`, `genes/PSEAE/pqsC`) surfaced exactly the annotation issues the
+(PqsB, PqsC) surfaced exactly the annotation issues the
 "only-functional-when-assembled" framing predicts:
 
 - **Over-annotation of the catalytic MF to a non-catalytic subunit.** PqsB carries
@@ -141,8 +141,8 @@ prediction corroborated, rather than drove, the curation.
 
 ### Second worked example: actinorhodin KS-CLF (BGC0000194)
 
-The *S. coelicolor* actinorhodin minimal-PKS KSα/KSβ pair (`genes/STRCO/actI-ORF1`,
-`genes/STRCO/actI-ORF2`; predicted at ipTM 0.96, matching PDB 1TQY) is the **same
+The *S. coelicolor* actinorhodin minimal-PKS KSα/KSβ pair (actI-ORF1,
+actI-ORF2; predicted at ipTM 0.96, matching PDB 1TQY) is the **same
 catalytic + non-catalytic heterodimer pattern** as PqsBC, and reproduces the same
 annotation failure mode from a different protein family:
 
@@ -164,7 +164,7 @@ for the remaining BGC exemplars.
 
 ### Third worked example: erythromycin EryCII-EryCIII (BGC0000055)
 
-The *S. erythraea* desosaminylation pair (`genes/SACEN/eryCII`, `genes/SACEN/eryCIII`;
+The *S. erythraea* desosaminylation pair (eryCII, eryCIII;
 predicted ipTM 0.92, matching PDB 2YJN) generalises the pattern beyond
 catalytic/non-catalytic *condensing* enzymes to a **catalytic enzyme + pseudoenzyme
 activator** pair:

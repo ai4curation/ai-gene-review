@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eryCII - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>eryCII</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A4F7P2" target="_blank" class="term-link">
+                        A4F7P2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharopolyspora erythraea (strain ATCC 11635 / DSM 40517 / JCM 4748 / NBRC 13426 / NCIMB 8594 / NRRL 2338)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "eryCII";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A4F7P2" data-a="DESCRIPTION: EryCII (SACE_0725) is a cytochrome-P450-family hom..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>EryCII (SACE_0725) is a cytochrome-P450-family homologue that has lost catalytic competence and instead acts as the activating partner of the desosaminyl transferase EryCIII in erythromycin biosynthesis in Saccharopolyspora erythraea. Although related to cytochrome P450s by sequence, EryCII lacks the heme-binding sites and therefore cannot perform P450 monooxygenase chemistry; it is a pseudoenzyme. Functionally, EryCII forms an elongated EryCII-EryCIII heterotetramer in which it stabilizes EryCIII and acts as an allosteric activator of the glycosyltransferase, enabling efficient transfer of TDP-D-desosamine to the macrolide scaffold (PMID:22056329, PMID:15303858). Mechanistically EryCII behaves like a conformational chaperone that templates the catalytically competent state of EryCIII, but - unlike a classical chaperone - it remains stably bound as a stoichiometric subunit and EryCIII is inactive without it, so it is best described as an activator/stabilizer subunit rather than a transient folding chaperone. EryCII is thus a clear example of domain-based over-annotation: its sequence-derived P450/heme/monooxygenase annotations do not reflect its true non-catalytic, GT-activating role.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004497" target="_blank" class="term-link">
+                                    GO:0004497
+                                </a>
+                            </span>
+                            <span class="term-label">monooxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A4F7P2" data-a="GO:0004497" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based (IEA) monooxygenase activity from the cytochrome P450 signature. EryCII is a P450 homologue that lacks the heme-binding sites and is catalytically dead; it has no monooxygenase activity. Its real role is as an allosteric activator of the EryCIII glycosyltransferase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Demonstrably incorrect. Beyond the UniProt CAUTION (&#34;lacks the heme-binding sites&#34;), the structure paper shows by structure-based alignment that EryCII lacks the conserved heme-ligating cysteine and is &#34;not an active P450 enzyme&#34;, and the 2YJN structure is apo (no heme). EryCII functions as a GT activator, not a monooxygenase. Classic domain-propagation over-annotation of a pseudoenzyme.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SACEN/eryCII/eryCII-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Although related to the cytochrome P450 family, lacks the heme-binding sites.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                        PMID:22056329
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not active P450 enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A4F7P2" data-a="GO:0005506" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA iron ion binding inherited from the P450 signature (P450s bind a heme iron). EryCII lacks the heme-binding sites and does not bind a catalytic iron.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Incorrect; depends on heme/iron cofactor binding that EryCII has lost. The UniProt CAUTION (lacks the heme-binding sites) and the structure (no heme; absent conserved Cys) agree.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SACEN/eryCII/eryCII-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Although related to the cytochrome P450 family, lacks the heme-binding sites.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                        PMID:22056329
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Having lost the heme group in the central core, the protein may be more conformationally dynamic</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016705" target="_blank" class="term-link">
+                                    GO:0016705
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A4F7P2" data-a="GO:0016705" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA oxidoreductase activity from the P450 signature. EryCII performs no oxygen-dependent oxidoreductase chemistry; it is a non-catalytic P450 homologue.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Incorrect catalytic MF for a heme-less, non-catalytic P450 homologue (UniProt CAUTION plus the apo structure / absent conserved Cys).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SACEN/eryCII/eryCII-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Although related to the cytochrome P450 family, lacks the heme-binding sites.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                        PMID:22056329
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not active P450 enzymes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="A4F7P2" data-a="GO:0020037" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA heme binding from the P450 signature. EryCII explicitly lacks the heme-binding sites, so it does not bind heme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Both the UniProt CAUTION (&#34;lacks the heme-binding sites&#34;) and primary structural data agree: the conserved heme-ligating cysteine is absent and EryCII has &#34;lost the heme group in the central core&#34; (PMID:22056329); the 2YJN structure contains no heme ligand. The most clearly incorrect of the inherited P450 terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SACEN/eryCII/eryCII-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Although related to the cytochrome P450 family, lacks the heme-binding sites.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                        PMID:22056329
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Having lost the heme group in the central core, the protein may be more conformationally dynamic</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008047" target="_blank" class="term-link">
+                                    GO:0008047
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22056329
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the glycosyltransferase EryCIII in complex with...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A4F7P2" data-a="GO:0008047" data-r="PMID:22056329" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed NEW annotation capturing EryCII&#39;s actual molecular function: it allosterically activates the glycosyltransferase EryCIII (EryCIII is inactive on its own; activity is restored by EryCII). Not present in GOA, which carries only the inherited (incorrect) P450 catalytic terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replaces the removed P450 catalytic terms with EryCII&#39;s true, experimentally supported activator role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                        PMID:22056329
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>EryCII is required to activate the desosaminyl transferase EryCIII: EryCIII is inactive on its own, and EryCII allosterically activates and stabilizes it within the alpha2-beta2 EryCII-EryCIII heterotetramer (via its N-terminal A&#39;&#39; helix contacting EryCIII&#39;s acceptor domain), enabling glycosyl transfer to the macrolide and hence the desosaminylation step of erythromycin biosynthesis (PMID:22056329, PMID:15303858; PDB 2YJN). This activator/stabilizer role is the accurate molecular function in place of the inherited (incorrect) P450 catalytic terms. The fold stabilization is conformational-chaperone-like, but EryCII is a stably bound stoichiometric subunit, not a transient folding chaperone.</h3>
+                <span class="vote-buttons" data-g="A4F7P2" data-a="FUNCTION: EryCII is required to activate the desosaminyl tra..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008047" target="_blank" class="term-link">
+                            enzyme activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050821" target="_blank" class="term-link">
+                                protein stabilization
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901115" target="_blank" class="term-link">
+                                erythromycin biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032991" target="_blank" class="term-link">
+                            protein-containing complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                PMID:22056329
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                                PMID:22056329
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">one function of the auxiliary proteins is to stabilize the fold and quaternary structure of its partner GT</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22056329" target="_blank" class="term-link">
+                            PMID:22056329
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the glycosyltransferase EryCIII in complex with its activating P450 homologue EryCII.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EryCII forms a heterotetramer with EryCIII, stabilizes it, and acts as an allosteric activator of the glycosyltransferase.</div>
+                        
+                        <div class="finding-text">"Our biophysical and enzymatic data support a model in which EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The EryCIII-EryCII complex is a heterotetramer.</div>
+                        
+                        <div class="finding-text">"The structure reveals a heterotetramer with a distinctive, elongated quaternary organization."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EryCII lacks the conserved heme-ligating cysteine of P450s and has no heme; it is not an active P450 enzyme (structure-based alignment, apo structure).</div>
+                        
+                        <div class="finding-text">"As expected for EryCII—and indeed the macrolide auxiliary proteins generally—the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not active P450 enzymes."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EryCII has lost the heme group from the central core of the P450-like fold.</div>
+                        
+                        <div class="finding-text">"Having lost the heme group in the central core, the protein may be more conformationally dynamic"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EryCIII is inactive on its own; EryCII is required to restore its glycosyltransferase activity.</div>
+                        
+                        <div class="finding-text">"When separate EryCIII- and EryCII-containing extracts were combined, the GT activity of EryCIII was restored, confirming as expected that EryCII is required by EryCIII."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The complex is an alpha2-beta2 heterotetramer (dimer of EryCIII-EryCII heterodimers); EryCII activates allosterically via its N-terminal A&#39;&#39; helix, which contacts EryCIII&#39;s acceptor domain without touching the active site directly.</div>
+                        
+                        <div class="finding-text">"Binding of EryCII to the N-terminal acceptor domain of EryCIII (Fig. 6) may likewise trigger a closer association with the C-terminal sugar-nucleotide binding domain and the correct juxtaposition of the acceptor and donor sites of EryCIII."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15303858" target="_blank" class="term-link">
+                            PMID:15303858
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Reconstitution and characterization of a new desosaminyl transferase, EryCIII, from the erythromycin biosynthetic pathway.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EryCIII transfers TDP-D-desosamine to alpha-mycarosyl erythronolide B to form erythromycin D; EryCII is its biosynthetic partner.</div>
+                        
+                        <div class="finding-text">"EryCIII converts alpha-mycarosyl erythronolide B into erythromycin D using TDP-d-desosamine as the glycosyl donor."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SACEN/eryCII/eryCII-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">eryCII review notes (BGC project); pseudoenzyme over-annotation analysis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SACEN/eryCII/eryCII-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB A4F7P2 (ERYC2_SACEN) record</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt flags that EryCII, though related to the cytochrome P450 family, lacks the heme-binding sites.</div>
+                        
+                        <div class="finding-text">"Although related to the cytochrome P450 family, lacks the heme-binding sites."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Would a dedicated &#34;glycosyltransferase activator activity&#34; term (child of GO:0008047) better capture the role of EryCII and analogous P450-homologue GT activators (e.g. in other deoxysugar pathways)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4F7P2" data-a="Q: Would a dedicated &#34;glycosyltransferase activator a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Confirm absence of heme binding and monooxygenase activity for purified EryCII, and quantify EryCIII GT stimulation as a function of EryCII, to formally retire the P450 catalytic annotations.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A4F7P2" data-a="EXPERIMENT: Confirm absence of heme binding and monooxygenase ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(eryCII-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A4F7P2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="erycii-a4f7p2-sace_0725-review-notes">eryCII (A4F7P2, SACE_0725) — review notes</h1>
+<p>Part of the <strong>BGC exemplar curation project</strong> (<code>projects/BGC.md</code>). MIBiG BGC0000055<br />
+(<em>Saccharopolyspora erythraea</em>, erythromycin PKS). GenBank CAM00066.1 → UniProt<br />
+<strong>A4F7P2</strong> (ERYC2_SACEN), gene <em>eryCII</em> / SACE_0725. Also relevant to<br />
+<code>projects/PSEUDOENZYMES.md</code>.</p>
+<h2 id="function-a-p450-pseudoenzyme-that-activates-a-glycosyltransferase">Function — a P450 PSEUDOENZYME that activates a glycosyltransferase</h2>
+<p>EryCII is a <strong>cytochrome-P450-family homologue that has lost catalytic competence</strong><br />
+and instead serves as the <strong>activating partner of the desosaminyl transferase<br />
+EryCIII</strong> in erythromycin biosynthesis.</p>
+<ul>
+<li>UniProt A4F7P2 CAUTION: "Although related to the cytochrome P450 family, lacks the<br />
+  heme-binding sites." (ECO:0000305) — note this is a <em>curator inference</em>, so it needs<br />
+  corroboration (below).</li>
+<li><strong>Beyond the assertion — primary structural evidence (PMID:22056329 full text):</strong></li>
+<li>"...lacks the essential cysteine residue that coordinates the heme iron."</li>
+<li>"the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not<br />
+    active P450 enzymes." (structure-based alignment vs P450 Cyp125)</li>
+<li>"Having lost the heme group in the central core, the protein may be more<br />
+    conformationally dynamic..."</li>
+<li><strong>PDB 2YJN is apo:</strong> the RCSB entry has zero non-polymer entities (no heme ligand).</li>
+<li>Activation mechanism: EryCIII activity "is almost completely rescued by the<br />
+    addition of soluble EryCII... able to induce a catalytically active structure in<br />
+    EryCIII."</li>
+</ul>
+<p>So the no-heme / no-catalysis conclusion rests on (1) the absent conserved Cys in a<br />
+  structure-based alignment, and (2) an apo crystal structure — not merely UniProt.<br />
+- UniProt FUNCTION: "Involved in the erythromycin biosynthesis pathway. Acts by<br />
+  forming a complex and stabilizing the desosaminyl transferase EryCIII."<br />
+  (ECO:0000269|PubMed:22056329); SUBUNIT: "Heterotetramer composed of EryCII and EryCIII."<br />
+- Structure (PDB 2YJN): "EryCIII, in concert with its partner EryCII, attaches a<br />
+  nucleotide-activated sugar to the macrolide scaffold... a heterotetramer...<br />
+  EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22056329">PMID:22056329</a><br />
+- <strong>EryCII is required for EryCIII catalysis</strong> (not merely an enhancer): purified<br />
+  EryCIII "was inactive under all conditions tried"; combining EryCIII + EryCII<br />
+  extracts "restored" GT activity [PMID:22056329 full text]. Stoichiometry is<br />
+  α2β2 (dimer of heterodimers, ~188 kDa); activation is allosteric via EryCII's<br />
+  N-terminal A″ helix, which contacts EryCIII's acceptor domain.</p>
+<h2 id="annotation-issues-domain-based-over-annotation-of-a-pseudoenzyme">Annotation issues — domain-based over-annotation of a pseudoenzyme</h2>
+<p>All four GOA molecular-function terms are IEA from the P450 sequence signature and are<br />
+<strong>incorrect for this catalytically dead homologue</strong>:</p>
+<ul>
+<li>GO:0004497 monooxygenase activity → REMOVE</li>
+<li>GO:0005506 iron ion binding → REMOVE</li>
+<li>GO:0016705 oxidoreductase activity (paired donors, O2) → REMOVE</li>
+<li>GO:0020037 heme binding → REMOVE (UniProt: "lacks the heme-binding sites")</li>
+</ul>
+<p>Accurate roles to assert instead: <strong>GO:0008047 enzyme activator activity</strong> (allosteric<br />
+activator of EryCIII; added as a NEW annotation), <strong>GO:0050821 protein stabilization</strong><br />
+(stabilizes EryCIII's fold/quaternary structure), <strong>GO:1901115 erythromycin<br />
+biosynthetic process</strong> (BP), <strong>GO:0032991 protein-containing complex</strong> (EryCII-EryCIII<br />
+heterotetramer).</p>
+<h3 id="conformational-chaperone">"Conformational chaperone"?</h3>
+<p>Mechanistically EryCII templates/stabilizes the catalytically competent conformation of<br />
+EryCIII, which is chaperone-like. But it is <strong>not</strong> annotated as a <code>protein folding
+chaperone</code> (GO:0044183): a chaperone acts transiently and is released, and its client<br />
+stays active afterwards; EryCII is a <strong>stably bound stoichiometric subunit</strong> and EryCIII<br />
+is <strong>inactive without it</strong> (PMID:22056329). So the stabilizing aspect is captured by<br />
+<code>protein stabilization</code> (GO:0050821) and the activating aspect by <code>enzyme activator
+activity</code> (GO:0008047) - not a chaperone MF. (The older fold-and-release / "does not<br />
+bind tightly" model, ref 13, was superseded by the stable-complex structure.)</p>
+<h3 id="capturing-absence-of-function-not-annotations">Capturing absence of function (NOT annotations)</h3>
+<p>A "NEW NOT" (negated: true + action: NEW) can only be used for a term NOT already in<br />
+GOA. Here the erroneous P450 functions (monooxygenase, heme binding, iron binding,<br />
+oxidoreductase) are already present in GOA, so they are handled by REMOVE; there is no<br />
+review action to convert an existing positive annotation into a NOT.</p>
+<h2 id="predicted-complex-evidence-bgc-project">Predicted-complex evidence (BGC project)</h2>
+<p>Moriwaki et al. (bioRxiv 2025.10.26.684697) predict the EryCII-EryCIII interaction<br />
+(BGC0000055; CAM00066.1/CAM00067.1) at <strong>ipTM 0.92</strong>, matching PDB 2YJN (hetero 4-mer).</p>
+<h2 id="references">References</h2>
+<ul>
+<li>PMID:22056329 — Moncrieffe et al. 2012, J Mol Biol (EryCIII·EryCII structure, PDB<br />
+  2YJN; EryCII stabilizes and allosterically activates EryCIII). VERIFIED.</li>
+<li>UniProt A4F7P2 (CAUTION: lacks heme-binding sites).</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A4F7P2
+gene_symbol: eryCII
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:405948
+  label: Saccharopolyspora erythraea (strain ATCC 11635 / DSM 40517 / JCM 4748 / NBRC
+    13426 / NCIMB 8594 / NRRL 2338)
+description: &gt;-
+  EryCII (SACE_0725) is a cytochrome-P450-family homologue that has lost catalytic
+  competence and instead acts as the activating partner of the desosaminyl
+  transferase EryCIII in erythromycin biosynthesis in Saccharopolyspora erythraea.
+  Although related to cytochrome P450s by sequence, EryCII lacks the heme-binding
+  sites and therefore cannot perform P450 monooxygenase chemistry; it is a
+  pseudoenzyme. Functionally, EryCII forms an elongated EryCII-EryCIII heterotetramer
+  in which it stabilizes EryCIII and acts as an allosteric activator of the
+  glycosyltransferase, enabling efficient transfer of TDP-D-desosamine to the
+  macrolide scaffold (PMID:22056329, PMID:15303858). Mechanistically EryCII behaves
+  like a conformational chaperone that templates the catalytically competent state of
+  EryCIII, but - unlike a classical chaperone - it remains stably bound as a
+  stoichiometric subunit and EryCIII is inactive without it, so it is best described as
+  an activator/stabilizer subunit rather than a transient folding chaperone. EryCII is
+  thus a clear example of domain-based over-annotation: its sequence-derived
+  P450/heme/monooxygenase annotations do not reflect its true non-catalytic,
+  GT-activating role.
+references:
+- id: PMID:22056329
+  title: Structure of the glycosyltransferase EryCIII in complex with its activating
+    P450 homologue EryCII.
+  findings:
+  - statement: &gt;-
+      EryCII forms a heterotetramer with EryCIII, stabilizes it, and acts as an
+      allosteric activator of the glycosyltransferase.
+    supporting_text: &gt;-
+      Our biophysical and enzymatic data support a model in which EryCII stabilizes
+      EryCIII and also functions as an allosteric activator of the GT.
+  - statement: &gt;-
+      The EryCIII-EryCII complex is a heterotetramer.
+    supporting_text: &gt;-
+      The structure reveals a heterotetramer with a distinctive, elongated quaternary
+      organization.
+  - statement: &gt;-
+      EryCII lacks the conserved heme-ligating cysteine of P450s and has no heme; it is
+      not an active P450 enzyme (structure-based alignment, apo structure).
+    supporting_text: &gt;-
+      As expected for EryCII—and indeed the macrolide auxiliary proteins generally—the
+      conserved cysteine is absent (Supplementary Fig. S5); thus, they are not active
+      P450 enzymes.
+  - statement: &gt;-
+      EryCII has lost the heme group from the central core of the P450-like fold.
+    supporting_text: &gt;-
+      Having lost the heme group in the central core, the protein may be more
+      conformationally dynamic
+  - statement: &gt;-
+      EryCIII is inactive on its own; EryCII is required to restore its
+      glycosyltransferase activity.
+    supporting_text: &gt;-
+      When separate EryCIII- and EryCII-containing extracts were combined, the GT
+      activity of EryCIII was restored, confirming as expected that EryCII is required
+      by EryCIII.
+  - statement: &gt;-
+      The complex is an alpha2-beta2 heterotetramer (dimer of EryCIII-EryCII
+      heterodimers); EryCII activates allosterically via its N-terminal A&#39;&#39; helix, which
+      contacts EryCIII&#39;s acceptor domain without touching the active site directly.
+    supporting_text: &gt;-
+      Binding of EryCII to the N-terminal acceptor domain of EryCIII (Fig. 6) may
+      likewise trigger a closer association with the C-terminal sugar-nucleotide binding
+      domain and the correct juxtaposition of the acceptor and donor sites of EryCIII.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; PDB 2YJN. Beyond the UniProt CAUTION (ECO:0000305), the full text
+      provides primary evidence that EryCII lacks the conserved heme-ligating cysteine
+      and the heme group (&#34;not active P450 enzymes&#34;); the 2YJN coordinates contain no
+      heme ligand (apo structure).
+- id: PMID:15303858
+  title: &#39;Reconstitution and characterization of a new desosaminyl transferase, EryCIII,
+    from the erythromycin biosynthetic pathway.&#39;
+  findings:
+  - statement: &gt;-
+      EryCIII transfers TDP-D-desosamine to alpha-mycarosyl erythronolide B to form
+      erythromycin D; EryCII is its biosynthetic partner.
+    supporting_text: &gt;-
+      EryCIII converts alpha-mycarosyl erythronolide B into erythromycin D using
+      TDP-d-desosamine as the glycosyl donor.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Characterizes the partner GT EryCIII; supports the erythromycin-biosynthesis role
+      of the EryCII/EryCIII system.
+- id: file:SACEN/eryCII/eryCII-notes.md
+  title: eryCII review notes (BGC project); pseudoenzyme over-annotation analysis
+- id: file:SACEN/eryCII/eryCII-uniprot.txt
+  title: UniProtKB A4F7P2 (ERYC2_SACEN) record
+  findings:
+  - statement: &gt;-
+      UniProt flags that EryCII, though related to the cytochrome P450 family, lacks
+      the heme-binding sites.
+    supporting_text: &gt;-
+      Although related to the cytochrome P450 family, lacks the heme-binding sites.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The CAUTION is an ECO:0000305 curator inference; it carries real weight as an
+      expert assessment and is independently corroborated by the structure (absent
+      conserved Cys; apo 2YJN). Both lines of evidence are cited together.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+existing_annotations:
+- term:
+    id: GO:0004497
+    label: monooxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based (IEA) monooxygenase activity from the cytochrome P450 signature.
+      EryCII is a P450 homologue that lacks the heme-binding sites and is catalytically
+      dead; it has no monooxygenase activity. Its real role is as an allosteric
+      activator of the EryCIII glycosyltransferase.
+    action: REMOVE
+    reason: &gt;-
+      Demonstrably incorrect. Beyond the UniProt CAUTION (&#34;lacks the heme-binding
+      sites&#34;), the structure paper shows by structure-based alignment that EryCII lacks
+      the conserved heme-ligating cysteine and is &#34;not an active P450 enzyme&#34;, and the
+      2YJN structure is apo (no heme). EryCII functions as a GT activator, not a
+      monooxygenase. Classic domain-propagation over-annotation of a pseudoenzyme.
+    supported_by:
+    - reference_id: file:SACEN/eryCII/eryCII-uniprot.txt
+      supporting_text: &gt;-
+        Although related to the cytochrome P450 family, lacks the heme-binding sites.
+    - reference_id: PMID:22056329
+      supporting_text: &gt;-
+        the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not
+        active P450 enzymes
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IEA iron ion binding inherited from the P450 signature (P450s bind a heme iron).
+      EryCII lacks the heme-binding sites and does not bind a catalytic iron.
+    action: REMOVE
+    reason: &gt;-
+      Incorrect; depends on heme/iron cofactor binding that EryCII has lost. The UniProt
+      CAUTION (lacks the heme-binding sites) and the structure (no heme; absent conserved
+      Cys) agree.
+    supported_by:
+    - reference_id: file:SACEN/eryCII/eryCII-uniprot.txt
+      supporting_text: &gt;-
+        Although related to the cytochrome P450 family, lacks the heme-binding sites.
+    - reference_id: PMID:22056329
+      supporting_text: &gt;-
+        Having lost the heme group in the central core, the protein may be more
+        conformationally dynamic
+- term:
+    id: GO:0016705
+    label: oxidoreductase activity, acting on paired donors, with incorporation or reduction
+      of molecular oxygen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IEA oxidoreductase activity from the P450 signature. EryCII performs no
+      oxygen-dependent oxidoreductase chemistry; it is a non-catalytic P450 homologue.
+    action: REMOVE
+    reason: &gt;-
+      Incorrect catalytic MF for a heme-less, non-catalytic P450 homologue (UniProt
+      CAUTION plus the apo structure / absent conserved Cys).
+    supported_by:
+    - reference_id: file:SACEN/eryCII/eryCII-uniprot.txt
+      supporting_text: &gt;-
+        Although related to the cytochrome P450 family, lacks the heme-binding sites.
+    - reference_id: PMID:22056329
+      supporting_text: &gt;-
+        the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not
+        active P450 enzymes
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IEA heme binding from the P450 signature. EryCII explicitly lacks the
+      heme-binding sites, so it does not bind heme.
+    action: REMOVE
+    reason: &gt;-
+      Both the UniProt CAUTION (&#34;lacks the heme-binding sites&#34;) and primary structural
+      data agree: the conserved heme-ligating cysteine is absent and EryCII has &#34;lost
+      the heme group in the central core&#34; (PMID:22056329); the 2YJN structure contains
+      no heme ligand. The most clearly incorrect of the inherited P450 terms.
+    supported_by:
+    - reference_id: file:SACEN/eryCII/eryCII-uniprot.txt
+      supporting_text: &gt;-
+        Although related to the cytochrome P450 family, lacks the heme-binding sites.
+    - reference_id: PMID:22056329
+      supporting_text: &gt;-
+        Having lost the heme group in the central core, the protein may be more
+        conformationally dynamic
+- term:
+    id: GO:0008047
+    label: enzyme activator activity
+  evidence_type: IDA
+  original_reference_id: PMID:22056329
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed NEW annotation capturing EryCII&#39;s actual molecular function: it
+      allosterically activates the glycosyltransferase EryCIII (EryCIII is inactive on
+      its own; activity is restored by EryCII). Not present in GOA, which carries only
+      the inherited (incorrect) P450 catalytic terms.
+    action: NEW
+    reason: &gt;-
+      Replaces the removed P450 catalytic terms with EryCII&#39;s true, experimentally
+      supported activator role.
+    supported_by:
+    - reference_id: PMID:22056329
+      supporting_text: &gt;-
+        EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT
+core_functions:
+- description: &gt;-
+    EryCII is required to activate the desosaminyl transferase EryCIII: EryCIII is
+    inactive on its own, and EryCII allosterically activates and stabilizes it within
+    the alpha2-beta2 EryCII-EryCIII heterotetramer (via its N-terminal A&#39;&#39; helix
+    contacting EryCIII&#39;s acceptor domain), enabling glycosyl transfer to the macrolide
+    and hence the desosaminylation step of erythromycin biosynthesis (PMID:22056329,
+    PMID:15303858; PDB 2YJN). This activator/stabilizer role is the accurate molecular
+    function in place of the inherited (incorrect) P450 catalytic terms. The fold
+    stabilization is conformational-chaperone-like, but EryCII is a stably bound
+    stoichiometric subunit, not a transient folding chaperone.
+  molecular_function:
+    id: GO:0008047
+    label: enzyme activator activity
+  directly_involved_in:
+    - id: GO:0050821
+      label: protein stabilization
+    - id: GO:1901115
+      label: erythromycin biosynthetic process
+  in_complex:
+    id: GO:0032991
+    label: protein-containing complex
+  supported_by:
+  - reference_id: PMID:22056329
+    supporting_text: &gt;-
+      EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT
+  - reference_id: PMID:22056329
+    supporting_text: &gt;-
+      one function of the auxiliary proteins is to stabilize the fold and quaternary
+      structure of its partner GT
+suggested_questions:
+- question: &gt;-
+    Would a dedicated &#34;glycosyltransferase activator activity&#34; term (child of
+    GO:0008047) better capture the role of EryCII and analogous P450-homologue GT
+    activators (e.g. in other deoxysugar pathways)?
+suggested_experiments:
+- description: &gt;-
+    Confirm absence of heme binding and monooxygenase activity for purified EryCII, and
+    quantify EryCIII GT stimulation as a function of EryCII, to formally retire the P450
+    catalytic annotations.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

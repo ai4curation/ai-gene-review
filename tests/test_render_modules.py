@@ -154,4 +154,46 @@ def test_render_all_modules_with_index(tmp_path):
     assert output_dir / "generic" / "test.html" in output_paths
     assert output_dir / "index.html" in output_paths
     assert (output_dir / "index.html").exists()
-    assert "Test module" in (output_dir / "index.html").read_text()
+
+    index_html = (output_dir / "index.html").read_text()
+    assert "Test module" in index_html
+    # The index renders as a sortable table of modules with derived metadata columns.
+    assert "<table" in index_html
+    assert "data-module-table" in index_html
+    assert "data-module-row" in index_html
+    for column in ("Nodes", "Annotons", "Parts", "Variant", "Variants", "Connections"):
+        assert column in index_html
+    # Derived counts for the single test module should be present in the row.
+    assert "METABOLIC_PATHWAY".replace("_", " ").title() in index_html
+
+
+def test_render_modules_index_table_lists_all_modules(tmp_path):
+    """The index table renders one row per module with its derived stats."""
+    import yaml
+
+    from ai_gene_review.render_modules import make_summary, render_modules_index
+
+    modules_dir = tmp_path / "modules"
+    modules_dir.mkdir()
+    output_dir = tmp_path / "pages" / "modules"
+    output_dir.mkdir(parents=True)
+    index_path = output_dir / "index.html"
+
+    data = yaml.safe_load(MODULE_YAML)
+    summary = make_summary(
+        data,
+        modules_dir / "test.yaml",
+        output_dir / "test.html",
+        index_path,
+    )
+
+    render_modules_index([summary], output_dir=output_dir)
+    html = index_path.read_text()
+
+    # Exactly one data row for the one module summary.
+    assert html.count("<tr data-module-row>") == 1
+    # Derived numeric metadata surfaced in the table.
+    assert str(summary["stats"]["nodes"]) in html
+    assert str(summary["stats"]["connections"]) in html
+    # Concepts derived from the module document appear.
+    assert "test pathway" in html

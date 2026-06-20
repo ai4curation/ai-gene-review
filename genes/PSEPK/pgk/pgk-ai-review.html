@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pgk - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pgk</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88D64" target="_blank" class="term-link">
+                        Q88D64
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pgk";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88D64" data-a="DESCRIPTION: Phosphoglycerate kinase (PGK; EC 2.7.2.3) is a con..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Phosphoglycerate kinase (PGK; EC 2.7.2.3) is a conserved cytosolic enzyme of central carbon metabolism that catalyzes the reversible, Mg2+-dependent transfer of a phosphoryl group between 1,3-bisphosphoglycerate and ADP, yielding 3-phosphoglycerate and ATP. It is a two-domain hinge-bending enzyme in which the N-terminal domain binds the phosphoglycerate substrate and the C-terminal domain binds the adenine nucleotide; catalysis requires large domain closure to bring the two substrates into proximity. In the glycolytic direction the enzyme performs substrate-level phosphorylation to generate ATP, and in the gluconeogenic direction it runs in reverse to regenerate 1,3-bisphosphoglycerate. In Pseudomonas putida KT2440, where the classical Embden-Meyerhof-Parnas pathway is incomplete in the forward glycolytic direction (the organism lacks 6-phosphofructokinase) and glucose catabolism proceeds mainly via periplasmic oxidation and the Entner-Doudoroff pathway, Pgk operates in the lower segment of central carbon metabolism, contributing to gluconeogenesis and to glycolytic ATP generation from triose phosphates.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004618" target="_blank" class="term-link">
+                                    GO:0004618
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0004618" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. The enzyme is a member of the phosphoglycerate kinase family (Pfam PF00162; IPR001576) carrying EC 2.7.2.3 and the RHEA:14801 reaction, mapped via UniRule and InterPro2GO. This is the defining catalytic activity of the protein.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0005524" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGK binds and produces/consumes ATP as part of its catalytic cycle; the C-terminal domain forms the adenine-nucleotide binding site. ATP binding is a well-supported supporting molecular function for this enzyme.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGK is a soluble cytosolic enzyme of central carbon metabolism, consistent with the UniProt subcellular location prediction. The more specific term cytosol (GO:0005829) is also annotated and is preferable.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Appropriate, more specific cytosolic localization for this soluble glycolytic/gluconeogenic enzyme. Consistent with pathway placement in the central carbon network; no experimental localization assay for the P. putida ortholog, but the inference is sound for a PGK-family enzyme.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0006094" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGK catalyzes a reversible reaction shared by glycolysis and gluconeogenesis. In P. putida KT2440, where forward EMP glycolysis is incomplete (no Pfk), the gluconeogenic direction is biologically important, making this an accurate process annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PGK performs the 1,3-bisphosphoglycerate to 3-phosphoglycerate step of glycolysis (UniPathway UPA00109), generating ATP by substrate-level phosphorylation. Standard and correct process annotation for this enzyme.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043531" target="_blank" class="term-link">
+                                    GO:0043531
+                                </a>
+                            </span>
+                            <span class="term-label">ADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88D64" data-a="GO:0043531" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ADP is a substrate/product of the PGK reaction and binds in the C-terminal nucleotide-binding domain. Well-supported supporting molecular function consistent with the catalyzed reaction.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the reversible Mg2+-dependent phosphoryl transfer between 1,3-bisphosphoglycerate and ADP to produce 3-phosphoglycerate and ATP, the seventh step of glycolysis and the corresponding step of gluconeogenesis.</h3>
+                <span class="vote-buttons" data-g="Q88D64" data-a="FUNCTION: Catalyzes the reversible Mg2+-dependent phosphoryl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004618" target="_blank" class="term-link">
+                            phosphoglycerate kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                glycolytic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                gluconeogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                        <div class="finding-text">EC 2.7.2.3 / RHEA:14801 reaction assigned via UniRule and InterPro2GO mapping of the phosphoglycerate kinase family (IPR001576, Pfam PF00162).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pgk-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88D64" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">31 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T21:49:05.299449</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pgk-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="pgk-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000005 I have extracted Figure 8.1, which illustrates the biochemical pathways involved in glucose catabolism in *Pseudomonas putida* KT24</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-pgk-pp_4963-uniprot-q88d64-in-pseudomonas-putida-kt2440">Research report: <strong>pgk</strong> (PP_4963; UniProt Q88D64) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>The target gene symbol <strong>pgk</strong> in <em>Pseudomonas putida</em> KT2440 is explicitly annotated as <strong>phosphoglycerate kinase</strong> with locus tag <strong>PP_4963</strong> in a KT2440 central carbon metabolism map, matching the provided UniProt identity (Q88D64; PGK family). Pgk is placed at the <strong>1,3-bisphosphoglycerate ↔ 3-phosphoglycerate</strong> step (canonical PGK step) in the pathway diagram for KT2440. (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766)</p>
+<h3 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h3>
+<h4 id="11-enzyme-identity-and-primary-biochemical-function">1.1 Enzyme identity and primary biochemical function</h4>
+<p><strong>Phosphoglycerate kinase (PGK; EC 2.7.2.3)</strong> is a conserved, typically ~45 kDa enzyme that catalyzes a reversible phosphoryl-transfer reaction between the triose-derived acyl-phosphate metabolite <strong>1,3-bisphosphoglycerate (1,3-BPG)</strong> and <strong>ADP</strong>:</p>
+<ul>
+<li><strong>1,3-BPG + ADP ⇌ 3-phosphoglycerate (3-PG) + ATP</strong></li>
+</ul>
+<p>In the <strong>glycolytic direction</strong>, PGK performs <strong>substrate-level phosphorylation</strong> to produce ATP. In the <strong>gluconeogenic direction</strong>, it runs in reverse to generate 1,3-BPG for upstream biosynthesis. (serimbetov2018thestructureand pages 56-63, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</p>
+<h4 id="12-substrate-specificity">1.2 Substrate specificity</h4>
+<p>Across organisms, the canonical PGK reaction couples <strong>adenine nucleotide (ADP/ATP)</strong> chemistry with the phosphorylated glycerate intermediates <strong>1,3-BPG/3-PG</strong>. The available KT2440-focused excerpts do not report organism-specific deviations in substrate specificity for Pgk (PP_4963); thus, functional annotation is best supported by strong family conservation and the pathway placement of Pgk at the 1,3-BPG ↔ 3-PG step. (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</p>
+<h4 id="13-mechanism-and-structural-determinants-expert-level-current-view">1.3 Mechanism and structural determinants (expert-level current view)</h4>
+<p>PGK is a classic <strong>two-domain hinge-bending enzyme</strong>:</p>
+<ul>
+<li><strong>Architecture:</strong> two Rossmann-like α/β domains separated by a cleft; the <strong>N-terminal domain</strong> binds 3-PG/1,3-BPG and the <strong>C-terminal domain</strong> binds MgADP/MgATP. (serimbetov2018thestructureand pages 26-32, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</li>
+<li><strong>Catalytic motion:</strong> catalysis requires large <strong>domain closure</strong>, reported as ~<strong>56°</strong> hinge rotation, bringing substrates from ~<strong>16 Å</strong> apart to ~<strong>4 Å</strong>, and PGK spends only ~<strong>7%</strong> of its time in a fully closed conformation during turnover. (serimbetov2018thestructureand pages 26-32)</li>
+<li><strong>Electrostatics/transition-state stabilization:</strong> <strong>Mg2+</strong> coordination is central to activity, helping shield negative charge and stabilize the phosphoryl-transfer transition state; conserved basic residues in the N-terminal “basic patch” contribute to binding/stabilization of the phosphorylated glycerate substrate. (rojaspirela2020phosphoglyceratekinasestructural pages 7-8)</li>
+</ul>
+<p>These properties provide a mechanistic basis for functional inference for Pgk (PP_4963) in <em>P. putida</em> KT2440.</p>
+<h3 id="2-p-putida-kt2440-pathway-context-biological-processes-and-where-pgk-acts">2) <em>P. putida</em> KT2440 pathway context: biological processes and where Pgk acts</h3>
+<h4 id="21-central-carbon-metabolism-in-kt2440-incomplete-emp-and-strong-edperipheral-oxidation">2.1 Central carbon metabolism in KT2440: incomplete EMP and strong ED/peripheral oxidation</h4>
+<p>A key systems-level fact in KT2440 is that the classical Embden–Meyerhof–Parnas (EMP) glycolytic route is <strong>incomplete in the forward glycolytic direction</strong> because KT2440 lacks <strong>6-phosphofructokinase (Pfk)</strong>, rendering the EMP glycolytic pathway nonfunctional as a full glucose-to-pyruvate route. (poblete‐castro2017hostorganismpseudomonas pages 1-3)</p>
+<p>Accordingly, KT2440 glucose catabolism heavily relies on:<br />
+- <strong>Peripheral periplasmic oxidation</strong> (e.g., glucose → gluconate; gluconate → 2-ketogluconate), and<br />
+- <strong>Entner–Doudoroff (ED)</strong> and pentose phosphate (PP) pathway connections. (poblete‐castro2017hostorganismpseudomonas pages 1-3, chen2024gnurrepressesthe pages 1-3)</p>
+<p>Within this architecture, <strong>Pgk (PP_4963)</strong> is still present and positioned in the <strong>lower part of the EMP / gluconeogenesis module</strong> at the 1,3-BPG ↔ 3-PG step (Figure evidence). (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766)</p>
+<h4 id="22-biological-process-interpretation">2.2 Biological process interpretation</h4>
+<p>Given its reaction, Pgk contributes to:<br />
+- <strong>Energy metabolism</strong> via substrate-level phosphorylation (ATP generation when operating in the glycolytic direction) and<br />
+- <strong>Gluconeogenic biosynthesis</strong> via reverse flux to produce 1,3-BPG when building upper glycolytic intermediates. (serimbetov2018thestructureand pages 56-63, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</p>
+<p>In KT2440 specifically, because glucose flux preferentially enters via periplasmic oxidation and ED (and EMP is incomplete in the forward direction), Pgk’s physiological importance is best viewed as supporting <strong>lower-glycolysis segment function, energy balance, and gluconeogenic flux</strong> rather than supporting a full canonical EMP glycolysis. (poblete‐castro2017hostorganismpseudomonas pages 1-3, chen2024gnurrepressesthe pages 1-3)</p>
+<h3 id="3-cellular-localization-where-the-pgk-protein-acts">3) Cellular localization: where the Pgk protein acts</h3>
+<p>Pgk is depicted as part of the <strong>intracellular central carbon network</strong> (lower glycolysis/gluconeogenesis) in KT2440 pathway maps. The periplasmic oxidation steps (glucose→gluconate→2-ketogluconate) are explicitly distinguished as periplasmic processes in KT2440-focused discussions, while Pgk sits in the cytosolic/lower central carbon portion of the network. However, the retrieved excerpts do not provide a direct experimental localization assay for Pgk; thus, localization is inferred from metabolic role and pathway compartmentation presented in the KT2440 pathway map. (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766, chen2024gnurrepressesthe pages 1-3)</p>
+<h3 id="4-gene-specific-evidence-in-p-putida-kt2440-expression-and-proteomics">4) Gene-specific evidence in <em>P. putida</em> KT2440: expression and proteomics</h3>
+<h4 id="41-transcriptomics-direct-pgkpp_4963-measurement">4.1 Transcriptomics (direct Pgk/PP_4963 measurement)</h4>
+<p>In transcriptome profiling connected to PHA-oriented metabolic engineering, <strong>Pgk (PP4963)</strong> is listed under “glycolysis/gluconeogenesis” and shows <strong>fold-change ~1.0</strong> and <strong>1.1</strong> in two engineered strains versus wild type, i.e., Pgk transcription was essentially unchanged in those genetic backgrounds/conditions. (pobletecastro2013insilicodrivenmetabolicengineering pages 6-7)</p>
+<h4 id="42-proteomics-under-anoxic-bioelectrochemical-conditions">4.2 Proteomics under anoxic bioelectrochemical conditions</h4>
+<p>In a bioelectrochemical system (BES) study of anoxic electrode-driven <strong>fructose</strong> catabolism, proteomics detected 2,377 proteins (~43.5% of predicted ORFs). Many glycolytic enzymes were downregulated, while proteins of <strong>lower central carbon metabolism</strong> generally increased; however, the authors explicitly list <strong>phosphoglycerate kinase (Pgk)</strong> among a small set of <strong>exceptions</strong> at peak current—implying Pgk was <strong>not significantly upregulated</strong> (using fold-change ≥2 and p ≤ 0.05) in that condition/time point. (nguyen2021theanoxicelectrode‐driven pages 4-5)</p>
+<p>Interpretation: Pgk appears to be a “stable core” enzyme in some contexts (transcriptome unchanged in certain engineered strains; not strongly induced in BES fructose proteomics), consistent with its role as a conserved housekeeping enzyme in central metabolism, though the exact regulation may be condition-specific.</p>
+<h3 id="5-recent-developments-20232024-prioritized-regulation-fluxes-and-electrogenic-applications">5) Recent developments (2023–2024 prioritized): regulation, fluxes, and electrogenic applications</h3>
+<h4 id="51-regulatory-discoveries-controlling-upstream-supply-to-the-pgk-containing-lower-network-2024">5.1 Regulatory discoveries controlling upstream supply to the Pgk-containing lower network (2024)</h4>
+<p>A 2024 study dissected regulation of glucose/gluconate catabolism in KT2440 and defined the <strong>GnuR regulon</strong>, reporting that <strong>GnuR directly represses genes involved in the ED pathway and peripheral glucose/gluconate metabolism</strong>, and proposing an incoherent feedforward regulatory motif. (chen2024gnurrepressesthe pages 1-3)</p>
+<p>This matters for Pgk functional context because the ED/peripheral modules determine carbon flow into the lower central carbon “trunk” where Pgk resides, especially in a bacterium with incomplete forward EMP. (chen2024gnurrepressesthe pages 1-3)</p>
+<p>Quantitative pathway split reported in this work underscores the peripheral bias:<br />
+- ~<strong>90%</strong> of periplasmic glucose is oxidized to <strong>gluconate</strong>,<br />
+- ~<strong>10%</strong> is transported directly into the cytoplasm,<br />
+- ~<strong>11%</strong> of periplasmic gluconate is oxidized to <strong>2-ketogluconate</strong>. (chen2024gnurrepressesthe pages 1-3)</p>
+<h4 id="52-fluxomics-and-energy-accounting-under-electrogenicanoxic-conditions-2024">5.2 Fluxomics and energy accounting under electrogenic/anoxic conditions (2024)</h4>
+<p>A 2024 BES study quantified central carbon fluxes and ATP generation under electrogenic conditions (WT and uptake-route mutants). Key quantitative results include:<br />
+- Estimated maximum ATP generation in WT: <strong>147 μmol ATP·gCDW⁻1·h⁻1</strong>.<br />
+- Very low ED flux to pyruvate under BES: <strong>3.4, 6.5, 3.9 μmol·gCDW⁻1·h⁻1</strong> (WT, KT-GL, KT-KG).<br />
+- Acetate production ~<strong>8–14 μmol·gCDW⁻1·h⁻1</strong>.<br />
+- Acetate 13C-enrichment (SFL) ~<strong>26%–50%</strong> depending on strain.<br />
+This study explicitly frames <strong>substrate-level phosphorylation “at the level of phosphoglycerate and pyruvate kinase”</strong> as central to ATP supply, directly implicating the PGK step conceptually in the energy balance even when gene-level Pgk values are not reported. (pause2024anaerobicglucoseuptake pages 9-11)</p>
+<h4 id="53-real-world-implementation-electrogenic-bioproduction-of-2-ketogluconate-2kg-2024">5.3 Real-world implementation: electrogenic bioproduction of 2-ketogluconate (2KG) (2024)</h4>
+<p>Multi-omics and metabolic engineering studies in 2024 show KT2440 can sustain long-term metabolic activity in an anoxic BES, oxidizing glucose predominantly in the periplasm and producing valuable oxidized sugars (notably <strong>2-ketogluconate</strong>). (weimer2024systemsbiologyof pages 1-2)</p>
+<p>Quantitative engineering outcomes reported include:<br />
+- <strong>Acetate pathway deletions</strong> (e.g., ΔaldBI ΔaldBII) reduced acetate by ~<strong>80%</strong>, doubled glucose conversion with complete consumption in ~<strong>200 h</strong>, and achieved <strong>2KG yield = 0.96 mol·mol⁻1 (glucose)</strong> with minimal gluconate accumulation. (weimer2024systemsmetabolicengineering pages 79-83, weimer2024systemsmetabolicengineeringa pages 79-83)<br />
+- In peer-reviewed multi-omics reporting, the best mutant produced 2KG nearly <strong>twice as fast</strong> and with <strong>fivefold less acetate</strong>, also reporting <strong>0.96 mol·mol⁻1</strong> yield. (weimer2024systemsbiologyof pages 12-14)<br />
+- <strong>OprF overexpression</strong> improved BES performance: early current <strong>1.0 mA vs 0.44 mA</strong>, glucose consumption <strong>0.089 vs 0.048 mM·h⁻1</strong>, peak current <strong>2.83 vs 1.93 mA</strong>, and gluconate accumulation rate <strong>0.051 vs 0.015 mM·h⁻1 (3.5-fold)</strong> before gluconate re-consumption and 2KG predominance. (weimer2024systemsmetabolicengineering pages 101-105)</p>
+<p>Relevance to Pgk: these implementations highlight that KT2440’s productivity under anoxic electrogenic conditions depends on how carbon is routed through peripheral oxidation/ED and how ATP is balanced between respiration and substrate-level phosphorylation steps that include the Pgk reaction. (pause2024anaerobicglucoseuptake pages 9-11, chen2024gnurrepressesthe pages 1-3)</p>
+<h3 id="6-expert-synthesis-and-functional-annotation-for-pgk-pp_4963">6) Expert synthesis and functional annotation for Pgk (PP_4963)</h3>
+<h4 id="61-most-defensible-functional-statement">6.1 Most defensible functional statement</h4>
+<p>Based on direct KT2440 pathway annotation and strong enzyme-family conservation, the primary function of <strong>Pgk (PP_4963; UniProt Q88D64)</strong> in <em>P. putida</em> KT2440 is:</p>
+<ul>
+<li><strong>Catalyze the reversible phosphoryl transfer between 1,3-bisphosphoglycerate and ADP to produce 3-phosphoglycerate and ATP (and the reverse in gluconeogenesis)</strong>, contributing to substrate-level phosphorylation and supporting central carbon flux in the lower glycolysis/gluconeogenesis segment. (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766, serimbetov2018thestructureand pages 56-63, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</li>
+</ul>
+<h4 id="62-pathway-placement-and-physiological-framing-in-kt2440">6.2 Pathway placement and physiological framing in KT2440</h4>
+<p>In KT2440, Pgk should be annotated within <strong>central carbon metabolism (lower glycolysis / gluconeogenesis)</strong>, with an explicit note that:<br />
+- KT2440’s forward EMP is incomplete due to missing Pfk, and carbon commonly enters the central network through <strong>peripheral oxidation and ED</strong>, not through a canonical full glycolysis chain. (poblete‐castro2017hostorganismpseudomonas pages 1-3, chen2024gnurrepressesthe pages 1-3)</p>
+<h4 id="63-regulation-and-condition-dependence">6.3 Regulation and condition dependence</h4>
+<p>Available evidence suggests pgk may not be among the most dynamically regulated central enzymes under certain perturbations:<br />
+- Transcript levels ~unchanged in some engineered strains (fold-change ~1.0–1.1). (pobletecastro2013insilicodrivenmetabolicengineering pages 6-7)<br />
+- In BES fructose proteomics, Pgk is mentioned as an “exception” to the general upregulation of lower central carbon proteins at peak current, implying it was not significantly induced (FC ≥2). (nguyen2021theanoxicelectrode‐driven pages 4-5)</p>
+<p>This pattern is consistent with Pgk functioning as a <strong>housekeeping enzyme</strong> whose control may occur more through substrate availability, allostery, and network-level flux partitioning than through large transcriptional swings (though this conclusion should be treated as provisional because it is drawn from limited contexts and the evidence does not provide Pgk-specific fold changes in proteomics). (nguyen2021theanoxicelectrode‐driven pages 4-5)</p>
+<h3 id="7-evidence-map-high-value-summary-table">7) Evidence map (high-value summary table)</h3>
+<p>The following table compiles the most directly relevant, citable evidence for identity, function, pathway context, and quantitative findings.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Evidence summary</th>
+<th>Source (with citation id)</th>
+<th>Publication (author year)</th>
+<th>URL if present</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td>In <em>Pseudomonas putida</em> KT2440, Pgk is explicitly annotated as phosphoglycerate kinase with locus tag PP_4963, matching the target gene/protein identity (UniProt Q88D64; gene <strong>pgk</strong>). It is shown in the central carbon pathway map as Pgk (PP_4963).</td>
+<td>Pathway figure and text annotation (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766)</td>
+<td>Poblete-Castro et al. 2017</td>
+<td>https://doi.org/10.1002/9783527807796.ch8</td>
+</tr>
+<tr>
+<td>Enzymatic reaction and pathway role</td>
+<td>PGK (EC 2.7.2.3) catalyzes the reversible reaction <strong>1,3-bisphosphoglycerate + ADP ⇌ 3-phosphoglycerate + ATP</strong>. In glycolysis it performs substrate-level phosphorylation to generate ATP; in gluconeogenesis it runs in reverse to form 1,3-bisphosphoglycerate.</td>
+<td>Mechanistic/structural reviews and bacterial metabolism reference (serimbetov2018thestructureand pages 56-63, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</td>
+<td>Serimbetov 2018; Rojas-Pirela et al. 2020</td>
+<td>https://doi.org/10.1098/rsob.200302</td>
+</tr>
+<tr>
+<td>Structural/mechanistic features</td>
+<td>PGK is typically a ~45 kDa monomer with two Rossmann-like α/β domains separated by a cleft; the N-domain binds 3PG/1,3-BPG and the C-domain binds ADP/ATP. Catalysis requires hinge-bending domain closure that brings substrates from ~16 Å to ~4 Å proximity. Mg2+ is required to coordinate nucleotide phosphates and stabilize the charged transition state during direct phosphoryl transfer.</td>
+<td>Structural analyses (rojaspirela2020phosphoglyceratekinasestructural pages 7-8, serimbetov2018thestructureand pages 26-32, rojaspirela2020phosphoglyceratekinasestructural pages 8-9)</td>
+<td>Rojas-Pirela et al. 2020; Serimbetov 2018</td>
+<td>https://doi.org/10.1098/rsob.200302</td>
+</tr>
+<tr>
+<td>Organism-specific pathway context</td>
+<td>Although Pgk is present, <em>P. putida</em> KT2440 lacks 6-phosphofructokinase, so the Embden-Meyerhof-Parnas (EMP) pathway is incomplete/nonfunctional in the glycolytic direction. KT2440 relies heavily on peripheral oxidative glucose metabolism and the Entner-Doudoroff pathway; Pgk therefore operates as part of lower glycolysis/gluconeogenesis rather than a full classical EMP glycolysis.</td>
+<td>KT2440 pathway map and regulatory review excerpts (poblete‐castro2017hostorganismpseudomonas pages 1-3, chen2024gnurrepressesthe pages 1-3)</td>
+<td>Poblete-Castro et al. 2017; Chen et al. 2024</td>
+<td>https://doi.org/10.1002/9783527807796.ch8; https://doi.org/10.1111/1751-7915.70059</td>
+</tr>
+<tr>
+<td>Pgk expression data</td>
+<td>In transcriptome profiling of engineered <em>P. putida</em> strains for PHA production, <strong>Pgk (PP4963)</strong> showed minimal change: fold change <strong>1.0</strong> in Δgcd and <strong>1.1</strong> in Δgcd-pgl versus wild type, consistent with the authors’ conclusion that central metabolic pathway genes were “rather unaffected.”</td>
+<td>Table 3 transcript data (pobletecastro2013insilicodrivenmetabolicengineering pages 6-7)</td>
+<td>Poblete-Castro et al. 2013</td>
+<td>https://doi.org/10.1016/j.ymben.2012.10.004</td>
+</tr>
+<tr>
+<td>Quantitative physiology: glucose oxidation bias</td>
+<td>In KT2440, most periplasmic glucose is oxidized to gluconate (<strong>~90%</strong>) and a smaller fraction to 2-ketogluconate (<strong>~11%</strong>), underscoring the dominance of peripheral oxidation over classical glycolysis.</td>
+<td>Regulatory/pathway analysis excerpt (chen2024gnurrepressesthe pages 1-3)</td>
+<td>Chen et al. 2024</td>
+<td>https://doi.org/10.1111/1751-7915.70059</td>
+</tr>
+<tr>
+<td>Quantitative physiology: electrogenic bioproduction</td>
+<td>In an anoxic bioelectrochemical system, engineered <em>P. putida</em> mutants with reduced acetate formation improved 2-ketogluconate production; the best mutant reached a <strong>2KG yield of 0.96 mol/mol glucose</strong> and, in one report, accumulated 2KG at roughly <strong>twice the wild-type rate</strong>.</td>
+<td>Multi-omics/electrogenic studies (weimer2024systemsbiologyof pages 12-14, weimer2024systemsbiologyof pages 1-2)</td>
+<td>Weimer et al. 2024</td>
+<td>https://doi.org/10.1186/s12934-024-02509-8</td>
+</tr>
+<tr>
+<td>Quantitative physiology: carbon sourcing under anoxic electrogenesis</td>
+<td>^13C tracing showed acetate had <strong>single-fraction labeling (SFL) 39.4%</strong>, indicating only part of acetate originated from glucose and a substantial fraction came from biomass/lipid turnover; this supports major remodeling around acetyl-CoA rather than Pgk-specific regulation.</td>
+<td>^13C-metabolic analysis (weimer2024systemsmetabolicengineering pages 65-69, weimer2024systemsbiologyof pages 10-12)</td>
+<td>Weimer et al. 2024</td>
+<td>https://doi.org/10.1186/s12934-024-02509-8</td>
+</tr>
+<tr>
+<td>Quantitative physiology: energy status</td>
+<td>Under anoxic electrogenic conditions, KT2440 maintained an <strong>adenylate energy charge (AEC) of 0.52 ± 0.01</strong> despite reduced ATP, consistent with large-scale energy-conserving remodeling of central metabolism.</td>
+<td>Multi-omics physiology excerpt (weimer2024systemsbiologyof pages 10-12)</td>
+<td>Weimer et al. 2024</td>
+<td>https://doi.org/10.1186/s12934-024-02509-8</td>
+</tr>
+<tr>
+<td>Evidence gap specific to Pgk</td>
+<td>Recent 2023–2024 <em>P. putida</em> systems studies discuss lower glycolytic ATP formation “at the level of phosphoglycerate and pyruvate kinase” and broad central carbon remodeling, but the provided excerpts do <strong>not</strong> report Pgk-specific proteomic abundances, fluxes, or mutant phenotypes for PP_4963.</td>
+<td>BES flux/omics excerpts (pause2024anaerobicglucoseuptake pages 9-11, weimer2024systemsbiologyof pages 12-14, weimer2024systemsbiologyof pages 1-2)</td>
+<td>Pause et al. 2024; Weimer et al. 2024</td>
+<td>https://doi.org/10.1111/1751-7915.14375; https://doi.org/10.1186/s12934-024-02509-8</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the verified identity, biochemical role, mechanistic features, pathway context, and key quantitative findings relevant to Pgk (PP_4963; UniProt Q88D64) in </em>Pseudomonas putida<em> KT2440. It is useful as a compact evidence map distinguishing direct Pgk-specific evidence from broader central-metabolism context.</em></p>
+<h3 id="8-key-evidence-gaps-and-what-remains-unresolved">8) Key evidence gaps and what remains unresolved</h3>
+<ul>
+<li><strong>Pgk-specific kinetics in <em>P. putida</em> KT2440</strong> (Km/kcat for 1,3-BPG, 3-PG, ADP/ATP; metal dependence) were not found in the retrieved sources; structural/mechanistic parameters used here come from general PGK literature. (rojaspirela2020phosphoglyceratekinasestructural pages 7-8, serimbetov2018thestructureand pages 26-32)</li>
+<li><strong>Direct localization assays</strong> (e.g., fractionation, fluorescent fusions) for Pgk (PP_4963) were not present in the retrieved excerpts; cytosolic action is inferred from pathway context. (poblete‐castro2017hostorganismpseudomonas media daeb7766, chen2024gnurrepressesthe pages 1-3)</li>
+<li><strong>Gene essentiality</strong> for pgk/PP_4963 in KT2440 was not obtained from accessible transposon/essentiality datasets in this run.</li>
+</ul>
+<h3 id="9-references-urls-and-publication-dates">9) References (URLs and publication dates)</h3>
+<ul>
+<li>Poblete-Castro et al. “Host organism: <em>Pseudomonas putida</em>.” (Nov 2017). https://doi.org/10.1002/9783527807796.ch8 (poblete‐castro2017hostorganismpseudomonas pages 1-3, poblete‐castro2017hostorganismpseudomonas media daeb7766)</li>
+<li>Poblete-Castro et al. “In-silico-driven metabolic engineering of <em>Pseudomonas putida</em> for enhanced production of PHAs.” <em>Metabolic Engineering</em> (Jan 2013). https://doi.org/10.1016/j.ymben.2012.10.004 (pobletecastro2013insilicodrivenmetabolicengineering pages 6-7)</li>
+<li>Rojas-Pirela et al. “Phosphoglycerate kinase: structural aspects and functions…” <em>Open Biology</em> (Nov 2020). https://doi.org/10.1098/rsob.200302 (rojaspirela2020phosphoglyceratekinasestructural pages 7-8, rojaspirela2020phosphoglyceratekinasestructural pages 8-9, rojaspirela2020phosphoglyceratekinasestructural pages 4-5)</li>
+<li>Nguyen et al. “The anoxic electrode-driven fructose catabolism of <em>P. putida</em> KT2440.” <em>Microbial Biotechnology</em> (Jun 2021). https://doi.org/10.1111/1751-7915.13862 (nguyen2021theanoxicelectrode‐driven pages 4-5)</li>
+<li>Chen et al. “GnuR represses the expression of glucose and gluconate catabolism in <em>P. putida</em> KT2440.” <em>Microbial Biotechnology</em> (Nov 2024). https://doi.org/10.1111/1751-7915.70059 (chen2024gnurrepressesthe pages 1-3)</li>
+<li>Pause et al. “Anaerobic glucose uptake in <em>P. putida</em> KT2440 in a bioelectrochemical system.” <em>Microbial Biotechnology</em> (Nov 2024). https://doi.org/10.1111/1751-7915.14375 (pause2024anaerobicglucoseuptake pages 9-11)</li>
+<li>Weimer et al. “Systems biology of electrogenic <em>Pseudomonas putida</em>… for enhanced 2-ketogluconate production.” <em>Microbial Cell Factories</em> (Sep 2024). https://doi.org/10.1186/s12934-024-02509-8 (weimer2024systemsbiologyof pages 1-2, weimer2024systemsbiologyof pages 12-14)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(poblete‐castro2017hostorganismpseudomonas pages 1-3): Ignacio Poblete‐Castro, José M. Borrero‐de Acuña, Pablo I. Nikel, Michael Kohlstedt, and Christoph Wittmann. Host organism: pseudomonas putida. ArXiv, pages 299-326, Nov 2017. URL: https://doi.org/10.1002/9783527807796.ch8, doi:10.1002/9783527807796.ch8. This article has 49 citations.</p>
+</li>
+<li>
+<p>(poblete‐castro2017hostorganismpseudomonas media daeb7766): Ignacio Poblete‐Castro, José M. Borrero‐de Acuña, Pablo I. Nikel, Michael Kohlstedt, and Christoph Wittmann. Host organism: pseudomonas putida. ArXiv, pages 299-326, Nov 2017. URL: https://doi.org/10.1002/9783527807796.ch8, doi:10.1002/9783527807796.ch8. This article has 49 citations.</p>
+</li>
+<li>
+<p>(serimbetov2018thestructureand pages 56-63): Z Serimbetov. The structure and dynamics of phosphoglycerate kinase along its catalytic cycle. Unknown journal, 2018.</p>
+</li>
+<li>
+<p>(rojaspirela2020phosphoglyceratekinasestructural pages 4-5): Maura Rojas-Pirela, Diego Andrade-Alviárez, Verónica Rojas, Ulrike Kemmerling, Ana J. Cáceres, Paul A. Michels, Juan Luis Concepción, and Wilfredo Quiñones. Phosphoglycerate kinase: structural aspects and functions, with special emphasis on the enzyme from kinetoplastea. Open Biology, Nov 2020. URL: https://doi.org/10.1098/rsob.200302, doi:10.1098/rsob.200302. This article has 91 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(serimbetov2018thestructureand pages 26-32): Z Serimbetov. The structure and dynamics of phosphoglycerate kinase along its catalytic cycle. Unknown journal, 2018.</p>
+</li>
+<li>
+<p>(rojaspirela2020phosphoglyceratekinasestructural pages 7-8): Maura Rojas-Pirela, Diego Andrade-Alviárez, Verónica Rojas, Ulrike Kemmerling, Ana J. Cáceres, Paul A. Michels, Juan Luis Concepción, and Wilfredo Quiñones. Phosphoglycerate kinase: structural aspects and functions, with special emphasis on the enzyme from kinetoplastea. Open Biology, Nov 2020. URL: https://doi.org/10.1098/rsob.200302, doi:10.1098/rsob.200302. This article has 91 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024gnurrepressesthe pages 1-3): Wenbo Chen, Rao Ma, Yong Feng, Yunzhu Xiao, Agnieszka Sekowska, Antoine Danchin, and Conghui You. Gnur represses the expression of glucose and gluconate catabolism in pseudomonas putida kt2440. Microbial Biotechnology, Nov 2024. URL: https://doi.org/10.1111/1751-7915.70059, doi:10.1111/1751-7915.70059. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pobletecastro2013insilicodrivenmetabolicengineering pages 6-7): Ignacio Poblete-Castro, Danielle Binger, Andre Rodrigues, Judith Becker, Vitor A.P. Martins dos Santos, and Christoph Wittmann. In-silico-driven metabolic engineering of pseudomonas putida for enhanced production of poly-hydroxyalkanoates. Metabolic engineering, 15:113-23, Jan 2013. URL: https://doi.org/10.1016/j.ymben.2012.10.004, doi:10.1016/j.ymben.2012.10.004. This article has 205 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nguyen2021theanoxicelectrode‐driven pages 4-5): Anh Vu Nguyen, Bin Lai, Lorenz Adrian, and Jens O. Krömer. The anoxic electrode‐driven fructose catabolism of pseudomonas putida kt2440. Microbial Biotechnology, 14:1784-1796, Jun 2021. URL: https://doi.org/10.1111/1751-7915.13862, doi:10.1111/1751-7915.13862. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pause2024anaerobicglucoseuptake pages 9-11): Laura Pause, Anna Weimer, Nicolas T. Wirth, Anh Vu Nguyen, Claudius Lenz, Michael Kohlstedt, Christoph Wittmann, Pablo I. Nikel, Bin Lai, and Jens O. Krömer. Anaerobic glucose uptake in pseudomonas putida kt2440 in a bioelectrochemical system. Microbial Biotechnology, Nov 2024. URL: https://doi.org/10.1111/1751-7915.14375, doi:10.1111/1751-7915.14375. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsbiologyof pages 1-2): Anna Weimer, Laura Pause, Fabian Ries, Michael Kohlstedt, Lorenz Adrian, Jens Krömer, Bin Lai, and Christoph Wittmann. Systems biology of electrogenic pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. Microbial Cell Factories, Sep 2024. URL: https://doi.org/10.1186/s12934-024-02509-8, doi:10.1186/s12934-024-02509-8. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 79-83): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineeringa pages 79-83): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(weimer2024systemsbiologyof pages 12-14): Anna Weimer, Laura Pause, Fabian Ries, Michael Kohlstedt, Lorenz Adrian, Jens Krömer, Bin Lai, and Christoph Wittmann. Systems biology of electrogenic pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. Microbial Cell Factories, Sep 2024. URL: https://doi.org/10.1186/s12934-024-02509-8, doi:10.1186/s12934-024-02509-8. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 101-105): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(rojaspirela2020phosphoglyceratekinasestructural pages 8-9): Maura Rojas-Pirela, Diego Andrade-Alviárez, Verónica Rojas, Ulrike Kemmerling, Ana J. Cáceres, Paul A. Michels, Juan Luis Concepción, and Wilfredo Quiñones. Phosphoglycerate kinase: structural aspects and functions, with special emphasis on the enzyme from kinetoplastea. Open Biology, Nov 2020. URL: https://doi.org/10.1098/rsob.200302, doi:10.1098/rsob.200302. This article has 91 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(weimer2024systemsmetabolicengineering pages 65-69): ALA Weimer. Systems metabolic engineering of electrogenic anaerobic pseudomonas putida for enhanced 2-ketogluconate production. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(weimer2024systemsbiologyof pages 10-12): Anna Weimer, Laura Pause, Fabian Ries, Michael Kohlstedt, Lorenz Adrian, Jens Krömer, Bin Lai, and Christoph Wittmann. Systems biology of electrogenic pseudomonas putida - multi-omics insights and metabolic engineering for enhanced 2-ketogluconate production. Microbial Cell Factories, Sep 2024. URL: https://doi.org/10.1186/s12934-024-02509-8, doi:10.1186/s12934-024-02509-8. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pgk-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000005 I have extracted Figure 8.1, which illustrates the biochemical pathways involved in glucose catabolism in *Pseudomonas putida* KT24" src="pgk-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>serimbetov2018thestructureand pages 26-32</li>
+<li>rojaspirela2020phosphoglyceratekinasestructural pages 7-8</li>
+<li>pobletecastro2013insilicodrivenmetabolicengineering pages 6-7</li>
+<li>chen2024gnurrepressesthe pages 1-3</li>
+<li>pause2024anaerobicglucoseuptake pages 9-11</li>
+<li>weimer2024systemsbiologyof pages 1-2</li>
+<li>weimer2024systemsbiologyof pages 12-14</li>
+<li>weimer2024systemsmetabolicengineering pages 101-105</li>
+<li>weimer2024systemsbiologyof pages 10-12</li>
+<li>serimbetov2018thestructureand pages 56-63</li>
+<li>rojaspirela2020phosphoglyceratekinasestructural pages 4-5</li>
+<li>weimer2024systemsmetabolicengineering pages 79-83</li>
+<li>weimer2024systemsmetabolicengineeringa pages 79-83</li>
+<li>rojaspirela2020phosphoglyceratekinasestructural pages 8-9</li>
+<li>weimer2024systemsmetabolicengineering pages 65-69</li>
+<li>https://doi.org/10.1002/9783527807796.ch8</li>
+<li>https://doi.org/10.1098/rsob.200302</li>
+<li>https://doi.org/10.1002/9783527807796.ch8;</li>
+<li>https://doi.org/10.1111/1751-7915.70059</li>
+<li>https://doi.org/10.1016/j.ymben.2012.10.004</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8</li>
+<li>https://doi.org/10.1111/1751-7915.14375;</li>
+<li>https://doi.org/10.1111/1751-7915.13862</li>
+<li>https://doi.org/10.1111/1751-7915.14375</li>
+<li>https://doi.org/10.1002/9783527807796.ch8,</li>
+<li>https://doi.org/10.1098/rsob.200302,</li>
+<li>https://doi.org/10.1111/1751-7915.70059,</li>
+<li>https://doi.org/10.1016/j.ymben.2012.10.004,</li>
+<li>https://doi.org/10.1111/1751-7915.13862,</li>
+<li>https://doi.org/10.1111/1751-7915.14375,</li>
+<li>https://doi.org/10.1186/s12934-024-02509-8,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88D64
+gene_symbol: pgk
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: Phosphoglycerate kinase (PGK; EC 2.7.2.3) is a conserved cytosolic enzyme of central carbon metabolism that catalyzes the reversible, Mg2+-dependent transfer of a phosphoryl group between 1,3-bisphosphoglycerate and ADP, yielding 3-phosphoglycerate and ATP. It is a two-domain hinge-bending enzyme in which the N-terminal domain binds the phosphoglycerate substrate and the C-terminal domain binds the adenine nucleotide; catalysis requires large domain closure to bring the two substrates into proximity. In the glycolytic direction the enzyme performs substrate-level phosphorylation to generate ATP, and in the gluconeogenic direction it runs in reverse to regenerate 1,3-bisphosphoglycerate. In Pseudomonas putida KT2440, where the classical Embden-Meyerhof-Parnas pathway is incomplete in the forward glycolytic direction (the organism lacks 6-phosphofructokinase) and glucose catabolism proceeds mainly via periplasmic oxidation and the Entner-Doudoroff pathway, Pgk operates in the lower segment of central carbon metabolism, contributing to gluconeogenesis and to glycolytic ATP generation from triose phosphates.
+existing_annotations:
+- term:
+    id: GO:0004618
+    label: phosphoglycerate kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Core molecular function. The enzyme is a member of the phosphoglycerate kinase family (Pfam PF00162; IPR001576) carrying EC 2.7.2.3 and the RHEA:14801 reaction, mapped via UniRule and InterPro2GO. This is the defining catalytic activity of the protein.
+    action: ACCEPT
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: PGK binds and produces/consumes ATP as part of its catalytic cycle; the C-terminal domain forms the adenine-nucleotide binding site. ATP binding is a well-supported supporting molecular function for this enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: PGK is a soluble cytosolic enzyme of central carbon metabolism, consistent with the UniProt subcellular location prediction. The more specific term cytosol (GO:0005829) is also annotated and is preferable.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Appropriate, more specific cytosolic localization for this soluble glycolytic/gluconeogenic enzyme. Consistent with pathway placement in the central carbon network; no experimental localization assay for the P. putida ortholog, but the inference is sound for a PGK-family enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: PGK catalyzes a reversible reaction shared by glycolysis and gluconeogenesis. In P. putida KT2440, where forward EMP glycolysis is incomplete (no Pfk), the gluconeogenic direction is biologically important, making this an accurate process annotation.
+    action: ACCEPT
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PGK performs the 1,3-bisphosphoglycerate to 3-phosphoglycerate step of glycolysis (UniPathway UPA00109), generating ATP by substrate-level phosphorylation. Standard and correct process annotation for this enzyme.
+    action: ACCEPT
+- term:
+    id: GO:0043531
+    label: ADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: ADP is a substrate/product of the PGK reaction and binds in the C-terminal nucleotide-binding domain. Well-supported supporting molecular function consistent with the catalyzed reaction.
+    action: ACCEPT
+core_functions:
+- description: Catalyzes the reversible Mg2+-dependent phosphoryl transfer between 1,3-bisphosphoglycerate and ADP to produce 3-phosphoglycerate and ATP, the seventh step of glycolysis and the corresponding step of gluconeogenesis.
+  supported_by:
+  - reference_id: GO_REF:0000120
+    supporting_text: EC 2.7.2.3 / RHEA:14801 reaction assigned via UniRule and InterPro2GO mapping of the phosphoglycerate kinase family (IPR001576, Pfam PF00162).
+  molecular_function:
+    id: GO:0004618
+    label: phosphoglycerate kinase activity
+  directly_involved_in:
+  - id: GO:0006096
+    label: glycolytic process
+  - id: GO:0006094
+    label: gluconeogenesis
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: KT2440 genome reference (Nelson et al. 2002, Environ Microbiol) establishing the locus/gene assignment.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

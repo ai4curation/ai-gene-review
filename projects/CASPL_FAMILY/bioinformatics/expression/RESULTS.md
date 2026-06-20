@@ -1,5 +1,6 @@
 ---
 title: "Poplar CASPL expression analysis — RESULTS (EBI Expression Atlas)"
+species: [POPTR, ARATH]
 ---
 
 # Poplar CASPL expression analysis — RESULTS (EBI Expression Atlas)

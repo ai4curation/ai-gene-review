@@ -97,204 +97,141 @@ review_batches:
 ---
 # Human Proteostasis Network Project
 
+## Bottom line
+
+We are using the **Human Proteostasis Network (PN) Annotation 4.3.11** workbook
+(3,123 genes, 4,000 role assignments across 9 branches) as a **scaffold,
+prioritization layer, and QA source** for GO curation — not as an annotation set
+to import. The workbook contains **no GO IDs**; it is a PN-native
+Branch/Class/Group/Type/Subtype taxonomy that overlaps GO inconsistently.
+
+So far the project has:
+
+- **Reviewed 320+ human genes** across the PN branches (chaperones,
+  translation/ribosome-QC, ER proteostasis, the UPS Cullin-RING ligases, and the
+  autophagy-lysosome receptors) — eight completed batches, with a ninth ~50-gene
+  batch in progress. See the [batch table](#review-progress).
+- **Built a complete curated PN→GO mapping** for the 2026-04-17 release: every
+  source code now resolves to `mapped`, `context_only`, or (most often)
+  `no_mapping`. See [mapping status](#current-mapping-completion-status).
+- **Projected mappings against human GOA**, yielding **1,093 candidate GO
+  additions** that feed manual rereview queues.
+- **Surfaced concrete curation fixes** — wrong localizations, pseudoenzyme
+  miscalls, adaptor-vs-catalyst corrections, and ontology gaps — that PN
+  prioritization led us to (see [Highlights](#highlights)).
+
+The deliverable is a **PN→GO bridge contract** (below): every PN row classified
+as GO-actionable, explicitly non-actionable, or queued as an ontology/evidence
+problem.
+
+## Highlights
+
+PN works best as a **prioritization layer**: it points AIGR at proteostasis genes
+whose existing GO annotations are stale, over-propagated, or mis-attributed. A
+representative case is the selective-autophagy receptor CALCOCO2/NDP52, where PN
+membership prompted a review that **removed the legacy PML-body localization**
+(revised by later imaging) while keeping the well-supported xenophagy/mitophagy
+receptor core. Other findings worth pulling out of the batch logs:
+
+**Wrong or over-propagated annotations removed/downgraded**
+
+- NBR1: REMOVE of an implausible IEA `mitochondrial intermembrane space`
+  localization on this cytosolic receptor.
+- RNF5 / RNF185: REMOVE of pathway-bleed-through IEA terms (`transmembrane
+  transport`, `ER mannose trimming`) on the ERAD E3s.
+- ERLIN2 plasma-membrane and MMGT1 legacy magnesium-transporter annotations
+  marked over-annotated.
+- FBXO21 `DNA binding` (a remote fold match) and FBXO43 `cellular response to
+  NGF` (an implausible ortholog transfer onto a meiotic APC/C inhibitor) — both
+  REMOVE.
+
+**Pseudoenzyme and adaptor-vs-catalyst corrections**
+
+- UBAC2: REMOVE of an over-propagated IBA serine-endopeptidase MF on this
+  rhomboid **pseudoprotease**.
+- **F-box substrate receptors** (CRL1/SCF): a recurring MODIFY/NEW replacing
+  catalytic `ubiquitin protein ligase activity` with **`GO:1990756`
+  ubiquitin-like ligase-substrate adaptor activity** — catalysis lives in the
+  RBX1 RING, not the F-box adaptor.
+- FBXO17: its ERAD/glycan term was over-annotated — experimentally it does
+  **not** bind high-mannose glycans (only FBXO2/FBXO6 do), despite sitting in the
+  lectin F-box subfamily.
+- FBXO5/EMI1 and FBXO43/EMI2 reframed as **APC/C inhibitors**, not productive SCF
+  receptors; GLMN and CAND2 modeled as CRL assembly regulators with no catalytic
+  activity.
+
+**Ontology gaps exposed** — receptor functions absent from GOA, added as NEW
+(QuickGO-verified): `GO:0034517` ribophagy, `GO:0160247` autophagy cargo adaptor
+activity, `GO:0035973` aggrephagy, `GO:0010508` positive regulation of autophagy.
+
+**Conservative rejections of over-broad PN projections** — a projection labelled
+"more specific than GOA" is not automatically a better assertion: TOMM20 (PN
+`protein import` broader than the existing route-specific term), HSPA8
+(aggrephagy rejected in favor of its better-supported CMA biology), and RAB7A
+(autophagosome-lysosome fusion rejected in favor of post-fusion maturation). More
+in [Using PN inside AIGR](#using-pn-inside-aigr-triage-qa).
+
+**Citation QA caught by review** — e.g. `PMID:23264731` (a microtubule study)
+mis-cited on both `SERP1` (removed; wrong gene) and `SRPRB` (left UNDECIDED);
+`SIAH1`'s `zinc ion binding` citation (`PMID:11863358`) flagged
+`WRONG_IDENTIFIER`.
+
 ## Background
 
 Proteostasis is used here in the broad systems sense: the cellular machinery that
 supports protein synthesis, folding, trafficking, quality control, sequestration,
 and degradation.
 
-The source resource analyzed in this project is the **Human Proteostasis Network
-Annotation 4.3.11** workbook together with three Proteostasis Consortium survey
-manuscripts:
+The source resource is the **Human Proteostasis Network Annotation 4.3.11**
+workbook (mapping/browser artifacts use the `2026-04-17` release) plus three
+Proteostasis Consortium survey manuscripts:
 
-- `MS1` introduces the overall PN framework and covers translation, folding,
-  transport, and organelle-specific proteostasis systems.
-- `MS2` covers the autophagy-lysosome pathway (`ALP`) and provides the most
-  detailed row-level notes and references in the current release.
-- `MS3` covers the ubiquitin-proteasome system (`UPS`) and explains the
-  domain-heavy inclusion and classification logic used for that branch.
+- `MS1` — overall PN framework: translation, folding, transport, organelle systems.
+- `MS2` — autophagy-lysosome pathway (`ALP`); most detailed row-level notes/refs.
+- `MS3` — ubiquitin-proteasome system (`UPS`); domain-heavy inclusion logic.
 
-The mapping and browser artifacts now use the `2026-04-17` PN `4.3.11`
-workbook. Earlier 2024 release artifacts are kept only as provenance for
-individual curation comments that were started against that release.
+The Consortium workbook defines a curated proteostasis **membership and role
+taxonomy**; it does **not** define a GO-ready annotation set. This project asks:
+what biological claims do PN rows actually make; which are close to GO terms,
+which imply ontology gaps, and which are systems metadata; and which entries are
+especially useful, curious, or suspect for AIGR? Within the project the PN
+resource provides systems architecture and candidate roles, unfolded protein
+binding is treated as one mechanistic subdomain, and AIGR uses PN as a scaffold,
+QA source, and prioritization layer.
 
-## Overview
+## Review progress
 
-The Proteostasis Consortium workbook and papers define a curated human proteostasis
-membership and role taxonomy. They do **not** define a GO-ready annotation set.
+Genes are reviewed in branch-themed batches selected from the projected candidate
+additions report. Per-gene metadata is tracked in
+[review_batches.tsv](PROTEOSTASIS/review_batches.tsv); the full selection
+rationale and notable calls for each batch live in the linked selection notes.
 
-This project asks three main questions:
+| Batch | PN branch / theme | Genes | Selection notes |
+|-------|-------------------|------:|-----------------|
+| [#1217](https://github.com/ai4curation/ai-gene-review/pull/1217) (merged 2026-06-02) | First PN pass (mixed) | 50 | — |
+| `2026-06-03` *(in progress)* | Projected candidate additions, batch 2 | 50 | — |
+| `2026-06-06` | Candidate additions batch 3 (V-ATPase, ER folding/QC, autophagy receptors) | 20 | [batch3](PROTEOSTASIS/batch3_selection_notes.md) |
+| `2026-06-07` | Batch 4 (V-ATPase isoforms, mito/ER chaperones, collagen, CRL/UPS adaptors) | 30 | [batch4](PROTEOSTASIS/batch4_selection_notes.md) |
+| `2026-06-07b` | Chaperone & co-chaperone network (DNAJ/HSP40, small HSPs, HSP70/90 co-chaperones, FKBPs, ER PPIases) | 50 | [batch5](PROTEOSTASIS/batch5_selection_notes.md) |
+| `2026-06-07c` | Co-translational QC (RQC & ribosome rescue, UFMylation, NMD, N-terminal acetylation) | 51 | [batch6](PROTEOSTASIS/batch6_selection_notes.md) |
+| `2026-06-11` | **ER proteostasis** (SRP/translocon, EMC & GET insertion, glycoprotein QC, ERAD machinery) | 50 | [batch7](PROTEOSTASIS/batch7_selection_notes.md) |
+| `2026-06-13` | **UPS** Cullin-RING ligases (44 F-box receptors, CRL4 core, assembly regulators) | 50 | [batch8](PROTEOSTASIS/batch8_selection_notes.md) |
+| `2026-06-14` | **ALP** selective-autophagy receptors (SQSTM1/NBR1/OPTN, TBK1 axis, TRIMs, tagging E3s) | 20 | [batch9](PROTEOSTASIS/batch9_selection_notes.md) |
 
-- What biological claims do the PN annotations actually make?
-- Which PN statements are close to GO terms, which imply ontology gaps, and which
-  are better treated as systems metadata?
-- Which workbook entries look especially useful, curious, or suspect in the
-  context of AIGR?
+Action-mix totals are recorded per batch where computed (counts sum to each
+batch's annotation total): ER batch (`1347`) ran `783` ACCEPT / `476`
+KEEP_AS_NON_CORE / `75` MARK_AS_OVER_ANNOTATED / `8` REMOVE / `3` MODIFY / `1`
+NEW / `1` UNDECIDED; UPS batch (`1590`) ran `649` ACCEPT / `878`
+KEEP_AS_NON_CORE / `23` MARK_AS_OVER_ANNOTATED / `19` MODIFY / `11` NEW / `8`
+UNDECIDED / `2` REMOVE; ALP batch (`1222`) ran `505` ACCEPT / `690`
+KEEP_AS_NON_CORE / `19` MARK_AS_OVER_ANNOTATED / `5` NEW / `2` UNDECIDED / `1`
+REMOVE. The dominant pattern across UPS/ALP is elevating a specific
+**adaptor/receptor MF** (substrate-adaptor activity; ubiquitin + LIR/Atg8
+binding) over bare `protein binding`, which is uniformly kept non-core. Mega-hubs
+(`HSPA5`/BiP, `HSP90AA1/AB1`, `HSP90B1`/GRP94, `HUWE1`, `OGT`, the UPR sensors
+`ERN1`/`EIF2AK3`) are deferred to dedicated single-gene reviews.
 
-Within this project:
-
-- the PN resource provides systems architecture and candidate roles
-- unfolded protein binding is treated as one mechanistic subdomain within proteostasis
-- AIGR uses PN as a scaffold, a QA source, and a prioritization layer
-
-See:
-
-- [Priority genes](PROTEOSTASIS/priority_genes.tsv)
-- [Reviewed gene batches](PROTEOSTASIS/review_batches.tsv)
-- [PN tree browser](PROTEOSTASIS/pn.html)
-- [ALP mapping set](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml)
-- [Chaperone mapping set](PROTEOSTASIS/mappings/chaperone_systems.yaml)
-- [ER proteostasis mapping set](PROTEOSTASIS/mappings/er_proteostasis.yaml)
-- [Extracellular proteostasis mapping set](PROTEOSTASIS/mappings/extracellular_proteostasis.yaml)
-- [Mitochondrial proteostasis mapping set](PROTEOSTASIS/mappings/mitochondrial_proteostasis.yaml)
-- [Nuclear proteostasis mapping set](PROTEOSTASIS/mappings/nuclear_proteostasis.yaml)
-- [PN regulation mapping set](PROTEOSTASIS/mappings/pn_regulation.yaml)
-- [Translation mapping set](PROTEOSTASIS/mappings/translation.yaml)
-- [UPS mapping set](PROTEOSTASIS/mappings/ubiquitin_proteasome_system.yaml)
-- [Project-local tests](PROTEOSTASIS/tests)
-- [Project-local reports](PROTEOSTASIS/reports)
-- [Report-local PN tree browser](PROTEOSTASIS/reports/pn_taxonomy_tree/pn_taxonomy_tree.html)
-- [Mapping scrutiny report](PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv)
-- [Unusual propagation report](PROTEOSTASIS/reports/pn_mapping_audit/unusual_propagations.tsv)
-- [Mapping export workbook](PROTEOSTASIS/reports/pn_mappings/pn_mappings.xlsx)
-- [UPB gene list](UNFOLDED_PROTEIN_BINDING/genes.csv)
-- [Unfolded Protein Binding project](UNFOLDED_PROTEIN_BINDING.md)
-- [Ribosome Quality Control project](RIBOSOME_QUALITY_CONTROL.md)
-- [Integrated Stress Response project](INTEGRATED_STRESS_RESPONSE.md)
-- [ER-phagy project](ER_PHAGY.md)
-
-## Gene Review Tracking
-
-The most recent PN review batch is
-[`#1217`](https://github.com/ai4curation/ai-gene-review/pull/1217),
-merged on `2026-06-02`. It reviewed `50` human proteostasis-network genes:
-`49` new review YAMLs plus a refresh of the existing `PIK3C3` review. The
-gene-level metadata for this batch is tracked in
-[review_batches.tsv](PROTEOSTASIS/review_batches.tsv).
-
-The current PN review batch, `proteostasis-batch-2026-06-03`, was selected from
-the projected candidate additions report and has `50` human gene-review PR rows
-in the same sidecar. Merged PRs record `merged_at`; open PRs keep that field
-empty until merged.
-
-Subsequent candidate-addition batches continued the rereview queue:
-`proteostasis-batch-2026-06-06` (`20` genes), `proteostasis-batch-2026-06-07`
-(`30` genes), and `proteostasis-batch-2026-06-07b` (`50` genes — the
-protein-folding chaperone & co-chaperone network: the DNAJ/HSP40 J-domain family,
-small heat-shock proteins, HSP70/HSP90 hub co-chaperones such as STUB1/CHIP,
-STIP1/HOP, SGTA and SERPINH1/HSP47, FKBP immunophilin co-chaperones, and ER
-oxidative-folding/PPIase enzymes including P4HB/PDI, ERO1A/B, ERP27/29 and
-PPIB). The mega-hubs `HSPA5`, `HSP90AA1` and `HSP90AB1` were deliberately
-deferred to dedicated single-gene reviews (50+ GOA terms each). See
-[batch5_selection_notes.md](PROTEOSTASIS/batch5_selection_notes.md).
-
-`proteostasis-batch-2026-06-07c` (`51` reviewed) covers the Translation
-branch's co-translational quality-control machinery: ribosome-associated quality
-control and ribosome rescue (LTN1, NEMF, ZNF598, PELO/HBS1L, GTPBP1/2, the
-makorin and RNF14/RNF25 E3s, GIGYF1/2–4EHP, RACK1, TRIP4, MAP3K20/ZAK, GCN1,
-NPLOC4/UFD1), the UFMylation cascade (UFM1, UBA5, UFC1, UFL1, UFSP1/2, DDRGK1),
-NMD surveillance (UPF1/2/3A/3B), and nascent-chain N-terminal acetylation (HYPK,
-NAA10/15/25/30/35/38/40), plus ribosome recycling (DENR/MCTS1/EIF2D/GTPBP6/
-EEF2K). `HUWE1` and `OGT` were deferred as mega/pleiotropic. The batch totals
-`51` because the `USP21` symbol resolved to the synonym gene `USP25` (also a
-valid ERAD-associated DUB); both were reviewed. See
-[batch6_selection_notes.md](PROTEOSTASIS/batch6_selection_notes.md).
-
-`proteostasis-batch-2026-06-11` (`50` reviewed) covers the **ER proteostasis
-branch**, walking the full ER lifecycle of a secretory/membrane protein:
-co-translational SRP targeting (`SRP9/19/68/72`, `SRPRB`), Sec61-translocon
-association and signal-peptide processing (`SEC62/63`, `SEC11A/C`,
-`SPCS1/2/3`, `SERP1/2`), ER membrane-protein insertion by the EMC
-(`EMC1/2/3/4/6/7/8/9/10`, `MMGT1`/EMC5) and GET/TRC tail-anchor pathway
-(`GET1/3/4`), ER glycoprotein-folding quality control via the ERAD
-mannosidases and cargo lectins (`EDEM1/2/3`, `MAN1B1`, `LMAN1/2`, `LMAN1L`,
-`LMAN2L`), ER oxidative folding and collagen prolyl hydroxylation
-(`P3H1/2`, `P4HA1/2/3`, `TXNDC11/12/16`), and the ERAD ubiquitin machinery and
-membrane cofactors (`RNF5/185/170`, `FAF2`, `UBAC2`, `ERLIN1/2`). All `50`
-review YAMLs validate; across `1347` reviewed annotations the action mix was
-`783` ACCEPT, `476` KEEP_AS_NON_CORE, `75` MARK_AS_OVER_ANNOTATED, `8` REMOVE,
-`3` MODIFY, `1` UNDECIDED, `1` NEW. Notable curation calls: REMOVE of
-pathway-bleed-through IEA terms (`transmembrane transport` / `ER mannose
-trimming` on the RNF5/RNF185 ERAD E3s), REMOVE of an over-propagated IBA serine
-endopeptidase MF on the `UBAC2` rhomboid **pseudoprotease**, MARK_AS_OVER_ANNOTATED
-of `ERLIN2` plasma-membrane and `MMGT1` legacy magnesium-transporter
-annotations, and handling of negated (NOT) historical mannosidase annotations on
-`EDEM1/EDEM2`. A shared caveat flagged for human follow-up: `PMID:23264731`
-(MTR120/KIAA1383 microtubule study) is cited for a `cytoplasmic microtubule`
-IDA on both `SERP1` (removed; full text confirms wrong gene) and `SRPRB`
-(left UNDECIDED where full text was unavailable). The mega-hub ER chaperones
-`HSPA5`/BiP, `HSP90B1`/GRP94, and the `ERN1`/`EIF2AK3` UPR sensors were deferred to
-dedicated reviews. See
-[batch7_selection_notes.md](PROTEOSTASIS/batch7_selection_notes.md).
-
-`proteostasis-batch-2026-06-13` (`50` reviewed) moves into the **Ubiquitin–
-Proteasome System (UPS) branch**, covering the **Cullin–RING ligase (CRL)
-substrate-recognition & assembly modules**: the `44` F-box substrate receptors
-of the SCF/CRL1 complex grouped by recognition module — leucine-rich-repeat
-`FBXL3/5/6/7/8/12/13/14/15/16/17/18/20/22`, WD40 `FBXW2/4/5/7/8/9/10/12`, and
-"other" `FBXO2/5/6/7/8/10/15/16/17/21/22/25/27/30/33/34/36/39/40/41/43/47` — plus
-the CRL4 core/receptors (`DDB1` adaptor scaffold, `DDB2` and `DTL`/CDT2 DCAF
-receptors, `DDA1` stabilizing subunit) and the CRL assembly regulators `CAND2`
-(CAND1 paralog) and `GLMN`/glomulin. All `50` review YAMLs pass schema, term
-(label + verbatim-quote), and best-practices validation; across `1590` reviewed
-annotations the action mix was `649` ACCEPT, `878` KEEP_AS_NON_CORE, `23`
-MARK_AS_OVER_ANNOTATED, `19` MODIFY, `11` NEW, `8` UNDECIDED, `2` REMOVE. The
-dominant curation pattern is the recurring **MODIFY/NEW that replaces a catalytic
-`ubiquitin protein ligase activity` / `ubiquitin-protein transferase activity`
-(IEA/NAS) on an F-box receptor with `GO:1990756 ubiquitin-like ligase-substrate
-adaptor activity`** — catalysis resides in the RBX1 RING, not the F-box adaptor —
-while bare `protein binding` was uniformly kept non-core in favor of the
-substrate-adaptor function. Notable calls: the **lectin/FBA F-box subfamily**
-(`FBXO2/6/17/27`) was framed by carbohydrate/high-mannose-glycan binding feeding
-ERAD/glycoprotein catabolism, but `FBXO17`'s ERAD term was MARK_AS_OVER_ANNOTATED
-because the experimental characterization shows it does **not** bind high-mannose
-glycans (only `FBXO2/FBXO6` do); the non-canonical "F-box" members `FBXO5`/EMI1
-and `FBXO43`/EMI2 were framed as **APC/C inhibitors** (not productive SCF
-receptors), with SCF-receptor IEA/NAS propagations marked non-core/over-annotated;
-`CAND2` and `GLMN` were modeled as CRL **assembly regulators/inhibitors** with no
-catalytic ligase activity assigned (`GLMN` core = `ubiquitin-protein transferase
-inhibitor activity` + RBX1 binding). The `2` REMOVE calls are both clearly-wrong
-IEA over-propagations — `FBXO21` `DNA binding` (a remote YccV/hemimethylated-DNA
-fold match, not a function) and `FBXO43` `cellular response to NGF` (an
-implausible Ensembl ortholog transfer onto a gonad-restricted meiotic APC/C
-inhibitor). The mega/pleiotropic UPS hubs `HUWE1` and `OGT` were left out of
-scope. See [batch8_selection_notes.md](PROTEOSTASIS/batch8_selection_notes.md).
-
-`proteostasis-batch-2026-06-14` (`20` reviewed) moves into the
-**Autophagy–Lysosome Pathway (ALP) branch** — the best-row-level-supported PN
-branch — covering the **selective autophagy cargo-recognition** machinery: the
-core selective autophagy receptors (`SQSTM1`/p62, `NBR1`, `OPTN`, `CCDC50`,
-the ribophagy receptor `NUFIP1`, and the ER-phagy receptor `RETREG2`/FAM134A),
-the TBK1 activation axis that phosphorylates those receptors (`TBK1`, `AZI2`/
-NAP1, `TANK`), the TRIM-family receptors/regulators (`TRIM5`, `TRIM13`,
-`TRIM16`, `TRIM17`), the ubiquitin-tagging E3 ligases that generate the
-autophagy signal (`SIAH1`, `RNF41`/NRDP1, `RNF166`, `LRSAM1`), and the
-selective-autophagy regulators `MEFV`/pyrin, `NLRX1`, and `MAP1S`. All `20`
-review YAMLs pass schema, term (label + verbatim-quote), and best-practices
-validation; across `1222` reviewed annotations the action mix was `690`
-KEEP_AS_NON_CORE, `505` ACCEPT, `19` MARK_AS_OVER_ANNOTATED, `5` NEW, `2`
-UNDECIDED, `1` REMOVE. The dominant curation pattern is the recurring elevation
-of the **selective-autophagy cargo-adaptor/receptor MF** (ubiquitin binding +
-LIR/Atg8 binding) over bare `protein binding`, which was uniformly kept non-core
-(the receptor hubs carry ~70 IPI `protein binding` entries each). Notable calls:
-genuine catalytic RING E3s (SIAH1, RNF41, RNF166, LRSAM1, TRIM5/13/17) kept
-catalytic ligase MF as core, whereas the **RING-less** TRIMs were handled
-conservatively — `TRIM16` ACCEPTed only the experimentally-supported atypical
-B-box autoubiquitination and `MEFV`/pyrin's IBA ubiquitin-ligase MF (no
-functional RING) was MARK_AS_OVER_ANNOTATED; `NEW`/proposed terms verified via
-QuickGO were added for receptor functions absent from GOA (`GO:0034517`
-ribophagy, `GO:0160247` autophagy cargo adaptor activity, `GO:0035973`
-aggrephagy, `GO:0010508` positive regulation of autophagy); disputed-direction
-electronic NF-κB-regulation terms on `NLRX1` and `AZI2` were flagged
-(MARK_AS_OVER_ANNOTATED / non-core) rather than removed; the single REMOVE is an
-implausible IEA `mitochondrial intermembrane space` localization on the
-cytosolic receptor `NBR1`; and `SIAH1`'s `zinc ion binding` IDA was ACCEPTed but
-its citation (PMID:11863358) flagged `WRONG_IDENTIFIER` in `reference_review`.
-The mega/pleiotropic hub `HUWE1` and a dedicated mitophagy/CMA effector set
-(DNM1L, MFN1, VDAC1, USP30, MARCHF5, MUL1, PARL, PGAM5, etc.) were left for a
-future batch. See [batch9_selection_notes.md](PROTEOSTASIS/batch9_selection_notes.md).
-
-## What The PN Resource Actually Contains
+## What the PN resource actually contains
 
 The workbook is a row-per-role annotation table, not a gene-centered review file.
 
@@ -590,7 +527,7 @@ This is stricter than a periodic mapping sync. It makes every PN row either
 actionable for GO, explicitly non-actionable for GO, or queued as an ontology or
 evidence problem.
 
-## AIGR Triage Opportunities
+## Using PN inside AIGR: triage & QA
 
 The PN resource is useful inside AIGR primarily as a **triage and QA layer**.
 
@@ -713,3 +650,34 @@ The PN project is broader:
 - Convert the mapping layer into the explicit PN-GO bridge contract described
   above, including actionability status, evidence basis, directness, exceptions,
   ontology gaps, and PN feedback.
+
+## Resources & links
+
+**Browse the data**
+
+- [PN tree browser](PROTEOSTASIS/pn.html) · [report-local copy](PROTEOSTASIS/reports/pn_taxonomy_tree/pn_taxonomy_tree.html)
+- [Priority genes](PROTEOSTASIS/priority_genes.tsv) · [reviewed gene batches](PROTEOSTASIS/review_batches.tsv)
+- [Mapping export workbook](PROTEOSTASIS/reports/pn_mappings/pn_mappings.xlsx)
+- [Project-local reports](PROTEOSTASIS/reports) · [tests](PROTEOSTASIS/tests)
+
+**Mapping sets** (one per branch):
+[ALP](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml) ·
+[Chaperone](PROTEOSTASIS/mappings/chaperone_systems.yaml) ·
+[ER](PROTEOSTASIS/mappings/er_proteostasis.yaml) ·
+[Extracellular](PROTEOSTASIS/mappings/extracellular_proteostasis.yaml) ·
+[Mitochondrial](PROTEOSTASIS/mappings/mitochondrial_proteostasis.yaml) ·
+[Nuclear](PROTEOSTASIS/mappings/nuclear_proteostasis.yaml) ·
+[PN regulation](PROTEOSTASIS/mappings/pn_regulation.yaml) ·
+[Translation](PROTEOSTASIS/mappings/translation.yaml) ·
+[UPS](PROTEOSTASIS/mappings/ubiquitin_proteasome_system.yaml)
+
+**QA reports:**
+[mapping scrutiny](PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv) ·
+[unusual propagations](PROTEOSTASIS/reports/pn_mapping_audit/unusual_propagations.tsv)
+
+**Related projects:**
+[Unfolded Protein Binding](UNFOLDED_PROTEIN_BINDING.md)
+([gene list](UNFOLDED_PROTEIN_BINDING/genes.csv)) ·
+[Ribosome Quality Control](RIBOSOME_QUALITY_CONTROL.md) ·
+[Integrated Stress Response](INTEGRATED_STRESS_RESPONSE.md) ·
+[ER-phagy](ER_PHAGY.md)

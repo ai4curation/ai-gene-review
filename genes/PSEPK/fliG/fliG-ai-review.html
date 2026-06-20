@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fliG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fliG</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88ET5" target="_blank" class="term-link">
+                        Q88ET5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fliG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88ET5" data-a="DESCRIPTION: FliG is a core component of the bacterial flagella..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FliG is a core component of the bacterial flagellar motor switch complex (C-ring), which assembles together with FliM and FliN on the cytoplasmic face of the MS-ring (FliF) at the base of the flagellar basal body. FliG is a peripheral, cytoplasmic-side membrane protein organized into three domains: an N-terminal domain that docks onto the FliF MS-ring, a middle domain that binds FliM, and a C-terminal domain bearing the conserved &#34;torque helix&#34; that interacts electrostatically with the cytoplasmic loops of the MotA/MotB-type stator units. Through these stator contacts FliG couples ion-motive-force-driven stator activity to rotation of the rotor, making it the key element that transmits torque to the flagellum. FliG also mediates directional switching of flagellar rotation: as the output of the chemotaxis signaling pathway, phosphorylated CheY binds the C-ring (FliM/FliN) and triggers large conformational rearrangements in FliG that reorient its stator-facing surface, switching rotation between counterclockwise and clockwise states. The protein is therefore essential for both flagellum-dependent motility and the chemotactic control of swimming direction. In Pseudomonas putida KT2440 the gene (PP_4368) lies within the flagellar gene cluster and is co-transcribed in the fliEFG operon.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003774" target="_blank" class="term-link">
+                                    GO:0003774
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeletal motor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET5" data-a="GO:0003774" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Molecular function annotation derived from the FliG InterPro signature (IPR000090). GO:0003774 is defined to include &#34;torque resulting in ... rotation of a flagellum&#34; powered by an electrochemical proton gradient, which fits the canonical FliG role: FliG forms the rotor face of the flagellar motor and, via its C-terminal torque helix, couples ion-motive-force-driven stator (MotA/MotB) activity to rotation. This is the standard, biologically appropriate MF annotation for FliG-family proteins and represents a core function of the gene product.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Term definition explicitly covers flagellar-rotation torque generation, and FliG is the rotor/torque-transmitting switch protein. Consistent with conserved FliG mechanism (PMID:31452860). Core molecular function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET5" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localization annotation from the UniProt Subcellular Location mapping. FliG is a peripheral membrane protein on the cytoplasmic side of the inner (plasma) membrane, so this is not incorrect, but it is a generic location. The more specific and informative location for FliG is the flagellar basal body / C-ring (captured by GO:0009425 and GO:0009288).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but non-specific; FliG associates with the cytoplasmic side of the inner membrane as part of the basal body. The basal body annotation is more informative and is the core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET5" data-a="GO:0006935" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliG is the motor-switch output of the chemotaxis pathway: phosphorylated CheY binds the C-ring and FliG undergoes conformational changes that switch rotation direction, biasing the random-walk/run-tumble behavior. Involvement in chemotaxis is therefore well supported by conserved mechanism. This is a downstream/effector role (the actual flagellum-dependent motility and switching are the more proximal functions), so it is retained as a non-core biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FliG mediates the motor-switching output of chemotaxis (CheY-P -&gt; C-ring -&gt; FliG reorientation), but its core process is flagellar rotation/motility; chemotaxis is the higher-level process it serves.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009288" target="_blank" class="term-link">
+                                    GO:0009288
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET5" data-a="GO:0009288" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliG is a structural component of the bacterial flagellum (the C-ring of the basal body). Correct cellular component annotation, consistent with family assignment and conserved architecture.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FliG is a bona fide flagellar structural protein; accurate location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009425" target="_blank" class="term-link">
+                                    GO:0009425
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum basal body</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET5" data-a="GO:0009425" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliG assembles into the C-ring (switch complex) on the cytoplasmic face of the MS-ring at the base of the basal body. This is the most specific and accurate localization for FliG and represents its core cellular component.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Specific, accurate localization to the basal body C-ring; core component location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071973" target="_blank" class="term-link">
+                                    GO:0071973
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum-dependent cell motility</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET5" data-a="GO:0071973" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliG is essential for flagellar rotation and hence for flagellum-dependent motility; it couples stator activity to torque generation in the rotor. This is a core biological process for the gene product, well supported by conserved FliG function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Flagellum-dependent motility is the primary biological process FliG enables, via torque transmission and rotation. Core process.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Rotor/switch component of the flagellar motor that couples ion-motive-force-driven stator activity to torque generation and rotation of the flagellum.</h3>
+                <span class="vote-buttons" data-g="Q88ET5" data-a="FUNCTION: Rotor/switch component of the flagellar motor that..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003774" target="_blank" class="term-link">
+                            cytoskeletal motor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071973" target="_blank" class="term-link">
+                                bacterial-type flagellum-dependent cell motility
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009425" target="_blank" class="term-link">
+                                bacterial-type flagellum basal body
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31452860" target="_blank" class="term-link">
+                                PMID:31452860
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">FliG forms the C-ring with FliM and FliN, docks on the FliF MS-ring via its N-terminal domain, and its C-terminal torque helix interacts electrostatically with the MotA/MotB stator to generate torque for flagellar rotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Directional switch of the flagellar motor: as the chemotaxis output, FliG undergoes conformational rearrangements (triggered by CheY-P binding to the C-ring) that reorient its stator-facing surface and switch rotation between CCW and CW states.</h3>
+                <span class="vote-buttons" data-g="Q88ET5" data-a="FUNCTION: Directional switch of the flagellar motor: as the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                chemotaxis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009425" target="_blank" class="term-link">
+                                bacterial-type flagellum basal body
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31452860" target="_blank" class="term-link">
+                                PMID:31452860
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Directional switching of the flagellar motor is controlled by conformational changes in the C-ring switch complex (FliG/FliM/FliN) in response to CheY-P, with FliG reorienting its interaction with the stator.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31452860" target="_blank" class="term-link">
+                            PMID:31452860
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Directional Switching Mechanism of the Bacterial Flagellar Motor</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34859548" target="_blank" class="term-link">
+                            PMID:34859548
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptional organization and regulation of the Pseudomonas putida flagellar system</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does deletion of fliG in P. putida KT2440 produce a non-motile (non-flagellated or paralyzed) phenotype, as predicted from conserved FliG function?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ET5" data-a="Q: Does deletion of fliG in P. putida KT2440 produce ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is FliG function in P. putida modulated by c-di-GMP effectors (e.g., FlgZ/PP4397) acting as a motor brake on the C-ring or stator?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ET5" data-a="Q: Is FliG function in P. putida modulated by c-di-GM..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct an in-frame fliG deletion and complementation in P. putida KT2440 and assay swimming/swarming motility and flagellation by electron microscopy.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ET5" data-a="EXPERIMENT: Construct an in-frame fliG deletion and complement..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-purification / bacterial two-hybrid assays to confirm FliG-FliF, FliG-FliM, and FliG-MotA interactions in P. putida.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88ET5" data-a="EXPERIMENT: Co-purification / bacterial two-hybrid assays to c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fliG-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ET5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">33 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-06-11T17:06:21.587487</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fliG-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="fliG-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000021 The structural basis of flagellar switching is illustrated through several key figures: - **FliG Domain Movement**: Figure 2 (speci</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-flig-uniprot-q88et5-locus-pp_4368-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>fliG</strong> (UniProt: <strong>Q88ET5</strong>; locus <strong>PP_4368</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-identity-verification-critical-disambiguation">1) Target identity verification (critical disambiguation)</h3>
+<p>The target provided (UniProt Q88ET5; gene symbol <strong>fliG</strong>; organism <em>Pseudomonas putida</em> strain KT2440) is consistent with the canonical bacterial <strong>flagellar motor switch protein FliG</strong>, a conserved cytoplasmic rotor/switch component of the flagellar basal body. In <em>P. putida</em> KT2440, strand-specific RNA-seq shows a continuous transcription unit annotated as <strong>fliEFG</strong>, indicating that <strong>fliE–fliF–fliG</strong> are co-transcribed as an operon within the flagellar gene cluster (supporting that “fliG” here refers to a flagellar motor gene rather than an unrelated protein) (leal‐morales2022transcriptionalorganizationand pages 4-5). Additional transcript mapping/RT-PCR analysis supports an operon boundary/termination at the <strong>fliG–fliH</strong> intergenic region (leal‐morales2022transcriptionalorganizationand pages 5-6). </p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-what-is-flig">2.1 What is FliG?</h4>
+<p><strong>FliG</strong> is a core subunit of the flagellar <strong>C-ring</strong> (also called the <strong>switch complex</strong>) that controls (i) <strong>torque transmission</strong> from the stator to the rotor and (ii) <strong>directional switching</strong> of flagellar rotation as an output of chemotaxis signaling. In the conserved architecture, <strong>FliG, FliM, and FliN</strong> assemble on the cytoplasmic face of the basal body MS-ring (FliF) and collectively act as the rotor/switch device (minamino2019directionalswitchingmechanism pages 1-2, bouteiller2021pseudomonasflagellageneralities pages 4-5). </p>
+<h4 id="22-cellular-localization">2.2 Cellular localization</h4>
+<p>FliG is a <strong>cytoplasmic, membrane-proximal</strong> protein localized to the <strong>cell pole</strong> at the flagellar basal body, where it assembles into the C-ring adjacent to the inner membrane/MS-ring (minamino2019directionalswitchingmechanism pages 1-2, bouteiller2021pseudomonasflagellageneralities pages 4-5). </p>
+<h4 id="23-domain-organization-and-conserved-functional-surfaces">2.3 Domain organization and conserved functional surfaces</h4>
+<p>Mechanistic work in model organisms establishes that FliG contains three major domains: an <strong>N-terminal domain (FliG_N)</strong> that interfaces with the MS-ring protein FliF, a <strong>middle domain (FliG_M)</strong> that binds FliM, and a <strong>C-terminal domain (FliG_C)</strong> that contains the “<strong>torque helix</strong>” implicated in stator interactions and torque generation/switching (minamino2019directionalswitchingmechanism pages 2-3). This domain organization is consistent with the user-provided InterPro assignments (FliG_N/M/C and motor-switch-related signatures) and the conserved role of the FliG family in flagellar motors.</p>
+<h3 id="3-biological-role-pathway-context-and-interaction-partners-with-emphasis-on-p-putida">3) Biological role, pathway context, and interaction partners (with emphasis on <em>P. putida</em>)</h3>
+<h4 id="31-pathway-context-flagellar-motor-chemotaxis-output">3.1 Pathway context: flagellar motor + chemotaxis output</h4>
+<p>The flagellar motor is powered by ion motive force through stator units (e.g., MotA/MotB-type complexes) that interact with the rotor. Reviews summarize that electrostatic interactions between stator components and FliG drive rotation, and the motor’s direction is controlled by chemotaxis signaling via CheY-P binding to C-ring components (nakamura2024structureanddynamics pages 1-3, minamino2019directionalswitchingmechanism pages 1-2). In <em>Pseudomonas</em>, motility outputs are further integrated with second-messenger signaling (c-di-GMP) and transcriptional cascades controlling flagellar gene expression (jimenezfernandez2016complexinterplaybetween pages 1-2, wirebrand2018pp4397flgzprovidesthe pages 1-2).</p>
+<h4 id="32-directlikely-physical-interaction-partners-of-p-putida-flig-inference-from-conserved-mechanism">3.2 Direct/likely physical interaction partners of <em>P. putida</em> FliG (inference from conserved mechanism)</h4>
+<p>Based on conserved C-ring architecture and motor mechanics, the principal interaction partners expected for <em>P. putida</em> FliG include:<br />
+- <strong>FliF (MS-ring)</strong>: FliG is required at the MS/C-ring interface and binds FliF with 1:1 stoichiometry in model systems (minamino2019directionalswitchingmechanism pages 2-3).<br />
+- <strong>FliM and FliN (switch complex)</strong>: FliG forms the C-ring together with FliM/FliN and provides the scaffold for switching and chemotaxis output (minamino2019directionalswitchingmechanism pages 1-2, minamino2019directionalswitchingmechanism pages 2-3).<br />
+- <strong>MotA/MotB-type stator proteins</strong>: stator–rotor coupling occurs through interactions between MotA cytoplasmic loops/domains and the FliG torque helix (nakamura2024structureanddynamics pages 1-3, minamino2019directionalswitchingmechanism pages 2-3).</p>
+<p>In addition, recent work on <strong>polar flagellation</strong> provides a conserved assembly interaction relevant to <em>P. putida</em>: FlhF (an SRP-type GTPase implicated in polar flagellum placement) can bind the C-ring protein <strong>FliG</strong> via FlhF’s N-terminus (demonstrated in <em>Shewanella putrefaciens</em>), recruiting a FlhF–FliG complex to the cell pole (via HubP) and helping capture FliF to promote MS-ring formation (arroyoperez2024aconservedcellpole pages 2-3). The same study reports relevance across polar-flagellated bacteria including <em>Pseudomonas putida</em> (though the specific FlhF–FliG binding experiment in that excerpt is not shown directly for <em>P. putida</em>) (arroyoperez2024aconservedcellpole pages 2-3).</p>
+<h4 id="33-regulatory-context-in-p-putida-transcriptional-hierarchy-and-operon-architecture">3.3 Regulatory context in <em>P. putida</em>: transcriptional hierarchy and operon architecture</h4>
+<p><em>P. putida</em> flagellar genes are organized as a large cluster with multiple operons. RNA-seq-based mapping identifies <strong>fliEFG</strong> as a continuous transcriptional region/operon (leal‐morales2022transcriptionalorganizationand pages 4-5) and supports termination at <strong>fliG–fliH</strong> as an operon boundary (leal‐morales2022transcriptionalorganizationand pages 5-6).</p>
+<p>At the systems level, <em>P. putida</em> motility and lifestyle switching are governed by a transcriptional network centered on <strong>FleQ</strong> (a master regulator of flagellar biogenesis) and c-di-GMP signaling; disruption of fleQ causes strong defects in flagellar motility and affects biofilm-related phenotypes (jimenezfernandez2016complexinterplaybetween pages 1-2). Screening of promoters in <em>P. putida</em> identified multiple FleQ-regulated promoters in the flagellar/chemotaxis cluster, supporting that the flagellar gene cluster (and thus operons such as fliEFG) lie within the FleQ-controlled program (jimenezfernandez2016complexinterplaybetween pages 10-13).</p>
+<p>Post-translational regulation relevant to FliG-containing motors is also described for <em>P. putida</em>: c-di-GMP signaling can modulate motility via PilZ-domain “motor brake” proteins; in <em>P. putida</em> KT2440, PP4397/FlgZ genetically links c-di-GMP signaling (from PP2258) to altered swimming/swarming motility, and general models for PilZ effectors include interactions with <strong>FliG/FliM</strong> and/or stator components to reduce torque (wirebrand2018pp4397flgzprovidesthe pages 1-2).</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-cryo-em-structures-resolve-how-flig-enables-bidirectional-switching-2024">4.1 Cryo-EM structures resolve how FliG enables bidirectional switching (2024)</h4>
+<p>High-resolution cryo-EM structures of intact flagellar basal bodies in different rotational conformations provide a modern structural basis for FliG function. A 2024 <em>Nature Microbiology</em> study reports large conformational rearrangements during switching, including <strong>~180° movements of both N- and C-terminal domains of FliG</strong> between CCW and CW conformations, and—when integrated with stator structures—supports a model where the stator shifts position (outside vs inside of the C-ring) to accomplish bidirectional rotation with unidirectional ion flow (johnson2024structuralbasisof pages 7-10). The associated figure/model panels showing this domain movement and stator relocation were retrieved for visual confirmation (johnson2024structuralbasisof media e0abbb26).</p>
+<p>A second 2024 <em>Nature Microbiology</em> study likewise reports conformational changes that include a <strong>~180° shift of FliF/FliG domains</strong> and describes structures in multiple functional states, advancing the mechanistic understanding of torque transmission and switching (singh2024cryoemstructuresreveal pages 9-10).</p>
+<h4 id="42-updated-motorswitch-stoichiometry-and-remodeling-2023">4.2 Updated motor/switch stoichiometry and remodeling (2023)</h4>
+<p>A 2023 <em>mBio</em> study used fluorescence-based counting with <strong>FliG copy number (34) as a reference</strong> to quantify C-ring remodeling, reporting average <strong>FliM copy numbers of ~45 in CW-locked motors and ~58 in CCW-locked motors</strong> (tao2023precisemeasurementof pages 1-2). The authors interpret this as adaptive remodeling involving “extra” FliM (and linked FliN) subunits, while treating FliG as a stable reference component (tao2023precisemeasurementof pages 1-2).</p>
+<h4 id="43-current-authoritative-synthesis-20232024">4.3 Current authoritative synthesis (2023–2024)</h4>
+<p>Recent authoritative reviews summarize that the flagellar motor consists of a rotor and stators where each stator functions as an ion channel complex converting ion flux to mechanical work, and that chemotaxis signaling (CheY-P binding to the C-ring) regulates directional switching; these reviews highlight that cryo-EM advances have deepened mechanistic insight into assembly, rotation, and switching (nakamura2024structureanddynamics pages 1-3, minamino2019directionalswitchingmechanism pages 1-2, minamino2023structureassemblyand pages 12-13).</p>
+<h3 id="5-current-applications-and-real-world-implementations-how-flig-matters-in-practice">5) Current applications and real-world implementations (how fliG matters in practice)</h3>
+<p>Although fliG itself is a structural/mechanical gene rather than a metabolic enzyme, it is central to <strong>motility</strong>, which is widely exploited or targeted in real-world contexts:</p>
+<ol>
+<li>
+<p><strong>Biofilm vs motile lifestyle control (biotechnology and environmental fitness):</strong> In <em>P. putida</em>, the transcriptional regulator FleQ and c-di-GMP are described as coordinating the transition between motility and sessility/biofilm development, with FleQ disruption causing strong motility defects and changes in surface colonization traits (jimenezfernandez2016complexinterplaybetween pages 1-2). Because FliG is an essential motor/switch component within the flagellar machinery, it is a key downstream “hardware” determinant of whether these regulatory programs can produce functional motility.</p>
+</li>
+<li>
+<p><strong>Second-messenger control of motor output (“motor brake” concept):</strong> In <em>P. putida</em>, PP4397/FlgZ provides a c-di-GMP-responsive link to altered motility, consistent with broader models where c-di-GMP effectors can reduce motor torque through interactions with motor components including FliG-containing switch machinery (wirebrand2018pp4397flgzprovidesthe pages 1-2). This provides a conceptual basis for engineering or manipulating motility output without deleting core structural genes.</p>
+</li>
+<li>
+<p><strong>Polar flagellum biogenesis and spatial organization:</strong> Assembly factors that localize to the pole (e.g., FlhF systems) can interface with C-ring components such as FliG to coordinate where the motor forms, which is a key consideration when engineering polar-flagellated bacteria (arroyoperez2024aconservedcellpole pages 2-3).</p>
+</li>
+</ol>
+<h3 id="6-statistics-and-quantitative-data-recent-and-authoritative">6) Statistics and quantitative data (recent and authoritative)</h3>
+<ul>
+<li><strong>C-ring stoichiometry/remodeling:</strong> FliG copy number used as a reference is <strong>34 per motor</strong> in the 2023 fluorescence-counting study; FliM counts are <strong>~45 (CW-locked)</strong> and <strong>~58 (CCW-locked)</strong>, implying state-dependent remodeling primarily of FliM (tao2023precisemeasurementof pages 1-2).</li>
+<li><strong>Approximate C-ring composition (review-level):</strong> A Pseudomonas-focused review summarizes the C-ring as composed of approximately <strong>~25 FliG, 34 FliM, and ~110 FliN</strong> subunits (noting these are approximate/legacy values and may differ from newer measurements) (bouteiller2021pseudomonasflagellageneralities pages 4-5).</li>
+</ul>
+<h3 id="7-evidence-summary-table">7) Evidence summary table</h3>
+<p>The following table consolidates the key functional-annotation claims and the best supporting sources.</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Key points</th>
+<th>Best supporting citations (pqac ids)</th>
+<th>URL/date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td><strong>UniProt Q88ET5 = FliG / PP_4368 in <em>Pseudomonas putida</em> KT2440</strong>; annotated as the <strong>flagellar motor switch protein FliG</strong>. In KT2440, <strong>fliE-fliF-fliG are co-transcribed</strong> as the <strong>fliEFG operon</strong>, supporting assignment to the conserved flagellar motor/switch module rather than an unrelated protein family.</td>
+<td>(leal‐morales2022transcriptionalorganizationand pages 4-5, leal‐morales2022transcriptionalorganizationand pages 5-6)</td>
+<td>Leal-Morales et al., <em>Environmental Microbiology</em> (2022-12), https://doi.org/10.1111/1462-2920.15857</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>FliG is a conserved <strong>C-ring rotor/switch protein</strong> with <strong>N-, middle-, and C-terminal domains</strong>. The <strong>N-terminus binds FliF/MS-ring</strong>, the <strong>middle domain binds FliM</strong>, and the <strong>C-terminal region contains the torque helix</strong> involved in stator coupling and switching. This matches the UniProt domain architecture for Q88ET5 (FliG family; FliG_N, FliG_M, FliG_C / motor-switch domains).</td>
+<td>(minamino2019directionalswitchingmechanism pages 2-3, bouteiller2021pseudomonasflagellageneralities pages 4-5)</td>
+<td>Minamino et al., <em>Computational and Structural Biotechnology Journal</em> (2019-07), https://doi.org/10.1016/j.csbj.2019.07.020; Bouteiller et al., <em>IJMS</em> (2021-03), https://doi.org/10.3390/ijms22073337</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>FliG is <strong>cytoplasmic and membrane-proximal</strong>, forming the <strong>cytoplasmic C-ring on the inner face of the MS-ring</strong> at the base of the polar flagellum. Function is therefore at the <strong>cell pole / basal body rotor</strong>, not in the periplasm or extracellular space.</td>
+<td>(minamino2019directionalswitchingmechanism pages 1-2, bouteiller2021pseudomonasflagellageneralities pages 4-5)</td>
+<td>Minamino et al., <em>CSBJ</em> (2019-07), https://doi.org/10.1016/j.csbj.2019.07.020; Bouteiller et al., <em>IJMS</em> (2021-03), https://doi.org/10.3390/ijms22073337</td>
+</tr>
+<tr>
+<td>Complex membership</td>
+<td>FliG is a core component of the <strong>flagellar C-ring / switch complex</strong> together with <strong>FliM and FliN</strong>, functionally linked to <strong>FliF (MS-ring)</strong> and the <strong>MotA/MotB-type stator</strong>. In pseudomonads, this places PP_4368 in the <strong>flagellar motor and chemotaxis output pathway</strong>.</td>
+<td>(minamino2019directionalswitchingmechanism pages 1-2, minamino2019directionalswitchingmechanism pages 2-3, wirebrand2018pp4397flgzprovidesthe pages 1-2)</td>
+<td>Minamino et al., <em>CSBJ</em> (2019-07), https://doi.org/10.1016/j.csbj.2019.07.020; Wirebrand et al., <em>Scientific Reports</em> (2018-08), https://doi.org/10.1038/s41598-018-29785-w</td>
+</tr>
+<tr>
+<td>Key interactions</td>
+<td>Conserved interactions inferred from structure/function: <strong>FliG–FliF</strong> (assembly of rotor/MS interface), <strong>FliG–FliM</strong> (C-ring architecture and switching), and <strong>FliG–MotA</strong> electrostatic coupling for torque generation. In polar-flagellated bacteria, <strong>FlhF can bind FliG</strong> during early polar flagellum assembly; this was demonstrated in <em>Shewanella</em> and discussed as relevant to <em>P. putida</em> polar flagellation. c-di-GMP motor-brake proteins (YcgR/FlgZ-like systems) can target FliG-containing motors.</td>
+<td>(minamino2019directionalswitchingmechanism pages 2-3, johnson2024structuralbasisof pages 7-10, arroyoperez2024aconservedcellpole pages 2-3, wirebrand2018pp4397flgzprovidesthe pages 1-2)</td>
+<td>Johnson et al., <em>Nature Microbiology</em> (2024-03), https://doi.org/10.1038/s41564-024-01630-z; Arroyo-Pérez et al., <em>eLife</em> (2024-12), https://doi.org/10.7554/eLife.93004.3; Wirebrand et al., <em>Scientific Reports</em> (2018-08), https://doi.org/10.1038/s41598-018-29785-w</td>
+</tr>
+<tr>
+<td>Regulation/operon</td>
+<td>In KT2440, <strong>fliEFG</strong> is a defined transcriptional unit; RNA-seq/RT-PCR support an <strong>operon boundary at the fliG-fliH intergenic region</strong>. The broader flagellar cluster is controlled by a <strong>FleQ/σ54-centered hierarchy</strong> in <em>P. putida</em>, so fliG belongs to the <strong>flagellar biogenesis regulon</strong> even though these excerpts do not assign a dedicated promoter directly upstream of fliG alone.</td>
+<td>(leal‐morales2022transcriptionalorganizationand pages 4-5, leal‐morales2022transcriptionalorganizationand pages 5-6, jimenezfernandez2016complexinterplaybetween pages 1-2, jimenezfernandez2016complexinterplaybetween pages 10-13)</td>
+<td>Leal-Morales et al., <em>Environmental Microbiology</em> (2022-12), https://doi.org/10.1111/1462-2920.15857; Jiménez-Fernández et al., <em>PLOS ONE</em> (2016-09-16), https://doi.org/10.1371/journal.pone.0163142</td>
+</tr>
+<tr>
+<td>Recent structural insights (2023-2024)</td>
+<td>2023–2024 cryo-EM studies strongly refine FliG annotation: <strong>FliG N- and C-terminal domains undergo ~180° movements between CCW and CW states</strong>, and the <strong>stator docking position shifts from the outside to the inside of the C-ring</strong> across switching states. These data support FliG as the key <strong>bidirectional gear/torque-transmission element</strong> of the rotor.</td>
+<td>(johnson2024structuralbasisof pages 7-10, singh2024cryoemstructuresreveal pages 9-10, johnson2024structuralbasisof media e0abbb26)</td>
+<td>Johnson et al., <em>Nature Microbiology</em> (2024-03), https://doi.org/10.1038/s41564-024-01630-z; Singh et al., <em>Nature Microbiology</em> (2024-04), https://doi.org/10.1038/s41564-024-01674-1</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>Recent quantitative work on the switch complex supports <strong>~34 FliG molecules per C-ring</strong> as a reference stoichiometry in enteric model systems; FliM averages were <strong>45 (CW)</strong> and <strong>58 (CCW)</strong>, indicating adaptive remodeling occurs mainly in FliM/FliN while FliG is comparatively stable. Review sources also summarize older approximate counts of <strong>~25 FliG, 34 FliM, ~110 FliN</strong>, but newer work favors <strong>34 FliG</strong> as the better current estimate. These numbers are not <em>P. putida</em>-specific but inform annotation of the conserved FliG family.</td>
+<td>(tao2023precisemeasurementof pages 1-2, tao2023precisemeasurementof pages 9-11, bouteiller2021pseudomonasflagellageneralities pages 4-5)</td>
+<td>Tao et al., <em>mBio</em> (2023-03-22), https://doi.org/10.1128/mbio.00189-23; Bouteiller et al., <em>IJMS</em> (2021-03), https://doi.org/10.3390/ijms22073337</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the most relevant functional annotation points for </em>Pseudomonas putida<em> KT2440 FliG (UniProt Q88ET5; PP_4368), including identity verification, localization, operon context, conserved interactions, and 2023–2024 structural insights. It is useful as a compact evidence map linking species-specific transcriptional data with broader mechanistic knowledge of FliG.</em></p>
+<h3 id="8-limitations-and-confidence-of-the-annotation">8) Limitations and confidence of the annotation</h3>
+<ul>
+<li><strong>High confidence (conserved function):</strong> FliG’s core role as a C-ring rotor/switch component that couples to stators for torque generation and participates in directional switching is strongly supported by structural and mechanistic literature (including 2023–2024 cryo-EM) (johnson2024structuralbasisof pages 7-10, singh2024cryoemstructuresreveal pages 9-10, minamino2019directionalswitchingmechanism pages 2-3).</li>
+<li><strong>Moderate confidence (<em>P. putida</em>-specific mechanistic details):</strong> The operon context and presence in the <em>P. putida</em> flagellar cluster is directly supported by transcriptional mapping (leal‐morales2022transcriptionalorganizationand pages 4-5, leal‐morales2022transcriptionalorganizationand pages 5-6). However, the retrieved <em>P. putida</em> papers in this run provide limited direct, gene-specific perturbation phenotypes for <strong>fliG</strong> itself (e.g., a clean deletion mutant phenotype was not captured in the available excerpts), so functional annotation for PP_4368 is chiefly based on conserved mechanism plus <em>P. putida</em> cluster/regulatory context (leal‐morales2022transcriptionalorganizationand pages 4-5, jimenezfernandez2016complexinterplaybetween pages 1-2).</li>
+</ul>
+<h3 id="9-recommended-functional-annotation-actionable-statement">9) Recommended functional annotation (actionable statement)</h3>
+<p><strong>fliG (PP_4368; UniProt Q88ET5)</strong> encodes a <strong>cytoplasmic flagellar motor switch/rotor protein</strong> that assembles with FliM and FliN into the <strong>C-ring</strong> at the <strong>cell pole</strong> basal body, couples electrostatically to stator complexes (Mot proteins) to transmit torque, and undergoes large conformational rearrangements during <strong>CCW↔CW switching</strong> controlled by chemotaxis signaling (CheY-P binding to the C-ring). In <em>P. putida</em> KT2440, fliG is expressed as part of the <strong>fliEFG operon</strong> within the flagellar cluster and is embedded in the FleQ/c-di-GMP regulatory architecture that coordinates motility with biofilm-associated lifestyles (leal‐morales2022transcriptionalorganizationand pages 4-5, leal‐morales2022transcriptionalorganizationand pages 5-6, johnson2024structuralbasisof pages 7-10, jimenezfernandez2016complexinterplaybetween pages 1-2).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand pages 4-5): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leal‐morales2022transcriptionalorganizationand pages 5-6): Antonio Leal‐Morales, Marta Pulido‐Sánchez, Aroa López‐Sánchez, and Fernando Govantes. Transcriptional organization and regulation of the <i>pseudomonas putida</i> flagellar system. Environmental Microbiology, 24:137-157, Dec 2022. URL: https://doi.org/10.1111/1462-2920.15857, doi:10.1111/1462-2920.15857. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minamino2019directionalswitchingmechanism pages 1-2): Tohru Minamino, Miki Kinoshita, and Keiichi Namba. Directional switching mechanism of the bacterial flagellar motor. Computational and Structural Biotechnology Journal, 17:1075-1081, Jul 2019. URL: https://doi.org/10.1016/j.csbj.2019.07.020, doi:10.1016/j.csbj.2019.07.020. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bouteiller2021pseudomonasflagellageneralities pages 4-5): Mathilde Bouteiller, Charly Dupont, Yvann Bourigault, Xavier Latour, Corinne Barbey, Yoan Konto-Ghiorghi, and Annabelle Merieau. Pseudomonas flagella: generalities and specificities. International Journal of Molecular Sciences, 22:3337, Mar 2021. URL: https://doi.org/10.3390/ijms22073337, doi:10.3390/ijms22073337. This article has 148 citations.</p>
+</li>
+<li>
+<p>(minamino2019directionalswitchingmechanism pages 2-3): Tohru Minamino, Miki Kinoshita, and Keiichi Namba. Directional switching mechanism of the bacterial flagellar motor. Computational and Structural Biotechnology Journal, 17:1075-1081, Jul 2019. URL: https://doi.org/10.1016/j.csbj.2019.07.020, doi:10.1016/j.csbj.2019.07.020. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nakamura2024structureanddynamics pages 1-3): Shuichi Nakamura and Tohru Minamino. Structure and dynamics of the bacterial flagellar motor complex. Biomolecules, 14:1488, Nov 2024. URL: https://doi.org/10.3390/biom14121488, doi:10.3390/biom14121488. This article has 25 citations.</p>
+</li>
+<li>
+<p>(jimenezfernandez2016complexinterplaybetween pages 1-2): Alicia Jiménez-Fernández, Aroa López-Sánchez, Lorena Jiménez-Díaz, Blanca Navarrete, Patricia Calero, Ana Isabel Platero, and Fernando Govantes. Complex interplay between fleq, cyclic diguanylate and multiple σ factors coordinately regulates flagellar motility and biofilm development in pseudomonas putida. PLOS ONE, 11:e0163142, Sep 2016. URL: https://doi.org/10.1371/journal.pone.0163142, doi:10.1371/journal.pone.0163142. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wirebrand2018pp4397flgzprovidesthe pages 1-2): Lisa Wirebrand, Sofia Österberg, Aroa López-Sánchez, Fernando Govantes, and Victoria Shingler. Pp4397/flgz provides the link between pp2258 c-di-gmp signalling and altered motility in pseudomonas putida. Scientific Reports, Aug 2018. URL: https://doi.org/10.1038/s41598-018-29785-w, doi:10.1038/s41598-018-29785-w. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arroyoperez2024aconservedcellpole pages 2-3): Erick Eligio Arroyo-Pérez, John C. Hook, Alejandra Alvarado, Stephan Wimmi, Timo Glatter, K. Thormann, and S. Ringgaard. A conserved cell-pole determinant organizes proper polar flagellum formation. Dec 2024. URL: https://doi.org/10.7554/elife.93004.3, doi:10.7554/elife.93004.3. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenezfernandez2016complexinterplaybetween pages 10-13): Alicia Jiménez-Fernández, Aroa López-Sánchez, Lorena Jiménez-Díaz, Blanca Navarrete, Patricia Calero, Ana Isabel Platero, and Fernando Govantes. Complex interplay between fleq, cyclic diguanylate and multiple σ factors coordinately regulates flagellar motility and biofilm development in pseudomonas putida. PLOS ONE, 11:e0163142, Sep 2016. URL: https://doi.org/10.1371/journal.pone.0163142, doi:10.1371/journal.pone.0163142. This article has 61 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johnson2024structuralbasisof pages 7-10): Steven Johnson, Justin C. Deme, Emily J. Furlong, Joseph J. E. Caesar, Fabienne F. V. Chevance, Kelly T. Hughes, and Susan M. Lea. Structural basis of directional switching by the bacterial flagellum. Nature microbiology, 9:1282-1292, Mar 2024. URL: https://doi.org/10.1038/s41564-024-01630-z, doi:10.1038/s41564-024-01630-z. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johnson2024structuralbasisof media e0abbb26): Steven Johnson, Justin C. Deme, Emily J. Furlong, Joseph J. E. Caesar, Fabienne F. V. Chevance, Kelly T. Hughes, and Susan M. Lea. Structural basis of directional switching by the bacterial flagellum. Nature microbiology, 9:1282-1292, Mar 2024. URL: https://doi.org/10.1038/s41564-024-01630-z, doi:10.1038/s41564-024-01630-z. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singh2024cryoemstructuresreveal pages 9-10): Prashant K. Singh, Pankaj Sharma, Oshri Afanzar, Margo H. Goldfarb, Elena Maklashina, Michael Eisenbach, Gary Cecchini, and T. M. Iverson. Cryoem structures reveal how the bacterial flagellum rotates and switches direction. Nature Microbiology, 9:1271-1281, Apr 2024. URL: https://doi.org/10.1038/s41564-024-01674-1, doi:10.1038/s41564-024-01674-1. This article has 53 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tao2023precisemeasurementof pages 1-2): Antai Tao, Guangzhe Liu, Rongjing Zhang, and Junhua Yuan. Precise measurement of the stoichiometry of the adaptive bacterial flagellar switch. Apr 2023. URL: https://doi.org/10.1128/mbio.00189-23, doi:10.1128/mbio.00189-23. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(minamino2023structureassemblyand pages 12-13): Tohru Minamino and Miki Kinoshita. Structure, assembly, and function of flagella responsible for bacterial locomotion. EcoSal Plus, Dec 2023. URL: https://doi.org/10.1128/ecosalplus.esp-0011-2023, doi:10.1128/ecosalplus.esp-0011-2023. This article has 57 citations.</p>
+</li>
+<li>
+<p>(tao2023precisemeasurementof pages 9-11): Antai Tao, Guangzhe Liu, Rongjing Zhang, and Junhua Yuan. Precise measurement of the stoichiometry of the adaptive bacterial flagellar switch. Apr 2023. URL: https://doi.org/10.1128/mbio.00189-23, doi:10.1128/mbio.00189-23. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fliG-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000021 The structural basis of flagellar switching is illustrated through several key figures: - **FliG Domain Movement**: Figure 2 (speci" src="fliG-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>minamino2019directionalswitchingmechanism pages 2-3</li>
+<li>arroyoperez2024aconservedcellpole pages 2-3</li>
+<li>jimenezfernandez2016complexinterplaybetween pages 1-2</li>
+<li>jimenezfernandez2016complexinterplaybetween pages 10-13</li>
+<li>johnson2024structuralbasisof pages 7-10</li>
+<li>singh2024cryoemstructuresreveal pages 9-10</li>
+<li>tao2023precisemeasurementof pages 1-2</li>
+<li>bouteiller2021pseudomonasflagellageneralities pages 4-5</li>
+<li>minamino2019directionalswitchingmechanism pages 1-2</li>
+<li>nakamura2024structureanddynamics pages 1-3</li>
+<li>minamino2023structureassemblyand pages 12-13</li>
+<li>tao2023precisemeasurementof pages 9-11</li>
+<li>https://doi.org/10.1111/1462-2920.15857</li>
+<li>https://doi.org/10.1016/j.csbj.2019.07.020;</li>
+<li>https://doi.org/10.3390/ijms22073337</li>
+<li>https://doi.org/10.1038/s41598-018-29785-w</li>
+<li>https://doi.org/10.1038/s41564-024-01630-z;</li>
+<li>https://doi.org/10.7554/eLife.93004.3;</li>
+<li>https://doi.org/10.1111/1462-2920.15857;</li>
+<li>https://doi.org/10.1371/journal.pone.0163142</li>
+<li>https://doi.org/10.1038/s41564-024-01674-1</li>
+<li>https://doi.org/10.1128/mbio.00189-23;</li>
+<li>https://doi.org/10.1111/1462-2920.15857,</li>
+<li>https://doi.org/10.1016/j.csbj.2019.07.020,</li>
+<li>https://doi.org/10.3390/ijms22073337,</li>
+<li>https://doi.org/10.3390/biom14121488,</li>
+<li>https://doi.org/10.1371/journal.pone.0163142,</li>
+<li>https://doi.org/10.1038/s41598-018-29785-w,</li>
+<li>https://doi.org/10.7554/elife.93004.3,</li>
+<li>https://doi.org/10.1038/s41564-024-01630-z,</li>
+<li>https://doi.org/10.1038/s41564-024-01674-1,</li>
+<li>https://doi.org/10.1128/mbio.00189-23,</li>
+<li>https://doi.org/10.1128/ecosalplus.esp-0011-2023,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88ET5
+gene_symbol: fliG
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  FliG is a core component of the bacterial flagellar motor switch complex (C-ring),
+  which assembles together with FliM and FliN on the cytoplasmic face of the MS-ring
+  (FliF) at the base of the flagellar basal body. FliG is a peripheral, cytoplasmic-side
+  membrane protein organized into three domains: an N-terminal domain that docks onto
+  the FliF MS-ring, a middle domain that binds FliM, and a C-terminal domain bearing
+  the conserved &#34;torque helix&#34; that interacts electrostatically with the cytoplasmic
+  loops of the MotA/MotB-type stator units. Through these stator contacts FliG couples
+  ion-motive-force-driven stator activity to rotation of the rotor, making it the key
+  element that transmits torque to the flagellum. FliG also mediates directional switching
+  of flagellar rotation: as the output of the chemotaxis signaling pathway, phosphorylated
+  CheY binds the C-ring (FliM/FliN) and triggers large conformational rearrangements in
+  FliG that reorient its stator-facing surface, switching rotation between counterclockwise
+  and clockwise states. The protein is therefore essential for both flagellum-dependent
+  motility and the chemotactic control of swimming direction. In Pseudomonas putida KT2440
+  the gene (PP_4368) lies within the flagellar gene cluster and is co-transcribed in the
+  fliEFG operon.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:31452860
+  title: Directional Switching Mechanism of the Bacterial Flagellar Motor
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Citation-integrity fix: this reference was originally entered as PMID:31413904, which
+      actually resolves to an unrelated social-science paper (&#34;Using Mixed Methods to Examine
+      Perceptions and Willingness to Participate in Biospecimen...&#34;) and was a hallucinated/wrong
+      identifier. The intended source is Minamino, Kinoshita &amp; Namba, &#34;Directional Switching
+      Mechanism of the Bacterial Flagellar Motor&#34; (Comput Struct Biotechnol J 2019;17:1075-1081,
+      doi:10.1016/j.csbj.2019.07.020), an authoritative review of FliG domain architecture
+      (N/M/C), FliG-FliF/FliM/MotA interactions, and the role of FliG in torque generation and
+      directional switching. The correct PMID was recovered from the DOI via doi_to_pmid and
+      independently verified against PubMed (PMID:31452860 -&gt; matching title/DOI). The
+      WRONG_IDENTIFIER code records that the original PMID was incorrect; the replacement
+      PMID:31452860 is VERIFIED on-topic. full_text_unavailable set on supported_by snippets
+      paraphrasing this abstract-only review.
+- id: PMID:34859548
+  title: Transcriptional organization and regulation of the Pseudomonas putida flagellar system
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Citation-integrity fix: this reference was originally entered as PMID:36256818,
+      which actually resolves to an unrelated paper (&#34;Bacterial catabolism of
+      acetovanillone...&#34;) and was a wrong identifier. The intended source is
+      Leal-Morales et al., &#34;Transcriptional organization and regulation of the
+      Pseudomonas putida flagellar system&#34; (Environ Microbiol 2022;24:137-157,
+      doi:10.1111/1462-2920.15857), which establishes that in P. putida KT2440
+      fliE-fliF-fliG are co-transcribed as the fliEFG operon within the flagellar
+      cluster, confirming gene identity/context for PP_4368. The correct PMID was
+      recovered from the DOI via doi_to_pmid and independently verified against
+      PubMed (PMID:34859548 -&gt; matching title/DOI). The WRONG_IDENTIFIER code
+      records that the original PMID was incorrect; the replacement PMID:34859548
+      is VERIFIED on-topic.
+existing_annotations:
+- term:
+    id: GO:0003774
+    label: cytoskeletal motor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Molecular function annotation derived from the FliG InterPro signature (IPR000090).
+      GO:0003774 is defined to include &#34;torque resulting in ... rotation of a flagellum&#34;
+      powered by an electrochemical proton gradient, which fits the canonical FliG role:
+      FliG forms the rotor face of the flagellar motor and, via its C-terminal torque
+      helix, couples ion-motive-force-driven stator (MotA/MotB) activity to rotation. This
+      is the standard, biologically appropriate MF annotation for FliG-family proteins and
+      represents a core function of the gene product.
+    action: ACCEPT
+    reason: &gt;-
+      Term definition explicitly covers flagellar-rotation torque generation, and FliG is
+      the rotor/torque-transmitting switch protein. Consistent with conserved FliG mechanism
+      (PMID:31452860). Core molecular function.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localization annotation from the UniProt Subcellular Location mapping. FliG is a
+      peripheral membrane protein on the cytoplasmic side of the inner (plasma) membrane,
+      so this is not incorrect, but it is a generic location. The more specific and
+      informative location for FliG is the flagellar basal body / C-ring (captured by
+      GO:0009425 and GO:0009288).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate but non-specific; FliG associates with the cytoplasmic side of the inner
+      membrane as part of the basal body. The basal body annotation is more informative
+      and is the core localization.
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FliG is the motor-switch output of the chemotaxis pathway: phosphorylated CheY binds
+      the C-ring and FliG undergoes conformational changes that switch rotation direction,
+      biasing the random-walk/run-tumble behavior. Involvement in chemotaxis is therefore
+      well supported by conserved mechanism. This is a downstream/effector role (the actual
+      flagellum-dependent motility and switching are the more proximal functions), so it is
+      retained as a non-core biological process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      FliG mediates the motor-switching output of chemotaxis (CheY-P -&gt; C-ring -&gt; FliG
+      reorientation), but its core process is flagellar rotation/motility; chemotaxis is the
+      higher-level process it serves.
+- term:
+    id: GO:0009288
+    label: bacterial-type flagellum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      FliG is a structural component of the bacterial flagellum (the C-ring of the basal
+      body). Correct cellular component annotation, consistent with family assignment and
+      conserved architecture.
+    action: ACCEPT
+    reason: FliG is a bona fide flagellar structural protein; accurate location.
+- term:
+    id: GO:0009425
+    label: bacterial-type flagellum basal body
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      FliG assembles into the C-ring (switch complex) on the cytoplasmic face of the MS-ring
+      at the base of the basal body. This is the most specific and accurate localization for
+      FliG and represents its core cellular component.
+    action: ACCEPT
+    reason: Specific, accurate localization to the basal body C-ring; core component location.
+- term:
+    id: GO:0071973
+    label: bacterial-type flagellum-dependent cell motility
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FliG is essential for flagellar rotation and hence for flagellum-dependent motility;
+      it couples stator activity to torque generation in the rotor. This is a core biological
+      process for the gene product, well supported by conserved FliG function.
+    action: ACCEPT
+    reason: &gt;-
+      Flagellum-dependent motility is the primary biological process FliG enables, via
+      torque transmission and rotation. Core process.
+core_functions:
+- description: &gt;-
+    Rotor/switch component of the flagellar motor that couples ion-motive-force-driven
+    stator activity to torque generation and rotation of the flagellum.
+  supported_by:
+  - reference_id: PMID:31452860
+    full_text_unavailable: true
+    supporting_text: &gt;-
+      FliG forms the C-ring with FliM and FliN, docks on the FliF MS-ring via its N-terminal
+      domain, and its C-terminal torque helix interacts electrostatically with the MotA/MotB
+      stator to generate torque for flagellar rotation.
+  molecular_function:
+    id: GO:0003774
+    label: cytoskeletal motor activity
+  directly_involved_in:
+  - id: GO:0071973
+    label: bacterial-type flagellum-dependent cell motility
+  locations:
+  - id: GO:0009425
+    label: bacterial-type flagellum basal body
+- description: &gt;-
+    Directional switch of the flagellar motor: as the chemotaxis output, FliG undergoes
+    conformational rearrangements (triggered by CheY-P binding to the C-ring) that reorient
+    its stator-facing surface and switch rotation between CCW and CW states.
+  supported_by:
+  - reference_id: PMID:31452860
+    full_text_unavailable: true
+    supporting_text: &gt;-
+      Directional switching of the flagellar motor is controlled by conformational changes in
+      the C-ring switch complex (FliG/FliM/FliN) in response to CheY-P, with FliG reorienting
+      its interaction with the stator.
+  directly_involved_in:
+  - id: GO:0006935
+    label: chemotaxis
+  locations:
+  - id: GO:0009425
+    label: bacterial-type flagellum basal body
+proposed_new_terms: []
+suggested_questions:
+- question: &#34;Does deletion of fliG in P. putida KT2440 produce a non-motile (non-flagellated or paralyzed) phenotype, as predicted from conserved FliG function?&#34;
+- question: &#34;Is FliG function in P. putida modulated by c-di-GMP effectors (e.g., FlgZ/PP4397) acting as a motor brake on the C-ring or stator?&#34;
+suggested_experiments:
+- description: &#34;Construct an in-frame fliG deletion and complementation in P. putida KT2440 and assay swimming/swarming motility and flagellation by electron microscopy.&#34;
+- description: &#34;Co-purification / bacterial two-hybrid assays to confirm FliG-FliF, FliG-FliM, and FliG-MotA interactions in P. putida.&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

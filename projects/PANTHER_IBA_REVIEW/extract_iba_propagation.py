@@ -29,6 +29,15 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 PANTHER = REPO / "interpro" / "panther"
 
+# Reuse the PAINT node-level ingest engine.
+sys.path.insert(0, str(REPO / "src"))
+from ai_gene_review.etl.panther_paint import (  # noqa: E402
+    IBD_GAF_URL,
+    IBDRecord,
+    download_cached,
+    parse_ibd_gaf,
+)
+
 GENES = [
     # batch 1
     "wee1", "cdc25", "cdc2", "cdc13", "chk1", "cds1", "rad3", "sty1", "wis1",
@@ -103,7 +112,40 @@ def parse_withfrom(value: str) -> tuple[list[str], list[str]]:
     return nodes, seeds
 
 
+def node_info(
+    ibd_index: dict[str, list[IBDRecord]], nodes: list[str], go_id: str
+) -> tuple[bool, int, str, bool]:
+    """Look up the node-level (PAINT) record(s) for a propagated (node, GO).
+
+    Returns ``(found, node_seed_count, node_evidence, node_loss)`` where:
+
+    * ``found`` is True if any node carries this GO at the node level,
+    * ``node_seed_count`` is the largest canonical seed set across matches (the
+      authoritative count curated at the node, vs. the few echoed into a leaf),
+    * ``node_evidence`` is the ``;``-joined evidence codes (IBD/IRD/IKR),
+    * ``node_loss`` is True if any matching record is a loss (IRD/IKR ``NOT``).
+    """
+    found = False
+    best_seeds = 0
+    evidences: list[str] = []
+    loss = False
+    for node in nodes:
+        for rec in ibd_index.get(node, []):
+            if rec.go_id != go_id:
+                continue
+            found = True
+            best_seeds = max(best_seeds, len(rec.seeds))
+            if rec.evidence not in evidences:
+                evidences.append(rec.evidence)
+            loss = loss or rec.negated
+    return found, best_seeds, ";".join(evidences), loss
+
+
 def main() -> None:
+    ibd_path = download_cached(IBD_GAF_URL, REPO / ".cache" / "panther")
+    with ibd_path.open() as fh:
+        ibd_index = parse_ibd_gaf(fh)
+
     rows = []
     for gene in GENES:
         gdir = REPO / "genes" / "SCHPO" / gene
@@ -128,6 +170,10 @@ def main() -> None:
             same = sum(1 for x in seed_sfs if sub and x == sub)
             other = sum(1 for x in seed_sfs if x and x != sub)
             other_sfs = sorted({x for x in seed_sfs if x and x != sub})
+            # node-level (PAINT) lookup for the authoritative seed count + loss
+            node_found, node_seeds, node_evidence, node_loss = node_info(
+                ibd_index, nodes, go_id
+            )
             # flagging
             flags = []
             if seed_sfs and same == 0 and other > 0:
@@ -138,6 +184,13 @@ def main() -> None:
                 flags.append("GENE_NO_SUBFAMILY")
             if not seeds:
                 flags.append("NO_UNIPROT_SEEDS")
+            # Node-level seed count is the authoritative confidence signal.
+            if node_found and node_seeds <= 1:
+                flags.append("SINGLE_NODE_SEED")
+            if not node_found:
+                flags.append("NODE_NOT_IN_IBD")
+            if node_loss:
+                flags.append("NODE_LOSS")
             rows.append({
                 "gene": gene,
                 "acc": acc or "",
@@ -152,10 +205,16 @@ def main() -> None:
                 "same_sf": same,
                 "other_sf": other,
                 "other_subfamilies": ";".join(other_sfs),
+                "node_seed_count": node_seeds,
+                "node_evidence": node_evidence,
+                "node_loss": "true" if node_loss else "false",
                 "our_action": actions.get(go_id, "?"),
                 "flags": ";".join(flags),
             })
 
+    if not rows:
+        print("No IBA annotations found.")
+        return
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "iba_propagation.tsv"
     cols = list(rows[0].keys())
     with out.open("w", newline="") as fh:
@@ -166,10 +225,16 @@ def main() -> None:
     # console summary
     n = len(rows)
     cross = [r for r in rows if "CROSS_SUBFAMILY" in r["flags"]]
+    single = [r for r in rows if "SINGLE_NODE_SEED" in r["flags"]]
+    losses = [r for r in rows if r["node_loss"] == "true"]
+    not_in_ibd = [r for r in rows if "NODE_NOT_IN_IBD" in r["flags"]]
     print(f"IBA annotations analyzed: {n}")
     print(f"  with UniProt seeds mappable to family subfamilies: "
           f"{sum(1 for r in rows if r['n_seed_in_fam'])}")
     print(f"  CROSS_SUBFAMILY (seeds only from other subfamilies): {len(cross)}")
+    print(f"  SINGLE_NODE_SEED (<=1 canonical seed at the source node): {len(single)}")
+    print(f"  NODE_LOSS (IRD/IKR at the source node): {len(losses)}")
+    print(f"  NODE_NOT_IN_IBD (node/GO not found in IBD.gaf): {len(not_in_ibd)}")
     print("\nCROSS_SUBFAMILY propagations (the review targets):")
     for r in sorted(cross, key=lambda r: (r["gene"], r["go_id"])):
         print(f"  {r['gene']:7s} {r['go_id']} {r['go_label'][:42]:42s} "

@@ -3012,6 +3012,127 @@ def render_modules(
 
 
 @app.command()
+def render_module_notation(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to project into compact notation"),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Write <stem>-notation.txt per module here; if omitted, print to stdout",
+        ),
+    ] = None,
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Project all module YAML files in modules/"),
+    ] = False,
+):
+    """Project module YAML into a compact, human-readable symbol notation.
+
+    This is a read-only view of the canonical YAML: a legend mapping short symbols
+    to grounded entities (GO/ChEBI), a reactions block, and a regulation block in
+    which the arrow encodes sign (-o activation, -| inhibition) and the bracketed
+    tag encodes the SBO-grounded mechanism (competitive vs allosteric).
+
+    Examples:
+        # Print one module's notation to stdout
+        ai-gene-review render-module-notation modules/methionine_cycle.yaml
+
+        # Write notation files for every module
+        ai-gene-review render-module-notation --all -o pages/modules
+    """
+    from ai_gene_review.module_notation import render_module_notation_file
+    from ai_gene_review.render_modules import iter_module_files
+
+    if all_modules:
+        targets = iter_module_files(modules_dir)
+    elif files:
+        targets = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all", err=True)
+        raise typer.Exit(code=1)
+
+    for module_file in targets:
+        if not module_file.exists():
+            typer.echo(f"Error: File not found: {module_file}", err=True)
+            continue
+        notation = render_module_notation_file(module_file)
+        if output_dir is None:
+            typer.echo(notation)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            out_path = output_dir / f"{module_file.stem}-notation.txt"
+            out_path.write_text(notation)
+            typer.echo(f"Wrote {module_file} -> {out_path}")
+
+
+@app.command()
+def compare_module_regulation(
+    module_file: Annotated[
+        Path, typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)")
+    ],
+    maud_toml: Annotated[
+        Path, typer.Argument(help="Maud model TOML to ingest as a regulatory source")
+    ],
+    mapping: Annotated[
+        Optional[Path],
+        typer.Option("--mapping", "-m", help="Reviewed id-mapping (source ids -> module symbols)"),
+    ] = None,
+    emit_candidates: Annotated[
+        bool,
+        typer.Option(
+            "--emit-candidates",
+            help="Also print source edges as candidate module connections (YAML)",
+        ),
+    ] = False,
+):
+    """Diff a curated module's regulation against a Maud model's regulatory tables.
+
+    Reduces both sides to canonical (effector, enzyme, sign, mechanism) edges and
+    reports agreements, missing/extra edges, and sign/mechanism conflicts. The Maud
+    source is treated as evidence (mediated by the reviewed --mapping), not merged.
+
+    Example:
+        ai-gene-review compare-module-regulation \\
+            modules/methionine_cycle.yaml \\
+            models/methionine/methionine_cycle.regulation.toml \\
+            -m models/methionine/maud_methionine_mapping.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.maud_ingest import candidate_connections, maud_edges_from_files
+    from ai_gene_review.regulation_compare import (
+        diff_edges,
+        format_edge_diff,
+        module_regulatory_edges,
+    )
+
+    if not module_file.exists():
+        typer.echo(f"Error: module file not found: {module_file}", err=True)
+        raise typer.Exit(code=1)
+    if not maud_toml.exists():
+        typer.echo(f"Error: TOML file not found: {maud_toml}", err=True)
+        raise typer.Exit(code=1)
+
+    curated = module_regulatory_edges(_yaml.safe_load(module_file.read_text()))
+    source = maud_edges_from_files(maud_toml, mapping)
+    diff = diff_edges(curated, source)
+    typer.echo(format_edge_diff(diff, module_file.name, maud_toml.name))
+
+    if emit_candidates:
+        candidates = candidate_connections(source, source_id=f"file:{maud_toml}")
+        typer.echo("# candidate connections (review before adding to a module):")
+        typer.echo(_yaml.safe_dump(candidates, sort_keys=False))
+
+
+@app.command()
 def fetch_descriptions(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., human, yeast)")
@@ -3179,6 +3300,121 @@ def analyze_evidence_sources(
         network=not no_network,
     )
     typer.echo(f"Report written to {report_path}")
+
+
+@app.command()
+def fetch_panther_paint(
+    family: Annotated[
+        Optional[str],
+        typer.Argument(help="PANTHER family id (e.g., PTHR10177). Omit with --all."),
+    ] = None,
+    all_families: Annotated[
+        bool,
+        typer.Option(
+            "--all",
+            help="Process every cached family under interpro/panther/ in a single "
+            "leaf-GAF pass (skips families with no node annotations).",
+        ),
+    ] = False,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Repo root (default: current directory). Slice is written to "
+            "interpro/panther/<FAMILY>/.",
+        ),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--cache-dir",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+        ),
+    ] = None,
+    extra_uniprot: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--extra-uniprot",
+            help="Extra member UniProt id(s) to include when resolving nodes "
+            "(repeatable). Single-family mode only.",
+        ),
+    ] = None,
+    force_download: Annotated[
+        bool,
+        typer.Option("--force-download", help="Re-download source GAFs even if cached."),
+    ] = False,
+):
+    """Fetch PANTHER PAINT (PTN node-level) annotations for a family (or --all).
+
+    Resolves the family's PTN tree nodes (from its cached ``<FAM>-entries.csv``
+    member list joined against the leaf IBA GAF), then slices the node-level
+    ``IBD.gaf`` (IBD/IRD/IKR annotations) for those nodes. Writes:
+
+        interpro/panther/<FAMILY>/<FAMILY>-paint.tsv   (one row per node annotation)
+
+    Run ``fetch-gene`` for a member first (or otherwise populate the family's
+    ``<FAMILY>-entries.csv``) so the member list is available.
+
+    Examples:
+        ai-gene-review fetch-panther-paint PTHR10177
+        ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+        ai-gene-review fetch-panther-paint --all
+    """
+    from ai_gene_review.etl.panther_paint import (
+        fetch_family_paint,
+        fetch_all_family_paint,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    panther_root = repo_root / "interpro" / "panther"
+
+    if all_families:
+        if family:
+            typer.echo("❌ Pass either a FAMILY or --all, not both.")
+            raise typer.Exit(code=1)
+        typer.echo(
+            "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
+            "this downloads/caches PAINT GAFs)..."
+        )
+        counts = fetch_all_family_paint(
+            panther_root, cache_dir=cache, force_download=force_download
+        )
+        total = sum(counts.values())
+        typer.echo(
+            f"✓ Wrote PAINT slices for {len(counts)} family/families "
+            f"({total} node-level annotations total)."
+        )
+        return
+
+    if not family:
+        typer.echo("❌ Provide a FAMILY id or use --all.")
+        raise typer.Exit(code=1)
+
+    family_dir = panther_root / family
+    entries_csv = family_dir / f"{family}-entries.csv"
+    if not entries_csv.exists():
+        typer.echo(
+            f"❌ {entries_csv} not found. Fetch the family first "
+            f"(e.g. via fetch-gene for a member of {family})."
+        )
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
+    tsv_path, nodes = fetch_family_paint(
+        family,
+        entries_csv=entries_csv,
+        out_dir=family_dir,
+        cache_dir=cache,
+        extra_uniprot=extra_uniprot,
+        force_download=force_download,
+    )
+    n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
+    typer.echo(
+        f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
+    )
+    typer.echo(f"  {tsv_path}")
 
 
 def main():
