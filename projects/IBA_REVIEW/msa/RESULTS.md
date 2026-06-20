@@ -10,10 +10,12 @@ Target sequences come from the repo's local `genes/.../*-uniprot.txt`; the refer
 active enzyme (DPYS) and all catalytic-residue **positions** are pulled live from the
 UniProt REST feature tables, so nothing is hardcoded.
 
-## 1. Human Argonautes AGO1–4 — RNase-H-like catalytic tetrad
+## 1. Human Argonautes AGO1–4 — RNase-H-like catalytic site (DDH of the DEDH tetrad)
 
 Residues at the positions UniProt annotates on AGO2 as divalent-metal-binding
-(the catalytic Asp/Asp/His of the DDH/DEDH slicer site):
+(the catalytic Asp/Asp/His — i.e. the DDH metal-coordinating subset of the
+canonical DEDH slicer tetrad; the catalytic-glutamate "finger" is discussed in
+the caveats and is not in the metal-binding feature set):
 
 | AGO2 position | AGO1 | AGO2 | AGO3 | AGO4 |
 |---------------|------|------|------|------|
