@@ -150,7 +150,23 @@ uv run python projects/INTERPRO/extract_suspect_interpro_mappings.py
       (`ATP binding`, `protein phosphorylation`) over-annotate the domain because it
       also matches pseudokinases — REMOVE at the domain level, restrict to catalytic
       children (GO:0004674 / GO:0004713)
-- [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the top entries
+- [x] Batch 1 of 5 more top entries researched with falcon/Edison (P450, Cu/Zn SOD,
+      GPCR, NRAMP/SLC11, DnaJ) — see the table below
+- [ ] Feed the family verdicts back into the affected gene reviews and a curators' summary
+- [ ] Continue down the worklist (`interpro_family_priorities.tsv`)
+
+## Family deep-research verdicts (falcon/Edison)
+
+| InterPro | Family | Entry type | InterPro2GO verdict |
+|----------|--------|-----------|---------------------|
+| IPR000719 | Protein kinase domain | domain | `ATP binding` + `protein phosphorylation` → **REMOVE** at domain level (captures pseudokinases); restrict to catalytic children (GO:0004674 / GO:0004713) |
+| IPR001128 | Cytochrome P450 | family | `heme binding` + `iron ion binding` universal → keep; `monooxygenase activity` + `oxidoreductase activity` over-annotate (819+ functionally diverse families) |
+| IPR001424 | Cu/Zn superoxide dismutase domain | domain | `superoxide metabolic process` → **REMOVE** (BP term on a structural module; copper-chaperone members don't dismutate); `metal ion binding` → KEEP_AS_NON_CORE |
+| IPR000276 | GPCR, rhodopsin-like (Class A) | family | `GPCR activity` + `GPCR signaling pathway` → MARK_AS_OVER_ANNOTATED / MODIFY (atypical chemokine + orphan receptors lack canonical G-protein coupling); `membrane` → KEEP_AS_NON_CORE |
+| IPR001046 | NRAMP / SLC11 metal transporter | family | `metal ion transmembrane transporter activity` + `metal ion transport` → ACCEPT as broad family terms; `membrane` → KEEP_AS_NON_CORE; do not add more specific terms at family level |
+| IPR012724 | Chaperone DnaJ (J-domain) | family | `ATP binding` → **REMOVE** (factually wrong — the Hsp70 *partner* binds ATP, not DnaJ); `protein folding` → ACCEPT; `response to heat` → KEEP_AS_NON_CORE (only heat-inducible subfamilies) |
+
+- [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the next entries
 
 Last updated: 2026-06-20
 
@@ -172,3 +188,13 @@ the `just deep-research-interpro-family <IPR> [provider]` recipe (provider defau
 `falcon`/Edison) — so families are researched by the same generated pipeline (output:
 `interpro/<db>/<ID>/<ID>-deep-research-<provider>.md`), with `IPR000719` cached as a
 seed.
+
+**Batch 1 of family deep research (falcon/Edison).** Ran five more top entries: P450
+(`IPR001128`), Cu/Zn SOD (`IPR001424`), GPCR Class A (`IPR000276`), NRAMP/SLC11
+(`IPR001046`), and DnaJ (`IPR012724`). See the verdict table under Workstream 2. A
+recurring, independently-reached pattern: cofactor/binding terms (`heme binding`, `metal
+ion binding`) and broad transport terms hold family-wide, but **whole-protein activity
+and process terms attached to a structural module over-annotate** — most sharply for
+IPR012724, where Edison flags `ATP binding` as factually wrong on DnaJ (the Hsp70 partner
+binds ATP), and for IPR001424, where `superoxide metabolic process` mis-annotates
+copper-chaperone members that do not dismutate.
