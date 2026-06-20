@@ -31,18 +31,21 @@ def uniprot_json(acc):
 def uniprot_seq(acc):
     return uniprot_json(acc)["sequence"]["value"]
 
-def catalytic_positions(acc, types=("ACT_SITE", "BINDING")):
-    """Return {position(1-based): description} for catalytic/binding features."""
+def catalytic_positions(acc, want=("Active site", "Binding site")):
+    """Return {position(1-based): description} for single-residue features whose
+    UniProt JSON feature `type` is in `want` (the live API uses the long names
+    'Active site' / 'Binding site'). The filter is applied strictly."""
     d = uniprot_json(acc)
     out = {}
     for f in d.get("features", []):
-        if f["type"] in types or f["type"] in ("Active site", "Binding site"):
-            loc = f["location"]
-            if loc["start"]["value"] == loc["end"]["value"]:
-                p = loc["start"]["value"]
-                desc = f.get("description", "") or f["type"]
-                lig = (f.get("ligand") or {}).get("name", "")
-                out[p] = (desc + (f" [{lig}]" if lig else "")).strip()
+        if f["type"] not in want:
+            continue
+        loc = f["location"]
+        if loc["start"]["value"] == loc["end"]["value"]:
+            p = loc["start"]["value"]
+            desc = f.get("description", "") or f["type"]
+            lig = (f.get("ligand") or {}).get("name", "")
+            out[p] = (desc + (f" [{lig}]" if lig else "")).strip() or f["type"]
     return out
 
 def align(named_seqs):
@@ -81,11 +84,14 @@ ago = {g: local_seq("human", g) for g in ["AGO1", "AGO2", "AGO3", "AGO4"]}
 ago_named = [(g, s) for g, (a, s) in ago.items()]
 ago_aln = align(ago_named)
 ago2_acc = ago["AGO2"][0]
-# DEDH tetrad: UniProt annotates these; filter to the catalytic Asp/Glu/Asp/His
-pos = catalytic_positions(ago2_acc, types=("ACT_SITE",))
-if not pos:  # fall back to known DEDH if UniProt lacks ACT_SITE
+# UniProt annotates the AGO2 slicer residues as single-residue "Binding site"
+# features that bind a divalent metal cation (the D/D/H of the DEDH tetrad).
+pos = catalytic_positions(ago2_acc, want=("Binding site",))
+if not pos:  # documented fallback if the live API returns no such features
+    print(f"WARNING: no metal-binding features from UniProt for {ago2_acc}; "
+          "using hardcoded fallback positions (597/637/669/807).")
     pos = {597: "Asp (DEDH)", 637: "Glu (DEDH)", 669: "Asp (DEDH)", 807: "His (DEDH)"}
-report("Argonaute catalytic tetrad (DEDH) — AGO1-4", ago_aln, "AGO2", pos,
+report("Argonaute catalytic site (DDH of the DEDH tetrad) — AGO1-4", ago_aln, "AGO2", pos,
        ["AGO1", "AGO2", "AGO3", "AGO4"])
 
 # ----------------- Analysis 2: CRMP/DPYSL vs active dihydropyrimidinase -----------------
@@ -94,7 +100,7 @@ crmp = {g: local_seq("human", g)[1] for g in ["DPYSL2", "DPYSL3", "DPYSL4", "DPY
 dpys_seq = uniprot_seq(DPYS)
 crmp_named = [("DPYS", dpys_seq)] + [(g, s) for g, s in crmp.items()]
 crmp_aln = align(crmp_named)
-metal = catalytic_positions(DPYS, types=("BINDING", "ACT_SITE"))
+metal = catalytic_positions(DPYS, want=("Binding site", "Active site"))
 # keep only metal/active residues
 metal = {p: d for p, d in metal.items() if any(k in d.lower() for k in
          ["zn", "metal", "active", "mn", "co", "ni", "carboxy"])}

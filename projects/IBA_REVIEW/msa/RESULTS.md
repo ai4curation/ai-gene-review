@@ -7,8 +7,10 @@ inspects the actual residues.
 
 Run: `uv run python catalytic_residue_msa.py` (FAMSA alignment via `pyfamsa`).
 Target sequences come from the repo's local `genes/.../*-uniprot.txt`; the reference
-active enzyme (DPYS) and all catalytic-residue **positions** are pulled live from the
-UniProt REST feature tables, so nothing is hardcoded.
+active enzyme (DPYS) and the catalytic-residue **positions** are pulled live from the
+UniProt REST feature tables (with a documented hardcoded fallback for the AGO2
+positions if the API returns none — not triggered in the runs reported here, which
+used the live metal-binding-site features).
 
 ## 1. Human Argonautes AGO1–4 — RNase-H-like catalytic site (DDH of the DEDH tetrad)
 
