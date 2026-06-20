@@ -19,6 +19,20 @@ Supporting material for the [InterPro Mapping Review project](../INTERPRO.md).
   it produced an accepted vs a suspect mapping across all reviewed genes. This is the
   ranked worklist for family-level deep research (entries that repeatedly produce
   suspect mappings first).
+## Proposed interpro2go edits (SSSOM)
+
+- `interpro2go.sssom.yaml` — canonical SSSOM mapping set: the family-deep-research verdicts
+  expressed as proposed edits to InterPro2GO (one row per reviewed `(InterPro entry, GO term)`;
+  `exactMatch` = sound, `broadMatch` = over-broad/demote, `exactMatch` + `predicate_modifier: Not`
+  = remove). Source of truth.
+- `interpro2go.terms.yaml` — **generated** nested term-tuple form (do not edit by hand) for GO
+  label validation.
+- `sssom_to_terms.py` — regenerates the `.terms.yaml` from the `.sssom.yaml`.
+
+```bash
+just validate-interpro-mappings   # SSSOM structure + GO term/label validation
+```
+
 ## Family deep research (generated process)
 
 Family deep research is generated, not hand-written. It is wired the same way as gene

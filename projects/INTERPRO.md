@@ -115,10 +115,27 @@ InterPro2GO terms are `GO:0005524 ATP binding` and `GO:0006468 protein phosphory
 — both generic, which is exactly why genes matching it are repeatedly MODIFY'd to
 specific kinase-activity children or marked non-core.
 
+## Proposed interpro2go edits (SSSOM)
+
+The family verdicts are captured as proposed edits to the InterPro2GO mapping file in
+SSSOM YAML — the same format the [RHEA](RHEA.html) and
+[AMR](ANTIMICROBIAL_RESISTANCE.html) projects use for proposing mappings —
+[`INTERPRO/interpro2go.sssom.yaml`](INTERPRO/interpro2go.sssom.yaml). One row per
+`(InterPro entry, GO term)` reviewed, with a 3-way predicate convention:
+
+- `skos:exactMatch` — the interpro2go mapping is **sound** (holds for ~all members);
+- `skos:broadMatch` — **over-broad**, retain but demote to a child entry / treat as non-core;
+- `skos:exactMatch` + `predicate_modifier: Not` — **remove** (factually incorrect for the entry).
+
+Validate (SSSOM structure + GO label check on the generated `interpro2go.terms.yaml`):
+
+```bash
+just validate-interpro-mappings
+```
+
 ## Supporting material
 
-- [`INTERPRO/`](INTERPRO/README.md) — extractor, generated TSVs, and the family
-  deep-research template.
+- [`INTERPRO/`](INTERPRO/README.md) — extractor, generated TSVs, and the SSSOM mapping set.
 - `INTERPRO/suspect_interpro_mappings.tsv` — per-annotation verdicts.
 - `INTERPRO/interpro_family_priorities.tsv` — per-entry worklist.
 
@@ -162,6 +179,9 @@ uv run python projects/INTERPRO/extract_suspect_interpro_mappings.py
       flagged term but is actually one of the verdict's *exception* members (pseudokinase,
       copper chaperone, atypical chemokine/orphan receptor, non-catalytic P450) — a genuine
       missed over-annotation rather than a soft-vs-hard mismatch
+- [x] Captured the family verdicts as proposed interpro2go edits in SSSOM YAML
+      (`INTERPRO/interpro2go.sssom.yaml`, 17 mappings over the 6 entries) — the
+      consortium-facing deliverable, validated via `just validate-interpro-mappings`
 - [ ] Continue down the worklist (`interpro_family_priorities.tsv`)
 
 ## Family deep-research verdicts (falcon/Edison)
