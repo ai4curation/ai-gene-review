@@ -625,6 +625,55 @@ nested view <a href="NCBIFam/ncbifam2go.terms.yaml"><code>ncbifam2go.terms.yaml<
 <p>A <code>cdd2go</code> set is <strong>not</strong> planned: per the <a href="#does-cdd-have-its-own-go-mappings-no-for-cdd-proper">CDD section</a>,<br />
 CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM<br />
 (captured here) or Pfam (InterPro-routed) — a <code>cdd2go</code> would be largely redundant.</p>
+<h2 id="scaling-the-seed-to-the-whole-collection-ec-bridge-candidates">Scaling the seed to the whole collection (EC-bridge candidates)</h2>
+<p>The 28-row seed is hand-reviewed; the <strong>EC bridge</strong> lets us scale the <em>same evidence<br />
+standard</em> to the whole collection with no per-row human judgement, because the<br />
+agreement of two independent curated resources (NCBI's <code>go_terms</code> and GO's <code>ec2go</code>)<br />
+<em>is</em> the verification. <a href="NCBIFam/ncbifam2go_candidates.py"><code>ncbifam2go_candidates.py</code></a><br />
+walks every NCBIFAM model and emits each <code>(model, GO)</code> where <code>ec2go(model's EC)</code><br />
+confirms one of the model's own NCBI <code>go_terms</code>. The live funnel:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th style="text-align: right;">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO-bearing NCBIFAM models</td>
+<td style="text-align: right;">11,228</td>
+</tr>
+<tr>
+<td>…with both an EC and a GO term</td>
+<td style="text-align: right;">3,782</td>
+</tr>
+<tr>
+<td>…where <code>ec2go(EC)</code> <strong>confirms</strong> a model GO → <strong>exactMatch candidates</strong></td>
+<td style="text-align: right;"><strong>2,455</strong> (2,503 rows)</td>
+</tr>
+<tr>
+<td>…where <code>ec2go(EC)</code> would <strong>refine</strong> NCBI's broader/absent GO (the spermidine-synthase pattern, at scale)</td>
+<td style="text-align: right;">843</td>
+</tr>
+<tr>
+<td>…candidates already in the reviewed seed (cross-check)</td>
+<td style="text-align: right;">17</td>
+</tr>
+</tbody>
+</table>
+<p>The generated set is <a href="NCBIFam/ncbifam2go.candidates.tsv"><code>ncbifam2go.candidates.tsv</code></a><br />
+(2,503 rows, clearly marked generated; <code>mapping_justification</code> would be<br />
+<code>semapv:CompositeMatching</code>). The <strong>17</strong> rows that coincide with the reviewed seed are<br />
+exactly the seed's EC-bridge enzyme rows — an automatic confirmation that the<br />
+generator agrees with manual curation where they overlap. These 2,455 are<br />
+AMR-rich (trimethoprim-resistant dihydrofolate reductases → <code>GO:0004146</code>,<br />
+β-lactamases → <code>GO:0008800</code>, aminoglycoside 6′-N-acetyltransferases → <code>GO:0047663</code>,<br />
+…) and are the natural ready-to-add core of a real <code>ncbifam2go</code>. The <strong>843<br />
+"refine"</strong> models are the scaled version of the five hand-fixed altitude rows: NCBIFAM<br />
+gave a broad/near-root term but <code>ec2go</code> supplies the specific child — a second,<br />
+also-automatable candidate class (propose <code>ec2go</code>'s term), pending the same<br />
+altitude/over-annotation check the FtsX case shows is still needed.</p>
 <h2 id="methods">Methods</h2>
 <p>The <code>interpro2go</code> characterisation, InterPro member-integration counts, and the<br />
 NCBIFAM PGAP GO/EC coverage are <strong>computed live</strong> by<br />
@@ -727,16 +776,20 @@ over-annotation.</p>
 <td>UniPathway-style uniqueness for member-attributed rows; needs go-db DuckDBs.</td>
 </tr>
 <tr>
-<td>Scale up <code>ncbifam2go.sssom.yaml</code></td>
-<td>Extend the 28-row verified seed across the 13,253 equivalogs (obsolete-filter, child-prefer, EC-bridge) → a full ingestible mapping.</td>
+<td>Promote the 2,455 EC-bridge candidates</td>
+<td>Altitude/obsolete-check <a href="NCBIFam/ncbifam2go.candidates.tsv"><code>ncbifam2go.candidates.tsv</code></a> and fold the clean rows into the reviewed SSSOM → a near-complete ingestible <code>ncbifam2go</code>.</td>
+</tr>
+<tr>
+<td>Build the 843 "refine" class</td>
+<td>Auto-propose <code>ec2go</code>'s specific term where NCBI's <code>go_terms</code> is broad/absent (the spermidine-synthase pattern), then altitude-review as FtsX shows is needed.</td>
+</tr>
+<tr>
+<td>Non-EC families (defense/secretion/transport)</td>
+<td>The high-gain non-enzyme equivalogs (transposases, anti-phage, T4SS, encapsulins) have no EC bridge → need a different verification (literature/SPARCLE), curated like the seed's CC/BP rows.</td>
 </tr>
 <tr>
 <td>Full-collection gain run</td>
 <td>Replace the 60-model gain sample with the complete equivalog set for a definitive reviewed-vs-TrEMBL gain figure.</td>
-</tr>
-<tr>
-<td>Integrated-but-unmapped IPR set</td>
-<td>NCBIFAM/CDD integrated into an InterPro entry lacking an <code>interpro2go</code> row → InterPro mapping requests.</td>
 </tr>
 <tr>
 <td>Exemplar gene reviews</td>
@@ -749,9 +802,9 @@ over-annotation.</p>
 <li><strong>Started</strong>: 2026-06-20</li>
 <li><strong>Maturity</strong>: SCOPING — pipeline identified, masking demonstrated on the repo<br />
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised<br />
-  live, CDD-own-GO question resolved, annotation gain measured, and a <strong>validated<br />
-  28-row <code>ncbifam2go</code> seed</strong> in place; member-attribution re-join and full-scale<br />
-  mapping are staged.</li>
+  live, CDD-own-GO question resolved, annotation gain measured, a <strong>validated<br />
+  28-row <code>ncbifam2go</code> seed</strong> in place, and a <strong>2,455-model EC-bridge candidate set</strong><br />
+  generated at collection scale; member-attribution re-join is staged.</li>
 <li><strong>Computed live</strong> (via <a href="NCBIFam/ncbifam_cdd_probe.py"><code>NCBIFam/ncbifam_cdd_probe.py</code></a><br />
   and <a href="NCBIFam/ncbifam_go_gain.py"><code>ncbifam_go_gain.py</code></a>):<br />
 <code>interpro2go</code> = 30,200 rows / 14,799 InterPro ids (GO <code>2026-04-28</code>); NCBIFAM PGAP<br />
@@ -764,6 +817,10 @@ over-annotation.</p>
   specific term over NCBI's broad one and 1 — FtsX — declining a too-specific term;<br />
   1 broadMatch, VirB5, where no specific term exists), spanning MF/BP/CC, each with<br />
   live propagation gain; <strong>passes</strong> <code>just validate-ncbifam-mappings</code>.</li>
+<li><strong>Scaled candidates</strong>: <a href="NCBIFam/ncbifam2go.candidates.tsv"><code>NCBIFam/ncbifam2go.candidates.tsv</code></a><br />
+  — 2,503 generated EC-bridge-confirmed rows (2,455 models; <code>ncbifam2go_candidates.py</code>),<br />
+  AMR-rich; 17 coincide with the reviewed seed as a cross-check, plus 843 "refine" models<br />
+  where <code>ec2go</code> supplies a specific term over NCBI's broad one.</li>
 <li><strong>Current conclusion</strong>: NCBIFAM/CDD reach GO only through InterPro, which<br />
 <strong>masks</strong> their contribution in GOA and leaves the <strong>majority of signatures<br />
   unintegrated</strong>. CDD-proper has <strong>no native GO</strong> (it is NCBIFAM, bundled inside<br />
