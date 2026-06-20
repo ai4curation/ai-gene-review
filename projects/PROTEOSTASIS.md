@@ -218,12 +218,14 @@ rationale and notable calls for each batch live in the linked selection notes.
 | `2026-06-13` | **UPS** Cullin-RING ligases (44 F-box receptors, CRL4 core, assembly regulators) | 50 | [batch8](PROTEOSTASIS/batch8_selection_notes.md) |
 | `2026-06-14` | **ALP** selective-autophagy receptors (SQSTM1/NBR1/OPTN, TBK1 axis, TRIMs, tagging E3s) | 20 | [batch9](PROTEOSTASIS/batch9_selection_notes.md) |
 
-Action-mix totals are recorded per batch where computed: ER batch (`1347`
-annotations) ran `783` ACCEPT / `476` KEEP_AS_NON_CORE / `75`
-MARK_AS_OVER_ANNOTATED / `8` REMOVE / `3` MODIFY; UPS batch (`1590`) ran `649` /
-`878` / `23` / `2` REMOVE / `19` MODIFY / `11` NEW; ALP batch (`1222`) ran `505`
-ACCEPT / `690` KEEP_AS_NON_CORE / `19` MARK_AS_OVER_ANNOTATED / `1` REMOVE / `5`
-NEW. The dominant pattern across UPS/ALP is elevating a specific
+Action-mix totals are recorded per batch where computed (counts sum to each
+batch's annotation total): ER batch (`1347`) ran `783` ACCEPT / `476`
+KEEP_AS_NON_CORE / `75` MARK_AS_OVER_ANNOTATED / `8` REMOVE / `3` MODIFY / `1`
+NEW / `1` UNDECIDED; UPS batch (`1590`) ran `649` ACCEPT / `878`
+KEEP_AS_NON_CORE / `23` MARK_AS_OVER_ANNOTATED / `19` MODIFY / `11` NEW / `8`
+UNDECIDED / `2` REMOVE; ALP batch (`1222`) ran `505` ACCEPT / `690`
+KEEP_AS_NON_CORE / `19` MARK_AS_OVER_ANNOTATED / `5` NEW / `2` UNDECIDED / `1`
+REMOVE. The dominant pattern across UPS/ALP is elevating a specific
 **adaptor/receptor MF** (substrate-adaptor activity; ubiquitin + LIR/Atg8
 binding) over bare `protein binding`, which is uniformly kept non-core. Mega-hubs
 (`HSPA5`/BiP, `HSP90AA1/AB1`, `HSP90B1`/GRP94, `HUWE1`, `OGT`, the UPR sensors
