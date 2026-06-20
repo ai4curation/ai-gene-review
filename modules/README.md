@@ -55,15 +55,22 @@ Design notes:
   gene, a complex, a family, a domain, a homolog/ortholog selector, or an
   abstract `ANY_WITH_FUNCTION` / `ANY_WITH_DOMAIN` selector.
 - Use `representative_members` on family descriptors when an abstract family or
-  evolutionary role needs a concrete UniProt/PTN exemplar without becoming
-  species-specific.
+  evolutionary role needs a concrete exemplar without becoming species-specific.
+  Members are treated uniformly: an extant gene product is grounded with a
+  `UniProtKB:` id, and the corresponding PANTHER/PAINT ancestral node is listed
+  as a sibling member grounded with a `PANTHER:PTN...` id. Resolve PTN ids from
+  the IBA `WITH/FROM` column of a representative member's `*-goa.tsv` (the node
+  the `GO_REF:0000033` annotation was propagated from) rather than guessing.
 - Use `active_units` on complex descriptors when the complex has role-bearing
   components that should be visible to module reasoning.
 - Use PANTHER `PTHR` or `PTHR:SF` identifiers for family/subfamily descriptors
-  when grounding to the local `interpro/panther/` cache. Use PAINT `PTN`
-  identifiers as evidence/provenance for a specific ancestral-node assertion, or
-  as the descriptor grounding only when the selector is explicitly “descendants
-  of this PAINT node”.
+  when grounding to the local `interpro/panther/` cache. PAINT `PTN`
+  identifiers name a specific ancestral node and are used in two ways: as a
+  `representative_member` of a family descriptor (the ancestral exemplar
+  alongside the extant UniProt exemplars; see `representative_members` above),
+  as evidence/provenance for a specific ancestral-node assertion, or as the
+  descriptor grounding when the selector is explicitly “descendants of this
+  PAINT node”.
 - Use descriptor holders for terms. A descriptor always has `preferred_term`,
   may have an ontology/database `term`, and may carry local nuance in
   `description`, `substrates`, `products`, `targets`, `cargo`, locations, and
