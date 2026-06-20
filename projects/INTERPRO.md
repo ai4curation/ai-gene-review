@@ -145,6 +145,11 @@ uv run python projects/INTERPRO/extract_suspect_interpro_mappings.py
       `scripts/deep_research_interpro_family.py`, and the
       `just deep-research-interpro-family` recipe
 - [x] Seed example cached (`interpro/interpro/IPR000719/`)
+- [x] First family deep research generated with falcon/Edison
+      (`IPR000719-deep-research-falcon.md`): verdict that **both** InterPro2GO terms
+      (`ATP binding`, `protein phosphorylation`) over-annotate the domain because it
+      also matches pseudokinases — REMOVE at the domain level, restrict to catalytic
+      children (GO:0004674 / GO:0004713)
 - [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the top entries
 
 Last updated: 2026-06-20

@@ -31,7 +31,8 @@ from typing import Optional
 
 import yaml
 
-DEFAULT_TIMEOUT = 600
+# Edison (falcon) family research routinely runs 10-15 min; keep a generous default.
+DEFAULT_TIMEOUT = 1800
 TEMPLATE = "templates/interpro_family_research.md"
 
 
