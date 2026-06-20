@@ -261,6 +261,43 @@ def test_abduction_classification(present, active, classification, gaps):
         assert ab.gap_candidates["sulfur_incorporation"] == ["metB", "metC", "metY"]
 
 
+KETOLYSIS = Path("modules/ketone_body_oxidation.yaml")
+
+
+@pytest.mark.skipif(not KETOLYSIS.exists(), reason="module file absent")
+def test_ketolysis_structure():
+    circuit = compile_module_file(KETOLYSIS)
+    assert [step_id(c) for c in circuit.children] == ["bdh1_step", "oxct1_step", "acat1_step"]
+    assert len(enumerate_routes(circuit)) == 1  # linear, all required
+    assert sorted(a.gene_symbol for a in core_atoms(circuit)) == ["ACAT1", "BDH1", "OXCT1"]
+
+
+@pytest.mark.skipif(not KETOLYSIS.exists(), reason="module file absent")
+@pytest.mark.parametrize(
+    "present,active,classification,gaps",
+    [
+        # ketolytic tissue (heart/brain/...): all enzymes, asserted active
+        ({"BDH1", "OXCT1", "ACAT1"}, True, "CONSISTENT_ACTIVE", []),
+        # liver: SCOT/OXCT1 absent, and liver genuinely does not oxidise ketones
+        ({"BDH1", "ACAT1"}, False, "CONSISTENT_INACTIVE", ["oxct1_step"]),
+        # if a tissue truly oxidised ketones yet lacked OXCT1, that is a lead
+        ({"BDH1", "ACAT1"}, True, "ABDUCTION_TARGET", ["oxct1_step"]),
+    ],
+)
+def test_ketolysis_abduction(present, active, classification, gaps):
+    circuit = compile_module_file(KETOLYSIS)
+
+    def holds(atom):
+        return atom.gene_symbol in present
+
+    ab = abduce(circuit, holds, asserted_active=active)
+    assert ab.classification == classification
+    assert ab.gap_steps == gaps
+    if classification == "CONSISTENT_INACTIVE":
+        # the liver gap pinpoints the SCOT step
+        assert ab.gap_candidates["oxct1_step"] == ["OXCT1"]
+
+
 def test_atom_is_hashable():
     # frozen dataclass -> usable in sets (a regression we want to keep)
     atoms = set(iter_atoms(compile_module(_toy_module())))

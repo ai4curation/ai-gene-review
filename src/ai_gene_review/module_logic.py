@@ -250,6 +250,8 @@ class Abduction:
 GAP_HYPOTHESES = [
     "non-orthologous / unannotated enzyme fills this step (candidate to identify by sequence/structure)",
     "an alternative route not represented in the module is used",
+    "the pathway is not cell-autonomous here: a required intermediate is supplied by another "
+    "cell type / organ (inter-organ transport) or by cross-feeding",
     "the activity assertion is incorrect for this context",
 ]
 

@@ -99,6 +99,22 @@ methionine yet encode none of the canonical acylation/sulfur enzymes, so the eng
 structured lead ("an unannotated / non-orthologous enzyme must fill this step"). The same
 machinery does *not* over-call *Rickettsia*, whose gap is correctly read as its auxotrophy.
 
+The same `abduce()` runs on the **eukaryotic** side against GTEx, with the independent claim
+now a documented tissue function (and an extra "not cell-autonomous" explanation, since a
+metazoan pathway can be split across organs):
+
+| outcome | meaning | example |
+|---|---|---|
+| CONSISTENT_ACTIVE | tissue oxidises ketones, enzymes expressed | heart, brain, muscle, kidney |
+| CONSISTENT_INACTIVE | gap correctly predicts the function's absence | **liver ketolysis → gap at OXCT1/SCOT** |
+| ABDUCTION_TARGET | function reported but a step's gene barely expressed | **intestinal gluconeogenesis → G6PC1** |
+
+Ketone-body oxidation pinpoints why the liver cannot consume the ketones it makes — it is the
+one tissue lacking OXCT1/SCOT (GTEx liver = 0 TPM) — reproducing a textbook fact from
+expression alone. Intestinal gluconeogenesis, genuinely debated because intestinal
+glucose-6-phosphatase is low, surfaces as a lead localised to one gene, which is exactly the
+form a reviewer can act on.
+
 ## Epistemics
 
 - **Presence ≠ flux.** Expression/genome presence is used asymmetrically: absence excludes a
@@ -121,20 +137,21 @@ uv run python resolve_context.py       # between organs (GTEx)
 uv run python resolve_zonation.py      # within liver (Halpern zonation)
 uv run python resolve_substrates.py    # which precursor per tissue
 uv run python resolve_genomes.py       # methionine across genomes (KEGG)
-uv run python resolve_abduction.py     # gaps vs phenotype → leads / auxotrophy
+uv run python resolve_abduction.py     # microbial gaps vs phenotype → leads / auxotrophy
+uv run python resolve_eukaryotic_abduction.py   # tissue gaps vs function (ketolysis, gluconeogenesis)
 ```
 
 ## Artifacts
 
 - Engine: `src/ai_gene_review/module_logic.py`; tests: `tests/test_module_logic.py`
 - Modules: `modules/gluconeogenesis_human.yaml`, `modules/gluconeogenesis_human_substrates.yaml`,
-  `modules/methionine_biosynthesis.yaml`
+  `modules/methionine_biosynthesis.yaml`, `modules/ketone_body_oxidation.yaml`
 - Oracles & resolvers + full results: `modules/experimental/gluconeogenesis-context/`
   (`RESULTS.md`)
 
 ## Next steps
 
-- Carry abduction to the eukaryotic side (assert a tissue/zone known active; flag any
-  unexpressed required atom as a lead).
 - A human liver zonation oracle to remove the mouse-ortholog step in the zonation result.
 - Apply the engine to additional curated modules (it is module-agnostic).
+- Promote the resolvers from `modules/experimental/` into a small CLI once the oracle
+  interfaces stabilise.

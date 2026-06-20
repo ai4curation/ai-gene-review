@@ -225,6 +225,46 @@ restatement. A `ABDUCTION_TARGET` is a lead to verify (sequence/structure search
 fixing the model), and the explicit `the activity assertion is incorrect` hypothesis keeps
 the engine honest when the phenotype call itself is the error.
 
+## Abduction on the eukaryotic side (tissue function vs expression)
+
+The same `abduce()` runs against GTEx, with the independent claim now a *documented
+tissue function* rather than a growth phenotype (`resolve_eukaryotic_abduction.py`). A
+eukaryotic gap carries an extra meaning microbes lack — a pathway can be split across
+organs/cell types — so a new explanation, "not cell-autonomous (intermediate supplied by
+another cell/organ)", was added to the hypothesis set.
+
+**Ketone-body oxidation (ketolysis = BDH1 → OXCT1/SCOT → ACAT1):**
+
+```
+CONSISTENT_ACTIVE   Heart, Brain, Skeletal muscle, Kidney cortex   (all three enzymes expressed)
+CONSISTENT_INACTIVE Liver  -> gap at OXCT1 (SCOT)                   (OXCT1 = 0 TPM in liver)
+```
+
+This is the eukaryotic counterpart of the *Rickettsia* result: the liver gap is **correct**.
+OXCT1/SCOT is the one ketolysis enzyme the liver does not express (GTEx liver = 0 TPM, vs
+heart 60, brain 45), so the engine reproduces the textbook molecular reason the liver
+**exports** the ketone bodies it makes instead of consuming them — and it pinpoints the exact
+enzyme, not just "the pathway".
+
+**Gluconeogenesis at a stringent expression bar (TPM ≥ 5):**
+
+```
+CONSISTENT_ACTIVE   Liver, Kidney cortex
+ABDUCTION_TARGET    Small intestine -> gap at the terminal G6PC1 step  (intestinal G6PC1 ≈ 3 TPM)
+```
+
+Intestinal gluconeogenesis is independently *reported* but genuinely *debated*, precisely
+because intestinal glucose-6-phosphatase is low. Asserting it active surfaces it as an
+`ABDUCTION_TARGET` at the terminal G6PC1 step, with the four leads (non-canonical enzyme;
+unmodelled route; **not cell-autonomous / inter-organ**; or the activity claim itself being
+the error). The engine does not adjudicate the controversy — it localises it to one step and
+one gene, which is exactly what a reviewer wants.
+
+Together with the microbial *Synechocystis*/*M. jannaschii* targets, this shows the gap-as-
+hypothesis machinery is genuinely kingdom-agnostic: the only thing that changes is which
+oracle (genome presence vs tissue expression) and which extra explanation (cross-feeding vs
+inter-organ) is in play.
+
 ## Honest scope / epistemics
 
 - **Expression is used asymmetrically:** absence excludes a route (no enzyme → no
@@ -263,7 +303,8 @@ uv run python resolve_substrates.py                   # which precursor can each
 
 uv run python kegg_oracle.py                           # cache KEGG ortholog presence per genome
 uv run python resolve_genomes.py                       # GapMind-style methionine reconstruction
-uv run python resolve_abduction.py                     # gaps vs known phenotype -> leads / auxotrophy
+uv run python resolve_abduction.py                     # microbial gaps vs phenotype -> leads / auxotrophy
+uv run python resolve_eukaryotic_abduction.py          # tissue gaps vs function (ketolysis, gluconeogenesis)
 uv run pytest tests/test_module_logic.py -q            # engine unit tests (from repo root)
 ```
 
