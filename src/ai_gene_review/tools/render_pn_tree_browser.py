@@ -35,6 +35,10 @@ DEFAULT_WORKBOOK_PATH = Path(
 )
 DEFAULT_WORKBOOK_SHEET = "DENSE"
 DEFAULT_OUTPUT_PATH = Path("projects/PROTEOSTASIS/pn.html")
+# The page is written to DEFAULT_OUTPUT_PATH but deployed (copied verbatim by the
+# project renderer) to DEPLOY_OUTPUT_PATH, one directory deeper. Relative hrefs
+# must resolve from the deployed location, so href computation targets this path.
+DEPLOY_OUTPUT_PATH = Path("pages/projects/PROTEOSTASIS/pn.html")
 PROJECT_PAGE_PATH = Path("pages/projects/PROTEOSTASIS.html")
 DEFAULT_REVIEW_ROOT = Path("genes")
 UNUSUAL_PROPAGATIONS_PATH = Path(
@@ -1570,20 +1574,35 @@ def repo_root_href(output_path: Path) -> str:
     return f"{relative_root}/"
 
 
-def render_html(data: dict[str, Any], output_path: Path) -> str:
-    """Render a standalone HTML document with embedded browser data."""
+def render_html(
+    data: dict[str, Any],
+    output_path: Path,
+    served_path: Path | None = None,
+) -> str:
+    """Render a standalone HTML document with embedded browser data.
+
+    Args:
+        data: Browser data embedded as JSON.
+        output_path: Where the HTML file is physically written.
+        served_path: Where the HTML file is ultimately served from. Relative
+            hrefs (gene-review links, project page, report TSVs) are computed
+            from this location. Defaults to ``output_path`` when not given; the
+            renderer passes ``DEPLOY_OUTPUT_PATH`` so that the page copied into
+            ``pages/projects/PROTEOSTASIS/`` links correctly.
+    """
+    href_path = served_path or output_path
     html = HTML_TEMPLATE.replace(
         "__DATA_JSON__",
         json.dumps(data, ensure_ascii=True, separators=(",", ":")),
     )
     return (
-        html.replace("__PROJECT_PAGE_HREF__", relative_href(output_path, PROJECT_PAGE_PATH))
-        .replace("__COVERAGE_HREF__", relative_href(output_path, DEFAULT_COVERAGE_PATH))
+        html.replace("__PROJECT_PAGE_HREF__", relative_href(href_path, PROJECT_PAGE_PATH))
+        .replace("__COVERAGE_HREF__", relative_href(href_path, DEFAULT_COVERAGE_PATH))
         .replace(
             "__UNUSUAL_PROPAGATIONS_HREF__",
-            relative_href(output_path, UNUSUAL_PROPAGATIONS_PATH),
+            relative_href(href_path, UNUSUAL_PROPAGATIONS_PATH),
         )
-        .replace("__REPO_ROOT_HREF__", repo_root_href(output_path))
+        .replace("__REPO_ROOT_HREF__", repo_root_href(href_path))
     )
 
 
@@ -1643,6 +1662,15 @@ def build_argument_parser() -> argparse.ArgumentParser:
         default=DEFAULT_OUTPUT_PATH,
         help=f"Output HTML path (default: {DEFAULT_OUTPUT_PATH})",
     )
+    parser.add_argument(
+        "--served-path",
+        type=Path,
+        default=DEPLOY_OUTPUT_PATH,
+        help=(
+            "Location the page is served from; relative hrefs are computed from "
+            f"here so the deployed copy links correctly (default: {DEPLOY_OUTPUT_PATH})"
+        ),
+    )
     return parser
 
 
@@ -1663,7 +1691,10 @@ def main() -> None:
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(render_html(data, args.output), encoding="utf-8")
+    args.output.write_text(
+        render_html(data, args.output, served_path=args.served_path),
+        encoding="utf-8",
+    )
     print(f"Wrote PN tree browser to {args.output}")
 
 

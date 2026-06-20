@@ -105,3 +105,40 @@ def test_tree_browser_embeds_leaf_iba_annotations_and_gene_accessions(
     assert ">Review</a>" in html
     assert "functionome.geneontology.org" in html
     assert "Q9H2V7" in html
+
+
+def test_render_html_targets_served_deploy_path() -> None:
+    """Hrefs must resolve from where the page is served, not where it is written.
+
+    The committed page lives at ``projects/PROTEOSTASIS/pn.html`` but is copied
+    verbatim into ``pages/projects/PROTEOSTASIS/pn.html`` (one level deeper) for
+    deployment. ``served_path`` lets href computation target the deployed depth so
+    repo-root links (gene reviews) and the project-page link resolve correctly.
+    """
+    data = {"root_codes": [], "tree": [], "summary": {}}
+    html = browser.render_html(
+        data,
+        Path("projects/PROTEOSTASIS/pn.html"),
+        served_path=Path("pages/projects/PROTEOSTASIS/pn.html"),
+    )
+    # Repo-root prefix for gene-review links: three levels up from
+    # pages/projects/PROTEOSTASIS/ reaches the deployed repo root.
+    assert 'const REPO_ROOT_HREF = "../../../";' in html
+    # Project page sits beside the PROTEOSTASIS/ folder in pages/projects/.
+    assert 'href="../PROTEOSTASIS.html"' in html
+    # Report TSVs live in the repo-root projects/ tree, not under pages/.
+    assert (
+        'href="../../../projects/PROTEOSTASIS/reports/'
+        'pn_mapping_coverage/pn_mapping_code_coverage.tsv"' in html
+    )
+    assert (
+        'href="../../../projects/PROTEOSTASIS/reports/'
+        'pn_mapping_audit/unusual_propagations.tsv"' in html
+    )
+
+
+def test_render_html_defaults_served_path_to_output_path() -> None:
+    """Without served_path, hrefs are computed relative to the output path."""
+    data = {"root_codes": [], "tree": [], "summary": {}}
+    html = browser.render_html(data, Path("projects/PROTEOSTASIS/pn.html"))
+    assert 'const REPO_ROOT_HREF = "../../";' in html
