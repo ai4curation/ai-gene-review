@@ -169,3 +169,12 @@ just validate-rhea-mappings   # SSSOM structural + GO term/label validation
 | RHEA:59980 | GO:0008413 8-oxo-7,8-dihydroguanosine triphosphate pyrophosphatase activity | ADP-sugar pyrophosphatase (Q9UKK9) | Homo sapiens | PE1, PMID:27257257 | 4 |
 | RHEA:65152 | GO:0047243 flavanone 7-O-beta-glucosyltransferase activity | UDP-glycosyltransferase 3A2 (Q3SY77) | Homo sapiens | PE1, PMID:21088224 | 2 |
 | RHEA:16457 | GO:0009027 tartrate dehydrogenase activity | Probable tartrate dehydrogenase/decarboxylase (P42958) | Bacillus subtilis | PE3, Swiss-Prot curator | 1 |
+
+## Batch 5 mappings (final EC-bridge, Swiss-Prot gap closure)
+
+| RHEA | GO term | Reviewed enzyme | Organism | Evidence | SwissProt gain |
+|------|---------|-----------------|----------|----------|---------------:|
+| RHEA:14321 | GO:0050109 morphine 6-dehydrogenase activity | NADPH-dependent codeinone reductase 1-3 (Q9SQ68) | Papaver somniferum | PE1, PMID:29779229 | 5 |
+| RHEA:27682 | GO:0004550 nucleoside diphosphate kinase activity | Nucleoside diphosphate kinase C (Q13232) | Homo sapiens | PE1, PMID:11277919 | 1 |
+| RHEA:59352 | GO:0047979 hexose oxidase activity | Hexose oxidase (P93762) | Chondrus crispus | PE1, PMID:9111074 | 1 |
+| RHEA:68796 | GO:0004575 sucrose alpha-glucosidase activity | Sucrase-isomaltase, intestinal (P14410) | Homo sapiens | PE1, PMID:20356844 | 1 |
