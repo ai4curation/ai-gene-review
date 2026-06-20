@@ -16,7 +16,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from module_logic import compile_module_file, enumerate_routes, core_atoms, is_satisfied
+from ai_gene_review.module_logic import (
+    compile_module_file, enumerate_routes, core_atoms, is_satisfied,
+)
 from zonation_oracle import (
     load_profiles, relative_profile, portal_pole, zone_label, N_LAYERS,
     PERICENTRAL_LANDMARKS,

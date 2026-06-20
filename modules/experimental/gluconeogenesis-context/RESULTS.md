@@ -149,7 +149,9 @@ uv run python resolve_zonation.py                     # per-lobule-layer resolut
    confirm the same zonation directly in human rather than via mouse orthologs.
 2. Add the substrate-entry OR-branches (lactate / alanine / glycerol) as their own
    variant set so the engine also resolves *which precursor* a tissue can use.
-3. Promote `module_logic.py` into `src/ai_gene_review/` with pytest coverage; it is
-   the reusable core for satisfiability over any module (microbial or eukaryotic).
+3. ~~Promote `module_logic.py` into `src/ai_gene_review/` with pytest coverage.~~
+   **Done**: the engine now lives at `src/ai_gene_review/module_logic.py` (frozen
+   `Atom`, doctested, mypy-clean) with `tests/test_module_logic.py`; the oracles
+   here import it (`from ai_gene_review.module_logic import ...`).
 4. Wire the "known-active + unexpressed required atom = gap" abduction path and emit
    gaps as reviewable predictions.
