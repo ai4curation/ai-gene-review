@@ -75,3 +75,52 @@ term, and is a GO new-term-request candidate.
 ```bash
 just validate-rhea-mappings   # SSSOM structural + GO term/label validation
 ```
+
+## Batch 3 mappings
+
+| RHEA | GO term | Reviewed enzyme | Organism | Evidence |
+|------|---------|-----------------|----------|----------|
+| RHEA:30807 | GO:0050241 pyrroline-2-carboxylate reductase activity | Ketimine reductase mu-crystallin (Q14894) | Homo sapiens | PE1, PMID:25931162 |
+| RHEA:17377 | GO:0004169 dolichyl-phosphate-mannose-protein mannosyltransferase activity | Protein O-mannosyl-transferase 2 (Q9UKY4) | Homo sapiens | PE1, PMID:28512129 |
+| RHEA:17901 | GO:0030753 8-hydroxyfuranocoumarin 8-O-methyltransferase activity | Esculetin O-methyltransferase (A0A4P8DY91) | Kitagawia praeruptora | PE1, PMID:30934718 |
+| RHEA:18225 | GO:0019875 6-aminohexanoate-dimer hydrolase activity | 6-aminohexanoate-dimer hydrolase (P07061) | Paenarthrobacter ureafaciens | PE1, PMID:6389532 |
+| RHEA:20465 | GO:0050501 hyaluronan synthase activity | Hyaluronan synthase 1 (Q92839) | Homo sapiens | PE1, Swiss-Prot curator |
+| RHEA:20800 | GO:0047238 glucuronosyl-N-acetylgalactosaminyl-proteoglycan 4-beta-N-acetylgalactosaminyltransferase activity | Chondroitin sulfate synthase 3 (Q70JA7) | Homo sapiens | PE1, PMID:12907687 |
+| RHEA:21924 | GO:0047559 3-dehydro-L-gulonate 2-dehydrogenase activity | 2,3-diketo-L-gulonate reductase (P37672) | Escherichia coli | PE1, Swiss-Prot curator |
+| RHEA:23048 | GO:0047988 hydroxyacid-oxoacid transhydrogenase activity | Hydroxyacid-oxoacid transhydrogenase, mitochondrial (Q8IWW8) | Homo sapiens | PE1, PMID:16435184 |
+| RHEA:23240 | GO:0030409 glutamate formimidoyltransferase activity | Formiminotransferase cyclodeaminase-like protein (Q9SKT4) | Arabidopsis thaliana | PE2, Swiss-Prot curator |
+| RHEA:23260 | GO:0047034 15-hydroxyicosatetraenoate dehydrogenase activity | 15-hydroxyprostaglandin dehydrogenase [NAD (P15428) | Homo sapiens | PE1, PMID:8086429 |
+| RHEA:23428 | GO:0050510 N-acetylgalactosaminyl-proteoglycan 3-beta-glucuronosyltransferase activity | Chondroitin sulfate synthase 3 (Q70JA7) | Homo sapiens | PE1, PMID:12907687 |
+| RHEA:23956 | GO:0004653 polypeptide N-acetylgalactosaminyltransferase activity | Polypeptide N-acetylgalactosaminyltransferase 10 (Q86SR1) | Homo sapiens | PE1, PMID:12417297 |
+| RHEA:24670 | GO:0004854 xanthine dehydrogenase activity | Xanthine dehydrogenase/oxidase (P47989) | Homo sapiens | PE1, PMID:8670112 |
+| RHEA:24869 | GO:0017061 S-methyl-5-thioadenosine phosphorylase activity | S-methyl-5'-thioadenosine phosphorylase (Q2RXH9) | Rhodospirillum rubrum | PE1, PMID:31950558 |
+| RHEA:25054 | GO:0047070 3-carboxyethylcatechol 2,3-dioxygenase activity | 2,3-dihydroxyphenylpropionate/2,3-dihydroxicinnamic acid 1,2-dioxygenase (P0ABR9) | Escherichia coli | PE1, PMID:8752345 |
+| RHEA:25058 | GO:0008695 3-phenylpropionate dioxygenase activity | 3-phenylpropionate/cinnamic acid dioxygenase subunit beta (Q47140) | Escherichia coli | PE1, Swiss-Prot curator |
+| RHEA:25173 | GO:0016403 dimethylargininase activity | N (O94760) | Homo sapiens | PE1, PMID:37296100 |
+| RHEA:25193 | GO:0018504 cis-1,2-dihydrobenzene-1,2-diol dehydrogenase activity | Cis-toluene dihydrodiol dehydrogenase (P13859) | Pseudomonas putida | PE1, Swiss-Prot curator |
+| RHEA:25269 | GO:0004603 phenylethanolamine N-methyltransferase activity | Phenylethanolamine N-methyltransferase (P11086) | Homo sapiens | PE1, PMID:8812853 |
+| RHEA:26269 | GO:0016852 sirohydrochlorin cobaltochelatase activity | Sirohydrochlorin cobaltochelatase (Q05592) | Salmonella typhimurium | PE1, PMID:9150215 |
+| RHEA:27846 | GO:0008688 3-(3-hydroxyphenyl)propionate hydroxylase activity | 3- (P77397) | Escherichia coli | PE1, Swiss-Prot curator |
+| RHEA:28062 | GO:0043842 Kdo transferase activity | 3-deoxy-D-manno-octulosonic acid transferase (P0AC75) | Escherichia coli | PE1, PMID:1577828 |
+| RHEA:28178 | GO:0102895 colneleate synthase activity | Divinyl ether synthase CYP74 (Q2WE96) | Allium sativum | PE1, PMID:9128734 |
+| RHEA:28406 | GO:0103023 ITPase activity | Inosine/xanthosine triphosphatase (P39411) | Escherichia coli | PE1, PMID:16216582 |
+| RHEA:28418 | GO:0008735 L-carnitine CoA-transferase activity | L-carnitine CoA-transferase (P31572) | Escherichia coli | PE1, PMID:11551212 |
+| RHEA:29859 | GO:0008782 adenosylhomocysteine nucleosidase activity | 5'-methylthioadenosine/S-adenosylhomocysteine nucleosidase (P0AF12) | Escherichia coli | PE1, PMID:3911944 |
+| RHEA:30367 | GO:0043755 alpha-ribazole phosphatase activity | Adenosylcobalamin/alpha-ribazole phosphatase (P52086) | Escherichia coli | PE1, Swiss-Prot curator |
+| RHEA:31375 | GO:0034941 pyrrole-2-carboxylate decarboxylase activity | Pyrrole-2-carboxylic acid decarboxylase (Q9I6N5) | Pseudomonas aeruginosa | PE1, PMID:33763291 |
+| RHEA:31599 | GO:0052614 uracil oxygenase activity | Pyrimidine monooxygenase RutA (P75898) | Escherichia coli | PE1, PMID:28661684 |
+| RHEA:31799 | GO:0050334 thiaminase activity | Aminopyrimidine aminohydrolase (P25052) | Bacillus subtilis | PE1, PMID:17618314 |
+| RHEA:32951 | GO:0050006 isomaltulose synthase activity | Isomaltulose synthase (Q8KR84) | Klebsiella variicola | PE1, PMID:12039719 |
+| RHEA:33507 | GO:0008117 sphinganine-1-phosphate aldolase activity | Sphingosine-1-phosphate lyase 1 (O95470) | Homo sapiens | PE1, PMID:28165339 |
+| RHEA:33955 | GO:0047254 2,4-dihydroxy-7-methoxy-2H-1,4-benzoxazin-3(4H)-one 2-D-glucosyltransferase activity | DIMBOA UDP-glucosyltransferase BX9 (B4G072) | Zea mays | PE1, PMID:16666853 |
+| RHEA:33979 | GO:0102726 DIMBOA glucoside beta-D-glucosidase activity | 4-hydroxy-7-methoxy-3-oxo-3,4-dihydro-2H-1,4-benzoxazin-2-yl glucoside beta-D-glucosidase 1d, chloroplastic (D5MTF8) | Triticum aestivum | PE1, PMID:21875895 |
+| RHEA:13969 | GO:0003963 RNA-3'-phosphate cyclase activity | RNA 3'-terminal phosphate cyclase (Q8U0N7) | Pyrococcus furiosus | PE1, PMID:22074260 |
+
+### Batch 3 new GO term suggestions
+
+**Coproheme decarboxylase** (chdC Q8Y5F1, Listeria monocytogenes serovar 1/2a; PE1, PMID:31423350). Reaction RHEA:56516 (EC 1.3.98.5): Fe-coproporphyrin III + 2 H2O2 + 2 H(+) = heme b + 2 CO2 + 4 H2O. No specific GO MF term (QuickGO); proposed *Coproheme decarboxylase activity*.
+
+**5-methyl-1-naphthoate synthase** (aziB B4XYB8, Streptomyces sahachiroi; PE1, PMID:18635006). Reaction RHEA:42836 (EC 2.3.1.236): 5 malonyl-CoA + acetyl-CoA + 3 NADPH + 7 H(+) = 5-methyl-1-naphthoate + 5 CO2 + 3 NADP(+) + 6 CoA + 4 H2O. No specific GO MF term (QuickGO); proposed *5-methyl-1-naphthoate synthase activity*.
+
+**UDP-Gal:alpha-D-GlcNAc-diphosphoundecaprenol beta-1,3-galactosyltransferase** (wbbD Q03084, Escherichia coli; PE1, PMID:18536883). Reaction RHEA:36747 (EC 2.4.1.303): N-acetyl-alpha-D-glucosaminyl-di-trans,octa-cis-undecaprenyl diphosphate + UDP-alpha-D-galactose = beta-D-Gal-(1->3)-alpha-D-GlcNAc-di-trans,octa-cis-undecaprenyl diphosphate + UDP + H(+). No specific GO MF term (QuickGO); proposed *UDP-Gal:alpha-D-GlcNAc-diphosphoundecaprenol beta-1,3-galactosyltransferase activity*.
+
