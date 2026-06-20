@@ -22,6 +22,8 @@ from ai_gene_review.datamodel.gene_review_model import (
     KnowledgeGapKindEnum,
     KnowledgeGapAspectEnum,
     KnowledgeGapStatusEnum,
+    ModuleReview,
+    ModuleNode,
 )
 
 
@@ -109,6 +111,30 @@ def test_gap_validates_at_each_attachment_point(level: str):
         assert report.is_valid, f"Unexpected validation failure: {report.issues}"
     finally:
         temp_path.unlink()
+
+
+def test_gap_attaches_to_module_and_module_node():
+    """The remaining two attachment points — ModuleReview and ModuleNode — accept gaps.
+
+    These live under the ModuleReview target (separate from GeneReview), so they are
+    exercised through the generated model rather than validate_gene_review. Together with
+    test_gap_validates_at_each_attachment_point this covers all five attachment points.
+    """
+    node = ModuleNode(
+        id="node:1",
+        label="a module step with a residual sub-gap",
+        knowledge_gaps=[KnowledgeGap(**_gap(dark_aspect="RESIDUAL_SUBGAP"))],
+    )
+    module = ModuleReview(
+        id="MODULE:1",
+        title="test module",
+        module=node,
+        knowledge_gaps=[KnowledgeGap(**_gap())],
+    )
+    assert len(module.knowledge_gaps) == 1
+    assert module.knowledge_gaps[0].gap_statement
+    assert len(module.module.knowledge_gaps) == 1
+    assert str(module.module.knowledge_gaps[0].dark_aspect) == "RESIDUAL_SUBGAP"
 
 
 def test_knowledge_gap_dataclass_roundtrip():
