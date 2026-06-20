@@ -88,10 +88,15 @@ def select(
             continue
         if single_go and not go.replace(" ", "").replace(",", "+").count("+") == 0:
             # keep only a single GO id
-            if len([t for t in go.replace(",", " ").split() if t.startswith("GO:")]) != 1:
+            if (
+                len([t for t in go.replace(",", " ").split() if t.startswith("GO:")])
+                != 1
+            ):
                 continue
         first_go = next(t for t in go.replace(",", " ").split() if t.startswith("GO:"))
-        out.append((r[COL_ACCESSION], first_go, r[COL_EC].strip(), r[COL_PRODUCT].strip()))
+        out.append(
+            (r[COL_ACCESSION], first_go, r[COL_EC].strip(), r[COL_PRODUCT].strip())
+        )
     out.sort(key=lambda t: t[0])  # deterministic
     if sample and len(out) > sample:
         step = len(out) / sample
@@ -104,7 +109,9 @@ def main(argv=None) -> int:
     ap.add_argument("--hmm-cache", type=Path, default=Path("/tmp/hmm_PGAP.tsv"))
     ap.add_argument("--accessions", help="comma-separated NCBIFAM accessions to score")
     ap.add_argument("--family-type", default="equivalog")
-    ap.add_argument("--single-go", action="store_true", help="only models with exactly one GO id")
+    ap.add_argument(
+        "--single-go", action="store_true", help="only models with exactly one GO id"
+    )
     ap.add_argument("--sample", type=int, default=25)
     ap.add_argument("--sleep", type=float, default=0.3)
     args = ap.parse_args(argv)
@@ -120,12 +127,18 @@ def main(argv=None) -> int:
             if not r or not r[COL_GO].strip():
                 print(f"# skip {w}: not found or no GO", file=sys.stderr)
                 continue
-            first_go = next(t for t in r[COL_GO].replace(",", " ").split() if t.startswith("GO:"))
-            picks.append((r[COL_ACCESSION], first_go, r[COL_EC].strip(), r[COL_PRODUCT].strip()))
+            first_go = next(
+                t for t in r[COL_GO].replace(",", " ").split() if t.startswith("GO:")
+            )
+            picks.append(
+                (r[COL_ACCESSION], first_go, r[COL_EC].strip(), r[COL_PRODUCT].strip())
+            )
     else:
         picks = select(rows, args.family_type, args.single_go, args.sample)
 
-    print("ncbifam\tgo\tN_all\tN_all_go\tgain_all\tN_rev\tN_rev_go\tgain_rev\tec\tproduct")
+    print(
+        "ncbifam\tgo\tN_all\tN_all_go\tgain_all\tN_rev\tN_rev_go\tgain_rev\tec\tproduct"
+    )
     tot = tot_rev = 0
     nz_rev = 0
     for acc, go, ec, product in picks:

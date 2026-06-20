@@ -74,14 +74,25 @@ Swiss-Prot entries that are missing the term too — the cleanest gap-fill targe
 
 ## The verification caveat is mandatory
 
-NCBIFAM's `go_terms` are NCBI-assigned and **not** automatically current: one value
-in the scoping sample — `GO:0009448` on a GABA transaminase — is **obsolete**, and
-several are **altitude-broad** (e.g. dGTPase NF002326 carries the parent
-`GO:0016793 triphosphoric monoester hydrolase activity` when the specific
-`GO:0008832 dGTPase activity` exists). So an `ncbifam2go` build must, like the
-curated seed in [`ncbifam2go.sssom.yaml`](ncbifam2go.sssom.yaml):
+NCBIFAM's `go_terms` are NCBI-assigned and **not** automatically current or correct.
+Three distinct failure modes turned up while building the 28-row seed, each of which
+a naive bulk ingest would have propagated:
 
-1. drop obsolete GO ids,
+- **Obsolete** — `GO:0009448` on a GABA transaminase is an obsolete id.
+- **Outright wrong** — the diacylglycerol-kinase model **NF009874** (EC 2.7.1.107)
+  is tagged `GO:0003951 NAD+ kinase activity`; the correct term `GO:0004143
+  ATP-dependent diacylglycerol kinase activity` exists. A wrong-MF assignment, not
+  just an altitude issue — excluded.
+- **Altitude-broad** — several sit far above the family's real function, up to the
+  ontology **near-root** `GO:0003824 catalytic activity` (enoyl-CoA hydratase
+  NF005804, spermidine synthase TIGR00417), or a class parent (dGTPase NF002326 →
+  `GO:0016793` when `GO:0008832 dGTPase activity` exists). Demoted to `broadMatch`
+  with the specific child named.
+
+So an `ncbifam2go` build must, like the curated seed in
+[`ncbifam2go.sssom.yaml`](ncbifam2go.sssom.yaml):
+
+1. drop obsolete **and incorrect** GO ids (check against EC where available),
 2. prefer the specific child where the NCBI term is a broad parent (`broadMatch`),
 3. EC-bridge-confirm enzyme rows via `ec2go`.
 

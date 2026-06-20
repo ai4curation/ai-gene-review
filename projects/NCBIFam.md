@@ -165,26 +165,37 @@ The curation deliverable mirrors RHEA's [`rhea2go.sssom.yaml`](RHEA/rhea2go.ssso
 [`ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml) records NCBIFAM-family →
 GO mappings adopting NCBI's own `hmm_PGAP.tsv go_terms` **after independent
 verification**, each backed by the model's `family_type`, `product_name`, EC, and
-PMIDs, plus the live UniProtKB propagation gain. A **10-mapping seed** spanning all
+PMIDs, plus the live UniProtKB propagation gain. A **28-mapping seed** spanning all
 three GO aspects (MF, BP, CC — NCBIFAM is a whole-protein family resource, not
 enzyme-only) is in place, with predicate classes parallel to RHEA:
 
-- **`skos:exactMatch`** (7 rows) — the NCBI-assigned GO term *is* the family's
-  function; ready-to-add `ncbifam2go` rows. Enzyme rows are **EC-bridge supported**
-  (verified: `ec2go(EC)` = this GO term for formamidase EC 3.5.1.49→`GO:0004328`,
-  AHL lactonase EC 3.1.1.81→`GO:0102007`, lipoprotein lipase EC 3.1.1.34→`GO:0004465`).
-  Includes the highest-gap case, IS630 transposase → `GO:0004803` (18,874 entries
-  missing it), an encapsulin shell CC term, and an anti-phage defense BP term.
-- **`skos:broadMatch`** (3 rows) — NCBI assigned a broader parent; the comment
-  names the narrower term to use/request (dGTPase NF002326 → `GO:0016793`, use
-  `GO:0008832 dGTPase activity`; VirB5 → the whole `type IV secretion system
-  complex`; FtsX → broad `cytokinesis`, prefer a bacterial cell-division child).
+- **`skos:exactMatch`** (21 rows) — the NCBI-assigned GO term *is* the family's
+  function; ready-to-add `ncbifam2go` rows. The enzyme majority are **EC-bridge
+  supported** (verified live: `ec2go(EC)` = this GO term, e.g. formamidase EC
+  3.5.1.49→`GO:0004328`, β-lactamase EC 3.5.2.6→`GO:0008800`, uridine kinase EC
+  2.7.1.48→`GO:0004849`, D-Ala-D-Ala ligase EC 6.3.2.4→`GO:0008716`). Spans AMR
+  (two distinct β-lactamase families → one GO term, the family→GO many-to-one
+  analog of RHEA's reactions→activity), central metabolism, phosphonate/arsenate/
+  cobalamin pathways, plus the highest-gap case IS630 transposase → `GO:0004803`
+  (18,874 entries missing it), an encapsulin-shell CC term, and an anti-phage
+  defense BP term.
+- **`skos:broadMatch`** (7 rows) — NCBI assigned a broader parent; the comment
+  names the narrower term to use/request. Includes two **near-root** assignments
+  (enoyl-CoA hydratase NF005804 and spermidine synthase TIGR00417 both tagged
+  `GO:0003824 catalytic activity`, fixable to `GO:0004300`/`GO:0004766`), plus
+  dGTPase NF002326 → use `GO:0008832`, dihydroorotase → `GO:0004151`,
+  LL-DAP aminotransferase → `GO:0010285`, VirB5 → T4SS complex, FtsX → a bacterial
+  cell-division child.
 
-**Verification matters:** one scoping-sample NCBIFAM `go_terms` value
-(`GO:0009448` on a GABA transaminase) is **obsolete**, and several are
-altitude-broad — so the seed drops obsolete ids, prefers specific children, and
-EC-bridge-confirms enzymes. Every GO id/label was checked non-obsolete against
-QuickGO (2026-06-20); every family id/name/type/EC is from `hmm_PGAP.tsv`. Validate
+**Verification matters and catches real errors.** One scoping-sample NCBIFAM
+`go_terms` value (`GO:0009448` on a GABA transaminase) is **obsolete**; a
+diacylglycerol-kinase model (NF009874, EC 2.7.1.107) is tagged with the **wrong**
+activity `GO:0003951 NAD+ kinase activity` (the correct `GO:0004143` exists); and
+several assignments sit at near-root altitude. All three classes were **excluded or
+demoted to broadMatch** — so the seed drops obsolete/incorrect ids, prefers specific
+children, and EC-bridge-confirms enzymes. Every GO id/label was checked non-obsolete
+against QuickGO (2026-06-20); every family id/name/type/EC is from `hmm_PGAP.tsv`;
+every EC→GO bridge against the live `ec2go`. Validate
 with **`just validate-ncbifam-mappings`** — SSSOM structural validation plus GO
 term/label validation (object bound to the **full** GO graph, MF+BP+CC; generated
 nested view [`ncbifam2go.terms.yaml`](NCBIFam/ncbifam2go.terms.yaml)). The seed
@@ -249,7 +260,7 @@ over-annotation.
 |--------|-----------|
 | GOA × InterPro member-integration re-join | Attribute each `GO_REF:0000002` row to its firing member DB; quantify NCBIFAM/CDD's *actual* forward contribution. |
 | Forward closure-filtered cross-organism scan | UniPathway-style uniqueness for member-attributed rows; needs go-db DuckDBs. |
-| Scale up `ncbifam2go.sssom.yaml` | Extend the 10-row verified seed across the 13,253 equivalogs (obsolete-filter, child-prefer, EC-bridge) → a full ingestible mapping. |
+| Scale up `ncbifam2go.sssom.yaml` | Extend the 28-row verified seed across the 13,253 equivalogs (obsolete-filter, child-prefer, EC-bridge) → a full ingestible mapping. |
 | Full-collection gain run | Replace the 60-model gain sample with the complete equivalog set for a definitive reviewed-vs-TrEMBL gain figure. |
 | Integrated-but-unmapped IPR set | NCBIFAM/CDD integrated into an InterPro entry lacking an `interpro2go` row → InterPro mapping requests. |
 | Exemplar gene reviews | Pick 2–3 genes whose only MF/BP support is an NCBIFAM equivalog (e.g. an anti-phage or secretion family) and run the full review workflow. |
@@ -260,7 +271,7 @@ over-annotation.
 - **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, and a **validated
-  10-row `ncbifam2go` seed** in place; member-attribution re-join and full-scale
+  28-row `ncbifam2go` seed** in place; member-attribution re-join and full-scale
   mapping are staged.
 - **Computed live** (via [`NCBIFam/ncbifam_cdd_probe.py`](NCBIFam/ncbifam_cdd_probe.py)
   and [`ncbifam_go_gain.py`](NCBIFam/ncbifam_go_gain.py)):
@@ -270,7 +281,7 @@ over-annotation.
   carries 0 native GO (FTP + Entrez); 60-model gain Σ = 19 reviewed / 26,578
   all-UniProtKB; masking verified from this repo's `*-goa.tsv` / `*-uniprot.txt`.
 - **Curated mappings**: [`NCBIFam/ncbifam2go.sssom.yaml`](NCBIFam/ncbifam2go.sssom.yaml)
-  — 10 verified SSSOM rows (7 exactMatch ready-to-add, 3 broadMatch), spanning MF/BP/CC,
+  — 28 verified SSSOM rows (21 exactMatch ready-to-add, 7 broadMatch), spanning MF/BP/CC,
   each with live propagation gain; **passes** `just validate-ncbifam-mappings`.
 - **Current conclusion**: NCBIFAM/CDD reach GO only through InterPro, which
   **masks** their contribution in GOA and leaves the **majority of signatures
