@@ -17,6 +17,7 @@ from ai_gene_review.etl.panther_paint import (
     load_all_family_members,
     family_nodes_from_leaf,
     fetch_all_family_paint,
+    assemble_loss_input,
 )
 
 
@@ -103,6 +104,29 @@ def test_family_member_subfamilies(tmp_path: Path):
         ",missing id,PTHR1:SF3\n"
     )
     assert family_member_subfamilies(csv_path) == {"P14635": "PTHR1:SF1", "P24864": ""}
+
+
+def test_assemble_loss_input_splits_clades_and_seeds():
+    inp = assemble_loss_input(
+        family="PTHR1",
+        go_id="GO:0016538",
+        aspect="F",
+        evidence="IKR",
+        ancestral_node="PTNa",
+        loss_node="PTNb",
+        seed_proteins=["UniProtKB:P14635", "MGI:MGI:88313"],
+        loss_members={"Q9", "Q8"},
+        retaining_members={"P14635", "Q9"},  # Q9 overlaps -> loss-only
+        member_subfamily={"Q9": "PTHR1:SF2", "Q8": "", "P14635": "PTHR1:SF1"},
+    )
+    assert inp.seed_uniprot == ["P14635"]
+    # Q9 is in both inputs but resolved to the loss clade only.
+    assert inp.loss_clade == [("Q8", ""), ("Q9", "PTHR1:SF2")]
+    assert inp.retaining_clade == [("P14635", "PTHR1:SF1")]
+
+    d = inp.to_dict()
+    assert d["seed_uniprot"] == ["P14635"]
+    assert d["loss_clade"][1] == {"accession": "Q9", "subfamily": "PTHR1:SF2"}
 
 
 def test_iter_losses_returns_only_losses_with_ancestor():

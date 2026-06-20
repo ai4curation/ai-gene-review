@@ -37,6 +37,24 @@ propagation — rather than re-judging gene by gene.
   `ancestral_node`, `loss_node`, `gain_confirmed`, and the affected
   `subfamilies`. (`n_members_affected=0` means the loss is in an unsampled
   subfamily — the gain→loss pair is still confirmed.)
+- `prepare_loss_analysis.py` — turns one loss finding into a ready-to-run input
+  bundle for a bioinformatics agent to **reconstruct the key-residue rationale**
+  (PANTHER never publishes which residues an IKR was based on — see the IKR note
+  below). Emits YAML with `seed_uniprot` (where the function + its key residues
+  are characterized), `loss_clade` (members predicted to have lost it), and
+  `retaining_clade` (members that kept it). The agent fetches these sequences,
+  aligns them, and compares the functional columns. Example:
+
+  ```bash
+  uv run python projects/PANTHER_IBA_REVIEW/prepare_loss_analysis.py \
+      --family PTHR10443 --loss-node PTN000047776 --go GO:0016805
+  ```
+
+  Note: `loss_clade`/`retaining_clade` are resolved from the *reviewed* member
+  tables + leaf GAF, so a finding with `n_members_affected=0` yields an empty
+  `loss_clade` (the loss is in an unsampled subfamily); seeds are still provided.
+  Of the 296 IKR findings, 49 have ≥1 attributed reviewed member and are
+  immediately actionable.
 - `REVIEW.md` — the written review and findings.
 
 Regenerate:

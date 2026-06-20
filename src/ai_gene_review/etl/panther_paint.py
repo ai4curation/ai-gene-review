@@ -213,7 +213,6 @@ def iter_losses(
                 yield rec, parse_ptn_nodes("|".join(rec.seeds))
 
 
-
 def leaf_nodes_for_members(lines: Iterable[str], members: Set[str]) -> Set[str]:
     """Stream the leaf IBA GAF and collect ancestral ``PTN`` nodes for members.
 
@@ -440,3 +439,114 @@ def fetch_all_family_paint(
         write_family_paint(family, nodes, ibd_index, fdir)
         counts[family] = n_annotations
     return counts
+
+
+@dataclass
+class LossAnalysisInput:
+    """Ready-to-run inputs for reconstructing an IKR/IRD function loss.
+
+    A PAINT loss records only the *outcome* (function lost at a node); the
+    residue-level rationale a curator saw in the alignment is not published. This
+    bundle gathers what a downstream bioinformatics agent needs to reconstruct
+    it: the proteins where the function (and its key residues) are characterized
+    (``seed_proteins``), the clade that **lost** the function (``loss_clade``),
+    and a sister clade that **retained** it (``retaining_clade``). The agent then
+    fetches these sequences, aligns them, and compares the key columns.
+
+    Attributes:
+        family / go_id / aspect / evidence: identify the loss event.
+        ancestral_node: PTN node where the function was gained (IBD).
+        loss_node: PTN node where the function was lost (IRD/IKR subject).
+        seed_proteins: with/from of the ancestral IBD record - the experimentally
+            characterized proteins establishing the function (mixed CURIEs).
+        seed_uniprot: the UniProtKB subset of ``seed_proteins`` (bare accessions),
+            for direct sequence/feature retrieval.
+        loss_clade: ``(accession, subfamily)`` members descending from the loss
+            node (the proteins predicted to have lost the function).
+        retaining_clade: ``(accession, subfamily)`` family members still annotated
+            with the function (the comparison/positive set).
+    """
+
+    family: str
+    go_id: str
+    aspect: str
+    evidence: str
+    ancestral_node: str
+    loss_node: str
+    seed_proteins: List[str] = field(default_factory=list)
+    seed_uniprot: List[str] = field(default_factory=list)
+    loss_clade: List[Tuple[str, str]] = field(default_factory=list)
+    retaining_clade: List[Tuple[str, str]] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        """Return a plain dict suitable for YAML/JSON serialization."""
+        return {
+            "family": self.family,
+            "go_id": self.go_id,
+            "aspect": self.aspect,
+            "evidence": self.evidence,
+            "ancestral_node": self.ancestral_node,
+            "loss_node": self.loss_node,
+            "seed_proteins": self.seed_proteins,
+            "seed_uniprot": self.seed_uniprot,
+            "loss_clade": [
+                {"accession": a, "subfamily": s} for a, s in self.loss_clade
+            ],
+            "retaining_clade": [
+                {"accession": a, "subfamily": s} for a, s in self.retaining_clade
+            ],
+        }
+
+
+def assemble_loss_input(
+    *,
+    family: str,
+    go_id: str,
+    aspect: str,
+    evidence: str,
+    ancestral_node: str,
+    loss_node: str,
+    seed_proteins: Iterable[str],
+    loss_members: Set[str],
+    retaining_members: Set[str],
+    member_subfamily: Dict[str, str],
+) -> LossAnalysisInput:
+    """Assemble a :class:`LossAnalysisInput` from resolved member sets.
+
+    Pure/deterministic: callers supply the seed proteins (from the ancestral IBD
+    record) and the loss/retaining member accessions (resolved from the leaf
+    GAF). Members appearing in both sets are treated as loss-clade only.
+
+    >>> inp = assemble_loss_input(
+    ...     family="PTHR1", go_id="GO:1", aspect="F", evidence="IKR",
+    ...     ancestral_node="PTNa", loss_node="PTNb",
+    ...     seed_proteins=["UniProtKB:P1", "MGI:MGI:9"],
+    ...     loss_members={"Q9"}, retaining_members={"P1", "Q9"},
+    ...     member_subfamily={"Q9": "PTHR1:SF2", "P1": "PTHR1:SF1"},
+    ... )
+    >>> inp.seed_uniprot
+    ['P1']
+    >>> inp.loss_clade
+    [('Q9', 'PTHR1:SF2')]
+    >>> inp.retaining_clade
+    [('P1', 'PTHR1:SF1')]
+    """
+    seeds = list(seed_proteins)
+    seed_uniprot = [s.split(":", 1)[1] for s in seeds if s.startswith("UniProtKB:")]
+    retaining = retaining_members - loss_members
+
+    def _decorate(accs: Set[str]) -> List[Tuple[str, str]]:
+        return sorted((a, member_subfamily.get(a, "")) for a in accs)
+
+    return LossAnalysisInput(
+        family=family,
+        go_id=go_id,
+        aspect=aspect,
+        evidence=evidence,
+        ancestral_node=ancestral_node,
+        loss_node=loss_node,
+        seed_proteins=seeds,
+        seed_uniprot=seed_uniprot,
+        loss_clade=_decorate(loss_members),
+        retaining_clade=_decorate(retaining),
+    )
